@@ -53,10 +53,10 @@ namespace ModuleESolver
         //! Non-Self-Consistant Filed (NSCF) calculations
         virtual void nscf(){};
 
-        //! Structure factors
+        //! Structure factors that used with plane-wave basis set
         Structure_Factor sf;
 
-        //! K-point list
+        //! K points in Brillouin zone
         K_Vectors kv;
 
       private:
