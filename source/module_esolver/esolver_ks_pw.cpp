@@ -613,22 +613,38 @@ void ESolver_KS_PW<T, Device>::allocate_psi_init()
         "for new psi initializer, init_wfc type not supported");
 	}
 
-    // function polymorphism is moved from constructor to function initialize. Two slightly different implementation are for MPI and serial case, respectively.
-    #ifdef __MPI
-    this->psi_init->initialize(&this->sf, this->pw_wfc, &GlobalC::ucell, &GlobalC::Pkpoints, 1, &GlobalC::ppcell, GlobalV::MY_RANK);
-    #else
-    this->psi_init->initialize(&this->sf, this->pw_wfc, &GlobalC::ucell, 1, &GlobalC::ppcell);
-    #endif
+    //! function polymorphism is moved from constructor to function initialize. 
+    //! Two slightly different implementation are for MPI and serial case, respectively.
+#ifdef __MPI
+	this->psi_init->initialize(
+			&this->sf, 
+			this->pw_wfc, 
+			&GlobalC::ucell, 
+			&GlobalC::Pkpoints, 
+			1, 
+			&GlobalC::ppcell, 
+			GlobalV::MY_RANK);
+#else
+	this->psi_init->initialize(
+			&this->sf, 
+			this->pw_wfc, 
+			&GlobalC::ucell, 
+			1, 
+			&GlobalC::ppcell);
+#endif
+
     // always new->initialize->tabulate->allocate->proj_ao_onkG
     this->psi_init->tabulate();
     ModuleBase::timer::tick("ESolver_KS_PW", "allocate_psi_init");
+
 }
-/*
-  Although ESolver_KS_PW supports template, but in this function it has no relationship with
-  heterogeneous calculation, so all templates function are specialized to double
-*/
+
+
+
+//! Although ESolver_KS_PW supports template, but in this function it has no relationship with
+//! heterogeneous calculation, so all templates function are specialized to double
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::initialize_psi()
+void ESolver_KS_PW<T, Device>::initialize_psi(void)
 {
     ModuleBase::timer::tick("ESolver_KS_PW", "initialize_psi");
     if (GlobalV::psi_initializer)
@@ -657,8 +673,9 @@ void ESolver_KS_PW<T, Device>::initialize_psi()
 			}
 
             //! to use psig, we need to lock it to get a shared pointer version,
-            //! then switch kpoint of psig to the given one
-            auto psig_ = psig.lock(); psig_->fix_k(ik);
+			//! then switch kpoint of psig to the given one
+			auto psig_ = psig.lock(); 
+			psig_->fix_k(ik);
 
             std::vector<Real> etatom(psig_->get_nbands(), 0.0);
 
@@ -666,11 +683,13 @@ void ESolver_KS_PW<T, Device>::initialize_psi()
             // either by matrix-multiplication or by copying-discarding
             if (this->psi_init->method() != "random")
             {
+                // lcao_in_pw and pw share the same esolver. In the future, we will have different esolver
                 if (
                       ((GlobalV::KS_SOLVER == "cg")||(GlobalV::KS_SOLVER == "lapack"))
-                    &&(GlobalV::BASIS_TYPE == "pw") // presently lcao_in_pw and pw share the same esolver. In the future, we will have different esolver
+                    &&(GlobalV::BASIS_TYPE == "pw") 
                     )
-                {// the following function is only run serially, to be improved
+                {
+                    // the following function is only run serially, to be improved
                     hsolver::DiagoIterAssist<T, Device>::diagH_subspace_init(
                         this->p_hamilt,
 						psig_->get_pointer(), 
@@ -686,7 +705,9 @@ void ESolver_KS_PW<T, Device>::initialize_psi()
 				{
 					if(ik == 0) 
 					{
-						GlobalV::ofs_running << " START WAVEFUNCTION: LCAO_IN_PW, psi initialization skipped " << std::endl;
+						GlobalV::ofs_running 
+							<< " START WAVEFUNCTION: LCAO_IN_PW, psi initialization skipped " 
+							<< std::endl;
 					}
                     continue;
                 }
@@ -706,7 +727,8 @@ void ESolver_KS_PW<T, Device>::initialize_psi()
                 }
                 // else the case is davidson
             }
-            // for davidson, we just copy the wavefunction (partially)
+
+            // for the Davidson method, we just copy the wavefunction (partially)
             for (int iband = 0; iband < this->kspw_psi->get_nbands(); iband++)
             {
                 for (int ibasis = 0; ibasis < this->kspw_psi->get_nbasis(); ibasis++)
@@ -714,16 +736,21 @@ void ESolver_KS_PW<T, Device>::initialize_psi()
                     (*(this->kspw_psi))(iband, ibasis) = (*psig_)(iband, ibasis);
                 }
             }
-        }
+        }// end k-point loop
+
         this->psi_init->set_initialized(true);
-    }
+
+    } // end GlobalV::psi_initializer 
     ModuleBase::timer::tick("ESolver_KS_PW", "initialize_psi");
 }
 
 
 // Temporary, it should be replaced by hsolver later.
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::hamilt2density(const int istep, const int iter, const double ethr)
+void ESolver_KS_PW<T, Device>::hamilt2density(
+		const int istep, 
+		const int iter, 
+		const double ethr)
 {
     ModuleBase::timer::tick("ESolver_KS_PW", "hamilt2density");
 
@@ -806,27 +833,33 @@ void ESolver_KS_PW<T, Device>::hamilt2density(const int istep, const int iter, c
     this->pelec->set_exx(GlobalC::exx_lip.get_exx_energy()); // Peize Lin add 2019-03-09
 #endif
 #endif
+
     // calculate the delta_harris energy
     // according to new charge density.
     // mohan add 2009-01-23
     this->pelec->cal_energies(1);
+
     Symmetry_rho srho;
     for (int is = 0; is < GlobalV::NSPIN; is++)
-    {
-        srho.begin(is, *(this->pelec->charge), this->pw_rhod, GlobalC::Pgrid, GlobalC::ucell.symm);
-    }
+	{
+		srho.begin(is, 
+				*(this->pelec->charge), 
+				this->pw_rhod, 
+				GlobalC::Pgrid, 
+				GlobalC::ucell.symm);
+	}
 
     // compute magnetization, only for LSDA(spin==2)
     GlobalC::ucell.magnet.compute_magnetization(this->pelec->charge->nrxx,
                                                 this->pelec->charge->nxyz,
                                                 this->pelec->charge->rho,
                                                 this->pelec->nelec_spin.data());
+
     // deband is calculated from "output" charge density calculated
     // in sum_band
     // need 'rho(out)' and 'vr (v_h(in) and v_xc(in))'
-    
     this->pelec->f_en.deband = this->pelec->cal_delta_eband();
-    // if (LOCAL_BASIS) xiaohui modify 2013-09-02
+
     ModuleBase::timer::tick("ESolver_KS_PW", "hamilt2density");
 }
 
@@ -863,8 +896,8 @@ void ESolver_KS_PW<T, Device>::eachiterfinish(const int iter)
         GlobalC::ppcell.cal_effective_D(veff, this->pw_rhod, GlobalC::ucell);
     }
 
-    // print_eigenvalue(GlobalV::ofs_running);
     this->pelec->cal_energies(2);
+
     // We output it for restarting the scf.
     bool print = false;
     if (this->out_freq_elec && iter % this->out_freq_elec == 0)
@@ -928,8 +961,9 @@ void ESolver_KS_PW<T, Device>::afterscf(const int istep)
         }
     }
 
-    if (this->wf.out_wfc_pw == 1 || this->wf.out_wfc_pw == 2)
-    {
+	if (this->wf.out_wfc_pw == 1 
+			|| this->wf.out_wfc_pw == 2)
+	{
         std::stringstream ssw;
         ssw << GlobalV::global_out_dir << "WAVEFUNC";
         ModuleIO::write_wfc_pw(ssw.str(), this->psi[0], this->kv, this->pw_wfc);
@@ -943,6 +977,7 @@ void ESolver_KS_PW<T, Device>::afterscf(const int istep)
     {
         this->pelec->print_eigenvalue(GlobalV::ofs_running);
     }
+
     if (this->device == psi::GpuDevice)
     {
         castmem_2d_d2h_op()(this->psi[0].get_device(),
