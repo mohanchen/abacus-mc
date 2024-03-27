@@ -125,7 +125,9 @@ void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
     // issue or pull request.
 
     if (this->psi != nullptr)
+    {
         delete this->psi;
+    }
 
     // allocate memory for std::complex<double> datatype psi
     // New psi initializer in ABACUS, Developer's note:
@@ -191,13 +193,16 @@ void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
     }
     // ---------------------------------------------------------------------------------
 
-    this->kspw_psi = GlobalV::device_flag == "gpu" || GlobalV::precision_flag == "single"
+    this->kspw_psi = GlobalV::device_flag == "gpu" 
+                         || GlobalV::precision_flag == "single"
                          ? new psi::Psi<T, Device>(this->psi[0])
                          : reinterpret_cast<psi::Psi<T, Device>*>(this->psi);
+
     if (GlobalV::precision_flag == "single")
     {
         ModuleBase::Memory::record("Psi_single", sizeof(T) * this->psi[0].size());
     }
+
     ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "INIT BASIS");
 }
 
@@ -225,8 +230,10 @@ void ESolver_KS_PW<T, Device>::Init(Input& inp, UnitCell& ucell)
                                                             this->pw_big);
     }
 
-    // Inititlize the charge density.
+    //! Inititlize the charge density.
     this->pelec->charge->allocate(GlobalV::NSPIN);
+
+    //! set the cell volume variable in pelec
     this->pelec->omega = GlobalC::ucell.omega;
 
     // Initialize the potential.
@@ -276,7 +283,9 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
 #endif
         this->pw_wfc->setuptransform();
         for (int ik = 0; ik < this->kv.nks; ++ik)
+        {
             this->kv.ngk[ik] = this->pw_wfc->npwk[ik];
+        }
         this->pw_wfc->collect_local_pw(inp.erf_ecut, inp.erf_height, inp.erf_sigma);
 
         delete this->phsol;
@@ -317,7 +326,9 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
                                 this->pw_wfc->nx,
                                 this->pw_wfc->ny,
                                 this->pw_wfc->nz);
+
         this->pw_wfc->initparameters(false, INPUT.ecutwfc, this->kv.nks, this->kv.kvec_d.data());
+
         this->pw_wfc->collect_local_pw(inp.erf_ecut, inp.erf_height, inp.erf_sigma);
         
         if(GlobalV::psi_initializer) // new initialization method, used in KSDFT and LCAO_IN_PW calculation
@@ -326,8 +337,12 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
             // for nao, we recalculate the overlap matrix between flz and jlq
             // for atomic, we recalculate the overlap matrix between pswfc and jlq
             // for psig is not read-only, its value will be overwritten in initialize_psi(), dont need delete and reallocate
-            if((GlobalV::init_wfc.substr(0, 3) == "nao")||(GlobalV::init_wfc.substr(0, 6) == "atomic")) this->psi_init->tabulate(); 
-        }
+            if((GlobalV::init_wfc.substr(0, 3) == "nao")
+					||(GlobalV::init_wfc.substr(0, 6) == "atomic")) 
+			{
+				this->psi_init->tabulate(); 
+			}
+		}
         else // old initialization method, used in EXX calculation
         {
             this->wf.init_after_vc(this->kv.nks); // reallocate wanf2, the planewave expansion of lcao
@@ -344,7 +359,10 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
                                          this->pw_wfc->startz,this->pw_wfc->numz);
 
 #ifdef __MPI
-        if(GlobalV::RANK_IN_POOL == 0) GlobalC::paw_cell.prepare_paw();
+		if(GlobalV::RANK_IN_POOL == 0) 
+		{
+			GlobalC::paw_cell.prepare_paw();
+		}
 #else
         GlobalC::paw_cell.prepare_paw();
 #endif
@@ -360,7 +378,11 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
 
             for(int iat = 0; iat < GlobalC::ucell.nat; iat ++)
             {
-                GlobalC::paw_cell.set_rhoij(iat,nrhoijsel[iat],rhoijselect[iat].size(),rhoijselect[iat].data(),rhoijp[iat].data());
+                GlobalC::paw_cell.set_rhoij(iat,
+						nrhoijsel[iat],
+						rhoijselect[iat].size(),
+						rhoijselect[iat].data(),
+						rhoijp[iat].data());
             }  
         }
 #else
@@ -368,8 +390,12 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
 
         for(int iat = 0; iat < GlobalC::ucell.nat; iat ++)
         {
-            GlobalC::paw_cell.set_rhoij(iat,nrhoijsel[iat],rhoijselect[iat].size(),rhoijselect[iat].data(),rhoijp[iat].data());
-        }
+			GlobalC::paw_cell.set_rhoij(iat,
+					nrhoijsel[iat],
+					rhoijselect[iat].size(),
+					rhoijselect[iat].data(),
+					rhoijp[iat].data());
+		}
 #endif
     }
 #endif
@@ -424,14 +450,20 @@ void ESolver_KS_PW<T, Device>::beforescf(int istep)
     // calculate ewald energy
     if (!GlobalV::test_skip_ewald)
     {
-        this->pelec->f_en.ewald_energy = H_Ewald_pw::compute_ewald(GlobalC::ucell, this->pw_rhod, this->sf.strucFac);
-    }
+		this->pelec->f_en.ewald_energy = H_Ewald_pw::compute_ewald(
+				GlobalC::ucell, 
+				this->pw_rhod, 
+				this->sf.strucFac);
+	}
 
     //=========================================================
     // cal_ux should be called before init_scf because
     // the direction of ux is used in noncoline_rho
     //=========================================================
-    if(GlobalV::NSPIN == 4 && GlobalV::DOMAG) GlobalC::ucell.cal_ux();
+    if(GlobalV::NSPIN == 4 && GlobalV::DOMAG) 
+	{
+		GlobalC::ucell.cal_ux();
+	}
 
     //=========================================================
     // calculate the total local pseudopotential in real space
@@ -442,14 +474,18 @@ void ESolver_KS_PW<T, Device>::beforescf(int istep)
     Symmetry_rho srho;
     for (int is = 0; is < GlobalV::NSPIN; is++)
     {
-        srho.begin(is, *(this->pelec->charge), this->pw_rhod, GlobalC::Pgrid, GlobalC::ucell.symm);
-    }
-
+		srho.begin(is, 
+				*(this->pelec->charge), 
+				this->pw_rhod, 
+				GlobalC::Pgrid, 
+				GlobalC::ucell.symm);
+	}
 
     // liuyu move here 2023-10-09
     // D in uspp need vloc, thus behind init_scf()
     // calculate the effective coefficient matrix for non-local pseudopotential projectors
     ModuleBase::matrix veff = this->pelec->pot->get_effective_v();
+
     GlobalC::ppcell.cal_effective_D(veff, this->pw_rhod, GlobalC::ucell);
 
     // after init_rho (in pelec->init_scf), we have rho now.
@@ -461,7 +497,11 @@ void ESolver_KS_PW<T, Device>::beforescf(int istep)
         // psi every time before scf. But for random wavefunction, we dont, because random wavefunction is not
         // related to atomic coordinates.
         // What the old strategy does is only to initialize for once...
-        if(((GlobalV::init_wfc == "random")&&(istep == 0))||(GlobalV::init_wfc != "random")) this->initialize_psi();
+        if(((GlobalV::init_wfc == "random")&&(istep == 0))
+				||(GlobalV::init_wfc != "random")) 
+		{
+			this->initialize_psi();
+		}
     }
 }
 
@@ -537,13 +577,42 @@ void ESolver_KS_PW<T, Device>::allocate_psi_init()
     // under restriction of C++11, std::unique_ptr can not be allocate via std::make_unique
     // use new instead, but will cause asymmetric allocation and deallocation, in literal aspect
     ModuleBase::timer::tick("ESolver_KS_PW", "allocate_psi_init");
-    if((GlobalV::init_wfc.substr(0, 6) == "atomic")&&(GlobalC::ucell.natomwfc == 0)) this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(new psi_initializer_random<T, Device>());
-    else if(GlobalV::init_wfc == "atomic") this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(new psi_initializer_atomic<T, Device>());
-    else if(GlobalV::init_wfc == "random") this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(new psi_initializer_random<T, Device>());
-    else if(GlobalV::init_wfc == "nao") this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(new psi_initializer_nao<T, Device>());
-    else if(GlobalV::init_wfc == "atomic+random") this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(new psi_initializer_atomic_random<T, Device>());
-    else if(GlobalV::init_wfc == "nao+random") this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(new psi_initializer_nao_random<T, Device>());
-    else ModuleBase::WARNING_QUIT("ESolver_KS_PW::allocate_psi_init", "for new psi initializer, init_wfc type not supported");
+	if((GlobalV::init_wfc.substr(0, 6) == "atomic")&&(GlobalC::ucell.natomwfc == 0))
+	{
+		this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(
+         new psi_initializer_random<T, Device>());
+	}
+	else if(GlobalV::init_wfc == "atomic") 
+	{
+		this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(
+        new psi_initializer_atomic<T, Device>());
+	}
+    else if(GlobalV::init_wfc == "random") 
+	{
+		this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(
+        new psi_initializer_random<T, Device>());
+	}
+    else if(GlobalV::init_wfc == "nao") 
+	{
+		this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(
+        new psi_initializer_nao<T, Device>());
+	}
+	else if(GlobalV::init_wfc == "atomic+random") 
+	{
+		this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(
+        new psi_initializer_atomic_random<T, Device>());
+	}
+	else if(GlobalV::init_wfc == "nao+random") 
+	{
+		this->psi_init = std::unique_ptr<psi_initializer<T, Device>>(
+        new psi_initializer_nao_random<T, Device>());
+	}
+	else 
+	{
+		ModuleBase::WARNING_QUIT("ESolver_KS_PW::allocate_psi_init", 
+        "for new psi initializer, init_wfc type not supported");
+	}
+
     // function polymorphism is moved from constructor to function initialize. Two slightly different implementation are for MPI and serial case, respectively.
     #ifdef __MPI
     this->psi_init->initialize(&this->sf, this->pw_wfc, &GlobalC::ucell, &GlobalC::Pkpoints, 1, &GlobalC::ppcell, GlobalV::MY_RANK);
