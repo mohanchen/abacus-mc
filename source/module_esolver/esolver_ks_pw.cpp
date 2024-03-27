@@ -108,7 +108,6 @@ ESolver_KS_PW<T, Device>::~ESolver_KS_PW()
 template <typename T, typename Device>
 void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
 {
-    // ---------------------------------------------------------------------------------
     // GlobalC is a historically left-over namespace, it is used to store global classes,
     // including:
     // pseudopot_cell_vnl: pseudopotential in cell, V non-local
@@ -159,20 +158,14 @@ void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
     }
     // ---------------------------------------------------------------------------------
 
-    //=======================
-    // init pseudopotential
-    //=======================
+    //! init pseudopotential
     GlobalC::ppcell.init(GlobalC::ucell.ntype, &this->sf, this->pw_wfc);
 
-    //=================================
-    // initalize local pseudopotential
-    //=================================
+    //! initalize local pseudopotential
     GlobalC::ppcell.init_vloc(GlobalC::ppcell.vloc, this->pw_rhod);
     ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "LOCAL POTENTIAL");
 
-    //======================================
-    // Initalize non local pseudopotential
-    //======================================
+    //! Initalize non-local pseudopotential
     GlobalC::ppcell.init_vnl(GlobalC::ucell, this->pw_rhod);
     ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "NON-LOCAL POTENTIAL");
 
@@ -193,10 +186,26 @@ void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
     }
     // ---------------------------------------------------------------------------------
 
+
     this->kspw_psi = GlobalV::device_flag == "gpu" 
                          || GlobalV::precision_flag == "single"
                          ? new psi::Psi<T, Device>(this->psi[0])
                          : reinterpret_cast<psi::Psi<T, Device>*>(this->psi);
+
+    // I would like to change the above sentence to the following, 
+    // but I am not sure what the code is doing, so I leave it as a comment
+    // mohan by 2024-03-27
+/*
+	if (GlobalV::device_flag == "gpu" || GlobalV::precision_flag == "single") 
+	{
+        // psi[0] means gamma_only?
+		this->kspw_psi = new psi::Psi<T, Device>(this->psi[0]);
+	} 
+	else 
+	{
+		this->kspw_psi = reinterpret_cast<psi::Psi<T, Device>*>(this->psi);
+	}
+*/
 
     if (GlobalV::precision_flag == "single")
     {
@@ -205,6 +214,7 @@ void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
 
     ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "INIT BASIS");
 }
+
 
 template <typename T, typename Device>
 void ESolver_KS_PW<T, Device>::Init(Input& inp, UnitCell& ucell)
@@ -264,6 +274,7 @@ void ESolver_KS_PW<T, Device>::Init(Input& inp, UnitCell& ucell)
     }
 }
 
+
 template <typename T, typename Device>
 void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
 {
@@ -274,18 +285,34 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
 
     if (GlobalV::md_prec_level == 2)
     {
-        this->pw_wfc->initgrids(ucell.lat0, ucell.latvec, this->pw_rho->nx, this->pw_rho->ny, this->pw_rho->nz);
-        this->pw_wfc->initparameters(false, inp.ecutwfc, this->kv.nks, this->kv.kvec_d.data());
+		this->pw_wfc->initgrids(
+				ucell.lat0, 
+				ucell.latvec, 
+				this->pw_rho->nx, 
+				this->pw_rho->ny, 
+				this->pw_rho->nz);
+
+		this->pw_wfc->initparameters(
+				false, 
+				inp.ecutwfc, 
+				this->kv.nks, 
+				this->kv.kvec_d.data());
+
 #ifdef __MPI
-        if (INPUT.pw_seed > 0)
-            MPI_Allreduce(MPI_IN_PLACE, &this->pw_wfc->ggecut, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-            // qianrui add 2021-8-13 to make different kpar parameters can get the same results
+		if (INPUT.pw_seed > 0)
+		{
+			MPI_Allreduce(MPI_IN_PLACE, &this->pw_wfc->ggecut, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+		}
+		// qianrui add 2021-8-13 to make different kpar parameters can get the same results
 #endif
+
         this->pw_wfc->setuptransform();
+
         for (int ik = 0; ik < this->kv.nks; ++ik)
         {
             this->kv.ngk[ik] = this->pw_wfc->npwk[ik];
         }
+
         this->pw_wfc->collect_local_pw(inp.erf_ecut, inp.erf_height, inp.erf_sigma);
 
         delete this->phsol;
@@ -302,9 +329,12 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
                                                             this->pw_big);
 
         this->pelec->charge->allocate(GlobalV::NSPIN);
+
+        //! setup cell volume
         this->pelec->omega = GlobalC::ucell.omega;
 
         delete this->pelec->pot;
+
         this->pelec->pot = new elecstate::Potential(this->pw_rhod,
                                                     this->pw_rho,
                                                     &GlobalC::ucell,
@@ -432,10 +462,14 @@ void ESolver_KS_PW<T, Device>::beforescf(int istep)
         delete reinterpret_cast<hamilt::HamiltPW<T, Device>*>(this->p_hamilt);
         this->p_hamilt = nullptr;
     }
+
     // allocate HamiltPW
     if (this->p_hamilt == nullptr)
     {
-        this->p_hamilt = new hamilt::HamiltPW<T, Device>(this->pelec->pot, this->pw_wfc, &this->kv);
+		this->p_hamilt = new hamilt::HamiltPW<T, Device>(
+				this->pelec->pot, 
+				this->pw_wfc, 
+				&this->kv);
     }
 
     //----------------------------------------------------------
@@ -456,21 +490,18 @@ void ESolver_KS_PW<T, Device>::beforescf(int istep)
 				this->sf.strucFac);
 	}
 
-    //=========================================================
-    // cal_ux should be called before init_scf because
-    // the direction of ux is used in noncoline_rho
-    //=========================================================
+    //! cal_ux should be called before init_scf because
+    //! the direction of ux is used in noncoline_rho
     if(GlobalV::NSPIN == 4 && GlobalV::DOMAG) 
 	{
 		GlobalC::ucell.cal_ux();
 	}
 
-    //=========================================================
-    // calculate the total local pseudopotential in real space
-    //=========================================================
+    //! calculate the total local pseudopotential in real space
     this->pelec->init_scf(istep, this->sf.strucFac);
-    // Symmetry_rho should behind init_scf, because charge should be initialized first.
-    // liuyu comment: Symmetry_rho should be located between init_rho and v_of_rho?
+
+    //! Symmetry_rho should behind init_scf, because charge should be initialized first.
+    //! liuyu comment: Symmetry_rho should be located between init_rho and v_of_rho?
     Symmetry_rho srho;
     for (int is = 0; is < GlobalV::NSPIN; is++)
     {
@@ -504,6 +535,7 @@ void ESolver_KS_PW<T, Device>::beforescf(int istep)
 		}
     }
 }
+
 
 template <typename T, typename Device>
 void ESolver_KS_PW<T, Device>::othercalculation(const int istep)
@@ -570,6 +602,7 @@ void ESolver_KS_PW<T, Device>::eachiterinit(const int istep, const int iter)
         this->pelec->charge->save_rho_before_sum_band();
     }
 }
+
 
 template <typename T, typename Device>
 void ESolver_KS_PW<T, Device>::allocate_psi_init()
