@@ -45,7 +45,7 @@ void ESolver_SDFT_PW::Init(Input& inp, UnitCell& ucell)
     this->pelec = new elecstate::ElecStatePW_SDFT(pw_wfc,
                                                   &(chr),
                                                   (K_Vectors*)(&(kv)),
-                                                  &GlobalC::ucell,
+                                                  &ucell,
                                                   &(GlobalC::ppcell),
                                                   this->pw_rhod,
                                                   this->pw_rho,
@@ -53,14 +53,14 @@ void ESolver_SDFT_PW::Init(Input& inp, UnitCell& ucell)
 
     // Inititlize the charge density.
     this->pelec->charge->allocate(GlobalV::NSPIN);
-    this->pelec->omega = GlobalC::ucell.omega;
+    this->pelec->omega = ucell.omega;
 
     // Initializee the potential.
     if (this->pelec->pot == nullptr)
     {
         this->pelec->pot = new elecstate::Potential(pw_rhod,
                                                     pw_rho,
-                                                    &GlobalC::ucell,
+                                                    &ucell,
                                                     &(GlobalC::ppcell.vloc),
                                                     &(sf),
                                                     &(this->pelec->f_en.etxc),
