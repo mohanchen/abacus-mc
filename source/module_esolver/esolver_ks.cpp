@@ -98,24 +98,24 @@ void ESolver_KS<T, Device>::Init(Input& inp, UnitCell& ucell)
 		double ** atom_coord;
 		std::vector<std::string> filename_list;
 
-		atom_type = new int [GlobalC::ucell.nat];
-		atom_coord = new double * [GlobalC::ucell.nat];
-		filename_list.resize(GlobalC::ucell.ntype);
+		atom_type = new int [ucell.nat];
+		atom_coord = new double * [ucell.nat];
+		filename_list.resize(ucell.ntype);
 
-		for(int ia = 0; ia < GlobalC::ucell.nat; ia ++)
+		for(int ia = 0; ia < ucell.nat; ia ++)
 		{
 			atom_coord[ia] = new double [3];
 		}
 
 		int iat = 0;
-		for(int it = 0; it < GlobalC::ucell.ntype; it ++)
+		for(int it = 0; it < ucell.ntype; it ++)
 		{
-			for(int ia = 0; ia < GlobalC::ucell.atoms[it].na; ia ++)
+			for(int ia = 0; ia < ucell.atoms[it].na; ia ++)
 			{
 				atom_type[iat] = it;
-				atom_coord[iat][0] = GlobalC::ucell.atoms[it].taud[ia].x;
-				atom_coord[iat][1] = GlobalC::ucell.atoms[it].taud[ia].y;
-				atom_coord[iat][2] = GlobalC::ucell.atoms[it].taud[ia].z;
+				atom_coord[iat][0] = ucell.atoms[it].taud[ia].x;
+				atom_coord[iat][1] = ucell.atoms[it].taud[ia].y;
+				atom_coord[iat][2] = ucell.atoms[it].taud[ia].z;
 				iat ++;
 			}
 		}            
@@ -135,24 +135,24 @@ void ESolver_KS<T, Device>::Init(Input& inp, UnitCell& ucell)
 				if (line.find("PAW_FILES") != std::string::npos) break;
 			}
 
-			for(int it = 0; it < GlobalC::ucell.ntype; it++)
+			for(int it = 0; it < ucell.ntype; it++)
 			{
 				ifa >> filename_list[it];
 			}
 		}
 #ifdef __MPI
-		for(int it = 0; it < GlobalC::ucell.ntype; it++)
+		for(int it = 0; it < ucell.ntype; it++)
 		{
 			Parallel_Common::bcast_string(filename_list[it]);
 		}
 #endif
 
 		GlobalC::paw_cell.init_paw_cell(INPUT.ecutwfc, INPUT.cell_factor,
-				GlobalC::ucell.omega,GlobalC::ucell.nat,GlobalC::ucell.ntype,
+				ucell.omega,ucell.nat,ucell.ntype,
 				atom_type,(const double **) atom_coord,
 				filename_list);
 
-		for(int iat = 0; iat < GlobalC::ucell.nat; iat ++)
+		for(int iat = 0; iat < ucell.nat; iat ++)
 		{
 			delete [] atom_coord[iat];
 		}
@@ -234,10 +234,10 @@ void ESolver_KS<T, Device>::Init(Input& inp, UnitCell& ucell)
 			pw_big->bz); // mohan add 2010-07-22, update 2011-05-04
 
 	// Calculate Structure factor
-	this->sf.setup_structure_factor(&GlobalC::ucell, this->pw_rhod);
+	this->sf.setup_structure_factor(&ucell, this->pw_rhod);
 
 	// Initialize charge extrapolation
-	CE.Init_CE(GlobalC::ucell.nat);
+	CE.Init_CE(ucell.nat);
 
 #ifdef USE_PAW
 	if(GlobalV::use_paw)
@@ -268,7 +268,7 @@ void ESolver_KS<T, Device>::Init(Input& inp, UnitCell& ucell)
 		{
 			GlobalC::paw_cell.get_rhoijp(rhoijp, rhoijselect, nrhoijsel);
 
-			for(int iat = 0; iat < GlobalC::ucell.nat; iat ++)
+			for(int iat = 0; iat < ucell.nat; iat ++)
 			{
 				GlobalC::paw_cell.set_rhoij(iat,nrhoijsel[iat],rhoijselect[iat].size(),rhoijselect[iat].data(),rhoijp[iat].data());
 			}  
@@ -276,7 +276,7 @@ void ESolver_KS<T, Device>::Init(Input& inp, UnitCell& ucell)
 #else
 		GlobalC::paw_cell.get_rhoijp(rhoijp, rhoijselect, nrhoijsel);
 
-		for(int iat = 0; iat < GlobalC::ucell.nat; iat ++)
+		for(int iat = 0; iat < ucell.nat; iat ++)
 		{
 			GlobalC::paw_cell.set_rhoij(iat,nrhoijsel[iat],rhoijselect[iat].size(),rhoijselect[iat].data(),rhoijp[iat].data());
 		}
