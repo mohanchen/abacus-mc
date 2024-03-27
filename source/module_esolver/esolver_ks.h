@@ -99,7 +99,6 @@ class ESolver_KS : public ESolver_FP
 		/// @brief create a new ModuleIO::Output_Potential object to print potential
 		ModuleIO::Output_Potential create_Output_Potential(int iter, const std::string& prefix = "None");
 
-
 		// TODO: control single precision at input files
 
         //! Solve Hamitonian

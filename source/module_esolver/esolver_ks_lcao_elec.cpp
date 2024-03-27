@@ -101,8 +101,8 @@ void ESolver_KS_LCAO<TK, TR>::beforesolver(const int istep)
     // init psi
     if (this->psi == nullptr)
     {
-        int nsk;
-        int ncol;
+        int nsk=0;
+        int ncol=0;
         if (GlobalV::GAMMA_ONLY_LOCAL)
         {
             nsk = GlobalV::NSPIN;
