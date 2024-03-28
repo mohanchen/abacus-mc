@@ -416,7 +416,10 @@ void ESolver_KS_LCAO<TK, TR>::postprocess()
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::Init_Basis_lcao(ORB_control& orb_con, Input& inp, UnitCell& ucell)
+void ESolver_KS_LCAO<TK, TR>::Init_Basis_lcao(
+		ORB_control& orb_con, 
+		Input& inp, 
+		UnitCell& ucell)
 {
     // autoset NB2D first
     if (GlobalV::NB2D == 0)
@@ -456,22 +459,6 @@ void ESolver_KS_LCAO<TK, TR>::Init_Basis_lcao(ORB_control& orb_con, Input& inp, 
     two_center_bundle->build_alpha(GlobalV::deepks_setorb, &ucell.descriptor_file);
     two_center_bundle->build_orb_onsite(ucell.ntype, GlobalV::onsite_radius);
     // currently deepks only use one descriptor file, so cast bool to int is fine
-
-    //this->orb_con.read_orb_first(GlobalV::ofs_running,
-    //                             GlobalC::ORB,
-    //                             ucell.ntype,
-    //                             GlobalV::global_orbital_dir,
-    //                             ucell.orbital_fn,
-    //                             ucell.descriptor_file,
-    //                             ucell.lmax,
-    //                             inp.lcao_ecut,
-    //                             inp.lcao_dk,
-    //                             inp.lcao_dr,
-    //                             inp.lcao_rmax,
-    //                             GlobalV::deepks_setorb,
-    //                             inp.out_mat_r,
-    //                             GlobalV::CAL_FORCE,
-    //                             GlobalV::MY_RANK);
 
     // TODO Due to the omnipresence of GlobalC::ORB, we still have to rely
     // on the old interface for now.
@@ -884,11 +871,17 @@ void ESolver_KS_LCAO<TK, TR>::eachiterfinish(int iter)
         for (int ik = 0;ik < this->kv.nks;++ik)
         {
             ModuleBase::GlobalFunc::ZEROS(Hexxk_save.data(), Hexxk_save.size());
+
             hamilt::OperatorEXX<hamilt::OperatorLCAO<TK, TR>> opexx_save(&this->LM, nullptr, &Hexxk_save, this->kv);
+
             opexx_save.contributeHk(ik);
+
             GlobalC::restart.save_disk("Hexx", ik, this->LOWF.ParaV->get_local_size(), Hexxk_save.data());
         }
-        if (GlobalV::MY_RANK == 0)GlobalC::restart.save_disk("Eexx", 0, 1, &this->pelec->f_en.exx);
+		if (GlobalV::MY_RANK == 0)
+		{
+			GlobalC::restart.save_disk("Eexx", 0, 1, &this->pelec->f_en.exx);
+		}
     }
 #endif
     //-----------------------------------
