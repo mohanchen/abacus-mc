@@ -45,12 +45,25 @@ namespace ModuleESolver
         virtual bool do_after_converge(int& iter) override;
 
         virtual void othercalculation(const int istep)override;
+
+        // we will get rid of this class soon, don't use it, mohan 2024-03-28
         ORB_control orb_con;    //Basis_LCAO
+
+        // we will get rid of this class soon, don't use it, mohan 2024-03-28
         Record_adj RA;
+
+        // we will get rid of this class soon, don't use it, mohan 2024-03-28
         Local_Orbital_wfc LOWF;
+
+        // we will get rid of this class soon, don't use it, mohan 2024-03-28
         Local_Orbital_Charge LOC;
+
+        // we will get rid of this class soon, don't use it, mohan 2024-03-28
         LCAO_Hamilt UHM;
+
+        // we will get rid of this class soon, don't use it, mohan 2024-03-28
         LCAO_Matrix LM;
+
         Grid_Technique GridT;
 
         std::unique_ptr<TwoCenterBundle> two_center_bundle;
