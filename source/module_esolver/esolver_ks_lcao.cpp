@@ -511,7 +511,8 @@ void ESolver_KS_LCAO<TK, TR>::eachiterinit(const int istep, const int iter)
         this->p_chgmix->mixing_restart = GlobalV::SCF_NMAX + 1;
     }
     // for mixing restart
-    if (iter == this->p_chgmix->mixing_restart && GlobalV::MIXING_RESTART > 0.0)
+    if (iter == this->p_chgmix->mixing_restart 
+        && GlobalV::MIXING_RESTART > 0.0)
     {
         this->p_chgmix->init_mixing();
         if (GlobalV::MIXING_DMR) // for mixing_dmr 
@@ -530,8 +531,9 @@ void ESolver_KS_LCAO<TK, TR>::eachiterinit(const int istep, const int iter)
     // mohan move it outside 2011-01-13
     // first need to calculate the weight according to
     // electrons number.
-
-    if (istep == 0 && this->wf.init_wfc == "file" && this->LOWF.error == 0)
+    if (istep == 0 
+        && this->wf.init_wfc == "file" 
+        && this->LOWF.error == 0)
     {
         if (iter == 1)
         {
@@ -570,7 +572,11 @@ void ESolver_KS_LCAO<TK, TR>::eachiterinit(const int istep, const int iter)
             {
                 GlobalC::ucell.cal_ux();
             }
+            
+            //! update the potentials by using new electron charge density
             this->pelec->pot->update_from_charge(this->pelec->charge, &GlobalC::ucell);
+
+            //! compute the correction energy for metals
             this->pelec->f_en.descf = this->pelec->cal_delta_escf();
         }
     }
@@ -599,13 +605,15 @@ void ESolver_KS_LCAO<TK, TR>::eachiterinit(const int istep, const int iter)
             dynamic_cast<elecstate::ElecStateLCAO<TK>*>(this->pelec)
                 ->get_DM();
         }
-        GlobalC::dftu.cal_slater_UJ(this->pelec->charge->rho, this->pw_rho->nrxx); // Calculate U and J if Yukawa potential is used
+        // Calculate U and J if Yukawa potential is used
+        GlobalC::dftu.cal_slater_UJ(this->pelec->charge->rho, this->pw_rho->nrxx);
     }
 
 
 #ifdef __DEEPKS
     // the density matrixes of DeePKS have been updated in each iter
     GlobalC::ld.set_hr_cal(true);
+
     // HR in HamiltLCAO should be recalculate
     if(GlobalV::deepks_scf)
     {
