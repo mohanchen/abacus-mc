@@ -401,7 +401,7 @@ void ESolver_KS<T, Device>::Run(const int istep, UnitCell& ucell)
 #endif
 			double diag_ethr = this->phsol->set_diagethr(istep, iter, drho);
 
-			eachiterinit(istep, iter);
+			this->iter_init(istep, iter);
 
 			this->hamilt2density(istep, iter, diag_ethr);
 
@@ -480,8 +480,8 @@ void ESolver_KS<T, Device>::Run(const int istep, UnitCell& ucell)
 
 			// Hamilt should be used after it is constructed.
 			// this->phamilt->update(conv_elec);
-			update_pot(istep, iter);
-			eachiterfinish(iter);
+			this->update_pot(istep, iter);
+			this->iter_finish(iter);
 #ifdef __MPI
 			double duration = (double)(MPI_Wtime() - iterstart);
 #else

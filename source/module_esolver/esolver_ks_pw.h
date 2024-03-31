@@ -90,11 +90,11 @@ class ESolver_KS_PW : public ESolver_KS<T, Device>
 
         virtual void before_scf(const int istep) override;
 
-        virtual void eachiterinit(const int istep, const int iter) override;
+        virtual void iter_init(const int istep, const int iter) override;
 
         virtual void update_pot(const int istep, const int iter) override;
 
-        virtual void eachiterfinish(const int iter) override;
+        virtual void iter_finish(const int iter) override;
 
         virtual void after_scf(const int istep) override;
 

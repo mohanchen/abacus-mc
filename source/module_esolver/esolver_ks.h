@@ -58,10 +58,10 @@ class ESolver_KS : public ESolver_FP
 		virtual void before_scf(int istep) {};
 
 		//! Something to do before hamilt2density function in each iter loop.
-		virtual void eachiterinit(const int istep, const int iter) {};
+		virtual void iter_init(const int istep, const int iter) {};
 
 		//! Something to do after hamilt2density function in each iter loop.
-		virtual void eachiterfinish(const int iter) {};
+		virtual void iter_finish(const int iter) {};
 
 		//! Something to do after SCF iterations when SCF is converged or comes to the max iter step.
 		virtual void after_scf(const int istep) {};

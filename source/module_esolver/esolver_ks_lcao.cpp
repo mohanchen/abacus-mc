@@ -505,7 +505,7 @@ void ESolver_KS_LCAO<TK, TR>::Init_Basis_lcao(
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::eachiterinit(const int istep, const int iter)
+void ESolver_KS_LCAO<TK, TR>::iter_init(const int istep, const int iter)
 {
     if (iter == 1)
     {
@@ -851,7 +851,7 @@ void ESolver_KS_LCAO<TK, TR>::update_pot(const int istep, const int iter)
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::eachiterfinish(int iter)
+void ESolver_KS_LCAO<TK, TR>::iter_finish(int iter)
 {
     // mix density matrix
     if (GlobalV::MIXING_RESTART > 0 && iter >= this->p_chgmix->mixing_restart && GlobalV::MIXING_DMR )

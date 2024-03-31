@@ -579,7 +579,7 @@ void ESolver_KS_PW<T, Device>::othercalculation(const int istep)
 }
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::eachiterinit(const int istep, const int iter)
+void ESolver_KS_PW<T, Device>::iter_init(const int istep, const int iter)
 {
     if (iter == 1)
     {
@@ -918,7 +918,7 @@ void ESolver_KS_PW<T, Device>::update_pot(const int istep, const int iter)
 
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::eachiterfinish(const int iter)
+void ESolver_KS_PW<T, Device>::iter_finish(const int iter)
 {
     // liuyu 2023-10-24
     // D in uspp need vloc, thus needs update when veff updated
