@@ -67,7 +67,7 @@ class ESolver_KS : public ESolver_FP
 		virtual void after_scf(const int istep) {};
 
 		//! <Temporary> It should be replaced by a function in Hamilt Class
-		virtual void updatepot(const int istep, const int iter) {};
+		virtual void update_pot(const int istep, const int iter) {};
 
 		//! choose strategy when charge density convergence achieved
 		virtual bool do_after_converge(int& iter){return true;}

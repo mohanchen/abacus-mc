@@ -755,7 +755,7 @@ void ESolver_KS_LCAO<TK, TR>::hamilt2density(int istep, int iter, double ethr)
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::updatepot(const int istep, const int iter)
+void ESolver_KS_LCAO<TK, TR>::update_pot(const int istep, const int iter)
 {
     // print Hamiltonian and Overlap matrix
     if (this->conv_elec)

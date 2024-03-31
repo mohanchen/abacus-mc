@@ -480,7 +480,7 @@ void ESolver_KS<T, Device>::Run(const int istep, UnitCell& ucell)
 
 			// Hamilt should be used after it is constructed.
 			// this->phamilt->update(conv_elec);
-			updatepot(istep, iter);
+			update_pot(istep, iter);
 			eachiterfinish(iter);
 #ifdef __MPI
 			double duration = (double)(MPI_Wtime() - iterstart);

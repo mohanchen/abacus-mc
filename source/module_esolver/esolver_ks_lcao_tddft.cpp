@@ -257,7 +257,7 @@ void ESolver_KS_LCAO_TDDFT::hamilt2density(
     this->pelec->f_en.deband = this->pelec->cal_delta_eband();
 }
 
-void ESolver_KS_LCAO_TDDFT::updatepot(const int istep, const int iter)
+void ESolver_KS_LCAO_TDDFT::update_pot(const int istep, const int iter)
 {
     // print Hamiltonian and Overlap matrix
     if (this->conv_elec)

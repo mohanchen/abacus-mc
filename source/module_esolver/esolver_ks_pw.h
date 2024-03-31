@@ -92,7 +92,7 @@ class ESolver_KS_PW : public ESolver_KS<T, Device>
 
         virtual void eachiterinit(const int istep, const int iter) override;
 
-        virtual void updatepot(const int istep, const int iter) override;
+        virtual void update_pot(const int istep, const int iter) override;
 
         virtual void eachiterfinish(const int iter) override;
 

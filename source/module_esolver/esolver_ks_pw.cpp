@@ -899,7 +899,7 @@ void ESolver_KS_PW<T, Device>::hamilt2density(
 
 // Temporary, it should be rewritten with Hamilt class.
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::updatepot(const int istep, const int iter)
+void ESolver_KS_PW<T, Device>::update_pot(const int istep, const int iter)
 {
     if (!this->conv_elec)
     {
