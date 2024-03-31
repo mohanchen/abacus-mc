@@ -58,27 +58,61 @@ void Force_LCAO_k::ftable_k(const bool isforce,
     ModuleBase::TITLE("Force_LCAO_k", "ftable_k");
     ModuleBase::timer::tick("Force_LCAO_k", "ftable_k");
 
-    this->UHM = &uhm;
-
     elecstate::DensityMatrix<complex<double>,double>* DM
     = dynamic_cast<const elecstate::ElecStateLCAO<std::complex<double>>*>(pelec)->get_DM();
 
-    this->allocate_k(pv, lm, kv.nks, kv.kvec_d);
+	this->allocate_k(
+			pv, 
+			lm, 
+            uhm.genH,
+			kv.nks, 
+			kv.kvec_d);
 
     // calculate the energy density matrix
     // and the force related to overlap matrix and energy density matrix.
-    this->cal_foverlap_k(isforce, isstress, ra, psi, loc, pv, lm, DM, foverlap, soverlap, pelec, kv.nks, kv);
+	this->cal_foverlap_k(
+			isforce, 
+			isstress, 
+			ra, 
+			psi, 
+			loc, 
+			pv, 
+			lm, 
+			DM, 
+			foverlap, 
+			soverlap, 
+			pelec, 
+			kv.nks, 
+			kv);
 
-    //DM->sum_DMR_spin();
+	this->cal_ftvnl_dphi_k(
+			DM, 
+			pv, 
+			lm, 
+			isforce, 
+			isstress, 
+			ra, 
+			ftvnl_dphi, 
+			stvnl_dphi);
 
-    this->cal_ftvnl_dphi_k(DM, pv, lm, isforce, isstress, ra, ftvnl_dphi, stvnl_dphi);
+	// doing on the real space grid.
+	this->cal_fvl_dphi_k(
+			isforce, 
+			isstress, 
+			lm, 
+			uhm.GK, 
+			pelec->pot, 
+			fvl_dphi, 
+			svl_dphi, 
+			loc.DM_R);
 
-    // ---------------------------------------
-    // doing on the real space grid.
-    // ---------------------------------------
-    this->cal_fvl_dphi_k(isforce, isstress, lm, pelec->pot, fvl_dphi, svl_dphi, loc.DM_R);
-
-    this->cal_fvnl_dbeta_k(DM, isforce, isstress, pv, fvnl_dbeta, svnl_dbeta);
+	this->cal_fvnl_dbeta_k(
+			DM, 
+			isforce, 
+			isstress, 
+			pv, 
+			fvnl_dbeta, 
+			svnl_dbeta);
 
 #ifdef __DEEPKS
     if (GlobalV::deepks_scf)
@@ -149,6 +183,7 @@ void Force_LCAO_k::ftable_k(const bool isforce,
 
 void Force_LCAO_k::allocate_k(const Parallel_Orbitals& pv,
                               LCAO_Matrix &lm,
+                              LCAO_gen_fixedH &gen_h,
                               const int& nks,
                               const std::vector<ModuleBase::Vector3<double>>& kvec_d)
 {
@@ -211,7 +246,7 @@ void Force_LCAO_k::allocate_k(const Parallel_Orbitals& pv,
     // calculate dS = <phi | dphi>
     //-----------------------------
     bool cal_deri = true;
-    this->UHM->genH.build_ST_new('S', cal_deri, GlobalC::ucell, this->UHM->genH.LM->SlocR.data());
+    gen_h.build_ST_new('S', cal_deri, GlobalC::ucell, gen_h.LM->SlocR.data());
 
     //-----------------------------------------
     // (2) allocate for <phi | T + Vnl | dphi>
@@ -222,7 +257,8 @@ void Force_LCAO_k::allocate_k(const Parallel_Orbitals& pv,
 
     // mohan add lm on 2024-03-31
     const auto init_DHloc_fixedR_xyz = [this, nnr, &lm](int num_threads, int thread_id) {
-        int beg, len;
+        int beg=0;
+        int len=0;
         ModuleBase::BLOCK_TASK_DIST_1D(num_threads, thread_id, nnr, 1024, beg, len);
         ModuleBase::GlobalFunc::ZEROS(lm.DHloc_fixedR_x + beg, len);
         ModuleBase::GlobalFunc::ZEROS(lm.DHloc_fixedR_y + beg, len);
@@ -233,18 +269,18 @@ void Force_LCAO_k::allocate_k(const Parallel_Orbitals& pv,
 
     // calculate dT=<phi|kin|dphi> in LCAO
     // calculate T + VNL(P1) in LCAO basis
-    this->UHM->genH.build_ST_new('T', cal_deri, GlobalC::ucell, this->UHM->genH.LM->Hloc_fixedR.data());
+    gen_h.build_ST_new('T', cal_deri, GlobalC::ucell, gen_h.LM->Hloc_fixedR.data());
 
     // calculate dVnl=<phi|dVnl|dphi> in LCAO
-    this->UHM->genH.build_Nonlocal_mu_new(this->UHM->genH.LM->Hloc_fixed.data(), cal_deri);
+    gen_h.build_Nonlocal_mu_new(gen_h.LM->Hloc_fixed.data(), cal_deri);
 
     // calculate asynchronous S matrix to output for Hefei-NAMD
     if (INPUT.cal_syns)
     {
         cal_deri = false;
-        // this->UHM->genH.build_ST_new('S', cal_deri, GlobalC::ucell, this->UHM->genH.LM->SlocR.data(),
+        // gen_h.build_ST_new('S', cal_deri, GlobalC::ucell, gen_h.LM->SlocR.data(),
 		// INPUT.cal_syns);
-		this->UHM->genH.build_ST_new('S', 
+		gen_h.build_ST_new('S', 
 				cal_deri, 
 				GlobalC::ucell, 
 				lm.SlocR.data(), 
@@ -372,11 +408,15 @@ void Force_LCAO_k::test(
     {
         for (int j = 0; j < GlobalV::NLOCAL; j++)
         {
-            if (std::abs(test[i * GlobalV::NLOCAL + j]) > 1.0e-5)
-                std::cout << std::setw(12) << test[i * GlobalV::NLOCAL + j];
-            else
-                std::cout << std::setw(12) << "0";
-        }
+			if (std::abs(test[i * GlobalV::NLOCAL + j]) > 1.0e-5)
+			{
+				std::cout << std::setw(12) << test[i * GlobalV::NLOCAL + j];
+			}
+			else
+			{
+				std::cout << std::setw(12) << "0";
+			}
+		}
         std::cout << std::endl;
     }
     delete[] test;

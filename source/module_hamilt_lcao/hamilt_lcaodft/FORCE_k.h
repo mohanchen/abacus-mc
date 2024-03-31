@@ -20,7 +20,6 @@ class Force_LCAO_k : public Force_LCAO_gamma
     ~Force_LCAO_k();
 
     private:
-    LCAO_Hamilt* UHM;
 
     // orthonormal force + contribution from T and VNL
     void ftable_k(const bool isforce,
@@ -50,6 +49,7 @@ class Force_LCAO_k : public Force_LCAO_gamma
     // get the ds, dt, dvnl.
     void allocate_k(const Parallel_Orbitals& pv,
                     LCAO_Matrix &lm,
+                    LCAO_gen_fixedH &gen_h,
                     const int& nks,
                     const std::vector<ModuleBase::Vector3<double>>& kvec_d);
 
@@ -84,6 +84,7 @@ class Force_LCAO_k : public Force_LCAO_gamma
 	void cal_fvl_dphi_k(const bool isforce,
 		  	const bool isstress,
 			LCAO_Matrix &lm,
+            Gint_k &gint_k,
 			const elecstate::Potential* pot_in,
 			ModuleBase::matrix& fvl_dphi,
 			ModuleBase::matrix& svl_dphi,
