@@ -1040,6 +1040,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
             this->LOWF.ParaV,
             *(this->psi),
             dynamic_cast<const elecstate::ElecStateLCAO<TK>*>(this->pelec)->get_DM());
+
     ModuleBase::timer::tick("ESolver_KS_LCAO", "out_deepks_labels");
 
 #endif
@@ -1067,6 +1068,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
         } // qifeng add 2019/9/10, jiyy modify 2023/2/27, liuyu move here 2023-04-18
     }
 
+    // spin constrain calculations, added by Tianqi Zhao.
     if (GlobalV::sc_mag_switch)
     {
         SpinConstrain<TK, psi::DEVICE_CPU>& sc = SpinConstrain<TK, psi::DEVICE_CPU>::getScInstance();
@@ -1078,6 +1080,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
         RA.delete_grid();
     }
 
+    // quasi-orbitals, added by Yike Huang.
     if(GlobalV::qo_switch)
     {
         toQO tqo(GlobalV::qo_basis, GlobalV::qo_strategy, GlobalV::qo_thr, GlobalV::qo_screening_coeff);
@@ -1095,6 +1098,8 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
 template <typename TK, typename TR>
 bool ESolver_KS_LCAO<TK, TR>::do_after_converge(int& iter)
 {
+    TITLE("ESolver_KS_LCAO","do_after_converge");
+
 #ifdef __EXX
     if (GlobalC::exx_info.info_ri.real_number)
     {
@@ -1114,11 +1119,13 @@ bool ESolver_KS_LCAO<TK, TR>::do_after_converge(int& iter)
 				iter);
 	}
 #endif // __EXX
+
     if(GlobalV::dft_plus_u)
     {
         // use the converged occupation matrix for next MD/Relax SCF calculation
         GlobalC::dftu.initialed_locale = true;
     }
+
     return true;
 }
 
