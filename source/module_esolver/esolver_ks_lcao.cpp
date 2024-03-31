@@ -229,7 +229,8 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
     if (GlobalV::ocp)
     {
         this->pelec->fixed_weights(GlobalV::ocp_kb);
-    }
+	}
+	return;
 }
 
 
@@ -270,7 +271,8 @@ void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
                                                         &(this->pelec->f_en.etxc),
                                                         &(this->pelec->f_en.vtxc));
         }
-    }
+	}
+	return;
 }
 
 
@@ -431,6 +433,8 @@ void ESolver_KS_LCAO<TK, TR>::init_basis_lcao(
 		Input& inp, 
 		UnitCell& ucell)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "init_basis_lcao");
+
     // autoset NB2D first
     if (GlobalV::NB2D == 0)
     {
@@ -509,6 +513,8 @@ void ESolver_KS_LCAO<TK, TR>::init_basis_lcao(
         this->orb_con.setup_2d_division(GlobalV::ofs_running, GlobalV::ofs_warning);
         this->orb_con.ParaV.set_atomic_trace(GlobalC::ucell.get_iat2iwt(), GlobalC::ucell.nat, GlobalV::NLOCAL);
     }
+
+    return;
 }
 
 
@@ -656,6 +662,8 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(const int istep, const int iter)
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::hamilt2density(int istep, int iter, double ethr)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "hamilt2density");
+
     // save input rho
     this->pelec->charge->save_rho_before_sum_band();
     // save density matrix for mixing
@@ -767,6 +775,8 @@ void ESolver_KS_LCAO<TK, TR>::hamilt2density(int istep, int iter, double ethr)
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::update_pot(const int istep, const int iter)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "update_pot");
+
     // print Hamiltonian and Overlap matrix
     if (this->conv_elec)
     {
@@ -863,6 +873,8 @@ void ESolver_KS_LCAO<TK, TR>::update_pot(const int istep, const int iter)
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::iter_finish(int iter)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "iter_finish");
+
     // mix density matrix
     if (GlobalV::MIXING_RESTART > 0 && iter >= this->p_chgmix->mixing_restart && GlobalV::MIXING_DMR )
     {
@@ -941,6 +953,8 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(int iter)
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "after_scf");
+
     // save charge difference into files for charge extrapolation
     if (GlobalV::CALCULATION != "scf")
     {
@@ -1063,6 +1077,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
     {
         RA.delete_grid();
     }
+
     if(GlobalV::qo_switch)
     {
         toQO tqo(GlobalV::qo_basis, GlobalV::qo_strategy, GlobalV::qo_thr, GlobalV::qo_screening_coeff);
@@ -1138,17 +1153,17 @@ ModuleIO::Output_DM1 ESolver_KS_LCAO<TK, TR>::create_Output_DM1(int istep)
 template <typename TK, typename TR>
 ModuleIO::Output_Mat_Sparse<TK> ESolver_KS_LCAO<TK, TR>::create_Output_Mat_Sparse(int istep)
 {
-        return ModuleIO::Output_Mat_Sparse<TK>(hsolver::HSolverLCAO<TK>::out_mat_hsR,
-            hsolver::HSolverLCAO<TK>::out_mat_dh,
-            hsolver::HSolverLCAO<TK>::out_mat_t,
-            INPUT.out_mat_r,
-            istep,
-            this->pelec->pot->get_effective_v(),
-            *this->LOWF.ParaV,
-            this->UHM,
-            this->LM,
-            this->kv,
-            this->p_hamilt);
+	return ModuleIO::Output_Mat_Sparse<TK>(hsolver::HSolverLCAO<TK>::out_mat_hsR,
+			hsolver::HSolverLCAO<TK>::out_mat_dh,
+			hsolver::HSolverLCAO<TK>::out_mat_t,
+			INPUT.out_mat_r,
+			istep,
+			this->pelec->pot->get_effective_v(),
+			*this->LOWF.ParaV,
+			this->UHM,
+			this->LM,
+			this->kv,
+			this->p_hamilt);
 }
 
 
