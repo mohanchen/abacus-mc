@@ -532,7 +532,7 @@ void ESolver_KS<T, Device>::Run(const int istep, UnitCell& ucell)
 				this->conv_elec
 				);
 #endif //__RAPIDJSON 
-		afterscf(istep);
+		after_scf(istep);
 		ModuleBase::timer::tick(this->classname, "Run");
 	} 
 

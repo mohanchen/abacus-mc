@@ -434,7 +434,7 @@ void ESolver_KS_LCAO_TDDFT::updatepot(const int istep, const int iter)
 }
 
 
-void ESolver_KS_LCAO_TDDFT::afterscf(const int istep)
+void ESolver_KS_LCAO_TDDFT::after_scf(const int istep)
 {
     for (int is = 0; is < GlobalV::NSPIN; is++)
     {
@@ -457,7 +457,7 @@ void ESolver_KS_LCAO_TDDFT::afterscf(const int istep)
                         this->RA,
                         this->UHM);
     }
-    ESolver_KS_LCAO<std::complex<double>, double>::afterscf(istep);
+    ESolver_KS_LCAO<std::complex<double>, double>::after_scf(istep);
 }
 
 // use the original formula (Hamiltonian matrix) to calculate energy density matrix

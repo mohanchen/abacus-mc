@@ -966,7 +966,7 @@ void ESolver_KS_PW<T, Device>::eachiterfinish(const int iter)
 
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::afterscf(const int istep)
+void ESolver_KS_PW<T, Device>::after_scf(const int istep)
 {
     this->create_Output_Potential(istep).write();
 

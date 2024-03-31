@@ -929,7 +929,7 @@ void ESolver_KS_LCAO<TK, TR>::eachiterfinish(int iter)
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::afterscf(const int istep)
+void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
 {
     // save charge difference into files for charge extrapolation
     if (GlobalV::CALCULATION != "scf")

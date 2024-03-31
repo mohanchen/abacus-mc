@@ -27,22 +27,35 @@ namespace ModuleESolver
         ~ESolver_KS_LCAO();
 
         void Init(Input& inp, UnitCell& cell) override;
+
         void init_after_vc(Input& inp, UnitCell& cell) override;
 
         double cal_Energy() override;
+
         void cal_Force(ModuleBase::matrix& force) override;
+
         void cal_Stress(ModuleBase::matrix& stress) override;
+
         void postprocess() override;
+
         void nscf() override;
+
         void get_S();
 
     protected:
+
         virtual void before_scf(const int istep) override;
+
         virtual void eachiterinit(const int istep, const int iter) override;
+
         virtual void hamilt2density(const int istep, const int iter, const double ethr) override;
+
         virtual void updatepot(const int istep, const int iter) override;
+
         virtual void eachiterfinish(const int iter) override;
-        virtual void afterscf(const int istep) override;
+
+        virtual void after_scf(const int istep) override;
+
         virtual bool do_after_converge(int& iter) override;
 
         virtual void othercalculation(const int istep)override;

@@ -126,7 +126,7 @@ void ESolver_SDFT_PW::eachiterfinish(int iter)
 }
 
 
-void ESolver_SDFT_PW::afterscf(const int istep)
+void ESolver_SDFT_PW::after_scf(const int istep)
 {
     // save charge difference into files for charge extrapolation
     if (GlobalV::CALCULATION != "scf")

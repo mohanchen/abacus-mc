@@ -64,7 +64,7 @@ class ESolver_KS : public ESolver_FP
 		virtual void eachiterfinish(const int iter) {};
 
 		//! Something to do after SCF iterations when SCF is converged or comes to the max iter step.
-		virtual void afterscf(const int istep) {};
+		virtual void after_scf(const int istep) {};
 
 		//! <Temporary> It should be replaced by a function in Hamilt Class
 		virtual void updatepot(const int istep, const int iter) {};
