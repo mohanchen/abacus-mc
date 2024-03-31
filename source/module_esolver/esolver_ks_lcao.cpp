@@ -665,7 +665,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(const int istep, const int iter)
         // update Gint_K
         if (!GlobalV::GAMMA_ONLY_LOCAL)
         {
-            this->UHM.GK.renew();
+            this->GK.renew();
         }
         // update real space Hamiltonian
         this->p_hamilt->refresh();
@@ -803,7 +803,7 @@ void ESolver_KS_LCAO<TK, TR>::update_pot(const int istep, const int iter)
     {
         if (!GlobalV::GAMMA_ONLY_LOCAL && hsolver::HSolverLCAO<TK>::out_mat_hs[0])
         {
-            this->UHM.GK.renew(true);
+            this->GK.renew(true);
         }
         for (int ik = 0; ik < this->kv.nks; ++ik)
         {
@@ -1016,9 +1016,24 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
     bool out_exc = true;    // tmp, add parameter!
     if (GlobalV::out_mat_xc)
     {
-        ModuleIO::write_Vxc<TK, TR>(GlobalV::NSPIN, GlobalV::NLOCAL, GlobalV::DRANK,
-            *this->psi, GlobalC::ucell, this->sf, *this->pw_rho, *this->pw_rhod, GlobalC::ppcell.vloc,
-            *this->pelec->charge, this->UHM, this->LM, this->LOC, this->kv, this->pelec->wg, GlobalC::GridD);
+		ModuleIO::write_Vxc<TK, TR>(
+				GlobalV::NSPIN, 
+				GlobalV::NLOCAL, 
+				GlobalV::DRANK,
+				*this->psi, 
+				GlobalC::ucell, 
+				this->sf, 
+				*this->pw_rho, 
+				*this->pw_rhod, 
+				GlobalC::ppcell.vloc,
+				*this->pelec->charge, 
+				this->GG,
+				this->GK,
+				this->LM, 
+				this->LOC, 
+				this->kv, 
+				this->pelec->wg, 
+				GlobalC::GridD);
     }
 
 #ifdef __EXX

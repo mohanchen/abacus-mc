@@ -3,6 +3,7 @@
 #include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/op_dftu_lcao.h"
 #include "module_base/scalapack_connector.h"
 #include "module_base/parallel_reduce.h"
+
 template <typename T> struct TGint;
 
 template <>
@@ -19,8 +20,22 @@ struct TGint<std::complex<double>> {
 namespace ModuleIO
 {
 
-    inline void gint_vl(Gint_Gamma& gg, Gint_inout& io, LCAO_Matrix& lm) { gg.cal_vlocal(&io, &lm, false); };
-    inline void gint_vl(Gint_k& gk, Gint_inout& io, LCAO_Matrix& lm, ModuleBase::matrix& wg) { gk.cal_gint(&io); };
+    inline void gint_vl(
+			Gint_Gamma& gg, 
+			Gint_inout& io, 
+			LCAO_Matrix& lm) 
+	{ 
+		gg.cal_vlocal(&io, &lm, false); 
+	};
+
+	inline void gint_vl(
+			Gint_k& gk, 
+			Gint_inout& io, 
+			LCAO_Matrix& lm, 
+			ModuleBase::matrix& wg) 
+	{ 
+		gk.cal_gint(&io); 
+	};
 
     void set_para2d_MO(const Parallel_Orbitals& pv, const int nbands, Parallel_2D& p2d)
     {
@@ -57,16 +72,20 @@ namespace ModuleIO
         const std::complex<double> beta(0.0, 0.0);
 #ifdef __MPI
         const int i1 = 1;
-        pzgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &i1, &i1, pv.desc, c, &i1, &i1, pv.desc_wfc, &beta, Vc.data(), &i1, &i1, pv.desc_wfc);
+        pzgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &i1, 
+        &i1, pv.desc, c, &i1, &i1, pv.desc_wfc, &beta, Vc.data(), &i1, &i1, pv.desc_wfc);
 #else
-        zgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &nbasis, c, &nbasis, &beta, Vc.data(), &nbasis);
+        zgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &nbasis, 
+        c, &nbasis, &beta, Vc.data(), &nbasis);
 #endif
         std::vector<std::complex<double>> cVc(p2d.nloc, 0.0);
         transa = 'C';
 #ifdef __MPI
-        pzgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, &i1, &i1, pv.desc_wfc, Vc.data(), &i1, &i1, pv.desc_wfc, &beta, cVc.data(), &i1, &i1, p2d.desc);
+        pzgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, &i1, &i1, 
+        pv.desc_wfc, Vc.data(), &i1, &i1, pv.desc_wfc, &beta, cVc.data(), &i1, &i1, p2d.desc);
 #else
-        zgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, &nbasis, Vc.data(), &nbasis, &beta, cVc.data(), &nbasis);
+        zgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, &nbasis, 
+        Vc.data(), &nbasis, &beta, cVc.data(), &nbasis);
 #endif
         return cVc;
     }
@@ -86,21 +105,26 @@ namespace ModuleIO
         const double beta = 0.0;
 #ifdef __MPI
         const int i1 = 1;
-        pdgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &i1, &i1, pv.desc, c, &i1, &i1, pv.desc_wfc, &beta, Vc.data(), &i1, &i1, pv.desc_wfc);
+        pdgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &i1, 
+        &i1, pv.desc, c, &i1, &i1, pv.desc_wfc, &beta, Vc.data(), &i1, &i1, pv.desc_wfc);
 #else
-        dgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &nbasis, c, &nbasis, &beta, Vc.data(), &nbasis);
+        dgemm_(&transa, &transb, &nbasis, &nbands, &nbasis, &alpha, V, &nbasis, 
+        c, &nbasis, &beta, Vc.data(), &nbasis);
 #endif
         std::vector<double> cVc(p2d.nloc, 0.0);
         transa = 'T';
 #ifdef __MPI
-        pdgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, &i1, &i1, pv.desc_wfc, Vc.data(), &i1, &i1, pv.desc_wfc, &beta, cVc.data(), &i1, &i1, p2d.desc);
+        pdgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, &i1, &i1, 
+        pv.desc_wfc, Vc.data(), &i1, &i1, pv.desc_wfc, &beta, cVc.data(), &i1, &i1, p2d.desc);
 #else
-        dgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, &nbasis, Vc.data(), &nbasis, &beta, cVc.data(), &nbasis);
+        dgemm_(&transa, &transb, &nbands, &nbands, &nbasis, &alpha, c, 
+        &nbasis, Vc.data(), &nbasis, &beta, cVc.data(), &nbasis);
 #endif
         return cVc;
     }
 
     inline double get_real(const std::complex<double>& c) { return c.real(); }
+
     inline double get_real(const double& d) { return d; }
 
     template<typename T>
@@ -125,19 +149,31 @@ namespace ModuleIO
         return e;
     }
 
+    // mohan update 2024-04-01
     template <typename T>
-    void set_gint_pointer(LCAO_Hamilt& uhm, typename TGint<T>::type*& gint);
+	void set_gint_pointer(
+				Gint_Gamma &gint_gamma,
+                Gint_k &gint_k, 
+				typename TGint<T>::type*& gint);
 
-    template <>
-    void set_gint_pointer<double>(LCAO_Hamilt& uhm, typename TGint<double>::type*& gint)
-    {
-        gint = &uhm.GG;
+    // mohan update 2024-04-01
+	template <>
+	void set_gint_pointer<double>(
+				Gint_Gamma &gint_gamma,
+                Gint_k &gint_k, 
+				typename TGint<double>::type*& gint)
+	{
+        gint = &gint_gamma;
     }
 
+    // mohan update 2024-04-01
     template <>
-    void set_gint_pointer<std::complex<double>>(LCAO_Hamilt& uhm, typename TGint<std::complex<double>>::type*& gint)
+    void set_gint_pointer<std::complex<double>>(
+				Gint_Gamma &gint_gamma,
+                Gint_k &gint_k, 
+			    typename TGint<std::complex<double>>::type*& gint)
     {
-        gint = &uhm.GK;
+        gint = &gint_k;
     }
 
     /// @brief  write the Vxc matrix in KS orbital representation, usefull for GW calculation
@@ -154,7 +190,8 @@ namespace ModuleIO
 			const ModulePW::PW_Basis& rhod_basis, 
 			const ModuleBase::matrix& vloc,
 			const Charge& chg, 
-			LCAO_Hamilt& uhm, 
+            Gint_Gamma &gint_gamma, // mohan add 2024-04-01
+            Gint_k &gint_k, // mohan add 2024-04-01
 			LCAO_Matrix& lm, 
 			Local_Orbital_Charge& loc,
 			const K_Vectors& kv, 
@@ -186,7 +223,9 @@ namespace ModuleIO
         // 3. allocate operators and contribute HR
         // op (corresponding to hR)
         typename TGint<TK>::type* gint = nullptr;
-        set_gint_pointer<TK>(uhm, gint);
+
+        set_gint_pointer<TK>(gint_gamma, gint_k, gint);
+
         std::vector<hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>*> vxcs_op_ao(nspin0);
         for (int is = 0;is < nspin0;++is)
         {
