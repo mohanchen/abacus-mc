@@ -4,10 +4,13 @@
 #include "module_base/global_function.h"
 #include "module_base/global_variable.h"
 #include "LCAO_gen_fixedH.h"
-#include "module_hamilt_lcao/module_gint/gint_gamma.h"
-#include "module_hamilt_lcao/module_gint/gint_k.h"
 #include "module_hamilt_lcao/module_hcontainer/hcontainer.h"
 #include "module_hamilt_general/hamilt.h"
+#include "module_hamilt_lcao/module_gint/grid_technique.h"
+
+#include "module_hamilt_lcao/module_gint/gint_gamma.h"
+#include "module_hamilt_lcao/module_gint/gint_k.h"
+
 
 #ifdef __EXX
 #include <RI/global/Tensor.h>
@@ -21,7 +24,12 @@ class LCAO_Hamilt
 
     ~LCAO_Hamilt();
 
-    void grid_prepare(const Grid_Technique& gt, const ModulePW::PW_Basis& rhopw, const ModulePW::PW_Basis_Big& bigpw);
+	void grid_prepare(
+			const Grid_Technique& gt, 
+			Gint_Gamma &gint_gamma,
+			Gint_k &gint_k,
+			const ModulePW::PW_Basis& rhopw, 
+			const ModulePW::PW_Basis_Big& bigpw);
 
     // jingan add 2021-6-4
     void set_R_range_sparse();
@@ -73,12 +81,6 @@ class LCAO_Hamilt
     void cal_dH_sparse(const int &current_spin, const double &sparse_threshold);
 
     void destroy_dH_R_sparse(void);
-
-    // used for gamma only algorithms.
-    Gint_Gamma GG;
-
-    // used for k-dependent grid integration.
-    Gint_k GK;
 
     // use overlap matrix to generate fixed Hamiltonian
     LCAO_gen_fixedH genH;
