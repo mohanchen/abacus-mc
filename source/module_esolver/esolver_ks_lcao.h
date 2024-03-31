@@ -26,17 +26,17 @@ namespace ModuleESolver
         ESolver_KS_LCAO();
         ~ESolver_KS_LCAO();
 
-        void Init(Input& inp, UnitCell& cell) override;
+        void init(Input& inp, UnitCell& cell) override;
 
         void init_after_vc(Input& inp, UnitCell& cell) override;
 
-        double cal_Energy() override;
+        double cal_energy() override;
 
-        void cal_Force(ModuleBase::matrix& force) override;
+        void cal_force(ModuleBase::matrix& force) override;
 
-        void cal_Stress(ModuleBase::matrix& stress) override;
+        void cal_stress(ModuleBase::matrix& stress) override;
 
-        void postprocess() override;
+        void post_process() override;
 
         void nscf() override;
 
@@ -58,7 +58,7 @@ namespace ModuleESolver
 
         virtual bool do_after_converge(int& iter) override;
 
-        virtual void othercalculation(const int istep)override;
+        virtual void others(const int istep)override;
 
         // we will get rid of this class soon, don't use it, mohan 2024-03-28
         ORB_control orb_con;    //Basis_LCAO
@@ -124,8 +124,5 @@ namespace ModuleESolver
 #endif
 
     };
-
-
-
 }
 #endif

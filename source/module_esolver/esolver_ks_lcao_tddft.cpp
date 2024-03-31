@@ -62,9 +62,9 @@ ESolver_KS_LCAO_TDDFT::~ESolver_KS_LCAO_TDDFT()
     }
 }
 
-void ESolver_KS_LCAO_TDDFT::Init(Input& inp, UnitCell& ucell)
+void ESolver_KS_LCAO_TDDFT::init(Input& inp, UnitCell& ucell)
 {
-    ESolver_KS::Init(inp, ucell);
+    ESolver_KS::init(inp, ucell);
 
     // Initialize the FFT.
     // this function belongs to cell LOOP
@@ -459,6 +459,7 @@ void ESolver_KS_LCAO_TDDFT::after_scf(const int istep)
     }
     ESolver_KS_LCAO<std::complex<double>, double>::after_scf(istep);
 }
+
 
 // use the original formula (Hamiltonian matrix) to calculate energy density matrix
 void ESolver_KS_LCAO_TDDFT::cal_edm_tddft(void)

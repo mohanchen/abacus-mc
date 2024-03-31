@@ -105,6 +105,8 @@ ESolver_KS_PW<T, Device>::~ESolver_KS_PW()
     }
     delete this->psi;
 }
+
+
 template <typename T, typename Device>
 void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
 {
@@ -217,9 +219,9 @@ void ESolver_KS_PW<T, Device>::Init_GlobalC(Input& inp, UnitCell& cell)
 
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::Init(Input& inp, UnitCell& ucell)
+void ESolver_KS_PW<T, Device>::init(Input& inp, UnitCell& ucell)
 {
-    ESolver_KS<T, Device>::Init(inp, ucell);
+    ESolver_KS<T, Device>::init(inp, ucell);
 
     // init HSolver
     if (this->phsol == nullptr)
@@ -433,6 +435,7 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
     ModuleBase::timer::tick("ESolver_KS_PW", "init_after_vc");
 }
 
+
 template <typename T, typename Device>
 void ESolver_KS_PW<T, Device>::before_scf(int istep)
 {
@@ -538,10 +541,10 @@ void ESolver_KS_PW<T, Device>::before_scf(int istep)
 
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::othercalculation(const int istep)
+void ESolver_KS_PW<T, Device>::others(const int istep)
 {
-    ModuleBase::TITLE("ESolver_KS_PW", "othercalculation");
-    ModuleBase::timer::tick("ESolver_KS_PW", "othercalculation");
+    ModuleBase::TITLE("ESolver_KS_PW", "others");
+    ModuleBase::timer::tick("ESolver_KS_PW", "others");
     if (GlobalV::CALCULATION == "test_memory")
     {
         Cal_Test::test_memory(this->pw_rho,
@@ -571,10 +574,10 @@ void ESolver_KS_PW<T, Device>::othercalculation(const int istep)
     }
     else
     {
-        ModuleBase::WARNING_QUIT("ESolver_KS_LCAO::othercalculation", "CALCULATION type not supported");
+        ModuleBase::WARNING_QUIT("ESolver_KS_PW::others", "CALCULATION type not supported");
     }
 
-    ModuleBase::timer::tick("ESolver_KS_PW", "othercalculation");
+    ModuleBase::timer::tick("ESolver_KS_PW", "others");
     return;
 }
 
@@ -1075,19 +1078,22 @@ void ESolver_KS_PW<T, Device>::after_scf(const int istep)
 
 
 template <typename T, typename Device>
-double ESolver_KS_PW<T, Device>::cal_Energy()
+double ESolver_KS_PW<T, Device>::cal_energy()
 {
     return this->pelec->f_en.etot;
 }
 
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::cal_Force(ModuleBase::matrix& force)
+void ESolver_KS_PW<T, Device>::cal_force(ModuleBase::matrix& force)
 {
     Forces<double, Device> ff(GlobalC::ucell.nat);
-    if (this->__kspw_psi != nullptr)
-        this->__kspw_psi = nullptr;
-    if (this->__kspw_psi == nullptr)
+	if (this->__kspw_psi != nullptr)
+	{
+		this->__kspw_psi = nullptr;
+	}
+
+	if (this->__kspw_psi == nullptr)
     {
         this->__kspw_psi = GlobalV::precision_flag == "single"
                                ? new psi::Psi<std::complex<double>, Device>(this->kspw_psi[0])
@@ -1107,11 +1113,14 @@ void ESolver_KS_PW<T, Device>::cal_Force(ModuleBase::matrix& force)
 
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::cal_Stress(ModuleBase::matrix& stress)
+void ESolver_KS_PW<T, Device>::cal_stress(ModuleBase::matrix& stress)
 {
     Stress_PW<double, Device> ss(this->pelec);
     if (this->__kspw_psi != nullptr)
+    {
         this->__kspw_psi = nullptr;
+    }
+
     if (this->__kspw_psi == nullptr)
     {
 		this->__kspw_psi = GlobalV::precision_flag == "single"
@@ -1141,7 +1150,7 @@ void ESolver_KS_PW<T, Device>::cal_Stress(ModuleBase::matrix& stress)
 
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::postprocess(void)
+void ESolver_KS_PW<T, Device>::post_process(void)
 {
 
     GlobalV::ofs_running << "\n\n --------------------------------------------" << std::endl;

@@ -68,8 +68,6 @@ ESolver_KS_LCAO<TK, TR>::ESolver_KS_LCAO()
 }
 
 
-
-
 template <typename TK, typename TR>
 ESolver_KS_LCAO<TK, TR>::~ESolver_KS_LCAO()
 {
@@ -80,9 +78,9 @@ ESolver_KS_LCAO<TK, TR>::~ESolver_KS_LCAO()
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::Init(Input& inp, UnitCell& ucell)
+void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
 {
-    ModuleBase::TITLE("ESolver_KS_LCAO", "Init");
+    ModuleBase::TITLE("ESolver_KS_LCAO", "init");
     // if we are only calculating S, then there is no need
     // to prepare for potentials and so on
 
@@ -104,7 +102,7 @@ void ESolver_KS_LCAO<TK, TR>::Init(Input& inp, UnitCell& ucell)
     }
     else
     {
-        ESolver_KS<TK>::Init(inp, ucell);
+        ESolver_KS<TK>::init(inp, ucell);
     } // end ifnot get_S
 
     // init ElecState
@@ -235,6 +233,7 @@ void ESolver_KS_LCAO<TK, TR>::Init(Input& inp, UnitCell& ucell)
     }
 }
 
+
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
 {
@@ -275,14 +274,14 @@ void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
 
 
 template <typename TK, typename TR>
-double ESolver_KS_LCAO<TK, TR>::cal_Energy()
+double ESolver_KS_LCAO<TK, TR>::cal_energy()
 {
     return this->pelec->f_en.etot;
 }
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::cal_Force(ModuleBase::matrix& force)
+void ESolver_KS_LCAO<TK, TR>::cal_force(ModuleBase::matrix& force)
 {
 	Force_Stress_LCAO<TK> FSL(this->RA, GlobalC::ucell.nat);
 	FSL.getForceStress(GlobalV::CAL_FORCE,
@@ -304,7 +303,7 @@ void ESolver_KS_LCAO<TK, TR>::cal_Force(ModuleBase::matrix& force)
 #endif  
 			& GlobalC::ucell.symm);
 
-	// delete RA after cal_Force
+	// delete RA after cal_force
 
 	this->RA.delete_grid();
 
@@ -313,12 +312,12 @@ void ESolver_KS_LCAO<TK, TR>::cal_Force(ModuleBase::matrix& force)
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::cal_Stress(ModuleBase::matrix& stress)
+void ESolver_KS_LCAO<TK, TR>::cal_stress(ModuleBase::matrix& stress)
 {
     if (!this->have_force)
     {
         ModuleBase::matrix fcs;
-        this->cal_Force(fcs);
+        this->cal_force(fcs);
     }
     stress = this->scs; // copy the stress
     this->have_force = false;
@@ -326,7 +325,7 @@ void ESolver_KS_LCAO<TK, TR>::cal_Stress(ModuleBase::matrix& stress)
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::postprocess()
+void ESolver_KS_LCAO<TK, TR>::post_process(void)
 {
     GlobalV::ofs_running << "\n\n --------------------------------------------" << std::endl;
     GlobalV::ofs_running << std::setprecision(16);

@@ -16,13 +16,13 @@ class ESolver_SDFT_PW : public ESolver_KS_PW<std::complex<double>>
     ESolver_SDFT_PW();
     ~ESolver_SDFT_PW();
 
-    void Init(Input& inp, UnitCell& cell) override;
+    void init(Input& inp, UnitCell& cell) override;
 
-    double cal_Energy() override;
+    double cal_energy() override;
 
-    void cal_Force(ModuleBase::matrix& force) override;
+    void cal_force(ModuleBase::matrix& force) override;
 
-    void cal_Stress(ModuleBase::matrix& stress) override;
+    void cal_stress(ModuleBase::matrix& stress) override;
 
   public:
 
@@ -35,13 +35,13 @@ class ESolver_SDFT_PW : public ESolver_KS_PW<std::complex<double>>
 
     virtual void nscf() override;
 
-    virtual void othercalculation(const int istep) override;
+    virtual void others(const int istep) override;
 
     virtual void iter_finish(const int iter) override;
 
     virtual void after_scf(const int istep) override;
 
-    virtual void postprocess() override;
+    virtual void post_process() override;
 
   public:
     /**

@@ -32,17 +32,22 @@ class ESolver_KS : public ESolver_FP
 		virtual ~ESolver_KS();
 
 		double scf_thr;   // scf threshold
+
 		double drho;      // the difference between rho_in (before HSolver) and rho_out (After HSolver)
+
 		int maxniter;     // maximum iter steps for scf
+
 		int niter;        // iter steps actually used in scf
+
 		bool conv_elec;   // If electron density is converged in scf.
+
 		int out_freq_elec;// frequency for output
 
-		virtual void Init(Input& inp, UnitCell& cell) override;
+		virtual void init(Input& inp, UnitCell& cell) override;
 
 		virtual void init_after_vc(Input& inp, UnitCell& cell) override;    // liuyu add 2023-03-09
 
-		virtual void Run(const int istep, UnitCell& cell) override;
+		virtual void run(const int istep, UnitCell& cell) override;
 
 		// calculate electron density from a specific Hamiltonian
 		virtual void hamilt2density(const int istep, const int iter, const double ethr);
@@ -76,19 +81,27 @@ class ESolver_KS : public ESolver_FP
 
 		// Print the headline on the screen:
 		// ITER   ETOT(eV)       EDIFF(eV)      DRHO    TIME(s) 
-		void printhead();
+		void print_head();
 
 		// Print inforamtion in each iter
 		// G1    -3.435545e+03  0.000000e+00   3.607e-01  2.862e-01
 		// for metaGGA
 		// ITER   ETOT(eV)       EDIFF(eV)      DRHO       DKIN       TIME(s) 
 		// G1    -3.435545e+03  0.000000e+00   3.607e-01  3.522e-01  2.862e-01
-		void printiter(const int iter, const double drho, const double dkin, const double duration, const double ethr);
+		void print_iter(
+				const int iter, 
+				const double drho, 
+				const double dkin, 
+				const double duration, 
+				const double ethr);
 
 
 		// Write the headline in the running_log file
 		// "PW/LCAO" ALGORITHM --------------- ION=   1  ELEC=   1--------------------------------
-		void writehead(std::ofstream& ofs_running, const int istep, const int iter);
+		void write_head(
+				std::ofstream& ofs_running, 
+				const int istep, 
+				const int iter);
 
 		/// @brief create a new ModuleIO::Output_Rho object to output charge density
 		ModuleIO::Output_Rho create_Output_Rho(int is, int iter, const std::string& prefix="None");
@@ -98,8 +111,6 @@ class ESolver_KS : public ESolver_FP
 
 		/// @brief create a new ModuleIO::Output_Potential object to print potential
 		ModuleIO::Output_Potential create_Output_Potential(int iter, const std::string& prefix = "None");
-
-		// TODO: control single precision at input files
 
         //! Solve Hamitonian
 		hsolver::HSolver<T, Device>* phsol = nullptr;

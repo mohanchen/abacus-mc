@@ -28,15 +28,15 @@ class ESolver_KS_PW : public ESolver_KS<T, Device>
 
         ~ESolver_KS_PW();
 
-        void Init(Input& inp, UnitCell& cell) override;
+        void init(Input& inp, UnitCell& cell) override;
 
         void init_after_vc(Input& inp, UnitCell& cell) override;
 
-        double cal_Energy() override;
+        double cal_energy() override;
 
-        void cal_Force(ModuleBase::matrix& force) override;
+        void cal_force(ModuleBase::matrix& force) override;
 
-        void cal_Stress(ModuleBase::matrix& stress) override;
+        void cal_stress(ModuleBase::matrix& stress) override;
 
         virtual void hamilt2density(const int istep, const int iter, const double ethr) override;
 
@@ -44,7 +44,7 @@ class ESolver_KS_PW : public ESolver_KS<T, Device>
 
         virtual void nscf() override;
 
-        void postprocess() override;
+        void post_process() override;
 
         /**
          * @brief calculate Onsager coefficients Lmn(\omega) and conductivities with Kubo-Greenwood formula
@@ -98,7 +98,7 @@ class ESolver_KS_PW : public ESolver_KS<T, Device>
 
         virtual void after_scf(const int istep) override;
 
-        virtual void othercalculation(const int istep)override;
+        virtual void others(const int istep)override;
 
         //temporary, this will be removed in the future;
         //Init Global class
