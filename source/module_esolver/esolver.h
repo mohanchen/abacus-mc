@@ -9,8 +9,6 @@ namespace ModuleESolver
 {
 class ESolver
 {
-    // protected:
-    //     ModuleBase::matrix lattice_v;
   public:
     ESolver()
     {
@@ -62,7 +60,7 @@ class ESolver
  * 
  * @return [out] std::string The type of ESolver
  */
-std::string determine_type();
+std::string determine_type(void);
 
 /**
  * @brief Determine and initialize an ESolver based on input information.
