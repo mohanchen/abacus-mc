@@ -32,9 +32,9 @@ namespace ModuleESolver
 
         double cal_energy() override;
 
-        void cal_force(ModuleBase::matrix& force) override;
+        void cal_force(ModuleBase::matrix &force) override;
 
-        void cal_stress(ModuleBase::matrix& stress) override;
+        void cal_stress(ModuleBase::matrix &stress) override;
 
         void post_process() override;
 

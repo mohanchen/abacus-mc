@@ -300,12 +300,16 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(ModuleBase::matrix& force)
     ModuleBase::TITLE("ESolver_KS_LCAO", "cal_force");
     ModuleBase::timer::tick("ESolver_KS_LCAO", "cal_force");
 
-	Force_Stress_LCAO<TK> FSL(this->RA, GlobalC::ucell.nat);
-	FSL.getForceStress(GlobalV::CAL_FORCE,
+	Force_Stress_LCAO<TK> fsl(this->RA, GlobalC::ucell.nat);
+
+	fsl.getForceStress(
+            GlobalV::CAL_FORCE,
 			GlobalV::CAL_STRESS,
 			GlobalV::TEST_FORCE,
 			GlobalV::TEST_STRESS,
 			this->LOC,
+            this->orb_con.ParaV, 
+            this->LM,
 			this->pelec,
 			this->psi,
 			this->UHM,
