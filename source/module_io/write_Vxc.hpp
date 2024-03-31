@@ -4,16 +4,21 @@
 #include "module_base/scalapack_connector.h"
 #include "module_base/parallel_reduce.h"
 template <typename T> struct TGint;
+
 template <>
 struct TGint<double> {
     using type = Gint_Gamma;
 };
+
 template <>
 struct TGint<std::complex<double>> {
     using type = Gint_k;
 };
+
+
 namespace ModuleIO
 {
+
     inline void gint_vl(Gint_Gamma& gg, Gint_inout& io, LCAO_Matrix& lm) { gg.cal_vlocal(&io, &lm, false); };
     inline void gint_vl(Gint_k& gk, Gint_inout& io, LCAO_Matrix& lm, ModuleBase::matrix& wg) { gk.cal_gint(&io); };
 
@@ -21,7 +26,7 @@ namespace ModuleIO
     {
         std::ofstream ofs;
 #ifdef __MPI
-        int dsize;
+        int dsize=0;
         MPI_Comm_size(MPI_COMM_WORLD, &dsize);
         p2d.set_block_size(pv.nb);
         p2d.set_proc_dim(dsize);
@@ -37,8 +42,14 @@ namespace ModuleIO
 #endif
     }
 
-    std::vector<std::complex<double>> cVc(std::complex<double>* V, std::complex<double>* c, int nbasis, int nbands, const Parallel_Orbitals& pv, const Parallel_2D& p2d)
-    {
+	std::vector<std::complex<double>> cVc(
+			std::complex<double>* V, 
+			std::complex<double>* c, 
+			int nbasis, 
+			int nbands, 
+			const Parallel_Orbitals& pv, 
+			const Parallel_2D& p2d)
+	{
         std::vector<std::complex<double>> Vc(pv.nloc_wfc, 0.0);
         char transa = 'N';
         char transb = 'N';
@@ -60,7 +71,13 @@ namespace ModuleIO
         return cVc;
     }
 
-    std::vector<double> cVc(double* V, double* c, int nbasis, int nbands, const Parallel_Orbitals& pv, const Parallel_2D& p2d)
+	std::vector<double> cVc(
+			double* V, 
+			double* c, 
+			int nbasis, 
+			int nbands, 
+			const Parallel_Orbitals& pv, 
+			const Parallel_2D& p2d)
     {
         std::vector<double> Vc(pv.nloc_wfc, 0.0);
         char transa = 'N';
@@ -87,13 +104,23 @@ namespace ModuleIO
     inline double get_real(const double& d) { return d; }
 
     template<typename T>
-    double all_band_energy(const int ik, const std::vector<T>& mat_mo, const Parallel_2D& p2d, const ModuleBase::matrix& wg)
+	double all_band_energy(
+				const int ik, 
+				const std::vector<T>& mat_mo, 
+				const Parallel_2D& p2d, 
+				const ModuleBase::matrix& wg)
     {
         double e = 0.0;
         for (int i = 0;i < p2d.get_row_size();++i)
-            for (int j = 0;j < p2d.get_col_size();++j)
-                if (p2d.local2global_row(i) == p2d.local2global_col(j))
-                    e += get_real(mat_mo[j * p2d.get_row_size() + i]) * wg(ik, p2d.local2global_row(i));
+		{
+			for (int j = 0;j < p2d.get_col_size();++j)
+			{
+				if (p2d.local2global_row(i) == p2d.local2global_col(j))
+				{
+					e += get_real(mat_mo[j * p2d.get_row_size() + i]) * wg(ik, p2d.local2global_row(i));
+				}
+			}
+		}
         Parallel_Reduce::reduce_all(e);
         return e;
     }
@@ -106,20 +133,33 @@ namespace ModuleIO
     {
         gint = &uhm.GG;
     }
+
     template <>
     void set_gint_pointer<std::complex<double>>(LCAO_Hamilt& uhm, typename TGint<std::complex<double>>::type*& gint)
     {
         gint = &uhm.GK;
     }
 
-
     /// @brief  write the Vxc matrix in KS orbital representation, usefull for GW calculation
     /// including terms: local/semi-local XC, EXX, DFTU
     template <typename TK, typename TR>
-    void write_Vxc(int nspin, int nbasis, int drank, const psi::Psi<TK>& psi, const UnitCell& ucell, Structure_Factor& sf,
-        const ModulePW::PW_Basis& rho_basis, const ModulePW::PW_Basis& rhod_basis, const ModuleBase::matrix& vloc,
-        const Charge& chg, LCAO_Hamilt& uhm, LCAO_Matrix& lm, Local_Orbital_Charge& loc,
-        const K_Vectors& kv, const ModuleBase::matrix& wg, Grid_Driver& gd)
+    void write_Vxc(
+			int nspin, 
+			int nbasis, 
+			int drank, 
+			const psi::Psi<TK>& psi, 
+			const UnitCell& ucell, 
+			Structure_Factor& sf,
+			const ModulePW::PW_Basis& rho_basis, 
+			const ModulePW::PW_Basis& rhod_basis, 
+			const ModuleBase::matrix& vloc,
+			const Charge& chg, 
+			LCAO_Hamilt& uhm, 
+			LCAO_Matrix& lm, 
+			Local_Orbital_Charge& loc,
+			const K_Vectors& kv, 
+			const ModuleBase::matrix& wg, 
+			Grid_Driver& gd)
     {
         ModuleBase::TITLE("ModuleIO", "write_Vxc");
         const Parallel_Orbitals* pv = lm.ParaV;
@@ -150,7 +190,18 @@ namespace ModuleIO
         std::vector<hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>*> vxcs_op_ao(nspin0);
         for (int is = 0;is < nspin0;++is)
         {
-            vxcs_op_ao[is] = new hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>(gint, &loc, &lm, kv.kvec_d, potxc, &vxcs_R_ao[is], &vxc_k_ao, &ucell, &gd, pv);
+            vxcs_op_ao[is] = new hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>(
+					gint, 
+					&loc, 
+					&lm, 
+					kv.kvec_d, 
+					potxc, 
+					&vxcs_R_ao[is], 
+					&vxc_k_ao, 
+					&ucell, 
+					&gd, 
+					pv);
+
             GlobalV::CURRENT_SPIN = is; //caution: Veff::contributeHR depends on GlobalV::CURRENT_SPIN
             vxcs_op_ao[is]->contributeHR();
         }
@@ -177,7 +228,10 @@ namespace ModuleIO
             int is = GlobalV::CURRENT_SPIN = kv.isk[ik];
             dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(vxcs_op_ao[is])->contributeHk(ik);
 #ifdef __EXX
-            if (GlobalC::exx_info.info_global.cal_exx) vexx_op_ao.contributeHk(ik);
+			if (GlobalC::exx_info.info_global.cal_exx) 
+			{
+				vexx_op_ao.contributeHk(ik);
+			}
             // ======test=======
             // ModuleBase::GlobalFunc::ZEROS(test_vexxonly_k_ao.data(), pv->nloc);
             // if (GlobalC::exx_info.info_global.cal_exx) test_vexxonly_op_ao.contributeHk(ik);
@@ -185,8 +239,11 @@ namespace ModuleIO
             // exx_energy += all_band_energy(ik, test_vexxonly_k_mo, p2d, wg);
             // ======test=======
 #endif
-            if (GlobalV::dft_plus_u) vdftu_op_ao.contributeHk(ik);
-            std::vector<TK> vxc_k_mo = cVc(vxc_k_ao.data(), &psi(ik, 0, 0), nbasis, nbands, *pv, p2d);
+			if (GlobalV::dft_plus_u) 
+			{
+				vdftu_op_ao.contributeHk(ik);
+			}
+			std::vector<TK> vxc_k_mo = cVc(vxc_k_ao.data(), &psi(ik, 0, 0), nbasis, nbands, *pv, p2d);
             // write
             ModuleIO::save_mat(-1, vxc_k_mo.data(), nbands,
                 false/*binary*/, GlobalV::out_ndigits, true/*triangle*/, false/*append*/,
@@ -204,6 +261,9 @@ namespace ModuleIO
         // std::cout << "exx_energy: " << 0.5 * exx_energy << std::endl;
         // ======test=======
         delete potxc;
-        for (int is = 0;is < nspin0;++is) delete vxcs_op_ao[is];
+		for (int is = 0;is < nspin0;++is) 
+		{
+			delete vxcs_op_ao[is];
+		}
     }
 }

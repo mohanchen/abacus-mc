@@ -78,7 +78,10 @@ class LCAO_Hamilt
 
     void destroy_TR_sparse(void);
 
-    void cal_dH_sparse(const int &current_spin, const double &sparse_threshold);
+	void cal_dH_sparse(
+			const int &current_spin, 
+			const double &sparse_threshold,
+			Gint_k &gint_k); // mohan add 2024-04-01
 
     void destroy_dH_R_sparse(void);
 

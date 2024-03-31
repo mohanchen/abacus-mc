@@ -354,7 +354,10 @@ void LCAO_Hamilt::cal_HSR_sparse(
     clear_zero_elements(current_spin, sparse_threshold);
 }
 
-void LCAO_Hamilt::cal_dH_sparse(const int &current_spin, const double &sparse_threshold)
+void LCAO_Hamilt::cal_dH_sparse(
+ const int &current_spin, 
+ const double &sparse_threshold,
+ Gint_k &gint_k)
 {
     ModuleBase::TITLE("LCAO_Hamilt","cal_dH_sparse");
 
@@ -388,7 +391,7 @@ void LCAO_Hamilt::cal_dH_sparse(const int &current_spin, const double &sparse_th
     delete[] this->LM->DHloc_fixedR_y;
     delete[] this->LM->DHloc_fixedR_z;
 
-    GK.cal_dvlocal_R_sparseMatrix(current_spin, sparse_threshold, this->LM);
+    gint_k.cal_dvlocal_R_sparseMatrix(current_spin, sparse_threshold, this->LM);
 }
 
 void LCAO_Hamilt::cal_STN_R_sparse_for_T(const double &sparse_threshold)
