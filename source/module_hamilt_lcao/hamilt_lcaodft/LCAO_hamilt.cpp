@@ -188,7 +188,11 @@ void LCAO_Hamilt::calculate_STN_R_sparse_for_S(const double &sparse_threshold)
 }
 
 #include "module_hamilt_lcao/module_hcontainer/hcontainer.h"
-void LCAO_Hamilt::calculate_HContainer_sparse_d(const int &current_spin, const double &sparse_threshold, const hamilt::HContainer<double>& hR, std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>>& target)
+void LCAO_Hamilt::calculate_HContainer_sparse_d(
+		const int &current_spin, 
+		const double &sparse_threshold, 
+		const hamilt::HContainer<double>& hR, 
+		std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>>& target)
 {
     ModuleBase::TITLE("LCAO_Hamilt","calculate_HContainer_sparse_d");
 
@@ -266,7 +270,11 @@ void LCAO_Hamilt::calculate_HContainer_sparse_cd(const int &current_spin, const 
     return;
 }
 
-void LCAO_Hamilt::calculate_HSR_sparse(const int &current_spin, const double &sparse_threshold, const int (&nmp)[3], hamilt::Hamilt<std::complex<double>>* p_ham)
+void LCAO_Hamilt::calculate_HSR_sparse(
+		const int &current_spin, 
+		const double &sparse_threshold, 
+		const int (&nmp)[3], 
+		hamilt::Hamilt<std::complex<double>>* p_ham)
 {
     ModuleBase::TITLE("LCAO_Hamilt","calculate_HSR_sparse");
 
@@ -275,15 +283,33 @@ void LCAO_Hamilt::calculate_HSR_sparse(const int &current_spin, const double &sp
     //calculate_STN_R_sparse(current_spin, sparse_threshold);
     if(GlobalV::NSPIN!=4)
     {
-        hamilt::HamiltLCAO<std::complex<double>, double>* p_ham_lcao = dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham);
-        this->calculate_HContainer_sparse_d(current_spin, sparse_threshold, *(p_ham_lcao->getHR()), this->LM->HR_sparse[current_spin]);
-        this->calculate_HContainer_sparse_d(current_spin, sparse_threshold, *(p_ham_lcao->getSR()), this->LM->SR_sparse);
+        hamilt::HamiltLCAO<std::complex<double>, double>* p_ham_lcao = 
+        dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham);
+
+		this->calculate_HContainer_sparse_d(current_spin, 
+				sparse_threshold, 
+				*(p_ham_lcao->getHR()), 
+				this->LM->HR_sparse[current_spin]);
+
+		this->calculate_HContainer_sparse_d(current_spin, 
+				sparse_threshold, 
+				*(p_ham_lcao->getSR()), 
+				this->LM->SR_sparse);
     }
     else
     {
-        hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>* p_ham_lcao = dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham);
-        this->calculate_HContainer_sparse_cd(current_spin, sparse_threshold, *(p_ham_lcao->getHR()), this->LM->HR_soc_sparse);
-        this->calculate_HContainer_sparse_cd(current_spin, sparse_threshold, *(p_ham_lcao->getSR()), this->LM->SR_soc_sparse);
+        hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>* p_ham_lcao = 
+        dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham);
+
+        this->calculate_HContainer_sparse_cd(current_spin, 
+        sparse_threshold, 
+        *(p_ham_lcao->getHR()), 
+        this->LM->HR_soc_sparse);
+
+        this->calculate_HContainer_sparse_cd(current_spin, 
+        sparse_threshold, 
+        *(p_ham_lcao->getSR()), 
+        this->LM->SR_soc_sparse);
     }
 
     // only old DFT+U method need to calculate extra contribution to HR
@@ -303,11 +329,15 @@ void LCAO_Hamilt::calculate_HSR_sparse(const int &current_spin, const double &sp
 #ifdef __MPI
     if( GlobalC::exx_info.info_global.cal_exx )
     {
-        if(GlobalC::exx_info.info_ri.real_number)
-            this->calculate_HR_exx_sparse(current_spin, sparse_threshold, nmp, *this->LM->Hexxd);
-        else
-            this->calculate_HR_exx_sparse(current_spin, sparse_threshold, nmp, *this->LM->Hexxc);
-    }
+		if(GlobalC::exx_info.info_ri.real_number)
+		{
+			this->calculate_HR_exx_sparse(current_spin, sparse_threshold, nmp, *this->LM->Hexxd);
+		}
+		else
+		{
+			this->calculate_HR_exx_sparse(current_spin, sparse_threshold, nmp, *this->LM->Hexxc);
+		}
+	}
 #endif // __MPI
 #endif // __EXX
 

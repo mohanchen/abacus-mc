@@ -1,4 +1,5 @@
 #include "esolver_ks_lcao.h"
+#include "module_base/tool_title.h"
 
 #include "module_base/global_variable.h"
 #include "module_io/dos_nao.h"
@@ -80,6 +81,8 @@ template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
 {
     ModuleBase::TITLE("ESolver_KS_LCAO", "init");
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "init");
+
     // if we are only calculating S, then there is no need
     // to prepare for potentials and so on
 
@@ -136,6 +139,7 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
 
     if (GlobalV::CALCULATION == "get_S")
     {
+        ModuleBase::timer::tick("ESolver_KS_LCAO", "init");
         return;
     }
 
@@ -230,6 +234,8 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
     {
         this->pelec->fixed_weights(GlobalV::ocp_kb);
 	}
+
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "init");
 	return;
 }
 
@@ -238,6 +244,7 @@ template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
 {
     ModuleBase::TITLE("ESolver_KS_LCAO", "init_after_vc");
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "init_after_vc");
 
 	ESolver_KS<TK>::init_after_vc(inp, ucell);
 
@@ -272,6 +279,8 @@ void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
                                                         &(this->pelec->f_en.vtxc));
         }
 	}
+
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "init_after_vc");
 	return;
 }
 
@@ -289,6 +298,7 @@ template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::cal_force(ModuleBase::matrix& force)
 {
     ModuleBase::TITLE("ESolver_KS_LCAO", "cal_force");
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "cal_force");
 
 	Force_Stress_LCAO<TK> FSL(this->RA, GlobalC::ucell.nat);
 	FSL.getForceStress(GlobalV::CAL_FORCE,
@@ -315,6 +325,8 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(ModuleBase::matrix& force)
 	this->RA.delete_grid();
 
 	this->have_force = true;
+
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "cal_force");
 }
 
 
@@ -322,6 +334,7 @@ template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::cal_stress(ModuleBase::matrix& stress)
 {
     ModuleBase::TITLE("ESolver_KS_LCAO", "cal_stress");
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "cal_stress");
 
     if (!this->have_force)
     {
@@ -330,6 +343,8 @@ void ESolver_KS_LCAO<TK, TR>::cal_stress(ModuleBase::matrix& stress)
     }
     stress = this->scs; // copy the stress
     this->have_force = false;
+
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "cal_stress");
 }
 
 
@@ -337,6 +352,7 @@ template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::post_process(void)
 {
     ModuleBase::TITLE("ESolver_KS_LCAO", "post_process");
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "post_process");
 
     GlobalV::ofs_running << "\n\n --------------------------------------------" << std::endl;
     GlobalV::ofs_running << std::setprecision(16);
@@ -424,6 +440,7 @@ void ESolver_KS_LCAO<TK, TR>::post_process(void)
 				GlobalV::NBANDS,
 				this->p_hamilt);
 	}
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "post_process");
 }
 
 
@@ -1098,7 +1115,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
 template <typename TK, typename TR>
 bool ESolver_KS_LCAO<TK, TR>::do_after_converge(int& iter)
 {
-    TITLE("ESolver_KS_LCAO","do_after_converge");
+    ModuleBase::TITLE("ESolver_KS_LCAO","do_after_converge");
 
 #ifdef __EXX
     if (GlobalC::exx_info.info_ri.real_number)
