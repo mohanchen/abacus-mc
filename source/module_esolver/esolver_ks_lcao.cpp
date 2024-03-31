@@ -21,7 +21,6 @@
 #include "module_hamilt_pw/hamilt_pwdft/global.h"
 #include "module_io/print_info.h"
 #ifdef __EXX
-// #include "module_rpa/rpa.h"
 #include "module_ri/RPA_LRI.h"
 #endif
 
@@ -123,7 +122,7 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
     // Init Basis should be put outside of Ensolver.
     // * reading the localized orbitals/projectors
     // * construct the interpolation tables.
-    this->Init_Basis_lcao(this->orb_con, inp, ucell);
+    this->init_basis_lcao(this->orb_con, inp, ucell);
     //------------------init Basis_lcao----------------------
 
     //! pass Hamilt-pointer to Operator
@@ -237,6 +236,8 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "init_after_vc");
+
 	ESolver_KS<TK>::init_after_vc(inp, ucell);
 
     if (GlobalV::md_prec_level == 2)
@@ -276,6 +277,8 @@ void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
 template <typename TK, typename TR>
 double ESolver_KS_LCAO<TK, TR>::cal_energy()
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "cal_energy");
+
     return this->pelec->f_en.etot;
 }
 
@@ -283,6 +286,8 @@ double ESolver_KS_LCAO<TK, TR>::cal_energy()
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::cal_force(ModuleBase::matrix& force)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "cal_force");
+
 	Force_Stress_LCAO<TK> FSL(this->RA, GlobalC::ucell.nat);
 	FSL.getForceStress(GlobalV::CAL_FORCE,
 			GlobalV::CAL_STRESS,
@@ -314,6 +319,8 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(ModuleBase::matrix& force)
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::cal_stress(ModuleBase::matrix& stress)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "cal_stress");
+
     if (!this->have_force)
     {
         ModuleBase::matrix fcs;
@@ -327,6 +334,8 @@ void ESolver_KS_LCAO<TK, TR>::cal_stress(ModuleBase::matrix& stress)
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::post_process(void)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "post_process");
+
     GlobalV::ofs_running << "\n\n --------------------------------------------" << std::endl;
     GlobalV::ofs_running << std::setprecision(16);
     GlobalV::ofs_running << " !FINAL_ETOT_IS " << this->pelec->f_en.etot * ModuleBase::Ry_to_eV << " eV" << std::endl;
@@ -417,7 +426,7 @@ void ESolver_KS_LCAO<TK, TR>::post_process(void)
 
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::Init_Basis_lcao(
+void ESolver_KS_LCAO<TK, TR>::init_basis_lcao(
 		ORB_control& orb_con, 
 		Input& inp, 
 		UnitCell& ucell)
@@ -506,6 +515,8 @@ void ESolver_KS_LCAO<TK, TR>::Init_Basis_lcao(
 template <typename TK, typename TR>
 void ESolver_KS_LCAO<TK, TR>::iter_init(const int istep, const int iter)
 {
+    ModuleBase::TITLE("ESolver_KS_LCAO", "iter_init");
+
     if (iter == 1)
     {
         this->p_chgmix->init_mixing(); // init mixing
