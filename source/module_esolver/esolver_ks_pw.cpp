@@ -434,9 +434,9 @@ void ESolver_KS_PW<T, Device>::init_after_vc(Input& inp, UnitCell& ucell)
 }
 
 template <typename T, typename Device>
-void ESolver_KS_PW<T, Device>::beforescf(int istep)
+void ESolver_KS_PW<T, Device>::before_scf(int istep)
 {
-    ModuleBase::TITLE("ESolver_KS_PW", "beforescf");
+    ModuleBase::TITLE("ESolver_KS_PW", "before_scf");
 
     if (GlobalC::ucell.cell_parameter_updated)
     {
@@ -523,7 +523,7 @@ void ESolver_KS_PW<T, Device>::beforescf(int istep)
     // before hamilt2density, we update Hk and initialize psi
     if(GlobalV::psi_initializer)
     {
-        // beforescf function will be called everytime before scf. However, once atomic coordinates changed,
+        // before_scf function will be called everytime before scf. However, once atomic coordinates changed,
         // structure factor will change, therefore all atomwise properties will change. So we need to reinitialize
         // psi every time before scf. But for random wavefunction, we dont, because random wavefunction is not
         // related to atomic coordinates.
@@ -804,7 +804,7 @@ void ESolver_KS_PW<T, Device>::hamilt2density(
         // before hamilt2density, we update Hk and initialize psi
         if(GlobalV::psi_initializer)
         {
-            // beforescf function will be called everytime before scf. However, once atomic coordinates changed,
+            // before_scf function will be called everytime before scf. However, once atomic coordinates changed,
             // structure factor will change, therefore all atomwise properties will change. So we need to reinitialize
             // psi every time before scf. But for random wavefunction, we dont, because random wavefunction is not
             // related to atomic coordinates.
@@ -1361,7 +1361,9 @@ void ESolver_KS_PW<T, Device>::nscf(void)
     ModuleBase::TITLE("ESolver_KS_PW", "nscf");
     ModuleBase::timer::tick("ESolver_KS_PW", "nscf");
 
-    this->beforescf(0);
+    // mohan add istep_tmp 2024-03-31
+    const int istep_tmp = 0;
+    this->before_scf(istep_tmp);
 
     //! Setup the parameters for diagonalization
     double diag_ethr = GlobalV::PW_DIAG_THR;

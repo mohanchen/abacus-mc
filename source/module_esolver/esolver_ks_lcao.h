@@ -16,6 +16,7 @@
 #include "module_io/output_mat_sparse.h"
 #include "module_basis/module_nao/two_center_bundle.h"
 #include <memory>
+
 namespace ModuleESolver
 {
     template <typename TK, typename TR>
@@ -36,7 +37,7 @@ namespace ModuleESolver
         void get_S();
 
     protected:
-        virtual void beforescf(const int istep) override;
+        virtual void before_scf(const int istep) override;
         virtual void eachiterinit(const int istep, const int iter) override;
         virtual void hamilt2density(const int istep, const int iter, const double ethr) override;
         virtual void updatepot(const int istep, const int iter) override;

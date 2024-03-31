@@ -273,10 +273,10 @@ void ESolver_KS_LCAO<TK, TR>::beforesolver(const int istep)
 }
 
 template <typename TK, typename TR>
-void ESolver_KS_LCAO<TK, TR>::beforescf(int istep)
+void ESolver_KS_LCAO<TK, TR>::before_scf(int istep)
 {
-    ModuleBase::TITLE("ESolver_KS_LCAO", "beforescf");
-    ModuleBase::timer::tick("ESolver_KS_LCAO", "beforescf");
+    ModuleBase::TITLE("ESolver_KS_LCAO", "before_scf");
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "before_scf");
 
     if (GlobalC::ucell.cell_parameter_updated)
     {
@@ -335,7 +335,7 @@ void ESolver_KS_LCAO<TK, TR>::beforescf(int istep)
 
     this->p_hamilt->non_first_scf = istep;
 
-    ModuleBase::timer::tick("ESolver_KS_LCAO", "beforescf");
+    ModuleBase::timer::tick("ESolver_KS_LCAO", "before_scf");
     return;
 }
 

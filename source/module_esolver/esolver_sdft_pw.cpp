@@ -110,9 +110,9 @@ void ESolver_SDFT_PW::Init(Input& inp, UnitCell& ucell)
 }
 
 
-void ESolver_SDFT_PW::beforescf(const int istep)
+void ESolver_SDFT_PW::before_scf(const int istep)
 {
-    ESolver_KS_PW::beforescf(istep);
+    ESolver_KS_PW::before_scf(istep);
 	if (istep > 0 && INPUT.nbands_sto != 0 && INPUT.initsto_freq > 0 && istep % INPUT.initsto_freq == 0)
 	{
 		Update_Sto_Orbitals(this->stowf, INPUT.seed_sto);
@@ -369,7 +369,7 @@ void ESolver_SDFT_PW::nscf(void)
 
     std::cout << " DIGA_THR          : " << diag_thr << std::endl;
 
-    this->beforescf(istep);
+    this->before_scf(istep);
 
     this->hamilt2density(istep, iter, diag_thr);
 

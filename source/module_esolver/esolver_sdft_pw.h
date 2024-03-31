@@ -24,7 +24,7 @@ class ESolver_SDFT_PW : public ESolver_KS_PW<std::complex<double>>
     Stochastic_WF stowf;
 
   protected:
-    virtual void beforescf(const int istep) override;
+    virtual void before_scf(const int istep) override;
     // virtual void eachiterinit(int iter) override;
     virtual void hamilt2density(const int istep, const int iter, const double ethr) override;
     virtual void nscf() override;

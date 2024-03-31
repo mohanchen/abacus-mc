@@ -88,7 +88,7 @@ class ESolver_KS_PW : public ESolver_KS<T, Device>
 
       protected:
 
-        virtual void beforescf(const int istep) override;
+        virtual void before_scf(const int istep) override;
 
         virtual void eachiterinit(const int istep, const int iter) override;
 

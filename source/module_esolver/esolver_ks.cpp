@@ -381,7 +381,7 @@ void ESolver_KS<T, Device>::Run(const int istep, UnitCell& ucell)
 	{
 		ModuleBase::timer::tick(this->classname, "Run");
 
-		this->beforescf(istep); //Something else to do before the iter loop
+		this->before_scf(istep); //Something else to do before the iter loop
 		ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "INIT SCF");
 		if(this->maxniter > 0)  
 		{
