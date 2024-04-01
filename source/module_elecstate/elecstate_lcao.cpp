@@ -216,9 +216,13 @@ void ElecStateLCAO<double>::psiToRho(const psi::Psi<double>& psi)
     // calculate the charge density on real space grid.
     //------------------------------------------------------------
     ModuleBase::GlobalFunc::NOTE("Calculate the charge on real space grid!");
+
     this->gint_gamma->transfer_DM2DtoGrid(this->DM->get_DMR_vector()); // transfer DM2D to DM_grid in gint
+
     Gint_inout inout(this->loc->DM, this->charge->rho, Gint_Tools::job_type::rho);
+
     this->gint_gamma->cal_gint(&inout);
+
     if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
     {
         for (int is = 0; is < GlobalV::NSPIN; is++)

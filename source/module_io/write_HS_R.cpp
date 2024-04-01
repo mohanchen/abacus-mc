@@ -72,7 +72,9 @@ void ModuleIO::output_dH_R(const int& istep,
     gint_k.allocate_pvdpR();
     if(GlobalV::NSPIN==1||GlobalV::NSPIN==4)
     {
-        UHM.cal_dH_sparse(0, sparse_threshold);
+        // mohan add 2024-04-01
+        assert(GlobalV::CURRENT_SPIN==0);
+        UHM.cal_dH_sparse(GlobalV::CURRENT_SPIN, sparse_threshold, gint_k);
     }
     else if(GlobalV::NSPIN==2)
     {
@@ -97,7 +99,7 @@ void ModuleIO::output_dH_R(const int& istep,
                     }
                 }
 
-                UHM.cal_dH_sparse(GlobalV::CURRENT_SPIN, sparse_threshold);
+                UHM.cal_dH_sparse(GlobalV::CURRENT_SPIN, sparse_threshold, gint_k);
             }
         }
     }
