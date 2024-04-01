@@ -32,7 +32,7 @@ class LCAO_Hamilt
 			const ModulePW::PW_Basis_Big& bigpw);
 
     // jingan add 2021-6-4
-    void set_R_range_sparse();
+    void set_R_range_sparse(LCAO_Matrix &lm);
 
     void cal_HContainer_sparse_d(const int &current_spin, 
         const double &sparse_threshold, 
@@ -46,7 +46,14 @@ class LCAO_Hamilt
 
     void cal_dSTN_R_sparse(const int &current_spin, const double &sparse_threshold);
 
-    void cal_STN_R_sparse_for_S(const double &sparse_threshold);
+    // mohan update 2024-04-01
+	void cal_STN_R_sparse_for_S(
+			const Parallel_Orbitals pv,
+			std::vector<double> &slocR,
+			std::vector<std::complex<double>> &slocR_soc,
+			std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> &SR_sparse,
+			std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> &SR_soc_sparse,
+			const double &sparse_threshold);
 
     void cal_STN_R_sparse_for_T(const double &sparse_threshold);
 
