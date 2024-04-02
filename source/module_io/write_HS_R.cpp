@@ -3,6 +3,9 @@
 #include "module_base/timer.h"
 #include "write_HS_sparse.h"
 
+#include "module_hamilt_lcao/hamilt_lcaodft/sparse_format.h"
+
+
 // if 'binary=true', output binary file.
 // The 'sparse_threshold' is the accuracy of the sparse matrix. 
 // If the absolute value of the matrix element is less than or equal to the 'sparse_threshold', it will be ignored.
@@ -77,7 +80,9 @@ void ModuleIO::output_dH_R(const int& istep,
     {
         // mohan add 2024-04-01
         assert(GlobalV::CURRENT_SPIN==0);
-		uhm.cal_dH_sparse(
+
+		sparse_format::cal_dH(
+                lm,
 				gen_h,
 				GlobalV::CURRENT_SPIN, 
 				sparse_threshold, 
@@ -106,7 +111,8 @@ void ModuleIO::output_dH_R(const int& istep,
                     }
                 }
 
-				uhm.cal_dH_sparse(
+				sparse_format::cal_dH(
+                        lm,
 						gen_h,
 						GlobalV::CURRENT_SPIN, 
 						sparse_threshold, 

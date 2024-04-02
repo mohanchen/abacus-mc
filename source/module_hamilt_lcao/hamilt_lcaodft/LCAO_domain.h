@@ -18,6 +18,7 @@ void grid_prepare(
 		const ModulePW::PW_Basis& rhopw, 
 		const ModulePW::PW_Basis_Big& bigpw);
 
+
 }
 
 #endif
