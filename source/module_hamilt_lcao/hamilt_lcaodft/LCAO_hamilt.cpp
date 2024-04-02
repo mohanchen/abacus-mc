@@ -373,9 +373,10 @@ void LCAO_Hamilt::cal_HSR_sparse(
 }
 
 void LCAO_Hamilt::cal_dH_sparse(
- const int &current_spin, 
- const double &sparse_threshold,
- Gint_k &gint_k)
+		LCAO_gen_fixedH &gen_h, 
+		const int &current_spin, 
+		const double &sparse_threshold,
+		Gint_k &gint_k)
 {
     ModuleBase::TITLE("LCAO_Hamilt","cal_dH_sparse");
 
@@ -394,14 +395,16 @@ void LCAO_Hamilt::cal_dH_sparse(
     if(GlobalV::CAL_STRESS)
 	{
         GlobalV::CAL_STRESS = false;
-        this->genH.build_ST_new('T', true, GlobalC::ucell, this->LM->Hloc_fixedR.data());
+
+        gen_h.build_ST_new('T', true, GlobalC::ucell, this->LM->Hloc_fixedR.data());
+
         GlobalV::CAL_STRESS = true;
     }
     else
     {
-        this->genH.build_ST_new('T', true, GlobalC::ucell, this->LM->Hloc_fixedR.data());
+        gen_h.build_ST_new('T', true, GlobalC::ucell, this->LM->Hloc_fixedR.data());
     }
-    this->genH.build_Nonlocal_mu_new (this->LM->Hloc_fixed.data(), true);
+    gen_h.build_Nonlocal_mu_new (this->LM->Hloc_fixed.data(), true);
     
     cal_dSTN_R_sparse(current_spin, sparse_threshold);
 
@@ -542,14 +545,18 @@ void LCAO_Hamilt::cal_SR_sparse(const double &sparse_threshold, hamilt::Hamilt<s
     }
 }
 
-void LCAO_Hamilt::cal_TR_sparse(const double &sparse_threshold)
+void LCAO_Hamilt::cal_TR_sparse(
+		LCAO_gen_fixedH &gen_h,
+		const double &sparse_threshold)
 {
     ModuleBase::TITLE("LCAO_Hamilt","cal_TR_sparse");
     
     //need to rebuild T(R)
     this->LM->Hloc_fixedR.resize(this->LM->ParaV->nnr);
     this->LM->zeros_HSR('T');
-    this->genH.build_ST_new('T', 0, GlobalC::ucell, this->LM->Hloc_fixedR.data());
+
+    gen_h.build_ST_new('T', 0, GlobalC::ucell, this->LM->Hloc_fixedR.data());
+
     this->set_R_range_sparse(*this->LM);
     this->cal_STN_R_sparse_for_T(sparse_threshold);
 

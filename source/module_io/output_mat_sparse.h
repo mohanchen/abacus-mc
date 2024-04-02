@@ -23,6 +23,7 @@ namespace ModuleIO
         const ModuleBase::matrix& v_eff,
         const Parallel_Orbitals& pv,
         LCAO_Hamilt& UHM,
+        LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
         Gint_k &gint_k, // mohan add 2024-04-01
         LCAO_Matrix& LM,
         const K_Vectors& kv,
@@ -39,6 +40,7 @@ namespace ModuleIO
     const ModuleBase::matrix& _v_eff;
     const Parallel_Orbitals& _pv;
     LCAO_Hamilt& _UHM;
+    LCAO_gen_fixedH& _gen_h; // mohan add 2024-04-02
     Gint_k& _gint_k; // mohan add 2024-04-01
     LCAO_Matrix& _LM;
     const K_Vectors& _kv;

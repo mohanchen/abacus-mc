@@ -16,6 +16,7 @@ namespace ModuleIO
         const ModuleBase::matrix& v_eff,
         const Parallel_Orbitals& pv,
         LCAO_Hamilt& UHM,
+        LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
         Gint_k& gint_k, // mohan add 2024-04-01
         LCAO_Matrix& LM,
         const K_Vectors& kv,
@@ -28,6 +29,7 @@ namespace ModuleIO
       _v_eff(v_eff),
       _pv(pv),
       _UHM(UHM),
+      _gen_h(gen_h), // mohan add 2024-04-02
       _gint_k(gint_k), // mohan add 2024-04-01
       _LM(LM),
       _kv(kv),
@@ -51,7 +53,7 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
 
     if (_out_mat_t)
     {
-        output_T_R(_istep, this->_UHM); // LiuXh add 2019-07-15
+        output_T_R(_istep, this->_UHM, this->_gen_h); // LiuXh add 2019-07-15
     }
 
     if (_out_mat_dh)
@@ -60,6 +62,7 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
 				_istep, 
 				this->_v_eff, 
 				this->_UHM, 
+                this->_gen_h,
 				this->_gint_k, // mohan add 2024-04-01
 				this->_LM,
 				_kv); // LiuXh add 2019-07-15

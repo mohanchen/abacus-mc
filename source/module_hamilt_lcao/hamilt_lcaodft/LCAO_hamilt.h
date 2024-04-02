@@ -81,19 +81,19 @@ class LCAO_Hamilt
 
     void destroy_all_HSR_sparse(void);
 
-    void cal_TR_sparse(const double &sparse_threshold);
+    void cal_TR_sparse(
+			LCAO_gen_fixedH &gen_h,
+			const double &sparse_threshold);
 
     void destroy_TR_sparse(void);
 
 	void cal_dH_sparse(
+		    LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
 			const int &current_spin, 
 			const double &sparse_threshold,
 			Gint_k &gint_k); // mohan add 2024-04-01
 
     void destroy_dH_R_sparse(void);
-
-    // use overlap matrix to generate fixed Hamiltonian
-    LCAO_gen_fixedH genH;
 
     LCAO_Matrix* LM;
 };

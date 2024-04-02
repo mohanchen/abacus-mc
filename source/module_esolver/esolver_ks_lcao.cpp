@@ -118,7 +118,7 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
             &(this->LOC),
             &(this->GG), // mohan add 2024-04-01
             &(this->GK), // mohan add 2024-04-01
-            &(this->UHM),
+            &(this->uhm),
             &(this->LOWF),
             this->pw_rho,
             this->pw_big);
@@ -132,7 +132,7 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
     //------------------init Basis_lcao----------------------
 
     //! pass Hamilt-pointer to Operator
-    this->UHM.genH.LM = this->UHM.LM = &this->LM;
+    this->gen_h.LM = this->uhm.LM = &this->LM;
 
     //! pass basis-pointer to EState and Psi
     this->LOC.ParaV = this->LOWF.ParaV = this->LM.ParaV = &(this->orb_con.ParaV);
@@ -260,7 +260,7 @@ void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
 				&(this->LOC),
                 &(this->GG), // mohan add 2024-04-01
                 &(this->GK), // mohan add 2024-04-01
-				&(this->UHM),
+				&(this->uhm),
 				&(this->LOWF),
 				this->pw_rho,
 				this->pw_big);
@@ -314,10 +314,10 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(ModuleBase::matrix& force)
 			GlobalV::TEST_STRESS,
 			this->LOC,
             this->orb_con.ParaV, 
-            this->LM,
 			this->pelec,
 			this->psi,
-			this->UHM,
+            this->LM,
+            this->gen_h, // mohan add 2024-04-02
             this->GG, // mohan add 2024-04-01
             this->GK, // mohan add 2024-04-01
 			force,
@@ -427,7 +427,7 @@ void ESolver_KS_LCAO<TK, TR>::post_process(void)
     {
         ModuleIO::write_proj_band_lcao(
             this->psi,
-            this->UHM,
+            this->uhm,
             this->pelec,
             this->kv,
             GlobalC::ucell,
@@ -438,7 +438,7 @@ void ESolver_KS_LCAO<TK, TR>::post_process(void)
     {
 		ModuleIO::out_dos_nao(
 				this->psi,
-				this->UHM,
+				this->uhm,
 				this->pelec->ekb,
 				this->pelec->wg,
 				INPUT.dos_edelta_ev,
@@ -1211,7 +1211,8 @@ ModuleIO::Output_Mat_Sparse<TK> ESolver_KS_LCAO<TK, TR>::create_Output_Mat_Spars
 			istep,
 			this->pelec->pot->get_effective_v(),
 			*this->LOWF.ParaV,
-			this->UHM,
+			this->uhm,
+            this->gen_h, // mohan add 2024-04-02
             this->GK, // mohan add 2024-04-01
 			this->LM,
 			this->kv,

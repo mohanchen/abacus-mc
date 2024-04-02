@@ -22,8 +22,9 @@ namespace ModuleIO
 
         void output_dH_R(
             const int &istep,
-            const ModuleBase::matrix& v_eff,
-			LCAO_Hamilt &UHM,
+			const ModuleBase::matrix& v_eff,
+			LCAO_Hamilt &uhm,
+			LCAO_gen_fixedH& gen_h, // mohan add 2024-04-02
 			Gint_k& gint_k,  // mohan add 2024-04-01
 			LCAO_Matrix &lm,  // mohan add 2024-04-01
             const K_Vectors& kv,
@@ -33,6 +34,7 @@ namespace ModuleIO
         void output_T_R(
             const int istep,
             LCAO_Hamilt &UHM,
+            LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
             const std::string& TR_filename = "data-TR-sparse_SPIN0.csr",
             const bool& binary = false,
             const double& sparse_threshold = 1e-10);
