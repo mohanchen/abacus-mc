@@ -23,6 +23,7 @@
 #include "module_io/dm_io.h"
 
 #include "module_hamilt_lcao/module_deltaspin/spin_constrain.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_domain.h"
 
 namespace ModuleESolver
 {
@@ -126,7 +127,7 @@ void ESolver_KS_LCAO<TK, TR>::beforesolver(const int istep)
     }
 
     // prepare grid in Gint
-	this->uhm.grid_prepare(
+	LCAO_domain::grid_prepare(
 			this->GridT, 
 			this->GG,
 			this->GK,

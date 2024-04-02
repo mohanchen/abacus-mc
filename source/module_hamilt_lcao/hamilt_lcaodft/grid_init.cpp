@@ -1,4 +1,4 @@
-#include "module_hamilt_lcao/hamilt_lcaodft/lcao_domain.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_domain.h"
 #include "module_base/parallel_reduce.h"
 #include "module_base/timer.h"
 

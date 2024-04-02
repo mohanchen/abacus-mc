@@ -126,7 +126,7 @@ void Veff<OperatorLCAO<TK, TR>>::contributeHR()
 
 // special case of gamma-only
 template<>
-void Veff<OperatorLCAO<double, double>>::contributeHR()
+void Veff<OperatorLCAO<double, double>>::contributeHR(void)
 {
     ModuleBase::TITLE("Veff", "contributeHR");
     ModuleBase::timer::tick("Veff", "contributeHR");
