@@ -248,7 +248,7 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
 					GlobalC::ucell,
 					&GlobalC::GridD,
 					&GlobalC::dftu,
-					lm.ParaV);
+					*(lm.ParaV));
             tmp_dftu.cal_force_stress(isforce, isstress, force_dftu, stress_dftu);
         }
     }
