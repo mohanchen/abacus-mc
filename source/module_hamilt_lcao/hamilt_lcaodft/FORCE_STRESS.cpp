@@ -240,14 +240,15 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
         }
         else
         {
-            hamilt::DFTU<hamilt::OperatorLCAO<T, double>> tmp_dftu(uhm.LM,
-                                                                 kv.kvec_d,
-                                                                 nullptr,
-                                                                 nullptr,
-                                                                 GlobalC::ucell,
-                                                                 &GlobalC::GridD,
-                                                                 &GlobalC::dftu,
-                                                                 lm.ParaV);
+			hamilt::DFTU<hamilt::OperatorLCAO<T, double>> tmp_dftu(
+					&lm,
+					kv.kvec_d,
+					nullptr,
+					nullptr,
+					GlobalC::ucell,
+					&GlobalC::GridD,
+					&GlobalC::dftu,
+					lm.ParaV);
             tmp_dftu.cal_force_stress(isforce, isstress, force_dftu, stress_dftu);
         }
     }
