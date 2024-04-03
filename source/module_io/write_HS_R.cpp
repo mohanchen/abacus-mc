@@ -136,7 +136,18 @@ void ModuleIO::output_S_R(
     ModuleBase::timer::tick("ModuleIO","output_S_R"); 
 
     uhm.cal_SR_sparse(sparse_threshold, p_ham);
-    ModuleIO::save_SR_sparse(*uhm.LM, sparse_threshold, binary, SR_filename);
+
+	ModuleIO::save_sparse(
+			uhm.LM->SR_sparse, 
+			uhm.LM->all_R_coor,
+			sparse_threshold, 
+			binary, 
+			SR_filename,
+			*uhm.LM->ParaV, 
+			"S", 
+			0
+			);
+
     uhm.destroy_all_HSR_sparse();
 
     ModuleBase::timer::tick("ModuleIO","output_S_R");
@@ -166,7 +177,18 @@ void ModuleIO::output_T_R(
     }
 
     uhm.cal_TR_sparse(gen_h, sparse_threshold);
-    ModuleIO::save_TR_sparse(istep, *uhm.LM, sparse_threshold, binary, sst.str().c_str());
+
+	ModuleIO::save_sparse(
+			uhm.LM->TR_sparse, 
+			uhm.LM->all_R_coor,
+			sparse_threshold, 
+			binary, 
+		    sst.str().c_str(),
+			*uhm.LM->ParaV, 
+			"T", 
+			istep
+			);
+
     uhm.destroy_TR_sparse();
 
     ModuleBase::timer::tick("ModuleIO","output_T_R");
