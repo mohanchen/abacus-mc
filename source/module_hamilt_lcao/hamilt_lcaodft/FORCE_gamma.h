@@ -5,7 +5,6 @@
 #include "module_base/global_variable.h"
 #include "module_base/matrix.h"
 #include "module_elecstate/module_dm/density_matrix.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_hamilt.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/LCAO_matrix.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/local_orbital_charge.h"
 #include "module_psi/psi.h"

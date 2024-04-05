@@ -2,7 +2,6 @@
 #define WRITE_DOS_LCAO_H
 #include "module_base/matrix.h"
 #include "module_cell/klist.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_hamilt.h"
 #include "module_psi/psi.h"
 #include "module_hamilt_general/hamilt.h"
 

@@ -5,7 +5,6 @@
 #include "module_hamilt_lcao/hamilt_lcaodft/record_adj.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/local_orbital_charge.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/local_orbital_wfc.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_hamilt.h"
 // for grid integration
 #include "module_hamilt_lcao/module_gint/gint_gamma.h"
 #include "module_hamilt_lcao/module_gint/gint_k.h"
@@ -75,9 +74,6 @@ namespace ModuleESolver
 
         // we will get rid of this class soon, don't use it, mohan 2024-03-28
         Local_Orbital_Charge LOC;
-
-        // we will get rid of this class soon, don't use it, mohan 2024-03-28
-        LCAO_Hamilt uhm;
 
         LCAO_gen_fixedH gen_h; // mohan add 2024-04-02
 

@@ -12,6 +12,8 @@ namespace sparse_format
 	void cal_TR(
 			LCAO_gen_fixedH &gen_h,
 			const double &sparse_thr);
+
+    void cal_STN_R_for_T(const double &sparse_thr);
 }
 
 #endif
