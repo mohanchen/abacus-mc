@@ -31,6 +31,7 @@
 template <>
 void ModuleIO::write_dos_lcao(
     const psi::Psi<double>* psi,
+    LCAO_Matrix &lm,
     const Parallel_Orbitals &pv, 
     const ModuleBase::matrix& ekb,
     const ModuleBase::matrix& wg,
@@ -67,10 +68,16 @@ void ModuleIO::write_dos_lcao(
 
     emax *= ModuleBase::Ry_to_eV;
     emin *= ModuleBase::Ry_to_eV;
-    if (INPUT.dos_setemax)
-        emax = INPUT.dos_emax_ev;
-    if (INPUT.dos_setemin)
-        emin = INPUT.dos_emin_ev;
+	if (INPUT.dos_setemax)
+	{
+		emax = INPUT.dos_emax_ev;
+	}
+
+	if (INPUT.dos_setemin)
+	{
+		emin = INPUT.dos_emin_ev;
+	}
+
     if (!INPUT.dos_setemax && !INPUT.dos_setemin)
     {
         // scale up a little bit so the end peaks are displaced better
@@ -146,7 +153,7 @@ void ModuleIO::write_dos_lcao(
                 &GlobalV::NLOCAL,
                 &GlobalV::NLOCAL,
                 &one_float,
-                uhm.LM->Sloc.data(),
+                lm.Sloc.data(),
                 &one_int,
                 &one_int,
                 pv.desc,
@@ -338,6 +345,7 @@ void ModuleIO::write_dos_lcao(
 template<>
 void ModuleIO::write_dos_lcao(
     const psi::Psi<std::complex<double>>* psi,
+    LCAO_Matrix &lm,
     const Parallel_Orbitals &pv,
     const ModuleBase::matrix& ekb,
     const ModuleBase::matrix& wg,
@@ -442,11 +450,13 @@ void ModuleIO::write_dos_lcao(
                     // the target matrix is LM->Sloc2 with collumn-major
                     if (GlobalV::NSPIN == 4)
                     {
-                        dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham)->updateSk(ik, uhm.LM, 1);
+                        dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham)->updateSk(
+                         ik, &lm, 1);
                     }
                     else
                     {
-                        dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham)->updateSk(ik, uhm.LM, 1);
+                        dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham)->updateSk(
+                         ik, &lm, 1);
                     }
 
                     psi->fix_k(ik);
@@ -484,7 +494,7 @@ void ModuleIO::write_dos_lcao(
                             &GlobalV::NLOCAL,
                             &GlobalV::NLOCAL,
                             &one_float[0],
-                            uhm.LM->Sloc2.data(),
+                            lm.Sloc2.data(),
                             &one_int,
                             &one_int,
                             pv.desc,
