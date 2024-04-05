@@ -1,4 +1,4 @@
-#include "sparse_format_u.h"
+#include "spar_u.h"
 
 void sparse_matrix_u::cal_HR_dftu(
 	    const Parallel_Orbitals &pv,
