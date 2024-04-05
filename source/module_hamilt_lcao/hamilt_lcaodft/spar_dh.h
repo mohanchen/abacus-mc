@@ -6,7 +6,6 @@
 #include "module_hamilt_pw/hamilt_pwdft/global.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/hamilt_lcao.h"
 
-
 namespace sparse_format
 {
 	void cal_dH(

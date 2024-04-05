@@ -25,5 +25,4 @@ namespace sparse_format
 
 	void clear_zero_elements(const int &current_spin, const double &sparse_thr);
 
-
 }
