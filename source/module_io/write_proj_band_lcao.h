@@ -14,7 +14,7 @@ namespace ModuleIO
     template <typename TK>
     void write_proj_band_lcao(
         const psi::Psi<TK>* psi,
-		LCAO_Hamilt& uhm,
+		LCAO_Matrix& lm,
 		const elecstate::ElecState* pelec,
 		const K_Vectors& kv,
 		const UnitCell &ucell, 

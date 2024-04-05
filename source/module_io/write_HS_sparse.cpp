@@ -322,7 +322,10 @@ void ModuleIO::save_HSR_sparse(
 
     if(GlobalV::DRANK==0) 
     {
-        for (int ispin = 0; ispin < spin_loop; ++ispin) g1[ispin].close();
+		for (int ispin = 0; ispin < spin_loop; ++ispin) 
+		{
+			g1[ispin].close();
+		}
         g2.close();
     }
     
@@ -683,6 +686,7 @@ void ModuleIO::save_dH_sparse(
     ModuleBase::timer::tick("ModuleIO","save_dH_sparse");
     return;
 }
+
 
 template<typename Tdata>
 void ModuleIO::save_sparse(

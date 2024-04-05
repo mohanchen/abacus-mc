@@ -12,6 +12,7 @@
 #include "module_psi/psi.h"
 #include "module_elecstate/elecstate.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/DM_gamma_2d_to_grid.h"
+#include "module_base/abfs-vector3_order.h"
 
 
 // try to get rid of this class, so please do not use it 

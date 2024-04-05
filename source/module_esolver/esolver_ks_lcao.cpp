@@ -426,7 +426,7 @@ void ESolver_KS_LCAO<TK, TR>::post_process(void)
     {
         ModuleIO::write_proj_band_lcao(
             this->psi,
-//            this->uhm,
+            this->LM,
             this->pelec,
             this->kv,
             GlobalC::ucell,
@@ -1204,8 +1204,6 @@ ModuleIO::Output_Mat_Sparse<TK> ESolver_KS_LCAO<TK, TR>::create_Output_Mat_Spars
 			istep,
 			this->pelec->pot->get_effective_v(),
 			*this->LOWF.ParaV,
-//			this->uhm,
-            this->gen_h, // mohan add 2024-04-02
             this->GK, // mohan add 2024-04-01
 			this->LM,
 			this->kv,
