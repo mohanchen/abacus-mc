@@ -3,6 +3,7 @@
 
 #include "module_basis/module_ao/parallel_orbitals.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/LCAO_matrix.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_gen_fixedH.h"
 #include "module_hamilt_lcao/module_gint/gint_k.h"
 #include "module_hsolver/hsolver_lcao.h"
 #include "output_interface.h"

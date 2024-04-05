@@ -2,6 +2,7 @@
 #define TD_CURRENT_H
 
 #include "module_elecstate/module_dm/density_matrix.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_gen_fixedH.h"
 #include "module_elecstate/elecstate_lcao.h"
 #include "module_psi/psi.h"
 

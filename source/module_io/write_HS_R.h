@@ -4,6 +4,8 @@
 #include "module_base/matrix.h"
 #include "module_cell/klist.h"
 #include "module_hamilt_general/hamilt.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_matrix.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_gen_fixedH.h"
 
 namespace ModuleIO
 {
