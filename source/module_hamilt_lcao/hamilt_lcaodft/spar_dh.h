@@ -1,5 +1,5 @@
-#ifndef SPARSE_FORMAT_H 
-#define SPARSE_FORMAT_H
+#ifndef SPARSE_FORMAT_DH_H 
+#define SPARSE_FORMAT_DH_H
 
 #include "module_cell/module_neighbor/sltk_atom_arrange.h"
 #include "module_cell/module_neighbor/sltk_grid_driver.h"
@@ -9,14 +9,12 @@
 
 namespace sparse_format
 {
-
-
 	void cal_dH(
 			LCAO_Matrix &lm,
 			Grid_Driver &grid,
 			LCAO_gen_fixedH &gen_h, 
 			const int &current_spin, 
-			const double &sparse_threshold,
+			const double &sparse_thr,
 			Gint_k &gint_k);
 
 	// be called by 'cal_dH_sparse'
@@ -28,9 +26,7 @@ namespace sparse_format
 	void cal_dSTN_R(
 			LCAO_Matrix &lm,
 			const int &current_spin, 
-			const double &sparse_threshold);
-
-
+			const double &sparse_thr);
 }
 
 #endif

@@ -25,33 +25,13 @@ class LCAO_Hamilt
     ~LCAO_Hamilt();
 
 
-    void cal_STN_R_for_T(const double &sparse_thr);
+	void cal_SR(
+			const double &sparse_thr, 
+			hamilt::Hamilt<std::complex<double>>* p_ham);
 
-
-#ifdef __EXX
-    template<typename Tdata> void cal_HR_exx_sparse(
-            const int &current_spin,
-            const double &sparse_thr,
-            const int (&nmp)[3],
-            const std::vector< std::map <int, std::map < std::pair<int, std::array<int,3>>, RI::Tensor<Tdata> > >>& Hexxs);
-#endif
-
-
-    void cal_SR(const double &sparse_thr, hamilt::Hamilt<std::complex<double>>* p_ham);
-
-    void cal_TR(
+	void cal_TR(
 			LCAO_gen_fixedH &gen_h,
 			const double &sparse_thr);
-
-
-    void clear_zero_elements(const int &current_spin, const double &sparse_thr);
-
-
-    void destroy_all_HSR(void);
-
-    void destroy_TR(void);
-
-    void destroy_dH_R(void);
 
     LCAO_Matrix* LM;
 };

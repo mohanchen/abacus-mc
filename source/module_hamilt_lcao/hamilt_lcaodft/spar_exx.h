@@ -1,3 +1,9 @@
+#ifndef SPARSE_FORMAT_EXX_H 
+#define SPARSE_FORMAT_EXX_H
+
+namespace sparse_format
+{
+
 #ifdef __EXX
     template<typename Tdata> void cal_HR_exx_sparse(
             const int &current_spin,
@@ -5,3 +11,5 @@
             const int (&nmp)[3],
             const std::vector< std::map <int, std::map < std::pair<int, std::array<int,3>>, RI::Tensor<Tdata> > >>& Hexxs);
 #endif
+
+}

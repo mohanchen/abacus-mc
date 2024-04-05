@@ -11,8 +11,10 @@ void sparse_matrix::cal_HSR(
 
     sparse_format::set_R_range(*this->LM);
 
+    const int nspin = GlobalV::NSPIN;
+
     //cal_STN_R_sparse(current_spin, sparse_threshold);
-    if(GlobalV::NSPIN!=4)
+    if(nspin==1 || nspin==2)
     {
         hamilt::HamiltLCAO<std::complex<double>, double>* p_ham_lcao = 
         dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham);
@@ -27,34 +29,42 @@ void sparse_matrix::cal_HSR(
 				*(p_ham_lcao->getSR()), 
 				this->LM->SR_sparse);
     }
-    else
-    {
-        hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>* p_ham_lcao = 
-        dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham);
+	else if(nspin==4)
+	{
+		hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>* p_ham_lcao = 
+			dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham);
 
-        this->cal_HContainer_sparse_cd(current_spin, 
-        sparse_threshold, 
-        *(p_ham_lcao->getHR()), 
-        this->LM->HR_soc_sparse);
+		this->cal_HContainer_sparse_cd(current_spin, 
+				sparse_threshold, 
+				*(p_ham_lcao->getHR()), 
+				this->LM->HR_soc_sparse);
 
-        this->cal_HContainer_sparse_cd(current_spin, 
-        sparse_threshold, 
-        *(p_ham_lcao->getSR()), 
-        this->LM->SR_soc_sparse);
+		this->cal_HContainer_sparse_cd(current_spin, 
+				sparse_threshold, 
+				*(p_ham_lcao->getSR()), 
+				this->LM->SR_soc_sparse);
+	}
+	else
+	{
+        ModuleBase::WARNING_QUIT("cal_HSR","check the value of nspin.");       
     }
 
     // only old DFT+U method need to cal extra contribution to HR
     if (GlobalV::dft_plus_u == 2)
     {
-        if (GlobalV::NSPIN != 4)
+        if(nspin==1 || nspin==2)
         {
             cal_HR_dftu(current_spin, sparse_threshold);
         }
-        else
+	    else if(nspin==4)
         {
             cal_HR_dftu_soc(current_spin, sparse_threshold);
         }
-    }
+		else
+		{
+			ModuleBase::WARNING_QUIT("cal_HSR","check the value of nspin.");       
+		}
+	}
 
 #ifdef __EXX
 #ifdef __MPI
@@ -73,13 +83,13 @@ void sparse_matrix::cal_HSR(
 #endif // __MPI
 #endif // __EXX
 
-    clear_zero_elements(current_spin, sparse_threshold);
+    sparse_matrix::clear_zero_elements(current_spin, sparse_threshold);
 
     return;
 }
 
 
-void sparse_matrix_h::cal_HContainer_d(
+void sparse_matrix::cal_HContainer_d(
 		const int &current_spin, 
 		const double &sparse_threshold, 
 		const hamilt::HContainer<double>& hR, 
@@ -122,7 +132,7 @@ void sparse_matrix_h::cal_HContainer_d(
     return;
 }
 
-void sparse_matrix_h::cal_HContainer_cd(
+void sparse_matrix::cal_HContainer_cd(
 		const int &current_spin, 
 		const double &sparse_threshold, 
 		const hamilt::HContainer<std::complex<double>>& hR, 
@@ -161,6 +171,101 @@ void sparse_matrix_h::cal_HContainer_cd(
                 }
             }
         }
+    }
+
+    return;
+}
+
+
+// in case there are elements smaller than the threshold
+void sparse_format::clear_zero_elements(
+		const int &current_spin, 
+		const double &sparse_threshold)
+{
+    if(GlobalV::NSPIN != 4)
+    {
+        for (auto &R_loop : this->LM->HR_sparse[current_spin])
+        {
+            for (auto &row_loop : R_loop.second)
+            {
+                auto &col_map = row_loop.second;
+                auto iter = col_map.begin();
+                while (iter != col_map.end())
+                {
+                    if (std::abs(iter->second) <= sparse_threshold)
+                    {
+                        col_map.erase(iter++);
+                    }
+                    else
+                    {
+                        iter++;
+                    }
+                }
+            }
+        }
+
+        for (auto &R_loop : this->LM->SR_sparse)
+        {
+            for (auto &row_loop : R_loop.second)
+            {
+                auto &col_map = row_loop.second;
+                auto iter = col_map.begin();
+                while (iter != col_map.end())
+                {
+                    if (std::abs(iter->second) <= sparse_threshold)
+                    {
+                        col_map.erase(iter++);
+                    }
+                    else
+                    {
+                        iter++;
+                    }
+                }
+            }
+        }
+
+    }
+    else
+    {
+        for (auto &R_loop : this->LM->HR_soc_sparse)
+        {
+            for (auto &row_loop : R_loop.second)
+            {
+                auto &col_map = row_loop.second;
+                auto iter = col_map.begin();
+                while (iter != col_map.end())
+                {
+                    if (std::abs(iter->second) <= sparse_threshold)
+                    {
+                        col_map.erase(iter++);
+                    }
+                    else
+                    {
+                        iter++;
+                    }
+                }// end while iter
+            }// end row loop
+        }// end R loop
+
+        for (auto &R_loop : this->LM->SR_soc_sparse)
+        {
+            for (auto &row_loop : R_loop.second)
+            {
+                auto &col_map = row_loop.second;
+                auto iter = col_map.begin();
+                while (iter != col_map.end())
+                {
+                    if (std::abs(iter->second) <= sparse_threshold)
+                    {
+                        col_map.erase(iter++);
+                    }
+                    else
+                    {
+                        iter++;
+                    }
+                }// end while iter
+            }// end row_loop
+        }// end R_loop
     }
 
     return;
