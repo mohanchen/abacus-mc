@@ -168,11 +168,11 @@ void LCAO_Hamilt::cal_HSR_sparse(
     {
         if (GlobalV::NSPIN != 4)
         {
-            cal_HR_dftu_sparse(current_spin, sparse_threshold);
+            cal_HR_dftu(current_spin, sparse_threshold);
         }
         else
         {
-            cal_HR_dftu_soc_sparse(current_spin, sparse_threshold);
+            cal_HR_dftu_soc(current_spin, sparse_threshold);
         }
     }
 

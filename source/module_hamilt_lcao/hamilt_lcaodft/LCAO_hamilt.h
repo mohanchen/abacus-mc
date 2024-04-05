@@ -37,9 +37,6 @@ class LCAO_Hamilt
 
     void cal_STN_R_sparse_for_T(const double &sparse_threshold);
 
-    void cal_HR_dftu_sparse(const int &current_spin, const double &sparse_threshold);
-
-    void cal_HR_dftu_soc_sparse(const int &current_spin, const double &sparse_threshold);
 
 #ifdef __EXX
     template<typename Tdata> void cal_HR_exx_sparse(

@@ -29,6 +29,7 @@ if(ENABLE_LCAO)
         LCAO_hamilt.cpp
         grid_init.cpp
         sparse_format.cpp
+        sparse_format_u.cpp
         LCAO_matrix.cpp
         LCAO_nnr.cpp
         record_adj.cpp
