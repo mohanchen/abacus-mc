@@ -2,6 +2,7 @@
 
 void sparse_format::cal_dH(
 		LCAO_Matrix &lm,
+		Grid_Driver &grid,
 		LCAO_gen_fixedH &gen_h, 
 		const int &current_spin, 
 		const double &sparse_threshold,
@@ -9,7 +10,7 @@ void sparse_format::cal_dH(
 {
     ModuleBase::TITLE("sparse_format","cal_dH");
 
-    sparse_format::set_R_range(lm);
+    sparse_format::set_R_range(lm.all_R_coor, grid);
 
     const int nnr = lm.ParaV->nnr;
     lm.DHloc_fixedR_x = new double[nnr];
@@ -45,24 +46,26 @@ void sparse_format::cal_dH(
 }
 
 
-void sparse_format::set_R_range(LCAO_Matrix &lm)
+void sparse_format::set_R_range(
+        std::set<Abfs::Vector3_Order<int>> &all_R_coor,
+		Grid_Driver &grid,
 {
-    int R_minX = int(GlobalC::GridD.getD_minX());
-    int R_minY = int(GlobalC::GridD.getD_minY());
-    int R_minZ = int(GlobalC::GridD.getD_minZ());
+    const int RminX = int(grid.getD_minX());
+    const int RminY = int(grid.getD_minY());
+    const int RminZ = int(grid.getD_minZ());
 
-    int R_x = GlobalC::GridD.getCellX();
-    int R_y = GlobalC::GridD.getCellY();
-    int R_z = GlobalC::GridD.getCellZ();
+    const int Rx = grid.getCellX();
+    const int Ry = grid.getCellY();
+    const int Rz = grid.getCellZ();
 
-    for(int ix = 0; ix < R_x; ix++)
+    for(int ix = 0; ix < Rx; ix++)
     {
-        for(int iy = 0; iy < R_y; iy++)
+        for(int iy = 0; iy < Ry; iy++)
         {
-            for(int iz = 0; iz < R_z; iz++)
+            for(int iz = 0; iz < Rz; iz++)
             {
-                Abfs::Vector3_Order<int> temp_R(ix+R_minX, iy+R_minY, iz+R_minZ);
-                lm.all_R_coor.insert(temp_R);
+                Abfs::Vector3_Order<int> temp_R(ix+RminX, iy+RminY, iz+RminZ);
+                all_R_coor.insert(temp_R);
             }
         }
     }
@@ -73,6 +76,7 @@ void sparse_format::set_R_range(LCAO_Matrix &lm)
 
 void sparse_format::cal_dSTN_R(
 		LCAO_Matrix &lm,
+		Grid_Driver &grid,
 		const int &current_spin, 
 		const double &sparse_threshold)
 {
@@ -91,31 +95,34 @@ void sparse_format::cal_dSTN_R(
         for(int I1 = 0; I1 < atom1->na; ++I1)
         {
             tau1 = atom1->tau[I1];
-            GlobalC::GridD.Find_atom(GlobalC::ucell, tau1, T1, I1);
+            grid.Find_atom(GlobalC::ucell, tau1, T1, I1);
             Atom* atom1 = &GlobalC::ucell.atoms[T1];
             const int start = GlobalC::ucell.itiaiw2iwt(T1,I1,0);
 
-            for(int ad = 0; ad < GlobalC::GridD.getAdjacentNum()+1; ++ad)
+            for(int ad = 0; ad < grid.getAdjacentNum()+1; ++ad)
             {
-                const int T2 = GlobalC::GridD.getType(ad);
-                const int I2 = GlobalC::GridD.getNatom(ad);
+                const int T2 = grid.getType(ad);
+                const int I2 = grid.getNatom(ad);
                 Atom* atom2 = &GlobalC::ucell.atoms[T2];
 
-                tau2 = GlobalC::GridD.getAdjacentTau(ad);
+                tau2 = grid.getAdjacentTau(ad);
                 dtau = tau2 - tau1;
                 double distance = dtau.norm() * GlobalC::ucell.lat0;
                 double rcut = GlobalC::ORB.Phi[T1].getRcut() + GlobalC::ORB.Phi[T2].getRcut();
 
                 bool adj = false;
 
-                if(distance < rcut) adj = true;
+				if(distance < rcut) 
+				{
+					adj = true;
+				}
                 else if(distance >= rcut)
                 {
-                    for(int ad0 = 0; ad0 < GlobalC::GridD.getAdjacentNum()+1; ++ad0)
+                    for(int ad0 = 0; ad0 < grid.getAdjacentNum()+1; ++ad0)
                     {
-                        const int T0 = GlobalC::GridD.getType(ad0);
+                        const int T0 = grid.getType(ad0);
 
-                        tau0 = GlobalC::GridD.getAdjacentTau(ad0);
+                        tau0 = grid.getAdjacentTau(ad0);
                         dtau1 = tau0 - tau1;
                         dtau2 = tau0 - tau2;
 
@@ -138,9 +145,9 @@ void sparse_format::cal_dSTN_R(
                     const int start2 = GlobalC::ucell.itiaiw2iwt(T2,I2,0);
 
 					Abfs::Vector3_Order<int> dR(
-							GlobalC::GridD.getBox(ad).x, 
-							GlobalC::GridD.getBox(ad).y, 
-							GlobalC::GridD.getBox(ad).z);
+							grid.getBox(ad).x, 
+							grid.getBox(ad).y, 
+							grid.getBox(ad).z);
 
                     for(int ii=0; ii<atom1->nw*GlobalV::NPOL; ii++)
                     {

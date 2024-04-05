@@ -12,13 +12,16 @@ namespace sparse_format
 
 void cal_dH(
 		LCAO_Matrix &lm,
+		Grid_Driver &grid,
 		LCAO_gen_fixedH &gen_h, 
 		const int &current_spin, 
 		const double &sparse_threshold,
 		Gint_k &gint_k);
 
 // be called by 'cal_dH_sparse'
-void set_R_range(LCAO_Matrix &lm);
+void set_R_range(
+        std::set<Abfs::Vector3_Order<int>> &all_R_coor,
+		Grid_Driver &grid);
 
 // be called by 'cal_dH_sparse' 
 void cal_dSTN_R(
