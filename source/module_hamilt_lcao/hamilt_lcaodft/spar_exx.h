@@ -1,6 +1,5 @@
 #ifndef SPARSE_FORMAT_EXX_H 
 #define SPARSE_FORMAT_EXX_H
-#ifdef __EXX
 
 #include <vector>
 #include <map>
@@ -24,5 +23,4 @@ namespace sparse_format
 
 }
 
-#endif
 #endif

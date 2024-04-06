@@ -133,7 +133,7 @@ void sparse_format::cal_HR_exx(
 		}
 	}
 
-	ModuleBase::timer::tick("sparse_format","cal_HR_exx_sparse");
+	ModuleBase::timer::tick("sparse_format","cal_HR_exx");
 }
 
 #endif
