@@ -23,6 +23,7 @@
 #include <string>
 #include <stdexcept>
 
+#ifdef __EXX
 // Peize Lin add 2022.09.13
 template<typename Tdata>
 void sparse_format::cal_HR_exx(
@@ -135,5 +136,6 @@ void sparse_format::cal_HR_exx(
 
 	ModuleBase::timer::tick("sparse_format","cal_HR_exx");
 }
+#endif
 
 #endif
