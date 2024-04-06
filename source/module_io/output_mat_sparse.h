@@ -15,18 +15,20 @@ namespace ModuleIO
     class Output_Mat_Sparse : public Output_Interface
 {
   public:
-    Output_Mat_Sparse(int out_mat_hsR,
+    Output_Mat_Sparse(
+        int out_mat_hsR,
         int out_mat_dh,
         int out_mat_t,
         int out_mat_r,
         int istep,
-        const ModuleBase::matrix& v_eff,
-        const Parallel_Orbitals& pv,
+        const ModuleBase::matrix &v_eff,
+        const Parallel_Orbitals &pv,
         LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
         Gint_k &gint_k, // mohan add 2024-04-01
-        LCAO_Matrix& LM,
-        const K_Vectors& kv,
-        hamilt::Hamilt<T>* p_ham);
+        LCAO_Matrix &lm,
+        Grid_Driver &grid, // mohan add 2024-04-06
+        const K_Vectors &kv,
+        hamilt::Hamilt<T> *p_ham);
 
     void write() override;
 
@@ -54,7 +56,9 @@ namespace ModuleIO
 
     Gint_k& _gint_k; // mohan add 2024-04-01
 
-    LCAO_Matrix& _LM;
+    LCAO_Matrix& _lm;
+
+    Grid_Driver _grid, // mohan add 2024-04-06
 
     const K_Vectors& _kv;
 

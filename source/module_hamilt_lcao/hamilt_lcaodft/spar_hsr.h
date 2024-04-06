@@ -1,6 +1,8 @@
 #ifndef SPARSE_FORMAT_HSR_H 
 #define SPARSE_FORMAT_HSR_H
 
+#include "module_hamilt_lcao/hamilt_lcaodft/hamilt_lcao.h"
+
 namespace sparse_format
 {
 
@@ -26,3 +28,5 @@ namespace sparse_format
 	void clear_zero_elements(const int &current_spin, const double &sparse_thr);
 
 }
+
+#endif

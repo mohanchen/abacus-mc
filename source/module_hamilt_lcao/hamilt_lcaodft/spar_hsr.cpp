@@ -1,13 +1,13 @@
 #include "spar_hsr.h"
 #include "module_hamilt_lcao/module_hcontainer/hcontainer.h"
 
-void sparse_matrix::cal_HSR(
+void sparse_format::cal_HSR(
 		const int &current_spin, 
 		const double &sparse_threshold, 
 		const int (&nmp)[3], 
 		hamilt::Hamilt<std::complex<double>>* p_ham)
 {
-    ModuleBase::TITLE("sparse_matrix","cal_HSR");
+    ModuleBase::TITLE("sparse_format","cal_HSR");
 
     sparse_format::set_R_range(*this->LM);
 
@@ -89,13 +89,13 @@ void sparse_matrix::cal_HSR(
 }
 
 
-void sparse_matrix::cal_HContainer_d(
+void sparse_format::cal_HContainer_d(
 		const int &current_spin, 
 		const double &sparse_threshold, 
 		const hamilt::HContainer<double>& hR, 
 		std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>>& target)
 {
-    ModuleBase::TITLE("sparse_matrix","cal_HContainer_d");
+    ModuleBase::TITLE("sparse_format","cal_HContainer_d");
 
     const Parallel_Orbitals* paraV = this->LM->ParaV;
     auto row_indexes = paraV->get_indexes_row();
@@ -132,14 +132,14 @@ void sparse_matrix::cal_HContainer_d(
     return;
 }
 
-void sparse_matrix::cal_HContainer_cd(
+void sparse_format::cal_HContainer_cd(
 		const int &current_spin, 
 		const double &sparse_threshold, 
 		const hamilt::HContainer<std::complex<double>>& hR, 
 		std::map<Abfs::Vector3_Order<int>, 
 		std::map<size_t, std::map<size_t, std::complex<double>>>>& target)
 {
-    ModuleBase::TITLE("sparse_matrix","cal_HContainer_cd");
+    ModuleBase::TITLE("sparse_format","cal_HContainer_cd");
 
     const Parallel_Orbitals* paraV = this->LM->ParaV;
     auto row_indexes = paraV->get_indexes_row();
@@ -182,6 +182,8 @@ void sparse_format::clear_zero_elements(
 		const int &current_spin, 
 		const double &sparse_threshold)
 {
+    ModuleBase::TITLE("sparse_format","clear_zero_elements");
+
     if(GlobalV::NSPIN != 4)
     {
         for (auto &R_loop : this->LM->HR_sparse[current_spin])

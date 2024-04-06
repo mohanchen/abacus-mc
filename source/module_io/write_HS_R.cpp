@@ -2,6 +2,7 @@
 #include "write_HS_R.h"
 #include "write_HS_sparse.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/spar_hsr.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/spar_dh.h"
 
 
 // if 'binary=true', output binary file.
@@ -25,13 +26,13 @@ void ModuleIO::output_HS_R(const int& istep,
     {
         const int spin_now = 0;
         // jingan add 2021-6-4, modify 2021-12-2
-        sparse_matrix::cal_HSR(spin_now, sparse_thr, kv.nmp, p_ham);
+        sparse_format::cal_HSR(spin_now, sparse_thr, kv.nmp, p_ham);
     }
     else if(GlobalV::NSPIN==2)
     {
         const int spin_now = GlobalV::CURRENT_SPIN;
         // save HR of current_spin first
-        sparse_matrix::cal_HSR(spin_now, sparse_thr, kv.nmp, p_ham);
+        sparse_format::cal_HSR(spin_now, sparse_thr, kv.nmp, p_ham);
         // cal HR of the other spin
         if(GlobalV::VL_IN_H)
         {
@@ -49,7 +50,7 @@ void ModuleIO::output_HS_R(const int& istep,
             p_ham->refresh();
             p_ham->updateHk(ik);
         }
-        sparse_matrix::cal_HSR(GlobalV::CURRENT_SPIN, sparse_thr, kv.nmp, p_ham);
+        sparse_format::cal_HSR(GlobalV::CURRENT_SPIN, sparse_thr, kv.nmp, p_ham);
     }
 
 	ModuleIO::save_HSR_sparse(
@@ -72,6 +73,7 @@ void ModuleIO::output_dH_R(const int& istep,
                            LCAO_gen_fixedH& gen_h, // mohan add 2024-04-02
                            Gint_k& gint_k,  // mohan add 2024-04-01
                            LCAO_Matrix &lm,  // mohan add 2024-04-01
+                           Grid_Driver &grid, // mohan add 2024-04-06
                            const K_Vectors& kv,
                            const bool& binary,
                            const double& sparse_thr)
@@ -86,12 +88,13 @@ void ModuleIO::output_dH_R(const int& istep,
     if(GlobalV::NSPIN==1||GlobalV::NSPIN==4)
     {
         // mohan add 2024-04-01
-        assert(GlobalV::CURRENT_SPIN==0);
+        const int nspin = GlobalV::CURRENT_SPIN; 
 
 		sparse_format::cal_dH(
                 lm,
+                grid,
 				gen_h,
-				GlobalV::CURRENT_SPIN, 
+				nspin, 
 				sparse_thr, 
 				gint_k);
 	}
@@ -120,6 +123,7 @@ void ModuleIO::output_dH_R(const int& istep,
 
 				sparse_format::cal_dH(
                         lm,
+                        grid,
 						gen_h,
 						GlobalV::CURRENT_SPIN, 
 						sparse_thr, 

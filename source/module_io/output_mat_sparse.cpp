@@ -12,11 +12,12 @@ namespace ModuleIO
         int out_mat_t,
         int out_mat_r,
         int istep,
-        const ModuleBase::matrix& v_eff,
-        const Parallel_Orbitals& pv,
+        const ModuleBase::matrix &v_eff,
+        const Parallel_Orbitals &pv,
         LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
-        Gint_k& gint_k, // mohan add 2024-04-01
-        LCAO_Matrix& LM,
+        Gint_k &gint_k, // mohan add 2024-04-01
+        LCAO_Matrix &lm,
+        Grid_Driver &grid, // mohan add 2024-04-06
         const K_Vectors& kv,
         hamilt::Hamilt<T>* p_ham)
     : _out_mat_hsR(out_mat_hsR),
@@ -28,7 +29,8 @@ namespace ModuleIO
       _pv(pv),
       _gen_h(gen_h), // mohan add 2024-04-02
       _gint_k(gint_k), // mohan add 2024-04-01
-      _LM(LM),
+      _lm(lm),
+      _grid(grid), // mohan add 2024-04-06
       _kv(kv),
       _p_ham(p_ham)
 {
@@ -49,7 +51,7 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
 		output_HS_R(
 				_istep, 
 				this->_v_eff, 
-				this->_LM, 
+				this->_lm, 
 				_kv, 
 				_p_ham);
     }
@@ -59,7 +61,7 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
     {
 		output_T_R(
 				_istep, 
-				this->_LM, 
+				this->_lm, 
 				this->_gen_h); // LiuXh add 2019-07-15
     }
 
@@ -71,7 +73,8 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
 				this->_v_eff, 
                 this->_gen_h,
 				this->_gint_k, // mohan add 2024-04-01
-				this->_LM,
+				this->_lm,
+                this->_grid, // mohan add 2024-04-06
 				_kv); // LiuXh add 2019-07-15
 	}
 
@@ -82,7 +85,7 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
         r_matrix.init(this->_pv);
         if (_out_mat_hsR)
         {
-            r_matrix.out_rR_other(_istep, this->_LM.output_R_coor);
+            r_matrix.out_rR_other(_istep, this->_lm.output_R_coor);
         }
         else
         {
