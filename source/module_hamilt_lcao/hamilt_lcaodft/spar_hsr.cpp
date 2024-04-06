@@ -1,4 +1,7 @@
 #include "spar_hsr.h"
+#include "spar_dh.h"
+#include "spar_u.h"
+#include "spar_exx.h"
 #include "module_hamilt_lcao/module_hcontainer/hcontainer.h"
 
 void sparse_format::cal_HSR(
@@ -22,14 +25,14 @@ void sparse_format::cal_HSR(
         hamilt::HamiltLCAO<std::complex<double>, double>* p_ham_lcao = 
         dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham);
 
-		this->cal_HContainer_sparse_d(
+		sparse_format::cal_HContainer_d(
                 pv,
                 current_spin, 
 				sparse_thr, 
 				*(p_ham_lcao->getHR()), 
 				lm.HR_sparse[current_spin]);
 
-		this->cal_HContainer_sparse_d(
+		sparse_format::cal_HContainer_d(
 				pv,
 				current_spin, 
 				sparse_thr, 
@@ -41,14 +44,14 @@ void sparse_format::cal_HSR(
 		hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>* p_ham_lcao = 
 			dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham);
 
-		this->cal_HContainer_sparse_cd(
+		sparse_format::cal_HContainer_cd(
 				pv,
 				current_spin, 
 				sparse_thr, 
 				*(p_ham_lcao->getHR()), 
 				lm.HR_soc_sparse);
 
-		this->cal_HContainer_sparse_cd(
+		sparse_format::cal_HContainer_cd(
 				pv,
 				current_spin, 
 				sparse_thr, 
@@ -65,11 +68,23 @@ void sparse_format::cal_HSR(
     {
         if(nspin==1 || nspin==2)
         {
-            cal_HR_dftu(current_spin, sparse_thr);
-        }
-	    else if(nspin==4)
-        {
-            cal_HR_dftu_soc(current_spin, sparse_thr);
+			cal_HR_dftu(
+					pv,
+					lm.all_R_coor,
+					lm.SR_sparse,
+					lm.HR_sparse,
+					current_spin, 
+					sparse_thr);
+		}
+		else if(nspin==4)
+		{
+			cal_HR_dftu_soc(
+					pv,
+					lm.all_R_coor,
+					lm.SR_soc_sparse,
+					lm.HR_soc_sparse,
+					current_spin, 
+					sparse_thr);
         }
 		else
 		{
@@ -84,11 +99,11 @@ void sparse_format::cal_HSR(
     {
 		if(GlobalC::exx_info.info_ri.real_number)
 		{
-			this->cal_HR_exx_sparse(current_spin, sparse_thr, nmp, lm.Hexxd);
+			sparse_format::cal_HR_exx_sparse(current_spin, sparse_thr, nmp, lm.Hexxd);
 		}
 		else
 		{
-			this->cal_HR_exx_sparse(current_spin, sparse_thr, nmp, lm.Hexxc);
+			sparse_format::cal_HR_exx_sparse(current_spin, sparse_thr, nmp, lm.Hexxc);
 		}
 	}
 #endif // __MPI

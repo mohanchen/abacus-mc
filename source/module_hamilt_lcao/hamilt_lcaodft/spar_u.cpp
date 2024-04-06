@@ -1,10 +1,14 @@
 #include "spar_u.h"
+#include "module_base/parallel_reduce.h"
+#include "module_hamilt_pw/hamilt_pwdft/global.h"
+#include "module_base/timer.h"
+#include "module_hamilt_lcao/module_dftu/dftu.h"
 
 void sparse_format::cal_HR_dftu(
 	    const Parallel_Orbitals &pv,
         std::set<Abfs::Vector3_Order<int>> &all_R_coor,
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> SR_sparse,
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> HR_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> &SR_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> *HR_sparse,
 		const int &current_spin, 
 		const double &sparse_thr)
 {
@@ -124,8 +128,8 @@ void sparse_format::cal_HR_dftu(
 void sparse_format:cal_HR_dftu_soc(
 	    const Parallel_Orbitals &pv,
         std::set<Abfs::Vector3_Order<int>> &all_R_coor,
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> SR_sparse,
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> HR_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> &SR_soc_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> &HR_soc_sparse,
 		const int &current_spin, 
 		const double &sparse_thr)
 {

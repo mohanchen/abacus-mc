@@ -50,7 +50,7 @@ void sparse_format::cal_dH(
 
 void sparse_format::set_R_range(
         std::set<Abfs::Vector3_Order<int>> &all_R_coor,
-		Grid_Driver &grid
+		Grid_Driver &grid)
 {
     const int RminX = int(grid.getD_minX());
     const int RminY = int(grid.getD_minY());

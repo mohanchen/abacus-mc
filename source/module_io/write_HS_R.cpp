@@ -9,7 +9,7 @@
 // if 'binary=true', output binary file.
 // The 'sparse_thr' is the accuracy of the sparse matrix. 
 // If the absolute value of the matrix element is less than or equal to the 'sparse_thr', it will be ignored.
-void ModuleIO::output_HS_R(const int& istep,
+void ModuleIO::output_HSR(const int& istep,
                            const ModuleBase::matrix& v_eff,
                            const Parallel_Orbitals &pv,
                            LCAO_Matrix& lm,
@@ -22,8 +22,8 @@ void ModuleIO::output_HS_R(const int& istep,
                            const bool& binary,
                            const double& sparse_thr)
 {
-    ModuleBase::TITLE("ModuleIO","output_HS_R"); 
-    ModuleBase::timer::tick("ModuleIO","output_HS_R"); 
+    ModuleBase::TITLE("ModuleIO","output_HSR"); 
+    ModuleBase::timer::tick("ModuleIO","output_HSR"); 
 
     const int nspin = GlobalV::NSPIN;
 
@@ -93,12 +93,12 @@ void ModuleIO::output_HS_R(const int& istep,
 
 	lm.destroy_HS_R_sparse();
 
-    ModuleBase::timer::tick("ModuleIO","output_HS_R"); 
+    ModuleBase::timer::tick("ModuleIO","output_HSR"); 
     return;
 }
 
 
-void ModuleIO::output_dH_R(const int &istep,
+void ModuleIO::output_dHR(const int &istep,
                            const ModuleBase::matrix &v_eff,
                            LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
                            Gint_k &gint_k,  // mohan add 2024-04-01
@@ -108,8 +108,8 @@ void ModuleIO::output_dH_R(const int &istep,
                            const bool &binary,
                            const double &sparse_thr)
 {
-    ModuleBase::TITLE("ModuleIO","output_dH_R"); 
-    ModuleBase::timer::tick("ModuleIO","output_dH_R"); 
+    ModuleBase::TITLE("ModuleIO","output_dHR"); 
+    ModuleBase::timer::tick("ModuleIO","output_dHR"); 
 
     lm.Hloc_fixedR.resize(lm.ParaV->nnr);
 
@@ -174,21 +174,28 @@ void ModuleIO::output_dH_R(const int &istep,
 
     gint_k.destroy_pvdpR();
 
-    ModuleBase::timer::tick("ModuleIO","output_dH_R"); 
+    ModuleBase::timer::tick("ModuleIO","output_dHR"); 
     return;
 }
 
-void ModuleIO::output_S_R(
+void ModuleIO::output_SR(
     LCAO_Matrix &lm,
+    Grid_Driver &grid,
     hamilt::Hamilt<std::complex<double>>* p_ham,
     const std::string &SR_filename,
     const bool &binary,
     const double &sparse_thr)
 {
-    ModuleBase::TITLE("ModuleIO","output_S_R");
-    ModuleBase::timer::tick("ModuleIO","output_S_R"); 
+    ModuleBase::TITLE("ModuleIO","output_SR");
+    ModuleBase::timer::tick("ModuleIO","output_SR"); 
 
-    sparse_format::cal_SR(sparse_thr, p_ham);
+	sparse_format::cal_SR(
+			lm.all_R_coor,
+			lm.SR_sparse,
+			lm.SR_soc_sparse,
+			grid,
+			sparse_thr, 
+			p_ham);
 
     const int istep=0;
 
@@ -205,21 +212,24 @@ void ModuleIO::output_S_R(
 
     lm.destroy_HS_R_sparse();
 
-    ModuleBase::timer::tick("ModuleIO","output_S_R");
+    ModuleBase::timer::tick("ModuleIO","output_SR");
     return;
 }
 
-void ModuleIO::output_T_R(
+void ModuleIO::output_TR(
     const int istep,
+    const UnitCell &ucell,
+    const Parallel_Orbitals &pv,
     LCAO_Matrix &lm,
+    Grid_Driver &grid,
     LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
     const std::string &TR_filename,
     const bool &binary,
     const double &sparse_thr
 )
 {
-    ModuleBase::TITLE("ModuleIO","output_T_R");
-    ModuleBase::timer::tick("ModuleIO","output_T_R"); 
+    ModuleBase::TITLE("ModuleIO","output_TR");
+    ModuleBase::timer::tick("ModuleIO","output_TR"); 
 
     std::stringstream sst;
     if(GlobalV::CALCULATION == "md" && !GlobalV::out_app_flag)
@@ -231,7 +241,13 @@ void ModuleIO::output_T_R(
         sst << GlobalV::global_out_dir << TR_filename;
     }
 
-    sparse_format::cal_TR(gen_h, sparse_thr);
+	sparse_format::cal_TR(
+			ucell,
+			pv,
+			lm,
+			grid,
+			gen_h, 
+			sparse_thr);
 
 	ModuleIO::save_sparse(
 			lm.TR_sparse, 
@@ -246,6 +262,6 @@ void ModuleIO::output_T_R(
 
     lm.destroy_T_R_sparse();
 
-    ModuleBase::timer::tick("ModuleIO","output_T_R");
+    ModuleBase::timer::tick("ModuleIO","output_TR");
     return;
 }

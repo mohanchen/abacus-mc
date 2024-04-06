@@ -1,6 +1,7 @@
 #include "output_mat_sparse.h"
 #include "cal_r_overlap_R.h"
 #include "write_HS_R.h"
+#include "module_hamilt_pw/hamilt_pwdft/global.h" // for ucell
 
 namespace ModuleIO
 {
@@ -48,7 +49,7 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
     //! generate a file containing the Hamiltonian and S(overlap) matrices 
     if (_out_mat_hsR)
     {
-		output_HS_R(
+		output_HSR(
 				_istep, 
 				this->_v_eff, 
                 this->_pv,
@@ -61,16 +62,19 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
     //! generate a file containing the kinetic energy matrix
     if (_out_mat_t)
     {
-		output_T_R(
+		output_TR(
 				_istep, 
+                GlobalC::ucell,
+                this->_pv, 
 				this->_lm, 
+				this->_grid,
 				this->_gen_h); // LiuXh add 2019-07-15
     }
 
     //! generate a file containing the derivatives of the Hamiltonian matrix (in Ry/Bohr)
     if (_out_mat_dh)
     {
-		output_dH_R(
+		output_dHR(
 				_istep, 
 				this->_v_eff, 
                 this->_gen_h,
@@ -94,6 +98,8 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
             r_matrix.out_rR(_istep);
         }
     }
+
+    return;
 }
 
 template class Output_Mat_Sparse<double>;

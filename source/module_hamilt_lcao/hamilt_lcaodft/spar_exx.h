@@ -13,3 +13,5 @@ namespace sparse_format
 #endif
 
 }
+
+#endif

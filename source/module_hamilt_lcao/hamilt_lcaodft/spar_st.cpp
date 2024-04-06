@@ -1,9 +1,11 @@
 #include "spar_st.h"
+#include "spar_dh.h"
+#include "spar_hsr.h"
 
 void sparse_format::cal_SR(
 		std::set<Abfs::Vector3_Order<int>> &all_R_coor,
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> SR_sparse,
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> SR_soc_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> &SR_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> &SR_soc_sparse,
 		Grid_Driver &grid,
 		const double &sparse_thr, 
 		hamilt::Hamilt<std::complex<double>>* p_ham)
@@ -12,27 +14,29 @@ void sparse_format::cal_SR(
 
     sparse_format::set_R_range(all_R_coor, grid);
 
+    const int nspin = GlobalV::NSPIN;
+
     //cal_STN_R_sparse(current_spin, sparse_thr);
     if(nspin==1 || nspin==2)
     {
         hamilt::HamiltLCAO<std::complex<double>, double>* p_ham_lcao 
         = dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham);
-        this->cal_HContainer_d(0, sparse_thr, *(p_ham_lcao->getSR()), SR_sparse);
+        sparse_format::cal_HContainer_d(0, sparse_thr, *(p_ham_lcao->getSR()), SR_sparse);
     }
     else if(nspin==4)
     {
         hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>* p_ham_lcao 
         = dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham);
-        this->cal_HContainer_cd(0, sparse_thr, *(p_ham_lcao->getSR()), SR_soc_sparse);
+        sparse_format::cal_HContainer_cd(0, sparse_thr, *(p_ham_lcao->getSR()), SR_soc_sparse);
     }
 
     return;
 }
 
 
-void LCAO_Hamilt::cal_TR(
+void sparse_format::cal_TR(
         const UnitCell &ucell,
-        Parallel_Orbitals &pv,
+        const Parallel_Orbitals &pv,
         LCAO_Matrix &lm,
 	    Grid_Driver &grid,
 		LCAO_gen_fixedH &gen_h,
@@ -48,7 +52,7 @@ void LCAO_Hamilt::cal_TR(
 
     sparse_format::set_R_range(lm.all_R_coor, grid);
 
-	this->cal_STN_R_for_T(
+	sparse_format::cal_STN_R_for_T(
 			ucell, 
 			pv, 
 			lm, 

@@ -10,7 +10,7 @@
 
 namespace ModuleIO
 {
-        void output_HS_R(
+        void output_HSR(
             const int &istep,
             const ModuleBase::matrix& v_eff,
 			const Parallel_Orbitals &pv,
@@ -24,7 +24,7 @@ namespace ModuleIO
             const bool& binary = false,
             const double& sparse_threshold = 1e-10); //LiuXh add 2019-07-15, modify in 2021-12-3
 
-        void output_dH_R(
+        void output_dHR(
             const int &istep,
 			const ModuleBase::matrix& v_eff,
 			LCAO_gen_fixedH& gen_h, // mohan add 2024-04-02
@@ -35,16 +35,20 @@ namespace ModuleIO
             const bool& binary = false,
             const double& sparse_threshold = 1e-10);
 
-        void output_T_R(
-            const int istep,
-            LCAO_Matrix &lm,
+        void output_TR(
+			const int istep,
+			const UnitCell &ucell,
+            const Parallel_Orbitals &pv,
+			LCAO_Matrix &lm,
+            Grid_Driver &grid,
             LCAO_gen_fixedH &gen_h, // mohan add 2024-04-02
             const std::string& TR_filename = "data-TR-sparse_SPIN0.csr",
             const bool& binary = false,
             const double& sparse_threshold = 1e-10);
 
-        void output_S_R(
+        void output_SR(
             LCAO_Matrix &lm,
+            Grid_Driver &grid,
             hamilt::Hamilt<std::complex<double>>* p_ham,
             const std::string& SR_filename = "data-SR-sparse_SPIN0.csr",
             const bool& binary = false,
