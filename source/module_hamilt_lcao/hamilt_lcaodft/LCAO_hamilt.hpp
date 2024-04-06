@@ -10,6 +10,7 @@
 #include "module_base/abfs-vector3_order.h"
 #include "module_ri/RI_2D_Comm.h"
 #include "module_base/timer.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/spar_exx.h"
 
 #include <RI/global/Global_Func-2.h>
 #include <RI/ri/Cell_Nearest.h>
@@ -22,7 +23,7 @@
 
 // Peize Lin add 2022.09.13
 template<typename Tdata>
-void LCAO_Hamilt::cal_HR_exx_sparse(
+void sparse_matrix::cal_HR_exx_sparse(
 			const int &current_spin, 
 			const double &sparse_threshold,
 			const int (&nmp)[3],
