@@ -99,11 +99,11 @@ void sparse_format::cal_HSR(
     {
 		if(GlobalC::exx_info.info_ri.real_number)
 		{
-			sparse_format::cal_HR_exx_sparse(current_spin, sparse_thr, nmp, lm.Hexxd);
+			sparse_format::cal_HR_exx(lm, current_spin, sparse_thr, nmp, lm.Hexxd);
 		}
 		else
 		{
-			sparse_format::cal_HR_exx_sparse(current_spin, sparse_thr, nmp, lm.Hexxc);
+			sparse_format::cal_HR_exx(lm, current_spin, sparse_thr, nmp, lm.Hexxc);
 		}
 	}
 #endif // __MPI

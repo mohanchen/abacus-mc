@@ -11,6 +11,8 @@
 #include "module_ri/RI_2D_Comm.h"
 #include "module_base/timer.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/spar_exx.h"
+// use LCAO_Matrix
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_matrix.h"
 
 #include <RI/global/Global_Func-2.h>
 #include <RI/ri/Cell_Nearest.h>
@@ -23,14 +25,15 @@
 
 // Peize Lin add 2022.09.13
 template<typename Tdata>
-void sparse_matrix::cal_HR_exx_sparse(
+void sparse_format::cal_HR_exx(
+            LCAO_Matrix &lm, // mohan add 2024-04-06
 			const int &current_spin, 
 			const double &sparse_threshold,
 			const int (&nmp)[3],
 			const std::vector< std::map<int, std::map<std::pair<int,std::array<int,3>>, RI::Tensor<Tdata>>>>& Hexxs)
 {
-	ModuleBase::TITLE("LCAO_Hamilt","cal_HR_exx_sparse");
-	ModuleBase::timer::tick("LCAO_Hamilt","cal_HR_exx_sparse");
+	ModuleBase::TITLE("sparse_format","cal_HR_exx");
+	ModuleBase::timer::tick("sparse_format","cal_HR_exx");
 
 	const Tdata frac = GlobalC::exx_info.info_global.hybrid_alpha;
 
@@ -73,14 +76,14 @@ void sparse_matrix::cal_HR_exx_sparse(
 				const Abfs::Vector3_Order<int> R = RI_Util::array3_to_Vector3(
 					cell_nearest.get_cell_nearest_discrete(iat0, iat1, HexxB.first.second));
 
-				this->LM->all_R_coor.insert(R);
+				lm.all_R_coor.insert(R);
 
 				const RI::Tensor<Tdata> &Hexx = HexxB.second;
 
 				for(size_t iw0=0; iw0<Hexx.shape[0]; ++iw0)
 				{
 					const int iwt0 = RI_2D_Comm::get_iwt(iat0, iw0, is0_b);
-					const int iwt0_local = this->LM->ParaV->global2local_row(iwt0);		
+					const int iwt0_local = lm.ParaV->global2local_row(iwt0);		
 
 					if(iwt0_local<0)	
 					{
@@ -90,7 +93,7 @@ void sparse_matrix::cal_HR_exx_sparse(
 					for(size_t iw1=0; iw1<Hexx.shape[1]; ++iw1)
 					{
 						const int iwt1 = RI_2D_Comm::get_iwt(iat1, iw1, is1_b);
-						const int iwt1_local = this->LM->ParaV->global2local_col(iwt1);		
+						const int iwt1_local = lm.ParaV->global2local_col(iwt1);		
 
 						if(iwt1_local<0)	
 						{
@@ -101,7 +104,7 @@ void sparse_matrix::cal_HR_exx_sparse(
 						{
 							if(GlobalV::NSPIN==1 || GlobalV::NSPIN==2)
 							{
-								auto &HR_sparse_ptr = this->LM->HR_sparse[current_spin][R][iwt0];
+								auto &HR_sparse_ptr = lm.HR_sparse[current_spin][R][iwt0];
 								double &HR_sparse = HR_sparse_ptr[iwt1];
 								HR_sparse += RI::Global_Func::convert<double>(frac * Hexx(iw0,iw1));
 								if(std::abs(HR_sparse) <= sparse_threshold)
@@ -111,7 +114,7 @@ void sparse_matrix::cal_HR_exx_sparse(
 							}
 							else if(GlobalV::NSPIN==4)
 							{
-								auto &HR_sparse_ptr = this->LM->HR_soc_sparse[R][iwt0];
+								auto &HR_sparse_ptr = lm.HR_soc_sparse[R][iwt0];
 								std::complex<double> &HR_sparse = HR_sparse_ptr[iwt1];
 								HR_sparse += RI::Global_Func::convert<std::complex<double>>(frac * Hexx(iw0,iw1));
 								if(std::abs(HR_sparse) <= sparse_threshold)
@@ -130,7 +133,7 @@ void sparse_matrix::cal_HR_exx_sparse(
 		}
 	}
 
-	ModuleBase::timer::tick("LCAO_Hamilt","cal_HR_exx_sparse");
+	ModuleBase::timer::tick("sparse_format","cal_HR_exx_sparse");
 }
 
 #endif

@@ -9,10 +9,14 @@
 #include <RI/global/Global_Func-2.h>
 #include <RI/ri/Cell_Nearest.h>
 
+// use LCAO_Matrix
+#include "module_hamilt_lcao/hamilt_lcaodft/LCAO_matrix.h"
+
 namespace sparse_format
 {
 
-    template<typename Tdata> void cal_HR_exx_sparse(
+    template<typename Tdata> void cal_HR_exx(
+            LCAO_Matrix &lm,
             const int &current_spin,
             const double &sparse_thr,
             const int (&nmp)[3],
