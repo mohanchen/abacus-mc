@@ -36,7 +36,7 @@ void sparse_format::cal_dH(
     }
     gen_h.build_Nonlocal_mu_new (lm.Hloc_fixed.data(), true);
     
-    sparse_format::cal_dSTN_R(lm, current_spin, sparse_thr);
+    sparse_format::cal_dSTN_R(lm, grid, current_spin, sparse_thr);
 
     delete[] lm.DHloc_fixedR_x;
     delete[] lm.DHloc_fixedR_y;

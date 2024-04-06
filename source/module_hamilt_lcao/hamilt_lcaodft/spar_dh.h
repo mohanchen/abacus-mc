@@ -24,6 +24,7 @@ namespace sparse_format
 	// be called by 'cal_dH_sparse' 
 	void cal_dSTN_R(
 			LCAO_Matrix &lm,
+		    Grid_Driver &grid,
 			const int &current_spin, 
 			const double &sparse_thr);
 }
