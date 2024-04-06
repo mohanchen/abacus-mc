@@ -117,7 +117,6 @@ void ESolver_KS_LCAO<TK, TR>::init(Input& inp, UnitCell& ucell)
             &(this->LOC),
             &(this->GG), // mohan add 2024-04-01
             &(this->GK), // mohan add 2024-04-01
-//            &(this->uhm),
             &(this->LOWF),
             this->pw_rho,
             this->pw_big);
@@ -259,7 +258,6 @@ void ESolver_KS_LCAO<TK, TR>::init_after_vc(Input& inp, UnitCell& ucell)
 				&(this->LOC),
                 &(this->GG), // mohan add 2024-04-01
                 &(this->GK), // mohan add 2024-04-01
-//				&(this->uhm),
 				&(this->LOWF),
 				this->pw_rho,
 				this->pw_big);
