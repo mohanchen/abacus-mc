@@ -438,6 +438,7 @@ void ESolver_KS_LCAO<TK, TR>::post_process(void)
 		ModuleIO::out_dos_nao(
 				this->psi,
                 this->LM,
+                this->orb_con.ParaV,
 				this->pelec->ekb,
 				this->pelec->wg,
 				INPUT.dos_edelta_ev,

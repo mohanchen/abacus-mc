@@ -1,15 +1,15 @@
 #include "spar_u.h"
 
-void sparse_matrix_u::cal_HR_dftu(
+void sparse_format::cal_HR_dftu(
 	    const Parallel_Orbitals &pv,
-        std::set<Abfs::Vector3_Order<int>> &all_R_coor;
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> SR_sparse;
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> HR_sparse;
+        std::set<Abfs::Vector3_Order<int>> &all_R_coor,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> SR_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> HR_sparse,
 		const int &current_spin, 
 		const double &sparse_thr)
 {
-    ModuleBase::TITLE("sparse_matrix_u","cal_HR_dftu");
-    ModuleBase::timer::tick("sparse_matrix_u","cal_HR_dftu");
+    ModuleBase::TITLE("sparse_format","cal_HR_dftu");
+    ModuleBase::timer::tick("sparse_format","cal_HR_dftu");
 
     int total_R_num = all_R_coor.size();
     int *nonzero_num = new int[total_R_num]();
@@ -116,20 +116,21 @@ void sparse_matrix_u::cal_HR_dftu(
     HR_tmp = nullptr;
     SR_tmp = nullptr;
 
-    ModuleBase::timer::tick("LCAO_Hamilt","cal_HR_dftu_sparse");
+    ModuleBase::timer::tick("sparse_format","cal_HR_dftu_sparse");
 
+    return;
 }
 
-void sparse_matrix_u:cal_HR_dftu_soc(
+void sparse_format:cal_HR_dftu_soc(
 	    const Parallel_Orbitals &pv,
-        std::set<Abfs::Vector3_Order<int>> &all_R_coor;
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> SR_sparse;
-        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> HR_sparse;
+        std::set<Abfs::Vector3_Order<int>> &all_R_coor,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> SR_sparse,
+        std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> HR_sparse,
 		const int &current_spin, 
 		const double &sparse_thr)
 {
-    ModuleBase::TITLE("LCAO_Hamilt","cal_HR_dftu_soc");
-    ModuleBase::timer::tick("LCAO_Hamilt","cal_HR_dftu_soc");
+    ModuleBase::TITLE("sparse_format","cal_HR_dftu_soc");
+    ModuleBase::timer::tick("sparse_format","cal_HR_dftu_soc");
 
     int total_R_num = all_R_coor.size();
     int *nonzero_num = new int[total_R_num]();
@@ -234,6 +235,7 @@ void sparse_matrix_u:cal_HR_dftu_soc(
     HR_soc_tmp = nullptr;
     SR_soc_tmp = nullptr;
 
-    ModuleBase::timer::tick("LCAO_Hamilt","calculat_HR_dftu_soc");
+    ModuleBase::timer::tick("sparse_format","calculat_HR_dftu_soc");
 
+    return;
 }

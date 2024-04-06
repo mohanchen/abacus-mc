@@ -58,7 +58,7 @@ namespace ModuleIO
 
     LCAO_Matrix& _lm;
 
-    Grid_Driver _grid, // mohan add 2024-04-06
+    Grid_Driver _grid; // mohan add 2024-04-06
 
     const K_Vectors& _kv;
 

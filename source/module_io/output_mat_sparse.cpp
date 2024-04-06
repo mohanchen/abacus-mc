@@ -51,7 +51,9 @@ void Output_Mat_Sparse<std::complex<double>>::write(void)
 		output_HS_R(
 				_istep, 
 				this->_v_eff, 
+                this->_pv,
 				this->_lm, 
+                this->_grid,
 				_kv, 
 				_p_ham);
     }

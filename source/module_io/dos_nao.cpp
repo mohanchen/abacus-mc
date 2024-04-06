@@ -59,10 +59,11 @@ namespace ModuleIO
     {
         GlobalV::ofs_running << " Fermi energy (spin = 1) is " << eferm.ef_up << " Rydberg" << std::endl;
         GlobalV::ofs_running << " Fermi energy (spin = 2) is " << eferm.ef_dw << " Rydberg" << std::endl;
-    }
-    }
+	}
+}
 
-template void out_dos_nao(const psi::Psi<double>* psi,
+template void out_dos_nao(
+        const psi::Psi<double>* psi,
 		LCAO_Matrix &lm,
 		const Parallel_Orbitals &pv,
 		const ModuleBase::matrix& ekb,
@@ -77,7 +78,8 @@ template void out_dos_nao(const psi::Psi<double>* psi,
         int nbands,
 		hamilt::Hamilt<double>* p_ham);
 
-template void out_dos_nao(const psi::Psi<std::complex<double>>* psi,
+template void out_dos_nao(
+        const psi::Psi<std::complex<double>>* psi,
 		LCAO_Matrix &lm,
 		const Parallel_Orbitals &pv,
 		const ModuleBase::matrix& ekb,

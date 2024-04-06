@@ -13,7 +13,9 @@ namespace ModuleIO
         void output_HS_R(
             const int &istep,
             const ModuleBase::matrix& v_eff,
-            LCAO_Matrix &lm,
+			const Parallel_Orbitals &pv,
+			LCAO_Matrix &lm,
+            Grid_Driver &grid, // mohan add 2024-04-06
             const K_Vectors& kv,
             hamilt::Hamilt<std::complex<double>>* p_ham,
             const std::string& SR_filename = "data-SR-sparse_SPIN0.csr",
