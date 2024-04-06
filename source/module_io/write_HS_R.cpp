@@ -3,6 +3,7 @@
 #include "write_HS_sparse.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/spar_hsr.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/spar_dh.h"
+#include "module_hamilt_lcao/hamilt_lcaodft/spar_st.h"
 
 
 // if 'binary=true', output binary file.
@@ -155,6 +156,8 @@ void ModuleIO::output_S_R(
 
     sparse_format::cal_SR(sparse_thr, p_ham);
 
+    const int istep=0;
+
 	ModuleIO::save_sparse(
 			lm.SR_sparse, 
 			lm.all_R_coor,
@@ -163,7 +166,7 @@ void ModuleIO::output_S_R(
 			SR_filename,
 			*lm.ParaV, 
 			"S", 
-			0
+			istep
 			);
 
     lm.destroy_HS_R_sparse();

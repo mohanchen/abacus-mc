@@ -437,7 +437,7 @@ void ESolver_KS_LCAO<TK, TR>::post_process(void)
     {
 		ModuleIO::out_dos_nao(
 				this->psi,
-//				this->uhm,
+                this->LM,
 				this->pelec->ekb,
 				this->pelec->wg,
 				INPUT.dos_edelta_ev,
@@ -1204,7 +1204,7 @@ ModuleIO::Output_Mat_Sparse<TK> ESolver_KS_LCAO<TK, TR>::create_Output_Mat_Spars
 			istep,
 			this->pelec->pot->get_effective_v(),
 			*this->LOWF.ParaV,
-            *this->gen_h, // mohan add 2024-04-06
+            this->gen_h, // mohan add 2024-04-06
             this->GK, // mohan add 2024-04-01
 			this->LM,
             GlobalC::GridD, // mohan add 2024-04-06
