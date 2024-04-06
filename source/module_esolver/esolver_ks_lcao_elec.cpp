@@ -494,7 +494,7 @@ void ESolver_KS_LCAO<std::complex<double>, double>::get_S(void)
         dynamic_cast<hamilt::OperatorLCAO<std::complex<double>, double>*>(this->p_hamilt->ops)->contributeHR();
     }
 
-    ModuleIO::output_SR(GlobalC::GridD, this->LM, this->p_hamilt, "SR.csr");
+    ModuleIO::output_SR(orb_con.ParaV, this->LM, GlobalC::GridD, this->p_hamilt, "SR.csr");
 
     return;
 }
@@ -528,7 +528,7 @@ void ESolver_KS_LCAO<std::complex<double>, std::complex<double>>::get_S(void)
             ->contributeHR();
     }
 
-    ModuleIO::output_SR(GlobalC::GridD, this->LM, this->p_hamilt, "SR.csr");
+    ModuleIO::output_SR(orb_con.ParaV, this->LM, GlobalC::GridD, this->p_hamilt, "SR.csr");
 
     return;
 }

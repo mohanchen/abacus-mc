@@ -109,7 +109,7 @@ void sparse_format::cal_HSR(
 #endif // __MPI
 #endif // __EXX
 
-    sparse_format::clear_zero_elements(current_spin, sparse_thr);
+    sparse_format::clear_zero_elements(lm, current_spin, sparse_thr);
 
     return;
 }

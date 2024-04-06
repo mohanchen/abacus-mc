@@ -8,6 +8,7 @@ namespace sparse_format
 {
     //! calculate overlap matrix with lattice vector R
 	void cal_SR(
+            const Parallel_Orbitals &pv,
 			std::set<Abfs::Vector3_Order<int>> &all_R_coor,
 			std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> &SR_sparse,
 			std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> &SR_soc_sparse,
@@ -27,7 +28,7 @@ namespace sparse_format
     //! cal_STN_R_for_T is only called by cal_TR
 	void cal_STN_R_for_T(
 			const UnitCell &ucell,
-			Parallel_Orbitals &pv,
+			const Parallel_Orbitals &pv,
 			LCAO_Matrix &lm,
 			Grid_Driver &grid,
 			const double &sparse_thr);

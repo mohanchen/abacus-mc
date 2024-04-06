@@ -1,8 +1,10 @@
+#include <complex>
 #include "spar_st.h"
 #include "spar_dh.h"
 #include "spar_hsr.h"
 
 void sparse_format::cal_SR(
+        const Parallel_Orbitals &pv,
 		std::set<Abfs::Vector3_Order<int>> &all_R_coor,
         std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, double>>> &SR_sparse,
         std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> &SR_soc_sparse,
@@ -21,13 +23,15 @@ void sparse_format::cal_SR(
     {
         hamilt::HamiltLCAO<std::complex<double>, double>* p_ham_lcao 
         = dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham);
-        sparse_format::cal_HContainer_d(0, sparse_thr, *(p_ham_lcao->getSR()), SR_sparse);
+        const int cspin = 0;
+        sparse_format::cal_HContainer_d(pv, cspin, sparse_thr, *(p_ham_lcao->getSR()), SR_sparse);
     }
     else if(nspin==4)
     {
         hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>* p_ham_lcao 
         = dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham);
-        sparse_format::cal_HContainer_cd(0, sparse_thr, *(p_ham_lcao->getSR()), SR_soc_sparse);
+        const int cspin = 0;
+        sparse_format::cal_HContainer_cd(pv, cspin, sparse_thr, *(p_ham_lcao->getSR()), SR_soc_sparse);
     }
 
     return;
@@ -65,19 +69,21 @@ void sparse_format::cal_TR(
 
 void sparse_format::cal_STN_R_for_T(
         const UnitCell &ucell,
-        Parallel_Orbitals &pv,
+        const Parallel_Orbitals &pv,
         LCAO_Matrix &lm,
 		Grid_Driver &grid,
 		const double &sparse_thr)
 {
     ModuleBase::TITLE("sparse_format","cal_STN_R_for_T");
 
+    const int nspin = GlobalV::NSPIN;
+
     int index = 0;
     ModuleBase::Vector3<double> dtau, tau1, tau2;
     ModuleBase::Vector3<double> dtau1, dtau2, tau0;
 
     double tmp=0.0;
-    std::complex<double> tmpc=complex<double>(0.0,0.0);
+    std::complex<double> tmpc=std::complex<double>(0.0,0.0);
 
     for(int T1 = 0; T1 < ucell.ntype; ++T1)
     {

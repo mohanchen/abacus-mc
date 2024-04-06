@@ -179,6 +179,7 @@ void ModuleIO::output_dHR(const int &istep,
 }
 
 void ModuleIO::output_SR(
+    Parallel_Orbitals &pv, 
     LCAO_Matrix &lm,
     Grid_Driver &grid,
     hamilt::Hamilt<std::complex<double>>* p_ham,
@@ -190,6 +191,7 @@ void ModuleIO::output_SR(
     ModuleBase::timer::tick("ModuleIO","output_SR"); 
 
 	sparse_format::cal_SR(
+            pv,
 			lm.all_R_coor,
 			lm.SR_sparse,
 			lm.SR_soc_sparse,
