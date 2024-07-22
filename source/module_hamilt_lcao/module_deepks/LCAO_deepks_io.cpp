@@ -23,10 +23,10 @@
 
 #ifdef __DEEPKS
 
-#include "LCAO_deepks.h"
+#include "LCAO_deepks_io.h"
 #include "npy.hpp"
 
-void LCAO_Deepks::print_dm(const std::vector<double> &dm)
+void LCAO_deepks_io::print_dm(const std::vector<double> &dm)
 {
     std::ofstream ofs("dm");
     ofs << std::setprecision(15);
@@ -41,7 +41,7 @@ void LCAO_Deepks::print_dm(const std::vector<double> &dm)
     }
 }
 
-void LCAO_Deepks::print_dm_k(const int nks, const std::vector<std::vector<std::complex<double>>>& dm)
+void LCAO_deepks_io::print_dm_k(const int nks, const std::vector<std::vector<std::complex<double>>>& dm)
 {
     std::stringstream ss;
     for(int ik=0;ik<nks;ik++)
@@ -63,9 +63,9 @@ void LCAO_Deepks::print_dm_k(const int nks, const std::vector<std::vector<std::c
     }
 }
 
-void LCAO_Deepks::load_npy_gedm(const int nat)
+void LCAO_deepks_io::load_npy_gedm(const int nat)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "load_npy_gedm");
+    ModuleBase::TITLE("LCAO_deepks_io", "load_npy_gedm");
 
     if(GlobalV::MY_RANK==0)
     {
@@ -101,9 +101,9 @@ void LCAO_Deepks::load_npy_gedm(const int nat)
 }
 
 //saves descriptor into dm_eig.npy
-void LCAO_Deepks::save_npy_d(const int nat)
+void LCAO_deepks_io::save_npy_d(const int nat)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_d");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_d");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save descriptor in .npy format
@@ -145,9 +145,9 @@ void LCAO_Deepks::save_npy_d(const int nat)
 }
 
 //saves gvx into grad_vx.npy
-void LCAO_Deepks::save_npy_gvx(const int nat)
+void LCAO_deepks_io::save_npy_gvx(const int nat)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_gvx");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gvx");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save grad_vx.npy (when  force label is in use)
@@ -173,9 +173,9 @@ void LCAO_Deepks::save_npy_gvx(const int nat)
 }
 
 //saves gvx into grad_vepsl.npy
-void LCAO_Deepks::save_npy_gvepsl(const int nat)
+void LCAO_deepks_io::save_npy_gvepsl(const int nat)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_gvepsl");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gvepsl");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save grad_vepsl.npy (when  stress label is in use)
@@ -199,9 +199,9 @@ void LCAO_Deepks::save_npy_gvepsl(const int nat)
 }
 
 //saves energy in numpy format
-void LCAO_Deepks::save_npy_e(const double &e, const std::string &e_file)
+void LCAO_deepks_io::save_npy_e(const double &e, const std::string &e_file)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_e");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_e");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save e_base
@@ -213,9 +213,9 @@ void LCAO_Deepks::save_npy_e(const double &e, const std::string &e_file)
 }
 
 //saves force in numpy format
-void LCAO_Deepks::save_npy_f(const ModuleBase::matrix &f, const std::string &f_file, const int nat)
+void LCAO_deepks_io::save_npy_f(const ModuleBase::matrix &f, const std::string &f_file, const int nat)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_f");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_f");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save f_base
@@ -234,9 +234,9 @@ void LCAO_Deepks::save_npy_f(const ModuleBase::matrix &f, const std::string &f_f
 }
 
 //saves stress in numpy format
-void LCAO_Deepks::save_npy_s(const ModuleBase::matrix &s, const std::string &s_file, const double omega)
+void LCAO_deepks_io::save_npy_s(const ModuleBase::matrix &s, const std::string &s_file, const double omega)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_s");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_s");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save f_base
@@ -255,9 +255,9 @@ void LCAO_Deepks::save_npy_s(const ModuleBase::matrix &s, const std::string &s_f
     return;
 }
 
-void LCAO_Deepks::save_npy_o(const ModuleBase::matrix &bandgap, const std::string &o_file, const int nks)
+void LCAO_deepks_io::save_npy_o(const ModuleBase::matrix &bandgap, const std::string &o_file, const int nks)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_o");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_o");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save o_base
@@ -275,9 +275,9 @@ void LCAO_Deepks::save_npy_o(const ModuleBase::matrix &bandgap, const std::strin
     return;
 }
 
-void LCAO_Deepks::save_npy_orbital_precalc(const int nat, const int nks)
+void LCAO_deepks_io::save_npy_orbital_precalc(const int nat, const int nks)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_orbital_precalc");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_orbital_precalc");
     if(GlobalV::MY_RANK!=0) { return;
 }
     //save orbital_precalc.npy (when bandgap label is in use)
@@ -305,9 +305,9 @@ void LCAO_Deepks::save_npy_orbital_precalc(const int nat, const int nks)
 }
 
 //just for gamma only
-void LCAO_Deepks::save_npy_h(const ModuleBase::matrix &H,const std::string &h_file,const int nlocal)
+void LCAO_deepks_io::save_npy_h(const ModuleBase::matrix &H,const std::string &h_file,const int nlocal)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_h");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_h");
     int nks=1;
     const long unsigned hshape[] = {static_cast<unsigned long>(nks),static_cast<unsigned long>(nlocal), static_cast<unsigned long>(nlocal) };
     vector<double> npy_h;
@@ -325,9 +325,9 @@ void LCAO_Deepks::save_npy_h(const ModuleBase::matrix &H,const std::string &h_fi
     return;    
 }
 
-void LCAO_Deepks::save_npy_v_delta_precalc(const int nat, const int nks,const int nlocal)
+void LCAO_deepks_io::save_npy_v_delta_precalc(const int nat, const int nks,const int nlocal)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_v_delta_precalc");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_v_delta_precalc");
     if(GlobalV::MY_RANK!=0) { return;
 }
     // timeval t_start;
@@ -363,9 +363,9 @@ void LCAO_Deepks::save_npy_v_delta_precalc(const int nat, const int nks,const in
     return;
 }
 
-void LCAO_Deepks::save_npy_psialpha(const int nat, const int nks,const int nlocal)
+void LCAO_deepks_io::save_npy_psialpha(const int nat, const int nks,const int nlocal)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_psialpha");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_psialpha");
     if(GlobalV::MY_RANK!=0) { return;
 }
     // timeval t_start;
@@ -403,17 +403,15 @@ void LCAO_Deepks::save_npy_psialpha(const int nat, const int nks,const int nloca
     return;
 }
 
-void LCAO_Deepks::save_npy_gevdm(const int nat)
+void LCAO_deepks_io::save_npy_gevdm(const int nat)
 {
-    ModuleBase::TITLE("LCAO_Deepks", "save_npy_gevdm");
+    ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gevdm");
     if(GlobalV::MY_RANK!=0) { return;
 }
-    // timeval t_start;
-    // gettimeofday(&t_start,NULL);
     //save grad_evdm.npy (when v_delta label == 2)
     //unit: a.u.
-    int nlmax = this->inlmax/nat;
-    int mmax = 2*this->lmaxd+1;
+    const int nlmax = this->inlmax/nat;
+    const int mmax = 2*this->lmaxd+1;
     const long unsigned gshape[] = {static_cast<unsigned long>(nat),
                                     static_cast<unsigned long>(nlmax),
                                     static_cast<unsigned long>(mmax),
@@ -437,9 +435,6 @@ void LCAO_Deepks::save_npy_gevdm(const int nat)
         }
     }
     npy::SaveArrayAsNumpy("grad_evdm.npy", false, 5, gshape, npy_gevdm);
-    // timeval t_end;
-    // gettimeofday(&t_end,NULL);
-    // std::cout<<"save gevdm time:\t"<<(double)(t_end.tv_sec-t_start.tv_sec) + (double)(t_end.tv_usec-t_start.tv_usec)/1000000.0<<std::endl;
     return;
 }
 
