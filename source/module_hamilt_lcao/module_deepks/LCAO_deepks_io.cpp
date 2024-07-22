@@ -120,6 +120,7 @@ void LCAO_deepks_io::load_npy_gedm(const int nat,
 //saves descriptor into dm_eig.npy
 void LCAO_deepks_io::save_npy_d(const int nat, 
                                 const int des_per_atom,
+                                const int inlmax,
                                 const bool deepks_equiv,
                                 const std::vector<torch::Tensor> &d_tensor)
 {
@@ -461,7 +462,10 @@ void LCAO_deepks_io::save_npy_v_delta_precalc(const int nat,
 
 void LCAO_deepks_io::save_npy_psialpha(const int nat, 
                                        const int nks,
-                                       const int nlocal)
+                                       const int nlocal,
+                                       const int inlmax,
+                                       const int lmaxd,
+                                       const torch::Tensor &psialpha_tensor)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_psialpha");
 	if(GlobalV::MY_RANK!=0)
@@ -471,8 +475,8 @@ void LCAO_deepks_io::save_npy_psialpha(const int nat,
 
     //save psialpha.npy (when v_delta label == 2)
     //unit: a.u.
-    int nlmax = this->inlmax/nat;
-    int mmax = 2*this->lmaxd+1;
+    const int nlmax = inlmax/nat;
+    const int mmax = 2*lmaxd+1;
     const long unsigned gshape[] = {static_cast<unsigned long>(nat),
                                     static_cast<unsigned long>(nlmax),
                                     static_cast<unsigned long>(nks),
@@ -489,7 +493,7 @@ void LCAO_deepks_io::save_npy_psialpha(const int nat,
                 {
                     for(int m=0; m< mmax; m++)
                     {
-                        npy_psialpha.push_back(this->psialpha_tensor.index({ iat,nl, iks, mu, m }).item().toDouble());
+                        npy_psialpha.push_back(psialpha_tensor.index({ iat,nl, iks, mu, m }).item().toDouble());
                     }
                 }                
             }
@@ -500,12 +504,18 @@ void LCAO_deepks_io::save_npy_psialpha(const int nat,
 }
 
 
-void LCAO_deepks_io::save_npy_gevdm(const int nat)
+void LCAO_deepks_io::save_npy_gevdm(const int nat,
+                                    const torch::Tensor& gevdm_tensor)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gevdm");
-    if(GlobalV::MY_RANK!=0) { return;
-}
-    //save grad_evdm.npy (when v_delta label == 2)
+	if(GlobalV::MY_RANK!=0) 
+	{ 
+		return;
+	}
+
+    assert(nat>0);
+
+	//save grad_evdm.npy (when v_delta label == 2)
     //unit: a.u.
     const int nlmax = this->inlmax/nat;
     const int mmax = 2*this->lmaxd+1;
@@ -525,7 +535,7 @@ void LCAO_deepks_io::save_npy_gevdm(const int nat)
                 {
                     for(int n=0; n< mmax; n++)
                     {
-                        npy_gevdm.push_back(this->gevdm_tensor.index({ iat, nl, v, m, n}).item().toDouble());
+                        npy_gevdm.push_back(gevdm_tensor.index({ iat, nl, v, m, n}).item().toDouble());
                     }         
                 }
             }                
