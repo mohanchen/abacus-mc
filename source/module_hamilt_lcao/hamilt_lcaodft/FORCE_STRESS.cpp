@@ -649,6 +649,7 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
 
                     LCAO_deepks_io::save_npy_gvepsl(
                       GlobalC::ucell.nat, 
+                      GlobalC::ld.des_per_atom,
                       GlobalC::ld.gvepsl_tensor,
                       GlobalV::MY_RANK); //  unitless, grad_vepsl
                 }

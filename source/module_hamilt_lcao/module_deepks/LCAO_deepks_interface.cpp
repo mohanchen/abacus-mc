@@ -131,14 +131,25 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
                                 ucell,
                                 orb,
                                 GridD);
-                    
-                    LCAO_deepks_io::save_npy_psialpha(nat, 1, nlocal);
+
+                    const int nks_gamma=1;
+                    LCAO_deepks_io::save_npy_psialpha(nat, 
+                                nks_gamma, 
+                                nlocal,
+                                ld->inlmax,
+                                ld->lmaxd,
+                                ld->psialpha_tensor,
+                                GlobalV::MY_RANK);
 
                     ld->prepare_gevdm(
                                 nat,
                                 orb);
 
-                    LCAO_deepks_io::save_npy_gevdm(nat);
+                    LCAO_deepks_io::save_npy_gevdm(nat,
+                      ld->inlmax,
+                      ld->lmaxd,
+                      ld->gevdm_tensor,
+                      GlobalV::MY_RANK);
                 }
             }
             else //deepks_scf == 0
@@ -171,6 +182,7 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
 					nat, 
 					ld->des_per_atom, 
 					ld->inlmax, 
+                    ld->inl_l,
 					GlobalV::deepks_equiv, 
 					ld->d_tensor, 
 					GlobalV::MY_RANK); // libnpy needed
@@ -317,8 +329,9 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
         {
             LCAO_deepks_io::save_npy_d(nat, 
                                        ld->des_per_atom, 
-                                       ld->inlmax, 
-                                       GlobalV::deepks_equiv, 
+									   ld->inlmax, 
+									   ld->inl_l,
+									   GlobalV::deepks_equiv, 
                                        ld->d_tensor, 
                                        GlobalV::MY_RANK); // libnpy needed
         }

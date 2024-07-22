@@ -11,6 +11,7 @@
 */
 
 #include <string>
+#include <vector>
 #include "module_base/tool_title.h"
 #include "module_base/matrix.h"
 
@@ -73,6 +74,7 @@ void load_npy_gedm(const int nat,
 void save_npy_d(const int nat,
 		const int des_per_atom,
 		const int inlmax,
+        const int* inl_l,
 		const bool deepks_equiv,
 		const std::vector<torch::Tensor> &d_tensor,
 		const int rank);
@@ -83,6 +85,7 @@ void save_npy_gvx(const int nat,
 		const int rank);
 
 void save_npy_gvepsl(const int nat,
+		const int des_per_atom,
 		const torch::Tensor &gvepsl_tensor,
 		const int rank);
 
@@ -134,6 +137,8 @@ void save_npy_psialpha(const int nat,
 		const int rank);
 
 void save_npy_gevdm(const int nat,
+		const int inlmax,
+		const int lmaxd,
 		const torch::Tensor& gevdm_tensor,
 		const int rank);
 };

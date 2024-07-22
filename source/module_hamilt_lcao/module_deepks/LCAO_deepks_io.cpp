@@ -23,6 +23,7 @@
 
 #ifdef __DEEPKS
 
+#include <mpi.h>
 #include "LCAO_deepks_io.h"
 #include "npy.hpp"
 
@@ -122,6 +123,7 @@ void LCAO_deepks_io::load_npy_gedm(const int nat,
 void LCAO_deepks_io::save_npy_d(const int nat, 
                                 const int des_per_atom,
                                 const int inlmax,
+                                const int *inl_l,
                                 const bool deepks_equiv,
                                 const std::vector<torch::Tensor> &d_tensor,
                                 const int rank)
@@ -137,7 +139,7 @@ void LCAO_deepks_io::save_npy_d(const int nat,
     // deepks_equiv was GlobalV::deepks_equiv
     if(!deepks_equiv)
     {
-        vector<double> npy_des;
+        std::vector<double> npy_des;
         for (int inl = 0;inl < inlmax;++inl)
         {
             int nm = 2*inl_l[inl] + 1;
@@ -196,7 +198,7 @@ void LCAO_deepks_io::save_npy_gvx(const int nat,
            static_cast<unsigned long>(nat), 
            static_cast<unsigned long>(des_per_atom)};
 
-    vector<double> npy_gvx;
+    std::vector<double> npy_gvx;
     for (int ibt = 0;ibt < nat;++ibt)
     {
         for (int i = 0;i < 3;i++)
@@ -216,6 +218,7 @@ void LCAO_deepks_io::save_npy_gvx(const int nat,
 
 //saves gvx into grad_vepsl.npy
 void LCAO_deepks_io::save_npy_gvepsl(const int nat,
+                                     const int des_per_atom,
                                      const torch::Tensor &gvepsl_tensor,
                                      const int rank)
 {
@@ -232,7 +235,7 @@ void LCAO_deepks_io::save_npy_gvepsl(const int nat,
                                     static_cast<unsigned long>(nat), 
                                     static_cast<unsigned long>(des_per_atom)};
  
-    vector<double> npy_gvepsl;
+    std::vector<double> npy_gvepsl;
 
     for (int i = 0;i < 6;i++)
     {
@@ -264,7 +267,7 @@ void LCAO_deepks_io::save_npy_e(const double &e,
 
 	//save e_base
     const long unsigned eshape[] = { 1 };
-    vector<double> npy_e;
+    std::vector<double> npy_e;
     npy_e.push_back(e);
     npy::SaveArrayAsNumpy(e_file, false, 1, eshape, npy_e);
     return;
@@ -289,7 +292,7 @@ void LCAO_deepks_io::save_npy_f(const ModuleBase::matrix &f,
 	//save f_base
     //caution: unit: Rydberg/Bohr
     const long unsigned fshape[] = {static_cast<unsigned long>(nat), 3};
-    vector<double> npy_f;
+    std::vector<double> npy_f;
     for (int iat = 0;iat < nat;++iat)
     {
         for (int i = 0;i < 3;i++)
@@ -315,7 +318,7 @@ void LCAO_deepks_io::save_npy_s(const ModuleBase::matrix &stress,
 	}
 
     const long unsigned sshape[] = { 6 };
-    vector<double> npy_s;
+    std::vector<double> npy_s;
 
     for (int ipol = 0;ipol < 3;++ipol)
     {
@@ -343,7 +346,7 @@ void LCAO_deepks_io::save_npy_o(const ModuleBase::matrix &bandgap,
     //save o_base
     const long unsigned oshape[] = {static_cast<unsigned long>(nks), 1 };
 
-    vector<double> npy_o;
+    std::vector<double> npy_o;
     for (int iks = 0; iks < nks; ++iks)
     {
         for (int hl = 0;hl < 1;hl++)
@@ -376,7 +379,7 @@ void LCAO_deepks_io::save_npy_orbital_precalc(const int nat,
                                     static_cast<unsigned long>(nat),
                                     static_cast<unsigned long>(des_per_atom)};
 
-    vector<double> npy_orbital_precalc;
+    std::vector<double> npy_orbital_precalc;
     for (int iks = 0; iks < nks; ++iks)
     {
         for (int hl = 0; hl < 1; ++hl)
@@ -408,7 +411,7 @@ void LCAO_deepks_io::save_npy_h(const ModuleBase::matrix &hamilt,
                                     static_cast<unsigned long>(nlocal), 
                                     static_cast<unsigned long>(nlocal) };
 
-    vector<double> npy_h;
+    std::vector<double> npy_h;
     for(int k=0; k<nks; k++)
     {
         for (int i=0; i<nlocal; i++)
@@ -448,7 +451,7 @@ void LCAO_deepks_io::save_npy_v_delta_precalc(const int nat,
                                     static_cast<unsigned long>(nat),
                                     static_cast<unsigned long>(des_per_atom)};
 
-    vector<double> npy_v_delta_precalc;
+    std::vector<double> npy_v_delta_precalc;
 
     for (int iks = 0; iks < nks; ++iks)
     {
@@ -494,7 +497,7 @@ void LCAO_deepks_io::save_npy_psialpha(const int nat,
                                     static_cast<unsigned long>(nks),
                                     static_cast<unsigned long>(nlocal),
                                     static_cast<unsigned long>(mmax)};
-    vector<double> npy_psialpha;
+    std::vector<double> npy_psialpha;
     for(int iat=0; iat< nat ; iat++) 
     {
         for(int nl = 0; nl < nlmax; nl++)
@@ -517,6 +520,8 @@ void LCAO_deepks_io::save_npy_psialpha(const int nat,
 
 
 void LCAO_deepks_io::save_npy_gevdm(const int nat,
+                                    const int inlmax,
+                                    const int lmaxd,
                                     const torch::Tensor& gevdm_tensor,
                                     const int rank)
 {
@@ -530,14 +535,14 @@ void LCAO_deepks_io::save_npy_gevdm(const int nat,
 
 	//save grad_evdm.npy (when v_delta label == 2)
     //unit: a.u.
-    const int nlmax = this->inlmax/nat;
-    const int mmax = 2*this->lmaxd+1;
+    const int nlmax = inlmax/nat;
+    const int mmax = 2*lmaxd+1;
     const long unsigned gshape[] = {static_cast<unsigned long>(nat),
                                     static_cast<unsigned long>(nlmax),
                                     static_cast<unsigned long>(mmax),
                                     static_cast<unsigned long>(mmax),
                                     static_cast<unsigned long>(mmax)};
-    vector<double> npy_gevdm;
+    std::vector<double> npy_gevdm;
     for(int iat=0; iat< nat ; iat++)
     {
         for(int nl = 0; nl < nlmax; nl++)
