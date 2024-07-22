@@ -75,11 +75,12 @@ void LCAO_deepks_io::print_dm_k(const int nks,
 void LCAO_deepks_io::load_npy_gedm(const int nat, 
                                    const int des_per_atom,
                                    double** gedm,
-                                   double& e_delta)
+                                   double& e_delta,
+                                   const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "load_npy_gedm");
 
-    if(GlobalV::MY_RANK==0)
+    if(rank==0)
     {
         //load gedm.npy
         std::vector<double> npy_gedm;
@@ -122,11 +123,12 @@ void LCAO_deepks_io::save_npy_d(const int nat,
                                 const int des_per_atom,
                                 const int inlmax,
                                 const bool deepks_equiv,
-                                const std::vector<torch::Tensor> &d_tensor)
+                                const std::vector<torch::Tensor> &d_tensor,
+                                const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_d");
 
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{ 
 		return;
 	}
@@ -145,7 +147,7 @@ void LCAO_deepks_io::save_npy_d(const int nat,
             }
         }
         const long unsigned dshape[] = {static_cast<unsigned long>(nat), static_cast<unsigned long>(des_per_atom)};
-        if (GlobalV::MY_RANK == 0)
+        if (rank == 0)
         {
             npy::SaveArrayAsNumpy("dm_eig.npy", false, 2, dshape, npy_des);
         }
@@ -162,7 +164,7 @@ void LCAO_deepks_io::save_npy_d(const int nat,
             }
         }
         const long unsigned dshape[] = {static_cast<unsigned long>(nat), static_cast<unsigned long>(des_per_atom)};
-        if (GlobalV::MY_RANK == 0)
+        if (rank == 0)
         {
             npy::SaveArrayAsNumpy("dm_eig.npy", false, 2, dshape, npy_des);
         }        
@@ -174,11 +176,12 @@ void LCAO_deepks_io::save_npy_d(const int nat,
 //saves gvx into grad_vx.npy
 void LCAO_deepks_io::save_npy_gvx(const int nat, 
                                   const int des_per_atom,
-                                  const torch::Tensor &gvx_tensor)
+                                  const torch::Tensor &gvx_tensor,
+                                  const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gvx");
 
-	if(GlobalV::MY_RANK!=0)
+	if(rank!=0)
 	{
 		return;
 	}
@@ -213,11 +216,12 @@ void LCAO_deepks_io::save_npy_gvx(const int nat,
 
 //saves gvx into grad_vepsl.npy
 void LCAO_deepks_io::save_npy_gvepsl(const int nat,
-                                     const torch::Tensor &gvepsl_tensor)
+                                     const torch::Tensor &gvepsl_tensor,
+                                     const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gvepsl");
 
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{ 
 		return;
 	}
@@ -248,10 +252,12 @@ void LCAO_deepks_io::save_npy_gvepsl(const int nat,
 
 
 //saves energy in numpy format
-void LCAO_deepks_io::save_npy_e(const double &e, const std::string &e_file)
+void LCAO_deepks_io::save_npy_e(const double &e, 
+                                const std::string &e_file,
+                                const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_e");
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{ 
 		return;
 	}
@@ -268,11 +274,12 @@ void LCAO_deepks_io::save_npy_e(const double &e, const std::string &e_file)
 //saves force in numpy format
 void LCAO_deepks_io::save_npy_f(const ModuleBase::matrix &f, 
                                 const std::string &f_file, 
-                                const int nat)
+                                const int nat,
+                                const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_f");
 
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{ 
 		return;
 	}
@@ -298,10 +305,11 @@ void LCAO_deepks_io::save_npy_f(const ModuleBase::matrix &f,
 //saves stress in numpy format
 void LCAO_deepks_io::save_npy_s(const ModuleBase::matrix &stress, 
                                 const std::string &s_file, 
-                                const double &omega)
+                                const double &omega,
+                                const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_s");
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{
 		return;
 	}
@@ -323,10 +331,11 @@ void LCAO_deepks_io::save_npy_s(const ModuleBase::matrix &stress,
 
 void LCAO_deepks_io::save_npy_o(const ModuleBase::matrix &bandgap, 
                                 const std::string &o_file, 
-                                const int nks)
+                                const int nks,
+                                const int rank)
 {
 	ModuleBase::TITLE("LCAO_deepks_io", "save_npy_o");
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{ 
 		return;
 	}
@@ -351,10 +360,11 @@ void LCAO_deepks_io::save_npy_o(const ModuleBase::matrix &bandgap,
 void LCAO_deepks_io::save_npy_orbital_precalc(const int nat, 
                                               const int nks, 
                                               const int des_per_atom,
-                                              const torch::Tensor& orbital_precalc_tensor)
+                                              const torch::Tensor& orbital_precalc_tensor,
+                                              const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_orbital_precalc");
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{ 
 		return;
 	}
@@ -419,10 +429,11 @@ void LCAO_deepks_io::save_npy_v_delta_precalc(const int nat,
                                               const int nks,
                                               const int nlocal, 
                                               const int des_per_atom,
-                                              const torch::Tensor& v_delta_precalc_tensor)
+                                              const torch::Tensor& v_delta_precalc_tensor,
+                                              const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_v_delta_precalc");
-	if(GlobalV::MY_RANK!=0)
+	if(rank!=0)
 	{
 		return;
 	}
@@ -465,10 +476,11 @@ void LCAO_deepks_io::save_npy_psialpha(const int nat,
                                        const int nlocal,
                                        const int inlmax,
                                        const int lmaxd,
-                                       const torch::Tensor &psialpha_tensor)
+                                       const torch::Tensor &psialpha_tensor,
+                                       const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_psialpha");
-	if(GlobalV::MY_RANK!=0)
+	if(rank!=0)
 	{ 
 		return;
 	}
@@ -505,10 +517,11 @@ void LCAO_deepks_io::save_npy_psialpha(const int nat,
 
 
 void LCAO_deepks_io::save_npy_gevdm(const int nat,
-                                    const torch::Tensor& gevdm_tensor)
+                                    const torch::Tensor& gevdm_tensor,
+                                    const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gevdm");
-	if(GlobalV::MY_RANK!=0) 
+	if(rank!=0) 
 	{ 
 		return;
 	}
