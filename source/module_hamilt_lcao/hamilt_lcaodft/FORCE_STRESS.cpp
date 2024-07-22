@@ -13,6 +13,7 @@
 #ifdef __DEEPKS
 #include "module_elecstate/elecstate_lcao.h"
 #include "module_hamilt_lcao/module_deepks/LCAO_deepks.h" //caoyu add for deepks 2021-06-03
+#include "module_hamilt_lcao/module_deepks/LCAO_deepks_io.h" // mohan add 2024-07-22 
 #endif
 #include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/dftu_lcao.h"
 
@@ -620,21 +621,29 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
             // wenfei add 2021/11/2
             if (GlobalV::deepks_scf)
             {
-                GlobalC::ld.save_npy_s(scs,
+                LCAO_deepks_io::save_npy_s(
+                                       scs,
                                        "s_tot.npy",
-                                       GlobalC::ucell.omega); // change to energy unit Ry when printing, S_tot, w/ model
+                                       GlobalC::ucell.omega,
+                                       GlobalV::MY_RANK); // change to energy unit Ry when printing, S_tot, w/ model
+
                 if (!GlobalV::deepks_equiv) // training with stress label not supported by equivariant version now
                 {
                     GlobalC::ld.cal_gvepsl(GlobalC::ucell.nat);
-                    GlobalC::ld.save_npy_gvepsl(GlobalC::ucell.nat); //  unitless, grad_vepsl
+
+                    LCAO_deepks_io::save_npy_gvepsl(
+                      GlobalC::ucell.nat, 
+                      GlobalC::ld.gvepsl_tensor,
+                      GlobalV::MY_RANK); //  unitless, grad_vepsl
                 }
             }
             else
             {
-                GlobalC::ld.save_npy_s(
+                LCAO_deepks_io::save_npy_s(
                     scs,
                     "s_tot.npy",
-                    GlobalC::ucell.omega); // change to energy unit Ry when printing, S_tot, w/o model;
+                    GlobalC::ucell.omega,
+                    GlobalV::MY_RANK); // change to energy unit Ry when printing, S_tot, w/o model;
             }
         }
 #endif
