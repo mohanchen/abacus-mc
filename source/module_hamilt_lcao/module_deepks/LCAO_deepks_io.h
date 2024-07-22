@@ -1,14 +1,7 @@
-#ifndef LCAO_DEEPKS_IO 
-#define LCAO_DEEPKS_IO 
+#ifndef LCAO_DEEPKS_IO_H 
+#define LCAO_DEEPKS_IO_H
 
 #ifdef __DEEPKS
-
-/*
-#include "module_base/timer.h"
-#include "module_elecstate/module_dm/density_matrix.h"
-
-#include <unordered_map>
-*/
 
 #include <string>
 #include <vector>

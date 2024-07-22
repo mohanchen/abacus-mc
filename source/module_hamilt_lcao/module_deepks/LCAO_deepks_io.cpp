@@ -27,8 +27,6 @@
 #include "LCAO_deepks_io.h"
 #include "npy.hpp"
 
-// nlocal is GlobalV::NLOCAL
-// nrow is this->pv->nrow
 void LCAO_deepks_io::print_dm(const std::vector<double> &dm, 
                               const int nlocal, 
                               const int nrow)
@@ -72,7 +70,6 @@ void LCAO_deepks_io::print_dm_k(const int nks,
 }
 
 
-// e_delta was E_delta
 void LCAO_deepks_io::load_npy_gedm(const int nat, 
                                    const int des_per_atom,
                                    double** gedm,
