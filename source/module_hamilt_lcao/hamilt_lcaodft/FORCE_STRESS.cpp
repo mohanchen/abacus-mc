@@ -397,10 +397,17 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
         // DeePKS force, caoyu add 2021-06-03
         if (GlobalV::deepks_out_labels) // not parallelized yet
         {
-            LCAO_deepks_io::save_npy_f(fcs, "f_tot.npy", GlobalC::ucell.nat); // Ty/Bohr, F_tot
+            LCAO_deepks_io::save_npy_f(fcs, 
+                                       "f_tot.npy", 
+                                       GlobalC::ucell.nat, 
+                                       GlobalV::MY_RANK); // Ty/Bohr, F_tot
+
             if (GlobalV::deepks_scf)
             {
-                LCAO_deepks_io::save_npy_f(fcs - GlobalC::ld.F_delta, "f_base.npy", GlobalC::ucell.nat); // Ry/Bohr, F_base
+                LCAO_deepks_io::save_npy_f(fcs - GlobalC::ld.F_delta, 
+                                           "f_base.npy", 
+                                           GlobalC::ucell.nat, 
+                                           GlobalV::MY_RANK); // Ry/Bohr, F_base
 
                 if (!GlobalV::deepks_equiv) // training with force label not supported by equivariant version now
                 {
@@ -416,6 +423,7 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
                             = dynamic_cast<const elecstate::ElecStateLCAO<std::complex<double>>*>(pelec)
                                   ->get_DM()
                                   ->get_DMK_vector();
+
                         GlobalC::ld.cal_gdmx_k(dm_k,
                                                GlobalC::ucell,
                                                GlobalC::ORB,
@@ -434,12 +442,19 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
                     {
                         GlobalC::ld.check_gvx(GlobalC::ucell.nat);
                     }
-                    LCAO_deepks_io::save_npy_gvx(GlobalC::ucell.nat); //  /Bohr, grad_vx
+
+                    LCAO_deepks_io::save_npy_gvx(GlobalC::ucell.nat,
+                      GlobalC::ld.des_per_atom,
+                      GlobalC::ld.gvx_tensor,
+                      GlobalV::MY_RANK);
                 }
             }
             else
             {
-                LCAO_deepks_io::save_npy_f(fcs, "f_base.npy", GlobalC::ucell.nat); // no scf, F_base=F_tot
+                LCAO_deepks_io::save_npy_f(fcs, 
+                  "f_base.npy", 
+                  GlobalC::ucell.nat,
+                  GlobalV::MY_RANK); // no scf, F_base=F_tot
             }
         }
 #endif
@@ -598,9 +613,10 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
 #ifdef __DEEPKS
         if (GlobalV::deepks_out_labels) // not parallelized yet
         {
-            GlobalC::ld.save_npy_s(scs,
-                                   "s_base.npy",
-                                   GlobalC::ucell.omega); // change to energy unit Ry when printing, S_base;
+            LCAO_deepks_io::save_npy_s(scs,
+                                      "s_base.npy",
+                                      GlobalC::ucell.omega,
+                                      GlobalV::MY_RANK); // change to energy unit Ry when printing, S_base;
         }
         if (GlobalV::deepks_scf)
         {

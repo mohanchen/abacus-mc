@@ -98,7 +98,8 @@ class LCAO_Deepks
     //-------------------
     // private variables
     //-------------------
-  private:
+//  private:
+  public: // change to public to reconstuct the code, 2024-07-22 by mohan
     int lmaxd = 0;  // max l of descirptors
     int nmaxd = 0;  //#. descriptors per l
     int inlmax = 0; // tot. number {i,n,l} - atom, n, l
