@@ -240,7 +240,7 @@ void LCAO_Deepks::cal_f_delta_gamma(const std::vector<std::vector<double>>& dm,
 
     if(isstress)
 	{
-		assert(ucell.omega_>0.0);
+		assert(ucell.omega>0.0);
 		const double weight = ucell.lat0 / ucell.omega ;
 		for(int i=0;i<3;++i)
 		{
