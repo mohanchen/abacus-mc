@@ -10,7 +10,6 @@
 //      calculated by d(des)/dX = d(pdm)/dX * d(des)/d(pdm) = gdmx * gvdm
 //      using einsum
 //4. check_gvx : prints gvx into gvx.dat for checking
-//4. check_gvx : prints gvx into gvx.dat for checking
 //5. cal_gvepsl : gvepsl is used for training with stress label, which is derivative of
 //       descriptors wrt strain tensor, calculated by
 //       d(des)/d\epsilon_{ab} = d(pdm)/d\epsilon_{ab} * d(des)/d(pdm) = gdm_epsl * gvdm
@@ -22,18 +21,8 @@
 //       this is the term V(D) that enters the expression H_V_delta = |alpha>V(D)<alpha|
 //       caculated using torch::autograd::grad
 //9. check_gedm : prints gedm for checking
-//10. cal_orbital_precalc : orbital_precalc is usted for training with orbital label,
-//                          which equals gvdm * orbital_pdm_shell,
-//                          orbital_pdm_shell[1,Inl,nm*nm] = dm_hl * overlap * overlap
-//11. cal_orbital_precalc_k : orbital_precalc is usted for training with orbital label,
-//                          for multi-k case, which equals gvdm * orbital_pdm_shell,
-//                          orbital_pdm_shell[1,Inl,nm*nm] = dm_hl_k * overlap * overlap
-//12. cal_v_delta_precalc : v_delta_precalc is used for training with v_delta label,
-//                         which equals gvdm * v_delta_pdm_shell,
-//                         v_delta_pdm_shell = overlap * overlap
-//13. check_v_delta_precalc : check v_delta_precalc
-//14. prepare_psialpha : prepare psialpha for outputting npy file
-//15. prepare_gevdm : prepare gevdm for outputting npy file
+//10. prepare_psialpha : prepare psialpha for outputting npy file
+//11. prepare_gevdm : prepare gevdm for outputting npy file
 
 #ifdef __DEEPKS
 
@@ -51,11 +40,13 @@ void LCAO_Deepks::cal_descriptor_equiv(const int nat) {
     ModuleBase::timer::tick("LCAO_Deepks", "cal_descriptor_equiv");
 
     // a rather unnecessary way of writing this, but I'll do it for now
-    if (!this->d_tensor.empty()) {
+    if (!this->d_tensor.empty()) 
+    {
         this->d_tensor.erase(this->d_tensor.begin(), this->d_tensor.end());
     }
 
-    for (int iat = 0; iat < nat; iat++) {
+    for (int iat = 0; iat < nat; iat++) 
+    {
         auto tmp = torch::zeros(des_per_atom, torch::kFloat64);
         std::memcpy(tmp.data_ptr(), pdm[iat], sizeof(double) * tmp.numel());
         this->d_tensor.push_back(tmp);
@@ -117,44 +108,59 @@ void LCAO_Deepks::cal_descriptor(const int nat) {
 
 void LCAO_Deepks::check_descriptor(const UnitCell& ucell) {
     ModuleBase::TITLE("LCAO_Deepks", "check_descriptor");
-    if (GlobalV::MY_RANK != 0) {
+
+    if (GlobalV::MY_RANK != 0) 
+    {
         return;
-}
+    }
+    
     std::ofstream ofs("descriptor.dat");
-    ofs << std::setprecision(10);
-    if (!GlobalV::deepks_equiv) {
-        for (int it = 0; it < ucell.ntype; it++) {
-            for (int ia = 0; ia < ucell.atoms[it].na; ia++) {
-                int iat = ucell.itia2iat(it, ia);
-                ofs << ucell.atoms[it].label << " atom_index " << ia + 1
-                    << " n_descriptor " << this->des_per_atom << std::endl;
-                int id = 0;
-                for (int inl = 0; inl < inlmax / ucell.nat; inl++) {
-                    int nm = 2 * inl_l[inl] + 1;
-                    for (int im = 0; im < nm; im++) {
-                        const int ind = iat * inlmax / ucell.nat + inl;
-                        ofs << d_tensor[ind].index({im}).item().toDouble()
-                            << " ";
-                        if (id % 8 == 7) {
-                            ofs << std::endl;
-}
-                        id++;
-                    }
-                }
-                ofs << std::endl << std::endl;
-            }
-        }
-    } else {
-        for (int iat = 0; iat < ucell.nat; iat++) {
-            int it = ucell.iat2it[iat];
+	ofs << std::setprecision(10);
+	if (!GlobalV::deepks_equiv) 
+	{
+		for (int it = 0; it < ucell.ntype; it++) 
+		{
+			for (int ia = 0; ia < ucell.atoms[it].na; ia++) 
+			{
+				int iat = ucell.itia2iat(it, ia);
+				ofs << ucell.atoms[it].label << " atom_index " << ia + 1
+					<< " n_descriptor " << this->des_per_atom << std::endl;
+				int id = 0;
+				for (int inl = 0; inl < inlmax / ucell.nat; inl++) 
+				{
+					int nm = 2 * inl_l[inl] + 1;
+					for (int im = 0; im < nm; im++) 
+					{
+						const int ind = iat * inlmax / ucell.nat + inl;
+						ofs << d_tensor[ind].index({im}).item().toDouble()
+							<< " ";
+
+						if (id % 8 == 7) 
+						{
+							ofs << std::endl;
+						}
+						id++;
+					}
+				}
+				ofs << std::endl << std::endl;
+			}
+		}
+	} 
+	else 
+	{
+		for (int iat = 0; iat < ucell.nat; iat++) 
+		{
+			const int it = ucell.iat2it[iat];
             ofs << ucell.atoms[it].label << " atom_index " << iat + 1
                 << " n_descriptor " << this->des_per_atom << std::endl;
-            for (int i = 0; i < this->des_per_atom; i++) {
+            for (int i = 0; i < this->des_per_atom; i++) 
+            {
                 ofs << this->pdm[iat][i] << " ";
-                if (i % 8 == 7) {
-                    ofs << std::endl;
-}
-            }
+				if (i % 8 == 7) 
+				{
+					ofs << std::endl;
+				}
+			}
             ofs << std::endl << std::endl;
         }
     }
@@ -167,45 +173,56 @@ void LCAO_Deepks::cal_gvx(const int nat) {
     ModuleBase::TITLE("LCAO_Deepks", "cal_gvx");
     // preconditions
     this->cal_gvdm(nat);
-    if (!gdmr_vector.empty()) {
+
+    if (!gdmr_vector.empty()) 
+    {
         gdmr_vector.erase(gdmr_vector.begin(), gdmr_vector.end());
     }
 
     // gdmr_vector : nat(derivative) * 3 * inl(projector) * nm * nm
-    if (GlobalV::MY_RANK == 0) {
+    if (GlobalV::MY_RANK == 0) 
+    {
         // make gdmx as tensor
         int nlmax = this->inlmax / nat;
-        for (int nl = 0; nl < nlmax; ++nl) {
+        for (int nl = 0; nl < nlmax; ++nl) 
+        {
             std::vector<torch::Tensor> bmmv;
-            for (int ibt = 0; ibt < nat; ++ibt) {
+            for (int ibt = 0; ibt < nat; ++ibt) 
+            {
                 std::vector<torch::Tensor> xmmv;
-                for (int i = 0; i < 3; ++i) {
+                for (int i = 0; i < 3; ++i) 
+                {
                     std::vector<torch::Tensor> ammv;
-                    for (int iat = 0; iat < nat; ++iat) {
+                    for (int iat = 0; iat < nat; ++iat) 
+                    {
                         int inl = iat * nlmax + nl;
                         int nm = 2 * this->inl_l[inl] + 1;
                         std::vector<double> mmv;
-                        for (int m1 = 0; m1 < nm; ++m1) {
-                            for (int m2 = 0; m2 < nm; ++m2) {
-                                if (i == 0) {
-                                    mmv.push_back(
-                                        this->gdmx[ibt][inl][m1 * nm + m2]);
-}
-                                if (i == 1) {
-                                    mmv.push_back(
-                                        this->gdmy[ibt][inl][m1 * nm + m2]);
-}
-                                if (i == 2) {
-                                    mmv.push_back(
-                                        this->gdmz[ibt][inl][m1 * nm + m2]);
-}
+                        for (int m1 = 0; m1 < nm; ++m1) 
+                        {
+                            for (int m2 = 0; m2 < nm; ++m2) 
+                            {
+                                if (i == 0) 
+								{
+									mmv.push_back(
+											this->gdmx[ibt][inl][m1 * nm + m2]);
+								}
+								if (i == 1) 
+								{
+									mmv.push_back(
+											this->gdmy[ibt][inl][m1 * nm + m2]);
+								}
+								if (i == 2) 
+								{
+									mmv.push_back(
+											this->gdmz[ibt][inl][m1 * nm + m2]);
+								}
                             }
                         } // nm^2
                         torch::Tensor mm
                             = torch::tensor(
                                   mmv,
-                                  torch::TensorOptions().dtype(torch::kFloat64))
-                                  .reshape({nm, nm}); // nm*nm
+                                  torch::TensorOptions().dtype(torch::kFloat64)).reshape({nm, nm}); // nm*nm
                         ammv.push_back(mm);
                     }
                     torch::Tensor amm = torch::stack(ammv, 0); // nat*nm*nm
@@ -214,9 +231,9 @@ void LCAO_Deepks::cal_gvx(const int nat) {
                 torch::Tensor bmm = torch::stack(xmmv, 0); // 3*nat*nm*nm
                 bmmv.push_back(bmm);
             }
-            this->gdmr_vector.push_back(
-                torch::stack(bmmv, 0)); // nbt*3*nat*nm*nm
+            this->gdmr_vector.push_back(torch::stack(bmmv, 0)); // nbt*3*nat*nm*nm
         }
+
         assert(this->gdmr_vector.size() == nlmax);
 
         // einsum for each inl:
@@ -305,17 +322,18 @@ void LCAO_Deepks::cal_gvepsl(const int nat) {
     }
 
     // gdmr_vector : nat(derivative) * 3 * inl(projector) * nm * nm
-    if (GlobalV::MY_RANK == 0) {
-        // make gdmx as tensor
-        int nlmax = this->inlmax / nat;
-        for (int nl = 0; nl < nlmax; ++nl) {
-            std::vector<torch::Tensor> bmmv;
-            // for (int ipol=0;ipol<6;++ipol)
-            //{
-            //     std::vector<torch::Tensor> xmmv;
-            for (int i = 0; i < 6; ++i) {
-                std::vector<torch::Tensor> ammv;
-                for (int iat = 0; iat < nat; ++iat) {
+	if (GlobalV::MY_RANK == 0) 
+	{
+		// make gdmx as tensor
+		int nlmax = this->inlmax / nat;
+		for (int nl = 0; nl < nlmax; ++nl) 
+		{
+			std::vector<torch::Tensor> bmmv;
+			for (int i = 0; i < 6; ++i) 
+			{
+				std::vector<torch::Tensor> ammv;
+				for (int iat = 0; iat < nat; ++iat) 
+				{
                     int inl = iat * nlmax + nl;
                     int nm = 2 * this->inl_l[inl] + 1;
                     std::vector<double> mmv;
@@ -424,9 +442,12 @@ void LCAO_Deepks::load_model(const std::string& deepks_model) {
 }
 
 inline void generate_py_files(const int lmaxd, const int nmaxd) {
-    if (GlobalV::MY_RANK != 0) {
-        return;
-}
+
+	if (GlobalV::MY_RANK != 0) 
+	{
+		return;
+	}
+
     std::ofstream ofs("cal_gedm.py");
     ofs << "import torch" << std::endl;
     ofs << "import numpy as np" << std::endl << std::endl;
@@ -505,7 +526,9 @@ void LCAO_Deepks::cal_gedm_equiv(const int nat) {
 
 // obtain from the machine learning model dE_delta/dDescriptor
 void LCAO_Deepks::cal_gedm(const int nat) {
-    if (GlobalV::deepks_equiv) {
+
+    if (GlobalV::deepks_equiv) 
+    {
         this->cal_gedm_equiv(nat);
         return;
     }
@@ -564,212 +587,6 @@ void LCAO_Deepks::check_gedm() {
     }
 }
 
-// calculates v_delta_precalc[nks,nlocal,nlocal,NAt,NDscrpt] = gvdm * v_delta_pdm_shell;
-// v_delta_pdm_shell[nks,nlocal,nlocal,Inl,nm*nm] = overlap * overlap;
-// for deepks_v_delta = 1
-void LCAO_Deepks::cal_v_delta_precalc(const int nlocal,
-    const int nat,
-    const UnitCell &ucell,
-    const LCAO_Orbitals &orb,
-    Grid_Driver &GridD)
-{
-    ModuleBase::TITLE("LCAO_Deepks", "calc_v_delta_precalc");
-    // timeval t_start;
-    // gettimeofday(&t_start,NULL);
-
-    this->cal_gvdm(nat);
-    const double Rcut_Alpha = orb.Alpha[0].getRcut();
-    this->init_v_delta_pdm_shell(1,nlocal);
-   
-    for (int T0 = 0; T0 < ucell.ntype; T0++)
-    {
-		Atom* atom0 = &ucell.atoms[T0]; 
-        
-        for (int I0 =0; I0< atom0->na; I0++)
-        {
-            const int iat = ucell.itia2iat(T0,I0);
-            const ModuleBase::Vector3<double> tau0 = atom0->tau[I0];
-            GridD.Find_atom(ucell, atom0->tau[I0] ,T0, I0);
-
-            for (int ad1=0; ad1<GridD.getAdjacentNum()+1 ; ++ad1)
-            {
-                const int T1 = GridD.getType(ad1);
-                const int I1 = GridD.getNatom(ad1);
-                const int start1 = ucell.itiaiw2iwt(T1, I1, 0);
-                const ModuleBase::Vector3<double> tau1 = GridD.getAdjacentTau(ad1);
-				const Atom* atom1 = &ucell.atoms[T1];
-				const int nw1_tot = atom1->nw*GlobalV::NPOL;
-				const double Rcut_AO1 = orb.Phi[T1].getRcut(); 
-
-                const double dist1 = (tau1-tau0).norm() * ucell.lat0;
-                if (dist1 >= Rcut_Alpha + Rcut_AO1)
-                {
-                    continue;
-                }
-
-				for (int ad2=0; ad2 < GridD.getAdjacentNum()+1 ; ad2++)
-				{
-					const int T2 = GridD.getType(ad2);
-					const int I2 = GridD.getNatom(ad2);
-					const int start2 = ucell.itiaiw2iwt(T2, I2, 0);
-					const ModuleBase::Vector3<double> tau2 = GridD.getAdjacentTau(ad2);
-					const Atom* atom2 = &ucell.atoms[T2];
-					const int nw2_tot = atom2->nw*GlobalV::NPOL;
-					
-					const double Rcut_AO2 = orb.Phi[T2].getRcut();
-                	const double dist2 = (tau2-tau0).norm() * ucell.lat0;
-
-					if (dist2 >= Rcut_Alpha + Rcut_AO2)
-					{
-						continue;
-					}
-
-					for (int iw1=0; iw1<nw1_tot; ++iw1)
-					{
-						const int iw1_all = start1 + iw1; // this is \mu
-						const int iw1_local = pv->global2local_row(iw1_all);
-						if(iw1_local < 0) {continue;
-}
-						const int iw1_0 = iw1/GlobalV::NPOL;
-						for (int iw2=0; iw2<nw2_tot; ++iw2)
-						{
-							const int iw2_all = start2 + iw2; // this is \nu
-							const int iw2_local = pv->global2local_col(iw2_all);
-							if(iw2_local < 0) {continue;
-}
-							const int iw2_0 = iw2/GlobalV::NPOL;
-
-                            std::vector<double> nlm1 = this->nlm_save[iat][ad1][iw1][0];
-                            std::vector<double> nlm2 = this->nlm_save[iat][ad2][iw2][0];
-
-                            assert(nlm1.size()==nlm2.size());
-                            int ib=0;
-                            for (int L0 = 0; L0 <= orb.Alpha[0].getLmax();++L0)
-                            {
-                                for (int N0 = 0;N0 < orb.Alpha[0].getNchi(L0);++N0)
-                                {
-                                    const int inl = this->inl_index[T0](I0, L0, N0);
-                                    const int nm = 2*L0+1;
-                                    
-                                    for (int m1=0; m1<nm; ++m1) // nm = 1 for s, 3 for p, 5 for d
-                                    {
-                                        for (int m2=0; m2<nm; ++m2) // nm = 1 for s, 3 for p, 5 for d
-                                        {
-                                            v_delta_pdm_shell[0][iw1_all][iw2_all][inl][m1*nm+m2] += nlm1[ib+m1]*nlm2[ib+m2];
-                                        }
-                                    }
-                                    ib+=nm;
-                                }
-                            }                            
-						}//iw2
-					}//iw1
-				}//ad2
-			}//ad1   
-            
-        }
-    }
-#ifdef __MPI
-    const int mn_size=(2 * this->lmaxd + 1) * (2 * this->lmaxd + 1);
-    for(int inl = 0; inl < this->inlmax; inl++)
-    {
-        for(int mu = 0; mu < nlocal ; mu++)
-        {
-            for(int nu=0; nu< nlocal ; nu++)
-            {
-                Parallel_Reduce::reduce_all(this->v_delta_pdm_shell[0][mu][nu][inl],mn_size);
-            }
-        }
-    }
-#endif    
-    
-    // transfer v_delta_pdm_shell to v_delta_pdm_shell_vector
-    
-    int nlmax = this->inlmax/nat;
-   
-    std::vector<torch::Tensor> v_delta_pdm_shell_vector;
-    for(int nl = 0; nl < nlmax; ++nl)
-    {
-        std::vector<torch::Tensor> kuuammv;
-        for(int iks = 0; iks < 1; ++iks)
-        {
-            std::vector<torch::Tensor> uuammv;
-            for(int mu = 0; mu < nlocal; ++mu)
-            {
-                std::vector<torch::Tensor> uammv;
-                for(int nu =0 ; nu < nlocal; ++nu)
-                {
-                    std::vector<torch::Tensor> ammv;
-                    for (int iat=0; iat<nat; ++iat)
-                    {
-                        int inl = iat*nlmax+nl;
-                        int nm = 2*this->inl_l[inl]+1;
-                        std::vector<double> mmv;
-                    
-                        for (int m1=0; m1<nm; ++m1) // m1 = 1 for s, 3 for p, 5 for d
-                        {
-                            for (int m2=0; m2<nm; ++m2) // m1 = 1 for s, 3 for p, 5 for d
-                            {
-                                mmv.push_back(this->v_delta_pdm_shell[iks][mu][nu][inl][m1*nm+m2]);
-                            }
-                        }
-                        torch::Tensor mm = torch::tensor(mmv, torch::TensorOptions().dtype(torch::kFloat64) ).reshape({nm, nm});    //nm*nm
-                        ammv.push_back(mm);
-                    }
-                    torch::Tensor amm = torch::stack(ammv, 0); 
-                    uammv.push_back(amm);                    
-                }
-                torch::Tensor uamm = torch::stack(uammv, 0); 
-                uuammv.push_back(uamm);
-            }
-            torch::Tensor uuamm = torch::stack(uuammv, 0); 
-            kuuammv.push_back(uuamm);
-        }
-        torch::Tensor kuuamm = torch::stack(kuuammv, 0);  
-        v_delta_pdm_shell_vector.push_back(kuuamm);
-    }
-       
-    assert(v_delta_pdm_shell_vector.size() == nlmax);
-    
-    //einsum for each nl: 
-    std::vector<torch::Tensor> v_delta_precalc_vector;
-    for (int nl = 0; nl<nlmax; ++nl)
-    {
-        v_delta_precalc_vector.push_back(at::einsum("kxyamn, avmn->kxyav", {v_delta_pdm_shell_vector[nl], this->gevdm_vector[nl]}));
-    }
-
-    this->v_delta_precalc_tensor = torch::cat(v_delta_precalc_vector, -1);
-    this->del_v_delta_pdm_shell(1,nlocal);
-
-    //check_v_delta_precalc(nlocal,nat);
-    // timeval t_end;
-    // gettimeofday(&t_end,NULL);
-    // std::cout<<"calculate v_delta_precalc time:\t"<<(double)(t_end.tv_sec-t_start.tv_sec) + (double)(t_end.tv_usec-t_start.tv_usec)/1000000.0<<std::endl;
-    return;
-}
-
-void LCAO_Deepks::check_v_delta_precalc(const int nat, const int nks,const int nlocal)
-{
-    std::ofstream ofs("v_delta_precalc.dat");
-    ofs << std::setprecision(10);
-    for (int iks = 0; iks < nks; ++iks)
-    {
-        for (int mu = 0; mu < nlocal; ++mu)
-        {
-            for (int nu = 0; nu < nlocal; ++nu)
-            {
-                for (int iat = 0;iat < nat;++iat)
-                {
-                    for(int p=0; p<this->des_per_atom; ++p)
-                    {
-                        ofs<<this->v_delta_precalc_tensor.index({iks, mu, nu, iat, p }).item().toDouble()<<" ";
-                    }
-                }
-                ofs << std::endl;                
-            }
-        }
-    }
-    ofs.close();
-}
 
 // prepare_psialpha and prepare_gevdm for deepks_v_delta = 2
 void LCAO_Deepks::prepare_psialpha(const int nlocal,
@@ -855,12 +672,16 @@ void LCAO_Deepks::prepare_psialpha(const int nlocal,
         {
             for(int mu = 0; mu < nlocal ; mu++)
             {
-                for(int m=0;m<mmax;m++) { msg[m] = this->psialpha_tensor[iat][nl][0][mu][m].item().toDouble();
-}
-                Parallel_Reduce::reduce_all(msg,mmax);
-                for(int m=0;m<mmax;m++) { this->psialpha_tensor[iat][nl][0][mu][m] = msg[m];
-}
-            }
+                for(int m=0;m<mmax;m++) 
+				{
+					msg[m] = this->psialpha_tensor[iat][nl][0][mu][m].item().toDouble();
+				}
+				Parallel_Reduce::reduce_all(msg,mmax);
+				for(int m=0;m<mmax;m++) 
+				{ 
+					this->psialpha_tensor[iat][nl][0][mu][m] = msg[m];
+				}
+			}
         }
     }
 

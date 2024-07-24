@@ -198,6 +198,7 @@ OBJS_DEEPKS=LCAO_deepks.o\
         orbital_precalc_k.o\
         cal_gdmx.o\
         cal_gdmx_k.o\
+        v_delta_precalc.o\
         
 
 OBJS_ELECSTAT=elecstate.o\

@@ -15,6 +15,7 @@ if(ENABLE_DEEPKS)
       orbital_precalc_k.cpp
       cal_gdmx.cpp
       cal_gdmx_k.cpp
+      v_delta_precalc.cpp
   )
 
   add_library(
