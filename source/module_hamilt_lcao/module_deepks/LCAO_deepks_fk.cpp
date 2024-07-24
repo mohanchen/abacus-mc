@@ -247,7 +247,16 @@ void LCAO_Deepks::cal_f_delta_k(const std::vector<std::vector<std::complex<doubl
 
     if(isstress)
     {
-        stress_fill(ucell.lat0, ucell.omega, svnl_dalpha);
+		assert(ucell.omega_>0.0);
+		const double weight = ucell.lat0 / ucell.omega ;
+		for(int i=0;i<3;++i)
+		{
+			for(int j=0;j<3;++j)
+			{
+				if(j>i) svnl_dalpha(j,i) = svnl_dalpha(i,j);
+				svnl_dalpha(i,j) *= weight ;
+			}
+		}
     }
     ModuleBase::timer::tick("LCAO_Deepks","cal_f_delta_hf_k_new");
     return;
