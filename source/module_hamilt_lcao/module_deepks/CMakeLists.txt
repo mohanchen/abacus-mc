@@ -15,6 +15,9 @@ if(ENABLE_DEEPKS)
       orbital_precalc_k.cpp
       cal_gdmx.cpp
       cal_gdmx_k.cpp
+      cal_gedm.cpp
+      cal_gvx.cpp      
+      cal_descriptor.cpp
       v_delta_precalc.cpp
   )
 
