@@ -12,17 +12,22 @@
 //force for multi-k calculations
 //Pulay and HF terms are calculated together
 
-void LCAO_Deepks::cal_f_delta_k(const std::vector<std::vector<std::complex<double>>>& dm,/**<[in] density matrix*/
+typedef std::tuple<int, int, int, int> key_tuple; // used in nlm_save_k
+
+void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<double>>>& dm,/**<[in] density matrix*/
     const UnitCell &ucell,
     const LCAO_Orbitals &orb,
     Grid_Driver& GridD,
     const int nks,
     const std::vector<ModuleBase::Vector3<double>> &kvec_d,
-    const bool isstress, ModuleBase::matrix& svnl_dalpha)
+    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<std::vector<double>>>>> &nlm_save_k,
+    ModuleBase::matrix& f_delta,
+    const bool isstress, 
+    ModuleBase::matrix& svnl_dalpha)
 {
     ModuleBase::TITLE("LCAO_Deepks", "cal_f_delta_hf_k_new");
     ModuleBase::timer::tick("LCAO_Deepks","cal_f_delta_hf_k_new");
-    this->F_delta.zero_out();
+    f_delta.zero_out();
 
     const double Rcut_Alpha = orb.Alpha[0].getRcut();
     int nrow = this->pv->nrow;
@@ -103,6 +108,7 @@ void LCAO_Deepks::cal_f_delta_k(const std::vector<std::vector<std::complex<doubl
                             dm_pair.add_from_matrix(dm[ik].data(), pv->get_col_size(), kphase, 0);
                         }
                     }
+
                     const double* dm_current = dm_pair.get_pointer();
 
                     for (int iw1=0; iw1<row_indexes.size(); ++iw1)
@@ -167,14 +173,14 @@ void LCAO_Deepks::cal_f_delta_k(const std::vector<std::vector<std::complex<doubl
                             }
 
                             // Pulay term is plus
-                            this->F_delta(ibt2, 0) += 2.0 * *dm_current * nlm[0];
-                            this->F_delta(ibt2, 1) += 2.0 * *dm_current * nlm[1];
-                            this->F_delta(ibt2, 2) += 2.0 * *dm_current * nlm[2];
+                            f_delta(ibt2, 0) += 2.0 * *dm_current * nlm[0];
+                            f_delta(ibt2, 1) += 2.0 * *dm_current * nlm[1];
+                            f_delta(ibt2, 2) += 2.0 * *dm_current * nlm[2];
 
                             // HF term is minus, only one projector for each atom force.
-                            this->F_delta(iat, 0) -= 2.0 * *dm_current * nlm[0];
-                            this->F_delta(iat, 1) -= 2.0 * *dm_current * nlm[1];
-                            this->F_delta(iat, 2) -= 2.0 * *dm_current * nlm[2];
+                            f_delta(iat, 0) -= 2.0 * *dm_current * nlm[0];
+                            f_delta(iat, 1) -= 2.0 * *dm_current * nlm[1];
+                            f_delta(iat, 2) -= 2.0 * *dm_current * nlm[2];
 
                             if(isstress)
                             {
