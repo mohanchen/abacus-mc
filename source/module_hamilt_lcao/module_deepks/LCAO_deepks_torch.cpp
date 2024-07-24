@@ -3,19 +3,15 @@
 //as well as subroutines that prints the results for checking
 
 //The file contains 8 subroutines:
-//5. cal_gvepsl : gvepsl is used for training with stress label, which is derivative of
+// cal_gvepsl : gvepsl is used for training with stress label, which is derivative of
 //       descriptors wrt strain tensor, calculated by
 //       d(des)/d\epsilon_{ab} = d(pdm)/d\epsilon_{ab} * d(des)/d(pdm) = gdm_epsl * gvdm
 //       using einsum
-//6. cal_gvdm : d(des)/d(pdm)
+// cal_gvdm : d(des)/d(pdm)
 //       calculated using torch::autograd::grad
-//7. load_model : loads model for applying V_delta
-//8. cal_gedm : calculates d(E_delta)/d(pdm)
-//       this is the term V(D) that enters the expression H_V_delta = |alpha>V(D)<alpha|
-//       caculated using torch::autograd::grad
-//9. check_gedm : prints gedm for checking
-//10. prepare_psialpha : prepare psialpha for outputting npy file
-//11. prepare_gevdm : prepare gevdm for outputting npy file
+// load_model : loads model for applying V_delta
+// prepare_psialpha : prepare psialpha for outputting npy file
+// prepare_gevdm : prepare gevdm for outputting npy file
 
 #ifdef __DEEPKS
 

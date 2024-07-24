@@ -146,19 +146,24 @@ void LCAO_Deepks::cal_gedm(const int nat) {
     return;
 }
 
-void LCAO_Deepks::check_gedm() {
+void LCAO_Deepks::check_gedm() 
+{
     std::ofstream ofs("gedm.dat");
-    for (int inl = 0; inl < inlmax; inl++) {
-        int nm = 2 * inl_l[inl] + 1;
-        for (int m1 = 0; m1 < nm; ++m1) {
-            for (int m2 = 0; m2 < nm; ++m2) {
-                int index = m1 * nm + m2;
-                //*2 is for Hartree to Ry
-                ofs << this->gedm[inl][index] << " ";
-            }
-        }
-        ofs << std::endl;
-    }
+
+	for (int inl = 0; inl < inlmax; inl++) 
+	{
+		int nm = 2 * inl_l[inl] + 1;
+		for (int m1 = 0; m1 < nm; ++m1) 
+		{
+			for (int m2 = 0; m2 < nm; ++m2) 
+			{
+				int index = m1 * nm + m2;
+				//*2 is for Hartree to Ry
+				ofs << this->gedm[inl][index] << " ";
+			}
+		}
+		ofs << std::endl;
+	}
 }
 
 #endif
