@@ -445,7 +445,7 @@ if ! test -z "$run_rpa" && [ $run_rpa == 1 ]; then
 fi
 
 if ! test -z "$deepks_out_labels" && [ $deepks_out_labels == 1 ]; then
-	sed '/n_des/d' descriptor.dat > des_tmp.txt
+	sed '/n_des/d' OUT.autotest/deepks_desc.dat > des_tmp.txt
 	total_des=`sum_file des_tmp.txt 5`
 	rm des_tmp.txt
 	echo "totaldes $total_des" >>$1
