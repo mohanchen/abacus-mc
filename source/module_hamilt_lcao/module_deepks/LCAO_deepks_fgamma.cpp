@@ -264,7 +264,8 @@ void DeePKS_domain::cal_f_delta_gamma(
 		{
 			for(int j=0;j<3;++j)
 			{
-				if(j>i) svnl_dalpha(j,i) = svnl_dalpha(i,j);
+				if(j>i) { svnl_dalpha(j,i) = svnl_dalpha(i,j);
+}
 				svnl_dalpha(i,j) *= weight;
 			}
 		}
