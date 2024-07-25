@@ -437,7 +437,7 @@ class LCAO_Deepks
     /// which are eigenvalues of pdm in blocks of I_n_l
     void cal_descriptor(const int nat);
     /// print descriptors based on LCAO basis
-    void check_descriptor(const UnitCell& ucell);
+    void check_descriptor(const UnitCell& ucell, const string &out_dir);
 
     void cal_descriptor_equiv(const int nat);
 
