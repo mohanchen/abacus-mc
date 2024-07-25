@@ -1,4 +1,4 @@
 import numpy
-a=numpy.load('o_tot.npy')
-b=numpy.load('o_base.npy')
+a=numpy.load('OUT.autotest/otot.npy')
+b=numpy.load('OUT.autotest/obase.npy')
 print((a-b)[0][0])
