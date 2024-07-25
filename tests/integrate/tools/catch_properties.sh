@@ -471,7 +471,7 @@ if ! test -z "$deepks_bandgap" && [ $deepks_bandgap == 1 ]; then
 fi
 
 if ! test -z "$deepks_v_delta" && [ $deepks_v_delta == 1 ]; then
-	totalh=`python3 get_sum_numpy.py h_tot.npy `
+	totalh=`python3 get_sum_numpy.py OUT.autotest/deepks_htot.npy `
 	echo "totalh $totalh" >>$1
 	totalvdelta=`python3 get_v_delta.py`
 	echo "totalvdelta $totalvdelta" >>$1
@@ -480,7 +480,7 @@ if ! test -z "$deepks_v_delta" && [ $deepks_v_delta == 1 ]; then
 fi
 
 if ! test -z "$deepks_v_delta" && [ $deepks_v_delta == 2 ]; then
-	totalh=`python3 get_sum_numpy.py h_tot.npy `
+	totalh=`python3 get_sum_numpy.py OUT.autotest/deepks_htot.npy `
 	echo "totalh $totalh" >>$1
 	totalvdelta=`python3 get_v_delta.py`
 	echo "totalvdelta $totalvdelta" >>$1
