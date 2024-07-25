@@ -229,8 +229,6 @@ void LCAO_deepks_io::save_npy_gvepsl(const int nat,
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gvepsl");
 
-    std::cout << " save_npy_gvepsl " << std::endl; // debug
-
 	if(rank!=0) 
 	{ 
 		return;
