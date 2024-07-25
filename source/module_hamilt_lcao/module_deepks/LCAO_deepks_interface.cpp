@@ -94,6 +94,7 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
                                                          nks, 
                                                          ld->des_per_atom, 
                                                          ld->orbital_precalc_tensor, 
+                                                         GlobalV::global_out_dir,
                                                          my_rank);
 
                 ld->cal_o_delta(dm_bandgap_gamma);
@@ -307,6 +308,7 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
 						nks, 
 						ld->des_per_atom, 
 						ld->orbital_precalc_tensor, 
+                        GlobalV::global_out_dir,
 						GlobalV::MY_RANK);
 
                 ld->cal_o_delta_k(dm_bandgap_k, nks);

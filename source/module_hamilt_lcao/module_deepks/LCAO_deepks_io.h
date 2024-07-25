@@ -107,6 +107,7 @@ void save_npy_orbital_precalc(const int nat,
 		const int nks,
 		const int des_per_atom,
 		const torch::Tensor& orbital_precalc_tensor,
+        const std::string& out_dir,
 		const int rank);
 
 /// xinyuan added on 2023-2-20

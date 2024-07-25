@@ -368,6 +368,7 @@ void LCAO_deepks_io::save_npy_orbital_precalc(const int nat,
                                               const int nks, 
                                               const int des_per_atom,
                                               const torch::Tensor& orbital_precalc_tensor,
+                                              const std::string& out_dir,
                                               const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_orbital_precalc");
@@ -397,7 +398,9 @@ void LCAO_deepks_io::save_npy_orbital_precalc(const int nat,
             }
         }
     }
-    npy::SaveArrayAsNumpy("orbital_precalc.npy", false, 4, gshape, npy_orbital_precalc);
+
+    const std::string file_orbpre = out_dir + "deepks_orbpre.npy";
+    npy::SaveArrayAsNumpy(file_orbpre, false, 4, gshape, npy_orbital_precalc);
     return;
 }
 
