@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # deepks_test executable path
-deepks_test=abacus
+deepks_test=test_deepks
 # regex for test cases
 case="^[^#].*_.*$"
 
