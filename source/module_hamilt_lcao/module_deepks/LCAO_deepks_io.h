@@ -75,6 +75,7 @@ void save_npy_d(const int nat,
 void save_npy_gvx(const int nat,
 		const int des_per_atom,
 		const torch::Tensor &gvx_tensor,
+        const std::string& out_dir,
 		const int rank);
 
 void save_npy_gvepsl(const int nat,

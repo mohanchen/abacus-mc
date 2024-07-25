@@ -394,18 +394,20 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
         }
 
 #ifdef __DEEPKS
-        // DeePKS force, caoyu add 2021-06-03
+        // DeePKS force
         if (GlobalV::deepks_out_labels) // not parallelized yet
         {
+            const std::string file_ftot = GlobalV::global_out_dir + "deepks_ftot.npy";
             LCAO_deepks_io::save_npy_f(fcs, 
-                                       "f_tot.npy", 
+                                       file_ftot, 
                                        GlobalC::ucell.nat, 
                                        GlobalV::MY_RANK); // Ty/Bohr, F_tot
 
             if (GlobalV::deepks_scf)
             {
+                const std::string file_fbase = GlobalV::global_out_dir + "deepks_fbase.npy";
                 LCAO_deepks_io::save_npy_f(fcs - GlobalC::ld.F_delta, 
-                                           "f_base.npy", 
+                                           file_fbase, 
                                            GlobalC::ucell.nat, 
                                            GlobalV::MY_RANK); // Ry/Bohr, F_base
 
@@ -446,13 +448,15 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
                     LCAO_deepks_io::save_npy_gvx(GlobalC::ucell.nat,
                       GlobalC::ld.des_per_atom,
                       GlobalC::ld.gvx_tensor,
+                      GlobalV::global_out_dir,
                       GlobalV::MY_RANK);
                 }
             }
             else
             {
+                const std::string file_fbase = GlobalV::global_out_dir + "deepks_fbase.npy";
                 LCAO_deepks_io::save_npy_f(fcs, 
-                  "f_base.npy", 
+                  file_fbase, 
                   GlobalC::ucell.nat,
                   GlobalV::MY_RANK); // no scf, F_base=F_tot
             }
