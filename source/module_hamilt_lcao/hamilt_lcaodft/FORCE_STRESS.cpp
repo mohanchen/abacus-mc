@@ -658,6 +658,7 @@ void Force_Stress_LCAO<T>::getForceStress(const bool isforce,
                       GlobalC::ucell.nat, 
                       GlobalC::ld.des_per_atom,
                       GlobalC::ld.gvepsl_tensor,
+                      GlobalV::global_out_dir,
                       GlobalV::MY_RANK); //  unitless, grad_vepsl
                 }
             }

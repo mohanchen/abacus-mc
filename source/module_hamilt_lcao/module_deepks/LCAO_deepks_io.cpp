@@ -224,9 +224,12 @@ void LCAO_deepks_io::save_npy_gvx(const int nat,
 void LCAO_deepks_io::save_npy_gvepsl(const int nat,
                                      const int des_per_atom,
                                      const torch::Tensor &gvepsl_tensor,
+                                     const std::string& out_dir,
                                      const int rank)
 {
     ModuleBase::TITLE("LCAO_deepks_io", "save_npy_gvepsl");
+
+    std::cout << " save_npy_gvepsl " << std::endl; // debug
 
 	if(rank!=0) 
 	{ 
@@ -253,7 +256,10 @@ void LCAO_deepks_io::save_npy_gvepsl(const int nat,
 
         }
     }
-    npy::SaveArrayAsNumpy("grad_vepsl.npy", false, 3, gshape, npy_gvepsl);
+
+    // change the name from grad_vepsl.npy to deepks_gvepsl.npy
+    const std::string file = out_dir + "deepks_gvepsl.npy";
+    npy::SaveArrayAsNumpy(file, false, 3, gshape, npy_gvepsl);
     return;
 }
 
