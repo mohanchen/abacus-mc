@@ -117,7 +117,7 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
             ld->collect_h_mat(ld->h_mat,h_tot,nlocal);
 
             const std::string file_htot = GlobalV::global_out_dir + "deepks_htot.npy";
-            LCAO_deepks_io::save_npy_h(h_tot, file_htot, nlocal);
+            LCAO_deepks_io::save_npy_h(h_tot, file_htot, nlocal, my_rank);
 
             if(GlobalV::deepks_scf)
             {
@@ -126,10 +126,10 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
                 ld->collect_h_mat(ld->H_V_delta,v_delta,nlocal);
 
                 const std::string file_hbase = GlobalV::global_out_dir + "deepks_hbase.npy";
-                LCAO_deepks_io::save_npy_h(h_tot-v_delta, file_hbase, nlocal);
+                LCAO_deepks_io::save_npy_h(h_tot-v_delta, file_hbase, nlocal, my_rank);
 
                 const std::string file_vdelta = GlobalV::global_out_dir + "deepks_vdelta.npy";
-                LCAO_deepks_io::save_npy_h(v_delta, file_vdelta, nlocal);
+                LCAO_deepks_io::save_npy_h(v_delta, file_vdelta, nlocal, my_rank);
 
                 if(deepks_v_delta==1)//v_delta_precalc storage method 1
                 {
@@ -179,7 +179,7 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
             else //deepks_scf == 0
             {
                 const std::string file_hbase = GlobalV::global_out_dir + "deepks_hbase.npy";
-                LCAO_deepks_io::save_npy_h(h_tot, file_hbase, nlocal);
+                LCAO_deepks_io::save_npy_h(h_tot, file_hbase, nlocal, my_rank);
             }
         }//end v_delta label
     
