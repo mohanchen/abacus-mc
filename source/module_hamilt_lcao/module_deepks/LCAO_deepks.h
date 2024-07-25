@@ -62,6 +62,10 @@ class LCAO_Deepks
     /// In k space:
     std::vector<std::vector<std::complex<double>>> H_V_delta_k;
 
+    // F_delta will be deleted soon, mohan 2024-07-25
+    ///(Unit: Ry/Bohr) Total Force due to the DeePKS correction term \f$E_{\delta}\f$
+    ModuleBase::matrix F_delta;
+
     // k index of HOMO for multi-k bandgap label. QO added 2022-01-24
     int h_ind = 0;
 
@@ -540,24 +544,36 @@ namespace DeePKS_domain
     // 3. check_f_delta, which prints F_delta into F_delta.dat for checking
 
     // for gamma only, pulay and HF terms of force are calculated together
-    void cal_f_delta_gamma( // const std::vector<ModuleBase::matrix>& dm/**< [in] density matrix*/,
-        const std::vector<std::vector<double>>& dm,
-        const UnitCell& ucell,
-        const LCAO_Orbitals& orb,
-        Grid_Driver& GridD,
-        const bool isstress,
-        ModuleBase::matrix& svnl_dalpha);
+	void cal_f_delta_gamma(
+			const std::vector<std::vector<double>>& dm,
+			const UnitCell &ucell,
+			const LCAO_Orbitals &orb,
+			Grid_Driver& gd,
+			const int nrow, // this->pv->nrow
+			const int lmaxd,
+			std::vector<std::vector<std::unordered_map<int, std::vector<std::vector<double>>>>>& nlm_save,
+			double** gedm,
+			ModuleBase::IntArray* inl_index,
+			ModuleBase::matrix& f_delta,
+			const bool isstress,
+			ModuleBase::matrix& svnl_dalpha);
 
     // for multi-k, pulay and HF terms of force are calculated together
-    void cal_f_delta_k(
-        const std::vector<std::vector<std::complex<double>>>& dm,
-        const UnitCell& ucell,
-        const LCAO_Orbitals& orb,
-        Grid_Driver& GridD,
-        const int nks,
-        const std::vector<ModuleBase::Vector3<double>>& kvec_d,
-        const bool isstress,
-        ModuleBase::matrix& svnl_dalpha);
+	void cal_f_delta_k(
+			const std::vector<std::vector<std::complex<double>>>& dm,/**<[in] density matrix*/
+			const UnitCell &ucell,
+			const LCAO_Orbitals &orb,
+			Grid_Driver& GridD,
+			const int nrow, // this->pv->nrow
+			const int lmaxd,
+			const int nks,
+			const std::vector<ModuleBase::Vector3<double>> &kvec_d,
+			std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<std::vector<double>>>>> &nlm_save_k,
+			double** gedm,
+			ModuleBase::IntArray* inl_index,
+			ModuleBase::matrix& f_delta,
+			const bool isstress,
+			ModuleBase::matrix& svnl_dalpha);
 
     void check_f_delta(const int nat, ModuleBase::matrix& svnl_dalpha);
 }

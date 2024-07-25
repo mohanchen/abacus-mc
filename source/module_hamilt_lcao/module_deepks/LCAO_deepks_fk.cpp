@@ -14,13 +14,18 @@
 
 typedef std::tuple<int, int, int, int> key_tuple; // used in nlm_save_k
 
-void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<double>>>& dm,/**<[in] density matrix*/
+void DeePKS_domain::cal_f_delta_k(
+    const std::vector<std::vector<std::complex<double>>>& dm,/**<[in] density matrix*/
     const UnitCell &ucell,
     const LCAO_Orbitals &orb,
     Grid_Driver& GridD,
+    const int nrow, // this->pv->nrow
+    const int lmaxd,
     const int nks,
     const std::vector<ModuleBase::Vector3<double>> &kvec_d,
     std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<std::vector<double>>>>> &nlm_save_k,
+    double** gedm,
+    ModuleBase::IntArray* inl_index,
     ModuleBase::matrix& f_delta,
     const bool isstress, 
     ModuleBase::matrix& svnl_dalpha)
@@ -30,7 +35,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
     f_delta.zero_out();
 
     const double Rcut_Alpha = orb.Alpha[0].getRcut();
-    int nrow = this->pv->nrow;
+
     for (int T0 = 0; T0 < ucell.ntype; T0++)
     {
 		Atom* atom0 = &ucell.atoms[T0]; 
@@ -119,12 +124,12 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                             double nlm_t[3] = {0,0,0}; //for stress
                             key_tuple key_1(ibt1,dR1.x,dR1.y,dR1.z);
                             key_tuple key_2(ibt2,dR2.x,dR2.y,dR2.z);
-                            std::vector<double> nlm1 = this->nlm_save_k[iat][key_1][row_indexes[iw1]][0];
+                            std::vector<double> nlm1 = nlm_save_k[iat][key_1][row_indexes[iw1]][0];
                             std::vector<std::vector<double>> nlm2;
                             nlm2.resize(3);
                             for(int dim=0;dim<3;dim++)
                             {
-                                nlm2[dim] = this->nlm_save_k[iat][key_2][col_indexes[iw2]][dim+1];
+                                nlm2[dim] = nlm_save_k[iat][key_2][col_indexes[iw2]][dim+1];
                             }
 
                             assert(nlm1.size()==nlm2[0].size());
@@ -136,7 +141,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                                 {
                                     for (int N0 = 0;N0 < orb.Alpha[0].getNchi(L0);++N0)
                                     {
-                                        const int inl = this->inl_index[T0](I0, L0, N0);
+                                        const int inl = inl_index[T0](I0, L0, N0);
                                         const int nm = 2*L0+1;
                                         for (int m1 = 0;m1 < nm; ++m1)
                                         {
@@ -144,7 +149,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                                             {
                                                 for(int dim=0;dim<3;dim++)
                                                 {                                            
-                                                    nlm[dim] += this->gedm[inl][m1*nm+m2]*nlm1[ib+m1]*nlm2[dim][ib+m2];
+                                                    nlm[dim] += gedm[inl][m1*nm+m2]*nlm1[ib+m1]*nlm2[dim][ib+m2];
                                                 }
                                             }
                                         }
@@ -156,7 +161,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                             else
                             {
                                 int nproj = 0;
-                                for(int il = 0; il < this->lmaxd + 1; il++)
+                                for(int il = 0; il < lmaxd + 1; il++)
                                 {
                                     nproj += (2 * il + 1) * orb.Alpha[0].getNchi(il);
                                 }
@@ -166,7 +171,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                                     {
                                         for(int dim=0;dim<3;dim++)
                                         {
-                                            nlm[dim] += this->gedm[iat][iproj*nproj+jproj] * nlm1[iproj] * nlm2[dim][jproj];
+                                            nlm[dim] += gedm[iat][iproj*nproj+jproj] * nlm1[iproj] * nlm2[dim][jproj];
                                         }
                                     }
                                 }
@@ -184,10 +189,10 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
 
                             if(isstress)
                             {
-                                nlm1 = this->nlm_save_k[iat][key_2][col_indexes[iw2]][0];
+                                nlm1 = nlm_save_k[iat][key_2][col_indexes[iw2]][0];
                                 for(int i=0;i<3;i++)
                                 {
-                                    nlm2[i] = this->nlm_save_k[iat][key_1][row_indexes[iw1]][i+1];
+                                    nlm2[i] = nlm_save_k[iat][key_1][row_indexes[iw1]][i+1];
                                 }
 
                                 assert(nlm1.size()==nlm2[0].size());                                
@@ -199,7 +204,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                                     {
                                         for (int N0 = 0;N0 < orb.Alpha[0].getNchi(L0);++N0)
                                         {
-                                            const int inl = this->inl_index[T0](I0, L0, N0);
+                                            const int inl = inl_index[T0](I0, L0, N0);
                                             const int nm = 2*L0+1;
                                             for (int m1 = 0;m1 < nm; ++m1)
                                             {
@@ -207,7 +212,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                                                 {
                                                     for(int dim=0;dim<3;dim++)
                                                     {                                            
-                                                        nlm_t[dim] += this->gedm[inl][m1*nm+m2]*nlm1[ib+m1]*nlm2[dim][ib+m2];
+                                                        nlm_t[dim] += gedm[inl][m1*nm+m2]*nlm1[ib+m1]*nlm2[dim][ib+m2];
                                                     }
                                                 }
                                             }
@@ -219,7 +224,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                                 else
                                 {
                                     int nproj = 0;
-                                    for(int il = 0; il < this->lmaxd + 1; il++)
+                                    for(int il = 0; il < lmaxd + 1; il++)
                                     {
                                         nproj += (2 * il + 1) * orb.Alpha[0].getNchi(il);
                                     }
@@ -229,7 +234,7 @@ void DeePKS_domain::cal_f_delta_k(const std::vector<std::vector<std::complex<dou
                                         {
                                             for(int dim=0;dim<3;dim++)
                                             {
-                                                nlm_t[dim] += this->gedm[iat][iproj*nproj+jproj] * nlm1[iproj] * nlm2[dim][jproj];
+                                                nlm_t[dim] += gedm[iat][iproj*nproj+jproj] * nlm1[iproj] * nlm2[dim][jproj];
                                             }
                                         }
                                     }
