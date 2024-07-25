@@ -14,7 +14,7 @@ scf_nmax                5
 
 #Parameters (3.Basis)
 basis_type              lcao 
-gamma_only              1
+gamma_only              0
 
 #Parameters (4.Smearing)
 smearing_method         gaussian
