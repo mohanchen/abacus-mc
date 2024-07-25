@@ -270,7 +270,7 @@ void Force_LCAO<double>::ftable(const bool isforce,
 
             GlobalC::ld.check_projected_dm();
 
-            GlobalC::ld.check_descriptor(ucell);
+            GlobalC::ld.check_descriptor(ucell, GlobalV::global_out_dir);
 
             GlobalC::ld.check_gedm();
 

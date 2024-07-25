@@ -97,7 +97,7 @@ void LCAO_Deepks::cal_descriptor(const int nat) {
 }
 
 
-void LCAO_Deepks::check_descriptor(const UnitCell& ucell, const string& out_dir) {
+void LCAO_Deepks::check_descriptor(const UnitCell& ucell, const std::string& out_dir) {
     ModuleBase::TITLE("LCAO_Deepks", "check_descriptor");
 
     if (GlobalV::MY_RANK != 0) 
@@ -106,7 +106,7 @@ void LCAO_Deepks::check_descriptor(const UnitCell& ucell, const string& out_dir)
     }
 
     // mohan updated 2024-07-25
-    string file = out_dir + "deepks_descriptor.dat";
+    std::string file = out_dir + "deepks_descriptor.dat";
     
     std::ofstream ofs(file.c_str());
 	ofs << std::setprecision(10);

@@ -323,7 +323,7 @@ void LCAO_Deepks_Interface::out_deepks_labels(const double& etot,
 
         ld->cal_descriptor(nat);     // final descriptor
 
-        ld->check_descriptor(ucell);
+        ld->check_descriptor(ucell, GlobalV::global_out_dir);
 
         if (GlobalV::deepks_out_labels)
         {
