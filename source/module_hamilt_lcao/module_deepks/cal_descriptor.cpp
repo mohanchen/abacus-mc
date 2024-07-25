@@ -106,7 +106,7 @@ void LCAO_Deepks::check_descriptor(const UnitCell& ucell, const std::string& out
     }
 
     // mohan updated 2024-07-25
-    std::string file = out_dir + "deepks_descriptor.dat";
+    std::string file = out_dir + "deepks_desc.dat";
     
     std::ofstream ofs(file.c_str());
 	ofs << std::setprecision(10);

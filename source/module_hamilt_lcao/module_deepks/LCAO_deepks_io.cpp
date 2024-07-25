@@ -346,7 +346,7 @@ void LCAO_deepks_io::save_npy_o(const ModuleBase::matrix &bandgap,
     std::vector<double> npy_o;
     for (int iks = 0; iks < nks; ++iks)
     {
-        for (int hl = 0;hl < 1;hl++)
+        for (int hl = 0;hl < 1; ++hl)
         {
             npy_o.push_back(bandgap(iks,hl));
         }

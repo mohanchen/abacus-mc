@@ -10,7 +10,7 @@ symmetry                0
 #Parameters (2.Iteration)
 ecutwfc                 50
 scf_thr                 1e-8
-scf_nmax                50
+scf_nmax                5
 
 #Parameters (3.Basis)
 basis_type              lcao 
@@ -30,3 +30,4 @@ test_force			1
 deepks_out_labels   1
 deepks_scf	        1
 deepks_model	    model.ptg
+deepks_bandgap      1
