@@ -19,7 +19,7 @@ void DeePKS_domain::cal_f_delta_k(
     const UnitCell &ucell,
     const LCAO_Orbitals &orb,
     Grid_Driver& GridD,
-    const int nrow, // this->pv->nrow
+    const Parallel_Orbitals& pv,
     const int lmaxd,
     const int nks,
     const std::vector<ModuleBase::Vector3<double>> &kvec_d,
@@ -35,6 +35,7 @@ void DeePKS_domain::cal_f_delta_k(
     f_delta.zero_out();
 
     const double Rcut_Alpha = orb.Alpha[0].getRcut();
+    const int nrow = pv.nrow;
 
     for (int T0 = 0; T0 < ucell.ntype; T0++)
     {
@@ -92,11 +93,11 @@ void DeePKS_domain::cal_f_delta_k(
                         r0[2] = ( tau2.z - tau0.z) ;
                     }
 
-                    auto row_indexes = pv->get_indexes_row(ibt1);
-                    auto col_indexes = pv->get_indexes_col(ibt2);
+                    auto row_indexes = pv.get_indexes_row(ibt1);
+                    auto col_indexes = pv.get_indexes_col(ibt2);
                     if(row_indexes.size() * col_indexes.size() == 0) continue;
 
-                    hamilt::AtomPair<double> dm_pair(ibt1, ibt2, (dR2-dR1).x, (dR2-dR1).y, (dR2-dR1).z, pv);
+                    hamilt::AtomPair<double> dm_pair(ibt1, ibt2, (dR2-dR1).x, (dR2-dR1).y, (dR2-dR1).z, &pv);
                     dm_pair.allocate(nullptr, 1);
                     for(int ik=0;ik<nks;ik++)
                     {
@@ -106,11 +107,11 @@ void DeePKS_domain::cal_f_delta_k(
                         const std::complex<double> kphase = std::complex<double>(cosp, sinp);
                         if(ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER())
                         {
-                            dm_pair.add_from_matrix(dm[ik].data(), pv->get_row_size(), kphase, 1);
+                            dm_pair.add_from_matrix(dm[ik].data(), pv.get_row_size(), kphase, 1);
                         }
                         else
                         {
-                            dm_pair.add_from_matrix(dm[ik].data(), pv->get_col_size(), kphase, 0);
+                            dm_pair.add_from_matrix(dm[ik].data(), pv.get_col_size(), kphase, 0);
                         }
                     }
 

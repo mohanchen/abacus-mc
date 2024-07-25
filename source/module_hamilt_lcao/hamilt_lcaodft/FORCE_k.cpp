@@ -335,12 +335,12 @@ void Force_LCAO<std::complex<double>>::ftable(const bool isforce,
 
         GlobalC::ld.cal_gedm(ucell.nat);
 
-		GlobalC::ld.cal_f_delta_k(
+	    DeePKS_domain::cal_f_delta_k(
 				dm_k, 
 				ucell, 
 				GlobalC::ORB, 
 				GlobalC::GridD, 
-                pv.nrow,
+                pv,
                 GlobalC::ld.lmaxd,
 				kv->get_nks(), 
 				kv->kvec_d, 

@@ -18,12 +18,12 @@
 
 //force for gamma only calculations
 //Pulay and HF terms are calculated together
-void DeePKS_Domain::cal_f_delta_gamma(
+void DeePKS_domain::cal_f_delta_gamma(
     const std::vector<std::vector<double>>& dm,
     const UnitCell &ucell,
     const LCAO_Orbitals &orb,
     Grid_Driver& gd,
-    const int nrow, // this->pv->nrow
+    const Parallel_Orbitals &pv,
     const int lmaxd,
     std::vector<std::vector<std::unordered_map<int, std::vector<std::vector<double>>>>>& nlm_save,
     double** gedm,
@@ -36,6 +36,8 @@ void DeePKS_Domain::cal_f_delta_gamma(
     f_delta.zero_out();
 
     const double Rcut_Alpha = orb.Alpha[0].getRcut();
+
+    const int nrow = pv.nrow;
 
     for (int T0 = 0; T0 < ucell.ntype; T0++)
     {
@@ -87,14 +89,15 @@ void DeePKS_Domain::cal_f_delta_gamma(
                         r0[2] = ( tau2.z - tau0.z) ;
                     }
 
-                    auto row_indexes = pv->get_indexes_row(ibt1);
-                    auto col_indexes = pv->get_indexes_col(ibt2);
+                    auto row_indexes = pv.get_indexes_row(ibt1);
+                    auto col_indexes = pv.get_indexes_col(ibt2);
+
 					if(row_indexes.size() * col_indexes.size() == 0) 
 					{
 						continue;
 					}
 
-                    hamilt::AtomPair<double> dm_pair(ibt1, ibt2, 0, 0, 0, pv);
+                    hamilt::AtomPair<double> dm_pair(ibt1, ibt2, 0, 0, 0, &pv);
 
                     dm_pair.allocate(nullptr, 1);
 
@@ -102,11 +105,11 @@ void DeePKS_Domain::cal_f_delta_gamma(
                     {
                         if(ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER())
                         {
-                            dm_pair.add_from_matrix(dm[is].data(), pv->get_row_size(), 1.0, 1);
+                            dm_pair.add_from_matrix(dm[is].data(), pv.get_row_size(), 1.0, 1);
                         }
                         else
                         {
-                            dm_pair.add_from_matrix(dm[is].data(), pv->get_col_size(), 1.0, 0);
+                            dm_pair.add_from_matrix(dm[is].data(), pv.get_col_size(), 1.0, 0);
                         }
                     }
 
@@ -262,7 +265,7 @@ void DeePKS_Domain::cal_f_delta_gamma(
 			for(int j=0;j<3;++j)
 			{
 				if(j>i) svnl_dalpha(j,i) = svnl_dalpha(i,j);
-				svnl_dalpha(i,j) *= weight ;
+				svnl_dalpha(i,j) *= weight;
 			}
 		}
 	}

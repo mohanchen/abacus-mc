@@ -246,7 +246,7 @@ void Force_LCAO<double>::ftable(const bool isforce,
 				ucell, 
 				GlobalC::ORB, 
 				GlobalC::GridD, 
-                this->ParaV.nrow,
+                *this->ParaV,
                 GlobalC::ld.lmaxd,
                 GlobalC::ld.nlm_save,
                 GlobalC::ld.gedm,
@@ -282,7 +282,7 @@ void Force_LCAO<double>::ftable(const bool isforce,
             std::ofstream ofs1("E_delta.dat");
             ofs1 << std::setprecision(10) << GlobalC::ld.E_delta;
 
-            GlobalC::ld.check_f_delta(ucell.nat, svnl_dalpha);
+            DeePKS_domain::check_f_delta(ucell.nat, GlobalC::ld.F_delta, svnl_dalpha);
         }
     }
 #endif
