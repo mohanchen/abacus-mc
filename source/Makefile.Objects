@@ -185,8 +185,8 @@ OBJS_CELL=atom_pseudo.o\
     print_cif.o\
 
 OBJS_DEEPKS=LCAO_deepks.o\
-        LCAO_deepks_fgamma.o\
-        LCAO_deepks_fk.o\
+        deepks_fgamma.o\
+        deepks_fk.o\
         LCAO_deepks_odelta.o\
         LCAO_deepks_io.o\
         LCAO_deepks_mpi.o\
