@@ -17,8 +17,9 @@ if(ENABLE_LCAO)
       esolver_ks_lcao.cpp
       esolver_ks_lcao_elec.cpp
       esolver_ks_lcao_tddft.cpp
-      esolver_ks_lcao_tmpfunc.cpp
+      dpks_cal_e_delta_band.cpp
       io_npz.cpp
+      dftu_cal_occup_m.cpp
   )
 endif()
 
