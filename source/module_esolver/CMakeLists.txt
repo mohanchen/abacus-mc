@@ -10,7 +10,7 @@ list(APPEND objects
     esolver_of.cpp
     esolver_of_interface.cpp
     esolver_of_tool.cpp
-    print_wfcfft.cpp
+    print_funcs.cpp
 )
 if(ENABLE_LCAO)
   list(APPEND objects
