@@ -1,11 +1,4 @@
 #include "esolver_ks.h"
-
-#include <ctime>
-#ifdef __MPI
-#include <mpi.h>
-#else
-#include <chrono>
-#endif
 #include <iostream>
 
 #include "module_base/timer.h"
@@ -15,10 +8,12 @@
 #include "module_parameter/parameter.h"
 //--------------Temporary----------------
 #include "module_base/global_variable.h"
-#include "module_hamilt_lcao/module_dftu/dftu.h"
 #include "module_hamilt_pw/hamilt_pwdft/global.h"
 //---------------------------------------
 #include "module_io/json_output/output_info.h"
+
+namespace ModuleESolver
+{
 
 
 //------------------------------------------------------------------------------
@@ -94,3 +89,4 @@ void ESolver_KS<T, Device>::print_wfcfft(const Input_para& inp, std::ofstream& o
     ModuleBase::GlobalFunc::DONE(ofs, "INIT PLANEWAVE");
 }
 
+}
