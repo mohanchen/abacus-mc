@@ -245,7 +245,7 @@ OBJS_ESOLVER=esolver.o\
 OBJS_ESOLVER_LCAO=esolver_ks_lcao.o\
       esolver_ks_lcao_elec.o\
       esolver_ks_lcao_tddft.o\
-      dpks_cal_e_delta_band.cpp.o\
+      dpks_cal_e_delta_band.o\
       dftu_cal_occup_m.o\
       set_matrix_grid.o\
       io_npz.o\
