@@ -247,8 +247,8 @@ OBJS_ESOLVER_LCAO=esolver_ks_lcao.o\
       esolver_ks_lcao_tddft.o\
       dpks_cal_e_delta_band.o\
       dftu_cal_occup_m.o\
-      set_matrix_grid.o\
       io_npz.o\
+      set_matrix_grid.o\
 
 OBJS_GINT=gint.o\
       gint_gamma_env.o\

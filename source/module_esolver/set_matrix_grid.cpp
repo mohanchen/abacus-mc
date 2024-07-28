@@ -3,38 +3,20 @@
 #include "module_elecstate/module_charge/symmetry_rho.h"
 #include "module_esolver/esolver_ks_lcao.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/hamilt_lcao.h"
-#include "module_hamilt_lcao/module_dftu/dftu.h"
 #include "module_hamilt_pw/hamilt_pwdft/global.h"
-//
 #include "module_base/timer.h"
 #include "module_cell/module_neighbor/sltk_atom_arrange.h"
 #include "module_cell/module_neighbor/sltk_grid_driver.h"
-#include "module_io/berryphase.h"
-#include "module_io/istate_charge.h"
-#include "module_io/istate_envelope.h"
-#include "module_io/to_wannier90_lcao.h"
-#include "module_io/to_wannier90_lcao_in_pw.h"
-#include "module_io/write_HS_R.h"
 #include "module_parameter/parameter.h"
-#ifdef __DEEPKS
-#include "module_hamilt_lcao/module_deepks/LCAO_deepks.h"
-#endif
 #include "module_elecstate/elecstate_lcao.h"
 #include "module_elecstate/module_dm/cal_dm_psi.h"
-#include "module_hamilt_general/module_ewald/H_Ewald_pw.h"
-#include "module_hamilt_general/module_vdw/vdw.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/LCAO_domain.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/op_exx_lcao.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/operator_lcao.h"
-#include "module_hamilt_lcao/module_deltaspin/spin_constrain.h"
 #include "module_io/rho_io.h"
 #include "module_io/write_pot.h"
 #include "module_io/write_wfc_nao.h"
 #include "module_io/read_wfc_nao.h"
-#include "module_base/formatter.h"
-#ifdef __EXX
-#include "module_io/restart_exx_csr.h"
-#endif
 
 
 namespace ModuleESolver
@@ -115,5 +97,9 @@ void ESolver_KS_LCAO<TK, TR>::set_matrix_grid(Record_adj& ra)
     ModuleBase::timer::tick("ESolver_KS_LCAO", "set_matrix_grid");
     return;
 }
+
+template class ESolver_KS_LCAO<double, double>;
+template class ESolver_KS_LCAO<std::complex<double>, double>;
+template class ESolver_KS_LCAO<std::complex<double>, std::complex<double>>;
 
 }
