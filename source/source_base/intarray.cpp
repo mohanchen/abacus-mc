@@ -176,6 +176,8 @@ IntArray::IntArray(IntArray&& other) noexcept
 {
     other.ptr = nullptr;
     other.size = 0;
+    other.dim = 0;
+    other.bound1 = other.bound2 = other.bound3 = other.bound4 = other.bound5 = other.bound6 = 0;
 }
 
 //********************************
@@ -212,6 +214,8 @@ IntArray& IntArray::operator=(IntArray&& other) noexcept
         ptr = other.ptr;
         other.ptr = nullptr;
         other.size = 0;
+        other.dim = 0;
+        other.bound1 = other.bound2 = other.bound3 = other.bound4 = other.bound5 = other.bound6 = 0;
     }
     return *this;
 }
