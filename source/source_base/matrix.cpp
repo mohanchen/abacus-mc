@@ -10,7 +10,6 @@
 #include <limits>
 
 #include "matrix.h"
-#include "global_function.h"
 
 #ifdef __NORMAL
 #else
@@ -27,7 +26,11 @@
 namespace ModuleBase
 {
 
-void matrixAlloc(){ModuleBase::WARNING_QUIT("matrix","Allocation error for Matrix");}
+void matrixAlloc()
+{
+    std::cerr << "Allocation error for Matrix" << std::endl;
+    std::exit(EXIT_FAILURE);
+}
 
 /*create a matrix with nrows*ncols size */
 matrix::matrix( const int nrows, const int ncols, const bool flag_zero )
