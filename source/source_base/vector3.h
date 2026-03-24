@@ -26,20 +26,30 @@ template <class T> class Vector3
     T z;
 
     /**
-     * @brief Construct a new Vector 3 object
+     * @brief Default constructor
      *
      * @param x1
      * @param y1
      * @param z1
      */
-    Vector3(const T &x1 = 0, const T &y1 = 0, const T &z1 = 0) : x(x1), y(y1), z(z1){};
-    Vector3(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z){}; // Peize Lin add 2018-07-16   
-    explicit Vector3(const std::array<T,3> &v) :x(v[0]), y(v[1]), z(v[2]){}
+    Vector3(const T &x1 = 0, const T &y1 = 0, const T &z1 = 0)
+        : x(x1), y(y1), z(z1)
+    {}
+    Vector3(const Vector3<T> &v)
+        : x(v.x), y(v.y), z(v.z)
+    {} 
+    explicit Vector3(const std::array<T,3> &v)
+        : x(v[0]), y(v[1]), z(v[2])
+    {}
 
     template <typename U>
-    explicit Vector3(const Vector3<U>& other) : x(static_cast<T>(other.x)), y(static_cast<T>(other.y)), z(static_cast<T>(other.z)) {}
+    explicit Vector3(const Vector3<U>& other)
+        : x(static_cast<T>(other.x)), y(static_cast<T>(other.y)), z(static_cast<T>(other.z))
+    {}
 
-    Vector3(Vector3<T> &&v) noexcept : x(v.x), y(v.y), z(v.z) {}
+    Vector3(Vector3<T> &&v) noexcept
+        : x(v.x), y(v.y), z(v.z)
+    {}
 
     /**
      * @brief set a 3d vector
@@ -74,6 +84,20 @@ template <class T> class Vector3
         x = u;
         y = u;
         z = u;
+        return *this;
+    }
+
+    /**
+     * @brief Move assignment operator
+     *
+     * @param u
+     * @return Vector3<T>&
+     */
+    Vector3<T> &operator=(Vector3<T> &&u) noexcept
+    {
+        x = u.x;
+        y = u.y;
+        z = u.z;
         return *this;
     }
 
@@ -120,13 +144,14 @@ template <class T> class Vector3
     }
 
     /**
-     * @brief Overload operator "/=" for (Vector3)/scalar
+     * @brief Overload operator "/=" for Vector3
      *
      * @param s
      * @return Vector3<T>&
      */
     Vector3<T> &operator/=(const T &s)
     {
+        assert(s != 0); // Avoid division by zero
         x /= s;
         y /= s;
         z /= s;
@@ -151,6 +176,7 @@ template <class T> class Vector3
      */
     T operator[](int index) const
     {
+        assert(index >= 0 && index < 3);
         //return (&x)[index]; // this is undefind behavior and breaks with icpx
         T const* ptr[3] = {&x, &y, &z};
         return *ptr[index];
@@ -164,6 +190,7 @@ template <class T> class Vector3
      */
     T &operator[](int index)
     {
+        assert(index >= 0 && index < 3);
         //return (&x)[index]; // this is undefind behavior and breaks with icpx
         T* ptr[3] = {&x, &y, &z};
         return *ptr[index];
@@ -197,9 +224,12 @@ template <class T> class Vector3
     Vector3<T> &normalize(void)
     {
         const T m = norm();
-        x /= m;
-        y /= m;
-        z /= m;
+        if (m > 1e-10) // Avoid division by zero
+        {
+            x /= m;
+            y /= m;
+            z /= m;
+        }
         return *this;
     } // Peize Lin update return 2019-09-08
 
@@ -221,7 +251,12 @@ template <class T> class Vector3
      * with formats
      *
      */
-    void print(void) const; // mohan add 2009-11-29
+    /**
+     * @brief Print a Vector3 on standard output with formats
+     *
+     * @param precision The number of decimal places to display (default: 5)
+     */
+    void print(const int precision = 5) const;
 };
 
 /**
@@ -397,10 +432,11 @@ template <class T> inline bool operator==(const Vector3<T> &u, const Vector3<T> 
 /**
  * @brief Print a Vector3 on standard output with formats
  *
+ * @param precision The number of decimal places to display
  */
-template <class T> void Vector3<T>::print(void) const
+template <class T> void Vector3<T>::print(const int precision) const
 {
-    std::cout.precision(5);
+    std::cout.precision(precision);
     std::cout << "(" << std::setw(10) << x << "," << std::setw(10) << y << "," << std::setw(10) << z << ")"
               << std::endl;
     return;
