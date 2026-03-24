@@ -180,10 +180,15 @@ int& IntArray::operator()(const int d1, const int d2)
 
 ### 1. Brace Style
 
-Use separate lines for braces:
+Use separate lines for braces, and always use braces for if and for statements, even if they contain only one line of code:
 
 ```cpp
 if (condition)
+{
+    // code here
+}
+
+for (int i = 0; i < size; i++)
 {
     // code here
 }
@@ -201,6 +206,33 @@ Use spaces instead of tabs for indentation (4 spaces per indent level).
 ### 3. Comments
 
 Use English for comments and document important functionality. Follow Doxygen-style documentation for classes and methods.
+
+## Code Quality
+
+### 1. Named Constants
+
+Avoid using magic numbers. Instead, define named constants for numerical values:
+
+```cpp
+// Small epsilon value for numerical comparisons
+constexpr double epsilon = 1e-10;
+
+// Usage
+if (m > epsilon) // Avoid division by zero
+{
+    x /= m;
+    y /= m;
+    z /= m;
+}
+```
+
+### 2. Header Includes
+
+Ensure all necessary header files are included, especially for functions like `assert`:
+
+```cpp
+#include <cassert>
+```
 
 ## Testing
 
@@ -240,11 +272,19 @@ protected:
 3. **Error Handling**: Handle errors gracefully, especially memory allocation failures.
 4. **Performance**: Use move semantics and other performance optimizations where appropriate.
 5. **Testing**: Write comprehensive tests for all functionality.
-6. **Code Style**: Follow consistent code style guidelines.
-7. **Documentation**: Document classes and methods to improve maintainability.
-8. **Compatibility**: Ensure code is compatible with C++11 standard.
-9. **Portability**: Write code that works across different platforms.
-10. **Reusability**: Design classes to be reusable in different contexts.
+6. **Code Style**: Follow consistent code style guidelines, including:
+   - Always use braces for if and for statements
+   - Use separate lines for braces
+   - Use spaces instead of tabs for indentation
+   - Use English for comments
+7. **Code Quality**: Maintain high code quality by:
+   - Using named constants instead of magic numbers
+   - Ensuring all necessary header files are included
+   - Adding boundary checks to prevent out-of-bounds access
+8. **Documentation**: Document classes and methods to improve maintainability.
+9. **Compatibility**: Ensure code is compatible with C++11 standard.
+10. **Portability**: Write code that works across different platforms.
+11. **Reusability**: Design classes to be reusable in different contexts.
 
 ## Application to Other Basic Tool Classes
 
