@@ -24,180 +24,33 @@ While this guide uses `IntArray` as an example for illustration purposes, the pr
 
 Always use try-catch blocks when allocating memory to handle `std::bad_alloc` exceptions gracefully:
 
-```cpp
-try
-{
-    ptr = new int[size];
-    zero_out();
-}
-catch (const std::bad_alloc& e)
-{
-    std::cerr << "Allocation error for IntArray: " << e.what() << std::endl;
-    ptr = nullptr;
-    size = 0;
-    throw;
-}
-assert(ptr != nullptr);
-```
-
 ### 2. Two-Stage Memory Allocation
 
-When reallocating memory (e.g., in `create` methods), use a two-stage approach to ensure that the original object remains valid if memory allocation fails:
-
-```cpp
-int* new_ptr = nullptr;
-try
-{
-    new_ptr = new int[size];
-}
-catch (const std::bad_alloc& e)
-{
-    std::cerr << "Allocation error in IntArray::create: " << e.what() << std::endl;
-    assert(new_ptr != nullptr);
-    return;
-}
-delete[] ptr;
-ptr = new_ptr;
-zero_out();
-```
+When reallocating memory (e.g., in `create` methods), use a two-stage approach to ensure that the original object remains valid if memory allocation fails.
 
 ### 3. Null Pointer Checks
 
-Always check for null pointers before accessing memory, especially in methods that might be called on objects with failed memory allocation:
-
-```cpp
-void IntArray::zero_out()
-{
-    if (size <= 0 || ptr == nullptr)
-    {
-        return;
-    }
-    for (int i = 0; i < size; i++)
-    {
-        ptr[i] = 0;
-    }
-    return;
-}
-```
+Always check for null pointers before accessing memory, especially in methods that might be called on objects with failed memory allocation.
 
 ## Class Design
 
 ### 1. Copy Constructor
 
-Implement a copy constructor to avoid shallow copy issues:
-
-```cpp
-IntArray::IntArray(const IntArray& other)
-{
-    size = other.size;
-    dim = other.dim;
-    bound1 = other.bound1;
-    bound2 = other.bound2;
-    bound3 = other.bound3;
-    bound4 = other.bound4;
-    bound5 = other.bound5;
-    bound6 = other.bound6;
-    try
-    {
-        ptr = new int[size];
-        for (int i = 0; i < size; i++)
-        {
-            ptr[i] = other.ptr[i];
-        }
-    }
-    catch (const std::bad_alloc& e)
-    {
-        std::cerr << "Allocation error in IntArray copy constructor: " << e.what() << std::endl;
-        ptr = nullptr;
-        size = 0;
-        throw;
-    }
-    assert(ptr != nullptr);
-}
-```
+Implement a copy constructor to avoid shallow copy issues.
 
 ### 2. Move Semantics
 
-Implement move constructor and move assignment operator to improve performance:
-
-```cpp
-// Move constructor
-IntArray::IntArray(IntArray&& other) noexcept
-    : size(other.size),
-      dim(other.dim),
-      bound1(other.bound1),
-      bound2(other.bound2),
-      bound3(other.bound3),
-      bound4(other.bound4),
-      bound5(other.bound5),
-      bound6(other.bound6),
-      ptr(other.ptr)
-{
-    other.ptr = nullptr;
-    other.size = 0;
-    other.dim = 0;
-    other.bound1 = other.bound2 = other.bound3 = other.bound4 = other.bound5 = other.bound6 = 0;
-}
-
-// Move assignment operator
-IntArray& IntArray::operator=(IntArray&& other) noexcept
-{
-    if (this != &other)
-    {
-        freemem();
-        size = other.size;
-        dim = other.dim;
-        bound1 = other.bound1;
-        bound2 = other.bound2;
-        bound3 = other.bound3;
-        bound4 = other.bound4;
-        bound5 = other.bound5;
-        bound6 = other.bound6;
-        ptr = other.ptr;
-        other.ptr = nullptr;
-        other.size = 0;
-        other.dim = 0;
-        other.bound1 = other.bound2 = other.bound3 = other.bound4 = other.bound5 = other.bound6 = 0;
-    }
-    return *this;
-}
-```
+Implement move constructor and move assignment operator to improve performance.
 
 ### 3. Boundary Checks
 
-Add boundary checks to prevent out-of-bounds access:
-
-```cpp
-int& IntArray::operator()(const int d1, const int d2)
-{
-    assert(d1 >= 0 && d1 < bound1);
-    assert(d2 >= 0 && d2 < bound2);
-    return ptr[d1 * bound2 + d2];
-}
-```
+Add boundary checks to prevent out-of-bounds access.
 
 ## Code Style
 
 ### 1. Brace Style
 
-Use separate lines for braces, and always use braces for if and for statements, even if they contain only one line of code:
-
-```cpp
-if (condition)
-{
-    // code here
-}
-
-for (int i = 0; i < size; i++)
-{
-    // code here
-}
-
-void function()
-{
-    // code here
-}
-```
+Use separate lines for braces, and always use braces for "if" and "for" statements, even if they contain one line of code
 
 ### 2. Indentation
 
@@ -212,19 +65,6 @@ Use English for comments and document important functionality. Follow Doxygen-st
 ### 1. Named Constants
 
 Avoid using magic numbers. Instead, define named constants for numerical values:
-
-```cpp
-// Small epsilon value for numerical comparisons
-constexpr double epsilon = 1e-10;
-
-// Usage
-if (m > epsilon) // Avoid division by zero
-{
-    x /= m;
-    y /= m;
-    z /= m;
-}
-```
 
 ### 2. Header Includes
 
