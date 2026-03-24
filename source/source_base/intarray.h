@@ -100,7 +100,10 @@ class IntArray
     const IntArray &operator=(const int &right)
     {
         if (ptr != nullptr && size > 0) {
-            for (int i = 0;i < size;i++) ptr[i] = right;
+            for (int i = 0;i < size;i++) 
+            {
+                ptr[i] = right;
+            }
         }
         return *this;// enables x = y = z;
     }

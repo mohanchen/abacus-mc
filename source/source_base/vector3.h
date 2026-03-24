@@ -2,6 +2,7 @@
 #define VECTOR3_H
 
 #include <cmath>
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 #include <array>
@@ -12,6 +13,8 @@
 
 namespace ModuleBase
 {
+    // Small epsilon value for numerical comparisons
+    constexpr double epsilon = 1e-10;
 
 /**
  * @brief 3 elements vector
@@ -166,7 +169,7 @@ template <class T> class Vector3
     Vector3<T> operator-() const
     {
         return Vector3<T>(-x, -y, -z);
-    } // Peize Lin add 2017-01-10
+    }
 
     /**
      * @brief Over load "[]" for accessing elements with pointers
@@ -224,7 +227,7 @@ template <class T> class Vector3
     Vector3<T> &normalize(void)
     {
         const T m = norm();
-        if (m > 1e-10) // Avoid division by zero
+        if (m > epsilon) // Avoid division by zero
         {
             x /= m;
             y /= m;
@@ -254,7 +257,7 @@ template <class T> class Vector3
     /**
      * @brief Print a Vector3 on standard output with formats
      *
-     * @param precision The number of decimal places to display (default: 5)
+     * @param precision The number of decimal places to display (must be positive, default: 5)
      */
     void print(const int precision = 5) const;
 };
@@ -404,15 +407,25 @@ template <class T> inline Vector3<T> cross(const Vector3<T> &u, const Vector3<T>
 template <class T> bool operator<(const Vector3<T> &u, const Vector3<T> &v)
 {
     if (u.x < v.x)
+    {
         return true;
+    }
     if (u.x > v.x)
+    {
         return false;
+    }
     if (u.y < v.y)
+    {
         return true;
+    }
     if (u.y > v.y)
+    {
         return false;
+    }
     if (u.z < v.z)
+    {
         return true;
+    }
     return false;
 }
 
@@ -425,18 +438,22 @@ template <class T> inline bool operator!=(const Vector3<T> &u, const Vector3<T> 
 template <class T> inline bool operator==(const Vector3<T> &u, const Vector3<T> &v)
 {
     if (u.x == v.x && u.y == v.y && u.z == v.z)
+    {
         return true;
+    }
     return false;
 }
 
 /**
  * @brief Print a Vector3 on standard output with formats
  *
- * @param precision The number of decimal places to display
+ * @param precision The number of decimal places to display (must be positive, default: 5)
  */
 template <class T> void Vector3<T>::print(const int precision) const
 {
-    std::cout.precision(precision);
+    // Ensure precision is non-negative
+    int valid_precision = precision > 0 ? precision : 5;
+    std::cout.precision(valid_precision);
     std::cout << "(" << std::setw(10) << x << "," << std::setw(10) << y << "," << std::setw(10) << z << ")"
               << std::endl;
     return;
