@@ -1,8 +1,22 @@
-# Basic Data Types Class Design for ABACUS
+# Basic Tool Classes Design Guide for ABACUS
 
 ## Overview
 
-This document provides guidelines for designing and implementing basic data type classes in the ABACUS codebase, focusing on best practices for memory management, code style, and testing.
+This document provides guidelines for designing and implementing basic tool classes in the ABACUS codebase, focusing on best practices for memory management, code style, and testing. These guidelines apply to all basic mathematical and utility classes, including but not limited to:
+
+- vector3.h
+- matrix.h
+- timer.h
+- ndarray.h
+- realarray.h
+- complexarray.h
+- complexmatrix.h
+- matrix3.h
+- intarray.h
+- formatter.h
+- math_chebyshev.h
+
+While this guide uses `IntArray` as an example for illustration purposes, the principles and practices described here are applicable to all basic tool classes in ABACUS.
 
 ## Memory Management
 
@@ -186,7 +200,7 @@ Use spaces instead of tabs for indentation (4 spaces per indent level).
 
 ### 3. Comments
 
-Use English for comments and document important functionality.
+Use English for comments and document important functionality. Follow Doxygen-style documentation for classes and methods.
 
 ## Testing
 
@@ -198,38 +212,7 @@ Write comprehensive unit tests for all classes, including:
 - Exception handling tests
 - Edge case tests
 
-### 2. Memory Allocation Failure Testing
-
-Test that classes handle memory allocation failures gracefully:
-
-```cpp
-// Override global operator new to simulate memory allocation failure
-static bool g_throw_bad_alloc = false;
-
-void* operator new(size_t size)
-{
-    if (g_throw_bad_alloc)
-    {
-        throw std::bad_alloc();
-    }
-    return std::malloc(size);
-}
-
-void operator delete(void* ptr) noexcept
-{
-    std::free(ptr);
-}
-
-TEST_F(IntArrayTest, MemoryAllocationFailure)
-{
-    // Test that IntArray throws bad_alloc when memory allocation fails
-    g_throw_bad_alloc = true;
-    EXPECT_THROW(ModuleBase::IntArray test_array(1, 1), std::bad_alloc);
-    g_throw_bad_alloc = false;
-}
-```
-
-### 3. Test Class Initialization
+### 2. Test Class Initialization
 
 Use constructor initialization lists for test classes to improve compatibility:
 
@@ -259,3 +242,19 @@ protected:
 5. **Testing**: Write comprehensive tests for all functionality.
 6. **Code Style**: Follow consistent code style guidelines.
 7. **Documentation**: Document classes and methods to improve maintainability.
+8. **Compatibility**: Ensure code is compatible with C++11 standard.
+9. **Portability**: Write code that works across different platforms.
+10. **Reusability**: Design classes to be reusable in different contexts.
+
+## Application to Other Basic Tool Classes
+
+While this guide uses `IntArray` as an example, these principles apply to all basic tool classes in ABACUS. For example:
+
+- **vector3.h**: Apply the same memory management and error handling principles, with additional focus on vector operations and operator overloading.
+- **matrix.h**: Extend the memory management practices to 2D arrays, with additional considerations for matrix operations.
+- **timer.h**: Focus on static member management and time measurement accuracy.
+- **ndarray.h**: Apply the same principles to multi-dimensional arrays, with additional considerations for shape manipulation.
+- **formatter.h**: Focus on string manipulation and formatting, with attention to performance and usability.
+- **math_chebyshev.h**: Apply the principles to template classes, with additional focus on mathematical algorithm implementation.
+
+By following these guidelines, you can ensure that all basic tool classes in ABACUS are well-designed, robust, and maintainable.
