@@ -166,7 +166,9 @@ matrix operator+(const matrix &m1, const matrix &m2)
 	matrix tm(m1);
 	const int size = m1.nr*m1.nc;
 	for (int i = 0; i < size; i++) 
+	{
 		tm.c[i] += m2.c[i];
+	}
 	return tm;
 }
 
@@ -179,7 +181,9 @@ matrix operator-(const matrix &m1, const matrix &m2)
 	matrix tm(m1);
 	const int size = m1.nr*m1.nc;
 	for(int i = 0; i < size; i++) 
+	{
 		tm.c[i] -= m2.c[i];
+	}
 	return tm;
 }
 
@@ -227,7 +231,9 @@ matrix operator*(const double &s, const matrix &m)
 	matrix sm(m);
 	const int size=m.nr*m.nc;
 	for (int i = 0; i < size; i++) 
+	{
 		sm.c[i] *= s;
+	}
 	return sm;
 }
 
@@ -237,7 +243,9 @@ matrix operator*(const matrix &m,const double &s)
 	matrix sm(m);
 	const int size=m.nr*m.nc;
 	for (int i = 0; i < size; i++)
+	{
 		sm.c[i] *= s;
+	}
 	return sm;
 }
 
@@ -261,7 +269,9 @@ void matrix::operator+=(const matrix & m)
 	const int size=nc*nr;
 	const double * const c_in = m.c;
 	for( int i = 0; i < size; ++i ) 
+	{
 		c[i] += c_in[i];
+	}
 }
 
 
@@ -277,7 +287,9 @@ void matrix::operator-=(const matrix & m)
 	const int size=nc*nr;
 	const double * const c_in = m.c;
 	for( int i = 0; i < size; ++i ) 
+	{
 		c[i] -= c_in[i];
+	}
 }
 
 /* zero out the matrix */

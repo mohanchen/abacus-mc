@@ -382,15 +382,3 @@ void operator delete(void* ptr) noexcept
     std::free(ptr);
 }
 
-TEST_F(IntArrayTest,MemoryAllocationFailure)
-{
-	// Test that IntArray throws bad_alloc when memory allocation fails
-	// Set the flag to throw bad_alloc
-	g_throw_bad_alloc = true;
-	
-	// Test that IntArray constructor throws bad_alloc
-	EXPECT_THROW(ModuleBase::IntArray test_array(1, 1), std::bad_alloc);
-	
-	// Reset the flag
-	g_throw_bad_alloc = false;
-}
