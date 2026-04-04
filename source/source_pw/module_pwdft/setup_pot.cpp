@@ -19,7 +19,7 @@ void pw::setup_pot(const int istep,
         Plus_U &dftu, // mohan add 2025-11-06
 		VSep* vsep_cell, // U-1/2 method
 		psi::Psi<T, Device>* kspw_psi, // electronic wave functions
-        hamilt::Hamilt<T, Device>* p_hamilt, // hamiltonian
+        hamilt::HamiltBase* p_hamilt, // hamiltonian
 		ModulePW::PW_Basis_K *pw_wfc,  // pw for wfc
 		const ModulePW::PW_Basis *pw_rhod, // pw for rhod
 		const Input_para& inp) // input parameters
@@ -137,7 +137,7 @@ template void pw::setup_pot<std::complex<float>, base_device::DEVICE_CPU>(
         Plus_U &dftu, // mohan add 2025-11-06
 		VSep* vsep_cell, // U-1/2 method
 		psi::Psi<std::complex<float>, base_device::DEVICE_CPU>* kspw_psi, // electronic wave functions
-        hamilt::Hamilt<std::complex<float>, base_device::DEVICE_CPU>* p_hamilt, // hamiltonian
+        hamilt::HamiltBase* p_hamilt, // hamiltonian
 		ModulePW::PW_Basis_K *pw_wfc,  // pw for wfc
 		const ModulePW::PW_Basis *pw_rhod, // pw for rhod
 		const Input_para& inp); // input parameters
@@ -156,7 +156,7 @@ template void pw::setup_pot<std::complex<double>, base_device::DEVICE_CPU>(
         Plus_U &dftu, // mohan add 2025-11-06
 		VSep* vsep_cell, // U-1/2 method
 		psi::Psi<std::complex<double>, base_device::DEVICE_CPU>* kspw_psi, // electronic wave functions
-        hamilt::Hamilt<std::complex<double>, base_device::DEVICE_CPU>* p_hamilt, // hamiltonian
+        hamilt::HamiltBase* p_hamilt, // hamiltonian
 		ModulePW::PW_Basis_K *pw_wfc,  // pw for wfc
 		const ModulePW::PW_Basis *pw_rhod, // pw for rhod
 		const Input_para& inp); // input parameters
@@ -176,7 +176,7 @@ template void pw::setup_pot<std::complex<float>, base_device::DEVICE_GPU>(
         Plus_U &dftu, // mohan add 2025-11-06
 		VSep* vsep_cell, // U-1/2 method
 		psi::Psi<std::complex<float>, base_device::DEVICE_GPU>* kspw_psi, // electronic wave functions
-        hamilt::Hamilt<std::complex<float>, base_device::DEVICE_GPU>* p_hamilt, // hamiltonian
+        hamilt::HamiltBase* p_hamilt, // hamiltonian
 		ModulePW::PW_Basis_K *pw_wfc,  // pw for wfc
 		const ModulePW::PW_Basis *pw_rhod, // pw for rhod
 		const Input_para& inp); // input parameters
@@ -194,7 +194,7 @@ template void pw::setup_pot<std::complex<double>, base_device::DEVICE_GPU>(
         Plus_U &dftu, // mohan add 2025-11-06
 		VSep* vsep_cell, // U-1/2 method
 		psi::Psi<std::complex<double>, base_device::DEVICE_GPU>* kspw_psi, // electronic wave functions
-        hamilt::Hamilt<std::complex<double>, base_device::DEVICE_GPU>* p_hamilt, // hamiltonian
+        hamilt::HamiltBase* p_hamilt, // hamiltonian
 		ModulePW::PW_Basis_K *pw_wfc,  // pw for wfc
 		const ModulePW::PW_Basis *pw_rhod, // pw for rhod
 		const Input_para& inp); // input parameters

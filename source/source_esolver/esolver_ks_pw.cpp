@@ -164,7 +164,7 @@ void ESolver_KS_PW<T, Device>::before_scf(UnitCell& ucell, const int istep)
     pw::setup_pot(istep, ucell, this->kv, this->sf, this->pelec, this->Pgrid,
               this->chr, this->locpp, this->ppcell, this->dftu, this->vsep_cell,
               this->stp.template get_psi_t<T, Device>(), 
-	      static_cast<hamilt::Hamilt<T, Device>*>(this->p_hamilt), 
+	      this->p_hamilt, 
 	      this->pw_wfc, this->pw_rhod, PARAM.inp);
 
     // setup psi (electronic wave functions)
