@@ -49,6 +49,7 @@ list(APPEND objects
     radial_proj.cpp
     onsite_projector.cpp
     onsite_proj_tools.cpp
+    onsite_proj_print.cpp
     vsep_pw.cpp
 )
 
