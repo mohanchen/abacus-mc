@@ -70,8 +70,11 @@ class Onsite_Proj_tools
     void cal_dbecp_f(int ik, int npm, int ipol);
 
     void cal_force_dftu(int ik, int npm, FPTYPE* force, const int* orbital_corr, const std::complex<FPTYPE>* vu, const int size_vu, const FPTYPE* h_wg);
+
     void cal_force_dspin(int ik, int npm, FPTYPE* force, const ModuleBase::Vector3<double>* lambda, const FPTYPE* h_wg);
+
     void cal_stress_dftu(int ik, int npm, FPTYPE* stress, const int* orbital_corr, const std::complex<FPTYPE>* vu, const int size_vu, const FPTYPE* h_wg);
+
     void cal_stress_dspin(int ik, int npm, FPTYPE* stress, const ModuleBase::Vector3<double>* lambda, const FPTYPE* h_wg);
 
 
