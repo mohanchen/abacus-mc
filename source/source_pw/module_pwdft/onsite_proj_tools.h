@@ -91,20 +91,18 @@ class Onsite_Proj_tools
         const FPTYPE* h_wg
     );
 
-    void cal_stress_dftu(
+    std::vector<double> cal_stress_dftu(
         int ik,
         int npm,
-        FPTYPE* stress,
         const int* orbital_corr,
         const std::complex<FPTYPE>* vu,
         const int size_vu,
         const FPTYPE* h_wg
     );
 
-    void cal_stress_dspin(
+    std::vector<double> cal_stress_dspin(
         int ik,
         int npm,
-        FPTYPE* stress,
         const ModuleBase::Vector3<double>* lambda,
         const FPTYPE* h_wg
     );

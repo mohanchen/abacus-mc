@@ -47,12 +47,7 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
     
     ModuleBase::timer::start("Stress", "stress_onsite");
 
-    // Allocate device memory for stress calculation
-    FPTYPE* stress_device = nullptr;
-    resmem_var_op()(stress_device, 9);
-    setmem_var_op()(stress_device, 0, 9);
-    
-    // Host memory for stress storage
+    // Host memory for stress storage (CPU only)
     std::vector<double> sigma_onsite(9, 0.0);
 
     // Get onsite projector instance
@@ -66,6 +61,20 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
     {
         // Determine number of occupied bands (skip zero weights)
         int nbands_occ = wg.nc;
+        
+        // Check if nbands_occ is valid
+        if (nbands_occ < 0)
+        {
+            ModuleBase::WARNING_QUIT("stress_onsite.cpp", "Number of bands is negative, cannot calculate stress");
+        }
+        
+        // Skip if no bands
+        if (nbands_occ == 0)
+        {
+            continue;
+        }
+        
+        // Find the highest occupied band with non-zero weight
         while (wg(ik, nbands_occ - 1) == 0.0)
         {
             nbands_occ--;
@@ -84,24 +93,27 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
         {
             for (int jpol = 0; jpol <= ipol; jpol++)
             {
-                // Get pointer to current stress component
-                FPTYPE* stress_component = stress_device + (ipol * 3 + jpol);
-                
                 // Calculate dbecp_s = <psi|d(beta)/d(epsilon_ij)>
                 fs_tools->cal_dbecp_s(ik, num_occupied_bands, ipol, jpol);
                 
                 // Add DFT+U contribution if enabled
                 if (PARAM.inp.dft_plus_u)
                 {
-                    fs_tools->cal_stress_dftu(
+                    // Calculate DFT+U stress contribution
+                    std::vector<double> dftu_stress = fs_tools->cal_stress_dftu(
                         ik,
                         num_occupied_bands,
-                        stress_component,
                         dftu.orbital_corr.data(),
                         dftu.get_eff_pot_pw(0),
                         dftu.get_size_eff_pot_pw(),
                         wg.c
                     );
+                    
+                    // Add to total stress
+                    for (int idx = 0; idx < 9; idx++)
+                    {
+                        sigma_onsite[idx] += dftu_stress[idx];
+                    }
                 }
                 
                 // Add spin constraint contribution if enabled
@@ -115,21 +127,24 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
                     const std::vector<ModuleBase::Vector3<double>>& lambda = spin_constrain.get_sc_lambda();
                     
                     // Calculate spin constraint stress contribution
-                    fs_tools->cal_stress_dspin(
+                    std::vector<double> dspin_stress = fs_tools->cal_stress_dspin(
                         ik,
                         num_occupied_bands,
-                        stress_component,
                         lambda.data(),
                         wg.c
                     );
+                    
+                    // Add to total stress
+                    for (int idx = 0; idx < 9; idx++)
+                    {
+                        sigma_onsite[idx] += dspin_stress[idx];
+                    }
                 }
             }
         }
     }
 
-    // Transfer stress from device to host
-    syncmem_var_d2h_op()(sigma_onsite.data(), stress_device, 9);
-    delmem_var_op()(stress_device);
+    // No device memory to clean up (using CPU only)
 
     // Step 1: Reduce stress contributions from all processors
     for (int i = 0; i < 3; i++)

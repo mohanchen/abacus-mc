@@ -911,14 +911,16 @@ void Onsite_Proj_tools<FPTYPE, Device>::cal_force_dspin(int ik,
 }
 
 template <typename FPTYPE, typename Device>
-void Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
-                                                        int npm,
-                                                        FPTYPE* stress,
-                                                        const int* orbital_corr,
-                                                        const std::complex<FPTYPE>* vu,
-                                                        const int size_vu,
-                                                        const FPTYPE* h_wg)
+std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
+                                                                     int npm,
+                                                                     const int* orbital_corr,
+                                                                     const std::complex<FPTYPE>* vu,
+                                                                     const int size_vu,
+                                                                     const FPTYPE* h_wg)
 {
+    // Create stress vector to store results
+    std::vector<double> stress(9, 0.0);
+    
     int* orbital_corr_tmp = nullptr;
     std::complex<FPTYPE>* vu_tmp = nullptr;
 #if defined(__CUDA) || defined(__ROCM)
@@ -929,6 +931,32 @@ void Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
         resmem_complex_op()(vu_tmp, size_vu);
         syncmem_complex_h2d_op()(vu_tmp, vu, size_vu);
         syncmem_var_h2d_op()(d_wg, h_wg, this->nbands * (ik+1));
+        
+        // Allocate device memory for stress
+        FPTYPE* stress_device = nullptr;
+        resmem_var_op()(stress_device, 9);
+        setmem_var_op()(stress_device, 0, 9);
+        
+        cal_stress_nl_op()(this->ctx,
+                           nkb,
+                           npm,
+                           this->ntype,
+                           this->nbands,
+                           ik,
+                           atom_nh,
+                           atom_na,
+                           d_wg,
+                           vu_tmp,
+                           orbital_corr_tmp,
+                           becp,
+                           dbecp,
+                           stress_device);
+        
+        // Transfer stress from device to host
+        syncmem_var_d2h_op()(stress.data(), stress_device, 9);
+        delmem_var_op()(stress_device);
+        delmem_complex_op()(vu_tmp);
+        delmem_int_op()(orbital_corr_tmp);
     }
     else
 #endif
@@ -936,37 +964,35 @@ void Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
         orbital_corr_tmp = const_cast<int*>(orbital_corr);
         vu_tmp = const_cast<std::complex<FPTYPE>*>(vu);
         d_wg = const_cast<FPTYPE*>(h_wg);
+        
+        cal_stress_nl_op()(this->ctx,
+                           nkb,
+                           npm,
+                           this->ntype,
+                           this->nbands,
+                           ik,
+                           atom_nh,
+                           atom_na,
+                           d_wg,
+                           vu_tmp,
+                           orbital_corr_tmp,
+                           becp,
+                           dbecp,
+                           stress.data());
     }
-    cal_stress_nl_op()(this->ctx,
-                       nkb,
-                       npm,
-                       this->ntype,
-                       this->nbands,
-                       ik,
-                       atom_nh,
-                       atom_na,
-                       d_wg,
-                       vu_tmp,
-                       orbital_corr_tmp,
-                       becp,
-                       dbecp,
-                       stress);
-#if defined(__CUDA) || defined(__ROCM)
-    if (this->device == base_device::GpuDevice)
-    {
-        delmem_complex_op()(vu_tmp);
-        delmem_int_op()(orbital_corr_tmp);
-    }
-#endif
+    
+    return stress;
 }
 
 template <typename FPTYPE, typename Device>
-void Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
-                                                         int npm,
-                                                         FPTYPE* stress,
-                                                         const ModuleBase::Vector3<double>* lambda,
-                                                         const FPTYPE* h_wg)
+std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
+                                                                      int npm,
+                                                                      const ModuleBase::Vector3<double>* lambda,
+                                                                      const FPTYPE* h_wg)
 {
+    // Create stress vector to store results
+    std::vector<double> stress(9, 0.0);
+    
     std::vector<FPTYPE> lambda_array(this->ucell_->nat * 3);
     for (int iat = 0; iat < this->ucell_->nat; iat++)
     {
@@ -981,34 +1007,55 @@ void Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
         resmem_var_op()(lambda_tmp, this->ucell_->nat * 3);
         syncmem_var_h2d_op()(lambda_tmp, lambda_array.data(), this->ucell_->nat * 3);
         syncmem_var_h2d_op()(d_wg, h_wg, this->nbands * (ik+1));
+        
+        // Allocate device memory for stress
+        FPTYPE* stress_device = nullptr;
+        resmem_var_op()(stress_device, 9);
+        setmem_var_op()(stress_device, 0, 9);
+        
+        const int force_nc = 3;
+        cal_stress_nl_op()(this->ctx,
+                           nkb,
+                           npm,
+                           this->ntype,
+                           this->nbands,
+                           ik,
+                           atom_nh,
+                           atom_na,
+                           d_wg,
+                           lambda_tmp,
+                           becp,
+                           dbecp,
+                           stress_device);
+        
+        // Transfer stress from device to host
+        syncmem_var_d2h_op()(stress.data(), stress_device, 9);
+        delmem_var_op()(stress_device);
+        delmem_var_op()(lambda_tmp);
     }
     else
 #endif
     {
         lambda_tmp = lambda_array.data();
         d_wg = const_cast<FPTYPE*>(h_wg);
+        
+        const int force_nc = 3;
+        cal_stress_nl_op()(this->ctx,
+                           nkb,
+                           npm,
+                           this->ntype,
+                           this->nbands,
+                           ik,
+                           atom_nh,
+                           atom_na,
+                           d_wg,
+                           lambda_tmp,
+                           becp,
+                           dbecp,
+                           stress.data());
     }
-    const int force_nc = 3;
-    cal_stress_nl_op()(this->ctx,
-                       nkb,
-                       npm,
-                       this->ntype,
-                       this->nbands,
-                       ik,
-                       atom_nh,
-                       atom_na,
-                       d_wg,
-                       lambda_tmp,
-                       becp,
-                       dbecp,
-                       stress);
-
-#if defined(__CUDA) || defined(__ROCM)
-    if (this->device == base_device::GpuDevice)
-    {
-        delmem_var_op()(lambda_tmp);
-    }
-#endif
+    
+    return stress;
 }
 
 // template instantiation
