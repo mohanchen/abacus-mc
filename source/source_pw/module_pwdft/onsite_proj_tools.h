@@ -91,7 +91,8 @@ class Onsite_Proj_tools
         const FPTYPE* h_wg
     );
 
-    std::vector<double> cal_stress_dftu(
+    // return stress(i,j) value
+    double cal_stress_dftu(
         int ik,
         int npm,
         const int* orbital_corr,
@@ -100,7 +101,8 @@ class Onsite_Proj_tools
         const FPTYPE* h_wg
     );
 
-    std::vector<double> cal_stress_dspin(
+    // return stress(i,j) value
+    double cal_stress_dspin(
         int ik,
         int npm,
         const ModuleBase::Vector3<double>* lambda,

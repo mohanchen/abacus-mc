@@ -911,15 +911,14 @@ void Onsite_Proj_tools<FPTYPE, Device>::cal_force_dspin(int ik,
 }
 
 template <typename FPTYPE, typename Device>
-std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
-                                                                     int npm,
-                                                                     const int* orbital_corr,
-                                                                     const std::complex<FPTYPE>* vu,
-                                                                     const int size_vu,
-                                                                     const FPTYPE* h_wg)
+double Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
+                                                          int npm,
+                                                          const int* orbital_corr,
+                                                          const std::complex<FPTYPE>* vu,
+                                                          const int size_vu,
+                                                          const FPTYPE* h_wg)
 {
-    // Create stress vector to store results
-    std::vector<double> stress(9, 0.0);
+    double stress_out = 0.0;
     
     int* orbital_corr_tmp = nullptr;
     std::complex<FPTYPE>* vu_tmp = nullptr;
@@ -934,8 +933,8 @@ std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
         
         // Allocate device memory for stress
         FPTYPE* stress_device = nullptr;
-        resmem_var_op()(stress_device, 9);
-        setmem_var_op()(stress_device, 0, 9);
+        resmem_var_op()(stress_device, 1);
+        setmem_var_op()(stress_device, 0, 1);
         
         cal_stress_nl_op()(this->ctx,
                            nkb,
@@ -953,7 +952,7 @@ std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
                            stress_device);
         
         // Transfer stress from device to host
-        syncmem_var_d2h_op()(stress.data(), stress_device, 9);
+        syncmem_var_d2h_op()(&stress_out, stress_device, 1);
         delmem_var_op()(stress_device);
         delmem_complex_op()(vu_tmp);
         delmem_int_op()(orbital_corr_tmp);
@@ -978,20 +977,19 @@ std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dftu(int ik,
                            orbital_corr_tmp,
                            becp,
                            dbecp,
-                           stress.data());
+                           &stress_out);
     }
     
-    return stress;
+    return stress_out;
 }
 
 template <typename FPTYPE, typename Device>
-std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
-                                                                      int npm,
-                                                                      const ModuleBase::Vector3<double>* lambda,
-                                                                      const FPTYPE* h_wg)
+double Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
+                                                           int npm,
+					          	   const ModuleBase::Vector3<double>* lambda,
+                                                           const FPTYPE* h_wg)
 {
-    // Create stress vector to store results
-    std::vector<double> stress(9, 0.0);
+    double stress_out = 0.0;
     
     std::vector<FPTYPE> lambda_array(this->ucell_->nat * 3);
     for (int iat = 0; iat < this->ucell_->nat; iat++)
@@ -1029,7 +1027,7 @@ std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
                            stress_device);
         
         // Transfer stress from device to host
-        syncmem_var_d2h_op()(stress.data(), stress_device, 9);
+        syncmem_var_d2h_op()(&stress_out, stress_device, 9);
         delmem_var_op()(stress_device);
         delmem_var_op()(lambda_tmp);
     }
@@ -1052,10 +1050,10 @@ std::vector<double> Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
                            lambda_tmp,
                            becp,
                            dbecp,
-                           stress.data());
+                           &stress_out);
     }
     
-    return stress;
+    return stress_out;
 }
 
 // template instantiation

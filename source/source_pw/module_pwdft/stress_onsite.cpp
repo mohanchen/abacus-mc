@@ -93,6 +93,8 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
         {
             for (int jpol = 0; jpol <= ipol; jpol++)
             {
+                const int idx = ipol * 3 + jpol;
+
                 // Calculate dbecp_s = <psi|d(beta)/d(epsilon_ij)>
                 fs_tools->cal_dbecp_s(ik, num_occupied_bands, ipol, jpol);
                 
@@ -100,7 +102,7 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
                 if (PARAM.inp.dft_plus_u)
                 {
                     // Calculate DFT+U stress contribution
-                    std::vector<double> dftu_stress = fs_tools->cal_stress_dftu(
+                    double dftu_stress = fs_tools->cal_stress_dftu(
                         ik,
                         num_occupied_bands,
                         dftu.orbital_corr.data(),
@@ -109,11 +111,10 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
                         wg.c
                     );
                     
-                    // Add to total stress
-                    for (int idx = 0; idx < 9; idx++)
-                    {
-                        sigma_onsite[idx] += dftu_stress[idx];
-                    }
+                    sigma_onsite[idx] += dftu_stress;
+#ifdef __DEBUG
+		    std::cout << " idx=" << idx << " stress=" << sigma_onsite[idx] << std::endl;
+#endif
                 }
                 
                 // Add spin constraint contribution if enabled
@@ -127,18 +128,14 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
                     const std::vector<ModuleBase::Vector3<double>>& lambda = spin_constrain.get_sc_lambda();
                     
                     // Calculate spin constraint stress contribution
-                    std::vector<double> dspin_stress = fs_tools->cal_stress_dspin(
+                    double dspin_stress = fs_tools->cal_stress_dspin(
                         ik,
                         num_occupied_bands,
                         lambda.data(),
                         wg.c
                     );
                     
-                    // Add to total stress
-                    for (int idx = 0; idx < 9; idx++)
-                    {
-                        sigma_onsite[idx] += dspin_stress[idx];
-                    }
+                    sigma_onsite[idx] += dspin_stress;
                 }
             }
         }
@@ -152,6 +149,10 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
         for (int j = 0; j < 3; j++)
         {
             const int idx = i * 3 + j;
+            if(j>i)
+            {
+                sigma_onsite[idx]=sigma_onsite[j*3+i];
+            }
             Parallel_Reduce::reduce_all(sigma_onsite[idx]); // qianrui fix a bug for kpar > 1
         }
     }
@@ -167,18 +168,15 @@ void Stress_Func<FPTYPE, Device>::stress_onsite(
         }
     }
 
-    // Step 3: Handle symmetry for upper triangular elements
-    for (int i = 0; i < 3; i++)
+#ifdef __DEBUG
+    // Add to total stress
+    for (int idx = 0; idx < 9; idx++)
     {
-        for (int j = i + 1; j < 3; j++)
-        {
-            const int idx = i * 3 + j;
-            const int transposed_idx = j * 3 + i;
-            sigma_onsite[idx] = sigma_onsite[transposed_idx];
-        }
+	    std::cout << " idx=" << idx << " stress=" << sigma_onsite[idx] << std::endl;
     }
+#endif
 
-    // Step 4: Assign stress values to output matrix
+    // Step 3: Assign stress values to output matrix
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 3; j++)
