@@ -1008,8 +1008,8 @@ double Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
         
         // Allocate device memory for stress
         FPTYPE* stress_device = nullptr;
-        resmem_var_op()(stress_device, 9);
-        setmem_var_op()(stress_device, 0, 9);
+        resmem_var_op()(stress_device, 1);
+        setmem_var_op()(stress_device, 0, 1);
         
         const int force_nc = 3;
         cal_stress_nl_op()(this->ctx,
@@ -1027,7 +1027,7 @@ double Onsite_Proj_tools<FPTYPE, Device>::cal_stress_dspin(int ik,
                            stress_device);
         
         // Transfer stress from device to host
-        syncmem_var_d2h_op()(&stress_out, stress_device, 9);
+        syncmem_var_d2h_op()(&stress_out, stress_device, 1);
         delmem_var_op()(stress_device);
         delmem_var_op()(lambda_tmp);
     }
