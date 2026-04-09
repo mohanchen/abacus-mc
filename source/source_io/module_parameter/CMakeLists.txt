@@ -9,8 +9,7 @@ add_library(
 # Link with base library for WARNING_QUIT
 target_link_libraries(parameter PUBLIC base)
 
-# Ensure device library is built before parameter
-add_dependencies(parameter device)
+# device library dependency removed for pyabacus build
 
 # if(ENABLE_COVERAGE)
 #   add_coverage(parameter)
