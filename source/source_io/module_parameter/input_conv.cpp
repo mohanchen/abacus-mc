@@ -665,6 +665,16 @@ void Input_Conv::Convert()
     hsolver::DiagoElpaNative<double>::elpa_num_thread = PARAM.inp.elpa_num_thread;
     ;
 #endif
+
+
+#ifdef __DSP
+    // Initialize DSP selector if DSP is enabled
+    if (PARAM.inp.dsp_count > 0)
+    {
+        ModuleIO::init_dsp_selector(GlobalV::MY_RANK, PARAM.inp.dsp_count);
+    }
+#endif
+
     ModuleBase::timer::end("Input_Conv", "Convert");
     return;
 }

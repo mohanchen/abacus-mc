@@ -46,6 +46,8 @@ list(APPEND device_srcs
   source_base/module_device/device_helpers.cpp
   source_base/module_device/output_device.cpp
   source_base/module_device/memory_op.cpp
+  source_base/module_device/memory_op_dsp.cpp
+  source_base/module_device/dsp_selector.cpp
   source_base/kernels/math_kernel_op.cpp
   source_base/kernels/math_kernel_op_vec.cpp
 

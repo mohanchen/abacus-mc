@@ -1,10 +1,14 @@
 #ifndef PARAMETER_H
 #define PARAMETER_H
+
 #include "input_parameter.h"
 #include "system_parameter.h"
+
 namespace ModuleIO
 {
 	class ReadInput;
+	// Initialize DSP selector
+	void init_dsp_selector(const int my_rank, const int dsp_count);
 }
 
 class CalAtomInfo;

@@ -176,10 +176,12 @@ OBJS_BASE=abfs-vector3_order.o\
     broyden_mixing.o\
     memory_op.o\
     memory_op_dsp.o\
+    dsp_selector.o\
     device.o\
     device_helpers.o\
     output_device.o\
     parallel_2d.o\
+
 
 OBJS_CELL=atom_pseudo.o\
     atom_spec.o\
@@ -516,6 +518,7 @@ OBJS_XC=xc_functional.o\
     exx_info.o\
 
 OBJS_IO=module_parameter/input_conv.o\
+    module_parameter/dsp_config.o\
     module_unk/berryphase.o\
     module_bessel/bessel_basis.o\
     cal_test.o\
@@ -592,6 +595,7 @@ OBJS_IO=module_parameter/input_conv.o\
     cal_pLpR.o\
     filename.o\
     ucell_io.o\
+
 
 OBJS_IO_LCAO=cal_r_overlap_R.o\
       write_orb_info.o\
