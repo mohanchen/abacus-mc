@@ -175,6 +175,7 @@ OBJS_BASE=abfs-vector3_order.o\
     pulay_mixing.o\
     broyden_mixing.o\
     memory_op.o\
+    memory_op_dsp.o\
     device.o\
     device_helpers.o\
     output_device.o\
