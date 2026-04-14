@@ -74,8 +74,6 @@ After running the calculation, you will find the following key output files in t
 
 - `running_scf.log` (for 01_pw_Si2): Log file for the SCF calculation
 - `running_md.log` (for 02_pw_md_Al): Log file for the MD calculation
-- `OSZICAR`: Contains energy and convergence information
-- `forces.dat`: Contains atomic forces (for MD calculation)
 - `STRU_*`: Contains the atomic positions at different time steps (for MD calculation)
 
 ## Notes

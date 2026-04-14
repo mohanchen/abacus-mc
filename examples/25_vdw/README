@@ -78,9 +78,7 @@ The INPUT files include specific parameters for vdW corrections:
 
 After running the calculation, you will find the following key output files in the `OUT.ABACUS` directory:
 
-- `OSZICAR`: Contains energy and convergence information, including the vdW correction energy
 - `running_scf.log`: Log file for the SCF calculation
-- `forces.dat`: Contains atomic forces
 
 ## Notes
 
