@@ -18,3 +18,5 @@ Let's have an example. Let's say we have 8 kpoints in both spins, 216 bands, whe
 - `ocp_set 143*1.0 1*0.0 1*1.0 71*0.0 143*1.0 1*0.0 1*1.0 71*0.0 143*1.0 1*0.0 1*1.0 71*0.0 143*1.0 1*0.0 1*1.0 71*0.0 143*1.0 1*0.0 1*1.0 71*0.0 143*1.0 1*0.0 1*1.0 71*0.0 143*1.0 1*0.0 1*1.0 71*0.0 143*1.0 1*0.0 1*1.0 71*0.0 142*1.0 74*0.0 142*1.0 74*0.0 142*1.0 74*0.0 142*1.0 74*0.0 142*1.0 74*0.0 142*1.0 74*0.0 142*1.0 74*0.0 142*1.0 74*0.0`
 
 I hope that helps!
+
+More information can be found at: https://abacus.deepmodeling.com/en/latest/advanced/input_files/input-main.html#ocp-set
