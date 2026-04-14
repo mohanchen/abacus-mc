@@ -73,7 +73,7 @@ Both plane wave (PW) and LCAO basis sets are supported for external electric fie
 
 After running the calculation, you will find the following key output files in the `OUT.ABACUS` directory:
 
-- `OSZICAR`: Contains energy and convergence information, including the electric field energy contribution
+- Energy output file: Contains energy and convergence information, including the electric field energy contribution
 - `running_scf.log`: Log file for the SCF calculation, includes details about the electric field setup
 - `forces.dat`: Contains atomic forces, which include contributions from the electric field
 
