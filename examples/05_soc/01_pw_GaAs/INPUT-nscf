@@ -1,7 +1,6 @@
 INPUT_PARAMETERS
 #Parameters	(General)
 pseudo_dir              ../../../tests/PP_ORB
-ntype                   2
 nbands                  35
 calculation             nscf
 symmetry                0

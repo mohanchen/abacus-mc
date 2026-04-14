@@ -3,7 +3,6 @@ INPUT_PARAMETERS
 kpoint_file                     KLINES
 pseudo_dir                      ../../../tests/PP_ORB
 calculation                     nscf
-ntype                           1
 symmetry                        0
 #Parameters (Methods)
 ecutwfc                         50

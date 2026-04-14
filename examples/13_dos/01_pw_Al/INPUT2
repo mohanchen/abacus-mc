@@ -2,7 +2,6 @@ INPUT_PARAMETERS
 #Parameters (General)
 pseudo_dir                      ../../../tests/PP_ORB
 calculation                     nscf
-ntype                           1
 symmetry                        0
 #Parameters (Methods)
 ecutwfc                         50
