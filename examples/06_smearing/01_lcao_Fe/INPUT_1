@@ -1,6 +1,5 @@
 INPUT_PARAMETERS
 suffix         autotest
-ntype          2
 
 calculation    scf
 ecutwfc        20
