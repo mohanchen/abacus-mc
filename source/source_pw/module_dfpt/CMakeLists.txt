@@ -31,9 +31,9 @@ target_include_directories(${MODULE_NAME}
 
 target_link_libraries(${MODULE_NAME}
     PUBLIC
-        module_base
-        module_cell
-        module_psi
-        module_estate
+        base
+        cell
+        psi
+        elecstate
         module_pwdft
 )

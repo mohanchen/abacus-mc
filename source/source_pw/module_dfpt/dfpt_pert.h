@@ -12,6 +12,9 @@
 #include "dfpt_pw_data.h"
 #include "source_cell/unitcell.h"
 #include "source_psi/psi.h"
+#include "source_basis/module_pw/pw_basis.h"
+#include "source_basis/module_pw/pw_basis_k.h"
+#include "source_pw/module_pwdft/structure_factor.h"
 
 namespace ModuleDFPT {
 

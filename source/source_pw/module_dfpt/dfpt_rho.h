@@ -12,6 +12,7 @@
 #include "dfpt_pw_data.h"
 #include "source_psi/psi.h"
 #include "source_estate/module_charge/charge_mixing.h"
+#include "source_basis/module_pw/pw_basis.h"
 #include "source_basis/module_pw/pw_basis_k.h"
 
 namespace ModuleDFPT {
