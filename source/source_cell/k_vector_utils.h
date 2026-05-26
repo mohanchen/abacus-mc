@@ -1,5 +1,6 @@
 //
 // Created by rhx on 25-6-3.
+// Added by Shengjun Chen on 2026-05-26 with Q_Vectors class and related functions.
 //
 
 #ifndef K_VECTOR_UTILS_H
@@ -9,6 +10,7 @@
 #include "source_cell/unitcell.h"
 
 class K_Vectors;
+class Q_Vectors;
 
 namespace KVectorUtils
 {
@@ -122,6 +124,26 @@ void kvec_ibz_kpoint(K_Vectors& kv,
                      std::string& skpt,
                      const UnitCell& ucell,
                      bool& match);
+
+
+// Function Overloading for Q_Vectors
+// Added for Q_Vectors, by Shengjun Chen on 2026-05-26.
+void kvec_d2c(Q_Vectors& qv, const ModuleBase::Matrix3& reciprocal_vec);
+void kvec_c2d(Q_Vectors& qv, const ModuleBase::Matrix3& latvec);
+void set_both_kvec(Q_Vectors& qv, const ModuleBase::Matrix3& G, const ModuleBase::Matrix3& R, std::string& sqpt);
+// Don't need to set_after_vc for Q_Vectors, since the q-points are only
+// used in phonon calculation and won't change after volume change.
+void print_klists(const Q_Vectors& qv, std::ofstream& ofs);
+#ifdef __MPI
+void kvec_mpi_k(Q_Vectors& qv);
+#endif // __MPI
+void kvec_ibz_kpoint(Q_Vectors& qv,
+                     const ModuleSymmetry::Symmetry& symm,
+                     bool use_symm,
+                     std::string& sqpt,
+                     const UnitCell& ucell,
+                     bool& match);
+
 } // namespace KVectorUtils
 
 #endif // K_VECTOR_UTILS_H
