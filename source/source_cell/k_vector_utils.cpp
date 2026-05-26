@@ -5,6 +5,7 @@
 #include "k_vector_utils.h"
 
 #include "klist.h"
+#include "qlist.h"
 #include "source_base/global_variable.h"
 #include "source_base/matrix3.h"
 
@@ -206,19 +207,19 @@ void set_both_kvec(Q_Vectors& qv, const ModuleBase::Matrix3& G, const ModuleBase
 {
     if (true) // Originally GlobalV::FINAL_SCF, but we don't have this variable in the new code.
     {
-        if (qv.get_q_nkstot() == 0)
+        if (qv.get_q_nqstot() == 0)
         {
             qv.qd_done = true;
             qv.qc_done = false;
         }
         else
         {
-            if (qv.get_q_kword() == "Cartesian" || qv.get_q_kword() == "C")
+            if (qv.get_q_qword() == "Cartesian" || qv.get_q_qword() == "C")
             {
                 qv.qc_done = true;
                 qv.qd_done = false;
             }
-            else if (qv.get_q_kword() == "Direct" || qv.get_q_kword() == "D")
+            else if (qv.get_q_qword() == "Direct" || qv.get_q_qword() == "D")
             {
                 qv.qd_done = true;
                 qv.qc_done = false;
@@ -246,7 +247,7 @@ void set_both_kvec(Q_Vectors& qv, const ModuleBase::Matrix3& G, const ModuleBase
     std::string table;
     table += " Q-POINTS DIRECT COORDINATES\n";
     table += FmtCore::format("%8s%12s%12s%12s%8s\n", "QPOINTS", "DIRECT_X", "DIRECT_Y", "DIRECT_Z", "WEIGHT");
-    for (int i = 0; i < qv.get_q_nkstot(); i++)
+    for (int i = 0; i < qv.get_q_nqstot(); i++)
     {
         table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f\n",
                                  i + 1,
@@ -260,7 +261,7 @@ void set_both_kvec(Q_Vectors& qv, const ModuleBase::Matrix3& G, const ModuleBase
     {
         std::stringstream ss;
         ss << " " << std::setw(40) << "nqstot now"
-           << " = " << qv.get_q_nkstot() << std::endl;
+           << " = " << qv.get_q_nqstot() << std::endl;
         ss << table << std::endl;
         sqpt = ss.str();
     }
@@ -345,8 +346,8 @@ void print_klists(const K_Vectors& kv, std::ofstream& ofs)
 void print_klists(const Q_Vectors& qv, std::ofstream& ofs)
 {
     ModuleBase::TITLE("KVectorUtils", "print_qlists");
-    int nqs = qv.get_q_nks();
-    int nqstot = qv.get_q_nkstot();
+    int nqs = qv.get_nqs();
+    int nqstot = qv.get_q_nqstot();
 
     if (nqstot < nqs)
     {
