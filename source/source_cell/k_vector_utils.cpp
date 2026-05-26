@@ -1,5 +1,6 @@
 //
 // Created by rhx on 25-6-3.
+// Added by Shengjun Chen on 2026-05-26 with Q_Vectors class and related functions.
 //
 #include "k_vector_utils.h"
 
@@ -59,6 +60,47 @@ void kvec_d2c(K_Vectors& kv, const ModuleBase::Matrix3& reciprocal_vec)
         }
     }
 }
+
+void kvec_d2c(Q_Vectors& qv, const ModuleBase::Matrix3& reciprocal_vec)
+{
+    if (qv.qvec_d.size() != qv.qvec_c.size())
+    {
+        qv.qvec_c.resize(qv.qvec_d.size());
+    }
+    int nqs = qv.qvec_d.size(); // always convert all q vectors
+
+    for (int i = 0; i < nqs; i++)
+    {
+        if (std::abs(qv.qvec_d[i].x) < 1.0e-10)
+        {
+            qv.qvec_d[i].x = 0.0;
+        }
+        if (std::abs(qv.qvec_d[i].y) < 1.0e-10)
+        {
+            qv.qvec_d[i].y = 0.0;
+        }
+        if (std::abs(qv.qvec_d[i].z) < 1.0e-10)
+        {
+            qv.qvec_d[i].z = 0.0;
+        }
+
+        qv.qvec_c[i] = qv.qvec_d[i] * reciprocal_vec;
+
+        if (std::abs(qv.qvec_c[i].x) < 1.0e-10)
+        {
+            qv.qvec_c[i].x = 0.0;
+        }
+        if (std::abs(qv.qvec_c[i].y) < 1.0e-10)
+        {
+            qv.qvec_c[i].y = 0.0;
+        }
+        if (std::abs(qv.qvec_c[i].z) < 1.0e-10)
+        {
+            qv.qvec_c[i].z = 0.0;
+        }
+    }
+}
+
 void kvec_c2d(K_Vectors& kv, const ModuleBase::Matrix3& latvec)
 {
     if (kv.kvec_d.size() != kv.kvec_c.size())
@@ -77,6 +119,21 @@ void kvec_c2d(K_Vectors& kv, const ModuleBase::Matrix3& latvec)
         // wrong!            kvec_d[i] = RT * kvec_c[i];
         // mohan fixed bug 2011-03-07
         kv.kvec_d[i] = kv.kvec_c[i] * RT;
+    }
+}
+
+void kvec_c2d(Q_Vectors& qv, const ModuleBase::Matrix3& latvec)
+{
+    if (qv.qvec_d.size() != qv.qvec_c.size())
+    {
+        qv.qvec_d.resize(qv.qvec_c.size());
+    }
+    int nqs = qv.qvec_d.size(); // always convert all q vectors
+
+    ModuleBase::Matrix3 RT = latvec.Transpose();
+    for (int i = 0; i < nqs; i++)
+    {
+        qv.qvec_d[i] = qv.qvec_c[i] * RT;
     }
 }
 
@@ -145,6 +202,71 @@ void set_both_kvec(K_Vectors& kv, const ModuleBase::Matrix3& G, const ModuleBase
     return;
 }
 
+void set_both_kvec(Q_Vectors& qv, const ModuleBase::Matrix3& G, const ModuleBase::Matrix3& R, std::string& sqpt)
+{
+    if (true) // Originally GlobalV::FINAL_SCF, but we don't have this variable in the new code.
+    {
+        if (qv.get_q_nkstot() == 0)
+        {
+            qv.qd_done = true;
+            qv.qc_done = false;
+        }
+        else
+        {
+            if (qv.get_q_kword() == "Cartesian" || qv.get_q_kword() == "C")
+            {
+                qv.qc_done = true;
+                qv.qd_done = false;
+            }
+            else if (qv.get_q_kword() == "Direct" || qv.get_q_kword() == "D")
+            {
+                qv.qd_done = true;
+                qv.qc_done = false;
+            }
+            else
+            {
+                GlobalV::ofs_warning << " Error : neither Cartesian nor Direct qpoint." << std::endl;
+            }
+        }
+    }
+
+    // set cartesian q vectors.
+    if (!qv.qc_done && qv.qd_done)
+    {
+        KVectorUtils::kvec_d2c(qv, G);
+        qv.qc_done = true;
+    }
+
+    // set direct q vectors
+    else if (qv.qc_done && !qv.qd_done)
+    {
+        KVectorUtils::kvec_c2d(qv, R);
+        qv.qd_done = true;
+    }
+    std::string table;
+    table += " Q-POINTS DIRECT COORDINATES\n";
+    table += FmtCore::format("%8s%12s%12s%12s%8s\n", "QPOINTS", "DIRECT_X", "DIRECT_Y", "DIRECT_Z", "WEIGHT");
+    for (int i = 0; i < qv.get_q_nkstot(); i++)
+    {
+        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f\n",
+                                 i + 1,
+                                 qv.qvec_d[i].x,
+                                 qv.qvec_d[i].y,
+                                 qv.qvec_d[i].z,
+                                 qv.wq[i]);
+    }
+    GlobalV::ofs_running << table << std::endl;
+    if (GlobalV::MY_RANK == 0)
+    {
+        std::stringstream ss;
+        ss << " " << std::setw(40) << "nqstot now"
+           << " = " << qv.get_q_nkstot() << std::endl;
+        ss << table << std::endl;
+        sqpt = ss.str();
+    }
+    return;
+}
+
 void set_after_vc(K_Vectors& kv, const int& nspin_in, const ModuleBase::Matrix3& reciprocal_vec)
 {
     GlobalV::ofs_running << "\n SETUP K-POINTS" << std::endl;
@@ -174,6 +296,9 @@ void set_after_vc(K_Vectors& kv, const int& nspin_in, const ModuleBase::Matrix3&
 
     print_klists(kv, GlobalV::ofs_running);
 }
+
+// Don't need to set_after_vc for Q_Vectors, since the q-points are only
+// used in the calculation of the wavefunctions.
 
 void print_klists(const K_Vectors& kv, std::ofstream& ofs)
 {
@@ -216,6 +341,47 @@ void print_klists(const K_Vectors& kv, std::ofstream& ofs)
     GlobalV::ofs_running << "\n" << table << std::endl;
     return;
 }
+
+void print_klists(const Q_Vectors& qv, std::ofstream& ofs)
+{
+    ModuleBase::TITLE("KVectorUtils", "print_qlists");
+    int nqs = qv.get_q_nks();
+    int nqstot = qv.get_q_nkstot();
+
+    if (nqstot < nqs)
+    {
+        std::cout << "\n nqstot=" << nqstot;
+        std::cout << "\n nqs=" << nqs;
+        ModuleBase::WARNING_QUIT("print_qlists", "nqstot < nqs");
+    }
+    std::string table;
+    table += " Q-POINTS CARTESIAN COORDINATES\n";
+    table += FmtCore::format("%8s%12s%12s%12s%8s\n", "QPOINTS", "CARTESIAN_X", "CARTESIAN_Y", "CARTESIAN_Z", "WEIGHT");
+    for (int i = 0; i < nqs; i++)
+    {
+        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f\n",
+                                 i + 1,
+                                 qv.qvec_c[i].x,
+                                 qv.qvec_c[i].y,
+                                 qv.qvec_c[i].z,
+                                 qv.wq[i]);
+    }
+    GlobalV::ofs_running << "\n" << table << std::endl;
+
+    table.clear();
+    table += " Q-POINTS DIRECT COORDINATES\n";
+    table += FmtCore::format("%8s%12s%12s%12s%8s\n", "QPOINTS", "DIRECT_X", "DIRECT_Y", "DIRECT_Z", "WEIGHT");
+    for (int i = 0; i < nqs; i++)
+    {
+        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f\n",
+                                 i + 1,
+                                 qv.qvec_d[i].x,
+                                 qv.qvec_d[i].y,
+                                 qv.qvec_d[i].z,
+                                 qv.wq[i]);
+    }
+    GlobalV::ofs_running << "\n" << table << std::endl;
+    return
 
 #ifdef __MPI
 void kvec_mpi_k(K_Vectors& kv)
@@ -349,6 +515,9 @@ void kvec_mpi_k(K_Vectors& kv)
 } // END SUBROUTINE
 #endif
 
+#ifdef __MPI
+// THIS Should be completed
+#endif
 
 void kvec_ibz_kpoint(K_Vectors& kv,
                      const ModuleSymmetry::Symmetry& symm,
@@ -807,4 +976,15 @@ void kvec_ibz_kpoint(K_Vectors& kv,
 
     return;
 }
+
+void kvec_ibz_kpoint(Q_Vectors& qv,
+                     const ModuleSymmetry::Symmetry& symm,
+                     bool use_symm,
+                     std::string& skpt,
+                     const UnitCell& ucell,
+                     bool& match)
+{
+// 大修特修
+}
+
 } // namespace KVectorUtils
