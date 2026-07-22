@@ -55,7 +55,7 @@ void pseudo::print_pseudo_atom(std::ofstream& ofs) const
 {
     print_pseudo_h(ofs);
     ofs << "\n pseudo_atom : ";
-    ofs << "\n msh    " << msh;
+    ofs << "\n msh\t" << msh;
 //    ofs    << "\n nchi    " << nchi;
     output::printr1_d(ofs, " r : ", r.data(), mesh);
     output::printr1_d(ofs, " rab : ", rab.data(), mesh);
