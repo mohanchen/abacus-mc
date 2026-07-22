@@ -29,7 +29,7 @@ Magnetism::~Magnetism()
  *   - atom_arrange::delete_vector(void)
  *     - delete vector
  *   - atom_arrange::set_sr_NL
- * 	   - set the sr: search radius including nonlocal beta
+ *        - set the sr: search radius including nonlocal beta
  *   - filter_adjs function
  *     - filter AdjacentAtomInfo to the minimized adjacent atoms
  */

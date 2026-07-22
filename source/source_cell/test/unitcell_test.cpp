@@ -1055,9 +1055,9 @@ class UcellTestReadStru : public ::testing::Test
   protected:
     std::unique_ptr<UnitCell> ucell{new UnitCell};
     std::string output;
-  	void SetUp() override
+      void SetUp() override
     {
-    	ucell->ntype = 2;
+        ucell->ntype = 2;
         ucell->atom_mass.resize(ucell->ntype);
         ucell->atom_label.resize(ucell->ntype);
         ucell->pseudo_fn.resize(ucell->ntype);

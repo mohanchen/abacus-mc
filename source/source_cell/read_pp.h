@@ -10,18 +10,18 @@
 class Pseudopot_upf
 {
 public:
-	//PP_INFO
-	//PP_HEADER
-	//PP_MESH
-	//PP_NLCC
-	//PP_LOCAL
-	//PP_NONLOCAL
-	//PP_PSWFC
-	//PP_PSRHOATOM
-	//addinfo
+    //PP_INFO
+    //PP_HEADER
+    //PP_MESH
+    //PP_NLCC
+    //PP_LOCAL
+    //PP_NONLOCAL
+    //PP_PSWFC
+    //PP_PSRHOATOM
+    //addinfo
 
-	Pseudopot_upf();
-	~Pseudopot_upf();
+    Pseudopot_upf();
+    ~Pseudopot_upf();
 
     std::string relativistic; // relativistic: no, scalar, full
     int lmax_rho;             // maximum angular momentum component in rho (should be 2*lmax)

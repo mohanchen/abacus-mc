@@ -67,7 +67,7 @@ void Atom_pseudo::set_d_so(ModuleBase::ComplexMatrix& d_so_in,
     else // zhengdy-soc
     {
         this->d_so.create(spin_dimension, nproj_soc + 1, nproj_soc + 1);
-        //		std::cout << "lmax=" << lmax << std::endl;
+        //        std::cout << "lmax=" << lmax << std::endl;
 
         if (this->lmax > -1)
         {
@@ -87,10 +87,10 @@ void Atom_pseudo::set_d_so(ModuleBase::ComplexMatrix& d_so_in,
                                 if (fabs(this->d_so(is, L1, L2).real()) > 1.0e-8
                                     || fabs(this->d_so(is, L1, L2).imag()) > 1.0e-8)
                                 {
-                                    //									std::cout << "tt in atom is=" << is << " L1=" <<
+                                    //                                    std::cout << "tt in atom is=" << is << " L1=" <<
                                     //L1
                                     //<< " L2="
-                                    //									<< L2 << " " << d_so(is, L1, L2) << std::endl;
+                                    //                                    << L2 << " " << d_so(is, L1, L2) << std::endl;
 
                                     this->index1_soc[is][non_zero_count_soc[is]] = L1;
                                     this->index2_soc[is][non_zero_count_soc[is]] = L2;
