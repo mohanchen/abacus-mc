@@ -1,14 +1,14 @@
 #include "read_pseudo.h"
 #include "source_base/global_file.h"
-#include "source_cell/cal_atoms_info.h"
-#include "source_cell/read_pp.h"
-#include "source_cell/bcast_cell.h"
+#include "cal_atoms_info.h"
+#include "read_pp.h"
+#include "bcast_cell.h"
 #include "source_base/element_elec_config.h"
 #include "source_base/parallel_common.h"
 
-#include <cstring> // Peize Lin fix bug about strcmp 2016-08-02
+#include <cstring>
 
-namespace elecstate {
+namespace unitcell {
 AtomsInfoResult read_pseudo(std::ofstream& ofs, UnitCell& ucell,
                    const std::string& pseudo_dir,
                    const std::string& global_out_dir,
@@ -132,7 +132,7 @@ AtomsInfoResult read_pseudo(std::ofstream& ofs, UnitCell& ucell,
     }
 
 #ifdef __MPI
-    unitcell::bcast_atoms_pseudo(ucell.atoms,ucell.ntype);
+    bcast_atoms_pseudo(ucell.atoms,ucell.ntype);
 #endif
 
     for (int it = 0; it < ucell.ntype; it++) {
@@ -265,7 +265,7 @@ void read_cell_pseudopots(const std::string& pp_dir, std::ofstream& log, UnitCel
                           const double pseudo_rcut,
                           const double soc_lambda)
 {
-    ModuleBase::TITLE("Elecstate", "read_cell_pseudopots");
+    ModuleBase::TITLE("UnitCell", "read_cell_pseudopots");
     // setup reading log for pseudopot_upf
     const std::string global_out_dir_ = global_out_dir;
     const std::string dft_functional_ = dft_functional;
@@ -386,7 +386,7 @@ void read_cell_pseudopots(const std::string& pp_dir, std::ofstream& log, UnitCel
 
 void print_unitcell_pseudo(const std::string& fn, UnitCell& ucell)
 {
-    ModuleBase::TITLE("elecstate", "print_unitcell_pseudo");
+    ModuleBase::TITLE("unitcell", "print_unitcell_pseudo");
     std::ofstream ofs(fn.c_str());
 
     ucell.print_cell(ofs);

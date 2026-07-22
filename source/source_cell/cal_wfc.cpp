@@ -1,6 +1,6 @@
 #include "read_pseudo.h"
 
-namespace elecstate
+namespace unitcell
 {
     void cal_nwfc(std::ofstream& log,UnitCell& ucell,Atom* atoms, const int nspin, const int nlocal, const int npol,
                const std::string& basis_type, const std::string& esolver_type, const std::string& init_wfc, const int nbands) 
