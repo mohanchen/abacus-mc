@@ -7,7 +7,7 @@
 #include "source_base/global_variable.h"
 #include "source_base/mathzone.h"
 #include "source_cell/unitcell.h"
-#include "read_pseudo.h"
+#include "source_cell/read_pseudo.h"
 #include <valarray>
 #include <vector>
 #ifdef __MPI
