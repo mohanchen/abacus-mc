@@ -43,7 +43,7 @@ void pseudo::print_pseudo(std::ofstream& ofs) const
 {
     print_pseudo_vl(ofs);
     ofs << "\n pseudo : ";
-    ofs << "\n kkbeta    " << kkbeta;
+    ofs << "\n kkbeta\t" << kkbeta;
     ofs << "\n nh  " << nh;
     output::printr1_d(ofs, " lll : ", lll.data(), nbeta);
     output::printrm(ofs, " betar : ", betar);
