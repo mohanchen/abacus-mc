@@ -1,5 +1,5 @@
 #include "source_esolver/esolver_ks_lcao.h"
-#include "source_estate/cal_ux.h"
+#include "source_cell/cal_ux.h"
 #include "source_estate/module_charge/symmetry_rho.h"
 #include "source_lcao/hamilt_lcao.h"
 #include "source_lcao/module_dftu/dftu.h"
@@ -167,7 +167,7 @@ void ESolver_KS_LCAO<TK, TR>::others(UnitCell& ucell, const int istep)
     // cal_ux should be called before init_scf because
     // the direction of ux is used in noncoline_rho
     //=========================================================
-    elecstate::cal_ux(ucell, PARAM.inp.nspin);
+    unitcell::cal_ux(ucell, PARAM.inp.nspin);
 
     // pelec should be initialized before these calculations
     elecstate::init_scf(ucell, this->Pgrid, this->sf.strucFac, this->locpp.numeric, 

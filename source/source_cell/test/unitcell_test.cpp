@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "source_estate/cal_ux.h"
+#include "source_cell/cal_ux.h"
 #include "source_cell/read_orb.h"
 #include "source_cell/read_pseudo.h"
 #include "source_cell/read_stru.h"
@@ -555,7 +555,7 @@ TEST_F(UcellTest, JudgeParallel)
 {
     ModuleBase::Vector3<double> b(1.0, 1.0, 1.0);
     double a[3] = {1.0, 1.0, 1.0};
-    EXPECT_TRUE(elecstate::judge_parallel(a, b));
+    EXPECT_TRUE(unitcell::judge_parallel(a, b));
 }
 
 TEST_F(UcellTest, Index)
@@ -1011,7 +1011,7 @@ TEST_F(UcellTest, CalUx1)
     ucell->atoms[1].m_loc_[0].set(1, 1, 1);
     ucell->atoms[1].m_loc_[1].set(0, 0, 0);
     const int nspin = 4;
-    elecstate::cal_ux(*ucell, nspin);
+    unitcell::cal_ux(*ucell, nspin);
     EXPECT_FALSE(ucell->magnet.lsign_);
     EXPECT_DOUBLE_EQ(ucell->magnet.ux_[0], 0);
     EXPECT_DOUBLE_EQ(ucell->magnet.ux_[1], -1);
@@ -1027,7 +1027,7 @@ TEST_F(UcellTest, CalUx2)
     ucell->atoms[1].m_loc_[1].set(0, 0, 0);
     //(0,0,0) is also parallel to (1,1,1)
     const int nspin = 4;
-    elecstate::cal_ux(*ucell, nspin);
+    unitcell::cal_ux(*ucell, nspin);
     EXPECT_TRUE(ucell->magnet.lsign_);
     EXPECT_NEAR(ucell->magnet.ux_[0], 0.57735, 1e-5);
     EXPECT_NEAR(ucell->magnet.ux_[1], 0.57735, 1e-5);
