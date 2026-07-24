@@ -1,3 +1,7 @@
+/**
+ * @file unitcell.cpp
+ * @brief Implementation of UnitCell class.
+ */
 #include <cstdlib>
 #include <cstring> // Peize Lin fix bug about strcmp 2016-08-02
 
@@ -21,6 +25,7 @@
 #endif
 
 #include "update_cell.h"
+
 UnitCell::UnitCell()
 {
     itia2iat.create(1, 1);

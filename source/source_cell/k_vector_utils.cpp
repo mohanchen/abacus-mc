@@ -1,6 +1,8 @@
-//
-// Created by rhx on 25-6-3.
-//
+/**
+ * @file k_vector_utils.cpp
+ * @brief Implementation of k-vector utility functions.
+ * @author rhx (created on 25-6-3)
+ */
 #include "k_vector_utils.h"
 
 #include "klist.h"

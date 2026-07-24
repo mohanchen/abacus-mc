@@ -1,3 +1,7 @@
+/**
+ * @file symmetry.h
+ * @brief Symmetry analysis class.
+ */
 #ifndef SYMMETRY_H
 #define SYMMETRY_H
 
@@ -11,6 +15,9 @@
 namespace ModuleSymmetry
 {
 
+/**
+ * @brief Symmetry analysis class.
+ */
 class Symmetry : public Symmetry_Basic
 {
 
@@ -22,12 +29,12 @@ public:
     };
     ~Symmetry() {};
 
-    //symmetry flag for levels
-    //-1 : no symmetry at all, k points would be total nks in KPT
-    //0 : only basic time-reversal symmetry is considered, point k and -k would fold to k
-    //1 : point group symmetry is considered
+    /// @brief symmetry flag for levels:
+    /// -1 : no symmetry at all, k points would be total nks in KPT
+    /// 0 : only basic time-reversal symmetry is considered, point k and -k would fold to k
+    /// 1 : point group symmetry is considered
     static int symm_flag;
-    static bool symm_autoclose; // controled by INPUT
+    static bool symm_autoclose; ///< controlled by INPUT
     static bool pricell_loop;   ///< whether to loop primitive cell in rhog_symmetry, Only for AFM
 
     /// @brief analyze the symmetry of the system
@@ -45,53 +52,53 @@ public:
                    const int* cal_symm_repr);
 
     ModuleBase::Vector3<double> s1, s2, s3;
-    ModuleBase::Vector3<double> a1, a2, a3;    //primitive cell vectors(might be changed during the process of the program)
-    ModuleBase::Vector3<double>    p1, p2, p3;    //primitive cell vectors
+    ModuleBase::Vector3<double> a1, a2, a3;    ///< primitive cell vectors(might be changed during the process of the program)
+    ModuleBase::Vector3<double> p1, p2, p3;    ///< primitive cell vectors
     
-    int ntype=0;      //the number of atomic species
-    int nat  =0;       //the number of all atoms
-     int *na  =nullptr;//number of atoms for each species
-    int *istart=nullptr; //start number of atom.
-    int itmin_type=0; //the type has smallest number of atoms
+    int ntype=0;      ///< the number of atomic species
+    int nat  =0;       ///< the number of all atoms
+    int *na  =nullptr;///< number of atoms for each species
+    int *istart=nullptr; ///< start number of atom
+    int itmin_type=0; ///< the type has smallest number of atoms
     int itmin_start=0;
 
-    // direct coordinates of atoms.
+    /// @brief direct coordinates of atoms
     double *newpos=nullptr;
-    // positions of atoms after rotation.
+    /// @brief positions of atoms after rotation
     double *rotpos=nullptr;
     
     
-    std::vector<ModuleBase::Vector3<double>> ptrans; // the translation vectors of the primitive cell in the input structure
-    int ncell=1;    //the number of primitive cells within one supercell
+    std::vector<ModuleBase::Vector3<double>> ptrans; ///< the translation vectors of the primitive cell in the input structure
+    int ncell=1;    ///< the number of primitive cells within one supercell
     int *index=nullptr;
     
     double cel_const[6]={0.0};
-    double pcel_const[6]={0.0};    //cel_const of primitive cell
-    double pre_const[6]={0.0};    //cel_const of input configuration, first 3 is moduli of a1, a2, a3, last 3 is eular angle
+    double pcel_const[6]={0.0};    ///< cel_const of primitive cell
+    double pre_const[6]={0.0};    ///< cel_const of input configuration, first 3 is moduli of a1, a2, a3, last 3 is eular angle
 
     bool symflag_fft[48]={false};
     int sym_test=0;
-    int pbrav=0;        //ibrav of primitive cell
-    int real_brav=0;    // the real ibrav for the cell     pengfei Li 3-15-2022
-    std::string ilattname;    //the bravais lattice type of the supercell
-    std::string plattname;    //the bravais lattice type of the primitive cell
+    int pbrav=0;        ///< ibrav of primitive cell
+    int real_brav=0;    ///< the real ibrav for the cell (pengfei Li 3-15-2022)
+    std::string ilattname;    ///< the bravais lattice type of the supercell
+    std::string plattname;    ///< the bravais lattice type of the primitive cell
 
-    ModuleBase::Matrix3 gmatrix[48];    //the rotation matrices for all space group operations
-    ModuleBase::Matrix3 kgmatrix[48];    //the rotation matrices in reciprocal space
+    ModuleBase::Matrix3 gmatrix[48];    ///< the rotation matrices for all space group operations
+    ModuleBase::Matrix3 kgmatrix[48];    ///< the rotation matrices in reciprocal space
     ModuleBase::Vector3<double> gtrans[48];
     
-    ModuleBase::Matrix3 symop[48];    //the rotation matrices for the pure bravais lattice
-    int nop=0;    //the number of point group operations of the pure bravais lattice without basis
-    int nrot=0;    //the number of pure point group rotations
-    int nrotk = -1;     //the number of all space group operations, >0 means the nrotk has been analyzed
+    ModuleBase::Matrix3 symop[48];    ///< the rotation matrices for the pure bravais lattice
+    int nop=0;    ///< the number of point group operations of the pure bravais lattice without basis
+    int nrot=0;    ///< the number of pure point group rotations
+    int nrotk = -1;     ///< the number of all space group operations, >0 means the nrotk has been analyzed
     int max_nrotk = -1;  ///< record the maximum number of symmetry operations during cell-relax
-    int pgnumber=0;    //the serial number of point group
-    int spgnumber=0;    //the serial number of point group in space group
-    std::string pgname;    //the Schoenflies name of the point group R in {R|0}
-    std::string spgname;    //the Schoenflies name of the point group R in the space group {R|t}
+    int pgnumber=0;    ///< the serial number of point group
+    int spgnumber=0;    ///< the serial number of point group in space group
+    std::string pgname;    ///< the Schoenflies name of the point group R in {R|0}
+    std::string spgname;    ///< the Schoenflies name of the point group R in the space group {R|t}
 
-    ModuleBase::Matrix3 optlat;        //the optimized-symmetry lattice
-    ModuleBase::Matrix3 plat;        //the primitive lattice
+    ModuleBase::Matrix3 optlat;        ///< the optimized-symmetry lattice
+    ModuleBase::Matrix3 plat;        ///< the primitive lattice
 
     bool all_mbl = true;    ///< whether all the atoms are movable in all the directions
 
@@ -136,34 +143,102 @@ public:
     /// @brief  primitive cell analysis
     void pricell(double* pos, const Atom* atoms);
 
-    /// -----------------------
-    /// Symmetrize the charge density, the forces, and the stress
-    /// -----------------------
+    /// @brief Symmetrize the charge density, the forces, and the stress
+
+    /**
+     * @brief Symmetrize charge density in real space.
+     *
+     * @param rho charge density
+     * @param nr1 number of grid points in x direction
+     * @param nr2 number of grid points in y direction
+     * @param nr3 number of grid points in z direction
+     */
     void rho_symmetry(double *rho, const int &nr1, const int &nr2, const int &nr3);
 
+    /**
+     * @brief Symmetrize charge density in reciprocal space.
+     *
+     * @param rhogtot charge density in reciprocal space
+     * @param ixyz2ipw index mapping from real to reciprocal space
+     * @param nx, ny, nz grid dimensions
+     * @param fftnx, fftny, fftnz FFT grid dimensions
+     * @param gamma_only_pw whether to use gamma-only PW
+     */
     void rhog_symmetry(std::complex<double> *rhogtot, int* ixyz2ipw, const int &nx, 
             const int &ny, const int &nz, const int & fftnx, const int &fftny, const int &fftnz,
             const bool gamma_only_pw);
 
-    /// symmetrize a vector3 with nat elements, which can be forces or variation of atom positions in relax
-    void symmetrize_vec3_nat(double* v)const;   // force
+    /**
+     * @brief Symmetrize a vector3 with nat elements.
+     *
+     * Can be forces or variation of atom positions in relax.
+     *
+     * @param v vector to symmetrize (forces)
+     */
+    void symmetrize_vec3_nat(double* v)const;
 
-    /// symmetrize a 3*3 tensor, which can be stress or variation of unitcell in cell-relax
-    void symmetrize_mat3(ModuleBase::matrix& sigma, const Lattice& lat)const; // stress
+    /**
+     * @brief Symmetrize a 3*3 tensor.
+     *
+     * Can be stress or variation of unitcell in cell-relax.
+     *
+     * @param sigma tensor to symmetrize (stress)
+     * @param lat lattice information
+     */
+    void symmetrize_mat3(ModuleBase::matrix& sigma, const Lattice& lat)const;
 
-    //convert n rotation-matrices from sa on basis {a1, a2, a3} to sb on basis {b1, b2, b3}
+    /**
+     * @brief Convert n rotation-matrices from basis {a1, a2, a3} to {b1, b2, b3}.
+     *
+     * @param sa source rotation matrices
+     * @param sb target rotation matrices
+     * @param n number of matrices
+     * @param a source basis
+     * @param b target basis
+     */
     void gmatrix_convert(const ModuleBase::Matrix3* sa, ModuleBase::Matrix3* sb, 
             const int n, const ModuleBase::Matrix3 &a, const ModuleBase::Matrix3 &b)const;
 
+    /**
+     * @brief Convert n integer rotation-matrices from basis {a1, a2, a3} to {b1, b2, b3}.
+     *
+     * @param sa source rotation matrices
+     * @param sb target rotation matrices
+     * @param n number of matrices
+     * @param a source basis
+     * @param b target basis
+     */
     void gmatrix_convert_int(const ModuleBase::Matrix3* sa, ModuleBase::Matrix3* sb, 
             const int n, const ModuleBase::Matrix3 &a, const ModuleBase::Matrix3 &b)const;
 
-    //convert n translation-vectors from va on basis {a1, a2, a3} to vb on basis {b1, b2, b3}
+    /**
+     * @brief Convert n translation-vectors from basis {a1, a2, a3} to {b1, b2, b3}.
+     *
+     * @param va source translation vectors
+     * @param vb target translation vectors
+     * @param n number of vectors
+     * @param a source basis
+     * @param b target basis
+     */
     void gtrans_convert(const ModuleBase::Vector3<double>* va, ModuleBase::Vector3<double>* vb, 
             const int n, const ModuleBase::Matrix3 &a, const ModuleBase::Matrix3 &b)const;
 
+    /**
+     * @brief Compute inverse mapping of symmetry operations.
+     *
+     * @param s symmetry operations
+     * @param n number of operations
+     * @param invmap inverse mapping
+     */
     void gmatrix_invmap(const ModuleBase::Matrix3* s, const int n, int* invmap) const;
 
+    /**
+     * @brief Compute Hermite normal form.
+     *
+     * @param s input matrix
+     * @param H Hermite normal form
+     * @param b transformation matrix
+     */
     void hermite_normal_form(const ModuleBase::Matrix3 &s, ModuleBase::Matrix3 &H, ModuleBase::Matrix3 &b) const;
 
     int get_rotated_atom(int isym, int iat)const
