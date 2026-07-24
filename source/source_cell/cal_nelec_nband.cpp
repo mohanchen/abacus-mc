@@ -46,10 +46,10 @@ void cal_nbands(const int& nelec, const int& nlocal, const std::vector<double>& 
     }
 
     double occupied_bands = static_cast<double>(nelec / ModuleBase::DEGSPIN);
-	if (lspinorb == 1) 
-	{
-		occupied_bands = static_cast<double>(nelec);
-	}
+    if (lspinorb == 1) 
+    {
+        occupied_bands = static_cast<double>(nelec);
+    }
 
     if ((occupied_bands - std::floor(occupied_bands)) > 0.0)
     {

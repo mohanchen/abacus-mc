@@ -136,44 +136,44 @@ std::vector<std::vector<int>> UnitCell::get_lnchiCounts() const {
 
 std::vector<ModuleBase::Vector3<double>> UnitCell::get_target_mag() const
 {
-	std::vector<ModuleBase::Vector3<double>> target_mag(this->nat);
-	for (int it = 0; it < this->ntype; it++)
-	{
-		for (int ia = 0; ia < this->atoms[it].na; ia++)
-		{
-			int iat = itia2iat(it, ia);
-			target_mag[iat] = this->atoms[it].m_loc_[ia];
-		}
-	}
-	return target_mag;
+    std::vector<ModuleBase::Vector3<double>> target_mag(this->nat);
+    for (int it = 0; it < this->ntype; it++)
+    {
+        for (int ia = 0; ia < this->atoms[it].na; ia++)
+        {
+            int iat = itia2iat(it, ia);
+            target_mag[iat] = this->atoms[it].m_loc_[ia];
+        }
+    }
+    return target_mag;
 }
 
 std::vector<ModuleBase::Vector3<double>> UnitCell::get_lambda() const
 {
-	std::vector<ModuleBase::Vector3<double>> lambda(this->nat);
-	for (int it = 0; it < this->ntype; it++)
-	{
-		for (int ia = 0; ia < this->atoms[it].na; ia++)
-		{
-			int iat = itia2iat(it, ia);
-			lambda[iat] = this->atoms[it].lambda[ia];
-		}
-	}
-	return lambda;
+    std::vector<ModuleBase::Vector3<double>> lambda(this->nat);
+    for (int it = 0; it < this->ntype; it++)
+    {
+        for (int ia = 0; ia < this->atoms[it].na; ia++)
+        {
+            int iat = itia2iat(it, ia);
+            lambda[iat] = this->atoms[it].lambda[ia];
+        }
+    }
+    return lambda;
 }
 
 std::vector<ModuleBase::Vector3<int>> UnitCell::get_constrain() const
 {
-	std::vector<ModuleBase::Vector3<int>> constrain(this->nat);
-	for (int it = 0; it < this->ntype; it++)
-	{
-		for (int ia = 0; ia < this->atoms[it].na; ia++)
-		{
-			int iat = itia2iat(it, ia);
-			constrain[iat] = this->atoms[it].constrain[ia];
-		}
-	}
-	return constrain;
+    std::vector<ModuleBase::Vector3<int>> constrain(this->nat);
+    for (int it = 0; it < this->ntype; it++)
+    {
+        for (int ia = 0; ia < this->atoms[it].na; ia++)
+        {
+            int iat = itia2iat(it, ia);
+            constrain[iat] = this->atoms[it].constrain[ia];
+        }
+    }
+    return constrain;
 }
 
 //==============================================================
@@ -382,26 +382,26 @@ bool UnitCell::if_atoms_can_move() const
     for (int it = 0; it < this->ntype; it++)
     {
         Atom* atom = &atoms[it];
-		for (int ia = 0; ia < atom->na; ia++)
-		{
-			if (atom->mbl[ia].x || atom->mbl[ia].y || atom->mbl[ia].z)
-			{
-				return true;
-			}
-		}
-	}
+        for (int ia = 0; ia < atom->na; ia++)
+        {
+            if (atom->mbl[ia].x || atom->mbl[ia].y || atom->mbl[ia].z)
+            {
+                return true;
+            }
+        }
+    }
     return false;
 }
 
 // check if lattice vector can be changed
 bool UnitCell::if_cell_can_change() const
 {
-	// need to be fixed next
-	if (this->lat_axis_free[0] || this->lat_axis_free[1] || this->lat_axis_free[2])
-	{
-		return true;
-	}
-	return false;
+    // need to be fixed next
+    if (this->lat_axis_free[0] || this->lat_axis_free[1] || this->lat_axis_free[2])
+    {
+        return true;
+    }
+    return false;
 }
 
 void UnitCell::setup(const std::string& latname_in,
@@ -482,30 +482,30 @@ void UnitCell::compare_atom_labels(const std::string& label1, const std::string&
         {
             std::string stru_label = "";
             std::string psuedo_label = "";
-			for (int ip = 0; ip < label1.length(); ip++)
-			{
-				if (!(isdigit(label1[ip]) || label1[ip] == '_'))
-				{
-					stru_label += label1[ip];
-				}
-				else
-				{
-					break;
-				}
-			}
-			stru_label[0] = toupper(stru_label[0]);
+            for (int ip = 0; ip < label1.length(); ip++)
+            {
+                if (!(isdigit(label1[ip]) || label1[ip] == '_'))
+                {
+                    stru_label += label1[ip];
+                }
+                else
+                {
+                    break;
+                }
+            }
+            stru_label[0] = toupper(stru_label[0]);
 
-			for (int ip = 0; ip < label2.length(); ip++)
-			{
-				if (!(isdigit(label2[ip]) || label2[ip] == '_'))
-				{
-					psuedo_label += label2[ip];
-				}
-				else
-				{
-					break;
-				}
-			}
+            for (int ip = 0; ip < label2.length(); ip++)
+            {
+                if (!(isdigit(label2[ip]) || label2[ip] == '_'))
+                {
+                    psuedo_label += label2[ip];
+                }
+                else
+                {
+                    break;
+                }
+            }
             psuedo_label[0] = toupper(psuedo_label[0]);
 
             if (!(stru_label == psuedo_label
