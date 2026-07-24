@@ -34,6 +34,8 @@ add_library(
     qlist.cpp
     qlist.h
     cal_nelec_nband.cpp
+    read_pseudo.cpp
+    cal_wfc.cpp
 )
 
 if(ENABLE_COVERAGE)

@@ -3,7 +3,7 @@
 
 #include "source_estate/cal_ux.h"
 #include "source_cell/read_orb.h"
-#include "source_estate/read_pseudo.h"
+#include "source_cell/read_pseudo.h"
 #include "source_cell/read_stru.h"
 #include "source_cell/print_cell.h"
 #include "memory"
@@ -787,7 +787,7 @@ TEST_F(UcellTest, PrintUnitcellPseudo)
     UcellTestPrepare utp = UcellTestLib["C1H2-Index"];
     ucell = utp.SetUcellInfo();
     std::string fn = "printcell.log";
-    elecstate::print_unitcell_pseudo(fn, *ucell);
+    unitcell::print_unitcell_pseudo(fn, *ucell);
     std::ifstream ifs;
     ifs.open("printcell.log");
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());

@@ -1,10 +1,10 @@
 #ifndef READ_PSEUDO_H
 #define READ_PSEUDO_H
 
-#include "source_cell/unitcell.h"
-#include "source_cell/cal_atoms_info.h"
+#include "unitcell.h"
+#include "cal_atoms_info.h"
 
-namespace elecstate {
+namespace unitcell {
 
     AtomsInfoResult read_pseudo(std::ofstream& ofs, UnitCell& ucell,
                    const std::string& pseudo_dir,
