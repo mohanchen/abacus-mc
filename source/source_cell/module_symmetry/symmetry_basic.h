@@ -118,7 +118,9 @@ class Symmetry_Basic
          *
          * @param gmatrix rotation matrix
          * @param gtrans translation vector
-         * @param i,j,k indices
+         * @param i index in x
+         * @param j index in y
+         * @param k index in z
          */
         void rotate(
                 ModuleBase::Matrix3 &gmatrix, ModuleBase::Vector3<double> &gtrans, 

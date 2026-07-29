@@ -20,7 +20,7 @@ class pseudo
     pseudo();
     ~pseudo();
 
-    ///<PP_HEADER>
+    /// PP_HEADER
     bool has_so = false;  ///< if .true. includes spin-orbit
     int nv = 0;           ///< UPF file version number
     std::string psd;      ///< Element label
@@ -47,37 +47,37 @@ class pseudo
     std::vector<double> jchi = {}; ///< jchi(nwfc), added by zhengdy-soc
     std::vector<int> nn = {};
 
-    ///<PP_LOCAL> Local pseudopotentials
+    /// PP_LOCAL - Local pseudopotentials
     std::vector<double> vloc_at = {}; ///< [mesh], local potential( = pseudopot_upf.vloc )
 
-    ///<PP_MESH>
+    /// PP_MESH
     std::vector<double> r = {};   ///< radial logaritmic mesh, r[0:mesh-1]
     std::vector<double> rab = {}; ///< derivative of the radial mesh, rab[0:mesh-1]
 
-    ///<PP_NLCC>
+    /// PP_NLCC
     std::vector<double> rho_atc = {}; ///< radial core charge density, rho_atc[0:mesh-1]
 
-    ///<PP_RHOATOM>
+    /// PP_RHOATOM
     std::vector<double> rho_at = {}; ///< radial atomic charge density, rho_at[0:mesh-1]
 
-    ///<PP_PSWFC>
+    /// PP_PSWFC
     ModuleBase::matrix chi; ///< radial atomic orbitals, chi(nchi, mesh)
 
-    ///<PP_OTHER>
+    /// PP_OTHER
     int msh = 0;       ///< number of points up to rcut
     double rcut = 0.0; ///< cut-off radius
 
-    ///<PP_BETA>
+    /// PP_BETA
     std::vector<int> lll = {}; ///< lll(nbeta), angular momentum of the beta function
 
-    ///<PP_DIJ>
+    /// PP_DIJ
     ModuleBase::matrix dion;  ///< dion(nbeta,nbeta)
     ModuleBase::matrix betar; ///< (nbeta, mesh), radial beta_{mu} functions
 
-    ///<PP_OTHER>
+    /// PP_OTHER
     int nh = 0; ///< number of beta functions per atomic type
 
-    ///<USPP> Ultrasoft pseudopotential
+    /// USPP - Ultrasoft pseudopotential
     ModuleBase::realArray qfuncl; ///< qfuncl(2*lmax+1,nbeta*(nbeta+1)/2,mesh) Q_{mu,nu}(|r|) function for |r|> r_L
     ModuleBase::matrix qqq;       ///< qqq(nbeta,nbeta) q_{mu,nu}
     /**

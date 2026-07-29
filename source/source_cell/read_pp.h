@@ -20,15 +20,15 @@
 class Pseudopot_upf
 {
 public:
-    ///<PP_INFO>
-    ///<PP_HEADER>
-    ///<PP_MESH>
-    ///<PP_NLCC>
-    ///<PP_LOCAL>
-    ///<PP_NONLOCAL>
-    ///<PP_PSWFC>
-    ///<PP_PSRHOATOM>
-    ///<addinfo>
+    /// PP_INFO
+    /// PP_HEADER
+    /// PP_MESH
+    /// PP_NLCC
+    /// PP_LOCAL
+    /// PP_NONLOCAL
+    /// PP_PSWFC
+    /// PP_PSRHOATOM
+    /// addinfo
 
     /**
      * @brief Default constructor.
@@ -52,7 +52,7 @@ public:
     bool q_with_l;            ///< if .true. qfunc is pseudized in
     int nqf;                  ///< number of Q coefficients
 
-    ///<Dynamic arrays>
+    /// Dynamic arrays
     bool coulomb_potential = false;  ///< coulomb potential : z/r
     ModuleBase::matrix chi;          ///< chi(nwfc,mesh) atomic wavefcts
     std::vector<int> kbeta = {};            ///< kbeta(nbeta):number of mesh points for projector i (must be .le. mesh )
@@ -69,7 +69,7 @@ public:
 
     int nd; ///< nl_5 // Number of nonzero Dij
 
-    ///<VWR format>
+    /// VWR format
     int spd_loc; ///< s,p,d local component
     int iTB_s;   ///< TB s orbital index
     int iTB_p;   ///< TB p orbital index
@@ -263,7 +263,7 @@ public:
      */
     void read_pseudo_so(std::ifstream& ifs, Atom_pseudo& pp);
 
-    ///<UPF201 format>
+    /// UPF201 format
     /**
      * @brief Read UPF201 format pseudopotential.
      *

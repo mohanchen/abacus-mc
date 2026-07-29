@@ -160,8 +160,12 @@ public:
      *
      * @param rhogtot charge density in reciprocal space
      * @param ixyz2ipw index mapping from real to reciprocal space
-     * @param nx, ny, nz grid dimensions
-     * @param fftnx, fftny, fftnz FFT grid dimensions
+     * @param nx grid dimension in x
+     * @param ny grid dimension in y
+     * @param nz grid dimension in z
+     * @param fftnx FFT grid dimension in x
+     * @param fftny FFT grid dimension in y
+     * @param fftnz FFT grid dimension in z
      * @param gamma_only_pw whether to use gamma-only PW
      */
     void rhog_symmetry(std::complex<double> *rhogtot, int* ixyz2ipw, const int &nx, 

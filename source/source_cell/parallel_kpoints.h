@@ -98,7 +98,7 @@ class Parallel_Kpoints
                     std::vector<ModuleBase::Vector3<double>>& vec_global) const;
 #endif
 
-    ///<K-point information>
+    /// K-point information
     std::vector<int> nks_pool;    ///< number of k-points in each pool (without spin)
     std::vector<int> startk_pool; ///< the first k-point in each pool (without spin)
     std::vector<int> whichpool;   ///< whichpool[k]: the pool which k belongs to, dim: nkstot_np
