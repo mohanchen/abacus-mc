@@ -1,6 +1,6 @@
 #include "esolver_fp.h"
 
-#include "source_estate/cal_ux.h"
+#include "source_cell/cal_ux.h"
 #include "source_estate/module_charge/symmetry_rho.h"
 #include "source_cell/read_pseudo.h"
 #include "source_estate/param_update.h"
@@ -201,7 +201,7 @@ void ESolver_FP::before_scf(UnitCell& ucell, const int istep)
     }
 
     //! set direction of magnetism, used in non-collinear case 
-    elecstate::cal_ux(ucell, PARAM.inp.nspin);
+    unitcell::cal_ux(ucell, PARAM.inp.nspin);
 
     //! output the initial charge density
     ModuleIO::write_chg_init(ucell, this->Pgrid, this->chr, this->pelec->eferm, istep,

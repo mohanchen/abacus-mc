@@ -1,6 +1,6 @@
 #include "cal_ux.h"
 
-namespace elecstate {
+namespace unitcell {
 
 void cal_ux(UnitCell& ucell, const int nspin) {
 
@@ -78,7 +78,7 @@ void cal_ux(UnitCell& ucell, const int nspin) {
 
 		if (uxmod < absolute_mag_thr) 
 		{
-			ModuleBase::WARNING_QUIT("elecstate::cal_ux", "wrong uxmod");
+			ModuleBase::WARNING_QUIT("unitcell::cal_ux", "wrong uxmod");
 		}
 
         // reset the magnetism for each direction
