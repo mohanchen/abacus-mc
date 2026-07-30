@@ -9,7 +9,7 @@
 #include "source_io/module_output/filename.h"
 #include "source_io/module_output/ucell_io.h"
 #include "source_io/module_parameter/parameter.h"
-#include "source_lcao/module_gint/gint_interface.h"
+#include "source_hamilt/module_gint/gint_interface.h"
 #include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 #include "source_hamilt/module_hcontainer/output_hcontainer.h"
 #include "source_lcao/module_operator_lcao/ekinetic.h"

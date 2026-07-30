@@ -3,6 +3,10 @@ add_subdirectory(module_surchem)
 add_subdirectory(module_xc)
 add_subdirectory(module_hcontainer)
 
+if(ENABLE_LCAO)
+  add_subdirectory(module_gint)
+endif()
+
 list(APPEND objects
     operator.cpp
     module_ewald/H_Ewald_pw.cpp

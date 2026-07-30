@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include "set_const_mem.cuh"
 #include "source_cell/unitcell.h"
-#include "source_lcao/module_gint/biggrid_info.h"
+#include "source_hamilt/module_gint/biggrid_info.h"
 #include "source_basis/module_ao/ORB_atomic.h"
 
 namespace ModuleGint

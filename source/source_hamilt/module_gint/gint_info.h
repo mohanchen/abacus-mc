@@ -16,7 +16,7 @@
 
 #ifdef __CUDA
 #include "batch_biggrid.h"
-#include "source_lcao/module_gint/kernel/gint_gpu_vars.h"
+#include "source_hamilt/module_gint/kernel/gint_gpu_vars.h"
 #endif
 
 namespace ModuleGint
