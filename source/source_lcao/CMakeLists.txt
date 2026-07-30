@@ -7,7 +7,6 @@ if(ENABLE_LCAO)
     add_subdirectory(module_operator_lcao)
     list(APPEND objects
         hamilt_lcao.cpp
-        hs_matrix_k.cpp
         module_operator_lcao/operator_lcao.cpp
         module_operator_lcao/veff_lcao.cpp
         module_operator_lcao/meta_lcao.cpp

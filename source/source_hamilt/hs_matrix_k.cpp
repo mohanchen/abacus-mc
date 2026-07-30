@@ -1,4 +1,4 @@
-#include "source_lcao/hs_matrix_k.h"
+#include "source_hamilt/hs_matrix_k.h"
 
 namespace hamilt
 {
