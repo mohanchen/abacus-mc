@@ -1,6 +1,6 @@
 #pragma once
 #include "source_hamilt/module_hcontainer/hcontainer.h"
-#include "source_hamilt/module_gint/gint_info.h"
+#include "gint_info.h"
 
 namespace ModuleGint
 {
