@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "source_lcao/module_hcontainer/hcontainer.h"
+#include "source_hamilt/module_hcontainer/hcontainer.h"
 #include <ctime>
 
 // test_size is the number of atoms in the unitcell

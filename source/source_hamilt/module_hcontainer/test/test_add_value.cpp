@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "source_lcao/module_hcontainer/hcontainer.h"
+#include "source_hamilt/module_hcontainer/hcontainer.h"
 
 // Tests for add_value_intersection and add_value_union.
 // HContainer is built via Parallel_Orbitals (serial):

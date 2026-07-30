@@ -5,7 +5,7 @@
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_cell/unitcell.h"
 #include "source_cell/atom_spec.h"
-#include "source_lcao/module_hcontainer/hcontainer.h"
+#include "source_hamilt/module_hcontainer/hcontainer.h"
 #include "source_io/module_parameter/parameter.h"
 #include "gint_helper.h"
 #include "big_grid.h"

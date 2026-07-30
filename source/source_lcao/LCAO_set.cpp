@@ -3,7 +3,7 @@
 #include "source_psi/setup_psi.h" // use Setup_Psi
 #include "source_io/module_wf/read_wfc_nao.h" // use read_wfc_nao
 #include "source_estate/elecstate_tools.h" // use fixed_weights
-#include "source_lcao/module_hcontainer/read_hcontainer.h"
+#include "source_hamilt/module_hcontainer/read_hcontainer.h"
 #include "source_lcao/rho_tau_lcao.h" // use dm2rho
 #include "source_lcao/hamilt_lcao.h" // use HamiltLCAO for init_chg_hr
 #include "source_hsolver/hsolver_lcao.h" // use HSolverLCAO for init_chg_hr

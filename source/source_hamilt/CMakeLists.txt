@@ -1,6 +1,7 @@
 add_subdirectory(module_vdw)
 add_subdirectory(module_surchem)
 add_subdirectory(module_xc)
+add_subdirectory(module_hcontainer)
 
 list(APPEND objects
     operator.cpp

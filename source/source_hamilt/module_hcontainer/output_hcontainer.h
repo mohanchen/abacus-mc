@@ -1,7 +1,7 @@
 #ifndef OUTPUT_HCONTAINER_H
 #define OUTPUT_HCONTAINER_H
 
-#include "source_lcao/module_hcontainer/hcontainer.h"
+#include "source_hamilt/module_hcontainer/hcontainer.h"
 
 namespace hamilt
 {

@@ -1,6 +1,6 @@
 #include "gint_common.h"
-#include "source_lcao/module_hcontainer/hcontainer.h"
-#include "source_lcao/module_hcontainer/hcontainer_funcs.h"
+#include "source_hamilt/module_hcontainer/hcontainer.h"
+#include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/tool_quit.h"
 #include <type_traits>

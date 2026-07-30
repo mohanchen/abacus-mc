@@ -6,7 +6,7 @@
 #include "source_lcao/module_lr/utils/lr_util_hcontainer.h"
 #include "source_lcao/module_lr/utils/lr_util_print.h"
 // #include "source_lcao/DM_gamma_2d_to_grid.h"
-#include "source_lcao/module_hcontainer/hcontainer_funcs.h"
+#include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 #include "source_lcao/module_lr/ao_to_mo_transformer/ao_to_mo.h"
 #include "source_lcao/module_gint/gint_interface.h"
 
