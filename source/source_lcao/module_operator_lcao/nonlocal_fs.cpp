@@ -1,4 +1,3 @@
-#pragma once
 #include "nonlocal.h"
 #include "operator_force_stress_utils.h"
 #include "source_base/parallel_reduce.h"
@@ -219,7 +218,7 @@ void Nonlocal<OperatorLCAO<TK, TR>>::cal_force_stress(const bool cal_force,
 }
 
 template <>
-void Nonlocal<OperatorLCAO<std::complex<double>, std::complex<double>>>::cal_force_IJR(const int& iat1,
+inline void Nonlocal<OperatorLCAO<std::complex<double>, std::complex<double>>>::cal_force_IJR(const int& iat1,
                                                const int& iat2,
                                                const int& T0,
                                                const Parallel_Orbitals* paraV,
@@ -284,7 +283,7 @@ void Nonlocal<OperatorLCAO<std::complex<double>, std::complex<double>>>::cal_for
 }
 
 template <>
-void Nonlocal<OperatorLCAO<std::complex<double>, std::complex<double>>>::cal_stress_IJR(const int& iat1,
+inline void Nonlocal<OperatorLCAO<std::complex<double>, std::complex<double>>>::cal_stress_IJR(const int& iat1,
                                                 const int& iat2,
                                                 const int& T0,
                                                 const Parallel_Orbitals* paraV,

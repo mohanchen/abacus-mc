@@ -323,7 +323,7 @@ void hamilt::Nonlocal<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     return;
 }
 
-#include "nonlocal_force_stress.hpp"
+#include "nonlocal_fs.cpp"
 #include "nonlocal_dh.cpp"
 
 template class hamilt::Nonlocal<hamilt::OperatorLCAO<double, double>>;
