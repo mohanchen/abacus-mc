@@ -9,6 +9,7 @@ add_library(
     overlap.cpp
     ekinetic.cpp
     nonlocal.cpp
+    nonlocal_dh.cpp
     td_ekinetic_lcao.cpp
     td_nonlocal_lcao.cpp
     td_pot_hybrid.cpp
