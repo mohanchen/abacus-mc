@@ -12,9 +12,9 @@ AddTest(
   SOURCES test_gint_common.cpp
     tmp_mocks.cpp
     ../gint_common.cpp
-    ../../module_hcontainer/base_matrix.cpp
-    ../../module_hcontainer/hcontainer.cpp
-    ../../module_hcontainer/atom_pair.cpp
+    ../../../source_hamilt/module_hcontainer/base_matrix.cpp
+    ../../../source_hamilt/module_hcontainer/hcontainer.cpp
+    ../../../source_hamilt/module_hcontainer/atom_pair.cpp
     ../../../source_basis/module_ao/parallel_orbitals.cpp
 )
 

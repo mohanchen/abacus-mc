@@ -1,7 +1,7 @@
 #ifndef READ_HCONTAINER_H
 #define READ_HCONTAINER_H
 
-#include "source_lcao/module_hcontainer/hcontainer.h"
+#include "source_hamilt/module_hcontainer/hcontainer.h"
 #include "source_cell/unitcell.h"
 
 namespace hamilt

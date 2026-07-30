@@ -49,13 +49,13 @@ set(DEEPKS_UNIT_COMMON_SOURCES
     ../../center2_orb.cpp
     ../../center2_orb-orb11.cpp
     ../../center2_orb-orb21.cpp
-    ../../module_hcontainer/base_matrix.cpp
-    ../../module_hcontainer/hcontainer.cpp
-    ../../module_hcontainer/atom_pair.cpp
-    ../../module_hcontainer/func_transfer.cpp
-    ../../module_hcontainer/func_folding.cpp
-    ../../module_hcontainer/transfer.cpp
-    ../../module_hcontainer/output_hcontainer.cpp
+    ../../../source_hamilt/module_hcontainer/base_matrix.cpp
+    ../../../source_hamilt/module_hcontainer/hcontainer.cpp
+    ../../../source_hamilt/module_hcontainer/atom_pair.cpp
+    ../../../source_hamilt/module_hcontainer/func_transfer.cpp
+    ../../../source_hamilt/module_hcontainer/func_folding.cpp
+    ../../../source_hamilt/module_hcontainer/transfer.cpp
+    ../../../source_hamilt/module_hcontainer/output_hcontainer.cpp
     ../../module_operator_lcao/deepks_lcao.cpp
     ../../module_operator_lcao/operator_lcao.cpp
     ../../../source_hamilt/operator.cpp
