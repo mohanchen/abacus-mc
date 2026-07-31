@@ -73,7 +73,7 @@ class Nonlocal<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
  *
  * Kleinman-Bylander non-local pseudopotential:
  * \f[
- *   V^{NL}(r, r') = \sum_{I} \sum_{m} \beta_{m}^{I}(r)\, D_{mm'}^{I}\, \beta_{m'}^{I}(r')
+ *   V^{NL}(r, r') = \sum_{I} \sum_{m,m'} \beta_{m}^{I}(r)\, D_{mm'}^{I}\, \beta_{m'}^{I}(r')
  * \f]
  *
  * In LCAO basis:

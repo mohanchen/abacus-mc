@@ -30,7 +30,7 @@
 #include "source_estate/module_charge/chgmixing.h" // use charge mixing, mohan add 20251006 
 #include "source_estate/update_pot.h" // mohan add 20251016
 #include "source_pw/module_pwdft/update_cell_pw.h" // mohan add 20250309
-#include "source_pw/module_pwdft/dftu_pw.h" // mohan add 20250309
+#include "source_pw/module_pwdft/setup_dftu_pw.h" // mohan add 20250309
 #include "source_pw/module_pwdft/deltaspin_pw.h" // mohan add 20250309
 
 #include "source_hamilt/module_xc/exx_info.h" // use GlobalC::exx_info

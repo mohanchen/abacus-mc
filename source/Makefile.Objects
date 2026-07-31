@@ -721,7 +721,7 @@ OBJS_SRCPW=H_Ewald_pw.o\
     setup_pwrho.o\
     setup_pwwfc.o\
     update_cell_pw.o\
-    dftu_pw.o\
+    setup_dftu_pw.o\
     deltaspin_pw.o\
     forces.o\
     forces_us.o\
@@ -793,7 +793,7 @@ OBJS_DFTU=dftu.o\
       dftu_tools.o\
       dftu_occup.o\
       dftu_hamilt.o\
-      dftu_pw.o
+      setup_dftu_pw.o
 
 OBJS_DELTASPIN=basic_funcs.o\
       cal_mw_from_lambda.o\
