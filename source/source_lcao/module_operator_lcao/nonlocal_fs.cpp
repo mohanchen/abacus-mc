@@ -1,5 +1,5 @@
 #include "nonlocal.h"
-#include "operator_force_stress_utils.h"
+#include "operator_fs_utils.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 

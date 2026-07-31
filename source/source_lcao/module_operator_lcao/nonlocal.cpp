@@ -1,5 +1,5 @@
 #include "nonlocal.h"
-#include "operator_force_stress_utils.h"
+#include "operator_fs_utils.h"
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
