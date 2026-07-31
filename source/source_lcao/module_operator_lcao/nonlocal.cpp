@@ -323,9 +323,6 @@ void hamilt::Nonlocal<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     return;
 }
 
-#include "nonlocal_fs.cpp"
-#include "nonlocal_dh.cpp"
-
 template class hamilt::Nonlocal<hamilt::OperatorLCAO<double, double>>;
 template class hamilt::Nonlocal<hamilt::OperatorLCAO<std::complex<double>, double>>;
 template class hamilt::Nonlocal<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>>;

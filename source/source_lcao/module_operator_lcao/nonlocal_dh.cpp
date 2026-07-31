@@ -278,7 +278,7 @@ void Nonlocal<OperatorLCAO<TK, TR>>::cal_dH(std::array<std::vector<hamilt::HCont
     ModuleBase::timer::end("Nonlocal", "cal_dH");
 }
 
-// explicit template instantiations
+// explicit member function instantiations
 template void Nonlocal<OperatorLCAO<double, double>>::cal_dH(
     std::array<std::vector<hamilt::HContainer<double>*>, 3>& dhR);
 template void Nonlocal<OperatorLCAO<std::complex<double>, double>>::cal_dH(

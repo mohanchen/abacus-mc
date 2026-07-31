@@ -16,6 +16,8 @@ if(ENABLE_LCAO)
         module_operator_lcao/overlap.cpp
         module_operator_lcao/ekinetic.cpp
         module_operator_lcao/nonlocal.cpp
+        module_operator_lcao/nonlocal_dh.cpp
+        module_operator_lcao/nonlocal_fs.cpp
         module_operator_lcao/td_ekinetic_lcao.cpp
         module_operator_lcao/td_nonlocal_lcao.cpp
         module_operator_lcao/td_pot_hybrid.cpp
