@@ -803,7 +803,7 @@ TEST_F(UcellTest, PrintSTRU)
      *
      */
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                              fn, 1, false, false, false, false, false, 0);
+                              fn, "", 1, false, false, false, false, false, 0);
     std::ifstream ifs;
     ifs.open("C1H2_STRU");
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
@@ -813,9 +813,9 @@ TEST_F(UcellTest, PrintSTRU)
     EXPECT_THAT(str, testing::HasSubstr("LATTICE_CONSTANT"));
     EXPECT_THAT(str, testing::HasSubstr("1.8897261255"));
     EXPECT_THAT(str, testing::HasSubstr("LATTICE_VECTORS"));
-    EXPECT_THAT(str, testing::HasSubstr("10.0000000000        0.0000000000        0.0000000000"));
-    EXPECT_THAT(str, testing::HasSubstr(" 0.0000000000       10.0000000000        0.0000000000"));
-    EXPECT_THAT(str, testing::HasSubstr(" 0.0000000000        0.0000000000       10.0000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("10.0000000000000000      0.0000000000000000      0.0000000000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000000000000000     10.0000000000000000      0.0000000000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000000000000000      0.0000000000000000     10.0000000000000000"));
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
     EXPECT_THAT(str, testing::HasSubstr("Cartesian"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
@@ -835,7 +835,7 @@ TEST_F(UcellTest, PrintSTRU)
      *
      */
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                            fn, 2, true, true, false, false, false, 0);
+                            fn, "", 2, true, true, false, false, false, 0);
     ifs.open("C1H2_STRU");
     str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_SPECIES"));
@@ -844,9 +844,9 @@ TEST_F(UcellTest, PrintSTRU)
     EXPECT_THAT(str, testing::HasSubstr("LATTICE_CONSTANT"));
     EXPECT_THAT(str, testing::HasSubstr("1.8897261255"));
     EXPECT_THAT(str, testing::HasSubstr("LATTICE_VECTORS"));
-    EXPECT_THAT(str, testing::HasSubstr("10.0000000000        0.0000000000        0.0000000000"));
-    EXPECT_THAT(str, testing::HasSubstr(" 0.0000000000       10.0000000000        0.0000000000"));
-    EXPECT_THAT(str, testing::HasSubstr(" 0.0000000000        0.0000000000       10.0000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("10.0000000000000000      0.0000000000000000      0.0000000000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000000000000000     10.0000000000000000      0.0000000000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000000000000000      0.0000000000000000     10.0000000000000000"));
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
     EXPECT_THAT(str, testing::HasSubstr("Direct"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
@@ -877,7 +877,7 @@ TEST_F(UcellTest, PrintSTRU)
     ucell->atom_mulliken
         = {{-1, 0.5}, {-1, 0.4}, {-1, 0.3}}; // first index is iat, the second is components, starts seems from 1
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                            fn, 2, true, false, true, true, true, 0);
+                            fn, "", 2, true, false, true, true, true, 0);
     ifs.open("C1H2_STRU");
     str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_SPECIES"));
@@ -891,9 +891,9 @@ TEST_F(UcellTest, PrintSTRU)
     EXPECT_THAT(str, testing::HasSubstr("LATTICE_CONSTANT"));
     EXPECT_THAT(str, testing::HasSubstr("1.8897261255"));
     EXPECT_THAT(str, testing::HasSubstr("LATTICE_VECTORS"));
-    EXPECT_THAT(str, testing::HasSubstr("10.0000000000        0.0000000000        0.0000000000"));
-    EXPECT_THAT(str, testing::HasSubstr(" 0.0000000000       10.0000000000        0.0000000000"));
-    EXPECT_THAT(str, testing::HasSubstr(" 0.0000000000        0.0000000000       10.0000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("10.0000000000000000      0.0000000000000000      0.0000000000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000000000000000     10.0000000000000000      0.0000000000000000"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000000000000000      0.0000000000000000     10.0000000000000000"));
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
     EXPECT_THAT(str, testing::HasSubstr("Direct"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
