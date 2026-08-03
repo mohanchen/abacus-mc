@@ -325,7 +325,6 @@ TEST(AbacusJsonTest, Init_stru_test)
     ucell.pseudo_fn.resize(1);
     ucell.orbital_fn.resize(1);
     ucell.atoms = atomlist;
-    ucell.atom_label.resize(1);
     ucell.lat0 = lat0;
     ucell.lat0_angstrom = lat0 * ModuleBase::BOHR_TO_A;
 
@@ -337,9 +336,8 @@ TEST(AbacusJsonTest, Init_stru_test)
     // fill ucell
     for (int i = 0; i < 1; i++)
     {
-        ucell.atom_label[i] = "Si";
+        ucell.atoms[i].label = "Si";
         atomlist[i].na = 2;
-        atomlist[i].label = "Fe";
         ucell.pseudo_fn[i] = "si.ufp";
         ucell.atoms[i].tau.resize(2);
         atomlist[i].mag.resize(2);
@@ -358,9 +356,9 @@ TEST(AbacusJsonTest, Init_stru_test)
     ASSERT_EQ(Json::AbacusJson::doc["init"]["mag"][0].GetDouble(), 0);
     ASSERT_EQ(Json::AbacusJson::doc["init"]["mag"][1].GetDouble(), 131.0);
 
-    ASSERT_STREQ(Json::AbacusJson::doc["init"]["pp"]["Fe"].GetString(), "si.ufp");
+    ASSERT_STREQ(Json::AbacusJson::doc["init"]["pp"]["Si"].GetString(), "si.ufp");
     ASSERT_STREQ(Json::AbacusJson::doc["init"]["label"][0].GetString(), "Si");
-    ASSERT_STREQ(Json::AbacusJson::doc["init"]["element"]["Fe"].GetString(), "");
+    ASSERT_STREQ(Json::AbacusJson::doc["init"]["element"]["Si"].GetString(), "");
 
     ASSERT_EQ(Json::AbacusJson::doc["init"]["coordinate"][0][0].GetDouble(), 0);
     ASSERT_EQ(Json::AbacusJson::doc["init"]["coordinate"][0][1].GetDouble(), 0);
