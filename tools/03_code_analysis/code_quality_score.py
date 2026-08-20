@@ -29,6 +29,11 @@ Rules (per-file score starts at 100):
     - function with more than 7 parameters: -1 per extra param (cap 30 per file)
     - function cyclomatic complexity > 10 (if/for/while/switch/case/&&/||):
       -1 per extra point (cap 30 per file)
+    - post-C++11 feature usage: -80 per file (one-shot); detects high-confidence
+      C++14/17/20/23 tokens such as `std::make_unique`, `if constexpr`,
+      `[[nodiscard]]`, `auto [...]` structured bindings, `concept`,
+      `requires`, `consteval`, `co_await`, `std::optional`, `std::variant`,
+      `std::any`, `std::span`, `std::expected`, `std::format`, etc.
 
 Usage:
     python3 code_quality_score.py source/source_base
@@ -56,7 +61,7 @@ SKIP_DIRS = {
     ".git", "build", "__pycache__", "node_modules", ".cache",
     "third_party", "thirdparty", ".vscode", ".idea", ".trae-cn",
     "Dependencies",
-    "test", "tests", "test_parallel", "unit_test", "unittest",
+    "test", "tests", "test_serial", "test_parallel", "unit_test", "unittest",
 }
 
 CAPS = {
@@ -94,6 +99,7 @@ WEIGHTS = {
     "raw_new_keyword": 1,
     "too_many_parameters": 1,
     "high_cyclomatic_complexity": 1,
+    "post_cpp11_feature": 80,
 }
 
 CAPS = {
@@ -165,6 +171,103 @@ NON_FUNCTION_KEYWORDS = {
 FUNC_NAME_RE = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
 QUALIFIER_RE = re.compile(r"\b(?:const|override|final|noexcept)\b")
 CYCLO_KEYWORDS_RE = re.compile(r"\b(?:if|for|while|switch|case)\b|&&|\|\|")
+
+# Post-C++11 features with low false-positive rates.
+# Each entry is (label, compiled_regex) — the label appears in the finding.
+POST_CPP11_PATTERNS: List[Tuple[str, "re.Pattern[str]"]] = [
+    # C++14
+    (
+        "std::make_unique",
+        re.compile(r"\bstd::make_unique\s*<"),
+    ),
+    (
+        "digit-separator in numeric literal (C++14)",
+        re.compile(r"(?<!')\b\d[\d']*'[\d']*\b"),
+    ),
+    # C++17
+    (
+        "if constexpr (C++17)",
+        re.compile(r"\bif\s+constexpr\b"),
+    ),
+    (
+        "structured binding auto [...] (C++17)",
+        re.compile(r"\bauto\s*&?\s*\[[^\[\]]+\]\s*="),
+    ),
+    (
+        "fold expression (C++17)",
+        re.compile(
+            r"\(\s*[A-Za-z_]\w*\s*(?:\+\+|\&\&|\|\||[+\-*/%^&|<>]=?|[.<>=])"
+            r"\s*\.\.\.\s*\)"
+            r"|\(\s*\.\.\.\s*(?:\+\+|\&\&|\|\||[+\-*/%^&|<>]=?|[.<>=])"
+            r"\s*[A-Za-z_]\w*\s*\)"
+            r"|\(\s*[A-Za-z_]\w*\s*(?:\+\+|\&\&|\|\||[+\-*/%^&|<>]=?|[.<>=])"
+            r"\s*\.\.\.\s*(?:\+\+|\&\&|\|\||[+\-*/%^&|<>]=?|[.<>=])"
+            r"\s*[^,)]+\s*\)"
+        ),
+    ),
+    (
+        "std::optional (C++17)",
+        re.compile(r"\bstd::optional\b"),
+    ),
+    (
+        "std::variant (C++17)",
+        re.compile(r"\bstd::variant\b"),
+    ),
+    (
+        "std::any (C++17)",
+        re.compile(r"\bstd::any\b"),
+    ),
+    (
+        "[[nodiscard]] (C++17)",
+        re.compile(r"\[\[nodiscard\b"),
+    ),
+    (
+        "[[maybe_unused]] (C++17)",
+        re.compile(r"\[\[maybe_unused\b"),
+    ),
+    # C++20
+    (
+        "concept (C++20)",
+        re.compile(r"\bconcept\b"),
+    ),
+    (
+        "requires (C++20)",
+        re.compile(r"\brequires\b"),
+    ),
+    (
+        "consteval (C++20)",
+        re.compile(r"\bconsteval\b"),
+    ),
+    (
+        "constinit (C++20)",
+        re.compile(r"\bconstinit\b"),
+    ),
+    (
+        "coroutine co_await / co_yield / co_return (C++20)",
+        re.compile(r"\bco_(?:await|yield|return)\b"),
+    ),
+    (
+        "std::span (C++20)",
+        re.compile(r"\bstd::span\b"),
+    ),
+    (
+        "std::ranges (C++20)",
+        re.compile(r"\bstd::ranges::"),
+    ),
+    (
+        "std::format (C++20)",
+        re.compile(r"\bstd::format\b"),
+    ),
+    # C++23
+    (
+        "std::expected (C++23)",
+        re.compile(r"\bstd::expected\b"),
+    ),
+    (
+        "std::print / std::println (C++23)",
+        re.compile(r"\bstd::print(?:ln)?\s*\("),
+    ),
+]
 
 
 @dataclass
@@ -280,6 +383,77 @@ def strip_comments(content: str) -> str:
                 out.append(re.sub(r"[^\n]", " ", block))
                 i = j
                 continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def strip_strings(content: str) -> str:
+    """Return content with string and character literals erased to spaces,
+    preserving line numbers.
+
+    The result still has the same number of characters and lines, but no
+    letter/word survives inside "..." or '...'. This prevents false matches
+    on keywords that happen to appear inside string literals.
+    """
+    out = []
+    i = 0
+    n = len(content)
+    in_string = False
+    in_char = False
+    while i < n:
+        c = content[i]
+        if in_string:
+            if c == "\\" and i + 1 < n:
+                # keep the escape sequence length but blank it out
+                out.append(" ")
+                if content[i + 1] == "\n":
+                    out.append("\n")
+                else:
+                    out.append(" ")
+                i += 2
+                continue
+            if c == '"':
+                in_string = False
+                out.append('"')  # keep the boundary marker (safest for line numbers)
+                i += 1
+                continue
+            if c == "\n":
+                out.append("\n")
+            else:
+                out.append(" ")
+            i += 1
+            continue
+        if in_char:
+            if c == "\\" and i + 1 < n:
+                out.append(" ")
+                if content[i + 1] == "\n":
+                    out.append("\n")
+                else:
+                    out.append(" ")
+                i += 2
+                continue
+            if c == "'":
+                in_char = False
+                out.append("'")
+                i += 1
+                continue
+            if c == "\n":
+                out.append("\n")
+            else:
+                out.append(" ")
+            i += 1
+            continue
+        if c == '"':
+            in_string = True
+            out.append('"')
+            i += 1
+            continue
+        if c == "'":
+            in_char = True
+            out.append("'")
+            i += 1
+            continue
         out.append(c)
         i += 1
     return "".join(out)
@@ -644,6 +818,30 @@ def find_high_complexity_functions(
     return findings
 
 
+def find_post_cpp11_features(
+    content: str,
+) -> List[Tuple[int, str]]:
+    """Find the first occurrence of each post-C++11 feature.
+
+    Uses the patterns in POST_CPP11_PATTERNS against content with both
+    comments AND string literals blanked out. String blanking prevents
+    false matches on keywords embedded in user-facing messages (e.g.
+    `"X requires Y"` in a WARNING_QUIT call).
+
+    Returns a list of (line_no, feature_label) — one entry per distinct
+    detected feature so the finding message is informative (the deduction
+    is one-shot -80 per file regardless of how many features hit).
+    """
+    stripped = strip_strings(strip_comments(content))
+    hits: List[Tuple[int, str]] = []
+    for label, regex in POST_CPP11_PATTERNS:
+        m = regex.search(stripped)
+        if m:
+            line_no = stripped[:m.start()].count("\n") + 1
+            hits.append((line_no, label))
+    return hits
+
+
 def analyze_class_blocks(content: str) -> Tuple[List[Finding], List[Finding], List[Finding]]:
     """Analyze class/struct blocks for public member variables, long member
     functions, and member/local name conflicts.
@@ -905,6 +1103,22 @@ def analyze_file(path: Path) -> FileReport:
                 f"(exceeds {CYCLO_THRESHOLD} by {excess})"
             ),
             deduction=per_deduction,
+        ))
+
+    # post-C++11 feature rule: one-shot -80, lists all distinct features
+    post_cpp11_hits = find_post_cpp11_features(content)
+    if post_cpp11_hits:
+        feature_list = ", ".join(
+            f"'{label}' (line {ln})" for ln, label in post_cpp11_hits
+        )
+        findings.append(Finding(
+            rule="post_cpp11_feature",
+            line=post_cpp11_hits[0][0],
+            reason=(
+                f"uses post-C++11 feature(s): {feature_list} "
+                f"(repo baseline is C++11)"
+            ),
+            deduction=WEIGHTS["post_cpp11_feature"],
         ))
 
     # class-based rules
