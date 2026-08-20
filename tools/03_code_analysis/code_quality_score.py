@@ -24,6 +24,9 @@ Rules (per-file score starts at 100):
     - `friend` keyword exposing internals: -1 per occurrence (cap 5)
     - unpaired `new` without matching `delete`: -1 per occurrence (cap 5)
     - local variable shadowing a member variable: -1 per occurrence (cap 5)
+    - file longer than 500 lines: -1 per additional 50-line block
+    - each `new` keyword usage: -1 per occurrence (no cap)
+    - function with more than 7 parameters: -1 per extra param (cap 30 per file)
 
 Usage:
     python3 code_quality_score.py source/source_base
@@ -51,6 +54,7 @@ SKIP_DIRS = {
     ".git", "build", "__pycache__", "node_modules", ".cache",
     "third_party", "thirdparty", ".vscode", ".idea", ".trae-cn",
     "Dependencies",
+    "test", "tests", "test_parallel", "unit_test", "unittest",
 }
 
 CAPS = {
@@ -84,10 +88,31 @@ WEIGHTS = {
     "friend_keyword": 1,
     "unpaired_new_delete": 1,
     "member_local_name_conflict": 1,
+    "file_too_long": 1,
+    "raw_new_keyword": 1,
+    "too_many_parameters": 1,
+}
+
+CAPS = {
+    "tab_indentation": 5,
+    "using_namespace_std": 5,
+    "line_too_long": 5,
+    "chinese_comment": 5,
+    "uppercase_constant": 5,
+    "default_parameter": 5,
+    "global_dependency": 10,
+    "hpp_include": 5,
+    "friend_keyword": 5,
+    "unpaired_new_delete": 5,
+    "member_local_name_conflict": 5,
+    "too_many_parameters": 30,
 }
 
 FUNCTION_LENGTH_THRESHOLD = 50
 FUNCTION_LENGTH_STEP = 50
+FILE_LENGTH_THRESHOLD = 500
+FILE_LENGTH_STEP = 50
+FUNCTION_PARAM_THRESHOLD = 7
 LINE_LENGTH_LIMIT = 120
 FILENAME_LENGTH_LIMIT = 20
 PASS_THRESHOLD = 60
@@ -124,6 +149,16 @@ BLOCK_KEYWORD_PREFIXES = (
     "else", "do", "try", "catch", "throw",
     "namespace", "enum", "union",
 )
+
+NON_FUNCTION_KEYWORDS = {
+    "if", "for", "while", "switch", "sizeof", "return", "throw",
+    "catch", "class", "struct", "namespace", "enum", "union",
+    "template", "static_assert", "typedef", "using", "new",
+    "delete", "operator", "do", "else", "goto", "continue",
+    "break", "try",
+}
+FUNC_NAME_RE = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
+QUALIFIER_RE = re.compile(r"\b(?:const|override|final|noexcept)\b")
 
 
 @dataclass
@@ -366,6 +401,126 @@ def _match_var_decl(stripped_line: str) -> Optional[str]:
     return m.group(1) if m else None
 
 
+def count_function_params(params_str: str) -> int:
+    """Count top-level parameters by counting commas at bracket depth 0.
+
+    Tracks (), [] {} and <> as nesting (so commas inside std::map<K, V> or
+    function-pointer params are not counted as param separators).
+    """
+    s = params_str.strip()
+    if not s or s == "void":
+        return 0
+    depth = 0
+    count = 1
+    for c in s:
+        if c in "([{<":
+            depth += 1
+        elif c in ")]}>":
+            depth = max(0, depth - 1)
+        elif c == "," and depth == 0:
+            count += 1
+    return count
+
+
+def find_long_function_signatures(
+    content: str, threshold: int
+) -> List[Tuple[int, str, int]]:
+    """Find function declarations/definitions whose parameter count exceeds threshold.
+
+    Returns list of (line_no, function_name, param_count). Best-effort:
+    requires either a return-type prefix before the function name (for `;`
+    and `=` endings) or a `{` ending (for constructors/destructors which
+    have no return type).
+    """
+    stripped = strip_comments(content)
+    n = len(stripped)
+    findings: List[Tuple[int, str, int]] = []
+
+    i = 0
+    while i < n:
+        m = FUNC_NAME_RE.search(stripped, i)
+        if not m:
+            break
+        name = m.group(1)
+        if name in NON_FUNCTION_KEYWORDS:
+            i = m.end()
+            continue
+
+        # inspect the prefix before `name(` to reject calls/lambdas/macros
+        line_start = stripped.rfind("\n", 0, m.start()) + 1
+        prefix = stripped[line_start:m.start()]
+        prefix_stripped = prefix.rstrip()
+        prefix_lstripped = prefix.lstrip()
+
+        # skip preprocessor lines
+        if prefix_lstripped.startswith("#"):
+            i = m.end()
+            continue
+        # skip lambdas: prefix ends with `]`
+        if prefix_stripped.endswith("]"):
+            i = m.end()
+            continue
+        # skip method calls: prefix ends with `.` or `->`
+        if prefix_stripped.endswith(".") or prefix_stripped.endswith("->"):
+            i = m.end()
+            continue
+        # skip assignment-result calls: prefix ends with `=` (but not `==`)
+        if prefix_stripped.endswith("=") and not prefix_stripped.endswith("=="):
+            i = m.end()
+            continue
+        # skip function-pointer typedefs
+        if "typedef" in prefix_stripped:
+            i = m.end()
+            continue
+
+        # match parens to find params string
+        paren_open = m.end() - 1
+        depth = 1
+        j = paren_open + 1
+        while j < n and depth > 0:
+            c = stripped[j]
+            if c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        if depth != 0:
+            i = m.end()
+            continue
+        params_str = stripped[paren_open + 1:j]
+
+        # after `)`: optional qualifiers (const/override/final/noexcept), then ; { or =
+        after = stripped[j + 1:].lstrip()
+        k = 0
+        while True:
+            mq = QUALIFIER_RE.match(after, k)
+            if not mq:
+                break
+            k = mq.end()
+            while k < len(after) and after[k] in " \t\n":
+                k += 1
+        if k >= len(after) or after[k] not in ";{=":
+            i = j + 1
+            continue
+
+        # for `;` and `=`, require a return-type prefix (else it looks like a
+        # function call). For `{`, allow empty prefix (constructor/destructor).
+        if after[k] in ";=" and not prefix_stripped:
+            i = j + 1
+            continue
+
+        param_count = count_function_params(params_str)
+        if param_count > threshold:
+            line_no = stripped[:paren_open].count("\n") + 1
+            findings.append((line_no, name, param_count))
+
+        i = j + 1
+
+    return findings
+
+
 def analyze_class_blocks(content: str) -> Tuple[List[Finding], List[Finding], List[Finding]]:
     """Analyze class/struct blocks for public member variables, long member
     functions, and member/local name conflicts.
@@ -514,6 +669,21 @@ def analyze_file(path: Path) -> FileReport:
 
     lines = content.split("\n")
 
+    # file length rule (no cap: large files legitimately scale deduction)
+    total_lines = len(lines)
+    if total_lines > FILE_LENGTH_THRESHOLD:
+        excess = total_lines - FILE_LENGTH_THRESHOLD
+        blocks = (excess + FILE_LENGTH_STEP - 1) // FILE_LENGTH_STEP
+        findings.append(Finding(
+            rule="file_too_long",
+            line=None,
+            reason=(
+                f"file has {total_lines} lines "
+                f"(exceeds {FILE_LENGTH_THRESHOLD} by {excess})"
+            ),
+            deduction=blocks * WEIGHTS["file_too_long"],
+        ))
+
     # line-based rules with caps
     tab_count = sum(1 for l in lines if "\t" in l)
     long_line_count = sum(1 for l in lines if len(l) > LINE_LENGTH_LIMIT)
@@ -542,6 +712,9 @@ def analyze_file(path: Path) -> FileReport:
     delete_count = len(DELETE_EXPR_RE.findall(stripped_content))
     unpaired_new = max(0, new_count - delete_count)
 
+    # raw `new` keyword usage: each occurrence costs 1 (no cap)
+    raw_new_count = new_count
+
     def append_capped(rule: str, count: int) -> None:
         if count == 0:
             return
@@ -565,6 +738,29 @@ def analyze_file(path: Path) -> FileReport:
     append_capped("hpp_include", hpp_include_count)
     append_capped("friend_keyword", friend_count)
     append_capped("unpaired_new_delete", unpaired_new)
+    append_capped("raw_new_keyword", raw_new_count)
+
+    # too-many-parameters rule (per-function, capped across the file)
+    long_param_funcs = find_long_function_signatures(content, FUNCTION_PARAM_THRESHOLD)
+    cap_params = CAPS.get("too_many_parameters")
+    running_param_deduction = 0
+    for line_no, fname, pcount in long_param_funcs:
+        excess = pcount - FUNCTION_PARAM_THRESHOLD
+        per_deduction = excess * WEIGHTS["too_many_parameters"]
+        if cap_params is not None and running_param_deduction + per_deduction > cap_params:
+            per_deduction = max(0, cap_params - running_param_deduction)
+            if per_deduction == 0:
+                break
+        running_param_deduction += per_deduction
+        findings.append(Finding(
+            rule="too_many_parameters",
+            line=line_no,
+            reason=(
+                f"function '{fname}' has {pcount} parameters "
+                f"(exceeds {FUNCTION_PARAM_THRESHOLD} by {excess})"
+            ),
+            deduction=per_deduction,
+        ))
 
     # class-based rules
     pub_findings, long_func_findings, conflict_findings = analyze_class_blocks(content)
