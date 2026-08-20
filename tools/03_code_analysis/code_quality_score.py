@@ -24,9 +24,11 @@ Rules (per-file score starts at 100):
     - `friend` keyword exposing internals: -1 per occurrence (cap 5)
     - unpaired `new` without matching `delete`: -1 per occurrence (cap 5)
     - local variable shadowing a member variable: -1 per occurrence (cap 5)
-    - file longer than 500 lines: -1 per additional 50-line block
+    - file longer than 500 lines: -2 per additional 50-line block
     - each `new` keyword usage: -1 per occurrence (no cap)
     - function with more than 7 parameters: -1 per extra param (cap 30 per file)
+    - function cyclomatic complexity > 10 (if/for/while/switch/case/&&/||):
+      -1 per extra point (cap 30 per file)
 
 Usage:
     python3 code_quality_score.py source/source_base
@@ -88,9 +90,10 @@ WEIGHTS = {
     "friend_keyword": 1,
     "unpaired_new_delete": 1,
     "member_local_name_conflict": 1,
-    "file_too_long": 1,
+    "file_too_long": 2,
     "raw_new_keyword": 1,
     "too_many_parameters": 1,
+    "high_cyclomatic_complexity": 1,
 }
 
 CAPS = {
@@ -106,6 +109,7 @@ CAPS = {
     "unpaired_new_delete": 5,
     "member_local_name_conflict": 5,
     "too_many_parameters": 30,
+    "high_cyclomatic_complexity": 30,
 }
 
 FUNCTION_LENGTH_THRESHOLD = 50
@@ -113,6 +117,7 @@ FUNCTION_LENGTH_STEP = 50
 FILE_LENGTH_THRESHOLD = 500
 FILE_LENGTH_STEP = 50
 FUNCTION_PARAM_THRESHOLD = 7
+CYCLO_THRESHOLD = 10
 LINE_LENGTH_LIMIT = 120
 FILENAME_LENGTH_LIMIT = 20
 PASS_THRESHOLD = 60
@@ -159,6 +164,7 @@ NON_FUNCTION_KEYWORDS = {
 }
 FUNC_NAME_RE = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
 QUALIFIER_RE = re.compile(r"\b(?:const|override|final|noexcept)\b")
+CYCLO_KEYWORDS_RE = re.compile(r"\b(?:if|for|while|switch|case)\b|&&|\|\|")
 
 
 @dataclass
@@ -521,6 +527,123 @@ def find_long_function_signatures(
     return findings
 
 
+def find_function_bodies(content: str) -> List[Tuple[int, str, int, int]]:
+    """Find function definitions (with body), not just declarations.
+
+    Returns list of (signature_line_no, function_name, body_start_pos,
+    body_end_pos) where positions are absolute offsets in stripped content.
+    Reuses the prefix/reject logic from find_long_function_signatures.
+    """
+    stripped = strip_comments(content)
+    n = len(stripped)
+    bodies: List[Tuple[int, str, int, int]] = []
+
+    i = 0
+    while i < n:
+        m = FUNC_NAME_RE.search(stripped, i)
+        if not m:
+            break
+        name = m.group(1)
+        if name in NON_FUNCTION_KEYWORDS:
+            i = m.end()
+            continue
+
+        line_start = stripped.rfind("\n", 0, m.start()) + 1
+        prefix = stripped[line_start:m.start()]
+        prefix_stripped = prefix.rstrip()
+        prefix_lstripped = prefix.lstrip()
+
+        if prefix_lstripped.startswith("#"):
+            i = m.end()
+            continue
+        if prefix_stripped.endswith("]"):
+            i = m.end()
+            continue
+        if prefix_stripped.endswith(".") or prefix_stripped.endswith("->"):
+            i = m.end()
+            continue
+        if prefix_stripped.endswith("=") and not prefix_stripped.endswith("=="):
+            i = m.end()
+            continue
+        if "typedef" in prefix_stripped:
+            i = m.end()
+            continue
+
+        paren_open = m.end() - 1
+        depth = 1
+        j = paren_open + 1
+        while j < n and depth > 0:
+            c = stripped[j]
+            if c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        if depth != 0:
+            i = m.end()
+            continue
+
+        # find what comes after `)`: skip whitespace and qualifiers
+        pos = j + 1
+        while pos < n and stripped[pos] in " \t\n":
+            pos += 1
+        while True:
+            mq = QUALIFIER_RE.match(stripped, pos)
+            if not mq:
+                break
+            pos = mq.end()
+            while pos < n and stripped[pos] in " \t\n":
+                pos += 1
+
+        # we need a `{` body (not `;` declaration, not `= 0` pure virtual)
+        if pos >= n or stripped[pos] != "{":
+            i = j + 1
+            continue
+
+        # match braces to find body end
+        body_open = pos
+        depth = 1
+        body_close = body_open + 1
+        while body_close < n and depth > 0:
+            c = stripped[body_close]
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            body_close += 1
+        if depth != 0:
+            i = j + 1
+            continue
+
+        sig_line_no = stripped[:paren_open].count("\n") + 1
+        bodies.append((sig_line_no, name, body_open, body_close))
+        i = body_close + 1
+
+    return bodies
+
+
+def find_high_complexity_functions(
+    content: str, threshold: int
+) -> List[Tuple[int, str, int]]:
+    """Find functions whose cyclomatic complexity exceeds threshold.
+
+    Cyclomatic complexity counts: if, for, while, switch, case, &&, ||.
+    Returns list of (line_no, function_name, complexity).
+    """
+    stripped = strip_comments(content)
+    findings: List[Tuple[int, str, int]] = []
+    for sig_line, name, body_open, body_close in find_function_bodies(content):
+        body = stripped[body_open + 1:body_close]
+        complexity = len(CYCLO_KEYWORDS_RE.findall(body))
+        if complexity > threshold:
+            findings.append((sig_line, name, complexity))
+    return findings
+
+
 def analyze_class_blocks(content: str) -> Tuple[List[Finding], List[Finding], List[Finding]]:
     """Analyze class/struct blocks for public member variables, long member
     functions, and member/local name conflicts.
@@ -758,6 +881,28 @@ def analyze_file(path: Path) -> FileReport:
             reason=(
                 f"function '{fname}' has {pcount} parameters "
                 f"(exceeds {FUNCTION_PARAM_THRESHOLD} by {excess})"
+            ),
+            deduction=per_deduction,
+        ))
+
+    # high cyclomatic complexity rule (per-function, capped across the file)
+    high_cyclo_funcs = find_high_complexity_functions(content, CYCLO_THRESHOLD)
+    cap_cyclo = CAPS.get("high_cyclomatic_complexity")
+    running_cyclo_deduction = 0
+    for line_no, fname, cyclo in high_cyclo_funcs:
+        excess = cyclo - CYCLO_THRESHOLD
+        per_deduction = excess * WEIGHTS["high_cyclomatic_complexity"]
+        if cap_cyclo is not None and running_cyclo_deduction + per_deduction > cap_cyclo:
+            per_deduction = max(0, cap_cyclo - running_cyclo_deduction)
+            if per_deduction == 0:
+                break
+        running_cyclo_deduction += per_deduction
+        findings.append(Finding(
+            rule="high_cyclomatic_complexity",
+            line=line_no,
+            reason=(
+                f"function '{fname}' has cyclomatic complexity {cyclo} "
+                f"(exceeds {CYCLO_THRESHOLD} by {excess})"
             ),
             deduction=per_deduction,
         ))
