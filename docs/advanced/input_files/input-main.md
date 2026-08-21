@@ -431,6 +431,8 @@
     - [vdw\_cutoff\_type](#vdw_cutoff_type)
     - [vdw\_cutoff\_radius](#vdw_cutoff_radius)
     - [vdw\_radius\_unit](#vdw_radius_unit)
+    - [vdw\_cutoff\_width2](#vdw_cutoff_width2)
+    - [vdw\_cutoff\_width3](#vdw_cutoff_width3)
     - [vdw\_cutoff\_period](#vdw_cutoff_period)
     - [vdw\_cn\_thr](#vdw_cn_thr)
     - [vdw\_cn\_thr\_unit](#vdw_cn_thr_unit)
@@ -4064,6 +4066,24 @@
   - A(Angstrom)
   - Bohr
 - **Default**: Bohr
+
+### vdw_cutoff_width2
+
+- **Type**: Real
+- **Availability**: *[`vdw_method`](#vdw_method)==d4*
+- **Description**: Width of the smooth switching region for the two-body pairwise dispersion real-space cutoff.
+  A value of zero disables smoothing for the two-body contribution.
+- **Default**: 0.05
+- **Unit**: Bohr
+
+### vdw_cutoff_width3
+
+- **Type**: Real
+- **Availability**: *[`vdw_method`](#vdw_method)==d4*
+- **Description**: Width of the smooth switching region for the three-body Axilrod-Teller-Muto (ATM) dispersion real-space cutoff.
+  A value of zero disables smoothing for the three-body contribution.
+- **Default**: 0.05
+- **Unit**: Bohr
 
 ### vdw_cutoff_period
 
