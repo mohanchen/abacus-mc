@@ -470,8 +470,7 @@ OBJS_PSI_INITIALIZER=psi_base.o\
                      psi_init_atomic.o\
                      psi_init_atom_rand.o\
                      psi_init_nao.o\
-                     psi_init_nao_random.o\
-                     psi_lcao_in_pw.o\
+                     psi_init_nao_random.o
 
 OBJS_PW=fft_bundle.o\
     fft_cpu.o\
