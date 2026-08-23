@@ -39,7 +39,8 @@ by per-rule severity within each group:
     - GlobalV::/GlobalC::/PARAM.* cross-layer dependency: -3 per
       occurrence (cap 10) (AGENTS.md §1)
     - function declaration with default parameter: -2 per occurrence
-      (cap 5) (AGENTS.md §5)
+      (cap 5) (AGENTS.md §5). Detects multi-line declarations where
+      the parameter list spans lines.
     - #include of .hpp implementation header: -2 per occurrence
       (cap 5) (AGENTS.md §3, §4)
     - each public member variable in a class/struct: -1
@@ -69,7 +70,9 @@ by per-rule severity within each group:
       extension, e.g. `matrix_orbs11.cpp` -> stem `matrix_orbs11`)
     - filename contains uppercase letters: -1
     - UPPERCASE constant naming (>3 chars all caps): -1 per occurrence
-      (cap 5)
+      (cap 5). Excludes string literals and member accesses such as
+      `X::UPPER` or `x.UPPER` (those are governed by the
+      cross-layer-dependency rule or another file's class definition).
     - tab indentation: -1 per line (cap 5)
     - `using namespace std;`: -1 per occurrence (cap 5)
     - line longer than 120 chars: -1 per line (cap 5)
@@ -172,7 +175,7 @@ PASS_THRESHOLD = 60
 
 CHINESE_RE = re.compile("[\u4e00-\u9fff]")
 USING_NS_STD_RE = re.compile(r"\busing\s+namespace\s+std\b")
-UPPERCASE_CONST_RE = re.compile(r"\b[A-Z][A-Z0-9_]{2,}\b")
+UPPERCASE_CONST_RE = re.compile(r"(?<![.:])\b[A-Z][A-Z0-9_]{2,}\b(?![.:])")
 ACCESS_RE = re.compile(r"^\s*(public|private|protected)\s*:")
 CLASS_OPEN_RE = re.compile(r"\b(class|struct)\s+(\w+)\b")
 
@@ -1058,19 +1061,24 @@ def analyze_file(path: Path) -> FileReport:
     chinese_count = sum(1 for l in lines if CHINESE_RE.search(l))
 
     stripped_content = strip_comments(content)
-    upper_const_count = 0
-    for l in stripped_content.split("\n"):
-        upper_const_count += len(UPPERCASE_CONST_RE.findall(l))
+    # uppercase constants: strip strings too (so default-value strings like
+    # "ABACUS" do not trigger), and the regex excludes member accesses
+    # (e.g. GlobalV::MY_RANK, x.UPPER) via a negative lookbehind.
+    stripped_for_upper = strip_strings(stripped_content)
+    upper_const_count = sum(
+        len(UPPERCASE_CONST_RE.findall(l))
+        for l in stripped_for_upper.split("\n")
+    )
 
     # interface & dependency rules
     global_dep_count = len(GLOBAL_DEPENDENCY_RE.findall(stripped_content))
     hpp_include_count = sum(1 for l in lines if HPP_INCLUDE_RE.match(l))
     friend_count = len(FRIEND_RE.findall(stripped_content))
 
-    # default parameter: scan each stripped line for function-decl signature
-    default_param_count = 0
-    for l in stripped_content.split("\n"):
-        default_param_count += len(DEFAULT_PARAM_RE.findall(l))
+    # default parameter: scan the full stripped content so multi-line
+    # declarations (parameter list spanning multiple lines) are detected;
+    # `[^();]*` in the regex already matches newlines.
+    default_param_count = len(DEFAULT_PARAM_RE.findall(stripped_content))
 
     # unpaired new/delete (file-level): rough heuristic, cap applied below
     new_count = len(NEW_EXPR_RE.findall(stripped_content))
