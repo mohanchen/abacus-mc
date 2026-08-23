@@ -6,27 +6,35 @@ starting from 100, deducting points for each rule violation found.
 
 General semantics:
   - Score is clamped to a minimum of 0 (a file cannot go negative even
-    when post-C++11 + .hpp alone would force it below 0).
+    when post-C++11 + .hpp alone would force it below 0). The
+    unclamped value is preserved as `real_score`: shown in the text
+    report as `(real_score=N)` next to clamped-0 files, included in
+    JSON output, and used to break ties among clamped-0 files.
   - All caps listed below are per-file limits on the cumulative
     deduction for that rule within a single file.
   - Files under any of these directories are skipped entirely: test/,
     tests/, test_serial/, test_parallel/, unit_test/, unittest/.
   - Pass threshold: score >= 60. Output is sorted by score ascending
-    (worst files first) and written to ./code_quality_score.txt by
-    default when format is text and no -o is given.
+    (worst files first); ties are broken by `real_score` ascending
+    (more negative = more total deduction = ranked first). Text and
+    JSON output also include a per-module rollup grouped by the
+    `source/source_*` prefix (worst module first). Written to
+    ./code_quality_score.txt by default when format is text and no -o
+    is given.
 
 Rules (per-file score starts at 100), grouped by concern and ordered
 by per-rule severity within each group:
 
   1. Architecture & compliance (AGENTS.md red lines):
-    - post-C++11 feature usage: -80 per file (one-shot). High one-shot
-      weight because it violates the repo-wide C++11 baseline
-      contract (AGENTS.md §7). Detects high-confidence C++14/17/20/23
-      tokens such as `std::make_unique`, `if constexpr`,
-      `[[nodiscard]]`, `auto [...]` structured bindings, `concept`,
-      `requires`, `consteval`, `co_await`, `std::optional`,
-      `std::variant`, `std::any`, `std::span`, `std::expected`,
-      `std::format`, etc.
+    - post-C++11 feature usage: -40 base + -8 per distinct feature
+      (cap 5). Total max -80, matching the previous one-shot weight,
+      but a single misuse no longer swamps the whole file. High weight
+      because it violates the repo-wide C++11 baseline contract
+      (AGENTS.md §7). Detects high-confidence C++14/17/20/23 tokens
+      such as `std::make_unique`, `if constexpr`, `[[nodiscard]]`,
+      `auto [...]` structured bindings, `concept`, `requires`,
+      `consteval`, `co_await`, `std::optional`, `std::variant`,
+      `std::any`, `std::span`, `std::expected`, `std::format`, etc.
     - filename extension is .hpp: -50 (AGENTS.md §4)
     - GlobalV::/GlobalC::/PARAM.* cross-layer dependency: -3 per
       occurrence (cap 10) (AGENTS.md §1)
@@ -129,7 +137,8 @@ WEIGHTS = {
     "raw_new_keyword": 1,
     "too_many_parameters": 1,
     "high_cyclomatic_complexity": 1,
-    "post_cpp11_feature": 80,
+    "post_cpp11_feature": 40,
+    "post_cpp11_per_feature": 8,
 }
 
 CAPS = {
@@ -146,6 +155,7 @@ CAPS = {
     "member_local_name_conflict": 5,
     "too_many_parameters": 30,
     "high_cyclomatic_complexity": 30,
+    "post_cpp11_per_feature": 5,
 }
 
 FUNCTION_LENGTH_THRESHOLD = 50
@@ -313,11 +323,13 @@ class FileReport:
     path: str
     score: int
     findings: List[Finding] = field(default_factory=list)
+    real_score: int = 100
 
     def to_dict(self) -> dict:
         return {
             "path": self.path,
             "score": self.score,
+            "real_score": self.real_score,
             "findings": [
                 {
                     "rule": f.rule,
@@ -1135,7 +1147,9 @@ def analyze_file(path: Path) -> FileReport:
             deduction=per_deduction,
         ))
 
-    # post-C++11 feature rule: one-shot -80, lists all distinct features
+    # post-C++11 feature rule: base deduction for any usage + per-feature
+    # incremental deduction (capped). Total cap matches the previous
+    # one-shot -80, but a single misuse no longer swamps the whole file.
     post_cpp11_hits = find_post_cpp11_features(content)
     if post_cpp11_hits:
         feature_list = ", ".join(
@@ -1150,6 +1164,22 @@ def analyze_file(path: Path) -> FileReport:
             ),
             deduction=WEIGHTS["post_cpp11_feature"],
         ))
+        num_features = len(post_cpp11_hits)
+        cap_features = CAPS.get("post_cpp11_per_feature", num_features)
+        capped = min(num_features, cap_features)
+        if capped > 0:
+            cap_text = (
+                f" (capped at {cap_features})" if num_features > cap_features else ""
+            )
+            findings.append(Finding(
+                rule="post_cpp11_per_feature",
+                line=post_cpp11_hits[0][0],
+                reason=(
+                    f"{num_features} distinct post-C++11 feature(s) detected"
+                    f"{cap_text}"
+                ),
+                deduction=capped * WEIGHTS["post_cpp11_per_feature"],
+            ))
 
     # class-based rules
     pub_findings, long_func_findings, conflict_findings = analyze_class_blocks(content)
@@ -1161,14 +1191,59 @@ def analyze_file(path: Path) -> FileReport:
         conflict_findings = conflict_findings[:cap]
     findings.extend(conflict_findings)
 
-    # compute score
-    score = 100
+    # compute score: real_score is the unclamped value (may be negative);
+    # score is clamped to a minimum of 0 for display.
+    real_score = 100
     for f in findings:
-        score -= f.deduction
-    if score < 0:
-        score = 0
+        real_score -= f.deduction
+    score = max(0, real_score)
 
-    return FileReport(path=str(path), score=score, findings=findings)
+    return FileReport(
+        path=str(path),
+        score=score,
+        findings=findings,
+        real_score=real_score,
+    )
+
+
+def get_module(path: str) -> str:
+    """Group a file path into its module for rollup purposes.
+
+    Returns the `source/source_*` prefix when present (e.g.
+    `source/source_lcao`); otherwise falls back to the file's parent
+    directory. Backslashes are normalised to forward slashes.
+    """
+    parts = path.replace("\\", "/").split("/")
+    for i, p in enumerate(parts):
+        if (
+            p == "source"
+            and i + 1 < len(parts)
+            and parts[i + 1].startswith("source_")
+        ):
+            return f"source/{parts[i + 1]}"
+    return "/".join(parts[:-1]) if len(parts) > 1 else path
+
+
+def compute_module_rollup(
+    reports: List[FileReport],
+) -> List[Tuple[str, int, float, int]]:
+    """Group reports by module and return rows sorted by avg score ascending.
+
+    Each row is (module, file_count, average_score, passing_count).
+    Worst module (lowest average) appears first.
+    """
+    groups: dict = {}
+    for r in reports:
+        m = get_module(r.path)
+        groups.setdefault(m, []).append(r)
+    rows: List[Tuple[str, int, float, int]] = []
+    for module, rs in groups.items():
+        n = len(rs)
+        avg = sum(r.score for r in rs) / n if n else 0.0
+        passing = sum(1 for r in rs if r.score >= PASS_THRESHOLD)
+        rows.append((module, n, avg, passing))
+    rows.sort(key=lambda x: x[2])
+    return rows
 
 
 def render_text(reports: List[FileReport], min_score: Optional[int]) -> str:
@@ -1177,18 +1252,35 @@ def render_text(reports: List[FileReport], min_score: Optional[int]) -> str:
         return "No files to analyze.\n"
 
     visible = reports if min_score is None else [r for r in reports if r.score <= min_score]
-    sorted_reports = sorted(visible, key=lambda r: r.score)
+    sorted_reports = sorted(visible, key=lambda r: (r.score, r.real_score))
 
     out: List[str] = []
     width = 70
     out.append("=" * width)
     out.append("Code Quality Score Report")
     out.append("=" * width)
-    out.append("")
+
+    rollup = compute_module_rollup(reports)
+    if rollup:
+        out.append("")
+        out.append(
+            "Per-module rollup (sorted by average score, worst first):"
+        )
+        out.append(f"  {'Module':<40} {'Files':>5} {'Avg':>6} {'Pass':>12}")
+        out.append("-" * width)
+        for module, n, avg, passing in rollup:
+            module_disp = module if len(module) <= 40 else module[-37:] + "..."
+            pass_str = f"{passing}/{n}"
+            out.append(
+                f"  {module_disp:<40} {n:>5} {avg:>6.1f} {pass_str:>12}"
+            )
+        out.append("")
+
     out.append(f"{'Score':>6}  {'File'}")
     out.append("-" * width)
     for r in sorted_reports:
-        out.append(f"{r.score:>6}  {r.path}")
+        suffix = f"  (real_score={r.real_score})" if r.real_score < 0 else ""
+        out.append(f"{r.score:>6}  {r.path}{suffix}")
     out.append("")
 
     for r in sorted_reports:
@@ -1217,6 +1309,7 @@ def render_text(reports: List[FileReport], min_score: Optional[int]) -> str:
 
 def render_json(reports: List[FileReport], min_score: Optional[int]) -> str:
     visible = reports if min_score is None else [r for r in reports if r.score <= min_score]
+    rollup = compute_module_rollup(reports)
     return json.dumps({
         "summary": {
             "total_scanned": len(reports),
@@ -1226,8 +1319,17 @@ def render_json(reports: List[FileReport], min_score: Optional[int]) -> str:
             ),
             "passing": sum(1 for r in reports if r.score >= PASS_THRESHOLD),
             "pass_threshold": PASS_THRESHOLD,
+            "by_module": [
+                {
+                    "module": module,
+                    "file_count": n,
+                    "average_score": avg,
+                    "passing": passing,
+                }
+                for module, n, avg, passing in rollup
+            ],
         },
-        "files": [r.to_dict() for r in sorted(visible, key=lambda r: r.score)],
+        "files": [r.to_dict() for r in sorted(visible, key=lambda r: (r.score, r.real_score))],
     }, indent=2)
 
 
