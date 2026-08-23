@@ -34,7 +34,7 @@ DiagoPexsi<T>::DiagoPexsi(const Parallel_Orbitals* ParaV_in,
     }
 
     this->ParaV = ParaV_in;
-    this->ps = std::make_unique<pexsi::PEXSI_Solver>();
+    this->ps.reset(new pexsi::PEXSI_Solver());
 
     this->DM.resize(this->nspin_dm);
     this->EDM.resize(this->nspin_dm);
