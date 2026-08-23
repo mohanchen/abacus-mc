@@ -136,8 +136,8 @@ class DiagoBPCGPrepare
         const std::vector<T> &h_mat = DIAGOTEST::hmatrix_local;
         auto hpsi_func = [h_mat, dim](T *psi_in, T *hpsi_out,
                                 const int ld_psi, const int nvec) {
-            auto one = std::make_unique<T>(1.0);
-            auto zero = std::make_unique<T>(0.0);
+            std::unique_ptr<T> one(new T(1.0));
+            std::unique_ptr<T> zero(new T(0.0));
             const T *one_ = one.get();
             const T *zero_ = zero.get();
 
