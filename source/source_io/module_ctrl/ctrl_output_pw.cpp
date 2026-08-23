@@ -249,12 +249,16 @@ void ModuleIO::ctrl_runner_pw(UnitCell& ucell,
     ModuleBase::TITLE("ModuleIO", "ctrl_runner_pw");
     ModuleBase::timer::start("ModuleIO", "ctrl_runner_pw");
 
+    // Create local ctx for device type deduction
+    Device* ctx = nullptr;
+
     //----------------------------------------------------------
     //! 1) Compute LDOS
     //----------------------------------------------------------
     if (inp.out_ldos[0])
     {
-        ModuleIO::cal_ldos_pw(reinterpret_cast<elecstate::ElecStatePW<std::complex<double>>*>(pelec), stp.psi_cpu[0], para_grid, ucell);
+        stp.update_psi_d();
+        ModuleIO::cal_ldos_pw(reinterpret_cast<elecstate::ElecStatePW<std::complex<double>>*>(pelec), *stp.template get_psi_d<T, Device>(), ctx, para_grid, ucell);
     }
 
     //----------------------------------------------------------
