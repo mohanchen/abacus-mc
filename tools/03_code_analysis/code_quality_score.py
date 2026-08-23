@@ -4,36 +4,66 @@
 Scans source files/directories and assigns each file a quality score
 starting from 100, deducting points for each rule violation found.
 
-Rules (per-file score starts at 100):
-  Core rules:
-    - filename stem longer than 20 chars: -1
-    - filename contains uppercase letters: -1
-    - filename extension is .hpp: -50
+General semantics:
+  - Score is clamped to a minimum of 0 (a file cannot go negative even
+    when post-C++11 + .hpp alone would force it below 0).
+  - All caps listed below are per-file limits on the cumulative
+    deduction for that rule within a single file.
+  - Files under any of these directories are skipped entirely: test/,
+    tests/, test_serial/, test_parallel/, unit_test/, unittest/.
+  - Pass threshold: score >= 60. Output is sorted by score ascending
+    (worst files first) and written to ./code_quality_score.txt by
+    default when format is text and no -o is given.
+
+Rules (per-file score starts at 100), grouped by concern and ordered
+by per-rule severity within each group:
+
+  1. Architecture & compliance (AGENTS.md red lines):
+    - post-C++11 feature usage: -80 per file (one-shot). High one-shot
+      weight because it violates the repo-wide C++11 baseline
+      contract (AGENTS.md §7). Detects high-confidence C++14/17/20/23
+      tokens such as `std::make_unique`, `if constexpr`,
+      `[[nodiscard]]`, `auto [...]` structured bindings, `concept`,
+      `requires`, `consteval`, `co_await`, `std::optional`,
+      `std::variant`, `std::any`, `std::span`, `std::expected`,
+      `std::format`, etc.
+    - filename extension is .hpp: -50 (AGENTS.md §4)
+    - GlobalV::/GlobalC::/PARAM.* cross-layer dependency: -3 per
+      occurrence (cap 10) (AGENTS.md §1)
+    - function declaration with default parameter: -2 per occurrence
+      (cap 5) (AGENTS.md §5)
+    - #include of .hpp implementation header: -2 per occurrence
+      (cap 5) (AGENTS.md §3, §4)
     - each public member variable in a class/struct: -1
-    - member function longer than 50 lines: -1 per additional 50-line block
-  Zero-cost rules (no C++ parsing needed):
+    - `friend` keyword exposing internals: -1 per occurrence (cap 5)
+
+  2. Size, complexity & memory (implementation-level maintainability):
+    - function with more than 7 parameters: -1 per extra param
+      (cap 30 per file)
+    - function cyclomatic complexity > 10 (if/for/while/switch/case/
+      &&/||): -1 per extra point (cap 30 per file)
+    - file longer than 500 lines: -2 per additional 50-line block
+      (counts all physical lines including blanks and comments; no cap)
+    - member function longer than 50 lines: -1 per additional 50-line
+      block (counts physical lines after comments are blanked, blanks
+      preserved)
+    - each `new` keyword usage: -1 per occurrence (no cap)
+    - unpaired `new` without matching `delete`: -1 per occurrence
+      (cap 5). NOTE: stacks with the `new` rule above, so an unpaired
+      `new` costs -2 total (-1 from `new` + -1 from unpaired).
+    - local variable shadowing a member variable: -1 per occurrence
+      (cap 5)
+
+  3. Naming & formatting (lightweight surface rules, regex-based):
+    - filename stem longer than 20 chars: -1 (stem = filename without
+      extension, e.g. `matrix_orbs11.cpp` -> stem `matrix_orbs11`)
+    - filename contains uppercase letters: -1
+    - UPPERCASE constant naming (>3 chars all caps): -1 per occurrence
+      (cap 5)
     - tab indentation: -1 per line (cap 5)
     - `using namespace std;`: -1 per occurrence (cap 5)
     - line longer than 120 chars: -1 per line (cap 5)
     - Chinese characters in comments/code: -1 per line (cap 5)
-    - UPPERCASE constant naming (>3 chars all caps): -1 per occurrence (cap 5)
-  Interface & dependency rules:
-    - function declaration with default parameter: -2 per occurrence (cap 5)
-    - GlobalV::/GlobalC::/PARAM.* cross-layer dependency: -3 per occurrence (cap 10)
-    - #include of .hpp implementation header: -2 per occurrence (cap 5)
-    - `friend` keyword exposing internals: -1 per occurrence (cap 5)
-    - unpaired `new` without matching `delete`: -1 per occurrence (cap 5)
-    - local variable shadowing a member variable: -1 per occurrence (cap 5)
-    - file longer than 500 lines: -2 per additional 50-line block
-    - each `new` keyword usage: -1 per occurrence (no cap)
-    - function with more than 7 parameters: -1 per extra param (cap 30 per file)
-    - function cyclomatic complexity > 10 (if/for/while/switch/case/&&/||):
-      -1 per extra point (cap 30 per file)
-    - post-C++11 feature usage: -80 per file (one-shot); detects high-confidence
-      C++14/17/20/23 tokens such as `std::make_unique`, `if constexpr`,
-      `[[nodiscard]]`, `auto [...]` structured bindings, `concept`,
-      `requires`, `consteval`, `co_await`, `std::optional`, `std::variant`,
-      `std::any`, `std::span`, `std::expected`, `std::format`, etc.
 
 Usage:
     python3 code_quality_score.py source/source_base
