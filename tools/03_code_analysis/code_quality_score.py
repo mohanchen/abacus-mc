@@ -47,9 +47,11 @@ by per-rule severity within each group:
 
   2. Size, complexity & memory (implementation-level maintainability):
     - function with more than 7 parameters: -1 per extra param
-      (cap 30 per file)
+      (cap 30 per function; multiple over-parameterised functions in
+      the same file accumulate)
     - function cyclomatic complexity > 10 (if/for/while/switch/case/
-      &&/||): -1 per extra point (cap 30 per file)
+      &&/||): -1 per extra point (cap 30 per function; multiple
+      complex functions in the same file accumulate)
     - file longer than 500 lines: -2 per additional 50-line block
       (counts all physical lines including blanks and comments; no cap)
     - member function longer than 50 lines: -1 per additional 50-line
@@ -1103,46 +1105,50 @@ def analyze_file(path: Path) -> FileReport:
     append_capped("unpaired_new_delete", unpaired_new)
     append_capped("raw_new_keyword", raw_new_count)
 
-    # too-many-parameters rule (per-function, capped across the file)
+    # too-many-parameters rule: each function's deduction is capped
+    # individually (per-function cap, not per-file). A file with many
+    # over-parameterised functions accumulates deductions across all of
+    # them, instead of one bad function hiding the rest.
     long_param_funcs = find_long_function_signatures(content, FUNCTION_PARAM_THRESHOLD)
     cap_params = CAPS.get("too_many_parameters")
-    running_param_deduction = 0
     for line_no, fname, pcount in long_param_funcs:
         excess = pcount - FUNCTION_PARAM_THRESHOLD
-        per_deduction = excess * WEIGHTS["too_many_parameters"]
-        if cap_params is not None and running_param_deduction + per_deduction > cap_params:
-            per_deduction = max(0, cap_params - running_param_deduction)
-            if per_deduction == 0:
-                break
-        running_param_deduction += per_deduction
+        raw_deduction = excess * WEIGHTS["too_many_parameters"]
+        if cap_params is not None and raw_deduction > cap_params:
+            per_deduction = cap_params
+            cap_text = f" (capped at {cap_params})"
+        else:
+            per_deduction = raw_deduction
+            cap_text = ""
         findings.append(Finding(
             rule="too_many_parameters",
             line=line_no,
             reason=(
                 f"function '{fname}' has {pcount} parameters "
-                f"(exceeds {FUNCTION_PARAM_THRESHOLD} by {excess})"
+                f"(exceeds {FUNCTION_PARAM_THRESHOLD} by {excess}){cap_text}"
             ),
             deduction=per_deduction,
         ))
 
-    # high cyclomatic complexity rule (per-function, capped across the file)
+    # high cyclomatic complexity rule: each function's deduction is capped
+    # individually (per-function cap, not per-file).
     high_cyclo_funcs = find_high_complexity_functions(content, CYCLO_THRESHOLD)
     cap_cyclo = CAPS.get("high_cyclomatic_complexity")
-    running_cyclo_deduction = 0
     for line_no, fname, cyclo in high_cyclo_funcs:
         excess = cyclo - CYCLO_THRESHOLD
-        per_deduction = excess * WEIGHTS["high_cyclomatic_complexity"]
-        if cap_cyclo is not None and running_cyclo_deduction + per_deduction > cap_cyclo:
-            per_deduction = max(0, cap_cyclo - running_cyclo_deduction)
-            if per_deduction == 0:
-                break
-        running_cyclo_deduction += per_deduction
+        raw_deduction = excess * WEIGHTS["high_cyclomatic_complexity"]
+        if cap_cyclo is not None and raw_deduction > cap_cyclo:
+            per_deduction = cap_cyclo
+            cap_text = f" (capped at {cap_cyclo})"
+        else:
+            per_deduction = raw_deduction
+            cap_text = ""
         findings.append(Finding(
             rule="high_cyclomatic_complexity",
             line=line_no,
             reason=(
                 f"function '{fname}' has cyclomatic complexity {cyclo} "
-                f"(exceeds {CYCLO_THRESHOLD} by {excess})"
+                f"(exceeds {CYCLO_THRESHOLD} by {excess}){cap_text}"
             ),
             deduction=per_deduction,
         ))
