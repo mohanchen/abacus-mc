@@ -44,7 +44,11 @@ by per-rule severity within each group:
     - #include of .hpp implementation header: -2 per occurrence
       (cap 5) (AGENTS.md §3, §4)
     - each public member variable in a class/struct: -1
-    - `friend` keyword exposing internals: -1 per occurrence (cap 5)
+    - each static member variable in a class/struct: -1 (cap 10)
+      Excludes static_assert, static member functions, and static_cast.
+    - `friend` keyword exposing internals: -1 per occurrence (cap 5).
+      Excludes friend declarations to standard-library types (e.g.
+      `friend class std::hash<T>`, `friend std::ostream& operator<<`).
 
   2. Size, complexity & memory (implementation-level maintainability):
     - function with more than 7 parameters: -1 per extra param
@@ -75,6 +79,7 @@ by per-rule severity within each group:
       cross-layer-dependency rule or another file's class definition).
     - tab indentation: -1 per line (cap 5)
     - `using namespace std;`: -1 per occurrence (cap 5)
+    - `goto` keyword: -2 per occurrence (cap 5)
     - line longer than 120 chars: -1 per line (cap 5)
     - Chinese characters in comments/code: -1 per line (cap 5)
 
@@ -144,6 +149,8 @@ WEIGHTS = {
     "high_cyclomatic_complexity": 1,
     "post_cpp11_feature": 40,
     "post_cpp11_per_feature": 8,
+    "goto_keyword": 2,
+    "static_member_variable": 1,
 }
 
 CAPS = {
@@ -161,6 +168,8 @@ CAPS = {
     "too_many_parameters": 30,
     "high_cyclomatic_complexity": 30,
     "post_cpp11_per_feature": 5,
+    "goto_keyword": 5,
+    "static_member_variable": 10,
 }
 
 FUNCTION_LENGTH_THRESHOLD = 50
@@ -181,9 +190,10 @@ CLASS_OPEN_RE = re.compile(r"\b(class|struct)\s+(\w+)\b")
 
 GLOBAL_DEPENDENCY_RE = re.compile(r"\b(?:GlobalV::|GlobalC::|PARAM(?:\.|->|::))")
 HPP_INCLUDE_RE = re.compile(r'^\s*#\s*include\s+[<"][^>"]+\.hpp[>"]')
-FRIEND_RE = re.compile(r"\bfriend\b")
+FRIEND_RE = re.compile(r"\bfriend\b(?!\s+(?:class\s+|struct\s+)?std::)")
 NEW_EXPR_RE = re.compile(r"\bnew\s+\w")
 DELETE_EXPR_RE = re.compile(r"\bdelete\s*\[\s*\]?\s+\w")
+GOTO_RE = re.compile(r"\bgoto\b")
 
 DEFAULT_PARAM_RE = re.compile(
     r"\b\w+\s*\([^();]*\b\w+\s*=(?![=>])[^();]*\)\s*"
@@ -614,6 +624,28 @@ def is_public_member_var(line: str) -> bool:
     return True
 
 
+def is_static_member_var(line: str) -> bool:
+    """Heuristic: does this stripped code line look like a static member
+    variable declaration inside a class/struct body?
+
+    Targets `static <type> <name>;` and `static <type> <name> = ...;`
+    while excluding static member functions, static_assert, and
+    static_cast (the latter two carry parentheses).
+    """
+    s = line.strip()
+    if not s.endswith(";"):
+        return False
+    if not s.startswith("static "):
+        return False
+    if s.startswith("static_assert"):
+        return False
+    if "(" in s or ")" in s:
+        return False
+    if "{" in s or "}" in s:
+        return False
+    return True
+
+
 def _match_var_decl(stripped_line: str) -> Optional[str]:
     """If line looks like a variable declaration `type name;` or
     `type name = ...;`, return the variable name; else None.
@@ -889,13 +921,17 @@ def find_post_cpp11_features(
     return hits
 
 
-def analyze_class_blocks(content: str) -> Tuple[List[Finding], List[Finding], List[Finding]]:
-    """Analyze class/struct blocks for public member variables, long member
-    functions, and member/local name conflicts.
+def analyze_class_blocks(
+    content: str,
+) -> Tuple[List[Finding], List[Finding], List[Finding], List[Finding]]:
+    """Analyze class/struct blocks for public member variables, static member
+    variables, long member functions, and member/local name conflicts.
 
-    Returns (public_member_findings, long_function_findings, name_conflict_findings).
+    Returns (public_member_findings, static_member_findings,
+              long_function_findings, name_conflict_findings).
     """
     pub_findings: List[Finding] = []
+    static_findings: List[Finding] = []
     long_func_findings: List[Finding] = []
     conflict_findings: List[Finding] = []
 
@@ -949,6 +985,17 @@ def analyze_class_blocks(content: str) -> Tuple[List[Finding], List[Finding], Li
                         deduction=WEIGHTS["public_member_variable"],
                     ))
 
+            # static member variable: depth 1, any access section.
+            # Excludes static_assert, static member functions, and
+            # static_cast via is_static_member_var's heuristic.
+            if prev_depth == 1 and is_static_member_var(line):
+                static_findings.append(Finding(
+                    rule="static_member_variable",
+                    line=abs_line,
+                    reason=f"static member in {kind} {name}: {line.strip()}",
+                    deduction=WEIGHTS["static_member_variable"],
+                ))
+
             # member/local name conflict: only at depth >= 2 (function body)
             if prev_depth >= 2:
                 var_name = _match_var_decl(line)
@@ -987,7 +1034,7 @@ def analyze_class_blocks(content: str) -> Tuple[List[Finding], List[Finding], Li
                     ))
                 func_start_abs = -1
 
-    return pub_findings, long_func_findings, conflict_findings
+    return pub_findings, static_findings, long_func_findings, conflict_findings
 
 
 def analyze_file(path: Path) -> FileReport:
@@ -1074,6 +1121,7 @@ def analyze_file(path: Path) -> FileReport:
     global_dep_count = len(GLOBAL_DEPENDENCY_RE.findall(stripped_content))
     hpp_include_count = sum(1 for l in lines if HPP_INCLUDE_RE.match(l))
     friend_count = len(FRIEND_RE.findall(stripped_content))
+    goto_count = len(GOTO_RE.findall(stripped_content))
 
     # default parameter: scan the full stripped content so multi-line
     # declarations (parameter list spanning multiple lines) are detected;
@@ -1112,6 +1160,7 @@ def analyze_file(path: Path) -> FileReport:
     append_capped("friend_keyword", friend_count)
     append_capped("unpaired_new_delete", unpaired_new)
     append_capped("raw_new_keyword", raw_new_count)
+    append_capped("goto_keyword", goto_count)
 
     # too-many-parameters rule: each function's deduction is capped
     # individually (per-function cap, not per-file). A file with many
@@ -1196,8 +1245,18 @@ def analyze_file(path: Path) -> FileReport:
             ))
 
     # class-based rules
-    pub_findings, long_func_findings, conflict_findings = analyze_class_blocks(content)
+    (
+        pub_findings,
+        static_findings,
+        long_func_findings,
+        conflict_findings,
+    ) = analyze_class_blocks(content)
     findings.extend(pub_findings)
+    # static member findings: cap per file
+    if len(static_findings) > CAPS.get("static_member_variable", len(static_findings)):
+        cap_static = CAPS["static_member_variable"]
+        static_findings = static_findings[:cap_static]
+    findings.extend(static_findings)
     findings.extend(long_func_findings)
     # name conflict findings already respect cap via per-file cap on the rule
     if len(conflict_findings) > CAPS.get("member_local_name_conflict", len(conflict_findings)):
