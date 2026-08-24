@@ -825,7 +825,7 @@ void SpinConstrain<TK>::print_Mi(std::ofstream& ofs_running)
  * @par Typical values
  * - Well-converged SCF: lambda ~ 0.01-1 eV/uB
  * - Strongly constrained: lambda ~ 1-10 eV/uB
- * - Diverging SCF: lambda growing without bound (check target_mag合理性)
+ * - Diverging SCF: lambda growing without bound (check target_mag validity)
  */
 template <typename TK>
 void SpinConstrain<TK>::print_Mag_Force(std::ofstream& ofs_running)
