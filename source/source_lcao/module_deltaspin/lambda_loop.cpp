@@ -7,8 +7,9 @@
 #include <iomanip>
 
 #include "basic_funcs.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_base/constants.h"
+#include "source_base/global_variable.h"
+#include "source_io/module_parameter/parameter.h"
 
 /**
  * @file lambda_loop.cpp
@@ -186,6 +187,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
 #endif
                 inner_loop_duration += duration;
                 std::cout << "Total TIME(s) = " << inner_loop_duration << std::endl;
+                GlobalV::ofs_running << "Total TIME(s) = " << inner_loop_duration << std::endl;
                 this->print_termination();
                 break;
             }
@@ -281,12 +283,14 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
                 mean_error = sum_2d(temp_1) / nat;
                 rms_error = std::sqrt(mean_error);
                 std::cout<<"Current RMS: "<<rms_error<<std::endl;
+                GlobalV::ofs_running<<"Current RMS: "<<rms_error<<std::endl;
 
                 // If RMS is still large after full update, recursively rerun
                 // with higher precision (full PW solver instead of subspace only)
                 if(rms_error > this->current_sc_thr_ * 10 && rerun == true && this->higher_mag_prec == true)
                 {
                     std::cout<<"Error: RMS error is too large, rerun the loop"<<std::endl;
+                    GlobalV::ofs_running<<"Error: RMS error is too large, rerun the loop"<<std::endl;
                     this->run_lambda_loop(outer_step, false);
                 }
             }
