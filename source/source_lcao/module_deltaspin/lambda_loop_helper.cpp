@@ -69,17 +69,23 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_rms_stop(int oute
 {
     std::cout << "Step (Outer -- Inner) =  " << outer_step << " -- " << std::left << std::setw(5) << i_step + 1
               << "       RMS = " << rms_error << "     TIME(s) = " << std::setw(11) << duration << std::endl;
+    GlobalV::ofs_running << "Step (Outer -- Inner) =  " << outer_step << " -- " << std::left << std::setw(5) << i_step + 1
+                         << "       RMS = " << rms_error << "     TIME(s) = " << std::setw(11) << duration << std::endl;
     if (rms_error < this->current_sc_thr_ || i_step == this->nsc_ - 1)
     {
         if (rms_error < this->current_sc_thr_)
         {
             std::cout << "Meet convergence criterion ( < " << this->current_sc_thr_ << " ), exit.";
+            GlobalV::ofs_running << "Meet convergence criterion ( < " << this->current_sc_thr_ << " ), exit.";
             std::cout << "       Total TIME(s) = " << total_duration << std::endl;
+            GlobalV::ofs_running << "       Total TIME(s) = " << total_duration << std::endl;
         }
         else if (i_step == this->nsc_ - 1)
         {
             std::cout << "Reach maximum number of steps ( " << this->nsc_ << " ), exit.";
+            GlobalV::ofs_running << "Reach maximum number of steps ( " << this->nsc_ << " ), exit.";
             std::cout << "              Total TIME(s) = " << total_duration << std::endl;
+            GlobalV::ofs_running << "              Total TIME(s) = " << total_duration << std::endl;
         }
         this->print_termination();
         return true;
