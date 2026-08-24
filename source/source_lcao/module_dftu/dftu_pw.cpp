@@ -18,14 +18,14 @@
 /// nspin=4 (npol=2): spinor calculation;
 ///   locale has a single matrix of size (2*tlp1) x (2*tlp1) per atom
 ///   storing all 4 Pauli blocks contiguously.
-void Plus_U::cal_occ_pw(const int iter, 
-		const void* psi_in, 
-		const ModuleBase::matrix& wg_in, 
-		const UnitCell& cell, 
-		Charge_Mixing* p_chgmix,
-		const int* isk)
+void Plus_U_Base::cal_occ_pw(const int iter,
+            const void* psi_in,
+            const ModuleBase::matrix& wg_in,
+            const UnitCell& cell,
+            Charge_Mixing* p_chgmix,
+            const int* isk)
 {
-    ModuleBase::timer::start("Plus_U", "cal_occ_pw");
+    ModuleBase::timer::start("Plus_U_Base", "cal_occ_pw");
     this->copy_locale(cell);
     this->zero_locale(cell);
 
@@ -37,7 +37,7 @@ void Plus_U::cal_occ_pw(const int iter,
         const int npol = psi_p->get_npol();
         for(int ik = 0; ik < psi_p->get_nk(); ik++)
         {
-            int is = (Plus_U::nspin == 2) ? isk[ik] : 0;
+            int is = (Plus_U_Base::nspin == 2) ? isk[ik] : 0;
             psi_p->fix_k(ik);
             onsite_p->tabulate_atomic(ik);
 
@@ -59,7 +59,7 @@ void Plus_U::cal_occ_pw(const int iter,
                 const int m_begin = target_l * target_l;
                 const int tlp1 = 2 * target_l + 1;
                 const int tlp1_2 = tlp1 * tlp1;
-                if(Plus_U::nspin == 4)
+                if(Plus_U_Base::nspin == 4)
                 {
                     for(int ib = 0;ib<nbands;ib++)
                     {
@@ -117,7 +117,7 @@ void Plus_U::cal_occ_pw(const int iter,
         const int npol = psi_p->get_npol();
         for(int ik = 0; ik < psi_p->get_nk(); ik++)
         {
-            int is = (Plus_U::nspin == 2) ? isk[ik] : 0;
+            int is = (Plus_U_Base::nspin == 2) ? isk[ik] : 0;
             psi_p->fix_k(ik);
             onsite_p->tabulate_atomic(ik);
 
@@ -138,7 +138,7 @@ void Plus_U::cal_occ_pw(const int iter,
                 const int m_begin = target_l * target_l;
                 const int tlp1 = 2 * target_l + 1;
                 const int tlp1_2 = tlp1 * tlp1;
-                if(Plus_U::nspin == 4)
+                if(Plus_U_Base::nspin == 4)
                 {
                     for(int ib = 0;ib<nbands;ib++)
                     {
@@ -199,25 +199,25 @@ void Plus_U::cal_occ_pw(const int iter,
         }
         const int size = (2 * target_l + 1) * (2 * target_l + 1);
 
-        if(Plus_U::nspin != 4)
+        if(Plus_U_Base::nspin != 4)
         {
-            Parallel_Reduce::reduce_double_allpool(this->kpar, 
-                    GlobalV::NPROC_IN_POOL, 
-                    this->locale[iat][target_l][0][0].c, 
+            Parallel_Reduce::reduce_double_allpool(this->kpar,
+                    GlobalV::NPROC_IN_POOL,
+                    this->locale[iat][target_l][0][0].c,
                     size);
-            if(Plus_U::nspin == 2)
+            if(Plus_U_Base::nspin == 2)
             {
-                Parallel_Reduce::reduce_double_allpool(this->kpar, 
-                        GlobalV::NPROC_IN_POOL, 
-                        this->locale[iat][target_l][0][1].c, 
+                Parallel_Reduce::reduce_double_allpool(this->kpar,
+                        GlobalV::NPROC_IN_POOL,
+                        this->locale[iat][target_l][0][1].c,
                         size);
             }
         }
         else
         {
-            Parallel_Reduce::reduce_double_allpool(this->kpar, 
-                    GlobalV::NPROC_IN_POOL, 
-                    this->locale[iat][target_l][0][0].c, 
+            Parallel_Reduce::reduce_double_allpool(this->kpar,
+                    GlobalV::NPROC_IN_POOL,
+                    this->locale[iat][target_l][0][0].c,
                     size * 4);
         }
 
@@ -228,7 +228,7 @@ void Plus_U::cal_occ_pw(const int iter,
             {
                 this->uom_array[eff_pot_pw_index[iat]+mm] = this->locale[iat][target_l][0][0].c[mm];
             }
-            if(Plus_U::nspin == 2)
+            if(Plus_U_Base::nspin == 2)
             {
                 const int half_size = this->uom_array.size() / 2;
                 for(int mm=0;mm<size;mm++)
@@ -246,9 +246,9 @@ void Plus_U::cal_occ_pw(const int iter,
         this->set_locale(cell);
     }
 
-    Plus_U::energy_u = 0.0;
-    const double weight_eu = (Plus_U::nspin == 1) ? 1.0 : (Plus_U::nspin == 2) ? 0.5 : 0.25;
-    const double diag_coeff = (Plus_U::nspin == 4) ? 1.0 : 0.5;
+    Plus_U_Base::energy_u = 0.0;
+    const double weight_eu = (Plus_U_Base::nspin == 1) ? 1.0 : (Plus_U_Base::nspin == 2) ? 0.5 : 0.25;
+    const double diag_coeff = (Plus_U_Base::nspin == 4) ? 1.0 : 0.5;
     // calculate VU and energy (locale already reduced above)
     for(int iat = 0; iat < cell.nat; iat++)
     {
@@ -265,15 +265,15 @@ void Plus_U::cal_occ_pw(const int iter,
         std::complex<double>* vu_iat = &(this->eff_pot_pw[this->eff_pot_pw_index[iat]]);
         const int m_size = 2 * target_l + 1;
 
-        if(Plus_U::nspin == 4)
+        if(Plus_U_Base::nspin == 4)
         {
             for (int m1 = 0; m1 < m_size; m1++)
             {
                 for (int m2 = 0; m2 < m_size; m2++)
                 {
-                    vu_iat[m1 * m_size + m2] = u_value * 
+                    vu_iat[m1 * m_size + m2] = u_value *
                       (diag_coeff * (m1 == m2) - this->locale[iat][target_l][0][0].c[m2 * m_size + m1]);
-                    Plus_U::energy_u += u_value * weight_eu * this->locale[iat][target_l][0][0].c[m2 * m_size + m1] 
+                    Plus_U_Base::energy_u += u_value * weight_eu * this->locale[iat][target_l][0][0].c[m2 * m_size + m1]
                              * this->locale[iat][target_l][0][0].c[m1 * m_size + m2];
                 }
             }
@@ -284,15 +284,15 @@ void Plus_U::cal_occ_pw(const int iter,
                 {
                     for (int m2 = 0; m2 < m_size; m2++)
                     {
-                        vu_iat[start + m1 * m_size + m2] = u_value * 
+                        vu_iat[start + m1 * m_size + m2] = u_value *
                           (0 - this->locale[iat][target_l][0][0].c[start + m2 * m_size + m1]);
-                        Plus_U::energy_u += u_value * weight_eu 
-                                 * this->locale[iat][target_l][0][0].c[start + m2 * m_size + m1] 
+                        Plus_U_Base::energy_u += u_value * weight_eu
+                                 * this->locale[iat][target_l][0][0].c[start + m2 * m_size + m1]
                                  * this->locale[iat][target_l][0][0].c[start + m1 * m_size + m2];
                     }
                 }
             }
-            // transfer from Pauli matrix representation to spin representation 
+            // transfer from Pauli matrix representation to spin representation
             for (int m1 = 0; m1 < m_size; m1++)
             {
                 for (int m2 = 0; m2 < m_size; m2++)
@@ -321,23 +321,23 @@ void Plus_U::cal_occ_pw(const int iter,
             {
                 for (int m2 = 0; m2 < m_size; m2++)
                 {
-                    vu_iat[m1 * m_size + m2] = u_value * 
+                    vu_iat[m1 * m_size + m2] = u_value *
                       (diag_coeff * (m1 == m2) - this->locale[iat][target_l][0][0].c[m2 * m_size + m1]);
-                    Plus_U::energy_u += u_value * weight_eu * this->locale[iat][target_l][0][0].c[m2 * m_size + m1] 
+                    Plus_U_Base::energy_u += u_value * weight_eu * this->locale[iat][target_l][0][0].c[m2 * m_size + m1]
                              * this->locale[iat][target_l][0][0].c[m1 * m_size + m2];
                 }
             }
             // spin-down channel for nspin=2
-            if(Plus_U::nspin == 2)
+            if(Plus_U_Base::nspin == 2)
             {
                 std::complex<double>* vu_iat1 = &(this->eff_pot_pw[this->eff_pot_pw.size()/2 + this->eff_pot_pw_index[iat]]);
                 for (int m1 = 0; m1 < m_size; m1++)
                 {
                     for (int m2 = 0; m2 < m_size; m2++)
                     {
-                        vu_iat1[m1 * m_size + m2] = u_value * 
+                        vu_iat1[m1 * m_size + m2] = u_value *
                           (diag_coeff * (m1 == m2) - this->locale[iat][target_l][0][1].c[m2 * m_size + m1]);
-                        Plus_U::energy_u += u_value * weight_eu * this->locale[iat][target_l][0][1].c[m2 * m_size + m1] 
+                        Plus_U_Base::energy_u += u_value * weight_eu * this->locale[iat][target_l][0][1].c[m2 * m_size + m1]
                                  * this->locale[iat][target_l][0][1].c[m1 * m_size + m2];
                     }
                 }
@@ -345,6 +345,5 @@ void Plus_U::cal_occ_pw(const int iter,
         }
     }
 
-    ModuleBase::timer::end("Plus_U", "cal_occ_pw");
+    ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
 }
-

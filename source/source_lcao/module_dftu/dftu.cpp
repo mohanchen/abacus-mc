@@ -21,22 +21,8 @@
 #include <vector>
 
  // mohan add 2025-11-06
-double Plus_U::energy_u = 0.0;
-
-std::vector<double> Plus_U::U = {}; // U (Hubbard parameter U)
-
-std::vector<double> Plus_U::U0 = {}; // U0 (target Hubbard parameter U0)
-
-std::vector<int> Plus_U::orbital_corr = {}; //
-
-double Plus_U::uramping = 0.0; // increase U by uramping, default is -1.0
-
-int Plus_U::omc=0; // occupation matrix control
-
-int Plus_U::mixing_dftu=0; //whether to mix locale
-int Plus_U::nspin=0;
-
-bool Plus_U::Yukawa=false; // whether to use Yukawa potential
+// Static member definitions moved to dftu_base.cpp (Plus_U_Base::)
+// Plus_U inherits these from Plus_U_Base.
 
 Plus_U::Plus_U()
 {}
@@ -465,45 +451,8 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
 
 #endif
 
-void Plus_U::uramping_update()
-{
-    // Yukawa calculates U directly every iteration, no need for ramping
-    if (Yukawa) {
-        return;
-    }
-    // if uramping < 0.1, use the original U
-    if (this->uramping < 0.01) {
-        return;
-}
-    // loop to change U
-    for (int i = 0; i < this->U0.size(); i++)
-    {
-        if (this->U[i] + this->uramping < this->U0[i])
-        {
-            this->U[i] += this->uramping;
-        }
-        else
-        {
-            this->U[i] = this->U0[i];
-        }
-    }
-}
-
-bool Plus_U::u_converged()
-{
-    // Yukawa calculates U directly every iteration, always considered converged
-    if (Yukawa) {
-        return true;
-    }
-    for (int i = 0; i < this->U0.size(); i++)
-    {
-        if (this->U[i] != this->U0[i])
-        {
-            return false;
-        }
-    }
-    return true;
-}
+// uramping_update() and u_converged() are now implemented in
+// dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
 
 #ifdef __LCAO
 

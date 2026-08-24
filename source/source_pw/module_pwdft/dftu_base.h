@@ -59,7 +59,7 @@ class Plus_U_Base
     static void set_energy(const double &e) { energy_u = e; }
     static void set_double_energy() { energy_u *= 2.0; }
 
-  private:
+  protected:
     static double energy_u;
 
   protected:
@@ -140,7 +140,7 @@ class Plus_U_Base
     static bool is_mixing_enabled() { return mixing_dftu != 0; }
     static void enable_mixing() { mixing_dftu = 1; }
 
-  private:
+  protected:
     void copy_locale(const UnitCell& ucell);
     void zero_locale(const UnitCell& ucell);
     void mix_locale(const UnitCell& ucell, const double& mixing_beta);
@@ -197,7 +197,7 @@ class Plus_U_Base
                 int nspin,
                 int npol);
 
-  private:
+  protected:
     void write_occup_m(const UnitCell& ucell,
                        std::ofstream& ofs,
                        bool diag,
