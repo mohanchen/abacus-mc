@@ -55,6 +55,10 @@ class Plus_U_Base
     static bool has_correlated_orbital(int it) { return orbital_corr[it] != -1; }
     static const int* get_orbital_corr_data() { return orbital_corr.data(); }
 
+    // mohan add 2025-11-08 for dftu_io::output free function
+    double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
+    double get_J_Yukawa(int it, int l, int n) const { return J_Yukawa[it][l][n]; }
+
     static double get_energy() { return energy_u; }
     static void set_energy(const double &e) { energy_u = e; }
     static void set_double_energy() { energy_u *= 2.0; }
@@ -187,22 +191,12 @@ class Plus_U_Base
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> locale_save;
 
     //=============================================================
-    // In dftu_io.cpp
-    // For reading/writing/broadcasting/copying relevant data structures
+    // output() and write_occup_m() have been extracted to free functions
+    // in source_pw/module_pwdft/dftu_output.cpp as dftu_io::output and
+    // dftu_io::write_occup_m. They access Plus_U_Base via public getters.
+    // mohan refactored 2025-11-08
     //=============================================================
-  public:
-    void output(const UnitCell& ucell,
-                bool out_chg,
-                const std::string& global_out_dir,
-                int nspin,
-                int npol);
-
   protected:
-    void write_occup_m(const UnitCell& ucell,
-                       std::ofstream& ofs,
-                       bool diag,
-                       int nspin,
-                       int npol);
     void read_occup_m(const UnitCell& ucell,
                       const std::string& fn,
                       const std::string& init_chg,
