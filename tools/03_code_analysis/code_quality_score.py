@@ -376,11 +376,37 @@ def discover_files(paths: Sequence[str]) -> List[Path]:
     return result
 
 
+def _is_digit_separator(content: str, quote_pos: int) -> bool:
+    """Return True if the single-quote at `quote_pos` is a C++14 digit
+    separator (e.g. the middle `'` in `1'000'000`).
+
+    Heuristic: a digit separator must be preceded and followed by a
+    character that can belong to a numeric literal — digits,
+    hexadecimal letters (a–f, A–F) for hex literals, or the base/type
+    suffix letters (uUlLbB) that typically attach to numbers after the
+    body. Floating-point '.' can also appear on either side (e.g.
+    `1'000.5` or `1.000'5`). Any other previous/next char means the
+    quote starts a character literal.
+    """
+    n = len(content)
+    if quote_pos <= 0 or quote_pos >= n - 1:
+        return False
+    prev = content[quote_pos - 1]
+    nxt = content[quote_pos + 1]
+    numeric_chars = set("0123456789abcdefABCDEFuUlLbBxXoO.")
+    return prev in numeric_chars and nxt in numeric_chars
+
+
 def strip_comments(content: str) -> str:
     """Return content with comments replaced by spaces, preserving line numbers.
 
     Handles // line comments and /* */ block comments. String literals are
     respected so that '/' inside strings is not mistaken for a comment.
+
+    C++14 digit separators such as `1'000'000` are NOT treated as character
+    literals: the parser inspects the characters on both sides of a `'` and
+    only enters character-literal mode when the quote is genuinely opening
+    a char literal like `'x'` or `'\\n'`.
     """
     out = []
     i = 0
@@ -415,6 +441,10 @@ def strip_comments(content: str) -> str:
             i += 1
             continue
         if c == "'":
+            if _is_digit_separator(content, i):
+                out.append(c)
+                i += 1
+                continue
             in_char = True
             out.append(c)
             i += 1
@@ -452,6 +482,11 @@ def strip_strings(content: str) -> str:
     The result still has the same number of characters and lines, but no
     letter/word survives inside "..." or '...'. This prevents false matches
     on keywords that happen to appear inside string literals.
+
+    C++14 digit separators such as `1'000'000` are left alone: the parser
+    inspects the characters on both sides of a `'` and only enters
+    character-literal mode when the quote genuinely opens a char literal
+    like `'x'` or `'\\n'`.
     """
     out = []
     i = 0
@@ -507,6 +542,10 @@ def strip_strings(content: str) -> str:
             i += 1
             continue
         if c == "'":
+            if _is_digit_separator(content, i):
+                out.append(c)
+                i += 1
+                continue
             in_char = True
             out.append("'")
             i += 1
