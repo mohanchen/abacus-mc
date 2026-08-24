@@ -338,15 +338,20 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_gradient_decay(
     {
         print_2d("diagonal gradient: ", spin_nu_gradient_diag, this->nspin_);
         std::cout << "maximum gradient appears at: " << std::endl;
+        GlobalV::ofs_running << "maximum gradient appears at: " << std::endl;
         for (int it = 0; it < ntype; it++)
         {
             std::cout << "( " << max_gradient_index[it].first << ", " << max_gradient_index[it].second << " )"
                       << std::endl;
+            GlobalV::ofs_running << "( " << max_gradient_index[it].first << ", " << max_gradient_index[it].second << " )"
+                                 << std::endl;
         }
         std::cout << "maximum gradient: " << std::endl;
+        GlobalV::ofs_running << "maximum gradient: " << std::endl;
         for (int it = 0; it < ntype; it++)
         {
             std::cout << max_gradient[it]/ModuleBase::Ry_to_eV << std::endl;
+            GlobalV::ofs_running << max_gradient[it]/ModuleBase::Ry_to_eV << std::endl;
         }
     }
 
@@ -357,6 +362,8 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_gradient_decay(
         {
             std::cout << "Reach limitation of current step ( maximum gradient < " << this->decay_grad_[it]/ModuleBase::Ry_to_eV // uB^2/Ry to uB^2/eV
                       << " in atom type " << it << " ), exit." << std::endl;
+            GlobalV::ofs_running << "Reach limitation of current step ( maximum gradient < " << this->decay_grad_[it]/ModuleBase::Ry_to_eV
+                                 << " in atom type " << it << " ), exit." << std::endl;
             return true;
         }
     }
