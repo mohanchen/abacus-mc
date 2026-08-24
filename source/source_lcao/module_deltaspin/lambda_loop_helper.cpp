@@ -1,4 +1,5 @@
 #include "basic_funcs.h"
+#include "source_base/global_variable.h"
 #include "spin_constrain.h"
 
 /**
@@ -89,8 +90,11 @@ template <>
 void spinconstrain::SpinConstrain<std::complex<double>>::print_header()
 {
     std::cout << "===============================================================================" << std::endl;
+    GlobalV::ofs_running << "===============================================================================" << std::endl;
     std::cout << "Inner optimization for lambda begins ..." << std::endl;
+    GlobalV::ofs_running << "Inner optimization for lambda begins ..." << std::endl;
     std::cout << "Covergence criterion for the iteration: " << this->sc_thr_ << std::endl;
+    GlobalV::ofs_running << "Covergence criterion for the iteration: " << this->sc_thr_ << std::endl;
 }
 
 /**
