@@ -358,7 +358,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
                     // TODO: UNSAFE - current_spin must be correct for nspin=2.
                     // If current_spin is not toggled properly, wrong spin channel's locale is read.
                     // This can happen if contributeHR() is called out of expected order.
-                    occ[i] = this->dftu->get_locale(iat0, target_L, 0, this->current_spin,
+                    occ[i] = this->dftu->get_occ_mat(iat0, target_L, 0, this->current_spin,
                                                       i / (2 * target_L + 1), i % (2 * target_L + 1));
                 }
             }

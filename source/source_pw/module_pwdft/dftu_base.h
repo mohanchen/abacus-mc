@@ -163,14 +163,14 @@ class Plus_U_Base
 
   public:
     /// get occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
-    double get_locale(const int iat, const int l, const int n, const int spin,
+    double get_occ_mat(const int iat, const int l, const int n, const int spin,
                      const int m1, const int m2) const
     {
         return occ_mat[iat][l][n][spin](m1, m2);
     }
 
     /// set occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
-    void set_locale(const int iat, const int l, const int n, const int spin,
+    void set_occ_mat(const int iat, const int l, const int n, const int spin,
                    const int m1, const int m2, const double val)
     {
         occ_mat[iat][l][n][spin](m1, m2) = val;
