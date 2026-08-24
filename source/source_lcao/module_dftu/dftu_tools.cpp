@@ -163,17 +163,17 @@ double Plus_U::get_onebody_eff_pot(const int T,
                 if (m0 == m1) 
                 {
                     VU = (this->U_Yukawa[T][L][N] - this->J_Yukawa[T][L][N])
-                         * (0.5 - this->locale[iat][L][N][spin](m0, m1));
+                         * (0.5 - this->occ_mat[iat][L][N][spin](m0, m1));
                 } else {
-                    VU = -(this->U_Yukawa[T][L][N] - this->J_Yukawa[T][L][N]) * this->locale[iat][L][N][spin](m0, m1);
+                    VU = -(this->U_Yukawa[T][L][N] - this->J_Yukawa[T][L][N]) * this->occ_mat[iat][L][N][spin](m0, m1);
                 }
             }
             else
             {
                 if (m0 == m1) {
-                    VU = (this->U[T]) * (0.5 - this->locale[iat][L][N][spin](m0, m1));
+                    VU = (this->U[T]) * (0.5 - this->occ_mat[iat][L][N][spin](m0, m1));
                 } else {
-                    VU = -(this->U[T]) * this->locale[iat][L][N][spin](m0, m1);
+                    VU = -(this->U[T]) * this->occ_mat[iat][L][N][spin](m0, m1);
                 }
             }
         }
@@ -183,18 +183,18 @@ double Plus_U::get_onebody_eff_pot(const int T,
             {
                 if (m0 == m1) {
                     VU = (this->U_Yukawa[T][L][N] - this->J_Yukawa[T][L][N])
-                         * (0.5 - this->locale_save[iat][L][N][spin](m0, m1));
+                         * (0.5 - this->occ_mat_save[iat][L][N][spin](m0, m1));
                 } else {
                     VU = -(this->U_Yukawa[T][L][N] - this->J_Yukawa[T][L][N])
-                         * this->locale_save[iat][L][N][spin](m0, m1);
+                         * this->occ_mat_save[iat][L][N][spin](m0, m1);
                 }
             }
             else
             {
                 if (m0 == m1) {
-                    VU = (this->U[T]) * (0.5 - this->locale_save[iat][L][N][spin](m0, m1));
+                    VU = (this->U[T]) * (0.5 - this->occ_mat_save[iat][L][N][spin](m0, m1));
                 } else {
-                    VU = -(this->U[T]) * this->locale_save[iat][L][N][spin](m0, m1);
+                    VU = -(this->U[T]) * this->occ_mat_save[iat][L][N][spin](m0, m1);
                 }
             }
         }

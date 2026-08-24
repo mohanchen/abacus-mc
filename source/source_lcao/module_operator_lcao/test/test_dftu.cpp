@@ -85,16 +85,16 @@ class DFTUTest : public ::testing::Test
         tmp_DMR = DMR;
 
         // setting of DFTU
-        dftu.locale.resize(test_size);
+        dftu.occ_mat.resize(test_size);
         for (int iat = 0; iat < test_size; iat++)
         {
-            dftu.locale[iat].resize(3);
+            dftu.occ_mat[iat].resize(3);
             for (int l = 0; l < 3; l++)
             {
-                dftu.locale[iat][l].resize(1);
-                dftu.locale[iat][l][0].resize(2);
-                dftu.locale[iat][l][0][0].create(2 * l + 1, 2 * l + 1);
-                dftu.locale[iat][l][0][1].create(2 * l + 1, 2 * l + 1);
+                dftu.occ_mat[iat][l].resize(1);
+                dftu.occ_mat[iat][l][0].resize(2);
+                dftu.occ_mat[iat][l][0][0].create(2 * l + 1, 2 * l + 1);
+                dftu.occ_mat[iat][l][0][1].create(2 * l + 1, 2 * l + 1);
             }
         }
         Plus_U::U = {U_test};
@@ -172,7 +172,7 @@ TEST_F(DFTUTest, constructHRd2d)
     {
         for (int icc = 0; icc < 25; icc++)
         {
-            EXPECT_NEAR(dftu.locale[iat][2][0][0].c[icc], 0.5, 1e-10);
+            EXPECT_NEAR(dftu.occ_mat[iat][2][0][0].c[icc], 0.5, 1e-10);
         }
     }
     // check the value of HR
@@ -230,7 +230,7 @@ TEST_F(DFTUTest, constructHRd2cd)
     {
         for (int icc = 0; icc < 25; icc++)
         {
-            EXPECT_NEAR(dftu.locale[iat][2][0][0].c[icc], 0.5, 1e-10);
+            EXPECT_NEAR(dftu.occ_mat[iat][2][0][0].c[icc], 0.5, 1e-10);
         }
     }
     // check the value of HR
@@ -263,7 +263,7 @@ TEST_F(DFTUTest, constructHRd2cd)
     {
         for (int icc = 0; icc < 25; icc++)
         {
-            EXPECT_NEAR(dftu.locale[iat][2][0][1].c[icc], 0.5, 1e-10);
+            EXPECT_NEAR(dftu.occ_mat[iat][2][0][1].c[icc], 0.5, 1e-10);
         }
     }
 }

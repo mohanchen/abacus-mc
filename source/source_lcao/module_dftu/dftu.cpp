@@ -158,11 +158,11 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
 
                             for (int m0 = 0; m0 < 2 * l + 1; m0++)
                             {
-                                nm_trace += this->locale[iat][l][n][spin](m0, m0);
+                                nm_trace += this->occ_mat[iat][l][n][spin](m0, m0);
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
-                                    nm2_trace += this->locale[iat][l][n][spin](m0, m1)
-                                                 * this->locale[iat][l][n][spin](m1, m0);
+                                    nm2_trace += this->occ_mat[iat][l][n][spin](m0, m1)
+                                                 * this->occ_mat[iat][l][n][spin](m1, m0);
                                 }
                             }
                             if (Yukawa)
@@ -186,7 +186,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                             for (int ipol0 = 0; ipol0 < this->npol; ipol0++)
                             {
                                 const int m0_all = m0 + (2 * l + 1) * ipol0;
-                                nm_trace += this->locale[iat][l][n][0](m0_all, m0_all);
+                                nm_trace += this->occ_mat[iat][l][n][0](m0_all, m0_all);
 
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
@@ -194,8 +194,8 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                     {
                                         int m1_all = m1 + (2 * l + 1) * ipol1;
 
-                                        nm2_trace += this->locale[iat][l][n][0](m0_all, m1_all)
-                                                     * this->locale[iat][l][n][0](m1_all, m0_all);
+                                        nm2_trace += this->occ_mat[iat][l][n][0](m0_all, m1_all)
+                                                     * this->occ_mat[iat][l][n][0](m1_all, m0_all);
                                     }
                                 }
                             }
@@ -228,14 +228,14 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                         {
                                             double VU = 0.0;
                                             VU = get_onebody_eff_pot(T, iat, l, n, is, m1_all, m2_all, false);
-                                            energy_dc += VU * this->locale[iat][l][n][is](m1_all, m2_all);
+                                            energy_dc += VU * this->occ_mat[iat][l][n][is](m1_all, m2_all);
                                         }
                                     }
                                     else if (Plus_U::nspin == 4)
                                     {
                                         double VU = 0.0;
                                         VU = get_onebody_eff_pot(T, iat, l, n, 0, m1_all, m2_all, false);
-                                        energy_dc += VU * this->locale[iat][l][n][0](m1_all, m2_all);
+                                        energy_dc += VU * this->occ_mat[iat][l][n][0](m1_all, m2_all);
                                     }
                                 }
                             }

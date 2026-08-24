@@ -162,24 +162,24 @@ class Plus_U_Base
     std::vector<std::vector<std::vector<double>>> J_Yukawa;
 
   public:
-    /// get occupation matrix element locale[iat][l][n][spin](m1,m2)
+    /// get occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
     double get_locale(const int iat, const int l, const int n, const int spin,
                      const int m1, const int m2) const
     {
-        return locale[iat][l][n][spin](m1, m2);
+        return occ_mat[iat][l][n][spin](m1, m2);
     }
 
-    /// set occupation matrix element locale[iat][l][n][spin](m1,m2)
+    /// set occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
     void set_locale(const int iat, const int l, const int n, const int spin,
                    const int m1, const int m2, const double val)
     {
-        locale[iat][l][n][spin](m1, m2) = val;
+        occ_mat[iat][l][n][spin](m1, m2) = val;
     }
 
     /// get flat occupation matrix for an atom's correlated orbital.
-    /// nspin=1: fills occ with locale[iat][l][0][0] data
-    /// nspin=2: fills occ with interleaved locale[iat][l][0][0] and [1] data
-    /// nspin=4: fills occ with locale[iat][l][0][0] data (all 4 Pauli blocks)
+    /// nspin=1: fills occ with occ_mat[iat][l][0][0] data
+    /// nspin=2: fills occ with interleaved occ_mat[iat][l][0][0] and [1] data
+    /// nspin=4: fills occ with occ_mat[iat][l][0][0] data (all 4 Pauli blocks)
     void get_locale_flat(const int iat, const int l, std::vector<double>& occ) const;
 
     /// set flat occupation matrix for an atom's correlated orbital (write-back)
@@ -187,8 +187,8 @@ class Plus_U_Base
                         const std::vector<double>& occ);
 
     // local occupancy matrix of the correlated subspace
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> locale;
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> locale_save;
+    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat;
+    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat_save;
 
     //=============================================================
     // output() and write_occup_m() have been extracted to free functions
