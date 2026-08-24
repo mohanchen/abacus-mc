@@ -681,6 +681,102 @@ def _match_var_decl(stripped_line: str) -> Optional[str]:
     return m.group(1) if m else None
 
 
+def _skip_trailing_return_type(s: str, start: int) -> int:
+    """Advance past `-> ReturnType` starting at position `start`.
+
+    `start` must point at the `-` in `->`. Scans over the return type by
+    tracking bracket nesting; stops and returns the position of the first
+    post-type character. Recognises two stop conditions at depth 0:
+
+      (a) current char is a direct terminator (`;`, `{`, `=`) or a
+          qualifier keyword starts here — stop on the spot so the caller
+          consumes it on the next loop iteration.
+      (b) current char is whitespace followed by a terminator or qualifier
+          keyword — stop at the whitespace position so the caller's own
+          whitespace-skip advances past it cleanly.
+
+    `:` is NOT a terminator because qualified return types like
+    `std::vector<int>` contain `::` scope-resolution colons, and in any
+    case a trailing-return-type function cannot also be a constructor
+    (which is the only case that introduces a member initializer list).
+
+    Caller re-runs qualifier / suffix scanning after this helper returns.
+    """
+    i = start + 2  # skip past `->`
+    n = len(s)
+    # skip whitespace between `->` and the type
+    while i < n and s[i] in " \t\n":
+        i += 1
+    depth = 0
+    while i < n:
+        c = s[i]
+        if c in "([{<":
+            depth += 1
+        elif c in ")]}>":
+            depth = max(0, depth - 1)
+        if depth == 0:
+            # (a) terminator/qualifier attached directly to the type, e.g. `int;`
+            if c in ";{=":
+                break
+            if QUALIFIER_RE.match(s, i):
+                break
+            # (b) terminator/qualifier after whitespace, e.g. `int const` / `int ;`
+            if c in " \t\n":
+                next_word_start = i + 1
+                while next_word_start < n and s[next_word_start] in " \t\n":
+                    next_word_start += 1
+                if next_word_start >= n:
+                    break
+                nc = s[next_word_start]
+                if nc in ";{=":
+                    break
+                if QUALIFIER_RE.match(s, next_word_start):
+                    break
+        i += 1
+    return i
+
+
+def _skip_member_initializer_list(s: str, start: int) -> int:
+    """Advance past `: member(args), member{args}, ...` constructor initializer
+    list starting at position `start`.
+
+    `start` must point at the `:` that introduces the list (and be preceded by
+    `)` — caller ensures this is not a `::` scope-resolution colon). Scans
+    commas between members while respecting nesting; returns the position of
+    the opening `{` (or `;`, `=`, or end-of-string if body-less).
+
+    Heuristic: at depth 0, `{` can either open a brace-initializer for a
+    member (e.g. `a{1,2}`) or open the function body itself. The function
+    body `{` is distinguished by looking at the previous non-whitespace
+    character: if it is `)` or `}` (a previous initializer ended normally)
+    or `,` / `:` (list-level punctuation), then `{` belongs to the function
+    body and scanning stops. Otherwise the `{` is consumed as a member
+    brace-initializer (depth increases normally).
+    """
+    i = start + 1  # skip past `:`
+    n = len(s)
+    depth = 0
+    while i < n:
+        c = s[i]
+        # Decide `{` at depth 0 before bumping depth.
+        if depth == 0 and c == "{":
+            prev = i - 1
+            while prev >= 0 and s[prev] in " \t\n":
+                prev -= 1
+            prev_c = s[prev] if prev >= 0 else ""
+            # `{` after full initializer / separator = function body opener
+            if prev_c in ")}:,":
+                break
+        if c in "([{<":
+            depth += 1
+        elif c in ")]}>":
+            depth = max(0, depth - 1)
+        if depth == 0 and c in ";=":
+            break
+        i += 1
+    return i
+
+
 def count_function_params(params_str: str) -> int:
     """Count top-level parameters by counting commas at bracket depth 0.
 
@@ -771,23 +867,50 @@ def find_long_function_signatures(
             continue
         params_str = stripped[paren_open + 1:j]
 
-        # after `)`: optional qualifiers (const/override/final/noexcept), then ; { or =
-        after = stripped[j + 1:].lstrip()
-        k = 0
+        # after `)`: optional qualifiers (const/override/final/noexcept),
+        # optional trailing-return type (`-> ReturnType`), optional
+        # constructor member initializer list (`: a(x), b{y}`), then ; { or =
+        pos = j + 1
+        while pos < n and stripped[pos] in " \t\n":
+            pos += 1
         while True:
-            mq = QUALIFIER_RE.match(after, k)
-            if not mq:
-                break
-            k = mq.end()
-            while k < len(after) and after[k] in " \t\n":
-                k += 1
-        if k >= len(after) or after[k] not in ";{=":
+            # consume qualifiers
+            mq = QUALIFIER_RE.match(stripped, pos)
+            if mq:
+                pos = mq.end()
+                while pos < n and stripped[pos] in " \t\n":
+                    pos += 1
+                continue
+            # consume trailing return type: `-> ReturnType`
+            if (
+                pos + 1 < n
+                and stripped[pos] == "-"
+                and stripped[pos + 1] == ">"
+            ):
+                pos = _skip_trailing_return_type(stripped, pos)
+                while pos < n and stripped[pos] in " \t\n":
+                    pos += 1
+                continue
+            # consume constructor member initializer list: `: members...`
+            # but avoid scope-resolution `::` — the prior non-whitespace
+            # char must be `)` (the closing param paren we just matched)
+            if pos < n and stripped[pos] == ":":
+                pre_colon = pos - 1
+                while pre_colon >= 0 and stripped[pre_colon] in " \t\n":
+                    pre_colon -= 1
+                if pre_colon == j:
+                    pos = _skip_member_initializer_list(stripped, pos)
+                    while pos < n and stripped[pos] in " \t\n":
+                        pos += 1
+                    continue
+            break
+        if pos >= n or stripped[pos] not in ";{=":
             i = j + 1
             continue
 
         # for `;` and `=`, require a return-type prefix (else it looks like a
         # function call). For `{`, allow empty prefix (constructor/destructor).
-        if after[k] in ";=" and not prefix_stripped:
+        if stripped[pos] in ";=" and not prefix_stripped:
             i = j + 1
             continue
 
@@ -859,17 +982,43 @@ def find_function_bodies(content: str) -> List[Tuple[int, str, int, int]]:
             i = m.end()
             continue
 
-        # find what comes after `)`: skip whitespace and qualifiers
+        # find what comes after `)`: skip whitespace, qualifiers, optional
+        # trailing-return type (`-> ReturnType`), and optional constructor
+        # member initializer list (`: a(x), b{y}`).
         pos = j + 1
         while pos < n and stripped[pos] in " \t\n":
             pos += 1
         while True:
+            # consume qualifiers
             mq = QUALIFIER_RE.match(stripped, pos)
-            if not mq:
-                break
-            pos = mq.end()
-            while pos < n and stripped[pos] in " \t\n":
-                pos += 1
+            if mq:
+                pos = mq.end()
+                while pos < n and stripped[pos] in " \t\n":
+                    pos += 1
+                continue
+            # consume trailing return type: `-> ReturnType`
+            if (
+                pos + 1 < n
+                and stripped[pos] == "-"
+                and stripped[pos + 1] == ">"
+            ):
+                pos = _skip_trailing_return_type(stripped, pos)
+                while pos < n and stripped[pos] in " \t\n":
+                    pos += 1
+                continue
+            # consume constructor member initializer list: `: members...`
+            # but avoid scope-resolution `::` — the prior non-whitespace
+            # char must be `)` (the closing param paren we just matched)
+            if pos < n and stripped[pos] == ":":
+                pre_colon = pos - 1
+                while pre_colon >= 0 and stripped[pre_colon] in " \t\n":
+                    pre_colon -= 1
+                if pre_colon == j:
+                    pos = _skip_member_initializer_list(stripped, pos)
+                    while pos < n and stripped[pos] in " \t\n":
+                        pos += 1
+                    continue
+            break
 
         # we need a `{` body (not `;` declaration, not `= 0` pure virtual)
         if pos >= n or stripped[pos] != "{":
