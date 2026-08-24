@@ -434,6 +434,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
 
     if (nsteps <= 0) {
         std::cout << "[DS-DIAG] linear_scan: sc_scan_steps <= 0, skipping" << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG] linear_scan: sc_scan_steps <= 0, skipping" << std::endl;
         return;
     }
 
@@ -443,14 +444,23 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     double lambda_step = (lambda_end_ry - lambda_start_ry) / (nsteps - 1);
 
     std::cout << "\n" << std::string(80, '=') << std::endl;
+    GlobalV::ofs_running << "\n" << std::string(80, '=') << std::endl;
     std::cout << "[DS-DIAG] === LINEAR LAMBDA SCAN START ===" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] === LINEAR LAMBDA SCAN START ===" << std::endl;
     std::cout << "[DS-DIAG] Scan range: " << lambda_start << " -> " << lambda_end << " eV/uB" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] Scan range: " << lambda_start << " -> " << lambda_end << " eV/uB" << std::endl;
     std::cout << "[DS-DIAG] Number of steps: " << nsteps << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] Number of steps: " << nsteps << std::endl;
     std::cout << "[DS-DIAG] Lambda step size: " << lambda_step * ModuleBase::Ry_to_eV << " eV/uB" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] Lambda step size: " << lambda_step * ModuleBase::Ry_to_eV << " eV/uB" << std::endl;
     std::cout << "[DS-DIAG] nat = " << nat << ", ntype = " << ntype << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] nat = " << nat << ", ntype = " << ntype << std::endl;
     std::cout << "[DS-DIAG] nspin_ = " << this->nspin_ << ", npol_ = " << this->npol_ << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] nspin_ = " << this->nspin_ << ", npol_ = " << this->npol_ << std::endl;
     std::cout << "[DS-DIAG] p_operator = " << (this->p_operator ? "valid" : "NULL") << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] p_operator = " << (this->p_operator ? "valid" : "NULL") << std::endl;
     std::cout << "[DS-DIAG] constrain_ size = " << this->constrain_.size() << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] constrain_ size = " << this->constrain_.size() << std::endl;
 
     // Check if any constraints are defined; if not, set all atoms as constrained
     bool has_constraints = false;
@@ -463,6 +473,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
 
     if (!has_constraints) {
         std::cout << "[DS-DIAG] No constraints found in STRU, setting all atoms as constrained" << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG] No constraints found in STRU, setting all atoms as constrained" << std::endl;
         for (int ia = 0; ia < nat; ia++) {
             if (this->nspin_ == 4) {
                 this->constrain_[ia] = ModuleBase::Vector3<int>(1, 1, 1);
@@ -477,8 +488,12 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
         std::cout << "[DS-DIAG]   Atom " << ia << " constrain = ("
                   << this->constrain_[ia].x << ", " << this->constrain_[ia].y << ", " << this->constrain_[ia].z << ")"
                   << " target_mag = (" << this->target_mag_[ia].x << ", " << this->target_mag_[ia].y << ", " << this->target_mag_[ia].z << ")" << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG]   Atom " << ia << " constrain = ("
+                             << this->constrain_[ia].x << ", " << this->constrain_[ia].y << ", " << this->constrain_[ia].z << ")"
+                             << " target_mag = (" << this->target_mag_[ia].x << ", " << this->target_mag_[ia].y << ", " << this->target_mag_[ia].z << ")" << std::endl;
     }
     std::cout << std::string(80, '=') << "\n" << std::endl;
+    GlobalV::ofs_running << std::string(80, '=') << "\n" << std::endl;
 
     // Save initial lambda to restore after scan
     std::vector<ModuleBase::Vector3<double>> initial_lambda(nat, 0.0);
@@ -532,6 +547,8 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
 
         std::cout << "[DS-DIAG] === Scan step " << istep << "/" << nsteps
                   << " lambda = " << lambda_val_ev << " eV/uB ===" << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG] === Scan step " << istep << "/" << nsteps
+                             << " lambda = " << lambda_val_ev << " eV/uB ===" << std::endl;
 
         // Compute magnetic moments at current lambda
         this->cal_mw_from_lambda(istep);
@@ -552,13 +569,19 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
         ofs_scan << std::endl;
 
         std::cout << "[DS-DIAG]   lambda = " << lambda_val_ev << " eV/uB" << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG]   lambda = " << lambda_val_ev << " eV/uB" << std::endl;
         for (int ia = 0; ia < nat; ia++) {
             std::cout << "[DS-DIAG]   Atom " << ia << " Mi = ("
                       << this->Mi_[ia].x << ", "
                       << this->Mi_[ia].y << ", "
                       << this->Mi_[ia].z << ") uB" << std::endl;
+            GlobalV::ofs_running << "[DS-DIAG]   Atom " << ia << " Mi = ("
+                                 << this->Mi_[ia].x << ", "
+                                 << this->Mi_[ia].y << ", "
+                                 << this->Mi_[ia].z << ") uB" << std::endl;
         }
         std::cout << std::endl;
+        GlobalV::ofs_running << std::endl;
     }
 
     // =============================================================
@@ -567,6 +590,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     // after multiple lambda updates in the scan loop
     // =============================================================
     std::cout << "[DS-DIAG] === Consistency check: restoring initial lambda ===" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] === Consistency check: restoring initial lambda ===" << std::endl;
     this->lambda_ = initial_lambda;
     this->cal_mw_from_lambda(nsteps);
 
@@ -581,11 +605,16 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     ofs_scan << std::endl;
 
     std::cout << "[DS-DIAG]   lambda = " << lambda_start << " eV/uB (restored)" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG]   lambda = " << lambda_start << " eV/uB (restored)" << std::endl;
     for (int ia = 0; ia < nat; ia++) {
         std::cout << "[DS-DIAG]   Atom " << ia << " Mi = ("
                   << this->Mi_[ia].x << ", "
                   << this->Mi_[ia].y << ", "
                   << this->Mi_[ia].z << ") uB" << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG]   Atom " << ia << " Mi = ("
+                             << this->Mi_[ia].x << ", "
+                             << this->Mi_[ia].y << ", "
+                             << this->Mi_[ia].z << ") uB" << std::endl;
     }
 
     // Compare restored Mi with step 0 Mi to check consistency
@@ -600,10 +629,13 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
         ofs_scan << "#   Atom " << ia << " dM = (" << dx << ", " << dy << ", " << dz << ") uB" << std::endl;
     }
     std::cout << "[DS-DIAG] Max Mi difference between step 0 and init_recheck: " << max_mi_diff << " uB" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] Max Mi difference between step 0 and init_recheck: " << max_mi_diff << " uB" << std::endl;
     if (max_mi_diff > 1e-8) {
         std::cout << "[DS-DIAG] WARNING: Mi mapping may be inconsistent after multiple lambda updates!" << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG] WARNING: Mi mapping may be inconsistent after multiple lambda updates!" << std::endl;
     } else {
         std::cout << "[DS-DIAG] OK: Mi mapping is consistent." << std::endl;
+        GlobalV::ofs_running << "[DS-DIAG] OK: Mi mapping is consistent." << std::endl;
     }
     ofs_scan << "#   Max Mi difference: " << max_mi_diff << " uB" << std::endl;
 
@@ -613,9 +645,13 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     this->lambda_ = initial_lambda;
 
     std::cout << std::string(80, '=') << std::endl;
+    GlobalV::ofs_running << std::string(80, '=') << std::endl;
     std::cout << "[DS-DIAG] === LINEAR LAMBDA SCAN COMPLETE ===" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] === LINEAR LAMBDA SCAN COMPLETE ===" << std::endl;
     std::cout << "[DS-DIAG] Results written to: lambda_scan_results.dat" << std::endl;
+    GlobalV::ofs_running << "[DS-DIAG] Results written to: lambda_scan_results.dat" << std::endl;
     std::cout << std::string(80, '=') << "\n" << std::endl;
+    GlobalV::ofs_running << std::string(80, '=') << "\n" << std::endl;
 
     return;
 }
