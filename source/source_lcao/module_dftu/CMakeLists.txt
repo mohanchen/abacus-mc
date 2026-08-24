@@ -7,7 +7,6 @@ list(APPEND objects
       dftu_tools.cpp
       dftu_occup.cpp
       dftu_hamilt.cpp
-      dftu_pw.cpp
 )
 
 add_library(

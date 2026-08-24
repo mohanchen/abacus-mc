@@ -1,4 +1,4 @@
-#include "dftu.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
 #include "source_base/parallel_reduce.h"
 #include "source_io/module_parameter/parameter.h"
