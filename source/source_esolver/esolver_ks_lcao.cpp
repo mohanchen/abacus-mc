@@ -436,12 +436,14 @@ void ESolver_KS_LCAO<TK, TR>::hamilt2rho_single(UnitCell& ucell, int istep, int 
         else if (!sc.mag_converged() && this->drho > 0 && this->drho < this->inp_->sc_scf_thr)
         {
             sc.run_lambda_loop(iter - 1);
+            this->ds_rms_ = sc.get_last_rms_error();
             sc.set_mag_converged(true);
             skip_solve = true;
         }
         else if (sc.mag_converged())
         {
             sc.run_lambda_loop(iter - 1);
+            this->ds_rms_ = sc.get_last_rms_error();
             skip_solve = true;
         }
     }

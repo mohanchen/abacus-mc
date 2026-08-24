@@ -255,6 +255,9 @@ public:
   void run_lambda_loop(int outer_step,
 		  bool rerun = true);
 
+  /// @brief RMS error of the most recent lambda optimization loop (-1.0 if none has run).
+  double get_last_rms_error() const { return last_rms_error_; }
+
   /**
    * @brief Alternative mode: sweep lambda values linearly for energy landscape mapping.
    *
@@ -624,6 +627,10 @@ public:
     TK* sub_s_save = nullptr;       ///< Cached subspace overlap matrix for all k-points
     TK* becp_save = nullptr;        ///< Cached becp coefficients for all k-points
     std::vector<ModuleBase::Vector3<double>> lambda_in_sub_; ///< Lambda values when subspace was saved
+
+    /// RMS error of the most recent lambda optimization loop; -1.0 if no loop has run.
+    /// Used by ESolver to pass the current DeltaSpin RMS into the SCF iteration table.
+    double last_rms_error_ = -1.0;
 };
 
 

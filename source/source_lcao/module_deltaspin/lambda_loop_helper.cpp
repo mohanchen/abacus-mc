@@ -71,13 +71,17 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_rms_stop(int oute
     {
         if (rms_error < this->current_sc_thr_)
         {
-            std::cout << "Meet convergence criterion ( < " << this->current_sc_thr_ << " ), exit."
-                      << "       Total TIME(s) = " << total_duration << std::endl;
+            GlobalV::ofs_running << " DeltaSpin: lambda loop converged ( RMS < " << this->current_sc_thr_
+                                 << " ), inner steps = " << (i_step + 1)
+                                 << ", Total TIME(s) = " << total_duration << std::endl;
+            GlobalV::ofs_running << std::endl;
         }
         else if (i_step == this->nsc_ - 1)
         {
-            std::cout << "Reach maximum number of steps ( " << this->nsc_ << " ), exit."
-                      << "              Total TIME(s) = " << total_duration << std::endl;
+            std::cout << " DeltaSpin: lambda loop reached max steps ( " << this->nsc_
+                      << " ), RMS = " << rms_error
+                      << ", Total TIME(s) = " << total_duration << std::endl;
+            std::cout << std::endl;
         }
         this->print_termination();
         return true;
@@ -342,8 +346,10 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_gradient_decay(
     {
         if (this->decay_grad_[it] > 0 && std::abs(max_gradient[it]) < this->decay_grad_[it])
         {
-            std::cout << "Reach limitation of current step ( maximum gradient < " << this->decay_grad_[it]/ModuleBase::Ry_to_eV // uB^2/Ry to uB^2/eV
-                      << " in atom type " << it << " ), exit." << std::endl;
+            std::cout << " DeltaSpin: lambda loop early-terminated ( maximum gradient < "
+                      << this->decay_grad_[it]/ModuleBase::Ry_to_eV // uB^2/Ry to uB^2/eV
+                      << " in atom type " << it << " )" << std::endl;
+            std::cout << std::endl;
             return true;
         }
     }

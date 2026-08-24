@@ -262,6 +262,8 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
         inner_loop_duration += duration;
         if (this->check_rms_stop(outer_step, i_step, rms_error, duration, inner_loop_duration))
         {
+            // Save RMS for ESolver to display in the SCF iteration table.
+            this->last_rms_error_ = rms_error;
             // Converged or max steps reached: final update
             this->update_psi_charge(dnu_last_step.data(), rerun, true);
 
@@ -287,7 +289,8 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
                 // with higher precision (full PW solver instead of subspace only)
                 if(rms_error > this->current_sc_thr_ * 10 && rerun == true && this->higher_mag_prec == true)
                 {
-                    std::cout<<"Error: RMS error is too large, rerun the loop"<<std::endl;
+                    std::cout<<" DeltaSpin: RMS error too large ("<<rms_error<<"), rerun inner loop with full PW solver"<<std::endl;
+                    std::cout<<std::endl;
                     this->run_lambda_loop(outer_step, false);
                 }
             }
