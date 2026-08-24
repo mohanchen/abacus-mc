@@ -12,6 +12,9 @@ list(APPEND objects
     op_pw_exx.cpp
     op_pw_exx_ace.cpp
     op_pw_exx_pot.cpp
+    dftu_base.cpp
+    dftu_output.cpp
+    dftu_pw.cpp
     setup_pot.cpp
     setup_pwrho.cpp
     setup_pwwfc.cpp
