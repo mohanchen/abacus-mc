@@ -32,12 +32,10 @@
 template <>
 void spinconstrain::SpinConstrain<std::complex<double>>::print_termination()
 {
-    print_2d("after-optimization spin (uB): (print in the inner loop): ", this->Mi_, this->nspin_);
-    print_2d("after-optimization lambda (eV/uB): (print in the inner loop): ", this->lambda_, this->nspin_, ModuleBase::Ry_to_eV);
-    std::cout << "Inner optimization for lambda ends." << std::endl;
-    GlobalV::ofs_running << "Inner optimization for lambda ends." << std::endl;
-    std::cout << "===============================================================================" << std::endl;
-    GlobalV::ofs_running << "===============================================================================" << std::endl;
+    print_2d(" after-optimization spin (uB): (print in the inner loop): ", this->Mi_, this->nspin_, 1.0, GlobalV::ofs_running);
+    print_2d(" after-optimization lambda (eV/uB): (print in the inner loop): ", this->lambda_, this->nspin_, ModuleBase::Ry_to_eV, GlobalV::ofs_running);
+    GlobalV::ofs_running << " Inner optimization for lambda ends." << std::endl;
+    GlobalV::ofs_running << " ================================================================================" << std::endl;
 }
 
 /**
@@ -67,25 +65,19 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_rms_stop(int oute
                                                                                   double duration,
                                                                                   double total_duration)
 {
-    std::cout << "Step (Outer -- Inner) =  " << outer_step << " -- " << std::left << std::setw(5) << i_step + 1
-              << "       RMS = " << rms_error << "     TIME(s) = " << std::setw(11) << duration << std::endl;
-    GlobalV::ofs_running << "Step (Outer -- Inner) =  " << outer_step << " -- " << std::left << std::setw(5) << i_step + 1
+    GlobalV::ofs_running << " Step (Outer -- Inner) =  " << outer_step << " -- " << std::left << std::setw(5) << i_step + 1
                          << "       RMS = " << rms_error << "     TIME(s) = " << std::setw(11) << duration << std::endl;
     if (rms_error < this->current_sc_thr_ || i_step == this->nsc_ - 1)
     {
         if (rms_error < this->current_sc_thr_)
         {
-            std::cout << "Meet convergence criterion ( < " << this->current_sc_thr_ << " ), exit.";
-            GlobalV::ofs_running << "Meet convergence criterion ( < " << this->current_sc_thr_ << " ), exit.";
-            std::cout << "       Total TIME(s) = " << total_duration << std::endl;
-            GlobalV::ofs_running << "       Total TIME(s) = " << total_duration << std::endl;
+            std::cout << "Meet convergence criterion ( < " << this->current_sc_thr_ << " ), exit."
+                      << "       Total TIME(s) = " << total_duration << std::endl;
         }
         else if (i_step == this->nsc_ - 1)
         {
-            std::cout << "Reach maximum number of steps ( " << this->nsc_ << " ), exit.";
-            GlobalV::ofs_running << "Reach maximum number of steps ( " << this->nsc_ << " ), exit.";
-            std::cout << "              Total TIME(s) = " << total_duration << std::endl;
-            GlobalV::ofs_running << "              Total TIME(s) = " << total_duration << std::endl;
+            std::cout << "Reach maximum number of steps ( " << this->nsc_ << " ), exit."
+                      << "              Total TIME(s) = " << total_duration << std::endl;
         }
         this->print_termination();
         return true;
@@ -97,12 +89,9 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_rms_stop(int oute
 template <>
 void spinconstrain::SpinConstrain<std::complex<double>>::print_header()
 {
-    std::cout << "===============================================================================" << std::endl;
-    GlobalV::ofs_running << "===============================================================================" << std::endl;
-    std::cout << "Inner optimization for lambda begins ..." << std::endl;
-    GlobalV::ofs_running << "Inner optimization for lambda begins ..." << std::endl;
-    std::cout << "Covergence criterion for the iteration: " << this->sc_thr_ << std::endl;
-    GlobalV::ofs_running << "Covergence criterion for the iteration: " << this->sc_thr_ << std::endl;
+    GlobalV::ofs_running << " ================================================================================" << std::endl;
+    GlobalV::ofs_running << " Inner optimization for lambda begins ..." << std::endl;
+    GlobalV::ofs_running << " Covergence criterion for the iteration: " << this->sc_thr_ << std::endl;
 }
 
 /**
@@ -132,10 +121,8 @@ void spinconstrain::SpinConstrain<std::complex<double>>::check_restriction(
     {
         alpha_trial = copysign(1.0, alpha_trial) * this->restrict_current_ / maxval_abs_2d(search);
         boundary = std::abs(alpha_trial * maxval_abs_2d(search));
-        std::cout << "alpha after restrict = " << alpha_trial * ModuleBase::Ry_to_eV << std::endl;
-        GlobalV::ofs_running << "alpha after restrict = " << alpha_trial * ModuleBase::Ry_to_eV << std::endl;
-        std::cout << "boundary after = " << boundary * ModuleBase::Ry_to_eV << std::endl;
-        GlobalV::ofs_running << "boundary after = " << boundary * ModuleBase::Ry_to_eV << std::endl;
+        GlobalV::ofs_running << " alpha after restrict = " << alpha_trial * ModuleBase::Ry_to_eV << std::endl;
+        GlobalV::ofs_running << " boundary after = " << boundary * ModuleBase::Ry_to_eV << std::endl;
     }
 }
 
@@ -336,22 +323,17 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_gradient_decay(
 
     if (print)
     {
-        print_2d("diagonal gradient: ", spin_nu_gradient_diag, this->nspin_);
-        std::cout << "maximum gradient appears at: " << std::endl;
-        GlobalV::ofs_running << "maximum gradient appears at: " << std::endl;
+        print_2d(" diagonal gradient: ", spin_nu_gradient_diag, this->nspin_, 1.0, GlobalV::ofs_running);
+        GlobalV::ofs_running << " maximum gradient appears at: " << std::endl;
         for (int it = 0; it < ntype; it++)
         {
-            std::cout << "( " << max_gradient_index[it].first << ", " << max_gradient_index[it].second << " )"
-                      << std::endl;
-            GlobalV::ofs_running << "( " << max_gradient_index[it].first << ", " << max_gradient_index[it].second << " )"
+            GlobalV::ofs_running << " ( " << max_gradient_index[it].first << ", " << max_gradient_index[it].second << " )"
                                  << std::endl;
         }
-        std::cout << "maximum gradient: " << std::endl;
-        GlobalV::ofs_running << "maximum gradient: " << std::endl;
+        GlobalV::ofs_running << " maximum gradient: " << std::endl;
         for (int it = 0; it < ntype; it++)
         {
-            std::cout << max_gradient[it]/ModuleBase::Ry_to_eV << std::endl;
-            GlobalV::ofs_running << max_gradient[it]/ModuleBase::Ry_to_eV << std::endl;
+            GlobalV::ofs_running << " " << max_gradient[it]/ModuleBase::Ry_to_eV << std::endl;
         }
     }
 
@@ -362,8 +344,6 @@ bool spinconstrain::SpinConstrain<std::complex<double>>::check_gradient_decay(
         {
             std::cout << "Reach limitation of current step ( maximum gradient < " << this->decay_grad_[it]/ModuleBase::Ry_to_eV // uB^2/Ry to uB^2/eV
                       << " in atom type " << it << " ), exit." << std::endl;
-            GlobalV::ofs_running << "Reach limitation of current step ( maximum gradient < " << this->decay_grad_[it]/ModuleBase::Ry_to_eV
-                                 << " in atom type " << it << " ), exit." << std::endl;
             return true;
         }
     }

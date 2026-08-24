@@ -139,22 +139,17 @@ void where_fill_scalar_else_2d(const std::vector<ModuleBase::Vector3<int>>& arra
 void print_2d(const std::string info, const std::vector<ModuleBase::Vector3<double>> &array, const int nspin, const double unit_convert, std::ostream& ofs)
 {
     ofs << info << std::endl;
-    GlobalV::ofs_running << info << std::endl;
     int iat = 0;
     for (const auto &row : array)
     {
         iat += 1;
         if (nspin == 2)
         {
-            const std::string line = FmtCore::format("ATOM %6d %20.10f\n", iat, row.z*unit_convert);
-            ofs << line;
-            GlobalV::ofs_running << line;
+            ofs << FmtCore::format(" ATOM %6d %20.10f\n", iat, row.z*unit_convert);
         }
         else if (nspin == 4)
         {
-            const std::string line = FmtCore::format("ATOM %6d %20.10f %20.10f %20.10f\n", iat, row.x*unit_convert, row.y*unit_convert, row.z*unit_convert);
-            ofs << line;
-            GlobalV::ofs_running << line;
+            ofs << FmtCore::format(" ATOM %6d %20.10f %20.10f %20.10f\n", iat, row.x*unit_convert, row.y*unit_convert, row.z*unit_convert);
         }
     }
 }

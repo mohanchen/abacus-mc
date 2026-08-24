@@ -147,7 +147,6 @@ void print_scf_iterinfo(const std::string& ks_solver,
         buf += FmtCore::format(td_fmt[i].c_str(), values[i]);
     }
     std::cout << buf << std::flush;
-    GlobalV::ofs_running << buf << std::flush;
 }
 
 
