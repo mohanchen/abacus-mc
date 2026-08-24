@@ -133,7 +133,9 @@ void spinconstrain::SpinConstrain<std::complex<double>>::check_restriction(
         alpha_trial = copysign(1.0, alpha_trial) * this->restrict_current_ / maxval_abs_2d(search);
         boundary = std::abs(alpha_trial * maxval_abs_2d(search));
         std::cout << "alpha after restrict = " << alpha_trial * ModuleBase::Ry_to_eV << std::endl;
+        GlobalV::ofs_running << "alpha after restrict = " << alpha_trial * ModuleBase::Ry_to_eV << std::endl;
         std::cout << "boundary after = " << boundary * ModuleBase::Ry_to_eV << std::endl;
+        GlobalV::ofs_running << "boundary after = " << boundary * ModuleBase::Ry_to_eV << std::endl;
     }
 }
 
