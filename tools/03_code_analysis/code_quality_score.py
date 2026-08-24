@@ -521,6 +521,7 @@ def find_class_blocks(code: str) -> List[Tuple[int, int, str, str]]:
     (start_line_1indexed, end_line_1indexed, kind, name).
 
     Walks brace matching starting from each `class X {` / `struct X {` opener.
+    Excludes `template <class T>` type parameters and `enum class` scoped enums.
     """
     blocks: List[Tuple[int, int, str, str]] = []
     i = 0
@@ -529,6 +530,26 @@ def find_class_blocks(code: str) -> List[Tuple[int, int, str, str]]:
         m = CLASS_OPEN_RE.search(code, i)
         if not m:
             break
+        # reject template type parameters: `template <class T>` or `<..., class T, ...>`
+        # look at non-whitespace chars before the match
+        pre_start = m.start() - 1
+        while pre_start >= 0 and code[pre_start] in " \t\n\r":
+            pre_start -= 1
+        if pre_start >= 0 and code[pre_start] in "<,":
+            i = m.end()
+            continue
+        # reject `enum class` / `enum struct` scoped enumerations
+        # look backwards for `enum` keyword (with optional whitespace)
+        enum_check_pos = pre_start
+        while enum_check_pos >= 0 and code[enum_check_pos] in " \t\n\r":
+            enum_check_pos -= 1
+        if (
+            enum_check_pos >= 3
+            and code[enum_check_pos - 3:enum_check_pos + 1].lower() == "enum"
+            and (enum_check_pos == 3 or not code[enum_check_pos - 4].isalnum())
+        ):
+            i = m.end()
+            continue
         # find the opening brace after the class/struct header
         # allow inheritance clauses: class X : public Y { ... }
         brace_pos = code.find("{", m.end())
