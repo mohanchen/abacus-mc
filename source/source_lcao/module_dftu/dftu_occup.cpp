@@ -236,12 +236,12 @@ void Plus_U::cal_occup_m_k(const int iter,
         } // end ia
     } // end it
 
-    if(is_mixing_enabled() && is_locale_initialized())
+    if(is_mixing_enabled() && is_occ_mat_initialized())
     {
         this->mix_locale(ucell,mixing_beta);
     }
 
-    mark_locale_initialized();
+    mark_occ_mat_initialized();
     ModuleBase::timer::end("Plus_U", "cal_occup_m_k");
     return;
 }
@@ -393,12 +393,12 @@ void Plus_U::cal_occup_m_gamma(const int iter,
         } // it
     } // is
 
-    if(is_mixing_enabled() && is_locale_initialized())
+    if(is_mixing_enabled() && is_occ_mat_initialized())
     {
         this->mix_locale(ucell,mixing_beta);
     }
 
-    mark_locale_initialized();
+    mark_occ_mat_initialized();
     ModuleBase::timer::end("Plus_U", "cal_occup_m_gamma");
     return;
 }

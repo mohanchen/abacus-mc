@@ -105,7 +105,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
 {
     ModuleBase::TITLE("Plus_U", "cal_energy_correction");
     ModuleBase::timer::start("Plus_U", "cal_energy_correction");
-    if (!is_locale_initialized())
+    if (!is_occ_mat_initialized())
     {
         ModuleBase::timer::end("Plus_U", "cal_energy_correction");
         return;

@@ -134,12 +134,12 @@ class Plus_U_Base
         return eff_pot_pw.size();
     }
 
-    // dftu can be calculated only after locale has been initialed
-    bool initialed_locale = false;
+    // dftu can be calculated only after occ_mat has been initialized
+    bool occ_mat_initialized = false;
 
-    bool is_locale_initialized() const { return initialed_locale; }
-    void mark_locale_initialized() { initialed_locale = true; }
-    void mark_locale_dirty() { initialed_locale = false; }
+    bool is_occ_mat_initialized() const { return occ_mat_initialized; }
+    void mark_occ_mat_initialized() { occ_mat_initialized = true; }
+    void mark_occ_mat_dirty() { occ_mat_initialized = false; }
 
     static bool is_mixing_enabled() { return mixing_dftu != 0; }
     static void enable_mixing() { mixing_dftu = 1; }
@@ -180,10 +180,10 @@ class Plus_U_Base
     /// nspin=1: fills occ with occ_mat[iat][l][0][0] data
     /// nspin=2: fills occ with interleaved occ_mat[iat][l][0][0] and [1] data
     /// nspin=4: fills occ with occ_mat[iat][l][0][0] data (all 4 Pauli blocks)
-    void get_locale_flat(const int iat, const int l, std::vector<double>& occ) const;
+    void get_occ_mat_flat(const int iat, const int l, std::vector<double>& occ) const;
 
     /// set flat occupation matrix for an atom's correlated orbital (write-back)
-    void set_locale_flat(const int iat, const int l, const int spin,
+    void set_occ_mat_flat(const int iat, const int l, const int spin,
                         const std::vector<double>& occ);
 
     // local occupancy matrix of the correlated subspace

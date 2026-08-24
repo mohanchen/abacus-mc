@@ -12,7 +12,7 @@ void Plus_U::cal_eff_pot_mat_complex(const int ik,
 		const int npol)
 {
     ModuleBase::TITLE("Plus_U", "cal_eff_pot_c");
-    if (!is_locale_initialized())
+    if (!is_occ_mat_initialized())
     {
         return;
     }
@@ -65,7 +65,7 @@ void Plus_U::cal_eff_pot_mat_complex(const int ik,
 void Plus_U::cal_eff_pot_mat_real(const int ik, double* eff_pot, const std::vector<int>& isk, const double* sk, const int npol)
 {
     ModuleBase::TITLE("Plus_U", "cal_eff_pot_r");
-    if (!is_locale_initialized())
+    if (!is_occ_mat_initialized())
     {
         return;
     }

@@ -238,7 +238,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
         this->local_occup_bcast(cell, nspin, npol);
 #endif
 
-        mark_locale_initialized();
+        mark_occ_mat_initialized();
         this->copy_locale(cell);
     }
     else
@@ -251,7 +251,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 #ifdef __MPI
             this->local_occup_bcast(cell, nspin, npol);
 #endif
-            mark_locale_initialized();
+            mark_occ_mat_initialized();
         }
         else
         {
@@ -487,7 +487,7 @@ void Plus_U_Base::set_locale(const UnitCell& ucell)
 }
 
 
-void Plus_U_Base::get_locale_flat(const int iat, const int l, std::vector<double>& occ) const
+void Plus_U_Base::get_occ_mat_flat(const int iat, const int l, std::vector<double>& occ) const
 {
     const int tlp1 = 2 * l + 1;
     const int size = tlp1 * tlp1;
@@ -511,7 +511,7 @@ void Plus_U_Base::get_locale_flat(const int iat, const int l, std::vector<double
 }
 
 
-void Plus_U_Base::set_locale_flat(const int iat, const int l, const int spin,
+void Plus_U_Base::set_occ_mat_flat(const int iat, const int l, const int spin,
                                    const std::vector<double>& occ)
 {
     for (int i = 0; i < static_cast<int>(occ.size()); i++)
