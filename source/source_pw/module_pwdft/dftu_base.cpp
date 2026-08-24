@@ -1,13 +1,17 @@
 #include "source_pw/module_pwdft/dftu_base.h"
 
+#include "source_base/global_function.h"
+#include "source_base/memory_recorder.h"
 #include "source_base/parallel_global.h"
 #include "source_base/timer.h"
+#include "source_io/module_parameter/parameter.h"
 
 #include <cmath>
 #include <complex>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
 #include <vector>
 
 // local inline helpers for eigenvalue calculation (mirrors dftu_io.cpp)
@@ -104,7 +108,8 @@ Plus_U_Base::~Plus_U_Base()
 {}
 
 
-// init_base will be fully implemented in Phase 4
+// init_base: base-only initialization shared by PW and LCAO paths.
+// LCAO-specific setup (paraV, orb, ucell pointer) stays in Plus_U::init().
 void Plus_U_Base::init_base(UnitCell& cell,
                              const int npol,
                              const int nspin,
@@ -122,22 +127,203 @@ void Plus_U_Base::init_base(UnitCell& cell,
                              const std::string& device,
                              const int kpar)
 {
-    (void)cell;
-    (void)npol;
-    (void)nspin;
-    (void)orbital_corr;
-    (void)yukawa_potential;
-    (void)yukawa_lambda;
-    (void)global_readin_dir;
-    (void)global_out_dir;
-    (void)init_chg;
-    (void)nlocal;
-    (void)gamma_only_local;
-    (void)ks_solver;
-    (void)cal_force;
-    (void)cal_stress;
-    (void)device;
-    (void)kpar;
+    ModuleBase::TITLE("Plus_U_Base", "init_base");
+
+#ifndef __MPI
+    std::cout << "DFT+U module is only accessible in mpi version" << std::endl;
+    exit(0);
+#endif
+
+    Plus_U_Base::nspin = nspin;
+    Plus_U_Base::orbital_corr = orbital_corr;
+    Plus_U_Base::Yukawa = yukawa_potential;
+    this->yukawa_lambda = yukawa_lambda;
+
+    this->global_readin_dir = global_readin_dir;
+    this->global_out_dir = global_out_dir;
+    this->init_chg = init_chg;
+    this->npol = npol;
+
+    this->nlocal = nlocal;
+    this->gamma_only_local = gamma_only_local;
+    this->ks_solver = ks_solver;
+    this->cal_force = cal_force;
+    this->cal_stress = cal_stress;
+    this->device = device;
+    this->kpar = kpar;
+
+    Plus_U_Base::energy_u = 0.0;
+
+    this->locale.resize(cell.nat);
+    this->locale_save.resize(cell.nat);
+    this->eff_pot_pw_index.resize(cell.nat);
+    int pot_index = 0;
+
+    this->iatlnmipol2iwt.resize(cell.nat);
+
+    int num_locale = 0;
+    for (int it = 0; it < cell.ntype; ++it)
+    {
+        for (int ia = 0; ia < cell.atoms[it].na; ia++)
+        {
+            const int iat = cell.itia2iat(it, ia);
+
+            locale[iat].resize(cell.atoms[it].nwl + 1);
+            locale_save[iat].resize(cell.atoms[it].nwl + 1);
+
+            this->iatlnmipol2iwt[iat].resize(cell.atoms[it].nwl + 1);
+
+            if(!has_correlated_orbital(it))
+            {
+                continue;
+            }
+
+            const int tlp1_npol = (get_orbital_corr(it)*2+1)*npol;
+            const int tlp1 = 2 * get_orbital_corr(it) + 1;
+            const int elem_size = tlp1 * tlp1;
+            if(nspin == 4)
+            {
+                this->eff_pot_pw_index[iat] = pot_index;
+                pot_index += tlp1_npol * tlp1_npol;
+            }
+            else
+            {
+                this->eff_pot_pw_index[iat] = pot_index;
+                pot_index += elem_size;
+            }
+
+            for (int l = 0; l <= cell.atoms[it].nwl; l++)
+            {
+                const int N = cell.atoms[it].l_nchi[l];
+
+                locale[iat][l].resize(N);
+                locale_save[iat][l].resize(N);
+
+                for (int n = 0; n < N; n++)
+                {
+                    if (nspin == 1 || nspin == 2)
+                    {
+                        locale[iat][l][n].resize(2);
+                        locale_save[iat][l][n].resize(2);
+
+                        locale[iat][l][n][0].create(2 * l + 1, 2 * l + 1);
+                        locale[iat][l][n][1].create(2 * l + 1, 2 * l + 1);
+
+                        locale_save[iat][l][n][0].create(2 * l + 1, 2 * l + 1);
+                        locale_save[iat][l][n][1].create(2 * l + 1, 2 * l + 1);
+                        num_locale += (2 * l + 1) * (2 * l + 1) * 2;
+                    }
+                    else if (nspin == 4)
+                    {
+                        locale[iat][l][n].resize(1);
+                        locale_save[iat][l][n].resize(1);
+
+                        locale[iat][l][n][0].create((2 * l + 1) * npol, (2 * l + 1) * npol);
+                        locale_save[iat][l][n][0].create((2 * l + 1) * npol, (2 * l + 1) * npol);
+                        num_locale += (2 * l + 1) * (2 * l + 1) * npol * npol;
+                    }
+                }
+            }
+
+            this->iatlnmipol2iwt[iat].resize(cell.atoms[it].nwl + 1);
+            for (int L = 0; L <= cell.atoms[it].nwl; L++)
+            {
+                this->iatlnmipol2iwt[iat][L].resize(cell.atoms[it].l_nchi[L]);
+
+                for (int n = 0; n < cell.atoms[it].l_nchi[L]; n++)
+                {
+                    this->iatlnmipol2iwt[iat][L][n].resize(2 * L + 1);
+
+                    for (int m = 0; m < 2 * L + 1; m++)
+                    {
+                        this->iatlnmipol2iwt[iat][L][n][m].resize(npol);
+                    }
+                }
+            }
+
+            for (int iw = 0; iw < cell.atoms[it].nw * npol; iw++)
+            {
+                int iw0 = iw / npol;
+                int ipol = iw % npol;
+                int iwt = cell.itiaiw2iwt(it, ia, iw);
+                int l = cell.atoms[it].iw2l[iw0];
+                int n = cell.atoms[it].iw2n[iw0];
+                int m = cell.atoms[it].iw2m[iw0];
+
+                this->iatlnmipol2iwt[iat][l][n][m][ipol] = iwt;
+            }
+        }
+    }
+
+    if (nspin == 2) pot_index *= 2;
+
+    this->eff_pot_pw.resize(pot_index, 0.0);
+    this->uom_array.resize(pot_index, 0.0);
+    this->uom_save.resize(pot_index, 0.0);
+
+    if (Yukawa)
+    {
+        this->Fk.resize(cell.ntype);
+
+        this->U_Yukawa.resize(cell.ntype);
+        this->J_Yukawa.resize(cell.ntype);
+
+        for (int it = 0; it < cell.ntype; it++)
+        {
+            const int NL = cell.atoms[it].nwl + 1;
+
+            this->Fk[it].resize(NL);
+            this->U_Yukawa[it].resize(NL);
+            this->J_Yukawa[it].resize(NL);
+
+            for (int l = 0; l < NL; l++)
+            {
+                int N = cell.atoms[it].l_nchi[l];
+
+                this->Fk[it][l].resize(N);
+                for (int n = 0; n < N; n++)
+                {
+                    this->Fk[it][l][n].resize(l + 1, 0.0);
+                }
+
+                this->U_Yukawa[it][l].resize(N, 0.0);
+                this->J_Yukawa[it][l].resize(N, 0.0);
+            }
+        }
+    }
+
+    if (omc != 0)
+    {
+        std::stringstream sst;
+        sst << this->global_readin_dir << "dm_onsite_ini.txt";
+        this->read_occup_m(cell, sst.str(), this->init_chg, nspin, npol);
+#ifdef __MPI
+        this->local_occup_bcast(cell, nspin, npol);
+#endif
+
+        mark_locale_initialized();
+        this->copy_locale(cell);
+    }
+    else
+    {
+        if (this->init_chg == "file")
+        {
+            std::stringstream sst;
+            sst << this->global_readin_dir << "dm_onsite.txt";
+            this->read_occup_m(cell, sst.str(), this->init_chg, nspin, npol);
+#ifdef __MPI
+            this->local_occup_bcast(cell, nspin, npol);
+#endif
+            mark_locale_initialized();
+        }
+        else
+        {
+            this->zero_locale(cell);
+        }
+    }
+
+    ModuleBase::Memory::record("Plus_U_Base::locale", sizeof(double) * num_locale);
+    return;
 }
 
 
