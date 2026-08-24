@@ -1056,8 +1056,13 @@ def find_high_complexity_functions(
 
     Cyclomatic complexity counts: if, for, while, switch, case, &&, ||.
     Returns list of (line_no, function_name, complexity).
+
+    String and character literals are blanked before the regex runs so
+    that control-flow words appearing inside messages (e.g.
+    `const char* msg = "if not ok return";`) are not counted as real
+    control flow statements.
     """
-    stripped = strip_comments(content)
+    stripped = strip_strings(strip_comments(content))
     findings: List[Tuple[int, str, int]] = []
     for sig_line, name, body_open, body_close in find_function_bodies(content):
         body = stripped[body_open + 1:body_close]
