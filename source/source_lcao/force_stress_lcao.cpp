@@ -20,7 +20,7 @@
 #include "source_lcao/module_deepks/lcao_deepks_io.h" // mohan add 2024-07-22
 #include "source_lcao/module_deepks/deepks_force.h"
 #endif
-#include "source_lcao/module_operator_lcao/dftu_lcao.h"
+#include "source_lcao/module_dftu/dftu_lcao.h"
 #include "source_lcao/module_operator_lcao/dspin_lcao.h"
 #include "source_lcao/module_operator_lcao/nonlocal.h"
 #include "source_lcao/module_operator_lcao/ekinetic.h"

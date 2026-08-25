@@ -8,6 +8,14 @@ list(APPEND objects
       dftu_hamilt.cpp
 )
 
+if(ENABLE_LCAO)
+  list(APPEND objects
+        dftu_lcao.cpp
+        dftu_fs.cpp
+        op_dftu_lcao.cpp
+  )
+endif()
+
 add_library(
     dftu
     OBJECT

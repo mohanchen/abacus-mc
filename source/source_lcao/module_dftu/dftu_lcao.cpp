@@ -177,25 +177,25 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbi
  * @brief Contribute DFT+U Hamiltonian to real-space HR matrix
  * 
  * @details This function handles different scenarios based on:
- * 1. Whether locale (occupation matrix) is read from file (is_locale_initialized)
+ * 1. Whether occ_mat (occupation matrix) is read from file (is_occ_mat_initialized)
  * 2. Spin configuration (nspin=1, 2, or 4)
  * 3. SCF iteration stage (first vs subsequent iterations)
  * 
- * Case 1: Locale NOT initialized (!is_locale_initialized)
+ * Case 1: Occ_mat NOT initialized (!is_occ_mat_initialized)
  *   - First electronic iteration: calculates occupation matrix from density matrix (DMR)
  *     * Uses get_dmr(current_spin) to get real-space density matrix
  *     * Accumulates contributions from all atom pairs via cal_occ()
  *     * Performs MPI reduction to sum occ across processes
- *     * Stores result via set_locale_flat() for use in VU calculation
+ *     * Stores result via set_occ_mat_flat() for use in VU calculation
  *     * For nspin=1: occ is scaled by 0.5 (since only one spin channel computed)
- *   - Subsequent iterations: locale is computed fresh each iteration from updated DMR
+ *   - Subsequent iterations: occ_mat is computed fresh each iteration from updated DMR
  * 
- * Case 2: Locale IS initialized (is_locale_initialized, i.e., read from dm_onsite.txt file)
- *   - First electronic iteration: uses pre-read locale directly without DMR calculation
+ * Case 2: Occ_mat IS initialized (is_occ_mat_initialized, i.e., read from dm_onsite.txt file)
+ *   - First electronic iteration: uses pre-read occ_mat directly without DMR calculation
  *     * Skips DMR-based occ calculation entirely
- *     * Reads locale from stored data via get_locale()
+ *     * Reads locale from stored data via get_occ_mat()
  *     * Different indexing for nspin=4 vs nspin=1/2 (see below)
- *   - After first iteration: mark_locale_dirty() is called to force recomputation
+ *   - After first iteration: mark_occ_mat_dirty() is called to force recomputation
  * 
  * Spin configurations:
  *   nspin=1 (non-spin-polarized):
@@ -206,14 +206,14 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbi
  *   nspin=2 (collinear spin-polarized):
  *     - Two separate spin channels (spin-up: 0, spin-down: 1)
  *     - current_spin toggles between 0 and 1 across iterations
- *     - mark_locale_dirty() called when current_spin == 1 (last spin)
+ *     - mark_occ_mat_dirty() called when current_spin == 1 (last spin)
  *     - HR accumulated separately for each spin
  *   
  *   nspin=4 (non-collinear/SOC):
  *     - Single 4x4 Pauli matrix representation per atom
  *     - occ has 4*(2l+1)^2 elements (spin_fold=4)
- *     - get_locale uses spin=0, ipol indices for Pauli blocks
- *     - mark_locale_dirty() always called (current_spin check always true)
+ *     - get_occ_mat uses spin=0, ipol indices for Pauli blocks
+ *     - mark_occ_mat_dirty() always called (current_spin check always true)
  *     - No current_spin toggling (all spins handled simultaneously)
  * 
  * @warning THREAD SAFETY: cal_HR_IJR() updates shared HR matrix entries.
@@ -228,12 +228,12 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     ModuleBase::TITLE("DFTU", "contributeHR");
     // Early exit conditions:
     // - get_dmr(0) == nullptr: DMR not available (typical in first iteration without file input)
-    // - !is_locale_initialized(): locale not read from file AND not yet computed from DMR
+    // - !is_occ_mat_initialized(): occ_mat not read from file AND not yet computed from DMR
     // When both true, skip DFT+U contribution entirely (first iteration, no file input)
     const bool dmr_null = (this->dftu->get_dmr(0) == nullptr);
-    const bool locale_not_init = !this->dftu->is_locale_initialized();
+    const bool occ_mat_not_init = !this->dftu->is_occ_mat_initialized();
 
-    if (dmr_null && locale_not_init)
+    if (dmr_null && occ_mat_not_init)
     {
         return;
     }
@@ -277,13 +277,13 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         std::vector<double> occ(tlp1 * tlp1 * spin_fold, 0.0);
         
         // ============================================================
-        // BRANCH 1: Locale NOT initialized (compute from DMR)
+        // BRANCH 1: Occ_mat NOT initialized (compute from DMR)
         // ============================================================
         // This branch is taken when:
-        // - is_locale_initialized() == false (no file read or omc != 0)
+        // - is_occ_mat_initialized() == false (no file read or omc != 0)
         // - DMR is available (get_dmr() != nullptr)
         // Typical scenario: normal SCF iterations after first step
-        if (!this->dftu->is_locale_initialized())
+        if (!this->dftu->is_occ_mat_initialized())
         {
             // TODO: UNSAFE - get_dmr(current_spin) assumes DMR has correct spin indexing.
             // For nspin=2, current_spin must be correctly toggled (0 then 1).
@@ -328,37 +328,37 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
             {
                 for (auto& v : occ) { v *= 0.5; }
             }
-            this->dftu->set_locale_flat(iat0, target_L, this->current_spin, occ);
+            this->dftu->set_occ_mat_flat(iat0, target_L, this->current_spin, occ);
         }
         // ============================================================
-        // BRANCH 2: Locale IS initialized (use pre-read data)
+        // BRANCH 2: Occ_mat IS initialized (use pre-read data)
         // ============================================================
         // This branch is taken when:
-        // - is_locale_initialized() == true (locale read from dm_onsite.txt file)
+        // - is_occ_mat_initialized() == true (occ_mat read from dm_onsite.txt file)
         // - OR omc != 0 (occupation matrix control with dm_onsite_ini.txt)
         // Typical scenario: first SCF iteration with file input, or restart calculation
         else
         {
             // nspin=4: Non-collinear case with Pauli matrix representation
-            // Locale stored as single 4x4 block per atom, with spin indices embedded
+            // Occ_mat stored as single 4x4 block per atom, with spin indices embedded
             // in the matrix indices (ipol0, ipol1 for Pauli block indices)
             if (this->nspin == 4)
             {
-                // For nspin=4, locale is stored as 4 stacked tlp1^2 blocks
+                // For nspin=4, occ_mat is stored as 4 stacked tlp1^2 blocks
                 // at offsets 0, tlp1^2, 2*tlp1^2, 3*tlp1^2 for the 4 Pauli channels.
-                // Use get_locale_flat to read the stacked blocks directly
-                this->dftu->get_locale_flat(iat0, target_L, occ);
+                // Use get_occ_mat_flat to read the stacked blocks directly
+                this->dftu->get_occ_mat_flat(iat0, target_L, occ);
             }
             // nspin=1 or nspin=2: Collinear spin case
-            // Locale stored separately for each spin channel
+            // Occ_mat stored separately for each spin channel
             else
             {
                 for (int i = 0; i < static_cast<int>(occ.size()); i++)
                 {
                     // TODO: UNSAFE - current_spin must be correct for nspin=2.
-                    // If current_spin is not toggled properly, wrong spin channel's locale is read.
+                    // If current_spin is not toggled properly, wrong spin channel's occ_mat is read.
                     // This can happen if contributeHR() is called out of expected order.
-                    occ[i] = this->dftu->get_locale(iat0, target_L, 0, this->current_spin,
+                    occ[i] = this->dftu->get_occ_mat(iat0, target_L, 0, this->current_spin,
                                                       i / (2 * target_L + 1), i % (2 * target_L + 1));
                 }
             }
@@ -428,7 +428,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         ModuleBase::timer::end("DFTU", "cal_vu");
     }
 
-    // 6. Post-processing: Energy correction and locale state management
+    // 6. Post-processing: Energy correction and occ_mat state management
     // For nspin=1: DFT+U energy computed for single spin channel, but should count both spins
     // set_double_energy() doubles the energy to account for degenerate spin-up/down
 	if (this->nspin == 1) 
@@ -436,18 +436,18 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         this->dftu->set_double_energy();
 	}
 	
-    // 7. Mark locale as dirty to force recomputation in next iteration
+    // 7. Mark occ_mat as dirty to force recomputation in next iteration
     // This is called when:
     // - nspin=4: Always (all spins handled simultaneously, current_spin==0==nspin-1)
     // - nspin=2: When current_spin==1 (after spin-down calculation, last spin channel)
     // - nspin=1: When current_spin==0==nspin-1 (always called)
     // 
-    // Purpose: Ensure locale is recomputed from updated DMR in next SCF iteration,
+    // Purpose: Ensure occ_mat is recomputed from updated DMR in next SCF iteration,
     // rather than using stale pre-read data from file.
     // TODO: This logic is confusing. Consider explicit variable like `is_last_spin_channel`.
 	if (this->current_spin == this->nspin - 1 || this->nspin == 4) 
 	{
-		this->dftu->mark_locale_dirty();
+		this->dftu->mark_occ_mat_dirty();
 	}
 
     // 8. Spin channel toggling for nspin=2

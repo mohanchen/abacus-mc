@@ -12,13 +12,13 @@
  *   2. Becp index logic: different index formulas for nspin=1/2 vs nspin=4
  *   3. VU effective potential: cal_occ_pw VU calculation for all nspin modes
  *   4. Energy calculation: E_U accumulation with correct weights
- *   5. Locale accumulation from becp: the core loop of cal_occ_pw
+ *   5. Occupation matrix accumulation from becp: the core loop of cal_occ_pw
  *   6. Multi-atom split layout: [all_up | all_dn] layout for nspin=2
  *   7. OnsitePsOp kernel: vu application to ps for npol=1
  *
  * Strategy: test energy weights and becp index logic as pure
  * arithmetic — no need to link against full ABACUS libraries.
- * set_locale is tested via integration tests.
+ * set_occ_mat is tested via integration tests.
  ***********************************************************************/
 
 class DftuPwTest : public ::testing::Test
@@ -215,7 +215,7 @@ TEST_F(DftuPwTest, EnergyNspin4_WithOffDiagonal)
 }
 
 // =====================================================================
-// Locale accumulation from becp (cal_occ_pw core loop)
+// Occupation matrix accumulation from becp (cal_occ_pw core loop)
 // =====================================================================
 
 TEST_F(DftuPwTest, LocaleAccumNspin12)

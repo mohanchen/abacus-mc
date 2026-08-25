@@ -134,21 +134,21 @@ class Plus_U_Base
         return eff_pot_pw.size();
     }
 
-    // dftu can be calculated only after locale has been initialed
-    bool initialed_locale = false;
+    // dftu can be calculated only after occ_mat has been initialized
+    bool occ_mat_initialized = false;
 
-    bool is_locale_initialized() const { return initialed_locale; }
-    void mark_locale_initialized() { initialed_locale = true; }
-    void mark_locale_dirty() { initialed_locale = false; }
+    bool is_occ_mat_initialized() const { return occ_mat_initialized; }
+    void mark_occ_mat_initialized() { occ_mat_initialized = true; }
+    void mark_occ_mat_dirty() { occ_mat_initialized = false; }
 
     static bool is_mixing_enabled() { return mixing_dftu != 0; }
     static void enable_mixing() { mixing_dftu = 1; }
 
   protected:
-    void copy_locale(const UnitCell& ucell);
-    void zero_locale(const UnitCell& ucell);
-    void mix_locale(const UnitCell& ucell, const double& mixing_beta);
-    void set_locale(const UnitCell& ucell);
+    void copy_occ_mat(const UnitCell& ucell);
+    void zero_occ_mat(const UnitCell& ucell);
+    void mix_occ_mat(const UnitCell& ucell, const double& mixing_beta);
+    void set_occ_mat(const UnitCell& ucell);
 
     std::vector<std::complex<double>> eff_pot_pw;
     std::vector<int> eff_pot_pw_index;
@@ -162,33 +162,33 @@ class Plus_U_Base
     std::vector<std::vector<std::vector<double>>> J_Yukawa;
 
   public:
-    /// get occupation matrix element locale[iat][l][n][spin](m1,m2)
-    double get_locale(const int iat, const int l, const int n, const int spin,
+    /// get occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
+    double get_occ_mat(const int iat, const int l, const int n, const int spin,
                      const int m1, const int m2) const
     {
-        return locale[iat][l][n][spin](m1, m2);
+        return occ_mat[iat][l][n][spin](m1, m2);
     }
 
-    /// set occupation matrix element locale[iat][l][n][spin](m1,m2)
-    void set_locale(const int iat, const int l, const int n, const int spin,
+    /// set occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
+    void set_occ_mat(const int iat, const int l, const int n, const int spin,
                    const int m1, const int m2, const double val)
     {
-        locale[iat][l][n][spin](m1, m2) = val;
+        occ_mat[iat][l][n][spin](m1, m2) = val;
     }
 
     /// get flat occupation matrix for an atom's correlated orbital.
-    /// nspin=1: fills occ with locale[iat][l][0][0] data
-    /// nspin=2: fills occ with interleaved locale[iat][l][0][0] and [1] data
-    /// nspin=4: fills occ with locale[iat][l][0][0] data (all 4 Pauli blocks)
-    void get_locale_flat(const int iat, const int l, std::vector<double>& occ) const;
+    /// nspin=1: fills occ with occ_mat[iat][l][0][0] data
+    /// nspin=2: fills occ with interleaved occ_mat[iat][l][0][0] and [1] data
+    /// nspin=4: fills occ with occ_mat[iat][l][0][0] data (all 4 Pauli blocks)
+    void get_occ_mat_flat(const int iat, const int l, std::vector<double>& occ) const;
 
     /// set flat occupation matrix for an atom's correlated orbital (write-back)
-    void set_locale_flat(const int iat, const int l, const int spin,
+    void set_occ_mat_flat(const int iat, const int l, const int spin,
                         const std::vector<double>& occ);
 
     // local occupancy matrix of the correlated subspace
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> locale;
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> locale_save;
+    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat;
+    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat_save;
 
     //=============================================================
     // output() and write_occup_m() have been extracted to free functions

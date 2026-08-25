@@ -6,8 +6,8 @@
 #endif
 #include "source_base/module_external/scalapack_connector.h"
 
-// copy_locale(), zero_locale(), mix_locale(), set_locale(ucell),
-// get_locale_flat(), set_locale_flat()
+// copy_occ_mat(), zero_occ_mat(), mix_occ_mat(), set_occ_mat(ucell),
+// get_occ_mat_flat(), set_occ_mat_flat()
 // are now implemented in dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
 
 #ifdef __LCAO
@@ -22,8 +22,8 @@ void Plus_U::cal_occup_m_k(const int iter,
     ModuleBase::TITLE("Plus_U", "cal_occup_m_k");
     ModuleBase::timer::start("Plus_U", "cal_occup_m_k");
 
-    this->copy_locale(ucell);
-    this->zero_locale(ucell);
+    this->copy_occ_mat(ucell);
+    this->zero_occ_mat(ucell);
 
     //=================Part 1======================
     // call SCALAPACK routine to calculate the product of the S and density matrix
@@ -129,12 +129,12 @@ void Plus_U::cal_occup_m_k(const int iter,
 
 										if ((nu >= 0) && (mu >= 0))
 										{
-											locale[iat][l][n][spin](m0_all, m1_all) += (srho[irc]).real() / 4.0;
+											occ_mat[iat][l][n][spin](m0_all, m1_all) += (srho[irc]).real() / 4.0;
 										}
 
 										if ((nu_prime >= 0) && (mu_prime >= 0))
 										{
-											locale[iat][l][n][spin](m0_all, m1_all)
+											occ_mat[iat][l][n][spin](m0_all, m1_all)
 												+= (std::conj(srho[irc_prime])).real() / 4.0;
 										}
                                     } // ipol1
@@ -182,9 +182,9 @@ void Plus_U::cal_occup_m_k(const int iter,
 #ifdef __MPI
                     if (Plus_U::nspin == 1 || Plus_U::nspin == 4)
                     {
-                        ModuleBase::matrix temp(locale[iat][l][n][0]);
+                        ModuleBase::matrix temp(occ_mat[iat][l][n][0]);
                         MPI_Allreduce(&temp(0, 0),
-                                      &locale[iat][l][n][0](0, 0),
+                                      &occ_mat[iat][l][n][0](0, 0),
                                       (2 * l + 1) * this->npol * (2 * l + 1) * this->npol,
                                       MPI_DOUBLE,
                                       MPI_SUM,
@@ -192,17 +192,17 @@ void Plus_U::cal_occup_m_k(const int iter,
                     }
                     else if (Plus_U::nspin == 2)
                     {
-                        ModuleBase::matrix temp0(locale[iat][l][n][0]);
+                        ModuleBase::matrix temp0(occ_mat[iat][l][n][0]);
                         MPI_Allreduce(&temp0(0, 0),
-                                      &locale[iat][l][n][0](0, 0),
+                                      &occ_mat[iat][l][n][0](0, 0),
                                       (2 * l + 1) * (2 * l + 1),
                                       MPI_DOUBLE,
                                       MPI_SUM,
                                       MPI_COMM_WORLD);
 
-                        ModuleBase::matrix temp1(locale[iat][l][n][1]);
+                        ModuleBase::matrix temp1(occ_mat[iat][l][n][1]);
                         MPI_Allreduce(&temp1(0, 0),
-                                      &locale[iat][l][n][1](0, 0),
+                                      &occ_mat[iat][l][n][1](0, 0),
                                       (2 * l + 1) * (2 * l + 1),
                                       MPI_DOUBLE,
                                       MPI_SUM,
@@ -213,18 +213,18 @@ void Plus_U::cal_occup_m_k(const int iter,
                     switch (Plus_U::nspin)
                     {
                     case 1:
-                        locale[iat][l][n][0] += transpose(locale[iat][l][n][0]);
-                        locale[iat][l][n][0] *= 0.5;
-                        locale[iat][l][n][1] += locale[iat][l][n][0];
+                        occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
+                        occ_mat[iat][l][n][0] *= 0.5;
+                        occ_mat[iat][l][n][1] += occ_mat[iat][l][n][0];
                         break;
 
                     case 2:
                         for (int is = 0; is < Plus_U::nspin; is++)
-                            locale[iat][l][n][is] += transpose(locale[iat][l][n][is]);
+                            occ_mat[iat][l][n][is] += transpose(occ_mat[iat][l][n][is]);
                         break;
 
                     case 4:
-                        locale[iat][l][n][0] += transpose(locale[iat][l][n][0]);
+                        occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
                         break;
 
                     default:
@@ -236,12 +236,12 @@ void Plus_U::cal_occup_m_k(const int iter,
         } // end ia
     } // end it
 
-    if(is_mixing_enabled() && is_locale_initialized())
+    if(is_mixing_enabled() && is_occ_mat_initialized())
     {
-        this->mix_locale(ucell,mixing_beta);
+        this->mix_occ_mat(ucell,mixing_beta);
     }
 
-    mark_locale_initialized();
+    mark_occ_mat_initialized();
     ModuleBase::timer::end("Plus_U", "cal_occup_m_k");
     return;
 }
@@ -254,8 +254,8 @@ void Plus_U::cal_occup_m_gamma(const int iter,
 {
     ModuleBase::TITLE("Plus_U", "cal_occup_m_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occup_m_gamma");
-    this->copy_locale(ucell);
-    this->zero_locale(ucell);
+    this->copy_occ_mat(ucell);
+    this->zero_occ_mat(ucell);
 
     //=================Part 1======================
     // call PBLAS routine to calculate the product of the S and density matrix
@@ -343,7 +343,7 @@ void Plus_U::cal_occup_m_gamma(const int iter,
                                             int m0_all = m0 + (2 * l + 1) * ipol0;
                                             int m1_all = m0 + (2 * l + 1) * ipol1;
 
-                                            locale[iat][l][n][is](m0, m1) += srho[irc] / 4.0;
+                                            occ_mat[iat][l][n][is](m0, m1) += srho[irc] / 4.0;
                                         }
 
                                         if ((nu_prime >= 0) && (mu_prime >= 0))
@@ -351,18 +351,18 @@ void Plus_U::cal_occup_m_gamma(const int iter,
                                             int m0_all = m0 + (2 * l + 1) * ipol0;
                                             int m1_all = m0 + (2 * l + 1) * ipol1;
 
-                                            locale[iat][l][n][is](m0, m1) += srho[irc_prime] / 4.0;
+                                            occ_mat[iat][l][n][is](m0, m1) += srho[irc_prime] / 4.0;
                                         }
                                     }
                                 }
                             }
                         }
 
-                        ModuleBase::matrix temp(locale[iat][l][n][is]);
+                        ModuleBase::matrix temp(occ_mat[iat][l][n][is]);
 
 #ifdef __MPI
                         MPI_Allreduce(&temp(0, 0),
-                                      &locale[iat][l][n][is](0, 0),
+                                      &occ_mat[iat][l][n][is](0, 0),
                                       (2 * l + 1) * this->npol * (2 * l + 1) * this->npol,
                                       MPI_DOUBLE,
                                       MPI_SUM,
@@ -373,13 +373,13 @@ void Plus_U::cal_occup_m_gamma(const int iter,
                         switch (Plus_U::nspin)
                         {
                         case 1:
-                            locale[iat][l][n][0] += transpose(locale[iat][l][n][0]);
-                            locale[iat][l][n][0] *= 0.5;
-                            locale[iat][l][n][1] += locale[iat][l][n][0];
+                            occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
+                            occ_mat[iat][l][n][0] *= 0.5;
+                            occ_mat[iat][l][n][1] += occ_mat[iat][l][n][0];
                             break;
 
                         case 2:
-                            locale[iat][l][n][is] += transpose(locale[iat][l][n][is]);
+                            occ_mat[iat][l][n][is] += transpose(occ_mat[iat][l][n][is]);
                             break;
 
                         default:
@@ -393,12 +393,12 @@ void Plus_U::cal_occup_m_gamma(const int iter,
         } // it
     } // is
 
-    if(is_mixing_enabled() && is_locale_initialized())
+    if(is_mixing_enabled() && is_occ_mat_initialized())
     {
-        this->mix_locale(ucell,mixing_beta);
+        this->mix_occ_mat(ucell,mixing_beta);
     }
 
-    mark_locale_initialized();
+    mark_occ_mat_initialized();
     ModuleBase::timer::end("Plus_U", "cal_occup_m_gamma");
     return;
 }

@@ -73,7 +73,7 @@ void finish_dftu_lcao(const int iter,
     /// use the converged occupation matrix for next MD/Relax SCF calculation
     if (conv_esolver)
     {
-        dftu_ptr->mark_locale_initialized();
+        dftu_ptr->mark_occ_mat_initialized();
     }
 }
 
