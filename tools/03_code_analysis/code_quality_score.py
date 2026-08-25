@@ -184,7 +184,7 @@ PASS_THRESHOLD = 60
 
 CHINESE_RE = re.compile("[\u4e00-\u9fff]")
 USING_NS_STD_RE = re.compile(r"\busing\s+namespace\s+std\b")
-UPPERCASE_CONST_RE = re.compile(r"(?<![.:])\b[A-Z][A-Z0-9_]{2,}\b(?![.:])")
+UPPERCASE_CONST_RE = re.compile(r"(?<![.:>])\b[A-Z][A-Z0-9_]{2,}\b(?![.:])")
 ACCESS_RE = re.compile(r"^\s*(public|private|protected)\s*:")
 CLASS_OPEN_RE = re.compile(r"\b(class|struct)\s+(\w+)\b")
 
