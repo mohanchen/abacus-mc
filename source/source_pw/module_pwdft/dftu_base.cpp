@@ -74,9 +74,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
     }
     this->yukawa_lambda = yukawa_lambda;
 
-    this->global_readin_dir = global_readin_dir;
-    this->global_out_dir = global_out_dir;
-    this->init_chg = init_chg;
     this->npol = npol;
 
     this->nlocal = nlocal;
@@ -230,8 +227,8 @@ void Plus_U_Base::init_base(UnitCell& cell,
     if (occ_mat_ctrl != 0)
     {
         std::stringstream sst;
-        sst << this->global_readin_dir << "dm_onsite_ini.txt";
-        this->read_occup_m(cell, sst.str(), this->init_chg, nspin, npol);
+        sst << global_readin_dir << "dm_onsite_ini.txt";
+        this->read_occup_m(cell, sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
         this->local_occup_bcast(cell, nspin, npol);
 #endif
@@ -241,11 +238,11 @@ void Plus_U_Base::init_base(UnitCell& cell,
     }
     else
     {
-        if (this->init_chg == "file")
+        if (init_chg == "file")
         {
             std::stringstream sst;
-            sst << this->global_readin_dir << "dm_onsite.txt";
-            this->read_occup_m(cell, sst.str(), this->init_chg, nspin, npol);
+            sst << global_readin_dir << "dm_onsite.txt";
+            this->read_occup_m(cell, sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
             this->local_occup_bcast(cell, nspin, npol);
 #endif

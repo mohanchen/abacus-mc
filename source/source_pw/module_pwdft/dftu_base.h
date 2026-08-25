@@ -41,7 +41,6 @@ class Plus_U_Base
     void uramping_update();
     bool u_converged();
 
-    // mohan note 2025-11-07: these were static, refactored to instance members
     std::vector<double> u_current;
     std::vector<double> u_target;
     std::vector<int> orbital_corr;
@@ -70,12 +69,8 @@ class Plus_U_Base
   protected:
     double energy_u = 0.0;
 
-  protected:
     int cal_type = 3;
-    std::string global_readin_dir;
-    std::string global_out_dir;
     double yukawa_lambda = 0.0;
-    std::string init_chg;
     int npol = 1;
     int nlocal = 0;
     bool gamma_only_local = false;
