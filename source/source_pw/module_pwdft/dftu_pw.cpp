@@ -16,7 +16,7 @@
 ///   spin channel selected by `isk[ik]` (not ik >= nk/2, which fails for kpar>1);
 ///
 /// nspin=4 (npol=2): spinor calculation;
-///   locale has a single matrix of size (2*tlp1) x (2*tlp1) per atom
+///   occ_mat has a single matrix of size (2*tlp1) x (2*tlp1) per atom
 ///   storing all 4 Pauli blocks contiguously.
 void Plus_U_Base::cal_occ_pw(const int iter,
             const void* psi_in,
@@ -188,7 +188,7 @@ void Plus_U_Base::cal_occ_pw(const int iter,
     }
 #endif
 
-    // reduce locale from all k-pools
+    // reduce occ_mat from all k-pools
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];
@@ -221,7 +221,7 @@ void Plus_U_Base::cal_occ_pw(const int iter,
                     size * 4);
         }
 
-        // save locale matrix for this iat to uom_array
+        // save occ_mat matrix for this iat to uom_array
         if(this->uom_array.size() != 0)
         {
             for(int mm=0;mm<size;mm++)
@@ -249,7 +249,7 @@ void Plus_U_Base::cal_occ_pw(const int iter,
     Plus_U_Base::energy_u = 0.0;
     const double weight_eu = (Plus_U_Base::nspin == 1) ? 1.0 : (Plus_U_Base::nspin == 2) ? 0.5 : 0.25;
     const double diag_coeff = (Plus_U_Base::nspin == 4) ? 1.0 : 0.5;
-    // calculate VU and energy (locale already reduced above)
+    // calculate VU and energy (occ_mat already reduced above)
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];

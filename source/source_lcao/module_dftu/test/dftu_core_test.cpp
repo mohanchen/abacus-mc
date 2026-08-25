@@ -10,7 +10,7 @@
  *
  * These tests target the most complex and bug-prone logic:
  * 1. eff_pot_pw_index calculation for mixed atom types and nspin modes
- * 2. copy_locale <-> set_locale roundtrip (3 data layouts)
+ * 2. copy_occ_mat <-> set_occ_mat roundtrip (3 data layouts)
  * 3. VU effective potential formula (cal_type=3, FLL)
  * 4. Energy correction and double-counting terms
  ***********************************************************************/
@@ -88,9 +88,9 @@ TEST_F(EffPotIndexTest, Nspin2and4_SplitAndPauli)
 }
 
 // =====================================================================
-// 2. copy_locale <-> set_locale roundtrip
+// 2. copy_occ_mat <-> set_occ_mat roundtrip
 //
-// Tests the bidirectional conversion between nested locale matrix
+// Tests the bidirectional conversion between nested occ_mat matrix
 // and flat uom_array/uom_save arrays for all 3 nspin modes.
 // =====================================================================
 
@@ -103,7 +103,7 @@ struct Matrix2D {
     const double& operator()(int i, int j) const { return data[i * nc + j]; }
 };
 
-static void copy_locale_to_flat(
+static void copy_occ_mat_to_flat(
     const std::vector<Matrix2D>& locale_up,
     const std::vector<Matrix2D>& locale_dn,
     std::vector<double>& uom_save,
@@ -143,7 +143,7 @@ static void copy_locale_to_flat(
     }
 }
 
-static void set_locale_from_flat(
+static void set_occ_mat_from_flat(
     const std::vector<double>& uom_array,
     std::vector<Matrix2D>& locale_up,
     std::vector<Matrix2D>& locale_dn,
@@ -183,13 +183,13 @@ static void set_locale_from_flat(
     }
 }
 
-class LocaleRoundtripTest : public ::testing::Test
+class OccMatRoundtripTest : public ::testing::Test
 {
   protected:
     void SetUp() override {}
 };
 
-TEST_F(LocaleRoundtripTest, Nspin1and2_SingleAndSplitLayout)
+TEST_F(OccMatRoundtripTest, Nspin1and2_SingleAndSplitLayout)
 {
     // nspin=1: single atom d-orbital roundtrip
     const int l = 2;
@@ -202,8 +202,8 @@ TEST_F(LocaleRoundtripTest, Nspin1and2_SingleAndSplitLayout)
 
     std::vector<int> eff_pot_pw_index = {0};
     std::vector<double> uom_save(size, 0.0);
-    copy_locale_to_flat(locale_up, locale_dn, uom_save, eff_pot_pw_index, 1);
-    set_locale_from_flat(uom_save, locale_up, locale_dn, eff_pot_pw_index, 1);
+    copy_occ_mat_to_flat(locale_up, locale_dn, uom_save, eff_pot_pw_index, 1);
+    set_occ_mat_from_flat(uom_save, locale_up, locale_dn, eff_pot_pw_index, 1);
     for (int i = 0; i < size; i++)
         EXPECT_DOUBLE_EQ(locale_up[0].data[i], static_cast<double>(i + 1));
 
@@ -215,14 +215,14 @@ TEST_F(LocaleRoundtripTest, Nspin1and2_SingleAndSplitLayout)
         locale_dn[0].data[i] = static_cast<double>(i + 100);
     }
     uom_save.assign(total, 0.0);
-    copy_locale_to_flat(locale_up, locale_dn, uom_save, eff_pot_pw_index, 2);
+    copy_occ_mat_to_flat(locale_up, locale_dn, uom_save, eff_pot_pw_index, 2);
     // Verify split layout
     for (int i = 0; i < size; i++)
     {
         EXPECT_DOUBLE_EQ(uom_save[i], static_cast<double>(i + 1));
         EXPECT_DOUBLE_EQ(uom_save[size + i], static_cast<double>(i + 100));
     }
-    set_locale_from_flat(uom_save, locale_up, locale_dn, eff_pot_pw_index, 2);
+    set_occ_mat_from_flat(uom_save, locale_up, locale_dn, eff_pot_pw_index, 2);
     for (int i = 0; i < size; i++)
     {
         EXPECT_DOUBLE_EQ(locale_up[0].data[i], static_cast<double>(i + 1));
@@ -230,7 +230,7 @@ TEST_F(LocaleRoundtripTest, Nspin1and2_SingleAndSplitLayout)
     }
 }
 
-TEST_F(LocaleRoundtripTest, Nspin4_PauliBlocks)
+TEST_F(OccMatRoundtripTest, Nspin4_PauliBlocks)
 {
     // 2 atoms: d(l=2), p(l=1)
     struct AtomSpec { int l; };
@@ -265,8 +265,8 @@ TEST_F(LocaleRoundtripTest, Nspin4_PauliBlocks)
     std::vector<double> uom_array(total, 0.0);
     std::vector<Matrix2D> locale_dn(specs.size()); // unused for nspin=4
 
-    copy_locale_to_flat(locale, locale_dn, uom_array, eff_pot_pw_index, 4);
-    set_locale_from_flat(uom_array, locale, locale_dn, eff_pot_pw_index, 4);
+    copy_occ_mat_to_flat(locale, locale_dn, uom_array, eff_pot_pw_index, 4);
+    set_occ_mat_from_flat(uom_array, locale, locale_dn, eff_pot_pw_index, 4);
 
     for (size_t i = 0; i < specs.size(); i++)
         for (int j = 0; j < sizes[i]; j++)

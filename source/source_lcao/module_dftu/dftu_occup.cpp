@@ -6,8 +6,8 @@
 #endif
 #include "source_base/module_external/scalapack_connector.h"
 
-// copy_occ_mat(), zero_occ_mat(), mix_occ_mat(), set_locale(ucell),
-// get_locale_flat(), set_locale_flat()
+// copy_occ_mat(), zero_occ_mat(), mix_occ_mat(), set_occ_mat(ucell),
+// get_occ_mat_flat(), set_occ_mat_flat()
 // are now implemented in dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
 
 #ifdef __LCAO
