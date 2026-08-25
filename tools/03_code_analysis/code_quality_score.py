@@ -816,6 +816,92 @@ def _match_var_decl(stripped_line: str) -> Optional[str]:
     return m.group(1) if m else None
 
 
+# Keywords that, when they appear on a class-body line that does not yet
+# end with ';', mark the start of a declaration that *may* span several
+# source lines. Following lines (up to the terminating ';') should not be
+# mistaken for individual member-variable declarations.  This catches
+# multi-line `using`/`typedef`/`template`/namespace-qualified type aliases
+# such as:
+#     using value_type
+#         = std::vector<int>;
+# Without the lookahead, the second line is inspected in isolation and
+# reads as `= std::vector<int>;` — a bogus public-static member hit.
+_MULTILINE_DECL_STARTERS = (
+    # Both the space-separated form (`using value_type = ...`) and the
+    # bare-keyword-alone form (`typedef` at the end of a line with a
+    # line-break before the type) are valid.  Using tuples of both
+    # spellings catches multi-line aliases regardless of where the
+    # author wraps the line.
+    "using", "typedef", "template", "typename",
+    "namespace", "extern", "friend",
+)
+
+
+def _mark_continued_decl_lines(class_lines: List[str]) -> "set":
+    """Return the set of 0-based line indices inside a class body that
+    belong to a multi-line declaration started by a previous line (and
+    therefore must not be treated as standalone member declarations).
+
+    A line is considered a "continuation line" when:
+      * there exists a strictly earlier non-empty line at the same or
+        smaller brace-nesting depth that begins with a declaration
+        starter keyword (`using`, `typedef`, `template`, `typename`,
+        `namespace`, `extern`, `friend`);
+      * the earlier starter line does NOT terminate with ';' (i.e. the
+        declaration has not been closed yet);
+      * no ';' has been seen on any intervening line at the starter's
+        brace-nesting depth since the starter was opened.
+
+    The heuristic is deliberately conservative: lines are only marked as
+    continuations inside the same brace-depth run so that real member
+    declarations following a `using` block are never incorrectly
+    suppressed.
+    """
+    marked: set = set()
+    depth = 0
+    # stack of (depth_at_starter, starter_line_idx) for currently-open
+    # multi-line declaration starters. Multiple starters may coexist at
+    # different brace-nesting levels; a semicolon at depth D closes all
+    # starters that were opened at exactly D (conservative, but this
+    # matches how class bodies declare one item per terminating ';').
+    open_starters: List[Tuple[int, int]] = []
+    for idx, line in enumerate(class_lines):
+        prev_depth = depth
+        stripped_l = line.strip()
+        # (1) Mark as continuation BEFORE processing any ';' on this line:
+        # the terminating-semicolon line is still part of the multi-line
+        # declaration and must be suppressed in the public/static-member
+        # heuristics. The starter line itself is never marked; every
+        # later line that runs while any starter is open is marked.
+        if open_starters and any(idx > sidx for _, sidx in open_starters):
+            marked.add(idx)
+        # (2) Now close starters at prev_depth if the current line
+        # contains a ';' at that depth.  Closure happens AFTER the
+        # marking step so the line that carries the terminating ';' is
+        # still counted as the final continuation of the declaration.
+        if stripped_l and ";" in stripped_l:
+            closed_depths = {d for d, _ in open_starters if d == prev_depth}
+            if closed_depths:
+                open_starters = [
+                    (d, sidx) for (d, sidx) in open_starters
+                    if d not in closed_depths
+                ]
+        # (3) Advance brace-depth for the current line (in/out of
+        # functions, nested classes, etc.).  Starter-opening happens
+        # after depth tracking so the starter is recorded at its
+        # prev_depth, which is the same depth at which the terminating
+        # ';' will be processed.
+        depth += line.count("{") - line.count("}")
+        # (4) Lines that begin with declaration-starter keywords but do
+        # NOT contain ';' will (in a well-formed class body) continue
+        # across at least one more line before reaching the terminating
+        # ';'. Record them so subsequent lines can be marked.
+        if prev_depth >= 1 and stripped_l and ";" not in stripped_l \
+                and stripped_l.startswith(_MULTILINE_DECL_STARTERS):
+            open_starters.append((prev_depth, idx))
+    return marked
+
+
 def _skip_trailing_return_type(s: str, start: int) -> int:
     """Advance past `-> ReturnType` starting at position `start`.
 
@@ -1269,16 +1355,24 @@ def analyze_class_blocks(
                 cur_access = m.group(1)
             access_per_line.append(cur_access)
 
+        # pass 0: identify lines belonging to multi-line declarations that
+        # start with keywords such as `using`, `typedef`, `template`, etc.
+        # Continuation lines (e.g. the "= std::vector<int>;" half of a
+        # two-line `using value_type = ...;` alias) would otherwise be
+        # treated as standalone member declarations when the per-line
+        # heuristics run below.
+        continued_idxs = _mark_continued_decl_lines(class_lines)
+
         # pass 1: collect all member variable names (any access section).
         # depth starts at 0; the class header line brings it to 1. Only lines
         # that begin AND end at depth 1 are class-body member declarations
         # (lines that open a function body bring depth from 1 to 2).
         member_var_names: set = set()
         depth = 0
-        for line in class_lines:
+        for idx, line in enumerate(class_lines):
             prev_depth = depth
             depth += line.count("{") - line.count("}")
-            if prev_depth == 1 and depth == 1:
+            if prev_depth == 1 and depth == 1 and idx not in continued_idxs:
                 var_name = _match_var_decl(line)
                 if var_name:
                     member_var_names.add(var_name)
@@ -1291,8 +1385,13 @@ def analyze_class_blocks(
             abs_line = body_start + idx + 1  # 1-indexed absolute line
             prev_depth = depth
 
-            # public member variable: only at depth 1 (class body, not in a function)
-            if prev_depth == 1 and access_per_line[idx] == "public":
+            # public member variable: only at depth 1 (class body, not in a
+            # function). Lines flagged as continuations of an earlier
+            # multi-line declaration are skipped regardless of how they
+            # look in isolation — e.g. `    = std::vector<int>;` after a
+            # two-line `using value_type` alias must not count as a member.
+            if prev_depth == 1 and access_per_line[idx] == "public" \
+                    and idx not in continued_idxs:
                 if is_public_member_var(line):
                     pub_findings.append(Finding(
                         rule="public_member_variable",
@@ -1303,8 +1402,11 @@ def analyze_class_blocks(
 
             # static member variable: depth 1, any access section.
             # Excludes static_assert, static member functions, and
-            # static_cast via is_static_member_var's heuristic.
-            if prev_depth == 1 and is_static_member_var(line):
+            # static_cast via is_static_member_var's heuristic. Continued
+            # multi-line declarations are skipped for the same reason
+            # documented above for the public-member rule.
+            if prev_depth == 1 and idx not in continued_idxs \
+                    and is_static_member_var(line):
                 static_findings.append(Finding(
                     rule="static_member_variable",
                     line=abs_line,
