@@ -119,7 +119,7 @@ void module_charge::chgmixing_ks(const int iter, // scf iteration number
 
 void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
         Charge_Mixing* p_chgmix, // charge mixing class
-        Plus_U &dftu, // mohan add 2025-11-06
+        Plus_U_Base& dftu,
 		const Input_para& inp) // input parameters
 {
     ModuleBase::TITLE("module_charge", "chgmixing_ks_pw");
@@ -180,7 +180,7 @@ void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
 
 void module_charge::chgmixing_ks_lcao(const int iter, // scf iteration number
         Charge_Mixing* p_chgmix, // charge mixing class
-        Plus_U &dftu, // mohan add 2025-11-06
+        Plus_U_Base& dftu,
         const int nnr, // dimension of density matrix
 		const Input_para& inp) // input parameters
 {
