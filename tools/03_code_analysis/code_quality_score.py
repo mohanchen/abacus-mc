@@ -1390,7 +1390,13 @@ def analyze_class_blocks(
             # multi-line declaration are skipped regardless of how they
             # look in isolation — e.g. `    = std::vector<int>;` after a
             # two-line `using value_type` alias must not count as a member.
+            # Only `class` bodies are penalised: in C++ a `struct` has
+            # public access by default and public data members are a
+            # legitimate, intended usage (POD aggregate, value types,
+            # mixin tags). Treating them as a code-quality issue would
+            # penalise perfectly idiomatic C++.
             if prev_depth == 1 and access_per_line[idx] == "public" \
+                    and kind == "class" \
                     and idx not in continued_idxs:
                 if is_public_member_var(line):
                     pub_findings.append(Finding(
