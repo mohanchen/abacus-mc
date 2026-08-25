@@ -60,31 +60,6 @@
 namespace spinconstrain
 {
 
-/**
- * @brief Convert spinor occupation matrix to magnetic moment vector using Pauli matrices.
- *
- * @details For a two-component spinor wavefunction, the spin density matrix is:
- *   rho = |a|^2    a*b  |   = | (1+Mz)/2    (Mx-iMy)/2 |
- *         |b*a    |b|^2  |     | (Mx+iMy)/2   (1-Mz)/2  |
- * The magnetic moment components are extracted via Pauli matrix traces:
- *   Mx = Tr(rho * sigma_x) = occ[1] + occ[2]           (real part)
- *   My = Tr(rho * sigma_y) = -Im(occ[1] - occ[2])      (from sigma_y = [[0,-i],[i,0]])
- *   Mz = Tr(rho * sigma_z) = occ[0] - occ[3]            (real part)
- * where occ = {|a|^2, a*b, b*a, |b|^2} from becp coefficients.
- *
- * @param occ 4-element array of occupation matrix elements (complex)
- * @param weight k-point weight for integration
- * @return 3D magnetic moment vector (Mx, My, Mz) in Bohr magnetons
- */
-inline ModuleBase::Vector3<double> pauli_to_moment(const std::complex<double> occ[4], double weight)
-{
-    return ModuleBase::Vector3<double>(
-        weight * (occ[1] + occ[2]).real(),
-        weight * (occ[1] - occ[2]).imag(),
-        weight * (occ[0] - occ[3]).real()
-    );
-}
-
 struct ScAtomData;
 
 /**
@@ -549,31 +524,6 @@ public:
     int get_iwt(int itype, int iat, int orbital_index) const; ///< Convert (itype, iat, iw) to global orbital index
     /// @brief Get spin sign for k-point ik: +1 for spin-up, -1 for spin-down (nspin=2 only)
     int get_spin_sign(int ik) const;
-    /**
-     * @brief Accumulate magnetic moments from becp coefficients for a single k-point.
-     *
-     * @details For npol=2 (nspin=4), computes full Pauli decomposition:
-     *   occ[0] = sum(becp_up^* * becp_up), occ[1] = sum(becp_up^* * becp_dn),
-     *   occ[2] = sum(becp_dn^* * becp_up), occ[3] = sum(becp_dn^* * becp_dn)
-     *   Mi = pauli_to_moment(occ, weight)
-     * For npol=1 (nspin=2), only z-component:
-     *   occ = sum(|becp|^2), Mi.z += weight * occ * spin_sign
-     *
-     * @param becp Projector coefficients <alpha_{l,m}|psi_{k,i}>
-     * @param nkb Total number of projectors
-     * @param nbands Number of bands
-     * @param npol Number of spinor components
-     * @param ik K-point index (for spin_sign lookup in nspin=2)
-     * @param wg_ik Band weights for this k-point
-     * @param nh_iat Number of projectors per atom
-     */
-    void accumulate_Mi_from_becp(const std::complex<double>* becp,
-                                 int nkb,
-                                 int nbands,
-                                 int npol,
-                                 int ik,
-                                 const double* wg_ik,
-                                 const int* nh_iat);
   private:
     /// DeltaSpin operator pointer for LCAO magnetic moment calculation
     hamilt::Operator<TK>* p_operator = nullptr;

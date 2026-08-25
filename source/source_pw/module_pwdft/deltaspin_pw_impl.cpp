@@ -5,6 +5,7 @@
 #include "source_base/kernels/math_kernel_op.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
 #include "source_lcao/module_deltaspin/spin_constrain.h"
+#include "source_lcao/module_deltaspin/mi_tools.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_hsolver/diago_iter_assist.h"
 #include "source_hsolver/hsolver_pw.h"
@@ -52,8 +53,9 @@ void SpinConstrain<std::complex<double>>::cal_mi_pw()
             onsite_p->overlap_proj_psi(nbands * npol, psi_pointer); // Compute becp = <alpha|psi>
             const std::complex<double>* becp = onsite_p->get_h_becp();
             int nkb = onsite_p->get_tot_nproj();
-            this->accumulate_Mi_from_becp(becp, nkb, nbands, npol, ik,
-                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0));
+            const int spin_sign = (npol == 2) ? 1 : this->get_spin_sign(ik);
+            accumulate_Mi_from_becp(becp, nkb, nbands, npol, spin_sign,
+                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0), this->Mi_);
         }
     }
 #if ((defined __CUDA) || (defined __ROCM))
@@ -73,8 +75,9 @@ void SpinConstrain<std::complex<double>>::cal_mi_pw()
             onsite_p->overlap_proj_psi(nbands * npol, psi_pointer);
             const std::complex<double>* becp = onsite_p->get_h_becp();
             int nkb = onsite_p->get_size_becp() / nbands / npol;
-            this->accumulate_Mi_from_becp(becp, nkb, nbands, npol, ik,
-                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0));
+            const int spin_sign = (npol == 2) ? 1 : this->get_spin_sign(ik);
+            accumulate_Mi_from_becp(becp, nkb, nbands, npol, spin_sign,
+                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0), this->Mi_);
         }
     }
 #endif

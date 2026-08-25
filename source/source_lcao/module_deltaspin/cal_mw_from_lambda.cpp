@@ -4,6 +4,7 @@
 #include "source_hsolver/diago_iter_assist.h"
 #include "source_io/module_parameter/parameter.h"
 #include "spin_constrain.h"
+#include "mi_tools.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
 #include "source_base/parallel_reduce.h"
 #include "source_hsolver/hsolver_lcao.h"
@@ -279,8 +280,9 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mw_from_lambda(
             for (int ik = 0; ik < nk; ik++)
             {
                 const std::complex<double>* becp = &becp_tmp[ik * size_becp];
-                this->accumulate_Mi_from_becp(becp, nkb, nbands, this->npol_, ik,
-                    &this->pelec->wg(ik, 0), nh_iat);
+                const int spin_sign = (this->npol_ == 2) ? 1 : this->get_spin_sign(ik);
+                accumulate_Mi_from_becp(becp, nkb, nbands, this->npol_, spin_sign,
+                    &this->pelec->wg(ik, 0), nh_iat, this->Mi_);
             }
             // MPI reduction: sum Mi across all k-pool ranks
             Parallel_Reduce::reduce_double_allpool(PARAM.inp.kpar,
