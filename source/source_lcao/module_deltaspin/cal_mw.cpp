@@ -1,12 +1,6 @@
-#include <iostream>
-
-#include "source_base/matrix.h"
-#include "source_base/name_angular.h"
-#include "source_base/parallel_reduce.h"
 #include "source_base/tool_title.h"
 #include "source_base/timer.h"
 #include "spin_constrain.h"
-#include "source_io/module_parameter/parameter.h"
 #ifdef __LCAO
 #include "source_estate/elecstate_lcao.h"
 #include "source_lcao/hamilt_lcao.h"
