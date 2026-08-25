@@ -223,6 +223,75 @@ NON_FUNCTION_KEYWORDS = {
     "delete", "operator", "do", "else", "goto", "continue",
     "break", "try",
 }
+
+# Keywords that, when they appear as the last identifier in the prefix
+# before a `name(args)` candidate followed by `;` or `=`, strongly
+# indicate the candidate is a function call in statement/expression
+# context rather than a declaration.
+STATEMENT_CONTEXT_KEYWORDS = NON_FUNCTION_KEYWORDS | {
+    "co_await", "co_return", "co_yield",
+    "typeid", "noexcept", "alignof", "alignas", "decltype",
+    "static_cast", "const_cast", "dynamic_cast", "reinterpret_cast",
+    "and", "or", "not", "xor", "bitor", "bitand", "compl",
+}
+
+# Punctuation characters that, when they are the last non-whitespace
+# char before `name(args)` followed by `;` or `=`, indicate an
+# expression / argument-list context (i.e. a call, not a declaration).
+# `*` and `&` are intentionally NOT in this set because they also act
+# as valid pointer/reference type qualifiers in a return type. The
+# double-character operator forms (`&&`, `||`, `**`, etc.) are handled
+# by the two-character check inside _is_declaration_prefix.
+# Examples: `foo(1, bar(x), 3)`    ->  prefix ends with `,`
+#           `if (cond && ok(x))`    ->  prefix ends with `&&`
+#           `v.push_back(fn())`      ->  prefix ends with `.`
+DECL_PREFIX_BAD_TAIL = set("=+-/%|^~!<>?([{,.;:")
+
+# Last-identifier regex: extracts the trailing identifier word from a
+# prefix string (strips trailing punctuation and whitespace first).
+_LAST_IDENT_RE = re.compile(r"([A-Za-z_]\w*)\s*$")
+
+
+def _is_declaration_prefix(prefix_stripped: str) -> bool:
+    """Return True when `prefix_stripped` (the right-stripped text between
+    the start of the line and the candidate `name(args)` opener) is
+    consistent with a function declaration/definition context rather
+    than a call-site expression.
+
+    A prefix is *not* a declaration prefix when:
+      * it is empty;
+      * its last non-whitespace character is punctuation that typically
+        appears inside expressions / argument lists (see
+        DECL_PREFIX_BAD_TAIL), or it is the double-character operator
+        form of `&&`, `||`, `**`, `->` that commonly appears inside
+        expressions;
+      * its trailing identifier token is a statement/expression
+        keyword (see STATEMENT_CONTEXT_KEYWORDS) such as `return`,
+        `throw`, `if`, `sizeof`, `static_cast`, etc.
+
+    Constructors/destructors that open with `{` instead of `;` or `=`
+    are handled separately by the caller and do not go through this
+    check.
+    """
+    if not prefix_stripped:
+        return False
+    tail_char = prefix_stripped[-1]
+    # Two-character expression operators that include `*` or `&` (which
+    # are not declared in the single-char bad-tail set because they are
+    # also valid type qualifiers).
+    if len(prefix_stripped) >= 2:
+        prev_char = prefix_stripped[-2]
+        double = prev_char + tail_char
+        if double in {"&&", "||", "**", "*&", "&*", "->"}:
+            return False
+    if tail_char in DECL_PREFIX_BAD_TAIL:
+        return False
+    m = _LAST_IDENT_RE.search(prefix_stripped)
+    if m and m.group(1) in STATEMENT_CONTEXT_KEYWORDS:
+        return False
+    return True
+
+
 FUNC_NAME_RE = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
 QUALIFIER_RE = re.compile(r"\b(?:const|override|final|noexcept)\b")
 CYCLO_KEYWORDS_RE = re.compile(r"\b(?:if|for|while|switch|case)\b|&&|\|\|")
@@ -947,9 +1016,15 @@ def find_long_function_signatures(
             i = j + 1
             continue
 
-        # for `;` and `=`, require a return-type prefix (else it looks like a
-        # function call). For `{`, allow empty prefix (constructor/destructor).
-        if stripped[pos] in ";=" and not prefix_stripped:
+        # For `;` and `=`, the preceding prefix must look like a genuine
+        # declaration context (return type + optional specifiers) rather
+        # than the tail of an expression / argument list.
+        #   - `int f(int);`              prefix `int`  -> declaration ✓
+        #   - `return f(1, 2, 3, ...);`  prefix `return` -> call ✗
+        #   - `foo(1, bar(x), 3);`       prefix `foo(1, ` -> call ✗ (ends with `,(`)
+        #   - Constructor/destructor bodies terminate with `{` and bypass
+        #     this check entirely.
+        if stripped[pos] in ";=" and not _is_declaration_prefix(prefix_stripped):
             i = j + 1
             continue
 
