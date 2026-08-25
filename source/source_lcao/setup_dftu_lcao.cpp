@@ -1,5 +1,6 @@
 #include "setup_dftu_lcao.h"
 #include "source_lcao/module_dftu/dftu.h"
+#include "source_pw/module_pwdft/dftu_output.h" // mohan add 2025-11-08
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/hamilt_lcao.h"
 
@@ -67,7 +68,7 @@ void finish_dftu_lcao(const int iter,
         }
         dftu_ptr->cal_energy_correction(ucell, iter);
     }
-    dftu_ptr->output(ucell, out_chg, global_out_dir, nspin, npol);
+    dftu_io::output(*dftu_ptr, ucell, out_chg, global_out_dir, nspin, npol);
     
     /// use the converged occupation matrix for next MD/Relax SCF calculation
     if (conv_esolver)

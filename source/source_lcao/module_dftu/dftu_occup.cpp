@@ -6,229 +6,13 @@
 #endif
 #include "source_base/module_external/scalapack_connector.h"
 
-// copy_locale — save current locale to locale_save and uom_save
-//
-// nspin=1: single spin channel, uom_save[eff_pot_pw_index[iat]+mm]
-// nspin=2: split layout — spin-up at uom_save[index+mm],
-//          spin-down at uom_save[half_size+index+mm]
-// nspin=4: all 4 Pauli blocks packed contiguously from index
-void Plus_U::copy_locale(const UnitCell& ucell)
-{
-    ModuleBase::TITLE("Plus_U", "copy_locale");
-    ModuleBase::timer::start("Plus_U", "copy_locale");
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        int target_l = get_orbital_corr(T);
-        if (target_l == -1)
-            continue;
-
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-
-            if (Plus_U::nspin == 4)
-            {
-                locale_save[iat][target_l][0][0] = locale[iat][target_l][0][0];
-                if(this->uom_save.size() != 0)
-                {
-                    const int size = locale[iat][target_l][0][0].nr * locale[iat][target_l][0][0].nc;
-                    for(int mm=0; mm<size; mm++)
-                    {
-                        this->uom_save[eff_pot_pw_index[iat]+mm] = locale[iat][target_l][0][0].c[mm];
-                    }
-                }
-            }
-            else if (Plus_U::nspin == 1 || Plus_U::nspin == 2)
-            {
-                locale_save[iat][target_l][0][0] = locale[iat][target_l][0][0];
-                locale_save[iat][target_l][0][1] = locale[iat][target_l][0][1];
-                if(this->uom_save.size() != 0)
-                {
-                    const int size = locale[iat][target_l][0][0].nr * locale[iat][target_l][0][0].nc;
-                    const int half_size = this->uom_save.size() / 2;
-                    for(int mm=0; mm<size; mm++)
-                    {
-                        this->uom_save[eff_pot_pw_index[iat]+mm] = locale[iat][target_l][0][0].c[mm];
-                        this->uom_save[half_size + eff_pot_pw_index[iat]+mm] = locale[iat][target_l][0][1].c[mm];
-                    }
-                }
-            }
-        }
-    }
-    ModuleBase::timer::end("Plus_U", "copy_locale");
-}
-
-void Plus_U::zero_locale(const UnitCell& ucell)
-{
-    ModuleBase::TITLE("Plus_U", "zero_locale");
-    ModuleBase::timer::start("Plus_U", "zero_locale");
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-		if (!has_correlated_orbital(T)) 
-		{ 
-			continue;
-		}
-
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-
-            for (int l = 0; l < ucell.atoms[T].nwl + 1; l++)
-            {
-                const int N = ucell.atoms[T].l_nchi[l];
-
-                for (int n = 0; n < N; n++)
-                {
-                    if (Plus_U::nspin == 4)
-                    {
-                        locale[iat][l][n][0].zero_out();
-                    }
-                    else if (Plus_U::nspin == 1 || Plus_U::nspin == 2)
-                    {
-                        locale[iat][l][n][0].zero_out();
-                        locale[iat][l][n][1].zero_out();
-                    }
-                }
-            }
-        }
-    }
-    ModuleBase::timer::end("Plus_U", "zero_locale");
-}
-
-void Plus_U::mix_locale(const UnitCell& ucell,
-                      const double& mixing_beta)
-{
-    ModuleBase::TITLE("Plus_U", "mix_locale");
-    ModuleBase::timer::start("Plus_U", "mix_locale");
-
-    double beta = mixing_beta;
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        int target_l = get_orbital_corr(T);
-        if (target_l == -1)
-            continue;
-
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-
-            if (Plus_U::nspin == 4)
-            {
-                const int size = locale[iat][target_l][0][0].nr * locale[iat][target_l][0][0].nc;
-                for (int mm = 0; mm < size; mm++)
-                {
-                    locale[iat][target_l][0][0].c[mm] = locale[iat][target_l][0][0].c[mm] * beta + locale_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                }
-                if (this->uom_save.size() != 0)
-                {
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        this->uom_save[eff_pot_pw_index[iat] + mm] = locale[iat][target_l][0][0].c[mm];
-                    }
-                }
-            }
-            else if (Plus_U::nspin == 1 || Plus_U::nspin == 2)
-            {
-                const int size = locale[iat][target_l][0][0].nr * locale[iat][target_l][0][0].nc;
-                const int half_size = this->uom_save.size() / 2;
-                for (int mm = 0; mm < size; mm++)
-                {
-                    locale[iat][target_l][0][0].c[mm] = locale[iat][target_l][0][0].c[mm] * beta + locale_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                    locale[iat][target_l][0][1].c[mm] = locale[iat][target_l][0][1].c[mm] * beta + locale_save[iat][target_l][0][1].c[mm] * (1.0 - beta);
-                }
-                if (this->uom_save.size() != 0)
-                {
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        this->uom_save[eff_pot_pw_index[iat] + mm] = locale[iat][target_l][0][0].c[mm];
-                        this->uom_save[half_size + eff_pot_pw_index[iat] + mm] = locale[iat][target_l][0][1].c[mm];
-                    }
-                }
-            }
-        }
-    }
-    ModuleBase::timer::end("Plus_U", "mix_locale");
-}
-
-// set_locale — restore locale from uom_array (after mixing)
-//
-// nspin=1: locale[iat][l][n][0] from uom_array[eff_pot_pw_index[iat]+mm]
-// nspin=2: spin-up from uom_array[index+mm],
-//          spin-down from uom_array[half_size+index+mm]
-// nspin=4: all 4 Pauli blocks from uom_array[index+mm], mm in [0, 4*tlp1^2)
-void Plus_U::set_locale(const UnitCell& ucell)
-{
-    ModuleBase::TITLE("Plus_U", "set_locale");
-    ModuleBase::timer::start("Plus_U", "set_locale");
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        if (!has_correlated_orbital(T)) continue;
-        const int l = get_orbital_corr(T);
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-            if (Plus_U::nspin == 4)
-            {
-                for(int mm = 0; mm < locale[iat][l][0][0].nr * locale[iat][l][0][0].nc; mm++)
-                    locale[iat][l][0][0].c[mm] = this->uom_array[eff_pot_pw_index[iat] + mm];
-            }
-            else if (Plus_U::nspin == 1 || Plus_U::nspin == 2)
-            {
-                const int half_size = this->uom_array.size() / 2;
-                for(int mm = 0; mm < locale[iat][l][0][0].nr * locale[iat][l][0][0].nc; mm++)
-                {
-                    locale[iat][l][0][0].c[mm] = this->uom_array[eff_pot_pw_index[iat] + mm];
-                    if (Plus_U::nspin == 2)
-                    {
-                        locale[iat][l][0][1].c[mm] = this->uom_array[half_size + eff_pot_pw_index[iat] + mm];
-                    }
-                }
-            }
-        }
-    }
-
-    ModuleBase::timer::end("Plus_U", "set_locale");
-}
-
-void Plus_U::get_locale_flat(const int iat, const int l, std::vector<double>& occ) const
-{
-    const int tlp1 = 2 * l + 1;
-    const int size = tlp1 * tlp1;
-    if (nspin == 2)
-    {
-        for (int is = 0; is < 2; is++)
-        {
-            for (int i = 0; i < size; i++)
-            {
-                occ[is * size + i] = locale[iat][l][0][is].c[i];
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < static_cast<int>(occ.size()); i++)
-        {
-            occ[i] = locale[iat][l][0][0].c[i];
-        }
-    }
-}
-
-void Plus_U::set_locale_flat(const int iat, const int l, const int spin,
-                             const std::vector<double>& occ)
-{
-    for (int i = 0; i < static_cast<int>(occ.size()); i++)
-    {
-        locale[iat][l][0][spin].c[i] = occ[i];
-    }
-}
+// copy_locale(), zero_locale(), mix_locale(), set_locale(ucell),
+// get_locale_flat(), set_locale_flat()
+// are now implemented in dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
 
 #ifdef __LCAO
 
-void Plus_U::cal_occup_m_k(const int iter, 
+void Plus_U::cal_occup_m_k(const int iter,
                          const UnitCell& ucell,
                          const std::vector<std::vector<std::complex<double>>>& dm_k,
                          const K_Vectors& kv,
@@ -294,7 +78,7 @@ void Plus_U::cal_occup_m_k(const int iter,
             const int NL = ucell.atoms[it].nwl + 1;
             const int LC = get_orbital_corr(it);
 
-			if (LC == -1) 
+			if (LC == -1)
 			{
 				continue;
 			}
@@ -305,7 +89,7 @@ void Plus_U::cal_occup_m_k(const int iter,
 
                 for (int l = 0; l < NL; l++)
                 {
-					if (l != get_orbital_corr(it)) 
+					if (l != get_orbital_corr(it))
 					{
 						continue;
 					}
@@ -315,7 +99,7 @@ void Plus_U::cal_occup_m_k(const int iter,
                     for (int n = 0; n < N; n++)
                     {
                         // if(!Yukawa && n!=0) continue;
-						if (n != 0) 
+						if (n != 0)
 						{
 							continue;
 						}
@@ -368,7 +152,7 @@ void Plus_U::cal_occup_m_k(const int iter,
         const int NL = ucell.atoms[it].nwl + 1;
         const int LC = get_orbital_corr(it);
 
-		if (LC == -1) 
+		if (LC == -1)
 		{
 			continue;
 		}
@@ -379,7 +163,7 @@ void Plus_U::cal_occup_m_k(const int iter,
 
             for (int l = 0; l < NL; l++)
             {
-				if (l != get_orbital_corr(it)) 
+				if (l != get_orbital_corr(it))
 				{
 					continue;
 				}
@@ -389,7 +173,7 @@ void Plus_U::cal_occup_m_k(const int iter,
                 for (int n = 0; n < N; n++)
                 {
                     // if(!Yukawa && n!=0) continue;
-					if (n != 0) 
+					if (n != 0)
 					{
 						continue;
 					}
@@ -464,8 +248,8 @@ void Plus_U::cal_occup_m_k(const int iter,
 
 void Plus_U::cal_occup_m_gamma(const int iter,
                              const UnitCell &ucell,
-                             const std::vector<std::vector<double>> &dm_gamma, 
-                             const double& mixing_beta, 
+                             const std::vector<std::vector<double>> &dm_gamma,
+                             const double& mixing_beta,
                              hamilt::Hamilt<double>* p_ham)
 {
     ModuleBase::TITLE("Plus_U", "cal_occup_m_gamma");
@@ -510,7 +294,7 @@ void Plus_U::cal_occup_m_gamma(const int iter,
         for (int it = 0; it < ucell.ntype; it++)
         {
             const int NL = ucell.atoms[it].nwl + 1;
-			if (!has_correlated_orbital(it)) 
+			if (!has_correlated_orbital(it))
 			{
 				continue;
 			}
@@ -520,7 +304,7 @@ void Plus_U::cal_occup_m_gamma(const int iter,
 
                 for (int l = 0; l < NL; l++)
                 {
-					if (l != get_orbital_corr(it)) 
+					if (l != get_orbital_corr(it))
 					{
 						continue;
 					}
@@ -529,7 +313,7 @@ void Plus_U::cal_occup_m_gamma(const int iter,
 
                     for (int n = 0; n < N; n++)
                     {
-						if (n != 0) 
+						if (n != 0)
 						{
 							continue;
 						}

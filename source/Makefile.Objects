@@ -740,6 +740,9 @@ OBJS_SRCPW=h_ewald_pw.o\
     setup_pwrho.o\
     setup_pwwfc.o\
     update_cell_pw.o\
+    dftu_base.o\
+    dftu_output.o\
+    dftu_pw.o\
     setup_dftu_pw.o\
     deltaspin_pw.o\
     force_pw.o\
@@ -808,7 +811,6 @@ OBJS_DFTU=dftu.o\
       dftu_force.o\
       dftu_yukawa.o\
       dftu_folding.o\
-      dftu_io.o\
       dftu_tools.o\
       dftu_occup.o\
       dftu_hamilt.o\

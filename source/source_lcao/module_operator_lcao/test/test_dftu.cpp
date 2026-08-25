@@ -12,37 +12,13 @@ Plus_U::Plus_U(){};
 Plus_U::~Plus_U(){};
 
 Plus_U dftu;
-double Plus_U::energy_u = 0.0;
-std::vector<double> Plus_U::U = {}; // U (Hubbard parameter U)
-std::vector<int> Plus_U::orbital_corr = {}; 
+// Static member definitions are in dftu_base.cpp (Plus_U_Base::)
 
 const hamilt::HContainer<double>* tmp_DMR;
 
 const hamilt::HContainer<double>* Plus_U::get_dmr(int ispin) const
 {
     return tmp_DMR;
-}
-
-void Plus_U::get_locale_flat(const int iat, const int l, std::vector<double>& occ) const
-{
-    const int tlp1 = 2 * l + 1;
-    const int tlp1_2 = tlp1 * tlp1;
-    occ.resize(tlp1_2);
-    for (int i = 0; i < tlp1_2; i++)
-    {
-        occ[i] = locale[iat][l][0][0].c[i];
-    }
-}
-
-void Plus_U::set_locale_flat(const int iat, const int l, const int spin,
-                              const std::vector<double>& occ)
-{
-    const int tlp1 = 2 * l + 1;
-    const int tlp1_2 = tlp1 * tlp1;
-    for (int i = 0; i < tlp1_2 && i < static_cast<int>(occ.size()); i++)
-    {
-        locale[iat][l][0][spin].c[i] = occ[i];
-    }
 }
 
 //---------------------------------------
