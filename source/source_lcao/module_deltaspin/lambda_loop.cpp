@@ -1,5 +1,4 @@
 #include "spin_constrain.h"
-
 #include <iostream>
 #include <cmath>
 #include <chrono>
@@ -7,6 +6,7 @@
 #include <iomanip>
 
 #include "basic_funcs.h"
+#include "lambda_loop_helper.h"
 #include "source_base/constants.h"
 #include "source_io/module_parameter/parameter.h"
 
@@ -106,7 +106,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
 
     double inner_loop_duration = 0.0;
 
-    this->print_header(ofs_running);
+    print_header(*this, ofs_running);
 
     // =============================================================
     // MAIN OPTIMIZATION LOOP
@@ -170,7 +170,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
             new_spin = this->Mi_;
 
             // Check if gradient dM/dlambda has decayed below threshold
-            bool GradLessThanBound = this->check_gradient_decay(new_spin, spin, delta_lambda, dnu_last_step, false, ofs_running);
+            bool GradLessThanBound = check_gradient_decay(*this, new_spin, spin, delta_lambda, dnu_last_step, false, ofs_running);
             if (i_step >= this->nsc_min_ && GradLessThanBound)
             {
                 // Gradient has decayed: further optimization yields diminishing returns
@@ -186,7 +186,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
 #endif
                 inner_loop_duration += duration;
                 ofs_running << " Total TIME(s) = " << inner_loop_duration << std::endl;
-                this->print_termination(ofs_running);
+                print_termination(*this, ofs_running);
                 break;
             }
             spin = new_spin;
@@ -259,7 +259,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
                 - iterstart)).count() / static_cast<double>(1e6);
 #endif
         inner_loop_duration += duration;
-        if (this->check_rms_stop(outer_step, i_step, rms_error, duration, inner_loop_duration, ofs_running))
+        if (check_rms_stop(*this, outer_step, i_step, rms_error, duration, inner_loop_duration, ofs_running))
         {
             // Save RMS for ESolver to display in the SCF iteration table.
             this->last_rms_error_ = rms_error;
@@ -316,7 +316,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
         }
 
         // Cap step size to prevent overshooting
-        this->check_restriction(search, alpha_trial, ofs_running);
+        check_restriction(*this, search, alpha_trial, ofs_running);
 
         // =============================================================
         // CUMULATIVE STEP UPDATE
@@ -354,8 +354,8 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
         spin_plus = this->Mi_;
 
         // Find optimal step size via linear interpolation
-        alpha_opt = this->cal_alpha_opt(spin, spin_plus, alpha_trial);
-        this->check_restriction(search, alpha_opt, ofs_running);
+        alpha_opt = cal_alpha_opt(*this, spin, spin_plus, alpha_trial);
+        check_restriction(*this, search, alpha_opt, ofs_running);
 
         // Correct dnu: dnu += (alpha_opt - alpha_trial) * search
         alpha_plus = alpha_opt - alpha_trial;

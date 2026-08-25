@@ -257,10 +257,10 @@ int SpinConstrain<TK>::get_iwt(int itype, int iat, int orbital_index) const
 
 /// @brief Get total number of atoms across all element types
 template <typename TK>
-int SpinConstrain<TK>::get_nat()
+int SpinConstrain<TK>::get_nat() const
 {
     int nat = 0;
-    for (std::map<int, int>::iterator it = this->atomCounts.begin(); it != this->atomCounts.end(); ++it)
+    for (std::map<int, int>::const_iterator it = this->atomCounts.begin(); it != this->atomCounts.end(); ++it)
     {
         nat += it->second;
     }
@@ -269,7 +269,7 @@ int SpinConstrain<TK>::get_nat()
 
 /// @brief Get number of element types
 template <typename TK>
-int SpinConstrain<TK>::get_ntype()
+int SpinConstrain<TK>::get_ntype() const
 {
     return this->atomCounts.size();
 }
@@ -618,9 +618,10 @@ void SpinConstrain<TK>::zero_Mi()
 /// this function can only be called by the root process because only
 /// root process reads the ScDecayGrad from json file
 template <typename TK>
-double SpinConstrain<TK>::get_decay_grad(int itype)
+double SpinConstrain<TK>::get_decay_grad(int itype) const
 {
-    return this->ScDecayGrad[itype];
+    std::map<int, double>::const_iterator it = this->ScDecayGrad.find(itype);
+    return it != this->ScDecayGrad.end() ? it->second : 0.0;
 }
 
 /// set grad_decy
@@ -638,7 +639,7 @@ void SpinConstrain<TK>::set_decay_grad()
 
 /// get decay_grad
 template <typename TK>
-const std::vector<double>& SpinConstrain<TK>::get_decay_grad()
+const std::vector<double>& SpinConstrain<TK>::get_decay_grad() const
 {
     return this->decay_grad_;
 }
@@ -682,6 +683,20 @@ template <typename TK>
 double SpinConstrain<TK>::get_sc_thr() const
 {
     return this->sc_thr_;
+}
+
+/// get current adaptive sc threshold
+template <typename TK>
+double SpinConstrain<TK>::get_current_sc_thr() const
+{
+    return this->current_sc_thr_;
+}
+
+/// get computed magnetic moments Mi per atom
+template <typename TK>
+const std::vector<ModuleBase::Vector3<double>>& SpinConstrain<TK>::get_Mi() const
+{
+    return this->Mi_;
 }
 
 /// get nsc

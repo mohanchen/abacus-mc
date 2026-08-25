@@ -339,35 +339,10 @@ public:
                   int isk);
 #endif
 
-  /// Lambda loop helper: check if RMS error below threshold or max steps reached
-  bool check_rms_stop(int outer_step, int i_step, double rms_error, double duration, double total_duration, std::ostream& ofs_running);
-
-  /// Lambda loop helper: cap step size via restrict_current_ to prevent overshooting
-  void check_restriction(const std::vector<ModuleBase::Vector3<double>>& search, double& alpha_trial, std::ostream& ofs_running);
-
-  /**
-   * @brief Lambda loop helper: check if dM/dlambda gradient has decayed below threshold.
-   *
-   * @details Computes the diagonal of the susceptibility matrix dM/dlambda for each
-   * atom type. If max gradient < decay_grad[itype], the lambda optimization has
-   * reached diminishing returns and should stop.
-   *
-   * @return true if gradient decayed below threshold, false otherwise
-   */
-  bool check_gradient_decay(std::vector<ModuleBase::Vector3<double>> new_spin,
-                            std::vector<ModuleBase::Vector3<double>> old_spin,
-                            std::vector<ModuleBase::Vector3<double>> new_delta_lambda,
-                            std::vector<ModuleBase::Vector3<double>> old_delta_lambda,
-                            bool print,
-                            std::ostream& ofs_running);
-  /// @brief Lambda loop helper: calculate optimal step size via linear interpolation
-  double cal_alpha_opt(std::vector<ModuleBase::Vector3<double>> spin,
-                       std::vector<ModuleBase::Vector3<double>> spin_plus,
-                       const double alpha_trial);
-  /// Print header at start of lambda loop
-  void print_header(std::ostream& ofs_running);
-  /// Print termination message with final spin and lambda values
-  void print_termination(std::ostream& ofs_running);
+  /// Lambda loop helpers (print_rms_stop, check_restriction, check_gradient_decay,
+  /// cal_alpha_opt, print_header, print_termination) have been lifted to free
+  /// functions in lambda_loop_helper.h. The class now only carries state and
+  /// the core lambda-loop driver (run_lambda_loop).
 
   /// Print magnetic moments to output stream
   void print_Mi(std::ofstream& ofs_running);
@@ -450,9 +425,9 @@ public:
     /// get constrain
     const std::vector<ModuleBase::Vector3<int>>& get_constrain() const;
     /// get nat
-    int get_nat();
+    int get_nat() const;
     /// get ntype
-    int get_ntype();
+    int get_ntype() const;
     /// check atomCounts
     void check_atomCounts();
     /// get iat
@@ -464,11 +439,11 @@ public:
     /// zero atomic magnetic moment
     void zero_Mi();
     /// get decay_grad
-    double get_decay_grad(int itype);
+    double get_decay_grad(int itype) const;
     /// set decay_grad
     void set_decay_grad();
     /// get decay_grad
-    const std::vector<double>& get_decay_grad();
+    const std::vector<double>& get_decay_grad() const;
     /// set decay_grad from variable
     void set_decay_grad(const double* decay_grad_in, int ntype_in);
     /// set decay grad switch
@@ -482,6 +457,8 @@ public:
                               double sc_drop_thr_in);
     /// get sc_thr
     double get_sc_thr() const;
+    /// get current adaptive sc threshold (max(initial_rms * sc_drop_thr_, sc_thr_))
+    double get_current_sc_thr() const;
     /// get nsc
     int get_nsc() const;
     /// get nsc_min
@@ -492,6 +469,8 @@ public:
     double get_sccut() const;
     /// get sc_drop_thr
     double get_sc_drop_thr() const;
+    /// get computed magnetic moments Mi per atom
+    const std::vector<ModuleBase::Vector3<double>>& get_Mi() const;
     /// @brief set orbital parallel info
     void set_ParaV(Parallel_Orbitals* ParaV_in);
     /// @brief set parameters for solver
