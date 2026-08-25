@@ -30,13 +30,13 @@ TEST_F(SpinConstrainTest, TemplatHelpers)
     std::vector<std::complex<double>> Sloc2;
     EXPECT_NO_THROW(sc.cal_mw_from_lambda(0));
     EXPECT_NO_THROW(sc.cal_mi_lcao(0,false));
-    EXPECT_NO_THROW(sc.run_lambda_loop(0));
-    EXPECT_FALSE(sc.check_rms_stop(0, 0, 0.0, 0.0, 0.0));
-    EXPECT_NO_THROW(sc.print_termination());
-    EXPECT_NO_THROW(sc.print_header());
+    EXPECT_NO_THROW(sc.run_lambda_loop(0, true, std::cout));
+    EXPECT_FALSE(sc.check_rms_stop(0, 0, 0.0, 0.0, 0.0, std::cout));
+    EXPECT_NO_THROW(sc.print_termination(std::cout));
+    EXPECT_NO_THROW(sc.print_header(std::cout));
     std::vector<ModuleBase::Vector3<double>> new_spin, old_spin, new_delta_lambda, old_delta_lambda;
-    EXPECT_FALSE(sc.check_gradient_decay(new_spin, old_spin, new_delta_lambda, old_delta_lambda, true));
+    EXPECT_FALSE(sc.check_gradient_decay(new_spin, old_spin, new_delta_lambda, old_delta_lambda, true, std::cout));
     double alpha = 0.0;
-    EXPECT_NO_THROW(sc.check_restriction(new_spin, alpha));
+    EXPECT_NO_THROW(sc.check_restriction(new_spin, alpha, std::cout));
     EXPECT_EQ(sc.cal_alpha_opt(new_spin, old_spin, alpha), 0.0);
 }

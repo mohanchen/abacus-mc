@@ -3,7 +3,6 @@
 #include <iostream>
 #include "source_base/constants.h"
 #include "source_base/formatter.h"
-#include "source_base/global_variable.h"
 
 double maxval_abs_2d(const std::vector<ModuleBase::Vector3<double>>& array)
 {

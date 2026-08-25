@@ -46,7 +46,8 @@ void spinconstrain::SpinConstrain<double>::cal_mi_lcao(const int& step, bool pri
 /// @brief run_lambda_loop stub (TK=double): no-op
 template <>
 void spinconstrain::SpinConstrain<double>::run_lambda_loop(int outer_step,
-		bool rerun)
+		bool rerun,
+		std::ostream& ofs_running)
 {
 }
 
@@ -56,7 +57,8 @@ bool spinconstrain::SpinConstrain<double>::check_rms_stop(int outer_step,
                                                                     int i_step,
                                                                     double rms_error,
                                                                     double duration,
-                                                                    double total_duration)
+                                                                    double total_duration,
+                                                                    std::ostream& ofs_running)
 {
     return false;
 }
@@ -65,7 +67,8 @@ bool spinconstrain::SpinConstrain<double>::check_rms_stop(int outer_step,
 template <>
 void spinconstrain::SpinConstrain<double>::check_restriction(
     const std::vector<ModuleBase::Vector3<double>>& search,
-    double& alpha_trial)
+    double& alpha_trial,
+    std::ostream& ofs_running)
 {
 }
 
@@ -80,13 +83,13 @@ double spinconstrain::SpinConstrain<double>::cal_alpha_opt(std::vector<ModuleBas
 
 /// @brief print_termination stub (TK=double): no-op
 template <>
-void spinconstrain::SpinConstrain<double>::print_termination()
+void spinconstrain::SpinConstrain<double>::print_termination(std::ostream& ofs_running)
 {
 }
 
 /// @brief print_header stub (TK=double): no-op
 template <>
-void spinconstrain::SpinConstrain<double>::print_header()
+void spinconstrain::SpinConstrain<double>::print_header(std::ostream& ofs_running)
 {
 }
 
@@ -97,14 +100,15 @@ bool spinconstrain::SpinConstrain<double>::check_gradient_decay(
     std::vector<ModuleBase::Vector3<double>> old_spin,
     std::vector<ModuleBase::Vector3<double>> new_delta_lambda,
     std::vector<ModuleBase::Vector3<double>> old_delta_lambda,
-    bool print)
+    bool print,
+    std::ostream& ofs_running)
 {
     return false;
 }
 
 /// @brief run_lambda_linear_scan stub (TK=double): no-op
 template <>
-void spinconstrain::SpinConstrain<double>::run_lambda_linear_scan(int outer_step)
+void spinconstrain::SpinConstrain<double>::run_lambda_linear_scan(int outer_step, std::ostream& ofs_running)
 {
 }
 

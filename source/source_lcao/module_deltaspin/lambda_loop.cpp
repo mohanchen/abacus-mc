@@ -8,7 +8,6 @@
 
 #include "basic_funcs.h"
 #include "source_base/constants.h"
-#include "source_base/global_variable.h"
 #include "source_io/module_parameter/parameter.h"
 
 /**
@@ -72,7 +71,7 @@
  *   - decay_grad thresholds are not too aggressive
  */
 template <>
-void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int outer_step, bool rerun)
+void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int outer_step, bool rerun, std::ostream& ofs_running)
 {
     int nat = this->get_nat();
     int ntype = this->get_ntype();
@@ -107,7 +106,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
 
     double inner_loop_duration = 0.0;
 
-    this->print_header();
+    this->print_header(ofs_running);
 
     // =============================================================
     // MAIN OPTIMIZATION LOOP
@@ -129,9 +128,9 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
             // Save initial lambda: for unconstrained components (constrain==0), set to 0
             where_fill_scalar_else_2d(this->constrain_, 0, zero, this->lambda_, initial_lambda);
 
-            print_2d(" initial lambda (eV/uB): ", initial_lambda, this->nspin_, ModuleBase::Ry_to_eV, GlobalV::ofs_running);
-            print_2d(" initial spin (uB): ", spin, this->nspin_, 1.0, GlobalV::ofs_running);
-            print_2d(" target spin (uB): ", this->target_mag_, this->nspin_, 1.0, GlobalV::ofs_running);
+            print_2d(" initial lambda (eV/uB): ", initial_lambda, this->nspin_, ModuleBase::Ry_to_eV, ofs_running);
+            print_2d(" initial spin (uB): ", spin, this->nspin_, 1.0, ofs_running);
+            print_2d(" target spin (uB): ", this->target_mag_, this->nspin_, 1.0, ofs_running);
             i_step++;
         }
         else
@@ -171,7 +170,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
             new_spin = this->Mi_;
 
             // Check if gradient dM/dlambda has decayed below threshold
-            bool GradLessThanBound = this->check_gradient_decay(new_spin, spin, delta_lambda, dnu_last_step);
+            bool GradLessThanBound = this->check_gradient_decay(new_spin, spin, delta_lambda, dnu_last_step, false, ofs_running);
             if (i_step >= this->nsc_min_ && GradLessThanBound)
             {
                 // Gradient has decayed: further optimization yields diminishing returns
@@ -186,8 +185,8 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
                     - iterstart)).count() / static_cast<double>(1e6);
 #endif
                 inner_loop_duration += duration;
-                GlobalV::ofs_running << " Total TIME(s) = " << inner_loop_duration << std::endl;
-                this->print_termination();
+                ofs_running << " Total TIME(s) = " << inner_loop_duration << std::endl;
+                this->print_termination(ofs_running);
                 break;
             }
             spin = new_spin;
@@ -260,7 +259,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
                 - iterstart)).count() / static_cast<double>(1e6);
 #endif
         inner_loop_duration += duration;
-        if (this->check_rms_stop(outer_step, i_step, rms_error, duration, inner_loop_duration))
+        if (this->check_rms_stop(outer_step, i_step, rms_error, duration, inner_loop_duration, ofs_running))
         {
             // Save RMS for ESolver to display in the SCF iteration table.
             this->last_rms_error_ = rms_error;
@@ -283,7 +282,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
                 }
                 mean_error = sum_2d(temp_1) / nat;
                 rms_error = std::sqrt(mean_error);
-                GlobalV::ofs_running<<" Current RMS: "<<rms_error<<std::endl;
+                ofs_running<<" Current RMS: "<<rms_error<<std::endl;
 
                 // If RMS is still large after full update, recursively rerun
                 // with higher precision (full PW solver instead of subspace only)
@@ -291,7 +290,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
                 {
                     std::cout<<" DeltaSpin: RMS error too large ("<<rms_error<<"), rerun inner loop with full PW solver"<<std::endl;
                     std::cout<<std::endl;
-                    this->run_lambda_loop(outer_step, false);
+                    this->run_lambda_loop(outer_step, false, ofs_running);
                 }
             }
             break;
@@ -317,7 +316,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
         }
 
         // Cap step size to prevent overshooting
-        this->check_restriction(search, alpha_trial);
+        this->check_restriction(search, alpha_trial, ofs_running);
 
         // =============================================================
         // CUMULATIVE STEP UPDATE
@@ -356,7 +355,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
 
         // Find optimal step size via linear interpolation
         alpha_opt = this->cal_alpha_opt(spin, spin_plus, alpha_trial);
-        this->check_restriction(search, alpha_opt);
+        this->check_restriction(search, alpha_opt, ofs_running);
 
         // Correct dnu: dnu += (alpha_opt - alpha_trial) * search
         alpha_plus = alpha_opt - alpha_trial;
@@ -423,7 +422,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
  *   step, lambda_eV_uB, Mi_x_0, Mi_y_0, Mi_z_0, Mi_x_1, ...
  */
 template <>
-void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(int outer_step)
+void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(int outer_step, std::ostream& ofs_running)
 {
     int nat = this->get_nat();
     int ntype = this->get_ntype();
@@ -433,7 +432,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     int nsteps = PARAM.inp.sc_scan_steps;
 
     if (nsteps <= 0) {
-        GlobalV::ofs_running << " [DS-DIAG] linear_scan: sc_scan_steps <= 0, skipping" << std::endl;
+        ofs_running << " [DS-DIAG] linear_scan: sc_scan_steps <= 0, skipping" << std::endl;
         return;
     }
 
@@ -442,15 +441,15 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     double lambda_end_ry = lambda_end / ModuleBase::Ry_to_eV;
     double lambda_step = (lambda_end_ry - lambda_start_ry) / (nsteps - 1);
 
-    GlobalV::ofs_running << "\n" << std::string(80, '=') << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] === LINEAR LAMBDA SCAN START ===" << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] Scan range: " << lambda_start << " -> " << lambda_end << " eV/uB" << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] Number of steps: " << nsteps << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] Lambda step size: " << lambda_step * ModuleBase::Ry_to_eV << " eV/uB" << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] nat = " << nat << ", ntype = " << ntype << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] nspin_ = " << this->nspin_ << ", npol_ = " << this->npol_ << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] p_operator = " << (this->p_operator ? "valid" : "NULL") << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] constrain_ size = " << this->constrain_.size() << std::endl;
+    ofs_running << "\n" << std::string(80, '=') << std::endl;
+    ofs_running << " [DS-DIAG] === LINEAR LAMBDA SCAN START ===" << std::endl;
+    ofs_running << " [DS-DIAG] Scan range: " << lambda_start << " -> " << lambda_end << " eV/uB" << std::endl;
+    ofs_running << " [DS-DIAG] Number of steps: " << nsteps << std::endl;
+    ofs_running << " [DS-DIAG] Lambda step size: " << lambda_step * ModuleBase::Ry_to_eV << " eV/uB" << std::endl;
+    ofs_running << " [DS-DIAG] nat = " << nat << ", ntype = " << ntype << std::endl;
+    ofs_running << " [DS-DIAG] nspin_ = " << this->nspin_ << ", npol_ = " << this->npol_ << std::endl;
+    ofs_running << " [DS-DIAG] p_operator = " << (this->p_operator ? "valid" : "NULL") << std::endl;
+    ofs_running << " [DS-DIAG] constrain_ size = " << this->constrain_.size() << std::endl;
 
     // Check if any constraints are defined; if not, set all atoms as constrained
     bool has_constraints = false;
@@ -462,7 +461,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     }
 
     if (!has_constraints) {
-        GlobalV::ofs_running << " [DS-DIAG] No constraints found in STRU, setting all atoms as constrained" << std::endl;
+        ofs_running << " [DS-DIAG] No constraints found in STRU, setting all atoms as constrained" << std::endl;
         for (int ia = 0; ia < nat; ia++) {
             if (this->nspin_ == 4) {
                 this->constrain_[ia] = ModuleBase::Vector3<int>(1, 1, 1);
@@ -474,11 +473,11 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     }
 
     for (int ia = 0; ia < nat; ia++) {
-        GlobalV::ofs_running << " [DS-DIAG]   Atom " << ia << " constrain = ("
+        ofs_running << " [DS-DIAG]   Atom " << ia << " constrain = ("
                              << this->constrain_[ia].x << ", " << this->constrain_[ia].y << ", " << this->constrain_[ia].z << ")"
                              << " target_mag = (" << this->target_mag_[ia].x << ", " << this->target_mag_[ia].y << ", " << this->target_mag_[ia].z << ")" << std::endl;
     }
-    GlobalV::ofs_running << std::string(80, '=') << "\n" << std::endl;
+    ofs_running << std::string(80, '=') << "\n" << std::endl;
 
     // Save initial lambda to restore after scan
     std::vector<ModuleBase::Vector3<double>> initial_lambda(nat, 0.0);
@@ -530,7 +529,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
             }
         }
 
-        GlobalV::ofs_running << " [DS-DIAG] === Scan step " << istep << "/" << nsteps
+        ofs_running << " [DS-DIAG] === Scan step " << istep << "/" << nsteps
                              << " lambda = " << lambda_val_ev << " eV/uB ===" << std::endl;
 
         // Compute magnetic moments at current lambda
@@ -551,14 +550,14 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
         }
         ofs_scan << std::endl;
 
-        GlobalV::ofs_running << " [DS-DIAG]   lambda = " << lambda_val_ev << " eV/uB" << std::endl;
+        ofs_running << " [DS-DIAG]   lambda = " << lambda_val_ev << " eV/uB" << std::endl;
         for (int ia = 0; ia < nat; ia++) {
-            GlobalV::ofs_running << " [DS-DIAG]   Atom " << ia << " Mi = ("
+            ofs_running << " [DS-DIAG]   Atom " << ia << " Mi = ("
                                  << this->Mi_[ia].x << ", "
                                  << this->Mi_[ia].y << ", "
                                  << this->Mi_[ia].z << ") uB" << std::endl;
         }
-        GlobalV::ofs_running << std::endl;
+        ofs_running << std::endl;
     }
 
     // =============================================================
@@ -566,7 +565,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     // to verify that the lambda->Mi mapping is numerically stable
     // after multiple lambda updates in the scan loop
     // =============================================================
-    GlobalV::ofs_running << " [DS-DIAG] === Consistency check: restoring initial lambda ===" << std::endl;
+    ofs_running << " [DS-DIAG] === Consistency check: restoring initial lambda ===" << std::endl;
     this->lambda_ = initial_lambda;
     this->cal_mw_from_lambda(nsteps);
 
@@ -580,9 +579,9 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     }
     ofs_scan << std::endl;
 
-    GlobalV::ofs_running << " [DS-DIAG]   lambda = " << lambda_start << " eV/uB (restored)" << std::endl;
+    ofs_running << " [DS-DIAG]   lambda = " << lambda_start << " eV/uB (restored)" << std::endl;
     for (int ia = 0; ia < nat; ia++) {
-        GlobalV::ofs_running << " [DS-DIAG]   Atom " << ia << " Mi = ("
+        ofs_running << " [DS-DIAG]   Atom " << ia << " Mi = ("
                              << this->Mi_[ia].x << ", "
                              << this->Mi_[ia].y << ", "
                              << this->Mi_[ia].z << ") uB" << std::endl;
@@ -599,11 +598,11 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
         if (diff > max_mi_diff) max_mi_diff = diff;
         ofs_scan << "#   Atom " << ia << " dM = (" << dx << ", " << dy << ", " << dz << ") uB" << std::endl;
     }
-    GlobalV::ofs_running << " [DS-DIAG] Max Mi difference between step 0 and init_recheck: " << max_mi_diff << " uB" << std::endl;
+    ofs_running << " [DS-DIAG] Max Mi difference between step 0 and init_recheck: " << max_mi_diff << " uB" << std::endl;
     if (max_mi_diff > 1e-8) {
-        GlobalV::ofs_running << " [DS-DIAG] WARNING: Mi mapping may be inconsistent after multiple lambda updates!" << std::endl;
+        ofs_running << " [DS-DIAG] WARNING: Mi mapping may be inconsistent after multiple lambda updates!" << std::endl;
     } else {
-        GlobalV::ofs_running << " [DS-DIAG] OK: Mi mapping is consistent." << std::endl;
+        ofs_running << " [DS-DIAG] OK: Mi mapping is consistent." << std::endl;
     }
     ofs_scan << "#   Max Mi difference: " << max_mi_diff << " uB" << std::endl;
 
@@ -612,10 +611,10 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_linear_scan(
     // Restore original lambda values (already restored above, but explicit for clarity)
     this->lambda_ = initial_lambda;
 
-    GlobalV::ofs_running << std::string(80, '=') << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] === LINEAR LAMBDA SCAN COMPLETE ===" << std::endl;
-    GlobalV::ofs_running << " [DS-DIAG] Results written to: lambda_scan_results.dat" << std::endl;
-    GlobalV::ofs_running << std::string(80, '=') << "\n" << std::endl;
+    ofs_running << std::string(80, '=') << std::endl;
+    ofs_running << " [DS-DIAG] === LINEAR LAMBDA SCAN COMPLETE ===" << std::endl;
+    ofs_running << " [DS-DIAG] Results written to: lambda_scan_results.dat" << std::endl;
+    ofs_running << std::string(80, '=') << "\n" << std::endl;
 
     return;
 }

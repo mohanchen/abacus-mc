@@ -37,6 +37,7 @@
 #define SPIN_CONSTRAIN_H
 
 #include <complex>
+#include <fstream>
 #include <map>
 #include <vector>
 
@@ -253,7 +254,8 @@ public:
    * @param rerun If true, use full PW solver for final charge update
    */
   void run_lambda_loop(int outer_step,
-		  bool rerun = true);
+		  bool rerun,
+		  std::ostream& ofs_running);
 
   /// @brief RMS error of the most recent lambda optimization loop (-1.0 if none has run).
   double get_last_rms_error() const { return last_rms_error_; }
@@ -267,7 +269,7 @@ public:
    *
    * @param outer_step Current SCF outer iteration number
    */
-  void run_lambda_linear_scan(int outer_step);
+  void run_lambda_linear_scan(int outer_step, std::ostream& ofs_running);
 
   /// @brief Reset DeltaSpin operator initialization state when constraints change
   void reset_dspin_operator();
@@ -338,10 +340,10 @@ public:
 #endif
 
   /// Lambda loop helper: check if RMS error below threshold or max steps reached
-  bool check_rms_stop(int outer_step, int i_step, double rms_error, double duration, double total_duration);
+  bool check_rms_stop(int outer_step, int i_step, double rms_error, double duration, double total_duration, std::ostream& ofs_running);
 
   /// Lambda loop helper: cap step size via restrict_current_ to prevent overshooting
-  void check_restriction(const std::vector<ModuleBase::Vector3<double>>& search, double& alpha_trial);
+  void check_restriction(const std::vector<ModuleBase::Vector3<double>>& search, double& alpha_trial, std::ostream& ofs_running);
 
   /**
    * @brief Lambda loop helper: check if dM/dlambda gradient has decayed below threshold.
@@ -356,15 +358,16 @@ public:
                             std::vector<ModuleBase::Vector3<double>> old_spin,
                             std::vector<ModuleBase::Vector3<double>> new_delta_lambda,
                             std::vector<ModuleBase::Vector3<double>> old_delta_lambda,
-                            bool print = false);
+                            bool print,
+                            std::ostream& ofs_running);
   /// @brief Lambda loop helper: calculate optimal step size via linear interpolation
   double cal_alpha_opt(std::vector<ModuleBase::Vector3<double>> spin,
                        std::vector<ModuleBase::Vector3<double>> spin_plus,
                        const double alpha_trial);
   /// Print header at start of lambda loop
-  void print_header();
+  void print_header(std::ostream& ofs_running);
   /// Print termination message with final spin and lambda values
-  void print_termination();
+  void print_termination(std::ostream& ofs_running);
 
   /// Print magnetic moments to output stream
   void print_Mi(std::ofstream& ofs_running);
