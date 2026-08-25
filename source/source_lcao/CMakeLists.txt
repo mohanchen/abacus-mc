@@ -65,7 +65,6 @@ if(ENABLE_LCAO)
         center2orb_orb11.cpp
         center2orb_orb21.cpp
         center2orb_orb22.cpp
-        wavefunc_in_pw.cpp
     )
 
     add_library(

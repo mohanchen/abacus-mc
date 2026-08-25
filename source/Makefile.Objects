@@ -470,7 +470,7 @@ OBJS_PSI_INITIALIZER=psi_base.o\
                      psi_init_atomic.o\
                      psi_init_atom_rand.o\
                      psi_init_nao.o\
-                     psi_init_nao_random.o\
+                     psi_init_nao_random.o
 
 OBJS_PW=fft_bundle.o\
     fft_cpu.o\
@@ -691,7 +691,6 @@ OBJS_LCAO=evolve_elec.o\
       center2orb_orb21.o\
       center2orb_orb22.o\
       record_adj.o\
-      wavefunc_in_pw.o\
 
 OBJS_MODULE_RI=conv_coulomb_pot_k.o\
       exx_abfs-abfs_index.o\
