@@ -26,8 +26,8 @@ void Plus_U_Base::cal_occ_pw(const int iter,
             const int* isk)
 {
     ModuleBase::timer::start("Plus_U_Base", "cal_occ_pw");
-    this->copy_locale(cell);
-    this->zero_locale(cell);
+    this->copy_occ_mat(cell);
+    this->zero_occ_mat(cell);
 
     if(this->device == "cpu")
     {
@@ -243,7 +243,7 @@ void Plus_U_Base::cal_occ_pw(const int iter,
     if(is_mixing_enabled() && p_chgmix != nullptr)
     {
         p_chgmix->mix_uom(this->uom_array, this->uom_save);
-        this->set_locale(cell);
+        this->set_occ_mat(cell);
     }
 
     Plus_U_Base::energy_u = 0.0;

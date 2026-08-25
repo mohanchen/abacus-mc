@@ -145,10 +145,10 @@ class Plus_U_Base
     static void enable_mixing() { mixing_dftu = 1; }
 
   protected:
-    void copy_locale(const UnitCell& ucell);
-    void zero_locale(const UnitCell& ucell);
-    void mix_locale(const UnitCell& ucell, const double& mixing_beta);
-    void set_locale(const UnitCell& ucell);
+    void copy_occ_mat(const UnitCell& ucell);
+    void zero_occ_mat(const UnitCell& ucell);
+    void mix_occ_mat(const UnitCell& ucell, const double& mixing_beta);
+    void set_occ_mat(const UnitCell& ucell);
 
     std::vector<std::complex<double>> eff_pot_pw;
     std::vector<int> eff_pot_pw_index;

@@ -239,7 +239,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 #endif
 
         mark_occ_mat_initialized();
-        this->copy_locale(cell);
+        this->copy_occ_mat(cell);
     }
     else
     {
@@ -255,7 +255,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
         }
         else
         {
-            this->zero_locale(cell);
+            this->zero_occ_mat(cell);
         }
     }
 
@@ -307,10 +307,10 @@ bool Plus_U_Base::u_converged()
 
 
 // copy_locale — save current occ_mat to occ_mat_save and uom_save
-void Plus_U_Base::copy_locale(const UnitCell& ucell)
+void Plus_U_Base::copy_occ_mat(const UnitCell& ucell)
 {
-    ModuleBase::TITLE("Plus_U_Base", "copy_locale");
-    ModuleBase::timer::start("Plus_U_Base", "copy_locale");
+    ModuleBase::TITLE("Plus_U_Base", "copy_occ_mat");
+    ModuleBase::timer::start("Plus_U_Base", "copy_occ_mat");
 
     for (int T = 0; T < ucell.ntype; T++)
     {
@@ -351,14 +351,14 @@ void Plus_U_Base::copy_locale(const UnitCell& ucell)
             }
         }
     }
-    ModuleBase::timer::end("Plus_U_Base", "copy_locale");
+    ModuleBase::timer::end("Plus_U_Base", "copy_occ_mat");
 }
 
 
-void Plus_U_Base::zero_locale(const UnitCell& ucell)
+void Plus_U_Base::zero_occ_mat(const UnitCell& ucell)
 {
-    ModuleBase::TITLE("Plus_U_Base", "zero_locale");
-    ModuleBase::timer::start("Plus_U_Base", "zero_locale");
+    ModuleBase::TITLE("Plus_U_Base", "zero_occ_mat");
+    ModuleBase::timer::start("Plus_U_Base", "zero_occ_mat");
 
     for (int T = 0; T < ucell.ntype; T++)
     {
@@ -390,15 +390,15 @@ void Plus_U_Base::zero_locale(const UnitCell& ucell)
             }
         }
     }
-    ModuleBase::timer::end("Plus_U_Base", "zero_locale");
+    ModuleBase::timer::end("Plus_U_Base", "zero_occ_mat");
 }
 
 
-void Plus_U_Base::mix_locale(const UnitCell& ucell,
+void Plus_U_Base::mix_occ_mat(const UnitCell& ucell,
                               const double& mixing_beta)
 {
-    ModuleBase::TITLE("Plus_U_Base", "mix_locale");
-    ModuleBase::timer::start("Plus_U_Base", "mix_locale");
+    ModuleBase::TITLE("Plus_U_Base", "mix_occ_mat");
+    ModuleBase::timer::start("Plus_U_Base", "mix_occ_mat");
 
     double beta = mixing_beta;
 
@@ -447,14 +447,14 @@ void Plus_U_Base::mix_locale(const UnitCell& ucell,
             }
         }
     }
-    ModuleBase::timer::end("Plus_U_Base", "mix_locale");
+    ModuleBase::timer::end("Plus_U_Base", "mix_occ_mat");
 }
 
 
-void Plus_U_Base::set_locale(const UnitCell& ucell)
+void Plus_U_Base::set_occ_mat(const UnitCell& ucell)
 {
-    ModuleBase::TITLE("Plus_U_Base", "set_locale");
-    ModuleBase::timer::start("Plus_U_Base", "set_locale");
+    ModuleBase::TITLE("Plus_U_Base", "set_occ_mat");
+    ModuleBase::timer::start("Plus_U_Base", "set_occ_mat");
 
     for (int T = 0; T < ucell.ntype; T++)
     {
@@ -483,7 +483,7 @@ void Plus_U_Base::set_locale(const UnitCell& ucell)
         }
     }
 
-    ModuleBase::timer::end("Plus_U_Base", "set_locale");
+    ModuleBase::timer::end("Plus_U_Base", "set_occ_mat");
 }
 
 

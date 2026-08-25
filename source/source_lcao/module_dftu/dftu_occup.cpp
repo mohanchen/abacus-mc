@@ -6,7 +6,7 @@
 #endif
 #include "source_base/module_external/scalapack_connector.h"
 
-// copy_locale(), zero_locale(), mix_locale(), set_locale(ucell),
+// copy_occ_mat(), zero_occ_mat(), mix_occ_mat(), set_locale(ucell),
 // get_locale_flat(), set_locale_flat()
 // are now implemented in dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
 
@@ -22,8 +22,8 @@ void Plus_U::cal_occup_m_k(const int iter,
     ModuleBase::TITLE("Plus_U", "cal_occup_m_k");
     ModuleBase::timer::start("Plus_U", "cal_occup_m_k");
 
-    this->copy_locale(ucell);
-    this->zero_locale(ucell);
+    this->copy_occ_mat(ucell);
+    this->zero_occ_mat(ucell);
 
     //=================Part 1======================
     // call SCALAPACK routine to calculate the product of the S and density matrix
@@ -238,7 +238,7 @@ void Plus_U::cal_occup_m_k(const int iter,
 
     if(is_mixing_enabled() && is_occ_mat_initialized())
     {
-        this->mix_locale(ucell,mixing_beta);
+        this->mix_occ_mat(ucell,mixing_beta);
     }
 
     mark_occ_mat_initialized();
@@ -254,8 +254,8 @@ void Plus_U::cal_occup_m_gamma(const int iter,
 {
     ModuleBase::TITLE("Plus_U", "cal_occup_m_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occup_m_gamma");
-    this->copy_locale(ucell);
-    this->zero_locale(ucell);
+    this->copy_occ_mat(ucell);
+    this->zero_occ_mat(ucell);
 
     //=================Part 1======================
     // call PBLAS routine to calculate the product of the S and density matrix
@@ -395,7 +395,7 @@ void Plus_U::cal_occup_m_gamma(const int iter,
 
     if(is_mixing_enabled() && is_occ_mat_initialized())
     {
-        this->mix_locale(ucell,mixing_beta);
+        this->mix_occ_mat(ucell,mixing_beta);
     }
 
     mark_occ_mat_initialized();
