@@ -193,6 +193,33 @@ HPP_INCLUDE_RE = re.compile(r'^\s*#\s*include\s+[<"][^>"]+\.hpp[>"]')
 FRIEND_RE = re.compile(r"\bfriend\b(?!\s+(?:class\s+|struct\s+)?std::)")
 NEW_EXPR_RE = re.compile(r"\bnew\s+\w")
 DELETE_EXPR_RE = re.compile(r"\bdelete\s*\[\s*\]?\s+\w")
+
+# Occurrences of `new T(...)` or `new T[...]` that are clearly owned by a
+# smart-pointer wrapper and therefore should NOT count as unpaired
+# new/delete leaks. Two idiomatic C++11 shapes are recognised:
+#   1. `ptr.reset(new T(args))`  /  `ptr->reset(new T(args))`
+#      — reset() transfers ownership into an existing smart pointer;
+#      most commonly used with unique_ptr/shared_ptr when make_unique/
+#      make_shared are not available (pre-C++14) or unsuitable.
+#   2. `unique_ptr<T> p(new T(args))` / `shared_ptr<T> p(new T(args))`
+#      plus the allocator-taking `allocate_shared` form — direct
+#      construction of a smart pointer that owns the freshly-allocated
+#      object from day one.
+# The pattern does NOT try to skip new in `raw_new_count` (that rule
+# penalises *any* direct use of `new` vs. make_unique/make_shared); it
+# only affects the ownership heuristic `unpaired_new`.
+_OWNED_NEW_SHAPES = [
+    # shape 1:  .reset(new T  or  ->reset(new T   (optionally with whitespace)
+    r"\.(?:reset|operator\s*=)\s*\(\s*new\s+\w",
+    r"->(?:reset|operator\s*=)\s*\(\s*new\s+\w",
+    # shape 2:  unique_ptr<T[const & ...]>   ident ( new T
+    #           shared_ptr<T[const & ...]>   ident ( new T
+    #           allocate_shared<T,...> ( alloc , new T   -> not exact, but
+    #           the simpler `allocate_shared<...> ( ... new T` heuristic
+    r"\b(?:unique_ptr|shared_ptr|scoped_ptr|auto_ptr)\s*<[^>]*>\s*[A-Za-z_]\w*\s*\(\s*new\s+\w",
+    r"\b(?:make_unique|make_shared|allocate_shared)\s*<[^>]*>\s*\([^;()]*?\bnew\s+\w",
+]
+OWNED_NEW_RE = re.compile("|".join(f"(?:{p})" for p in _OWNED_NEW_SHAPES))
 GOTO_RE = re.compile(r"\bgoto\b")
 
 DEFAULT_PARAM_RE = re.compile(
@@ -1417,10 +1444,27 @@ def analyze_file(path: Path) -> FileReport:
     # `[^();]*` in the regex already matches newlines.
     default_param_count = len(DEFAULT_PARAM_RE.findall(stripped_content))
 
-    # unpaired new/delete (file-level): rough heuristic, cap applied below
+    # unpaired new/delete (file-level): rough heuristic, cap applied below.
+    # All `new` expressions are counted first. `delete` expressions are the
+    # obvious symmetric ownership cancel, but there is a second class of
+    # cancellations that never produces a `delete` keyword at all: a
+    # C++11 (or later) smart pointer that owns the object from construction.
+    # Recognised ownership-transfer patterns are aggregated in OWNED_NEW_RE
+    # and subtracted before comparing with `delete` so the leak heuristic
+    # stays meaningful on modern code that prefers std::unique_ptr /
+    # std::shared_ptr to manual delete. Examples that now cancel:
+    #     ptr.reset(new Foo());
+    #     std::unique_ptr<Foo> p(new Foo(arg));
+    # These cancellations deliberately do NOT touch `raw_new_count` below
+    # because the "raw_new_keyword" rule charges per direct `new` regardless
+    # of ownership — it is the stylistic counterpart to std::make_unique /
+    # std::make_shared, so `reset(new Foo)` and `unique_ptr<T>(new T)`
+    # must still contribute to that count.
     new_count = len(NEW_EXPR_RE.findall(stripped_content))
     delete_count = len(DELETE_EXPR_RE.findall(stripped_content))
-    unpaired_new = max(0, new_count - delete_count)
+    owned_new_count = len(OWNED_NEW_RE.findall(stripped_content))
+    cancelled_new = delete_count + owned_new_count
+    unpaired_new = max(0, new_count - cancelled_new)
 
     # raw `new` keyword usage: each occurrence costs 1 (no cap)
     raw_new_count = new_count
