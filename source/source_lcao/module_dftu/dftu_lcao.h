@@ -1,6 +1,5 @@
 #ifndef DFTPLUSU_H
 #define DFTPLUSU_H
-#include "dftu.hpp"
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_basis/module_nao/two_center_integrator.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
@@ -14,6 +13,20 @@
 
 namespace hamilt
 {
+
+#ifndef __DFTUTEMPLATE
+#define __DFTUTEMPLATE
+
+/// The DFTU class template inherits from class T
+/// it is used to calculate the non-local pseudopotential of wavefunction basis
+/// Template parameters:
+/// - T: base class, it would be OperatorLCAO<TK, TR> or OperatorPW<TK>
+template <class T>
+class DFTU : public T
+{
+};
+
+#endif
 
 /// DFTU class template specialization for OperatorLCAO<TK> base class
 /// It is used to calculate the non-local pseudopotential matrix in real space and fold it to k-space
