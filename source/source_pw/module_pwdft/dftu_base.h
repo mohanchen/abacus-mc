@@ -22,15 +22,9 @@ class Plus_U_Base
                    const int nspin,
                    const std::vector<int>& orbital_corr,
                    const bool yukawa_potential,
-                   const double yukawa_lambda,
                    const std::string& global_readin_dir,
                    const std::string& global_out_dir,
                    const std::string& init_chg,
-                   const int nlocal,
-                   const bool gamma_only_local,
-                   const std::string& ks_solver,
-                   const bool cal_force,
-                   const bool cal_stress,
                    const std::string& device,
                    const int kpar,
                    const std::vector<double>& hubbard_u,
@@ -58,7 +52,6 @@ class Plus_U_Base
     bool has_correlated_orbital(int it) const { return orbital_corr[it] != -1; }
     const int* get_orbital_corr_data() const { return orbital_corr.data(); }
 
-    // mohan add 2025-11-08 for dftu_io::output free function
     double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
     double get_J_Yukawa(int it, int l, int n) const { return J_Yukawa[it][l][n]; }
 
@@ -70,13 +63,6 @@ class Plus_U_Base
     double energy_u = 0.0;
 
     int cal_type = 3;
-    double yukawa_lambda = 0.0;
-    int npol = 1;
-    int nlocal = 0;
-    bool gamma_only_local = false;
-    std::string ks_solver;
-    bool cal_force = false;
-    bool cal_stress = false;
     std::string device;
     int kpar = 1;
 

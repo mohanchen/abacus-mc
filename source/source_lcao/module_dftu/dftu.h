@@ -60,6 +60,14 @@ class Plus_U : public Plus_U_Base
 
     const Parallel_Orbitals* paraV = nullptr;
 
+    double yukawa_lambda = 0.0;
+    int npol = 1;
+    int nlocal = 0;
+    bool gamma_only_local = false;
+    std::string ks_solver;
+    bool cal_force = false;
+    bool cal_stress = false;
+
 #ifdef __LCAO
     const LCAO_Orbitals* ptr_orb_ = nullptr;
     std::vector<double> orb_cutoff_;

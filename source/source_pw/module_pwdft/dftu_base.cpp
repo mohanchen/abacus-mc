@@ -35,15 +35,9 @@ void Plus_U_Base::init_base(UnitCell& cell,
                              const int nspin,
                              const std::vector<int>& orbital_corr,
                              const bool yukawa_potential,
-                             const double yukawa_lambda,
                              const std::string& global_readin_dir,
                              const std::string& global_out_dir,
                              const std::string& init_chg,
-                             const int nlocal,
-                             const bool gamma_only_local,
-                             const std::string& ks_solver,
-                             const bool cal_force,
-                             const bool cal_stress,
                              const std::string& device,
                              const int kpar,
                              const std::vector<double>& hubbard_u,
@@ -72,15 +66,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
                   this->u_current.end(),
                   0.0);
     }
-    this->yukawa_lambda = yukawa_lambda;
-
-    this->npol = npol;
-
-    this->nlocal = nlocal;
-    this->gamma_only_local = gamma_only_local;
-    this->ks_solver = ks_solver;
-    this->cal_force = cal_force;
-    this->cal_stress = cal_stress;
     this->device = device;
     this->kpar = kpar;
 

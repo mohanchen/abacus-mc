@@ -60,6 +60,14 @@ void Plus_U::init(UnitCell& cell,
 
     this->paraV = pv;
 
+    this->yukawa_lambda = yukawa_lambda;
+    this->npol = npol;
+    this->nlocal = nlocal;
+    this->gamma_only_local = gamma_only_local;
+    this->ks_solver = ks_solver;
+    this->cal_force = cal_force;
+    this->cal_stress = cal_stress;
+
 #ifdef __LCAO
     ptr_orb_ = orb;
     if(ptr_orb_ != nullptr)
@@ -88,15 +96,9 @@ void Plus_U::init(UnitCell& cell,
                     nspin,
                     orbital_corr,
                     yukawa_potential,
-                    yukawa_lambda,
                     global_readin_dir,
                     global_out_dir,
                     init_chg,
-                    nlocal,
-                    gamma_only_local,
-                    ks_solver,
-                    cal_force,
-                    cal_stress,
                     device,
                     kpar,
                     hubbard_u,

@@ -121,18 +121,12 @@ void pw::setup_pot(const int istep,
     //----------------------------------------------------------
     if (inp.dft_plus_u)
     {
-        const int nlocal_dftu = 0;
         dftu.init_base(ucell,
                   PARAM.globalv.npol,
-                  inp.nspin, inp.orbital_corr, inp.yukawa_potential, inp.yukawa_lambda,
+                  inp.nspin, inp.orbital_corr, inp.yukawa_potential,
                   PARAM.globalv.global_readin_dir,
                   PARAM.globalv.global_out_dir,
                   inp.init_chg,
-                  nlocal_dftu,
-                  PARAM.globalv.gamma_only_local,
-                  inp.ks_solver,
-                  inp.cal_force,
-                  inp.cal_stress,
                   inp.device,
                   inp.kpar,
                   PARAM.globalv.hubbard_u,
