@@ -2,7 +2,7 @@
 #define OPDFTULCAO_H
 
 #include "source_base/timer.h"
-#include "operator_lcao.h"
+#include "source_lcao/module_operator_lcao/operator_lcao.h"
 #include "source_lcao/module_dftu/dftu.h" // mohan add 20251107
 
 namespace hamilt
