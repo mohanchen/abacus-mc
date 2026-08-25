@@ -4,9 +4,12 @@
 #include <cmath>
 #include <cstdio>
 #include <iomanip>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "basic_funcs.h"
+#include "source_base/formatter.h"
 
 /**
  * @file lambda_loop_helper.cpp
@@ -345,6 +348,116 @@ bool check_gradient_decay(const SpinConstrain<TK>& sc,
     return false;
 }
 
+/**
+ * @brief Print atomic magnetic moments Mi in a formatted table.
+ *
+ * @par Output format
+ * - nspin=2: "Total Magnetism (uB)" with single z-component column
+ * - nspin=4: three columns (Mx, My, Mz)
+ *
+ * Lifted from SpinConstrain<TK>::print_Mi; accesses state via getters.
+ */
+template <typename TK>
+void print_Mi(const SpinConstrain<TK>& sc, std::ostream& ofs_running)
+{
+    sc.check_atomCounts();
+    const int nat = sc.get_nat();
+    const int nspin = sc.get_nspin();
+    const auto& Mi = sc.get_Mi();
+    const auto& atomLabel = sc.get_atomLabels();
+    std::vector<double> mag_x(nat, 0.0);
+    std::vector<double> mag_y(nat, 0.0);
+    std::vector<double> mag_z(nat, 0.0);
+    if (nspin == 2)
+    {
+        const std::vector<std::string> title = {"Total Magnetism (uB)", ""};
+        const std::vector<std::string> fmts = {"%-26s", "%20.10f"};
+        FmtTable table(/*titles=*/title,
+                       /*nrows=*/nat,
+                       /*formats=*/fmts,
+                       /*indent=*/0,
+                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
+        for (int iat = 0; iat < nat; ++iat)
+        {
+            mag_z[iat] = Mi[iat].z;
+        }
+        table << atomLabel << mag_z;
+        ofs_running << table.str() << std::endl;
+    }
+    else if (nspin == 4)
+    {
+        const std::vector<std::string> title = {"Total Magnetism (uB)", "", "", ""};
+        const std::vector<std::string> fmts = {"%-26s", "%20.10f", "%20.10f", "%20.10f"};
+        FmtTable table(/*titles=*/title,
+                       /*nrows=*/nat,
+                       /*formats=*/fmts,
+                       /*indent=*/0,
+                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
+        for (int iat = 0; iat < nat; ++iat)
+        {
+            mag_x[iat] = Mi[iat].x;
+            mag_y[iat] = Mi[iat].y;
+            mag_z[iat] = Mi[iat].z;
+        }
+        table << atomLabel << mag_x << mag_y << mag_z;
+        ofs_running << table.str() << std::endl;
+    }
+}
+
+/**
+ * @brief Print the magnetic force (-lambda) per atom in eV/uB.
+ *
+ * Lifted from SpinConstrain<TK>::print_Mag_Force; accesses state via getters.
+ * lambda is read via get_sc_lambda() and converted from Ry to eV on output.
+ */
+template <typename TK>
+void print_Mag_Force(const SpinConstrain<TK>& sc, std::ostream& ofs_running)
+{
+    sc.check_atomCounts();
+    const int nat = sc.get_nat();
+    const int nspin = sc.get_nspin();
+    const auto& lambda = sc.get_sc_lambda();
+    const auto& atomLabel = sc.get_atomLabels();
+    std::vector<double> mag_force_x(nat, 0.0);
+    std::vector<double> mag_force_y(nat, 0.0);
+    std::vector<double> mag_force_z(nat, 0.0);
+    if (nspin == 2)
+    {
+        const std::vector<std::string> title = {"Magnetic force (eV/uB)", ""};
+        const std::vector<std::string> fmts = {"%-26s", "%20.10f"};
+        FmtTable table(/*titles=*/title,
+                       /*nrows=*/nat,
+                       /*formats=*/fmts,
+                       /*indent=*/0,
+                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
+        for (int iat = 0; iat < nat; ++iat)
+        {
+            mag_force_z[iat] = lambda[iat].z * ModuleBase::Ry_to_eV;
+        }
+        table << atomLabel << mag_force_z;
+        ofs_running << table.str() << std::endl;
+    }
+    else if (nspin == 4)
+    {
+        const std::vector<std::string> title = {"Magnetic force (eV/uB)", "", "", ""};
+        const std::vector<std::string> fmts = {"%-26s", "%20.10f", "%20.10f", "%20.10f"};
+        FmtTable table(/*titles=*/title,
+                       /*nrows=*/nat,
+                       /*formats=*/fmts,
+                       /*indent=*/0,
+                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
+        for (int iat = 0; iat < nat; ++iat)
+        {
+            mag_force_x[iat] = lambda[iat].x * ModuleBase::Ry_to_eV;
+            mag_force_y[iat] = lambda[iat].y * ModuleBase::Ry_to_eV;
+            mag_force_z[iat] = lambda[iat].z * ModuleBase::Ry_to_eV;
+        }
+        table << atomLabel << mag_force_x << mag_force_y << mag_force_z;
+        ofs_running << table.str() << std::endl;
+    }
+}
+
+
 // Explicit instantiation for the only supported TK = std::complex<double>.
 // The double stub is provided by template_helpers.cpp via the existing
 // specialization mechanism (kept as a separate file to avoid duplicate symbols).
@@ -365,5 +478,15 @@ template bool check_gradient_decay<std::complex<double>>(const SpinConstrain<std
                                                           std::vector<ModuleBase::Vector3<double>>,
                                                           std::vector<ModuleBase::Vector3<double>>,
                                                           bool, std::ostream&);
+
+// print_Mi / print_Mag_Force are generic (no per-TK stub needed): the
+// template body works for both TK = std::complex<double> (real usage) and
+// TK = double (nspin=2 stub path instantiated by template_helpers_test).
+// We instantiate both so callers in PW/LCAO ESolvers that hold either TK
+// can link against a single definition.
+template void print_Mi<std::complex<double>>(const SpinConstrain<std::complex<double>>&, std::ostream&);
+template void print_Mag_Force<std::complex<double>>(const SpinConstrain<std::complex<double>>&, std::ostream&);
+template void print_Mi<double>(const SpinConstrain<double>&, std::ostream&);
+template void print_Mag_Force<double>(const SpinConstrain<double>&, std::ostream&);
 
 } // namespace spinconstrain

@@ -134,6 +134,32 @@ bool check_gradient_decay(const SpinConstrain<TK>& sc,
                           bool print,
                           std::ostream& ofs_running);
 
+/**
+ * @brief Print atomic magnetic moments Mi in a formatted table.
+ *
+ * @par Output format
+ * - nspin=2: "Total Magnetism (uB)" with single z-component column
+ * - nspin=4: three columns (Mx, My, Mz)
+ *
+ * @param sc          SpinConstrain instance
+ * @param ofs_running Log output stream
+ */
+template <typename TK>
+void print_Mi(const SpinConstrain<TK>& sc, std::ostream& ofs_running);
+
+/**
+ * @brief Print the magnetic force (-lambda) per atom in eV/uB.
+ *
+ * @par Physical meaning
+ * Magnetic force = dL/dMi = -lambda. Large |lambda| means the system
+ * strongly resists the target moment constraint.
+ *
+ * @param sc          SpinConstrain instance
+ * @param ofs_running Log output stream
+ */
+template <typename TK>
+void print_Mag_Force(const SpinConstrain<TK>& sc, std::ostream& ofs_running);
+
 } // namespace spinconstrain
 
 #endif // LAMBDA_LOOP_HELPER_H

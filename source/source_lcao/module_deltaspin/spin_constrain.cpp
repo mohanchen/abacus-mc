@@ -287,7 +287,7 @@ int SpinConstrain<TK>::get_ntype() const
  * - "number of atoms <= 0": some element type has no atoms
  */
 template <typename TK>
-void SpinConstrain<TK>::check_atomCounts()
+void SpinConstrain<TK>::check_atomCounts() const
 {
     if (!this->atomCounts.size())
     {
@@ -297,7 +297,7 @@ void SpinConstrain<TK>::check_atomCounts()
     {
         ModuleBase::WARNING_QUIT("SpinConstrain::check_atomCounts", "nat <= 0");
     }
-    for (std::map<int, int>::iterator it = this->atomCounts.begin(); it != this->atomCounts.end(); ++it)
+    for (std::map<int, int>::const_iterator it = this->atomCounts.begin(); it != this->atomCounts.end(); ++it)
     {
         int itype = it->first;
         if (itype < 0 || itype >= this->get_ntype())
@@ -342,7 +342,7 @@ int SpinConstrain<TK>::get_iat(int itype, int atom_index)
         ModuleBase::WARNING_QUIT("SpinConstrain::get_iat", "atom index out of range [0, nat)");
     }
     int iat = 0;
-    for (std::map<int, int>::iterator it = this->atomCounts.begin(); it != this->atomCounts.end(); ++it)
+    for (std::map<int, int>::const_iterator it = this->atomCounts.begin(); it != this->atomCounts.end(); ++it)
     {
         if (it->first == itype)
         {
@@ -699,6 +699,13 @@ const std::vector<ModuleBase::Vector3<double>>& SpinConstrain<TK>::get_Mi() cons
     return this->Mi_;
 }
 
+/// get human-readable atom labels for table printing
+template <typename TK>
+const std::vector<std::string>& SpinConstrain<TK>::get_atomLabels() const
+{
+    return this->atomLabels_;
+}
+
 /// get nsc
 template <typename TK>
 int SpinConstrain<TK>::get_nsc() const
@@ -762,127 +769,6 @@ void SpinConstrain<TK>::set_ParaV(Parallel_Orbitals* ParaV_in)
     if (nloc <= 0)
     {
         ModuleBase::WARNING_QUIT("SpinConstrain::set_ParaV", "nloc <= 0");
-    }
-}
-
-/**
- * @brief Print magnetic moments per atom in formatted table.
- *
- * @par Output format
- * - nspin=2: "ATOM   1    2.0000000000" (z-component only)
- * - nspin=4: "ATOM   1    0.0010000000    0.0020000000    1.9990000000" (x, y, z)
- *
- * @par Interpretation
- * - Positive Mi.z: spin aligned with z-axis (spin-up character)
- * - Negative Mi.z: spin anti-aligned with z-axis (spin-down character)
- * - Non-zero Mi.x/Mi.y: non-collinear spin components
- * - Mi close to target_mag: constraint is well-satisfied
- * - Mi far from target_mag: constraint is not yet converged
- */
-template <typename TK>
-void SpinConstrain<TK>::print_Mi(std::ofstream& ofs_running)
-{
-    this->check_atomCounts();
-    int nat = this->get_nat();
-    std::vector<double> mag_x(nat, 0.0);
-    std::vector<double> mag_y(nat, 0.0);
-    std::vector<double> mag_z(nat, 0.0);
-    if (this->nspin_ == 2)
-    {
-        const std::vector<std::string> title = {"Total Magnetism (uB)", ""};
-        const std::vector<std::string> fmts = {"%-26s", "%20.10f"};
-        FmtTable table(/*titles=*/title, 
-                       /*nrows=*/nat, 
-                       /*formats=*/fmts, 
-                       /*indent=*/0,
-                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
-        for (int iat = 0; iat < nat; ++iat)
-        {
-            mag_z[iat] = Mi_[iat].z;
-        }
-        table << this->atomLabels_ << mag_z;
-        ofs_running << table.str() << std::endl;
-    }
-    else if (this->nspin_ == 4)
-    {
-        const std::vector<std::string> title = {"Total Magnetism (uB)", "", "", ""};
-        const std::vector<std::string> fmts = {"%-26s", "%20.10f", "%20.10f", "%20.10f"};
-        FmtTable table(/*titles=*/title, 
-                       /*nrows=*/nat, 
-                       /*formats=*/fmts, 
-                       /*indent=*/0,
-                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
-        for (int iat = 0; iat < nat; ++iat)
-        {
-            mag_x[iat] = Mi_[iat].x;
-            mag_y[iat] = Mi_[iat].y;
-            mag_z[iat] = Mi_[iat].z;
-        }
-        table << this->atomLabels_ << mag_x << mag_y << mag_z;
-        ofs_running << table.str() << std::endl;
-    }
-}
-
-/**
- * @brief Print the magnetic force (-lambda) per atom in eV/uB.
- *
- * @par Physical meaning
- * The "magnetic force" is the derivative of the constrained Lagrangian
- * with respect to the magnetic moment: dL/dMi = -lambda_i.
- * It represents how much energy would change if the constraint were relaxed.
- *
- * @par Interpretation
- * - Large |lambda|: The system strongly resists the target moment constraint
- * - lambda ≈ 0: The system naturally has the target moment (no constraint needed)
- * - Positive lambda.z: The constraint pushes the moment in the +z direction
- * - Negative lambda.z: The constraint pushes the moment in the -z direction
- *
- * @par Typical values
- * - Well-converged SCF: lambda ~ 0.01-1 eV/uB
- * - Strongly constrained: lambda ~ 1-10 eV/uB
- * - Diverging SCF: lambda growing without bound (check target_mag合理性)
- */
-template <typename TK>
-void SpinConstrain<TK>::print_Mag_Force(std::ofstream& ofs_running)
-{
-    this->check_atomCounts();
-    int nat = this->get_nat();
-    std::vector<double> mag_force_x(nat, 0.0);
-    std::vector<double> mag_force_y(nat, 0.0);
-    std::vector<double> mag_force_z(nat, 0.0);
-    if (this->nspin_ == 2)
-    {
-        const std::vector<std::string> title = {"Magnetic force (eV/uB)", ""};
-        const std::vector<std::string> fmts = {"%-26s", "%20.10f"};
-        FmtTable table(/*titles=*/title, 
-                       /*nrows=*/nat, 
-                       /*formats=*/fmts, 
-                       /*indent=*/0,
-                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
-        for (int iat = 0; iat < nat; ++iat)
-        {
-            mag_force_z[iat] = lambda_[iat].z * ModuleBase::Ry_to_eV;
-        }
-        table << this->atomLabels_ << mag_force_z;
-        ofs_running << table.str() << std::endl;
-    }
-    else if (this->nspin_ == 4)
-    {
-        const std::vector<std::string> title = {"Magnetic force (eV/uB)", "", "", ""};
-        const std::vector<std::string> fmts = {"%-26s", "%20.10f", "%20.10f", "%20.10f"};
-        FmtTable table(/*titles=*/title, 
-                       /*nrows=*/nat, 
-                       /*formats=*/fmts, 
-                       /*indent=*/0,
-                       /*align=*/{/*value*/FmtTable::Align::RIGHT, /*title*/FmtTable::Align::LEFT});
-        for (int iat = 0; iat < nat; ++iat)
-        {
-            mag_force_x[iat] = lambda_[iat].x * ModuleBase::Ry_to_eV;
-            mag_force_y[iat] = lambda_[iat].y * ModuleBase::Ry_to_eV;
-            mag_force_z[iat] = lambda_[iat].z * ModuleBase::Ry_to_eV;
-        }
-        table << this->atomLabels_ << mag_force_x << mag_force_y << mag_force_z;
-        ofs_running << table.str() << std::endl;
     }
 }
 

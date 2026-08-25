@@ -343,12 +343,7 @@ public:
   /// cal_alpha_opt, print_header, print_termination) have been lifted to free
   /// functions in lambda_loop_helper.h. The class now only carries state and
   /// the core lambda-loop driver (run_lambda_loop).
-
-  /// Print magnetic moments to output stream
-  void print_Mi(std::ofstream& ofs_running);
-
-  /// Print magnetic force (defined as dL/dMi = -lambda[iat]) in eV/uB
-  void print_Mag_Force(std::ofstream& ofs_running);
+  /// print_Mi and print_Mag_Force have also been lifted to lambda_loop_helper.h.
 
   /// @brief Use full PW solver (rerun) for higher precision in lambda loop
   bool higher_mag_prec = false;
@@ -429,7 +424,7 @@ public:
     /// get ntype
     int get_ntype() const;
     /// check atomCounts
-    void check_atomCounts();
+    void check_atomCounts() const;
     /// get iat
     int get_iat(int itype, int atom_index);
     /// set nspin
@@ -471,6 +466,8 @@ public:
     double get_sc_drop_thr() const;
     /// get computed magnetic moments Mi per atom
     const std::vector<ModuleBase::Vector3<double>>& get_Mi() const;
+    /// get human-readable atom labels ("Fe_0", "Fe_1", ...) for table printing
+    const std::vector<std::string>& get_atomLabels() const;
     /// @brief set orbital parallel info
     void set_ParaV(Parallel_Orbitals* ParaV_in);
     /// @brief set parameters for solver
