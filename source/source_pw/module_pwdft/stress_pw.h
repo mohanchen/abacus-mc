@@ -4,7 +4,7 @@
 #include "source_estate/elecstate.h"
 #include "source_pw/module_pwdft/vl_pw.h"
 #include "stress_func.h"
-#include "source_lcao/module_dftu/dftu.h" // mohan add 2025-11-07
+#include "source_lcao/module_dftu/dftu_lcao.h" // mohan add 2025-11-07
 #include "source_hamilt/module_xc/coulomb_config.h"
 
 namespace vdw

@@ -7,7 +7,7 @@
 #include "source_pw/module_pwdft/radial_proj.h"
 #include "source_psi/psi.h"
 #include "source_pw/module_pwdft/onsite_proj_tools.h"
-#include "source_lcao/module_dftu/dftu.h"
+#include "source_lcao/module_dftu/dftu_lcao.h"
 
 #include <string>
 #include <vector>

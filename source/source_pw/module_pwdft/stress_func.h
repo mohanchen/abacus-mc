@@ -14,7 +14,7 @@
 #include "source_pw/module_pwdft/stru_fac.h"
 #include "source_base/kernels/math_kernel_op.h"
 #include "source_psi/psi.h"
-#include "source_lcao/module_dftu/dftu.h" // mohan add 2025-11-06
+#include "source_lcao/module_dftu/dftu_lcao.h" // mohan add 2025-11-06
 
 //-------------------------------------------------------------------
 // mohan reconstruction note: 2021-02-07

@@ -6,7 +6,7 @@
 #include "source_estate/module_charge/charge_mixing.h" // use p_chgmix
 #include "source_io/module_parameter/input_parameter.h" // use Input_para
 #include "source_cell/unitcell.h"
-#include "source_lcao/module_dftu/dftu.h" // mohan add 2025-11-06
+#include "source_lcao/module_dftu/dftu_lcao.h" // mohan add 2025-11-06
 
 namespace module_charge
 {

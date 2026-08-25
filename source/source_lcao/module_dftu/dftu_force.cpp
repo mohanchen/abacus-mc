@@ -1,7 +1,7 @@
 #include "source_io/module_parameter/parameter.h"
 
 #ifdef __LCAO
-#include "dftu.h"
+#include "dftu_lcao.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
 #include "source_base/inverse_matrix.h"

@@ -6,7 +6,7 @@
 #include "source_cell/klist.h"
 #include "source_estate/module_pot/potential_new.h"
 #include "source_hamilt/hamilt.h"
-#include "source_lcao/module_dftu/dftu.h" // mohan add 2025-11-06
+#include "source_lcao/module_dftu/dftu_lcao.h" // mohan add 2025-11-06
 #include "source_pw/module_pwdft/exx_helper.h"
 #include "source_pw/module_pwdft/vnl_pw.h"
 

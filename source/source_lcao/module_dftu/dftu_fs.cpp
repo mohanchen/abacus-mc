@@ -1,4 +1,4 @@
-#include "dftu_lcao.h"
+#include "dftu_lcao_op.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 

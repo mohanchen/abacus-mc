@@ -1,5 +1,5 @@
 #ifdef __LCAO
-#include "dftu.h"
+#include "dftu_lcao.h"
 #include "source_base/timer.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
