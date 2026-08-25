@@ -46,7 +46,11 @@ void Plus_U::init(UnitCell& cell,
                 const bool cal_force,
                 const bool cal_stress,
                 const std::string& device,
-                const int kpar
+                const int kpar,
+                const std::vector<double>& hubbard_u,
+                const double uramping,
+                const int occ_mat_ctrl,
+                const int mixing_dftu
 #ifdef __LCAO
                 , const LCAO_Orbitals* orb
 #endif
@@ -94,7 +98,11 @@ void Plus_U::init(UnitCell& cell,
                     cal_force,
                     cal_stress,
                     device,
-                    kpar);
+                    kpar,
+                    hubbard_u,
+                    uramping,
+                    occ_mat_ctrl,
+                    mixing_dftu);
     return;
 }
 
@@ -112,7 +120,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
     }
 
     // mohan update 20251106
-    Plus_U::energy_u = 0.0;
+    this->energy_u = 0.0;
 
     double energy_dc = 0.0;
 
@@ -149,7 +157,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                         continue;
                     }
 
-                    if (Plus_U::nspin == 1 || Plus_U::nspin == 2)
+                    if (this->nspin == 1 || this->nspin == 2)
                     {
                         for (int spin = 0; spin < 2; spin++)
                         {
@@ -165,18 +173,18 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                                  * this->occ_mat[iat][l][n][spin](m1, m0);
                                 }
                             }
-                            if (Yukawa)
+                            if (use_yukawa)
                             {
-                                Plus_U::energy_u += 0.5 * (this->U_Yukawa[T][l][n] - this->J_Yukawa[T][l][n])
+                                this->energy_u += 0.5 * (this->U_Yukawa[T][l][n] - this->J_Yukawa[T][l][n])
                                             * (nm_trace - nm2_trace);
                             }
                             else
                             {
-                                Plus_U::energy_u += 0.5 * this->U[T] * (nm_trace - nm2_trace);
+                                this->energy_u += 0.5 * this->u_current[T] * (nm_trace - nm2_trace);
                             }
                         }
                     }
-                    else if (Plus_U::nspin == 4)
+                    else if (this->nspin == 4)
                     {
                         double nm_trace = 0.0;
                         double nm2_trace = 0.0;
@@ -200,14 +208,14 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                 }
                             }
                         }
-                        if (Yukawa)
+                        if (use_yukawa)
                         {
-                            Plus_U::energy_u += 0.5 * (this->U_Yukawa[T][l][n] - this->J_Yukawa[T][l][n]) 
+                            this->energy_u += 0.5 * (this->U_Yukawa[T][l][n] - this->J_Yukawa[T][l][n]) 
                               * (nm_trace - nm2_trace);
                         }
                         else
                         {
-                            Plus_U::energy_u += 0.5 * this->U[T] * (nm_trace - nm2_trace);
+                            this->energy_u += 0.5 * this->u_current[T] * (nm_trace - nm2_trace);
                         }
                     }
 
@@ -222,7 +230,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                 {
                                     const int m2_all = m2 + ipol2 * (2 * l + 1);
 
-                                    if (Plus_U::nspin == 1 || Plus_U::nspin == 2)
+                                    if (this->nspin == 1 || this->nspin == 2)
                                     {
                                         for (int is = 0; is < 2; is++)
                                         {
@@ -231,7 +239,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                             energy_dc += VU * this->occ_mat[iat][l][n][is](m1_all, m2_all);
                                         }
                                     }
-                                    else if (Plus_U::nspin == 4)
+                                    else if (this->nspin == 4)
                                     {
                                         double VU = 0.0;
                                         VU = get_onebody_eff_pot(T, iat, l, n, 0, m1_all, m2_all, false);
@@ -247,7 +255,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
     }             // end T
 
     // substract the double counting energy_dc included in band energy eband
-    Plus_U::energy_u -= energy_dc;
+    this->energy_u -= energy_dc;
 
     ModuleBase::timer::end("Plus_U", "cal_energy_correction");
     return;

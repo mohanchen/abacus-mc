@@ -43,7 +43,11 @@ class Plus_U : public Plus_U_Base
                 const bool cal_force,
                 const bool cal_stress,
                 const std::string& device,
-                const int kpar
+                const int kpar,
+                const std::vector<double>& hubbard_u,
+                const double uramping,
+                const int occ_mat_ctrl,
+                const int mixing_dftu
 #ifdef __LCAO
                 , const LCAO_Orbitals* orb = nullptr
 #endif

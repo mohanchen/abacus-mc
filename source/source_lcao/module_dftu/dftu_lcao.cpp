@@ -369,15 +369,14 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         // VU = U * (1/2 * delta(m,m') - occ(m,m')) for each spin channel
         // Energy: EU = U * 1/2 * occ(m,m') * occ(m',m)
         ModuleBase::timer::start("DFTU", "cal_vu");
-        const double u_value = this->dftu->U[T0];
+        const double u_value = this->dftu->u_current[T0];
         std::vector<double> VU_tmp(occ.size());
 
-        // TODO: GLOBAL STATE - Plus_U::get_energy()/set_energy() uses static member variable.
-        // This is NOT thread-safe for parallel SCF calculations.
-        // TODO: Refactor to use instance member or pass energy by reference.
-        double u_energy = Plus_U::get_energy();
+        // mohan update 2025-11: get_energy/set_energy are now instance methods
+        // via this->dftu pointer, no longer global static state.
+        double u_energy = this->dftu->get_energy();
         this->cal_v_of_u(occ, tlp1, u_value, VU_tmp.data(), u_energy);
-        Plus_U::set_energy(u_energy);
+        this->dftu->set_energy(u_energy);
 
         // 4. Convert VU to appropriate data type (real or complex)
         // For nspin=4 with complex Hamiltonian, VU needs Pauli matrix transformation

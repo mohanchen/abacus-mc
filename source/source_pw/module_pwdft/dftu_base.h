@@ -32,39 +32,43 @@ class Plus_U_Base
                    const bool cal_force,
                    const bool cal_stress,
                    const std::string& device,
-                   const int kpar);
+                   const int kpar,
+                   const std::vector<double>& hubbard_u,
+                   const double uramping,
+                   const int occ_mat_ctrl,
+                   const int mixing_dftu);
 
     void uramping_update();
     bool u_converged();
 
-    // mohan change these parameters to static, 2025-11-07
-    static std::vector<double> U;
-    static std::vector<double> U0;
-    static std::vector<int> orbital_corr;
-    static double uramping;
-    static int omc;
-    static int mixing_dftu;
-    static int nspin;
+    // mohan note 2025-11-07: these were static, refactored to instance members
+    std::vector<double> u_current;
+    std::vector<double> u_target;
+    std::vector<int> orbital_corr;
+    double uramping = 0.0;
+    int occ_mat_ctrl = 0;
+    int mixing_dftu = 0;
+    int nspin = 0;
 
-    // --- Accessors for static data ---
+    // --- Accessors ---
 
-    static double get_hubbard_u(int it) { return U[it]; }
-    static double get_hubbard_u0(int it) { return U0[it]; }
-    static int get_num_u_types() { return static_cast<int>(U.size()); }
-    static int get_orbital_corr(int it) { return orbital_corr[it]; }
-    static bool has_correlated_orbital(int it) { return orbital_corr[it] != -1; }
-    static const int* get_orbital_corr_data() { return orbital_corr.data(); }
+    double get_u_current(int it) const { return u_current[it]; }
+    double get_u_target(int it) const { return u_target[it]; }
+    int get_num_u_types() const { return static_cast<int>(u_current.size()); }
+    int get_orbital_corr(int it) const { return orbital_corr[it]; }
+    bool has_correlated_orbital(int it) const { return orbital_corr[it] != -1; }
+    const int* get_orbital_corr_data() const { return orbital_corr.data(); }
 
     // mohan add 2025-11-08 for dftu_io::output free function
     double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
     double get_J_Yukawa(int it, int l, int n) const { return J_Yukawa[it][l][n]; }
 
-    static double get_energy() { return energy_u; }
-    static void set_energy(const double &e) { energy_u = e; }
-    static void set_double_energy() { energy_u *= 2.0; }
+    double get_energy() const { return energy_u; }
+    void set_energy(const double &e) { energy_u = e; }
+    void set_double_energy() { energy_u *= 2.0; }
 
   protected:
-    static double energy_u;
+    double energy_u = 0.0;
 
   protected:
     int cal_type = 3;
@@ -141,8 +145,8 @@ class Plus_U_Base
     void mark_occ_mat_initialized() { occ_mat_initialized = true; }
     void mark_occ_mat_dirty() { occ_mat_initialized = false; }
 
-    static bool is_mixing_enabled() { return mixing_dftu != 0; }
-    static void enable_mixing() { mixing_dftu = 1; }
+    bool is_mixing_enabled() const { return mixing_dftu != 0; }
+    void enable_mixing() { mixing_dftu = 1; }
 
   protected:
     void copy_occ_mat(const UnitCell& ucell);
@@ -212,7 +216,7 @@ class Plus_U_Base
     //=============================================================
 
   public:
-    static bool Yukawa;
+    bool use_yukawa = false;
 };
 
 

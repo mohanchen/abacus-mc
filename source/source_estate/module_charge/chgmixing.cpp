@@ -167,7 +167,7 @@ void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
 					std::cout << " U-Ramping! Current U = ";
 					for (int i = 0; i < dftu.get_num_u_types(); i++)
 					{
-						std::cout << dftu.get_hubbard_u(i) * ModuleBase::Ry_to_eV << " ";
+						std::cout << dftu.get_u_current(i) * ModuleBase::Ry_to_eV << " ";
 					}
 					std::cout << " eV " << std::endl;
 				}
@@ -202,7 +202,7 @@ void module_charge::chgmixing_ks_lcao(const int iter, // scf iteration number
             std::cout << " U-Ramping! Current U = ";
             for (int i = 0; i < dftu.get_num_u_types(); i++)
             {
-                std::cout << dftu.get_hubbard_u(i) * ModuleBase::Ry_to_eV << " ";
+                std::cout << dftu.get_u_current(i) * ModuleBase::Ry_to_eV << " ";
             }
             std::cout << " eV " << std::endl;
         }
@@ -221,7 +221,7 @@ void module_charge::chgmixing_ks_lcao(const int iter, // scf iteration number
                 std::cout << " U-Ramping! Current U = ";
                 for (int i = 0; i < dftu.get_num_u_types(); i++)
                 {
-                    std::cout << dftu.get_hubbard_u(i) * ModuleBase::Ry_to_eV << " ";
+                    std::cout << dftu.get_u_current(i) * ModuleBase::Ry_to_eV << " ";
                 }
                 std::cout << " eV " << std::endl;
             }

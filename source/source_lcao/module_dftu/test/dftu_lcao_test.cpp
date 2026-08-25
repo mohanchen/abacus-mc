@@ -97,8 +97,8 @@ class DFTUTest : public ::testing::Test
                 dftu.occ_mat[iat][l][0][1].create(2 * l + 1, 2 * l + 1);
             }
         }
-        Plus_U::U = {U_test};
-        Plus_U::orbital_corr = {orbital_c_test};
+        dftu.u_current = {U_test};
+        dftu.orbital_corr = {orbital_c_test};
 
         PARAM.input.onsite_radius = 1.0;
     }
