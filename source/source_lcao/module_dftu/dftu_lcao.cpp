@@ -1,23 +1,11 @@
 #include "dftu_lcao.h"
 
-#include "source_io/module_parameter/parameter.h"
-#include "source_base/constants.h"
-#include "source_base/global_function.h"
-#include "source_base/inverse_matrix.h"
-#include "source_base/memory_recorder.h"
+#include "source_base/matrix.h"  // occ_mat uses ModuleBase::matrix::operator()
+#include "source_base/tool_quit.h"
+#include "source_base/tool_title.h"
 #include "source_base/timer.h"
-#include "source_cell/magnetism.h"
-#include "source_estate/module_charge/charge.h"
 
-#include <cstdint>
-#include <cmath>
 #include <complex>
-#include <cstdio>
-#include <cstring>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <vector>
 
  // mohan add 2025-11-06

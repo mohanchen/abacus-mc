@@ -1,27 +1,13 @@
-#include "source_io/module_parameter/parameter.h"
-
 #ifdef __LCAO
 #include "dftu_force.h"
 #include "dftu_folding.h"
 #include "dftu_lcao.h"
-#include "source_base/constants.h"
 #include "source_base/global_function.h"
-#include "source_base/inverse_matrix.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
-#include "source_estate/elecstate_lcao.h"
-#include "source_cell/magnetism.h"
-#include "source_estate/module_charge/charge.h"
 
-#include <cmath>
 #include <complex>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <stdio.h>
-#include <string.h>
 #include <string>
 
 

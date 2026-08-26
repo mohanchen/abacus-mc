@@ -1,7 +1,6 @@
 #include "dftu_lcao_op_legacy.h"
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
-#include "source_lcao/module_dftu/dftu_lcao.h"
 
 namespace hamilt
 {

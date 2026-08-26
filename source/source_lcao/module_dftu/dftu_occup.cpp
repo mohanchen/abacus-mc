@@ -1,11 +1,10 @@
 #include "dftu_lcao.h"
 #include "dftu_folding.h"
 #include "source_base/timer.h"
-#include "source_io/module_parameter/parameter.h"
+#include "source_base/module_external/scalapack_connector.h"
 #ifdef __LCAO
 #include "source_lcao/hamilt_lcao.h"
 #endif
-#include "source_base/module_external/scalapack_connector.h"
 
 // copy_occ_mat(), zero_occ_mat(), mix_occ_mat(), set_occ_mat(ucell),
 // get_occ_mat_flat(), set_occ_mat_flat()

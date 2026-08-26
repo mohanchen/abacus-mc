@@ -4,14 +4,12 @@
 #include "source_cell/klist.h"
 #include "source_cell/unitcell.h"
 #include "source_basis/module_ao/parallel_orbitals.h"
-#include "source_estate/module_charge/charge_mixing.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 #ifdef __LCAO
 #include "source_basis/module_ao/orb_read.h"
 #include "source_hamilt/hamilt.h"
 #include "source_hamilt/module_hcontainer/hcontainer.h"
 #include "source_estate/module_dm/density_matrix.h"
-#include "source_lcao/force_stress_arrays.h" // mohan add 2024-06-15
 #endif
 
 #include <string>

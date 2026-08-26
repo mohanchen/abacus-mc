@@ -1,17 +1,9 @@
 #ifdef __LCAO
-#include "source_io/module_parameter/parameter.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
 #include "dftu_lcao.h"
 
 #include <cmath>
-#include <complex>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <cstdio>
-#include <cstring>
 
 
 void Plus_U::cal_yukawa_lambda(double** rho, const int& nrxx)
