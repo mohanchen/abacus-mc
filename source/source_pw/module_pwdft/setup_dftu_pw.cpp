@@ -27,7 +27,7 @@ void iter_init_dftu_pw(const int iter,
 
     if (dftu.get_occ_mat_ctrl() != 2)
     {
-        dftu.cal_occ_pw(iter, psi, wg, ucell, p_chgmix, isk);
+        dftu.cal_occ_pw(psi, wg, ucell, p_chgmix, isk);
     }
     dftu_io::output(dftu, ucell, PARAM.inp.out_chg[0], PARAM.globalv.global_out_dir, PARAM.inp.nspin, PARAM.globalv.npol);
 }

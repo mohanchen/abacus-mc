@@ -61,10 +61,9 @@ class Plus_U_Base
     void set_energy(const double &e) { energy_u = e; }
     void set_double_energy() { energy_u *= 2.0; }
 
-    /// interface for PW base
+    /// interface for PW basis
     /// calculate the local occupation number matrix for PW based wave functions
-    void cal_occ_pw(const int iter,
-                    const void* psi_in,
+    void cal_occ_pw(const void* psi_in,
                     const ModuleBase::matrix& wg_in,
                     const UnitCell& cell,
                     Charge_Mixing* p_chgmix,
@@ -177,6 +176,13 @@ class Plus_U_Base
     void zero_occ_mat(const UnitCell& ucell);
     void mix_occ_mat(const UnitCell& ucell, const double& mixing_beta);
     void set_occ_mat(const UnitCell& ucell);
+
+    /// accumulate occ_mat from psi for all k-points (per-device template)
+    template <typename Device>
+    void accumulate_occ_one_k(const void* psi_in,
+                              const ModuleBase::matrix& wg_in,
+                              const UnitCell& cell,
+                              const int* isk);
 
     std::vector<std::complex<double>> eff_pot_pw;
     std::vector<int> eff_pot_pw_index;

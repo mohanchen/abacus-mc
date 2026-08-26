@@ -18,8 +18,7 @@
 /// nspin=4 (npol=2): spinor calculation;
 ///   occ_mat has a single matrix of size (2*tlp1) x (2*tlp1) per atom
 ///   storing all 4 Pauli blocks contiguously.
-void Plus_U_Base::cal_occ_pw(const int iter,
-            const void* psi_in,
+void Plus_U_Base::cal_occ_pw(const void* psi_in,
             const ModuleBase::matrix& wg_in,
             const UnitCell& cell,
             Charge_Mixing* p_chgmix,
@@ -31,160 +30,12 @@ void Plus_U_Base::cal_occ_pw(const int iter,
 
     if(this->device == "cpu")
     {
-        auto* onsite_p = projectors::OnsiteProjector<double, base_device::DEVICE_CPU>::get_instance();
-        const psi::Psi<std::complex<double>>* psi_p = (const psi::Psi<std::complex<double>>*)psi_in;
-        const int nbands = psi_p->get_nbands();
-        const int npol = psi_p->get_npol();
-        for(int ik = 0; ik < psi_p->get_nk(); ik++)
-        {
-            int is = (this->nspin == 2) ? isk[ik] : 0;
-            psi_p->fix_k(ik);
-            onsite_p->tabulate_atomic(ik);
-
-            onsite_p->overlap_proj_psi(nbands*npol, psi_p->get_pointer());
-            const std::complex<double>* becp = onsite_p->get_h_becp();
-            int nkb = onsite_p->get_size_becp() / nbands / npol;
-
-            int begin_ih = 0;
-            for(int iat = 0; iat < cell.nat; iat++)
-            {
-                const int it = cell.iat2it[iat];
-                const int nh = onsite_p->get_nh(iat);
-                const int target_l = get_orbital_corr(it);
-                if(!has_correlated_orbital(it))
-                {
-                    begin_ih += nh;
-                    continue;
-                }
-                const int m_begin = target_l * target_l;
-                const int tlp1 = 2 * target_l + 1;
-                const int tlp1_2 = tlp1 * tlp1;
-                if(this->nspin == 4)
-                {
-                    for(int ib = 0;ib<nbands;ib++)
-                    {
-                        const double weight = wg_in(ik, ib);
-                        int ind_m1m2 = 0;
-                        for(int m1 = 0; m1 < tlp1; m1++)
-                        {
-                            const int index_m1 = ib*npol*nkb + begin_ih + m_begin + m1;
-                            for(int m2 = 0; m2 < tlp1; m2++)
-                            {
-                                const int index_m2 = ib*npol*nkb + begin_ih + m_begin + m2;
-                                std::complex<double> occ[4];
-                                occ[0] = weight * conj(becp[index_m1]) * becp[index_m2];
-                                occ[1] = weight * conj(becp[index_m1]) * becp[index_m2 + nkb];
-                                occ[2] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2];
-                                occ[3] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2 + nkb];
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2] += (occ[0] + occ[3]).real();
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + tlp1_2] += (occ[1] + occ[2]).real();
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 2 * tlp1_2] += (occ[1] - occ[2]).imag();
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 3 * tlp1_2] += (occ[0] - occ[3]).real();
-                                ind_m1m2++;
-                            }
-                        }
-                    }// ib
-                }
-                else // nspin=1 or nspin=2
-                {
-                    for(int ib = 0;ib<nbands;ib++)
-                    {
-                        const double weight = wg_in(ik, ib);
-                        int ind_m1m2 = 0;
-                        for(int m1 = 0; m1 < tlp1; m1++)
-                        {
-                            const int index_m1 = ib*nkb + begin_ih + m_begin + m1;
-                            for(int m2 = 0; m2 < tlp1; m2++)
-                            {
-                                const int index_m2 = ib*nkb + begin_ih + m_begin + m2;
-                                this->occ_mat[iat][target_l][0][is].c[ind_m1m2] += weight * (conj(becp[index_m1]) * becp[index_m2]).real();
-                                ind_m1m2++;
-                            }
-                        }
-                    }// ib
-                }
-                begin_ih += nh;
-            }// iat
-
-        }// ik
+        this->accumulate_occ_one_k<base_device::DEVICE_CPU>(psi_in, wg_in, cell, isk);
     }
 #if defined(__CUDA) || defined(__ROCM)
     else
     {
-        auto* onsite_p = projectors::OnsiteProjector<double, base_device::DEVICE_GPU>::get_instance();
-        const psi::Psi<std::complex<double>, base_device::DEVICE_GPU>* psi_p = (const psi::Psi<std::complex<double>, base_device::DEVICE_GPU>*)psi_in;
-        const int nbands = psi_p->get_nbands();
-        const int npol = psi_p->get_npol();
-        for(int ik = 0; ik < psi_p->get_nk(); ik++)
-        {
-            int is = (this->nspin == 2) ? isk[ik] : 0;
-            psi_p->fix_k(ik);
-            onsite_p->tabulate_atomic(ik);
-
-            onsite_p->overlap_proj_psi(nbands*npol, psi_p->get_pointer());
-            const std::complex<double>* becp = onsite_p->get_h_becp();
-            int nkb = onsite_p->get_size_becp() / nbands / npol;
-            int begin_ih = 0;
-            for(int iat = 0; iat < cell.nat; iat++)
-            {
-                const int it = cell.iat2it[iat];
-                const int nh = onsite_p->get_nh(iat);
-                const int target_l = get_orbital_corr(it);
-                if(!has_correlated_orbital(it))
-                {
-                    begin_ih += nh;
-                    continue;
-                }
-                const int m_begin = target_l * target_l;
-                const int tlp1 = 2 * target_l + 1;
-                const int tlp1_2 = tlp1 * tlp1;
-                if(this->nspin == 4)
-                {
-                    for(int ib = 0;ib<nbands;ib++)
-                    {
-                        const double weight = wg_in(ik, ib);
-                        int ind_m1m2 = 0;
-                        for(int m1 = 0; m1 < tlp1; m1++)
-                        {
-                            const int index_m1 = ib*npol*nkb + begin_ih + m_begin + m1;
-                            for(int m2 = 0; m2 < tlp1; m2++)
-                            {
-                                const int index_m2 = ib*npol*nkb + begin_ih + m_begin + m2;
-                                std::complex<double> occ[4];
-                                occ[0] = weight * conj(becp[index_m1]) * becp[index_m2];
-                                occ[1] = weight * conj(becp[index_m1]) * becp[index_m2 + nkb];
-                                occ[2] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2];
-                                occ[3] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2 + nkb];
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2] += (occ[0] + occ[3]).real();
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + tlp1_2] += (occ[1] + occ[2]).real();
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 2 * tlp1_2] += (occ[1] - occ[2]).imag();
-                                this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 3 * tlp1_2] += (occ[0] - occ[3]).real();
-                                ind_m1m2++;
-                            }
-                        }
-                    }// ib
-                }
-                else // nspin=1 or nspin=2
-                {
-                    for(int ib = 0;ib<nbands;ib++)
-                    {
-                        const double weight = wg_in(ik, ib);
-                        int ind_m1m2 = 0;
-                        for(int m1 = 0; m1 < tlp1; m1++)
-                        {
-                            const int index_m1 = ib*nkb + begin_ih + m_begin + m1;
-                            for(int m2 = 0; m2 < tlp1; m2++)
-                            {
-                                const int index_m2 = ib*nkb + begin_ih + m_begin + m2;
-                                this->occ_mat[iat][target_l][0][is].c[ind_m1m2] += weight * (conj(becp[index_m1]) * becp[index_m2]).real();
-                                ind_m1m2++;
-                            }
-                        }
-                    }// ib
-                }
-                begin_ih += nh;
-            }// iat
-        }// ik
+        this->accumulate_occ_one_k<base_device::DEVICE_GPU>(psi_in, wg_in, cell, isk);
     }
 #endif
 
@@ -347,3 +198,95 @@ void Plus_U_Base::cal_occ_pw(const int iter,
 
     ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
 }
+
+template <typename Device>
+void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
+                                       const ModuleBase::matrix& wg_in,
+                                       const UnitCell& cell,
+                                       const int* isk)
+{
+    auto* onsite_p = projectors::OnsiteProjector<double, Device>::get_instance();
+    const psi::Psi<std::complex<double>, Device>* psi_p =
+        (const psi::Psi<std::complex<double>, Device>*)psi_in;
+    const int nbands = psi_p->get_nbands();
+    const int npol = psi_p->get_npol();
+    for(int ik = 0; ik < psi_p->get_nk(); ik++)
+    {
+        int is = (this->nspin == 2) ? isk[ik] : 0;
+        psi_p->fix_k(ik);
+        onsite_p->tabulate_atomic(ik);
+
+        onsite_p->overlap_proj_psi(nbands*npol, psi_p->get_pointer());
+        const std::complex<double>* becp = onsite_p->get_h_becp();
+        int nkb = onsite_p->get_size_becp() / nbands / npol;
+
+        int begin_ih = 0;
+        for(int iat = 0; iat < cell.nat; iat++)
+        {
+            const int it = cell.iat2it[iat];
+            const int nh = onsite_p->get_nh(iat);
+            const int target_l = get_orbital_corr(it);
+            if(!has_correlated_orbital(it))
+            {
+                begin_ih += nh;
+                continue;
+            }
+            const int m_begin = target_l * target_l;
+            const int tlp1 = 2 * target_l + 1;
+            const int tlp1_2 = tlp1 * tlp1;
+            if(this->nspin == 4)
+            {
+                for(int ib = 0; ib < nbands; ib++)
+                {
+                    const double weight = wg_in(ik, ib);
+                    int ind_m1m2 = 0;
+                    for(int m1 = 0; m1 < tlp1; m1++)
+                    {
+                        const int index_m1 = ib*npol*nkb + begin_ih + m_begin + m1;
+                        for(int m2 = 0; m2 < tlp1; m2++)
+                        {
+                            const int index_m2 = ib*npol*nkb + begin_ih + m_begin + m2;
+                            std::complex<double> occ[4];
+                            occ[0] = weight * conj(becp[index_m1]) * becp[index_m2];
+                            occ[1] = weight * conj(becp[index_m1]) * becp[index_m2 + nkb];
+                            occ[2] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2];
+                            occ[3] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2 + nkb];
+                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2] += (occ[0] + occ[3]).real();
+                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + tlp1_2] += (occ[1] + occ[2]).real();
+                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 2 * tlp1_2] += (occ[1] - occ[2]).imag();
+                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 3 * tlp1_2] += (occ[0] - occ[3]).real();
+                            ind_m1m2++;
+                        }
+                    }
+                }
+            }
+            else // nspin=1 or nspin=2
+            {
+                for(int ib = 0; ib < nbands; ib++)
+                {
+                    const double weight = wg_in(ik, ib);
+                    int ind_m1m2 = 0;
+                    for(int m1 = 0; m1 < tlp1; m1++)
+                    {
+                        const int index_m1 = ib*nkb + begin_ih + m_begin + m1;
+                        for(int m2 = 0; m2 < tlp1; m2++)
+                        {
+                            const int index_m2 = ib*nkb + begin_ih + m_begin + m2;
+                            this->occ_mat[iat][target_l][0][is].c[ind_m1m2] += weight * (conj(becp[index_m1]) * becp[index_m2]).real();
+                            ind_m1m2++;
+                        }
+                    }
+                }
+            }
+            begin_ih += nh;
+        }
+    }
+}
+
+// explicit instantiations
+template void Plus_U_Base::accumulate_occ_one_k<base_device::DEVICE_CPU>(
+    const void*, const ModuleBase::matrix&, const UnitCell&, const int*);
+#if defined(__CUDA) || defined(__ROCM)
+template void Plus_U_Base::accumulate_occ_one_k<base_device::DEVICE_GPU>(
+    const void*, const ModuleBase::matrix&, const UnitCell&, const int*);
+#endif
