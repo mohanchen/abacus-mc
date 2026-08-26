@@ -733,6 +733,6 @@ void Plus_U_Base::local_occup_bcast(const UnitCell& ucell,
 }
 
 
-// cal_occ_pw() is implemented in source_lcao/module_dftu/dftu_pw.cpp
-// as a Plus_U_Base method. It will be relocated to this directory
-// in Phase 5 of the class-split refactor.
+// cal_occ_pw() is implemented in source_pw/module_pwdft/dftu_cal_occ_pw.cpp
+// as a Plus_U_Base method. Pure per-atom kernels live in dftu_tools_pw.{h,cpp}
+// as free functions in namespace dftu_pw.

@@ -1,5 +1,5 @@
-#ifndef DFTU_PW_H
-#define DFTU_PW_H
+#ifndef DFTU_TOOLS_PW_H
+#define DFTU_TOOLS_PW_H
 
 #include <complex>
 #include "source_base/matrix.h"
