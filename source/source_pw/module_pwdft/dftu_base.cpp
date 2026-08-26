@@ -73,7 +73,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->occ_mat.resize(cell.nat);
     this->occ_mat_save.resize(cell.nat);
-    this->eff_pot_pw_index.resize(cell.nat);
+    this->pot_uterm_pw_index.resize(cell.nat);
     int pot_index = 0;
 
     this->iatlnmipol2iwt.resize(cell.nat);
@@ -100,12 +100,12 @@ void Plus_U_Base::init_base(UnitCell& cell,
             const int elem_size = tlp1 * tlp1;
             if(nspin == 4)
             {
-                this->eff_pot_pw_index[iat] = pot_index;
+                this->pot_uterm_pw_index[iat] = pot_index;
                 pot_index += tlp1_npol * tlp1_npol;
             }
             else
             {
-                this->eff_pot_pw_index[iat] = pot_index;
+                this->pot_uterm_pw_index[iat] = pot_index;
                 pot_index += elem_size;
             }
 
@@ -174,7 +174,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     if (nspin == 2) pot_index *= 2;
 
-    this->eff_pot_pw.resize(pot_index, 0.0);
+    this->pot_uterm_pw.resize(pot_index, 0.0);
     this->uom_array.resize(pot_index, 0.0);
     this->uom_save.resize(pot_index, 0.0);
 
@@ -310,7 +310,7 @@ void Plus_U_Base::copy_occ_mat(const UnitCell& ucell)
                     const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
                     for(int mm=0; mm<size; mm++)
                     {
-                        this->uom_save[eff_pot_pw_index[iat]+mm] = occ_mat[iat][target_l][0][0].c[mm];
+                        this->uom_save[pot_uterm_pw_index[iat]+mm] = occ_mat[iat][target_l][0][0].c[mm];
                     }
                 }
             }
@@ -324,8 +324,8 @@ void Plus_U_Base::copy_occ_mat(const UnitCell& ucell)
                     const int half_size = this->uom_save.size() / 2;
                     for(int mm=0; mm<size; mm++)
                     {
-                        this->uom_save[eff_pot_pw_index[iat]+mm] = occ_mat[iat][target_l][0][0].c[mm];
-                        this->uom_save[half_size + eff_pot_pw_index[iat]+mm] = occ_mat[iat][target_l][0][1].c[mm];
+                        this->uom_save[pot_uterm_pw_index[iat]+mm] = occ_mat[iat][target_l][0][0].c[mm];
+                        this->uom_save[half_size + pot_uterm_pw_index[iat]+mm] = occ_mat[iat][target_l][0][1].c[mm];
                     }
                 }
             }
@@ -403,7 +403,7 @@ void Plus_U_Base::mix_occ_mat(const UnitCell& ucell,
                 {
                     for (int mm = 0; mm < size; mm++)
                     {
-                        this->uom_save[eff_pot_pw_index[iat] + mm] = occ_mat[iat][target_l][0][0].c[mm];
+                        this->uom_save[pot_uterm_pw_index[iat] + mm] = occ_mat[iat][target_l][0][0].c[mm];
                     }
                 }
             }
@@ -420,8 +420,8 @@ void Plus_U_Base::mix_occ_mat(const UnitCell& ucell,
                 {
                     for (int mm = 0; mm < size; mm++)
                     {
-                        this->uom_save[eff_pot_pw_index[iat] + mm] = occ_mat[iat][target_l][0][0].c[mm];
-                        this->uom_save[half_size + eff_pot_pw_index[iat] + mm] = occ_mat[iat][target_l][0][1].c[mm];
+                        this->uom_save[pot_uterm_pw_index[iat] + mm] = occ_mat[iat][target_l][0][0].c[mm];
+                        this->uom_save[half_size + pot_uterm_pw_index[iat] + mm] = occ_mat[iat][target_l][0][1].c[mm];
                     }
                 }
             }
@@ -446,17 +446,17 @@ void Plus_U_Base::set_occ_mat(const UnitCell& ucell)
             if (this->nspin == 4)
             {
                 for(int mm = 0; mm < occ_mat[iat][l][0][0].nr * occ_mat[iat][l][0][0].nc; mm++)
-                    occ_mat[iat][l][0][0].c[mm] = this->uom_array[eff_pot_pw_index[iat] + mm];
+                    occ_mat[iat][l][0][0].c[mm] = this->uom_array[pot_uterm_pw_index[iat] + mm];
             }
             else if (this->nspin == 1 || this->nspin == 2)
             {
                 const int half_size = this->uom_array.size() / 2;
                 for(int mm = 0; mm < occ_mat[iat][l][0][0].nr * occ_mat[iat][l][0][0].nc; mm++)
                 {
-                    occ_mat[iat][l][0][0].c[mm] = this->uom_array[eff_pot_pw_index[iat] + mm];
+                    occ_mat[iat][l][0][0].c[mm] = this->uom_array[pot_uterm_pw_index[iat] + mm];
                     if (this->nspin == 2)
                     {
-                        occ_mat[iat][l][0][1].c[mm] = this->uom_array[half_size + eff_pot_pw_index[iat] + mm];
+                        occ_mat[iat][l][0][1].c[mm] = this->uom_array[half_size + pot_uterm_pw_index[iat] + mm];
                     }
                 }
             }

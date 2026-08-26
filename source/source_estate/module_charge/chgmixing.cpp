@@ -133,7 +133,7 @@ void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
             // enable mixing_dftu for DFT+U occupation mixing
             dftu.enable_mixing();
             // allocate memory for uom_mdata
-            p_chgmix->allocate_mixing_uom(dftu.get_size_eff_pot_pw());
+            p_chgmix->allocate_mixing_uom(dftu.get_size_pot_uterm_pw());
         }
     }
 

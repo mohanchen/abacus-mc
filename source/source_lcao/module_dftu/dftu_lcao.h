@@ -108,8 +108,8 @@ class Plus_U : public Plus_U_Base
     // for both Hamiltonian and force/stress
     //=============================================================
   public:
-    void pot_onsite_complex(const int spin, const bool newlocale, std::complex<double>* VU, const int npol);
-    void pot_onsite_real(const int spin, const bool newlocale, double* VU, const int npol);
+    void pot_onsite_complex(const int spin, const bool newlocale, std::complex<double>* pot_onsite, const int npol);
+    void pot_onsite_real(const int spin, const bool newlocale, double* pot_onsite, const int npol);
 
   private:
     double get_onebody_eff_pot(const int T,

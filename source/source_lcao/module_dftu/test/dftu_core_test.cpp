@@ -9,14 +9,14 @@
  * Unit tests for DFT+U core algorithms.
  *
  * These tests target the most complex and bug-prone logic:
- * 1. eff_pot_pw_index calculation for mixed atom types and nspin modes
+ * 1. pot_uterm_pw_index calculation for mixed atom types and nspin modes
  * 2. copy_occ_mat <-> set_occ_mat roundtrip (3 data layouts)
- * 3. VU effective potential formula (cal_type=3, FLL)
+ * 3. pot_onsite effective potential formula (cal_type=3, FLL)
  * 4. Energy correction and double-counting terms
  ***********************************************************************/
 
 // =====================================================================
-// 1. eff_pot_pw_index calculation
+// 1. pot_uterm_pw_index calculation
 //
 // nspin=1: offset = sum(tlp1^2), total = sum(all tlp1^2)
 // nspin=2: same per-spin-channel, then pot_index *= 2 (split layout)
@@ -27,13 +27,13 @@ class EffPotIndexTest : public ::testing::Test
 {
   protected:
     struct AtomSpec { int l; int na; }; // correlated orbital l, number of atoms
-    std::vector<int> eff_pot_pw_index;
+    std::vector<int> pot_uterm_pw_index;
     int pot_index;
 
     void compute_indices(const std::vector<AtomSpec>& atoms, int nspin)
     {
         pot_index = 0;
-        eff_pot_pw_index.resize(atoms.size());
+        pot_uterm_pw_index.resize(atoms.size());
 
         for (size_t i = 0; i < atoms.size(); i++)
         {
@@ -42,12 +42,12 @@ class EffPotIndexTest : public ::testing::Test
 
             if (nspin == 4)
             {
-                eff_pot_pw_index[i] = pot_index;
+                pot_uterm_pw_index[i] = pot_index;
                 pot_index += tlp1_npol * tlp1_npol;
             }
             else
             {
-                eff_pot_pw_index[i] = pot_index;
+                pot_uterm_pw_index[i] = pot_index;
                 pot_index += tlp1 * tlp1;
             }
         }
@@ -64,9 +64,9 @@ TEST_F(EffPotIndexTest, Nspin1_MixedOrbitals)
     compute_indices(atoms, 1);
 
     // p: 9, d: 25, p: 9
-    EXPECT_EQ(eff_pot_pw_index[0], 0);
-    EXPECT_EQ(eff_pot_pw_index[1], 9);
-    EXPECT_EQ(eff_pot_pw_index[2], 34);
+    EXPECT_EQ(pot_uterm_pw_index[0], 0);
+    EXPECT_EQ(pot_uterm_pw_index[1], 9);
+    EXPECT_EQ(pot_uterm_pw_index[2], 34);
     EXPECT_EQ(pot_index, 43); // 9 + 25 + 9
 }
 
@@ -75,15 +75,15 @@ TEST_F(EffPotIndexTest, Nspin2and4_SplitAndPauli)
     // nspin=2: 2 d-atoms, split layout [up | dn]
     std::vector<AtomSpec> atoms2 = {{2, 1}, {2, 1}};
     compute_indices(atoms2, 2);
-    EXPECT_EQ(eff_pot_pw_index[0], 0);
-    EXPECT_EQ(eff_pot_pw_index[1], 25);
+    EXPECT_EQ(pot_uterm_pw_index[0], 0);
+    EXPECT_EQ(pot_uterm_pw_index[1], 25);
     EXPECT_EQ(pot_index, 100); // (25 + 25) * 2
 
     // nspin=4: d + p atoms, Pauli blocks
     std::vector<AtomSpec> atoms4 = {{2, 1}, {1, 1}};
     compute_indices(atoms4, 4);
-    EXPECT_EQ(eff_pot_pw_index[0], 0);    // d: (5*2)^2 = 100
-    EXPECT_EQ(eff_pot_pw_index[1], 100);  // p: (3*2)^2 = 36
+    EXPECT_EQ(pot_uterm_pw_index[0], 0);    // d: (5*2)^2 = 100
+    EXPECT_EQ(pot_uterm_pw_index[1], 100);  // p: (3*2)^2 = 36
     EXPECT_EQ(pot_index, 136);
 }
 
@@ -107,7 +107,7 @@ static void copy_occ_mat_to_flat(
     const std::vector<Matrix2D>& locale_up,
     const std::vector<Matrix2D>& locale_dn,
     std::vector<double>& uom_save,
-    const std::vector<int>& eff_pot_pw_index,
+    const std::vector<int>& pot_uterm_pw_index,
     int nspin)
 {
     if (nspin == 4)
@@ -116,7 +116,7 @@ static void copy_occ_mat_to_flat(
         {
             int size = locale_up[iat].nr * locale_up[iat].nc;
             for (int mm = 0; mm < size; mm++)
-                uom_save[eff_pot_pw_index[iat] + mm] = locale_up[iat].data[mm];
+                uom_save[pot_uterm_pw_index[iat] + mm] = locale_up[iat].data[mm];
         }
     }
     else if (nspin == 2) // split layout: [up | dn]
@@ -127,8 +127,8 @@ static void copy_occ_mat_to_flat(
             int size = locale_up[iat].nr * locale_up[iat].nc;
             for (int mm = 0; mm < size; mm++)
             {
-                uom_save[eff_pot_pw_index[iat] + mm] = locale_up[iat].data[mm];
-                uom_save[half_size + eff_pot_pw_index[iat] + mm] = locale_dn[iat].data[mm];
+                uom_save[pot_uterm_pw_index[iat] + mm] = locale_up[iat].data[mm];
+                uom_save[half_size + pot_uterm_pw_index[iat] + mm] = locale_dn[iat].data[mm];
             }
         }
     }
@@ -138,7 +138,7 @@ static void copy_occ_mat_to_flat(
         {
             int size = locale_up[iat].nr * locale_up[iat].nc;
             for (int mm = 0; mm < size; mm++)
-                uom_save[eff_pot_pw_index[iat] + mm] = locale_up[iat].data[mm];
+                uom_save[pot_uterm_pw_index[iat] + mm] = locale_up[iat].data[mm];
         }
     }
 }
@@ -147,7 +147,7 @@ static void set_occ_mat_from_flat(
     const std::vector<double>& uom_array,
     std::vector<Matrix2D>& locale_up,
     std::vector<Matrix2D>& locale_dn,
-    const std::vector<int>& eff_pot_pw_index,
+    const std::vector<int>& pot_uterm_pw_index,
     int nspin)
 {
     if (nspin == 4)
@@ -156,7 +156,7 @@ static void set_occ_mat_from_flat(
         {
             int size = locale_up[iat].nr * locale_up[iat].nc;
             for (int mm = 0; mm < size; mm++)
-                locale_up[iat].data[mm] = uom_array[eff_pot_pw_index[iat] + mm];
+                locale_up[iat].data[mm] = uom_array[pot_uterm_pw_index[iat] + mm];
         }
     }
     else if (nspin == 2)
@@ -167,8 +167,8 @@ static void set_occ_mat_from_flat(
             int size = locale_up[iat].nr * locale_up[iat].nc;
             for (int mm = 0; mm < size; mm++)
             {
-                locale_up[iat].data[mm] = uom_array[eff_pot_pw_index[iat] + mm];
-                locale_dn[iat].data[mm] = uom_array[half_size + eff_pot_pw_index[iat] + mm];
+                locale_up[iat].data[mm] = uom_array[pot_uterm_pw_index[iat] + mm];
+                locale_dn[iat].data[mm] = uom_array[half_size + pot_uterm_pw_index[iat] + mm];
             }
         }
     }
@@ -178,7 +178,7 @@ static void set_occ_mat_from_flat(
         {
             int size = locale_up[iat].nr * locale_up[iat].nc;
             for (int mm = 0; mm < size; mm++)
-                locale_up[iat].data[mm] = uom_array[eff_pot_pw_index[iat] + mm];
+                locale_up[iat].data[mm] = uom_array[pot_uterm_pw_index[iat] + mm];
         }
     }
 }
@@ -200,10 +200,10 @@ TEST_F(OccMatRoundtripTest, Nspin1and2_SingleAndSplitLayout)
     for (int i = 0; i < size; i++)
         locale_up[0].data[i] = static_cast<double>(i + 1);
 
-    std::vector<int> eff_pot_pw_index = {0};
+    std::vector<int> pot_uterm_pw_index = {0};
     std::vector<double> uom_save(size, 0.0);
-    copy_occ_mat_to_flat(locale_up, locale_dn, uom_save, eff_pot_pw_index, 1);
-    set_occ_mat_from_flat(uom_save, locale_up, locale_dn, eff_pot_pw_index, 1);
+    copy_occ_mat_to_flat(locale_up, locale_dn, uom_save, pot_uterm_pw_index, 1);
+    set_occ_mat_from_flat(uom_save, locale_up, locale_dn, pot_uterm_pw_index, 1);
     for (int i = 0; i < size; i++)
         EXPECT_DOUBLE_EQ(locale_up[0].data[i], static_cast<double>(i + 1));
 
@@ -215,14 +215,14 @@ TEST_F(OccMatRoundtripTest, Nspin1and2_SingleAndSplitLayout)
         locale_dn[0].data[i] = static_cast<double>(i + 100);
     }
     uom_save.assign(total, 0.0);
-    copy_occ_mat_to_flat(locale_up, locale_dn, uom_save, eff_pot_pw_index, 2);
+    copy_occ_mat_to_flat(locale_up, locale_dn, uom_save, pot_uterm_pw_index, 2);
     // Verify split layout
     for (int i = 0; i < size; i++)
     {
         EXPECT_DOUBLE_EQ(uom_save[i], static_cast<double>(i + 1));
         EXPECT_DOUBLE_EQ(uom_save[size + i], static_cast<double>(i + 100));
     }
-    set_occ_mat_from_flat(uom_save, locale_up, locale_dn, eff_pot_pw_index, 2);
+    set_occ_mat_from_flat(uom_save, locale_up, locale_dn, pot_uterm_pw_index, 2);
     for (int i = 0; i < size; i++)
     {
         EXPECT_DOUBLE_EQ(locale_up[0].data[i], static_cast<double>(i + 1));
@@ -245,11 +245,11 @@ TEST_F(OccMatRoundtripTest, Nspin4_PauliBlocks)
     }
     int total = std::accumulate(sizes.begin(), sizes.end(), 0);
 
-    std::vector<int> eff_pot_pw_index(specs.size());
+    std::vector<int> pot_uterm_pw_index(specs.size());
     int offset = 0;
     for (size_t i = 0; i < specs.size(); i++)
     {
-        eff_pot_pw_index[i] = offset;
+        pot_uterm_pw_index[i] = offset;
         offset += sizes[i];
     }
 
@@ -265,8 +265,8 @@ TEST_F(OccMatRoundtripTest, Nspin4_PauliBlocks)
     std::vector<double> uom_array(total, 0.0);
     std::vector<Matrix2D> locale_dn(specs.size()); // unused for nspin=4
 
-    copy_occ_mat_to_flat(locale, locale_dn, uom_array, eff_pot_pw_index, 4);
-    set_occ_mat_from_flat(uom_array, locale, locale_dn, eff_pot_pw_index, 4);
+    copy_occ_mat_to_flat(locale, locale_dn, uom_array, pot_uterm_pw_index, 4);
+    set_occ_mat_from_flat(uom_array, locale, locale_dn, pot_uterm_pw_index, 4);
 
     for (size_t i = 0; i < specs.size(); i++)
         for (int j = 0; j < sizes[i]; j++)
@@ -274,13 +274,13 @@ TEST_F(OccMatRoundtripTest, Nspin4_PauliBlocks)
 }
 
 // =====================================================================
-// 3. VU effective potential formula (cal_type=3, FLL)
+// 3. pot_onsite effective potential formula (cal_type=3, FLL)
 //
-// VU[m0,m1] = U * (0.5*delta(m0,m1) - locale[m0,m1])  (diagonal)
-// VU[m0,m1] = -U * locale[m0,m1]                       (off-diagonal)
+// pot_onsite[m0,m1] = U * (0.5*delta(m0,m1) - locale[m0,m1])  (diagonal)
+// pot_onsite[m0,m1] = -U * locale[m0,m1]                       (off-diagonal)
 // =====================================================================
 
-static double compute_vu(double U_val, int m0, int m1, double locale_val)
+static double compute_pot_onsite(double U_val, int m0, int m1, double locale_val)
 {
     if (m0 == m1)
         return U_val * (0.5 - locale_val);
@@ -288,34 +288,34 @@ static double compute_vu(double U_val, int m0, int m1, double locale_val)
         return -U_val * locale_val;
 }
 
-class VUPotentialTest : public ::testing::Test
+class PotOnsitePotentialTest : public ::testing::Test
 {
   protected:
     void SetUp() override {}
 };
 
-TEST_F(VUPotentialTest, Diagonal_HalfFilled)
+TEST_F(PotOnsitePotentialTest, Diagonal_HalfFilled)
 {
     double U = 4.0;
     double locale = 0.5; // half-filled
-    double vu = compute_vu(U, 0, 0, locale);
-    EXPECT_DOUBLE_EQ(vu, 0.0); // U * (0.5 - 0.5) = 0
+    double pot_onsite = compute_pot_onsite(U, 0, 0, locale);
+    EXPECT_DOUBLE_EQ(pot_onsite, 0.0); // U * (0.5 - 0.5) = 0
 }
 
-TEST_F(VUPotentialTest, Diagonal_FullyOccupied)
+TEST_F(PotOnsitePotentialTest, Diagonal_FullyOccupied)
 {
     double U = 4.0;
     double locale = 1.0; // fully occupied
-    double vu = compute_vu(U, 0, 0, locale);
-    EXPECT_DOUBLE_EQ(vu, -2.0); // U * (0.5 - 1.0) = -2.0
+    double pot_onsite = compute_pot_onsite(U, 0, 0, locale);
+    EXPECT_DOUBLE_EQ(pot_onsite, -2.0); // U * (0.5 - 1.0) = -2.0
 }
 
-TEST_F(VUPotentialTest, OffDiagonal)
+TEST_F(PotOnsitePotentialTest, OffDiagonal)
 {
     double U = 5.0;
     double locale = 0.3;
-    double vu = compute_vu(U, 0, 1, locale);
-    EXPECT_DOUBLE_EQ(vu, -1.5); // -U * locale = -1.5
+    double pot_onsite = compute_pot_onsite(U, 0, 1, locale);
+    EXPECT_DOUBLE_EQ(pot_onsite, -1.5); // -U * locale = -1.5
 }
 
 // =====================================================================
@@ -368,7 +368,7 @@ TEST_F(EnergyCorrectionTest, OffDiagonal_Contribution)
 
 TEST_F(EnergyCorrectionTest, DoubleCounting_Energy)
 {
-    // E_dc = sum_{m1,m2,spin} VU[m1,m2] * n[m2,m1]
+    // E_dc = sum_{m1,m2,spin} pot_onsite[m1,m2] * n[m2,m1]
     const int m_size = 3;
     double U = 4.0;
     std::vector<double> locale = {
@@ -381,9 +381,9 @@ TEST_F(EnergyCorrectionTest, DoubleCounting_Energy)
     for (int m1 = 0; m1 < m_size; m1++)
         for (int m2 = 0; m2 < m_size; m2++)
         {
-            double vu = (m1 == m2) ? U * (0.5 - locale[m1 * m_size + m2])
+            double pot_onsite = (m1 == m2) ? U * (0.5 - locale[m1 * m_size + m2])
                                    : -U * locale[m1 * m_size + m2];
-            e_dc += vu * locale[m2 * m_size + m1];
+            e_dc += pot_onsite * locale[m2 * m_size + m1];
         }
 
     // Only diagonal: m=0: 0*0.5=0, m=1: 0.8*0.3=0.24, m=2: 1.2*0.2=0.24

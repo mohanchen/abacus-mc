@@ -2,7 +2,7 @@
 
 namespace dftu_pw {
 
-void pauli_to_spin_basis(std::complex<double>* vu, int m_size)
+void pauli_to_spin_basis(std::complex<double>* pot_onsite, int m_size)
 {
     const int size = m_size * m_size;
     for (int m1 = 0; m1 < m_size; m1++)
@@ -14,21 +14,21 @@ void pauli_to_spin_basis(std::complex<double>* vu, int m_size)
             index[1] = m1 * m_size + m2 + size;
             index[2] = m1 * m_size + m2 + size * 2;
             index[3] = m1 * m_size + m2 + size * 3;
-            std::complex<double> vu_tmp[4];
+            std::complex<double> pot_onsite_tmp[4];
             for (int i = 0; i < 4; i++)
             {
-                vu_tmp[i] = vu[index[i]];
+                pot_onsite_tmp[i] = pot_onsite[index[i]];
             }
-            vu[index[0]] = 0.5 * (vu_tmp[0] + vu_tmp[3]);
-            vu[index[3]] = 0.5 * (vu_tmp[0] - vu_tmp[3]);
-            vu[index[1]] = 0.5 * (vu_tmp[1] + std::complex<double>(0.0, 1.0) * vu_tmp[2]);
-            vu[index[2]] = 0.5 * (vu_tmp[1] - std::complex<double>(0.0, 1.0) * vu_tmp[2]);
+            pot_onsite[index[0]] = 0.5 * (pot_onsite_tmp[0] + pot_onsite_tmp[3]);
+            pot_onsite[index[3]] = 0.5 * (pot_onsite_tmp[0] - pot_onsite_tmp[3]);
+            pot_onsite[index[1]] = 0.5 * (pot_onsite_tmp[1] + std::complex<double>(0.0, 1.0) * pot_onsite_tmp[2]);
+            pot_onsite[index[2]] = 0.5 * (pot_onsite_tmp[1] - std::complex<double>(0.0, 1.0) * pot_onsite_tmp[2]);
         }
     }
 }
 
-double compute_vu_spinor(
-    std::complex<double>* vu,
+double compute_pot_onsite_spinor(
+    std::complex<double>* pot_onsite,
     const double* occ,
     double u_value,
     double diag_coeff,
@@ -45,7 +45,7 @@ double compute_vu_spinor(
         {
             for (int m2 = 0; m2 < m_size; m2++)
             {
-                vu[start + m1 * m_size + m2] = u_value *
+                pot_onsite[start + m1 * m_size + m2] = u_value *
                     (diag * (m1 == m2) - occ[start + m2 * m_size + m1]);
                 energy_u += u_value * weight_eu
                     * occ[start + m2 * m_size + m1]
@@ -53,12 +53,12 @@ double compute_vu_spinor(
             }
         }
     }
-    pauli_to_spin_basis(vu, m_size);
+    pauli_to_spin_basis(pot_onsite, m_size);
     return energy_u;
 }
 
-double compute_vu_scalar(
-    std::complex<double>* vu,
+double compute_pot_onsite_scalar(
+    std::complex<double>* pot_onsite,
     const double* occ,
     double u_value,
     double diag_coeff,
@@ -70,7 +70,7 @@ double compute_vu_scalar(
     {
         for (int m2 = 0; m2 < m_size; m2++)
         {
-            vu[m1 * m_size + m2] = u_value *
+            pot_onsite[m1 * m_size + m2] = u_value *
                 (diag_coeff * (m1 == m2) - occ[m2 * m_size + m1]);
             energy_u += u_value * weight_eu
                 * occ[m2 * m_size + m1]

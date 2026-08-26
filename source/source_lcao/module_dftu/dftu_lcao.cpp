@@ -221,16 +221,16 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                     {
                                         for (int is = 0; is < 2; is++)
                                         {
-                                            double VU = 0.0;
-                                            VU = get_onebody_eff_pot(T, iat, l, n, is, m1_all, m2_all, false);
-                                            energy_dc += VU * this->occ_mat[iat][l][n][is](m1_all, m2_all);
+                                            double pot_onsite = 0.0;
+                                            pot_onsite = get_onebody_eff_pot(T, iat, l, n, is, m1_all, m2_all, false);
+                                            energy_dc += pot_onsite * this->occ_mat[iat][l][n][is](m1_all, m2_all);
                                         }
                                     }
                                     else if (this->nspin == 4)
                                     {
-                                        double VU = 0.0;
-                                        VU = get_onebody_eff_pot(T, iat, l, n, 0, m1_all, m2_all, false);
-                                        energy_dc += VU * this->occ_mat[iat][l][n][0](m1_all, m2_all);
+                                        double pot_onsite = 0.0;
+                                        pot_onsite = get_onebody_eff_pot(T, iat, l, n, 0, m1_all, m2_all, false);
+                                        energy_dc += pot_onsite * this->occ_mat[iat][l][n][0](m1_all, m2_all);
                                     }
                                 }
                             }

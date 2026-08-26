@@ -13,7 +13,7 @@ namespace DFTU_LCAO {
 /// Wraps Plus_U::pot_onsite_complex plus the S-projection GEMM.
 void pot_uterm_complex(Plus_U& dftu,
                        const int ik,
-                       std::complex<double>* eff_pot,
+                       std::complex<double>* pot_uterm,
                        const std::vector<int>& isk,
                        const std::complex<double>* sk,
                        const int npol);
@@ -22,7 +22,7 @@ void pot_uterm_complex(Plus_U& dftu,
 /// Wraps Plus_U::pot_onsite_real plus the S-projection GEMM.
 void pot_uterm_real(Plus_U& dftu,
                     const int ik,
-                    double* eff_pot,
+                    double* pot_uterm,
                     const std::vector<int>& isk,
                     const double* sk,
                     const int npol);

@@ -9,7 +9,7 @@
 /// calculate occupation matrix for DFT+U (PW basis)
 ///
 /// nspin=1 (npol=1): single spin channel; occ_mat[iat][l][n][0] only;
-///   eff_pot_pw has one block of tlp1^2 per atom.
+///   pot_uterm_pw has one block of tlp1^2 per atom.
 ///
 /// nspin=2 (npol=1): two spin channels stored separately:
 ///   occ_mat[iat][l][n][0] = spin-up, occ_mat[iat][l][n][1] = spin-down;
@@ -102,10 +102,10 @@ void Plus_U_Base::reduce_occ_mat(const UnitCell& cell)
 /// copy occ_mat to uom_array for mixing.
 ///
 /// Layout:
-///   nspin=1: uom_array[eff_pot_pw_index[iat] + mm] = occ_mat[...][0][0]
+///   nspin=1: uom_array[pot_uterm_pw_index[iat] + mm] = occ_mat[...][0][0]
 ///   nspin=2: split layout [all_up | all_dn], each atom's spin-up in the
 ///            first half and spin-down in the second half, both indexed by
-///            eff_pot_pw_index[iat]
+///            pot_uterm_pw_index[iat]
 ///   nspin=4: not used here (uom_array mixing only covers nspin=1/2 in the
 ///            current code path; the nspin=4 branch is a no-op)
 void Plus_U_Base::sync_occ_to_uom(const UnitCell& cell)
@@ -126,7 +126,7 @@ void Plus_U_Base::sync_occ_to_uom(const UnitCell& cell)
 
         for(int mm = 0; mm < size; mm++)
         {
-            this->uom_array[eff_pot_pw_index[iat] + mm] =
+            this->uom_array[pot_uterm_pw_index[iat] + mm] =
                 this->occ_mat[iat][target_l][0][0].c[mm];
         }
         if(this->nspin == 2)
@@ -134,21 +134,21 @@ void Plus_U_Base::sync_occ_to_uom(const UnitCell& cell)
             const int half_size = this->uom_array.size() / 2;
             for(int mm = 0; mm < size; mm++)
             {
-                this->uom_array[half_size + eff_pot_pw_index[iat] + mm] =
+                this->uom_array[half_size + pot_uterm_pw_index[iat] + mm] =
                     this->occ_mat[iat][target_l][0][1].c[mm];
             }
         }
     }
 }
 
-/// compute effective potential VU and DFT+U energy from occ_mat.
+/// compute effective potential pot_onsite and DFT+U energy from occ_mat.
 ///
 /// Preconditions:
 ///   - occ_mat has been accumulated from psi and reduced across k-pools
 ///     (cal_occ_pw calls this after the reduce + mixing steps).
 ///
 /// Outputs:
-///   - eff_pot_pw: VU = U * (diag*delta - occ) written per atom
+///   - pot_uterm_pw: pot_onsite = U * (diag*delta - occ) written per atom
 ///     nspin=4: 4 Pauli blocks per atom, then transformed to spin basis
 ///     nspin=1: single channel
 ///     nspin=2: two channels in split layout [all_up | all_dn]
@@ -158,7 +158,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
     this->energy_u = 0.0;
     const double weight_eu = (this->nspin == 1) ? 1.0 : (this->nspin == 2) ? 0.5 : 0.25;
     const double diag_coeff = (this->nspin == 4) ? 1.0 : 0.5;
-    // calculate VU and energy (occ_mat already reduced above)
+    // calculate pot_onsite and energy (occ_mat already reduced above)
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];
@@ -171,35 +171,35 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
 
         //update effective potential
         const double u_value = this->u_current[it];
-        std::complex<double>* vu_iat = &(this->eff_pot_pw[this->eff_pot_pw_index[iat]]);
+        std::complex<double>* pot_onsite_iat = &(this->pot_uterm_pw[this->pot_uterm_pw_index[iat]]);
         const int m_size = 2 * target_l + 1;
 
         if(this->nspin == 4)
         {
-            // VU is stored as 4 contiguous Pauli blocks per atom:
+            // pot_onsite is stored as 4 contiguous Pauli blocks per atom:
             //   is=0: charge channel (identity), Hubbard U contributes the
             //         diagonal term diag_coeff*delta(m1,m2)
             //   is=1,2,3: spin channels (sigma_x/y/z), no U diagonal term
             // The occupation matrix occ_mat[...][0][0].c packs all 4 blocks
             // contiguously, each of size m_size*m_size.
-            this->energy_u += dftu_pw::compute_vu_spinor(
-                vu_iat,
+            this->energy_u += dftu_pw::compute_pot_onsite_spinor(
+                pot_onsite_iat,
                 this->occ_mat[iat][target_l][0][0].c,
                 u_value, diag_coeff, weight_eu, m_size);
         }
         else // nspin=1 or nspin=2
         {
             // spin-up channel
-            this->energy_u += dftu_pw::compute_vu_scalar(
-                vu_iat,
+            this->energy_u += dftu_pw::compute_pot_onsite_scalar(
+                pot_onsite_iat,
                 this->occ_mat[iat][target_l][0][0].c,
                 u_value, diag_coeff, weight_eu, m_size);
             // spin-down channel for nspin=2
             if(this->nspin == 2)
             {
-                std::complex<double>* vu_iat1 = &(this->eff_pot_pw[this->eff_pot_pw.size()/2 + this->eff_pot_pw_index[iat]]);
-                this->energy_u += dftu_pw::compute_vu_scalar(
-                    vu_iat1,
+                std::complex<double>* pot_onsite_iat1 = &(this->pot_uterm_pw[this->pot_uterm_pw.size()/2 + this->pot_uterm_pw_index[iat]]);
+                this->energy_u += dftu_pw::compute_pot_onsite_scalar(
+                    pot_onsite_iat1,
                     this->occ_mat[iat][target_l][0][1].c,
                     u_value, diag_coeff, weight_eu, m_size);
             }
