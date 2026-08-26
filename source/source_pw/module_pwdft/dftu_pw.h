@@ -2,6 +2,7 @@
 #define DFTU_PW_H
 
 #include <complex>
+#include "source_base/matrix.h"
 
 /// Free functions for DFT+U PW basis calculations.
 ///
@@ -51,6 +52,49 @@ double compute_vu_scalar(
     double diag_coeff,
     double weight_eu,
     int m_size);
+
+/// accumulate occ_mat from becp for one atom, one k-point (nspin==4, spinor).
+///
+/// occ_mat_out points to occ_mat[iat][target_l][0][0].c, which packs 4
+/// Pauli blocks contiguously (each of size tlp1*tlp1). The function adds
+/// the contributions from all nbands bands for the given k-point.
+///
+/// becp:     projector-bra overlap for this k-point
+/// npol:     2 for spinor (nspin==4)
+/// nkb:      number of projectors per band per spin
+/// begin_ih: offset of this atom's projectors in becp
+/// m_begin:  offset of the correlated l's first m within the atom's projectors
+/// tlp1:     2*target_l + 1
+void accumulate_occ_spinor(
+    double* occ_mat_out,
+    const std::complex<double>* becp,
+    int nbands,
+    int npol,
+    int nkb,
+    int begin_ih,
+    int m_begin,
+    int tlp1,
+    const ModuleBase::matrix& wg,
+    int ik);
+
+/// accumulate occ_mat from becp for one atom, one k-point (nspin==1 or 2).
+///
+/// occ_mat_out points to occ_mat[iat][target_l][0][is].c, a single channel
+/// of size tlp1*tlp1. The caller selects the spin channel by passing the
+/// corresponding occ_mat pointer; this function does not need is.
+/// Adds contributions from all nbands bands.
+///
+/// becp, nbands, nkb, begin_ih, m_begin, tlp1: same as accumulate_occ_spinor
+void accumulate_occ_scalar(
+    double* occ_mat_out,
+    const std::complex<double>* becp,
+    int nbands,
+    int nkb,
+    int begin_ih,
+    int m_begin,
+    int tlp1,
+    const ModuleBase::matrix& wg,
+    int ik);
 
 } // namespace dftu_pw
 

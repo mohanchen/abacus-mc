@@ -241,50 +241,19 @@ void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
             }
             const int m_begin = target_l * target_l;
             const int tlp1 = 2 * target_l + 1;
-            const int tlp1_2 = tlp1 * tlp1;
             if(this->nspin == 4)
             {
-                for(int ib = 0; ib < nbands; ib++)
-                {
-                    const double weight = wg_in(ik, ib);
-                    int ind_m1m2 = 0;
-                    for(int m1 = 0; m1 < tlp1; m1++)
-                    {
-                        const int index_m1 = ib*npol*nkb + begin_ih + m_begin + m1;
-                        for(int m2 = 0; m2 < tlp1; m2++)
-                        {
-                            const int index_m2 = ib*npol*nkb + begin_ih + m_begin + m2;
-                            std::complex<double> occ[4];
-                            occ[0] = weight * conj(becp[index_m1]) * becp[index_m2];
-                            occ[1] = weight * conj(becp[index_m1]) * becp[index_m2 + nkb];
-                            occ[2] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2];
-                            occ[3] = weight * conj(becp[index_m1 + nkb]) * becp[index_m2 + nkb];
-                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2] += (occ[0] + occ[3]).real();
-                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + tlp1_2] += (occ[1] + occ[2]).real();
-                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 2 * tlp1_2] += (occ[1] - occ[2]).imag();
-                            this->occ_mat[iat][target_l][0][0].c[ind_m1m2 + 3 * tlp1_2] += (occ[0] - occ[3]).real();
-                            ind_m1m2++;
-                        }
-                    }
-                }
+                dftu_pw::accumulate_occ_spinor(
+                    this->occ_mat[iat][target_l][0][0].c,
+                    becp, nbands, npol, nkb, begin_ih, m_begin, tlp1,
+                    wg_in, ik);
             }
             else // nspin=1 or nspin=2
             {
-                for(int ib = 0; ib < nbands; ib++)
-                {
-                    const double weight = wg_in(ik, ib);
-                    int ind_m1m2 = 0;
-                    for(int m1 = 0; m1 < tlp1; m1++)
-                    {
-                        const int index_m1 = ib*nkb + begin_ih + m_begin + m1;
-                        for(int m2 = 0; m2 < tlp1; m2++)
-                        {
-                            const int index_m2 = ib*nkb + begin_ih + m_begin + m2;
-                            this->occ_mat[iat][target_l][0][is].c[ind_m1m2] += weight * (conj(becp[index_m1]) * becp[index_m2]).real();
-                            ind_m1m2++;
-                        }
-                    }
-                }
+                dftu_pw::accumulate_occ_scalar(
+                    this->occ_mat[iat][target_l][0][is].c,
+                    becp, nbands, nkb, begin_ih, m_begin, tlp1,
+                    wg_in, ik);
             }
             begin_ih += nh;
         }
@@ -369,6 +338,72 @@ double compute_vu_scalar(
         }
     }
     return energy_u;
+}
+
+void accumulate_occ_spinor(
+    double* occ_mat_out,
+    const std::complex<double>* becp,
+    int nbands,
+    int npol,
+    int nkb,
+    int begin_ih,
+    int m_begin,
+    int tlp1,
+    const ModuleBase::matrix& wg,
+    int ik)
+{
+    const int tlp1_2 = tlp1 * tlp1;
+    for (int ib = 0; ib < nbands; ib++)
+    {
+        const double weight = wg(ik, ib);
+        int ind_m1m2 = 0;
+        for (int m1 = 0; m1 < tlp1; m1++)
+        {
+            const int index_m1 = ib * npol * nkb + begin_ih + m_begin + m1;
+            for (int m2 = 0; m2 < tlp1; m2++)
+            {
+                const int index_m2 = ib * npol * nkb + begin_ih + m_begin + m2;
+                std::complex<double> occ[4];
+                occ[0] = weight * std::conj(becp[index_m1]) * becp[index_m2];
+                occ[1] = weight * std::conj(becp[index_m1]) * becp[index_m2 + nkb];
+                occ[2] = weight * std::conj(becp[index_m1 + nkb]) * becp[index_m2];
+                occ[3] = weight * std::conj(becp[index_m1 + nkb]) * becp[index_m2 + nkb];
+                occ_mat_out[ind_m1m2] += (occ[0] + occ[3]).real();
+                occ_mat_out[ind_m1m2 + tlp1_2] += (occ[1] + occ[2]).real();
+                occ_mat_out[ind_m1m2 + 2 * tlp1_2] += (occ[1] - occ[2]).imag();
+                occ_mat_out[ind_m1m2 + 3 * tlp1_2] += (occ[0] - occ[3]).real();
+                ind_m1m2++;
+            }
+        }
+    }
+}
+
+void accumulate_occ_scalar(
+    double* occ_mat_out,
+    const std::complex<double>* becp,
+    int nbands,
+    int nkb,
+    int begin_ih,
+    int m_begin,
+    int tlp1,
+    const ModuleBase::matrix& wg,
+    int ik)
+{
+    for (int ib = 0; ib < nbands; ib++)
+    {
+        const double weight = wg(ik, ib);
+        int ind_m1m2 = 0;
+        for (int m1 = 0; m1 < tlp1; m1++)
+        {
+            const int index_m1 = ib * nkb + begin_ih + m_begin + m1;
+            for (int m2 = 0; m2 < tlp1; m2++)
+            {
+                const int index_m2 = ib * nkb + begin_ih + m_begin + m2;
+                occ_mat_out[ind_m1m2] += weight * (std::conj(becp[index_m1]) * becp[index_m2]).real();
+                ind_m1m2++;
+            }
+        }
+    }
 }
 
 } // namespace dftu_pw
