@@ -1,5 +1,5 @@
-#ifndef DFTU_H
-#define DFTU_H
+#ifndef DFTU_LCAO_H
+#define DFTU_LCAO_H
 
 #include "source_cell/klist.h"
 #include "source_cell/unitcell.h"
@@ -134,61 +134,6 @@ private:
                                const int m0,
                                const int m1,
                                const bool newlocale);
-
-    //=============================================================
-    // In dftu_folding.cpp
-    // Subroutines for folding S and dS matrix
-    //=============================================================
-
-    /// @brief Judge whether atom pair (T1,I1) and (T2,I2,tau2) are adjacent
-    ///        by direct orbital cutoff overlap or three-body bridging via a
-    ///        common nonlocal projector center T0.
-    /// @return true if the pair should be processed
-    bool is_adjacent_pair(const UnitCell& ucell,
-                          const Grid_Driver& gd,
-                          const int T1,
-                          const int T2,
-                          const ModuleBase::Vector3<double>& tau1,
-                          const ModuleBase::Vector3<double>& tau2) const;
-
-    /// @brief Get the linear index of local matrix element (mu, nu) based on
-    ///        ks_solver (column-major or row-major).
-    int get_linear_index(const int mu,
-                         const int nu,
-                         const Parallel_Orbitals& pv) const;
-
-    void fold_dSR_gamma(const UnitCell& ucell,
-                        const Parallel_Orbitals& pv,
-                        const Grid_Driver* gd,
-                        double* dsloc_x,
-                        double* dsloc_y,
-                        double* dsloc_z,
-                        double* dh_r,
-                        const int dim1,
-                        const int dim2,
-                        double* dSR_gamma);
-
-    // dim = 0 : S, for Hamiltonian
-    // dim = 1-3 : dS, for force
-    // dim = 4-6 : dS * dR, for stress
-
-    void folding_matrix_k(const UnitCell& ucell,
-                          const Grid_Driver& gd,
-                          ForceStressArrays& fsr,
-                          const Parallel_Orbitals& pv,
-                          const int ik,
-                          const int dim1,
-                          const int dim2,
-                          std::complex<double>* mat_k,
-                          const ModuleBase::Vector3<double>& kvec_d);
-
-    /**
-     * @brief new function of folding_S_matrix
-     * only for Hamiltonian now, for force and stress will be developed later
-     * use HContainer as input and output in mat_k
-    */
-	void folding_matrix_k_new(const int ik,
-			hamilt::Hamilt<std::complex<double>>* p_ham);
 
     //=============================================================
     // In dftu_force.cpp

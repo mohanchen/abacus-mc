@@ -1,4 +1,5 @@
 #ifdef __LCAO
+#include "dftu_folding.h"
 #include "dftu_lcao.h"
 #include "source_base/timer.h"
 #include "source_io/module_parameter/parameter.h"
@@ -7,16 +8,19 @@
 #include "source_hamilt/module_hcontainer/hcontainer.h"
 #include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 
-bool Plus_U::is_adjacent_pair(const UnitCell& ucell,
-                              const Grid_Driver& gd,
-                              const int T1,
-                              const int T2,
-                              const ModuleBase::Vector3<double>& tau1,
-                              const ModuleBase::Vector3<double>& tau2) const
+namespace dftu_folding {
+
+bool is_adjacent_pair(const std::vector<double>& orb_cutoff,
+                      const UnitCell& ucell,
+                      const Grid_Driver& gd,
+                      const int T1,
+                      const int T2,
+                      const ModuleBase::Vector3<double>& tau1,
+                      const ModuleBase::Vector3<double>& tau2)
 {
     const ModuleBase::Vector3<double> dtau = tau2 - tau1;
     const double distance = dtau.norm() * ucell.lat0;
-    const double rcut = orb_cutoff_[T1] + orb_cutoff_[T2];
+    const double rcut = orb_cutoff[T1] + orb_cutoff[T2];
     if (distance < rcut)
     {
         return true;
@@ -30,8 +34,8 @@ bool Plus_U::is_adjacent_pair(const UnitCell& ucell,
         const ModuleBase::Vector3<double> tau0 = gd.getAdjacentTau(ad0);
         const double distance1 = (tau0 - tau1).norm() * ucell.lat0;
         const double distance2 = (tau0 - tau2).norm() * ucell.lat0;
-        const double rcut1 = orb_cutoff_[T1] + ucell.infoNL->get_rcut_max(T0);
-        const double rcut2 = orb_cutoff_[T2] + ucell.infoNL->get_rcut_max(T0);
+        const double rcut1 = orb_cutoff[T1] + ucell.infoNL->get_rcut_max(T0);
+        const double rcut2 = orb_cutoff[T2] + ucell.infoNL->get_rcut_max(T0);
         if (distance1 < rcut1 && distance2 < rcut2)
         {
             return true;
@@ -40,45 +44,49 @@ bool Plus_U::is_adjacent_pair(const UnitCell& ucell,
     return false;
 }
 
-int Plus_U::get_linear_index(const int mu,
-                             const int nu,
-                             const Parallel_Orbitals& pv) const
+int get_linear_index(const std::string& ks_solver,
+                    const int mu,
+                    const int nu,
+                    const Parallel_Orbitals& pv)
 {
-    if (ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(this->ks_solver))
+    if (ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(ks_solver))
     {
         return mu + nu * pv.nrow;
     }
     return mu * pv.ncol + nu;
 }
 
-void Plus_U::fold_dSR_gamma(const UnitCell& ucell,
-                          const Parallel_Orbitals& pv,
-                          const Grid_Driver* gd,
-                          double* dsloc_x,
-                          double* dsloc_y,
-                          double* dsloc_z,
-                          double* dh_r,
-                          const int dim1,
-                          const int dim2,
-                          double* dSR_gamma)
+void fold_dSR_gamma(int npol,
+                    const std::string& ks_solver,
+                    const std::vector<double>& orb_cutoff,
+                    const UnitCell& ucell,
+                    const Parallel_Orbitals& pv,
+                    const Grid_Driver* gd,
+                    double* dsloc_x,
+                    double* dsloc_y,
+                    double* dsloc_z,
+                    double* dh_r,
+                    const int dim1,
+                    const int dim2,
+                    double* dSR_gamma)
 {
     ModuleBase::TITLE("Plus_U", "fold_dSR_gamma");
 
     ModuleBase::GlobalFunc::ZEROS(dSR_gamma, pv.nloc);
 
     double* dS_ptr = nullptr;
-	if(dim1 == 0) 
-	{
-		dS_ptr = dsloc_x;
-	}
-	else if(dim1 == 1) 
-	{
-		dS_ptr = dsloc_y;
-	}
-	else if (dim1 == 2) 
-	{
-		dS_ptr = dsloc_z;
-	}
+    if (dim1 == 0)
+    {
+        dS_ptr = dsloc_x;
+    }
+    else if (dim1 == 1)
+    {
+        dS_ptr = dsloc_y;
+    }
+    else if (dim1 == 2)
+    {
+        dS_ptr = dsloc_z;
+    }
 
     int nnr = 0;
     ModuleBase::Vector3<double> tau1, tau2;
@@ -98,15 +106,15 @@ void Plus_U::fold_dSR_gamma(const UnitCell& ucell,
                 Atom* atom2 = &ucell.atoms[T2];
                 tau2 = gd->getAdjacentTau(ad);
 
-                if (!is_adjacent_pair(ucell, *gd, T1, T2, tau1, tau2))
+                if (!is_adjacent_pair(orb_cutoff, ucell, *gd, T1, T2, tau1, tau2))
                 {
                     continue;
                 }
 
                 const int start2 = ucell.itiaiw2iwt(T2, I2, 0);
-                for (int jj = 0; jj < atom1->nw * this->npol; ++jj)
+                for (int jj = 0; jj < atom1->nw * npol; ++jj)
                 {
-                    const int jj0 = jj / this->npol;
+                    const int jj0 = jj / npol;
                     const int iw1_all = start1 + jj0;
                     const int mu = pv.global2local_row(iw1_all);
                     if (mu < 0)
@@ -114,9 +122,9 @@ void Plus_U::fold_dSR_gamma(const UnitCell& ucell,
                         continue;
                     }
 
-                    for (int kk = 0; kk < atom2->nw * this->npol; ++kk)
+                    for (int kk = 0; kk < atom2->nw * npol; ++kk)
                     {
-                        const int kk0 = kk / this->npol;
+                        const int kk0 = kk / npol;
                         const int iw2_all = start2 + kk0;
                         const int nu = pv.global2local_col(iw2_all);
                         if (nu < 0)
@@ -124,7 +132,7 @@ void Plus_U::fold_dSR_gamma(const UnitCell& ucell,
                             continue;
                         }
 
-                        const int iic = get_linear_index(mu, nu, pv);
+                        const int iic = get_linear_index(ks_solver, mu, nu, pv);
                         dSR_gamma[iic] += dS_ptr[nnr] * dh_r[nnr * 3 + dim2];
 
                         ++nnr;
@@ -137,15 +145,18 @@ void Plus_U::fold_dSR_gamma(const UnitCell& ucell,
     return;
 }
 
-void Plus_U::folding_matrix_k(const UnitCell& ucell,
-                            const Grid_Driver& gd,
-                            ForceStressArrays& fsr,
-                            const Parallel_Orbitals& pv,
-                            const int ik,
-                            const int dim1,
-                            const int dim2,
-                            std::complex<double>* mat_k,
-                            const ModuleBase::Vector3<double>& kvec_d)
+void folding_matrix_k(int npol,
+                      const std::string& ks_solver,
+                      const std::vector<double>& orb_cutoff,
+                      const UnitCell& ucell,
+                      const Grid_Driver& gd,
+                      ForceStressArrays& fsr,
+                      const Parallel_Orbitals& pv,
+                      const int ik,
+                      const int dim1,
+                      const int dim2,
+                      std::complex<double>* mat_k,
+                      const ModuleBase::Vector3<double>& kvec_d)
 {
     ModuleBase::TITLE("Plus_U", "folding_matrix_k");
     ModuleBase::timer::start("Plus_U", "folding_matrix_k");
@@ -187,7 +198,7 @@ void Plus_U::folding_matrix_k(const UnitCell& ucell,
 
                 tau2 = gd.getAdjacentTau(ad);
 
-                if (!is_adjacent_pair(ucell, gd, T1, T2, tau1, tau2))
+                if (!is_adjacent_pair(orb_cutoff, ucell, gd, T1, T2, tau1, tau2))
                 {
                     continue;
                 }
@@ -206,7 +217,7 @@ void Plus_U::folding_matrix_k(const UnitCell& ucell,
                 // calculate how many matrix elements are in
                 // this processor.
                 //--------------------------------------------------
-                for (int ii = 0; ii < atom1->nw * this->npol; ii++)
+                for (int ii = 0; ii < atom1->nw * npol; ii++)
                 {
                     // the index of orbitals in this processor
                     const int iw1_all = start1 + ii;
@@ -216,7 +227,7 @@ void Plus_U::folding_matrix_k(const UnitCell& ucell,
                         continue;
                     }
 
-                    for (int jj = 0; jj < atom2->nw * this->npol; jj++)
+                    for (int jj = 0; jj < atom2->nw * npol; jj++)
                     {
                         int iw2_all = start2 + jj;
                         const int nu = pv.global2local_col(iw2_all);
@@ -225,7 +236,7 @@ void Plus_U::folding_matrix_k(const UnitCell& ucell,
                             continue;
                         }
 
-                        const int iic = get_linear_index(mu, nu, pv);
+                        const int iic = get_linear_index(ks_solver, mu, nu, pv);
 
                         if (dim1 <= 3)
                         {
@@ -247,27 +258,30 @@ void Plus_U::folding_matrix_k(const UnitCell& ucell,
     return;
 }
 
-void Plus_U::folding_matrix_k_new(const int ik,
-    hamilt::Hamilt<std::complex<double>>* p_ham)
+void folding_matrix_k_new(const std::string& ks_solver,
+                          bool gamma_only_local,
+                          int nspin,
+                          const int ik,
+                          hamilt::Hamilt<std::complex<double>>* p_ham)
 {
     ModuleBase::TITLE("Plus_U", "folding_matrix_k_new");
     ModuleBase::timer::start("Plus_U", "folding_matrix_k_new");
 
     int hk_type = 0;
-    if (ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(this->ks_solver))
+    if (ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(ks_solver))
     {
         hk_type = 1;
     }
 
     // get SR and fold to mat_k
-    if(this->gamma_only_local)
+    if (gamma_only_local)
     {
         dynamic_cast<hamilt::HamiltLCAO<double, double>*>(p_ham)
                     ->updateSk(ik, hk_type);
     }
     else
     {
-        if(this->nspin != 4)
+        if (nspin != 4)
         {
             dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham)
                         ->updateSk(ik, hk_type);
@@ -281,5 +295,7 @@ void Plus_U::folding_matrix_k_new(const int ik,
 
     ModuleBase::timer::end("Plus_U", "folding_matrix_k_new");
 }
+
+} // namespace dftu_folding
 
 #endif // __LCAO

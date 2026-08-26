@@ -2,6 +2,7 @@
 
 #ifdef __LCAO
 #include "dftu_lcao.h"
+#include "dftu_folding.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
 #include "source_base/inverse_matrix.h"
@@ -237,7 +238,8 @@ void Plus_U::cal_force_k(const UnitCell& ucell,
 
     for (int dim = 0; dim < 3; dim++)
     {
-        this->folding_matrix_k(ucell, gd, fsr, pv, ik, dim + 1, 0, &dSm_k[0], kvec_d);
+        dftu_folding::folding_matrix_k(this->npol, this->ks_solver, this->orb_cutoff_,
+                                        ucell, gd, fsr, pv, ik, dim + 1, 0, &dSm_k[0], kvec_d);
 
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
@@ -371,7 +373,8 @@ void Plus_U::cal_stress_k(const UnitCell& ucell,
     {
         for (int dim2 = dim1; dim2 < 3; dim2++)
         {
-            this->folding_matrix_k(ucell, gd, fsr, pv, ik, dim1 + 4, dim2, &dSR_k[0], kvec_d);
+            dftu_folding::folding_matrix_k(this->npol, this->ks_solver, this->orb_cutoff_,
+                                            ucell, gd, fsr, pv, ik, dim1 + 4, dim2, &dSR_k[0], kvec_d);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transN,
@@ -588,7 +591,8 @@ void Plus_U::cal_stress_gamma(const UnitCell& ucell,
     {
         for (int dim2 = dim1; dim2 < 3; dim2++)
         {
-            this->fold_dSR_gamma(ucell, pv, gd, dsloc_x, dsloc_y, dsloc_z, dh_r, dim1, dim2, &dSR_gamma[0]);
+            dftu_folding::fold_dSR_gamma(this->npol, this->ks_solver, this->orb_cutoff_,
+                                         ucell, pv, gd, dsloc_x, dsloc_y, dsloc_z, dh_r, dim1, dim2, &dSR_gamma[0]);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transN,
