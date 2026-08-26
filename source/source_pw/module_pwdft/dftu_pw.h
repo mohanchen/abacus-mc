@@ -23,6 +23,35 @@ namespace dftu_pw {
 ///   vu[2*size]   <- 0.5 * (vu_pauli[1] - i * vu_pauli[2])
 void pauli_to_spin_basis(std::complex<double>* vu, int m_size);
 
+/// compute VU and energy contribution for one atom (nspin==4, spinor).
+///
+/// Writes 4 Pauli blocks of VU into vu (size 4 * m_size * m_size) and
+/// returns the energy_u increment. Internally calls pauli_to_spin_basis
+/// to convert vu to spin basis in-place.
+///
+/// vu:  pointer to eff_pot_pw[eff_pot_pw_index[iat]]
+/// occ: pointer to occ_mat[iat][target_l][0][0].c (4 Pauli blocks packed)
+double compute_vu_spinor(
+    std::complex<double>* vu,
+    const double* occ,
+    double u_value,
+    double diag_coeff,
+    double weight_eu,
+    int m_size);
+
+/// compute VU and energy contribution for one atom, one spin channel
+/// (nspin==1 or nspin==2). Returns the energy_u increment.
+///
+/// vu:  pointer to the spin channel's VU block (size m_size * m_size)
+/// occ: pointer to occ_mat[iat][target_l][0][is].c for this channel
+double compute_vu_scalar(
+    std::complex<double>* vu,
+    const double* occ,
+    double u_value,
+    double diag_coeff,
+    double weight_eu,
+    int m_size);
+
 } // namespace dftu_pw
 
 #endif

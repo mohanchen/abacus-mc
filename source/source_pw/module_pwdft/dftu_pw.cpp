@@ -182,52 +182,26 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
             //   is=1,2,3: spin channels (sigma_x/y/z), no U diagonal term
             // The occupation matrix occ_mat[...][0][0].c packs all 4 blocks
             // contiguously, each of size m_size*m_size.
-            for (int is = 0; is < 4; ++is)
-            {
-                int start = is * m_size * m_size;
-                double diag = (is == 0) ? diag_coeff : 0.0;
-                for (int m1 = 0; m1 < m_size; m1++)
-                {
-                    for (int m2 = 0; m2 < m_size; m2++)
-                    {
-                        vu_iat[start + m1 * m_size + m2] = u_value *
-                          (diag * (m1 == m2) - this->occ_mat[iat][target_l][0][0].c[start + m2 * m_size + m1]);
-                        this->energy_u += u_value * weight_eu
-                                 * this->occ_mat[iat][target_l][0][0].c[start + m2 * m_size + m1]
-                                 * this->occ_mat[iat][target_l][0][0].c[start + m1 * m_size + m2];
-                    }
-                }
-            }
-            // transfer from Pauli matrix representation to spin representation
-            dftu_pw::pauli_to_spin_basis(vu_iat, m_size);
+            this->energy_u += dftu_pw::compute_vu_spinor(
+                vu_iat,
+                this->occ_mat[iat][target_l][0][0].c,
+                u_value, diag_coeff, weight_eu, m_size);
         }
         else // nspin=1 or nspin=2
         {
             // spin-up channel
-            for (int m1 = 0; m1 < m_size; m1++)
-            {
-                for (int m2 = 0; m2 < m_size; m2++)
-                {
-                    vu_iat[m1 * m_size + m2] = u_value *
-                      (diag_coeff * (m1 == m2) - this->occ_mat[iat][target_l][0][0].c[m2 * m_size + m1]);
-                    this->energy_u += u_value * weight_eu * this->occ_mat[iat][target_l][0][0].c[m2 * m_size + m1]
-                             * this->occ_mat[iat][target_l][0][0].c[m1 * m_size + m2];
-                }
-            }
+            this->energy_u += dftu_pw::compute_vu_scalar(
+                vu_iat,
+                this->occ_mat[iat][target_l][0][0].c,
+                u_value, diag_coeff, weight_eu, m_size);
             // spin-down channel for nspin=2
             if(this->nspin == 2)
             {
                 std::complex<double>* vu_iat1 = &(this->eff_pot_pw[this->eff_pot_pw.size()/2 + this->eff_pot_pw_index[iat]]);
-                for (int m1 = 0; m1 < m_size; m1++)
-                {
-                    for (int m2 = 0; m2 < m_size; m2++)
-                    {
-                        vu_iat1[m1 * m_size + m2] = u_value *
-                          (diag_coeff * (m1 == m2) - this->occ_mat[iat][target_l][0][1].c[m2 * m_size + m1]);
-                        this->energy_u += u_value * weight_eu * this->occ_mat[iat][target_l][0][1].c[m2 * m_size + m1]
-                                 * this->occ_mat[iat][target_l][0][1].c[m1 * m_size + m2];
-                    }
-                }
+                this->energy_u += dftu_pw::compute_vu_scalar(
+                    vu_iat1,
+                    this->occ_mat[iat][target_l][0][1].c,
+                    u_value, diag_coeff, weight_eu, m_size);
             }
         }
     }
@@ -342,6 +316,59 @@ void pauli_to_spin_basis(std::complex<double>* vu, int m_size)
             vu[index[2]] = 0.5 * (vu_tmp[1] - std::complex<double>(0.0, 1.0) * vu_tmp[2]);
         }
     }
+}
+
+double compute_vu_spinor(
+    std::complex<double>* vu,
+    const double* occ,
+    double u_value,
+    double diag_coeff,
+    double weight_eu,
+    int m_size)
+{
+    double energy_u = 0.0;
+    const int m_size2 = m_size * m_size;
+    for (int is = 0; is < 4; ++is)
+    {
+        int start = is * m_size2;
+        double diag = (is == 0) ? diag_coeff : 0.0;
+        for (int m1 = 0; m1 < m_size; m1++)
+        {
+            for (int m2 = 0; m2 < m_size; m2++)
+            {
+                vu[start + m1 * m_size + m2] = u_value *
+                    (diag * (m1 == m2) - occ[start + m2 * m_size + m1]);
+                energy_u += u_value * weight_eu
+                    * occ[start + m2 * m_size + m1]
+                    * occ[start + m1 * m_size + m2];
+            }
+        }
+    }
+    pauli_to_spin_basis(vu, m_size);
+    return energy_u;
+}
+
+double compute_vu_scalar(
+    std::complex<double>* vu,
+    const double* occ,
+    double u_value,
+    double diag_coeff,
+    double weight_eu,
+    int m_size)
+{
+    double energy_u = 0.0;
+    for (int m1 = 0; m1 < m_size; m1++)
+    {
+        for (int m2 = 0; m2 < m_size; m2++)
+        {
+            vu[m1 * m_size + m2] = u_value *
+                (diag_coeff * (m1 == m2) - occ[m2 * m_size + m1]);
+            energy_u += u_value * weight_eu
+                * occ[m2 * m_size + m1]
+                * occ[m1 * m_size + m2];
+        }
+    }
+    return energy_u;
 }
 
 } // namespace dftu_pw
