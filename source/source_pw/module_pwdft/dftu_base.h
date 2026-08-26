@@ -11,18 +11,20 @@
 
 class Plus_U_Base
 {
+  //=============================================================
+  // public section
+  //=============================================================
   public:
     Plus_U_Base();
     ~Plus_U_Base();
 
-  public:
     /// allocate relevant data structures (base part, no LCAO types)
     void init_base(UnitCell& cell,
                    const int npol,
                    const int nspin,
                    const std::vector<int>& orbital_corr,
                    const bool yukawa_potential,
-                   const std::string& global_readin_dir,
+                   const std::string& global_read_in_dir,
                    const std::string& global_out_dir,
                    const std::string& init_chg,
                    const std::string& device,
@@ -44,7 +46,6 @@ class Plus_U_Base
     int nspin = 0;
 
     // --- Accessors ---
-
     double get_u_current(int it) const { return u_current[it]; }
     double get_u_target(int it) const { return u_target[it]; }
     int get_num_u_types() const { return static_cast<int>(u_current.size()); }
@@ -59,18 +60,6 @@ class Plus_U_Base
     void set_energy(const double &e) { energy_u = e; }
     void set_double_energy() { energy_u *= 2.0; }
 
-  protected:
-    double energy_u = 0.0;
-
-    int cal_type = 3;
-    std::string device;
-    int kpar = 1;
-
-    // transform between iwt index and it, ia, L, N and m index
-    std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>
-        iatlnmipol2iwt;
-
-  public:
     /// interface for PW base
     /// calculate the local occupation number matrix for PW based wave functions
     void cal_occ_pw(const int iter,
@@ -129,24 +118,6 @@ class Plus_U_Base
     bool is_mixing_enabled() const { return mixing_dftu != 0; }
     void enable_mixing() { mixing_dftu = 1; }
 
-  protected:
-    void copy_occ_mat(const UnitCell& ucell);
-    void zero_occ_mat(const UnitCell& ucell);
-    void mix_occ_mat(const UnitCell& ucell, const double& mixing_beta);
-    void set_occ_mat(const UnitCell& ucell);
-
-    std::vector<std::complex<double>> eff_pot_pw;
-    std::vector<int> eff_pot_pw_index;
-    std::vector<double> uom_array;
-    std::vector<double> uom_save;
-
-    // Yukawa-related members (base part, no LCAO dependency)
-    double lambda = 0.0;
-    std::vector<std::vector<std::vector<std::vector<double>>>> Fk;
-    std::vector<std::vector<std::vector<double>>> U_Yukawa;
-    std::vector<std::vector<std::vector<double>>> J_Yukawa;
-
-  public:
     /// get occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
     double get_occ_mat(const int iat, const int l, const int n, const int spin,
                      const int m1, const int m2) const
@@ -181,7 +152,39 @@ class Plus_U_Base
     // dftu_io::write_occup_m. They access Plus_U_Base via public getters.
     // mohan refactored 2025-11-08
     //=============================================================
+
+    bool use_yukawa = false;
+
+  //=============================================================
+  // protected section
+  //=============================================================
   protected:
+    double energy_u = 0.0;
+
+    int cal_type = 3;
+    std::string device;
+    int kpar = 1;
+
+    // transform between iwt index and it, ia, L, N and m index
+    std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>
+        iatlnmipol2iwt;
+
+    void copy_occ_mat(const UnitCell& ucell);
+    void zero_occ_mat(const UnitCell& ucell);
+    void mix_occ_mat(const UnitCell& ucell, const double& mixing_beta);
+    void set_occ_mat(const UnitCell& ucell);
+
+    std::vector<std::complex<double>> eff_pot_pw;
+    std::vector<int> eff_pot_pw_index;
+    std::vector<double> uom_array;
+    std::vector<double> uom_save;
+
+    // Yukawa-related members (base part, no LCAO dependency)
+    double lambda = 0.0;
+    std::vector<std::vector<std::vector<std::vector<double>>>> Fk;
+    std::vector<std::vector<std::vector<double>>> U_Yukawa;
+    std::vector<std::vector<std::vector<double>>> J_Yukawa;
+
     void read_occup_m(const UnitCell& ucell,
                       const std::string& fn,
                       const std::string& init_chg,
@@ -195,9 +198,6 @@ class Plus_U_Base
     // In dftu_yukawa.cpp
     // Relevant for calculating U using Yukawa potential
     //=============================================================
-
-  public:
-    bool use_yukawa = false;
 };
 
 
