@@ -184,6 +184,10 @@ class Plus_U_Base
                               const UnitCell& cell,
                               const int* isk);
 
+    /// compute effective potential VU and DFT+U energy from occ_mat
+    /// (assumes occ_mat has already been reduced across k-pools)
+    void compute_eff_pot_and_energy(const UnitCell& cell);
+
     std::vector<std::complex<double>> eff_pot_pw;
     std::vector<int> eff_pot_pw_index;
     std::vector<double> uom_array;

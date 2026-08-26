@@ -97,6 +97,25 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
         this->set_occ_mat(cell);
     }
 
+    this->compute_eff_pot_and_energy(cell);
+
+    ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
+}
+
+/// compute effective potential VU and DFT+U energy from occ_mat.
+///
+/// Preconditions:
+///   - occ_mat has been accumulated from psi and reduced across k-pools
+///     (cal_occ_pw calls this after the reduce + mixing steps).
+///
+/// Outputs:
+///   - eff_pot_pw: VU = U * (diag*delta - occ) written per atom
+///     nspin=4: 4 Pauli blocks per atom, then transformed to spin basis
+///     nspin=1: single channel
+///     nspin=2: two channels in split layout [all_up | all_dn]
+///   - energy_u: E_U = sum U * weight_eu * occ(m2,m1) * occ(m1,m2)
+void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
+{
     this->energy_u = 0.0;
     const double weight_eu = (this->nspin == 1) ? 1.0 : (this->nspin == 2) ? 0.5 : 0.25;
     const double diag_coeff = (this->nspin == 4) ? 1.0 : 0.5;
@@ -192,8 +211,6 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
             }
         }
     }
-
-    ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
 }
 
 template <typename Device>
