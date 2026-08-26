@@ -171,41 +171,4 @@ class Plus_U : public Plus_U_Base
 };
 
 
-#ifdef __LCAO
-namespace DFTU_LCAO {
-
-/// @brief Compute the occupation matrix and delegate to Plus_U member.
-/// Dispatches to Plus_U::cal_occ_mat_gamma (gamma-only, double) or
-/// Plus_U::cal_occ_mat_k (multi-k, std::complex<double>) via template.
-template <typename T>
-void cal_occ_mat(const int iter,
-                 const UnitCell& ucell,
-                 const std::vector<std::vector<T>>& dm,
-                 const K_Vectors& kv,
-                 const double& mixing_beta,
-                 hamilt::Hamilt<T>* p_ham,
-                 Plus_U& dftu);
-
-/// @brief Compute the LCAO-basis U-term effective potential matrix (complex).
-/// Wraps Plus_U::pot_onsite_complex plus the S-projection GEMM.
-void pot_uterm_complex(Plus_U& dftu,
-                       const int ik,
-                       std::complex<double>* eff_pot,
-                       const std::vector<int>& isk,
-                       const std::complex<double>* sk,
-                       const int npol);
-
-/// @brief Compute the LCAO-basis U-term effective potential matrix (real).
-/// Wraps Plus_U::pot_onsite_real plus the S-projection GEMM.
-void pot_uterm_real(Plus_U& dftu,
-                    const int ik,
-                    double* eff_pot,
-                    const std::vector<int>& isk,
-                    const double* sk,
-                    const int npol);
-
-} // namespace DFTU_LCAO
-#endif
-
-
 #endif

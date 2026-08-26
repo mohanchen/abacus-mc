@@ -1,4 +1,5 @@
 #include "dftu_lcao.h"
+#include "dftu_occup.h"
 
 #include "source_base/matrix.h"  // occ_mat uses ModuleBase::matrix::operator()
 #include "source_base/tool_quit.h"
@@ -7,10 +8,6 @@
 
 #include <complex>
 #include <vector>
-
- // mohan add 2025-11-06
-// Static member definitions moved to dftu_base.cpp (Plus_U_Base::)
-// Plus_U inherits these from Plus_U_Base.
 
 Plus_U::Plus_U()
 {}
