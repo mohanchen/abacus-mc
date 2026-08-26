@@ -1,8 +1,11 @@
 #include "gtest/gtest.h"
 #include <complex>
+#include <vector>
 #define private public
 #include "source_io/module_parameter/parameter.h"
 #undef private
+#include "source_base/matrix.h"
+#include "source_pw/module_pwdft/dftu_tools_pw.h"
 
 /***********************************************************************
  * Unit tests for DFT+U PW nspin=1/2/4 support (PR-2)
@@ -80,9 +83,7 @@ TEST_F(DftuPwTest, VUPotNspin1_DiagonalLocale)
         locale_c[m * m_size + m] = 0.3; // diagonal
 
     std::vector<std::complex<double>> vu(size, {0.0, 0.0});
-    for (int m1 = 0; m1 < m_size; m1++)
-        for (int m2 = 0; m2 < m_size; m2++)
-            vu[m1 * m_size + m2] = U_val * (0.5 * (m1 == m2) - locale_c[m2 * m_size + m1]);
+    dftu_pw::compute_vu_scalar(vu.data(), locale_c.data(), U_val, 0.5, 1.0, m_size);
 
     // diagonal: U*(0.5 - 0.3) = 4.0*0.2 = 0.8
     for (int m = 0; m < m_size; m++)
@@ -104,13 +105,15 @@ TEST_F(DftuPwTest, VUPotNspin2_TwoSpinChannels)
     locale_up[0] = 0.4; // locale_up(0,0) = 0.4
     locale_dn[0] = 0.1; // locale_dn(0,0) = 0.1
 
-    // VU_up[0,0] = U*(0.5 - 0.4) = 0.5
-    double vu_up_00 = U_val * (0.5 - locale_up[0 * m_size + 0]);
-    EXPECT_DOUBLE_EQ(vu_up_00, 0.5);
+    std::vector<std::complex<double>> vu_up(size, {0.0, 0.0});
+    std::vector<std::complex<double>> vu_dn(size, {0.0, 0.0});
+    dftu_pw::compute_vu_scalar(vu_up.data(), locale_up.data(), U_val, 0.5, 0.5, m_size);
+    dftu_pw::compute_vu_scalar(vu_dn.data(), locale_dn.data(), U_val, 0.5, 0.5, m_size);
 
+    // VU_up[0,0] = U*(0.5 - 0.4) = 0.5
+    EXPECT_DOUBLE_EQ(vu_up[0].real(), 0.5);
     // VU_dn[0,0] = U*(0.5 - 0.1) = 2.0
-    double vu_dn_00 = U_val * (0.5 - locale_dn[0 * m_size + 0]);
-    EXPECT_DOUBLE_EQ(vu_dn_00, 2.0);
+    EXPECT_DOUBLE_EQ(vu_dn[0].real(), 2.0);
 }
 
 TEST_F(DftuPwTest, VUPotNspin4_PauliTransform)
@@ -120,30 +123,26 @@ TEST_F(DftuPwTest, VUPotNspin4_PauliTransform)
     // vu_spin[3] = 0.5*(vu_pauli[0] - vu_pauli[3])
     // vu_spin[1] = 0.5*(vu_pauli[1] + i*vu_pauli[2])
     // vu_spin[2] = 0.5*(vu_pauli[1] - i*vu_pauli[2])
-    const int m_size = 3;
+    const int m_size = 1;
     const int size = m_size * m_size;
 
-    // For a single (m1,m2) pair, test the Pauli->spin transform
-    std::complex<double> vu_pauli[4];
-    vu_pauli[0] = {1.0, 0.0}; // charge channel
-    vu_pauli[1] = {0.5, 0.0}; // sigma_x
-    vu_pauli[2] = {0.3, 0.0}; // sigma_y
-    vu_pauli[3] = {0.2, 0.0}; // sigma_z
+    // For a single (m1,m2) pair, test the Pauli->spin transform (in-place)
+    std::complex<double> vu[4];
+    vu[0] = {1.0, 0.0}; // charge channel
+    vu[1] = {0.5, 0.0}; // sigma_x
+    vu[2] = {0.3, 0.0}; // sigma_y
+    vu[3] = {0.2, 0.0}; // sigma_z
 
-    std::complex<double> vu_spin[4];
-    vu_spin[0] = 0.5 * (vu_pauli[0] + vu_pauli[3]);
-    vu_spin[3] = 0.5 * (vu_pauli[0] - vu_pauli[3]);
-    vu_spin[1] = 0.5 * (vu_pauli[1] + std::complex<double>(0.0, 1.0) * vu_pauli[2]);
-    vu_spin[2] = 0.5 * (vu_pauli[1] - std::complex<double>(0.0, 1.0) * vu_pauli[2]);
+    dftu_pw::pauli_to_spin_basis(vu, m_size);
 
-    EXPECT_DOUBLE_EQ(vu_spin[0].real(), 0.6);  // 0.5*(1.0+0.2)
-    EXPECT_DOUBLE_EQ(vu_spin[0].imag(), 0.0);
-    EXPECT_DOUBLE_EQ(vu_spin[3].real(), 0.4);  // 0.5*(1.0-0.2)
-    EXPECT_DOUBLE_EQ(vu_spin[3].imag(), 0.0);
-    EXPECT_DOUBLE_EQ(vu_spin[1].real(), 0.25); // 0.5*0.5
-    EXPECT_DOUBLE_EQ(vu_spin[1].imag(), 0.15); // 0.5*0.3
-    EXPECT_DOUBLE_EQ(vu_spin[2].real(), 0.25); // 0.5*0.5
-    EXPECT_DOUBLE_EQ(vu_spin[2].imag(), -0.15);// -0.5*0.3
+    EXPECT_DOUBLE_EQ(vu[0].real(), 0.6);  // 0.5*(1.0+0.2)
+    EXPECT_DOUBLE_EQ(vu[0].imag(), 0.0);
+    EXPECT_DOUBLE_EQ(vu[3].real(), 0.4);  // 0.5*(1.0-0.2)
+    EXPECT_DOUBLE_EQ(vu[3].imag(), 0.0);
+    EXPECT_DOUBLE_EQ(vu[1].real(), 0.25); // 0.5*0.5
+    EXPECT_DOUBLE_EQ(vu[1].imag(), 0.15); // 0.5*0.3
+    EXPECT_DOUBLE_EQ(vu[2].real(), 0.25); // 0.5*0.5
+    EXPECT_DOUBLE_EQ(vu[2].imag(), -0.15);// -0.5*0.3
 }
 
 // =====================================================================
@@ -164,19 +163,21 @@ TEST_F(DftuPwTest, EnergyNspin12_DiagonalLocale)
     locale_c[2 * m_size + 2] = 0.2;
 
     // nspin=1: E = U * 1.0 * (0.5^2 + 0.3^2 + 0.2^2) = 4 * 0.38 = 1.52
-    double energy_u = 0.0;
-    for (int m1 = 0; m1 < m_size; m1++)
-        for (int m2 = 0; m2 < m_size; m2++)
-            energy_u += U_val * 1.0 * locale_c[m2 * m_size + m1] * locale_c[m1 * m_size + m2];
+    std::vector<std::complex<double>> vu_nspin1(size, {0.0, 0.0});
+    double energy_u = dftu_pw::compute_vu_scalar(
+        vu_nspin1.data(), locale_c.data(), U_val, 0.5, 1.0, m_size);
     EXPECT_DOUBLE_EQ(energy_u, 1.52);
 
     // nspin=2: two spin channels, weight_eu = 0.5
-    energy_u = 0.0;
     std::vector<double> locale_up(size, 0.0), locale_dn(size, 0.0);
     locale_up[0] = 0.4; locale_dn[0] = 0.6;
-    // Only diagonal element (0,0) is non-zero, so only m1=0, m2=0 contributes
-    energy_u += U_val * 0.5 * locale_up[0] * locale_up[0];
-    energy_u += U_val * 0.5 * locale_dn[0] * locale_dn[0];
+    std::vector<std::complex<double>> vu_up(size, {0.0, 0.0});
+    std::vector<std::complex<double>> vu_dn(size, {0.0, 0.0});
+    energy_u = 0.0;
+    energy_u += dftu_pw::compute_vu_scalar(
+        vu_up.data(), locale_up.data(), U_val, 0.5, 0.5, m_size);
+    energy_u += dftu_pw::compute_vu_scalar(
+        vu_dn.data(), locale_dn.data(), U_val, 0.5, 0.5, m_size);
     // E = U*0.5*(0.4^2 + 0.6^2) = 4*0.5*(0.16+0.36) = 1.04
     EXPECT_DOUBLE_EQ(energy_u, 1.04);
 }
@@ -198,15 +199,9 @@ TEST_F(DftuPwTest, EnergyNspin4_WithOffDiagonal)
     locale_c[size + 0] = 0.2; locale_c[size + 1] = 0.0;
     locale_c[size + 2] = 0.0; locale_c[size + 3] = 0.2;
 
-    double energy_u = 0.0;
-    for (int is = 0; is < 4; is++) {
-        int start = is * size;
-        for (int m1 = 0; m1 < m_size; m1++)
-            for (int m2 = 0; m2 < m_size; m2++)
-                energy_u += U_val * weight_eu
-                    * locale_c[start + m2 * m_size + m1]
-                    * locale_c[start + m1 * m_size + m2];
-    }
+    std::vector<std::complex<double>> vu(size * 4, {0.0, 0.0});
+    double energy_u = dftu_pw::compute_vu_spinor(
+        vu.data(), locale_c.data(), U_val, 1.0, weight_eu, m_size);
 
     // is=0: 2*0.25*(0.5*0.5 + 0.1*0.1 + 0.1*0.1 + 0.5*0.5) = 0.26
     // is=1: 2*0.25*(0.2*0.2 + 0 + 0 + 0.2*0.2) = 0.04
@@ -221,25 +216,20 @@ TEST_F(DftuPwTest, EnergyNspin4_WithOffDiagonal)
 TEST_F(DftuPwTest, LocaleAccumNspin12)
 {
     // nspin=1/2: locale[m1*m_size+m2] += weight * real(conj(becp[m1]) * becp[m2])
-    const int m_size = 3, nkb = 5, begin_ih = 0, m_begin = 0, nbands = 2;
-    const double weights[2] = {1.0, 0.5};
+    const int m_size = 3, nkb = 5, begin_ih = 0, m_begin = 0, nbands = 2, ik = 0;
 
     std::vector<std::complex<double>> becp(nbands * nkb, {0.0, 0.0});
     becp[0 * nkb + 0] = {1.0, 0.0}; becp[0 * nkb + 1] = {0.0, 1.0}; becp[0 * nkb + 2] = {0.5, 0.5};
     becp[1 * nkb + 0] = {0.5, 0.0}; becp[1 * nkb + 1] = {0.5, -0.5}; becp[1 * nkb + 2] = {0.0, 1.0};
 
+    ModuleBase::matrix wg(1, nbands);
+    wg(0, 0) = 1.0;
+    wg(0, 1) = 0.5;
+
     std::vector<double> locale_c(m_size * m_size, 0.0);
-    for (int ib = 0; ib < nbands; ib++) {
-        int ind_m1m2 = 0;
-        for (int m1 = 0; m1 < m_size; m1++) {
-            const int index_m1 = ib * nkb + begin_ih + m_begin + m1;
-            for (int m2 = 0; m2 < m_size; m2++) {
-                const int index_m2 = ib * nkb + begin_ih + m_begin + m2;
-                locale_c[ind_m1m2] += weights[ib] * (std::conj(becp[index_m1]) * becp[index_m2]).real();
-                ind_m1m2++;
-            }
-        }
-    }
+    dftu_pw::accumulate_occ_scalar(
+        locale_c.data(), becp.data(), nbands, nkb,
+        begin_ih, m_begin, m_size, wg, ik);
 
     // band0, w=1.0: locale[0,0] = 1.0*|1|^2 = 1.0
     // band1, w=0.5: locale[0,0] = 0.5*|0.5|^2 = 0.125
@@ -260,8 +250,7 @@ TEST_F(DftuPwTest, LocaleAccumNspin4_PauliComponents)
     // locale[ind+size] += (occ[1]+occ[2]).real()   -- sigma_x
     // locale[ind+2*size] += (occ[1]-occ[2]).imag() -- sigma_y
     // locale[ind+3*size] += (occ[0]-occ[3]).real() -- sigma_z
-    const int m_size = 1, nkb = 2, nbands = 1;
-    const double weight = 1.0;
+    const int m_size = 1, nkb = 2, nbands = 1, npol = 2, ik = 0;
 
     std::vector<std::complex<double>> becp(nbands * 2 * nkb, {0.0, 0.0});
     becp[0] = {0.8, 0.0};       // becp_up[m=0]
@@ -270,25 +259,11 @@ TEST_F(DftuPwTest, LocaleAccumNspin4_PauliComponents)
     const int size = m_size * m_size;
     std::vector<double> locale_c(size * 4, 0.0);
 
-    for (int ib = 0; ib < nbands; ib++) {
-        int ind_m1m2 = 0;
-        for (int m1 = 0; m1 < m_size; m1++) {
-            const int index_m1 = ib * 2 * nkb + 0 + m1;
-            for (int m2 = 0; m2 < m_size; m2++) {
-                const int index_m2 = ib * 2 * nkb + 0 + m2;
-                std::complex<double> occ[4];
-                occ[0] = weight * std::conj(becp[index_m1]) * becp[index_m2];
-                occ[1] = weight * std::conj(becp[index_m1]) * becp[index_m2 + nkb];
-                occ[2] = weight * std::conj(becp[index_m1 + nkb]) * becp[index_m2];
-                occ[3] = weight * std::conj(becp[index_m1 + nkb]) * becp[index_m2 + nkb];
-                locale_c[ind_m1m2] += (occ[0] + occ[3]).real();
-                locale_c[ind_m1m2 + size] += (occ[1] + occ[2]).real();
-                locale_c[ind_m1m2 + 2 * size] += (occ[1] - occ[2]).imag();
-                locale_c[ind_m1m2 + 3 * size] += (occ[0] - occ[3]).real();
-                ind_m1m2++;
-            }
-        }
-    }
+    ModuleBase::matrix wg(1, nbands);
+    wg(0, 0) = 1.0;
+    dftu_pw::accumulate_occ_spinor(
+        locale_c.data(), becp.data(), nbands, npol, nkb,
+        0, 0, m_size, wg, ik);
 
     // becp_up = (0.8, 0), becp_dn = (0, 0.6)
     // occ[0] = 0.64, occ[1] = (0, 0.48), occ[2] = (0, -0.48), occ[3] = 0.36
