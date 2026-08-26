@@ -39,7 +39,31 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
     }
 #endif
 
-    // reduce occ_mat from all k-pools
+    // reduce occ_mat across k-pools, then copy to uom_array for mixing
+    this->reduce_occ_mat(cell);
+    this->sync_occ_to_uom(cell);
+
+    // mixing
+    if(is_mixing_enabled() && p_chgmix != nullptr)
+    {
+        p_chgmix->mix_uom(this->uom_array, this->uom_save);
+        this->set_occ_mat(cell);
+    }
+
+    this->compute_eff_pot_and_energy(cell);
+
+    ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
+}
+
+/// reduce occ_mat across all k-pools.
+///
+/// Each k-pool only accumulates occ_mat contributions from the k-points it
+/// owns; this sums them across pools so occ_mat holds the full result.
+/// nspin=1: single channel, size elements
+/// nspin=2: two channels (spin-up/down) reduced separately
+/// nspin=4: 4 Pauli blocks packed contiguously, reduced in one shot
+void Plus_U_Base::reduce_occ_mat(const UnitCell& cell)
+{
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];
@@ -71,35 +95,49 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
                     this->occ_mat[iat][target_l][0][0].c,
                     size * 4);
         }
+    }
+}
 
-        // save occ_mat matrix for this iat to uom_array
-        if(this->uom_array.size() != 0)
+/// copy occ_mat to uom_array for mixing.
+///
+/// Layout:
+///   nspin=1: uom_array[eff_pot_pw_index[iat] + mm] = occ_mat[...][0][0]
+///   nspin=2: split layout [all_up | all_dn], each atom's spin-up in the
+///            first half and spin-down in the second half, both indexed by
+///            eff_pot_pw_index[iat]
+///   nspin=4: not used here (uom_array mixing only covers nspin=1/2 in the
+///            current code path; the nspin=4 branch is a no-op)
+void Plus_U_Base::sync_occ_to_uom(const UnitCell& cell)
+{
+    if(this->uom_array.size() == 0)
+    {
+        return;
+    }
+    for(int iat = 0; iat < cell.nat; iat++)
+    {
+        const int it = cell.iat2it[iat];
+        const int target_l = get_orbital_corr(it);
+        if(!has_correlated_orbital(it))
         {
-            for(int mm=0;mm<size;mm++)
+            continue;
+        }
+        const int size = (2 * target_l + 1) * (2 * target_l + 1);
+
+        for(int mm = 0; mm < size; mm++)
+        {
+            this->uom_array[eff_pot_pw_index[iat] + mm] =
+                this->occ_mat[iat][target_l][0][0].c[mm];
+        }
+        if(this->nspin == 2)
+        {
+            const int half_size = this->uom_array.size() / 2;
+            for(int mm = 0; mm < size; mm++)
             {
-                this->uom_array[eff_pot_pw_index[iat]+mm] = this->occ_mat[iat][target_l][0][0].c[mm];
-            }
-            if(this->nspin == 2)
-            {
-                const int half_size = this->uom_array.size() / 2;
-                for(int mm=0;mm<size;mm++)
-                {
-                    this->uom_array[half_size + eff_pot_pw_index[iat]+mm] = this->occ_mat[iat][target_l][0][1].c[mm];
-                }
+                this->uom_array[half_size + eff_pot_pw_index[iat] + mm] =
+                    this->occ_mat[iat][target_l][0][1].c[mm];
             }
         }
     }
-
-    // mixing
-    if(is_mixing_enabled() && p_chgmix != nullptr)
-    {
-        p_chgmix->mix_uom(this->uom_array, this->uom_save);
-        this->set_occ_mat(cell);
-    }
-
-    this->compute_eff_pot_and_energy(cell);
-
-    ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
 }
 
 /// compute effective potential VU and DFT+U energy from occ_mat.

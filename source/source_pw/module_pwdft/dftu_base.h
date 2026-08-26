@@ -184,6 +184,12 @@ class Plus_U_Base
                               const UnitCell& cell,
                               const int* isk);
 
+    /// reduce occ_mat across k-pools (per-atom, nspin-aware)
+    void reduce_occ_mat(const UnitCell& cell);
+
+    /// copy occ_mat to uom_array for mixing (nspin-aware split layout)
+    void sync_occ_to_uom(const UnitCell& cell);
+
     /// compute effective potential VU and DFT+U energy from occ_mat
     /// (assumes occ_mat has already been reduced across k-pools)
     void compute_eff_pot_and_energy(const UnitCell& cell);
