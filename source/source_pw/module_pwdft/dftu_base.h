@@ -9,8 +9,12 @@
 #include <vector>
 
 
+class DFTUTest;
+
 class Plus_U_Base
 {
+  friend class DFTUTest;
+
   //=============================================================
   // public section
   //=============================================================
@@ -24,7 +28,7 @@ class Plus_U_Base
                    const int nspin,
                    const std::vector<int>& orbital_corr,
                    const bool yukawa_potential,
-                   const std::string& global_read_in_dir,
+                   const std::string& global_readin_dir,
                    const std::string& global_out_dir,
                    const std::string& init_chg,
                    const std::string& device,
@@ -37,21 +41,18 @@ class Plus_U_Base
     void uramping_update();
     bool u_converged();
 
-    std::vector<double> u_current;
-    std::vector<double> u_target;
-    std::vector<int> orbital_corr;
-    double uramping = 0.0;
-    int occ_mat_ctrl = 0;
-    int mixing_dftu = 0;
-    int nspin = 0;
-
-    // --- Accessors ---
+    // --- Accessors for U values and orbital configuration ---
     double get_u_current(int it) const { return u_current[it]; }
     double get_u_target(int it) const { return u_target[it]; }
     int get_num_u_types() const { return static_cast<int>(u_current.size()); }
     int get_orbital_corr(int it) const { return orbital_corr[it]; }
     bool has_correlated_orbital(int it) const { return orbital_corr[it] != -1; }
     const int* get_orbital_corr_data() const { return orbital_corr.data(); }
+
+    // --- Accessors for DFT+U configuration ---
+    double get_uramping() const { return uramping; }
+    int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
+    bool use_yukawa() const { return use_yukawa_; }
 
     double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
     double get_J_Yukawa(int it, int l, int n) const { return J_Yukawa[it][l][n]; }
@@ -109,8 +110,6 @@ class Plus_U_Base
     }
 
     // dftu can be calculated only after occ_mat has been initialized
-    bool occ_mat_initialized = false;
-
     bool is_occ_mat_initialized() const { return occ_mat_initialized; }
     void mark_occ_mat_initialized() { occ_mat_initialized = true; }
     void mark_occ_mat_dirty() { occ_mat_initialized = false; }
@@ -142,23 +141,28 @@ class Plus_U_Base
     void set_occ_mat_flat(const int iat, const int l, const int spin,
                         const std::vector<double>& occ);
 
-    // local occupancy matrix of the correlated subspace
+  protected:
+    // --- U values and orbital configuration (set in init_base) ---
+    std::vector<double> u_current;
+    std::vector<double> u_target;
+    std::vector<int> orbital_corr;
+
+    // --- DFT+U configuration flags ---
+    double uramping = 0.0;
+    int occ_mat_ctrl = 0;
+    int mixing_dftu = 0;
+    int nspin = 0;
+    bool use_yukawa_ = false;
+
+    // --- State flags ---
+    // dftu can be calculated only after occ_mat has been initialized
+    bool occ_mat_initialized = false;
+
+    // --- Occupation matrices ---
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat;
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat_save;
 
-    //=============================================================
-    // output() and write_occup_m() have been extracted to free functions
-    // in source_pw/module_pwdft/dftu_output.cpp as dftu_io::output and
-    // dftu_io::write_occup_m. They access Plus_U_Base via public getters.
-    // mohan refactored 2025-11-08
-    //=============================================================
-
-    bool use_yukawa = false;
-
-  //=============================================================
-  // protected section
-  //=============================================================
-  protected:
+    // --- Internal state ---
     double energy_u = 0.0;
 
     int cal_type = 3;
@@ -193,11 +197,6 @@ class Plus_U_Base
     void local_occup_bcast(const UnitCell& ucell,
                            int nspin,
                            int npol);
-
-    //=============================================================
-    // In dftu_yukawa.cpp
-    // Relevant for calculating U using Yukawa potential
-    //=============================================================
 };
 
 

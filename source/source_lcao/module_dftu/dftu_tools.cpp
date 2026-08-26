@@ -158,7 +158,7 @@ double Plus_U::get_onebody_eff_pot(const int T,
     case 3: // simplified formalism and FLL double counting
         if (new_occ_mat)
         {
-            if (use_yukawa)
+            if (use_yukawa_)
             {
                 if (m0 == m1) 
                 {
@@ -179,7 +179,7 @@ double Plus_U::get_onebody_eff_pot(const int T,
         }
         else
         {
-            if (use_yukawa)
+            if (use_yukawa_)
             {
                 if (m0 == m1) {
                     VU = (this->U_Yukawa[T][L][N] - this->J_Yukawa[T][L][N])

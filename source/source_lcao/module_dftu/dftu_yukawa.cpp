@@ -64,7 +64,7 @@ void Plus_U::cal_slater_Fk(const UnitCell& ucell,
 {
     ModuleBase::TITLE("Plus_U", "cal_slater_Fk");
 
-    if (use_yukawa)
+    if (use_yukawa_)
     {
         for (int chi = 0; chi < ucell.atoms[T].l_nchi[L]; chi++)
         {
@@ -111,7 +111,7 @@ void Plus_U::cal_slater_Fk(const UnitCell& ucell,
 void Plus_U::cal_slater_UJ(const UnitCell& ucell, double** rho, const int& nrxx)
 {
     ModuleBase::TITLE("Plus_U", "cal_slater_UJ");
-    if (!use_yukawa)
+    if (!use_yukawa_)
 	{
 		return;
 	}

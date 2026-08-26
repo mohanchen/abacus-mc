@@ -54,7 +54,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->nspin = nspin;
     this->orbital_corr = orbital_corr;
-    this->use_yukawa = yukawa_potential;
+    this->use_yukawa_ = yukawa_potential;
     this->uramping = uramping;
     this->occ_mat_ctrl = occ_mat_ctrl;
     this->mixing_dftu = mixing_dftu;
@@ -178,7 +178,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
     this->uom_array.resize(pot_index, 0.0);
     this->uom_save.resize(pot_index, 0.0);
 
-    if (use_yukawa)
+    if (use_yukawa_)
     {
         this->Fk.resize(cell.ntype);
 
@@ -247,7 +247,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 void Plus_U_Base::uramping_update()
 {
     // Yukawa calculates U directly every iteration, no need for ramping
-    if (use_yukawa) {
+    if (use_yukawa_) {
         return;
     }
     // if uramping < 0.1, use the original U
@@ -272,7 +272,7 @@ void Plus_U_Base::uramping_update()
 bool Plus_U_Base::u_converged()
 {
     // Yukawa calculates U directly every iteration, always considered converged
-    if (use_yukawa) {
+    if (use_yukawa_) {
         return true;
     }
     for (int i = 0; i < static_cast<int>(this->u_target.size()); i++)

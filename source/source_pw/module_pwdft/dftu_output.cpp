@@ -113,7 +113,7 @@ void output(const Plus_U_Base& dftu,
                     continue;
                 }
 
-                if (!dftu.use_yukawa)
+                if (!dftu.use_yukawa())
                 {
                     GlobalV::ofs_running << " Type=" << T+1 << " L=" << L << " ORBITAL=" << 0
                                          << " U=" << dftu.get_u_current(T) * ModuleBase::Ry_to_eV << " eV" << std::endl;

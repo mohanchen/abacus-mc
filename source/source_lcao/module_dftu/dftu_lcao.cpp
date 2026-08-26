@@ -175,7 +175,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                                  * this->occ_mat[iat][l][n][spin](m1, m0);
                                 }
                             }
-                            if (use_yukawa)
+                            if (use_yukawa_)
                             {
                                 this->energy_u += 0.5 * (this->U_Yukawa[T][l][n] - this->J_Yukawa[T][l][n])
                                             * (nm_trace - nm2_trace);
@@ -210,7 +210,7 @@ void Plus_U::cal_energy_correction(const UnitCell& ucell,
                                 }
                             }
                         }
-                        if (use_yukawa)
+                        if (use_yukawa_)
                         {
                             this->energy_u += 0.5 * (this->U_Yukawa[T][l][n] - this->J_Yukawa[T][l][n]) 
                               * (nm_trace - nm2_trace);

@@ -369,7 +369,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         // VU = U * (1/2 * delta(m,m') - occ(m,m')) for each spin channel
         // Energy: EU = U * 1/2 * occ(m,m') * occ(m',m)
         ModuleBase::timer::start("DFTU", "cal_vu");
-        const double u_value = this->dftu->u_current[T0];
+        const double u_value = this->dftu->get_u_current(T0);
         std::vector<double> VU_tmp(occ.size());
 
         // mohan update 2025-11: get_energy/set_energy are now instance methods
