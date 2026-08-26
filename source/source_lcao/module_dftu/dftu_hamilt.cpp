@@ -14,13 +14,13 @@ void pot_uterm_complex(Plus_U& dftu,
                        const std::complex<double>* sk,
                        const int npol)
 {
-    ModuleBase::TITLE("Plus_U", "pot_uterm_complex");
+    ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_complex");
     if (!dftu.is_occ_mat_initialized())
     {
         return;
     }
 
-    ModuleBase::timer::start("Plus_U", "pot_uterm_complex");
+    ModuleBase::timer::start("DFTU_LCAO", "pot_uterm_complex");
 
     int spin = isk[ik];
 
@@ -63,7 +63,7 @@ void pot_uterm_complex(Plus_U& dftu,
             eff_pot, one_int, one_int, paraV->desc);
 #endif
 
-    ModuleBase::timer::end("Plus_U", "pot_uterm_complex");
+    ModuleBase::timer::end("DFTU_LCAO", "pot_uterm_complex");
     return;
 }
 
@@ -74,12 +74,12 @@ void pot_uterm_real(Plus_U& dftu,
                     const double* sk,
                     const int npol)
 {
-    ModuleBase::TITLE("Plus_U", "pot_uterm_real");
+    ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_real");
     if (!dftu.is_occ_mat_initialized())
     {
         return;
     }
-    ModuleBase::timer::start("Plus_U", "pot_uterm_real");
+    ModuleBase::timer::start("DFTU_LCAO", "pot_uterm_real");
 
     int spin = isk[ik];
 
@@ -118,7 +118,7 @@ void pot_uterm_real(Plus_U& dftu,
             eff_pot, &one_int, &one_int, const_cast<int*>(paraV->desc));
 #endif
 
-    ModuleBase::timer::end("Plus_U", "pot_uterm_real");
+    ModuleBase::timer::end("DFTU_LCAO", "pot_uterm_real");
     return;
 }
 
