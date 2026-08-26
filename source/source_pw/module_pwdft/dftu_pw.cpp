@@ -1,4 +1,5 @@
 #include "source_pw/module_pwdft/dftu_base.h"
+#include "source_pw/module_pwdft/dftu_pw.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
 #include "source_base/parallel_reduce.h"
 #include "source_io/module_parameter/parameter.h"
@@ -198,26 +199,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
                 }
             }
             // transfer from Pauli matrix representation to spin representation
-            for (int m1 = 0; m1 < m_size; m1++)
-            {
-                for (int m2 = 0; m2 < m_size; m2++)
-                {
-                    int index[4];
-                    index[0] = m1 * m_size + m2;
-                    index[1] = m1 * m_size + m2 + size;
-                    index[2] = m1 * m_size + m2 + size * 2;
-                    index[3] = m1 * m_size + m2 + size * 3;
-                    std::complex<double> vu_tmp[4];
-                    for (int i = 0; i < 4; i++)
-                    {
-                        vu_tmp[i] = vu_iat[index[i]];
-                    }
-                    vu_iat[index[0]] = 0.5 * (vu_tmp[0] + vu_tmp[3]);
-                    vu_iat[index[3]] = 0.5 * (vu_tmp[0] - vu_tmp[3]);
-                    vu_iat[index[1]] = 0.5 * (vu_tmp[1] + std::complex<double>(0.0, 1.0) * vu_tmp[2]);
-                    vu_iat[index[2]] = 0.5 * (vu_tmp[1] - std::complex<double>(0.0, 1.0) * vu_tmp[2]);
-                }
-            }
+            dftu_pw::pauli_to_spin_basis(vu_iat, m_size);
         }
         else // nspin=1 or nspin=2
         {
@@ -334,6 +316,35 @@ void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
         }
     }
 }
+
+namespace dftu_pw {
+
+void pauli_to_spin_basis(std::complex<double>* vu, int m_size)
+{
+    const int size = m_size * m_size;
+    for (int m1 = 0; m1 < m_size; m1++)
+    {
+        for (int m2 = 0; m2 < m_size; m2++)
+        {
+            int index[4];
+            index[0] = m1 * m_size + m2;
+            index[1] = m1 * m_size + m2 + size;
+            index[2] = m1 * m_size + m2 + size * 2;
+            index[3] = m1 * m_size + m2 + size * 3;
+            std::complex<double> vu_tmp[4];
+            for (int i = 0; i < 4; i++)
+            {
+                vu_tmp[i] = vu[index[i]];
+            }
+            vu[index[0]] = 0.5 * (vu_tmp[0] + vu_tmp[3]);
+            vu[index[3]] = 0.5 * (vu_tmp[0] - vu_tmp[3]);
+            vu[index[1]] = 0.5 * (vu_tmp[1] + std::complex<double>(0.0, 1.0) * vu_tmp[2]);
+            vu[index[2]] = 0.5 * (vu_tmp[1] - std::complex<double>(0.0, 1.0) * vu_tmp[2]);
+        }
+    }
+}
+
+} // namespace dftu_pw
 
 // explicit instantiations
 template void Plus_U_Base::accumulate_occ_one_k<base_device::DEVICE_CPU>(
