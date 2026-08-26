@@ -140,6 +140,23 @@ private:
     // Subroutines for folding S and dS matrix
     //=============================================================
 
+    /// @brief Judge whether atom pair (T1,I1) and (T2,I2,tau2) are adjacent
+    ///        by direct orbital cutoff overlap or three-body bridging via a
+    ///        common nonlocal projector center T0.
+    /// @return true if the pair should be processed
+    bool is_adjacent_pair(const UnitCell& ucell,
+                          const Grid_Driver& gd,
+                          const int T1,
+                          const int T2,
+                          const ModuleBase::Vector3<double>& tau1,
+                          const ModuleBase::Vector3<double>& tau2) const;
+
+    /// @brief Get the linear index of local matrix element (mu, nu) based on
+    ///        ks_solver (column-major or row-major).
+    int get_linear_index(const int mu,
+                         const int nu,
+                         const Parallel_Orbitals& pv) const;
+
     void fold_dSR_gamma(const UnitCell& ucell,
                         const Parallel_Orbitals& pv,
                         const Grid_Driver* gd,
