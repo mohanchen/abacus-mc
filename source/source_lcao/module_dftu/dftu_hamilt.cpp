@@ -124,7 +124,7 @@ void pot_uterm_real(Plus_U& dftu,
 
 } // namespace DFTU_LCAO
 
-void Plus_U::cal_pot_uterm_mat_R_double(const int ispin, double* SR, double* HR, const int npol)
+void Plus_U::cal_eff_pot_mat_R_double(const int ispin, double* SR, double* HR, const int npol)
 {
     const char transN = 'N', transT = 'T';
     const int one_int = 1;
@@ -154,7 +154,7 @@ void Plus_U::cal_pot_uterm_mat_R_double(const int ispin, double* SR, double* HR,
     return;
 }
 
-void Plus_U::cal_pot_uterm_mat_R_complex_double(const int ispin, std::complex<double>* SR, std::complex<double>* HR, const int npol)
+void Plus_U::cal_eff_pot_mat_R_complex_double(const int ispin, std::complex<double>* SR, std::complex<double>* HR, const int npol)
 {
     const char transN = 'N', transT = 'T';
     const int one_int = 1;
