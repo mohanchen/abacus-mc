@@ -77,18 +77,6 @@ class Plus_U : public Plus_U_Base
     // For calculating contribution to Hamiltonian matrices
     //=============================================================
   public:
-	void cal_eff_pot_mat_complex(const int ik,
-			std::complex<double>* eff_pot,
-			const std::vector<int>& isk,
-			const std::complex<double>* sk,
-			const int npol);
-
-	void cal_eff_pot_mat_real(const int ik,
-			double* eff_pot,
-			const std::vector<int>& isk,
-			const double* sk,
-			const int npol);
-
     void cal_eff_pot_mat_R_double(const int ispin, double* SR, double* HR, const int npol);
 
 	void cal_eff_pot_mat_R_complex_double(const int ispin,
@@ -99,14 +87,14 @@ class Plus_U : public Plus_U_Base
 
 #ifdef __LCAO
     // calculate the local occupation number matrix
-    void cal_occup_m_k(const int iter,
+    void cal_occ_mat_k(const int iter,
                        const UnitCell& ucell,
                        const std::vector<std::vector<std::complex<double>>>& dm_k,
                        const K_Vectors& kv,
                        const double& mixing_beta,
                        hamilt::Hamilt<std::complex<double>>* p_ham);
 
-    void cal_occup_m_gamma(const int iter,
+    void cal_occ_mat_gamma(const int iter,
                            const UnitCell& ucell,
                            const std::vector<std::vector<double>>& dm_gamma,
                            const double& mixing_beta,
@@ -120,8 +108,8 @@ class Plus_U : public Plus_U_Base
     // for both Hamiltonian and force/stress
     //=============================================================
   public:
-    void cal_VU_pot_mat_complex(const int spin, const bool newlocale, std::complex<double>* VU, const int npol);
-    void cal_VU_pot_mat_real(const int spin, const bool newlocale, double* VU, const int npol);
+    void pot_onsite_complex(const int spin, const bool newlocale, std::complex<double>* VU, const int npol);
+    void pot_onsite_real(const int spin, const bool newlocale, double* VU, const int npol);
 
   private:
     double get_onebody_eff_pot(const int T,
@@ -184,14 +172,39 @@ class Plus_U : public Plus_U_Base
 
 
 #ifdef __LCAO
+namespace DFTU_LCAO {
+
+/// @brief Compute the occupation matrix and delegate to Plus_U member.
+/// Dispatches to Plus_U::cal_occ_mat_gamma (gamma-only, double) or
+/// Plus_U::cal_occ_mat_k (multi-k, std::complex<double>) via template.
 template <typename T>
-void dftu_cal_occup_m(const int iter,
-                      const UnitCell& ucell,
-                      const std::vector<std::vector<T>>& dm,
-                      const K_Vectors& kv,
-                      const double& mixing_beta,
-                      hamilt::Hamilt<T>* p_ham,
-                      Plus_U &dftu);
+void cal_occ_mat(const int iter,
+                 const UnitCell& ucell,
+                 const std::vector<std::vector<T>>& dm,
+                 const K_Vectors& kv,
+                 const double& mixing_beta,
+                 hamilt::Hamilt<T>* p_ham,
+                 Plus_U& dftu);
+
+/// @brief Compute the LCAO-basis U-term effective potential matrix (complex).
+/// Wraps Plus_U::pot_onsite_complex plus the S-projection GEMM.
+void pot_uterm_complex(Plus_U& dftu,
+                       const int ik,
+                       std::complex<double>* eff_pot,
+                       const std::vector<int>& isk,
+                       const std::complex<double>* sk,
+                       const int npol);
+
+/// @brief Compute the LCAO-basis U-term effective potential matrix (real).
+/// Wraps Plus_U::pot_onsite_real plus the S-projection GEMM.
+void pot_uterm_real(Plus_U& dftu,
+                    const int ik,
+                    double* eff_pot,
+                    const std::vector<int>& isk,
+                    const double* sk,
+                    const int npol);
+
+} // namespace DFTU_LCAO
 #endif
 
 

@@ -286,30 +286,34 @@ const hamilt::HContainer<double>* Plus_U::get_dmr(int ispin) const
     }
 }
 
+namespace DFTU_LCAO {
+
 //! dftu occupation matrix for gamma only using dm(double)
 template <>
-void dftu_cal_occup_m(const int iter,
-                      const UnitCell& ucell,
-                      const std::vector<std::vector<double>>& dm,
-                      const K_Vectors& kv,
-                      const double& mixing_beta,
-                      hamilt::Hamilt<double>* p_ham,
-                      Plus_U &dftu)
+void cal_occ_mat(const int iter,
+                 const UnitCell& ucell,
+                 const std::vector<std::vector<double>>& dm,
+                 const K_Vectors& kv,
+                 const double& mixing_beta,
+                 hamilt::Hamilt<double>* p_ham,
+                 Plus_U& dftu)
 {
-    dftu.cal_occup_m_gamma(iter, ucell ,dm, mixing_beta, p_ham);
+    dftu.cal_occ_mat_gamma(iter, ucell, dm, mixing_beta, p_ham);
 }
 
 //! dftu occupation matrix for multiple k-points using dm(complex)
 template <>
-void dftu_cal_occup_m(const int iter,
-                      const UnitCell& ucell,
-                      const std::vector<std::vector<std::complex<double>>>& dm,
-                      const K_Vectors& kv,
-                      const double& mixing_beta,
-                      hamilt::Hamilt<std::complex<double>>* p_ham,
-                      Plus_U &dftu)
+void cal_occ_mat(const int iter,
+                 const UnitCell& ucell,
+                 const std::vector<std::vector<std::complex<double>>>& dm,
+                 const K_Vectors& kv,
+                 const double& mixing_beta,
+                 hamilt::Hamilt<std::complex<double>>* p_ham,
+                 Plus_U& dftu)
 {
-    dftu.cal_occup_m_k(iter,ucell, dm, kv, mixing_beta, p_ham);
+    dftu.cal_occ_mat_k(iter, ucell, dm, kv, mixing_beta, p_ham);
 }
+
+} // namespace DFTU_LCAO
 
 #endif

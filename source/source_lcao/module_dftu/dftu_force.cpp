@@ -102,7 +102,7 @@ void force_stress(Plus_U& dftu,
 
             double* VU = new double[pv.nloc];
 
-            dftu.cal_VU_pot_mat_real(spin, false, VU, npol);
+            dftu.pot_onsite_real(spin, false, VU, npol);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
@@ -148,7 +148,7 @@ void force_stress(Plus_U& dftu,
 
             std::complex<double>* VU = new std::complex<double>[pv.nloc];
 
-            dftu.cal_VU_pot_mat_complex(spin, false, VU, npol);
+            dftu.pot_onsite_complex(spin, false, VU, npol);
 
 
 #ifdef __MPI

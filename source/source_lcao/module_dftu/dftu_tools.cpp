@@ -1,9 +1,9 @@
 #include "dftu_lcao.h"
 
 #ifdef __LCAO
-void Plus_U::cal_VU_pot_mat_complex(const int spin, const bool new_occ_mat, std::complex<double>* VU, const int npol)
+void Plus_U::pot_onsite_complex(const int spin, const bool new_occ_mat, std::complex<double>* VU, const int npol)
 {
-    ModuleBase::TITLE("Plus_U", "cal_VU_pot_mat_complex");
+    ModuleBase::TITLE("Plus_U", "pot_onsite_complex");
     ModuleBase::GlobalFunc::ZEROS(VU, this->paraV->nloc);
 
     for (int it = 0; it < this->ucell->ntype; ++it)
@@ -65,9 +65,9 @@ void Plus_U::cal_VU_pot_mat_complex(const int spin, const bool new_occ_mat, std:
     return;
 }
 
-void Plus_U::cal_VU_pot_mat_real(const int spin, const bool new_occ_mat, double* VU, const int npol)
+void Plus_U::pot_onsite_real(const int spin, const bool new_occ_mat, double* VU, const int npol)
 {
-    ModuleBase::TITLE("Plus_U", "cal_VU_pot_mat_real");
+    ModuleBase::TITLE("Plus_U", "pot_onsite_real");
     ModuleBase::GlobalFunc::ZEROS(VU, this->paraV->nloc);
 
     for (int it = 0; it < this->ucell->ntype; ++it)

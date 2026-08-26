@@ -12,15 +12,15 @@
 
 #ifdef __LCAO
 
-void Plus_U::cal_occup_m_k(const int iter,
+void Plus_U::cal_occ_mat_k(const int iter,
                          const UnitCell& ucell,
                          const std::vector<std::vector<std::complex<double>>>& dm_k,
                          const K_Vectors& kv,
                          const double& mixing_beta,
                          hamilt::Hamilt<std::complex<double>>* p_ham)
 {
-    ModuleBase::TITLE("Plus_U", "cal_occup_m_k");
-    ModuleBase::timer::start("Plus_U", "cal_occup_m_k");
+    ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
+    ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
 
     this->copy_occ_mat(ucell);
     this->zero_occ_mat(ucell);
@@ -242,18 +242,18 @@ void Plus_U::cal_occup_m_k(const int iter,
     }
 
     mark_occ_mat_initialized();
-    ModuleBase::timer::end("Plus_U", "cal_occup_m_k");
+    ModuleBase::timer::end("Plus_U", "cal_occ_mat_k");
     return;
 }
 
-void Plus_U::cal_occup_m_gamma(const int iter,
+void Plus_U::cal_occ_mat_gamma(const int iter,
                              const UnitCell &ucell,
                              const std::vector<std::vector<double>> &dm_gamma,
                              const double& mixing_beta,
                              hamilt::Hamilt<double>* p_ham)
 {
-    ModuleBase::TITLE("Plus_U", "cal_occup_m_gamma");
-    ModuleBase::timer::start("Plus_U", "cal_occup_m_gamma");
+    ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
+    ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
     this->copy_occ_mat(ucell);
     this->zero_occ_mat(ucell);
 
@@ -399,7 +399,7 @@ void Plus_U::cal_occup_m_gamma(const int iter,
     }
 
     mark_occ_mat_initialized();
-    ModuleBase::timer::end("Plus_U", "cal_occup_m_gamma");
+    ModuleBase::timer::end("Plus_U", "cal_occ_mat_gamma");
     return;
 }
 #endif

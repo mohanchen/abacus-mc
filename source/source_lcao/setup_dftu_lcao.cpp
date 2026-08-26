@@ -63,8 +63,8 @@ void finish_dftu_lcao(const int iter,
     {
         if (dftu_ptr->get_occ_mat_ctrl() != 2)
         {
-            dftu_cal_occup_m(iter, ucell, dm_vec, kv, mixing_beta, 
-                             static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr);
+            DFTU_LCAO::cal_occ_mat(iter, ucell, dm_vec, kv, mixing_beta,
+                                   static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr);
         }
         dftu_ptr->cal_energy_correction(ucell, iter);
     }

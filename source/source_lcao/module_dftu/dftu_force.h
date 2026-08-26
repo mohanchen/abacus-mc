@@ -1,7 +1,7 @@
 /// @file dftu_force.h
 /// @brief Free-function helpers for DFT+U force and stress, extracted from
 ///        Plus_U. The top-level force_stress takes a Plus_U& because it needs
-///        to call Plus_U::cal_VU_pot_mat_real/complex; the four inner
+///        to call Plus_U::pot_onsite_real/complex; the four inner
 ///        functions are fully decoupled and take their dependencies as
 ///        explicit parameters (mirroring the folding helpers in the same
 ///        DFTU_LCAO namespace).
@@ -27,7 +27,7 @@ class Plus_U;
 namespace DFTU_LCAO {
 
 /// @brief Top-level entry: drives force/stress from DFT+U.
-/// Takes Plus_U& because it calls dftu.cal_VU_pot_mat_real/complex,
+/// Takes Plus_U& because it calls dftu.pot_onsite_real/complex,
 /// which are still members of Plus_U (defined in dftu_tools.cpp).
 void force_stress(Plus_U& dftu,
                   const UnitCell& ucell,
