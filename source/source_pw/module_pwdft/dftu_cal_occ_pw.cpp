@@ -2,7 +2,7 @@
 #include "source_pw/module_pwdft/dftu_tools_pw.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
 #include "source_base/parallel_reduce.h"
-#include "source_io/module_parameter/parameter.h"
+#include "source_base/global_variable.h"
 #include "source_base/timer.h"
 #include "source_base/parallel_global.h"
 
