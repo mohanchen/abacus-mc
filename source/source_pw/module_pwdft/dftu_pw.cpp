@@ -118,25 +118,22 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
 
         if(this->nspin == 4)
         {
-            for (int m1 = 0; m1 < m_size; m1++)
-            {
-                for (int m2 = 0; m2 < m_size; m2++)
-                {
-                    vu_iat[m1 * m_size + m2] = u_value *
-                      (diag_coeff * (m1 == m2) - this->occ_mat[iat][target_l][0][0].c[m2 * m_size + m1]);
-                    this->energy_u += u_value * weight_eu * this->occ_mat[iat][target_l][0][0].c[m2 * m_size + m1]
-                             * this->occ_mat[iat][target_l][0][0].c[m1 * m_size + m2];
-                }
-            }
-            for (int is = 1; is < 4; ++is)
+            // VU is stored as 4 contiguous Pauli blocks per atom:
+            //   is=0: charge channel (identity), Hubbard U contributes the
+            //         diagonal term diag_coeff*delta(m1,m2)
+            //   is=1,2,3: spin channels (sigma_x/y/z), no U diagonal term
+            // The occupation matrix occ_mat[...][0][0].c packs all 4 blocks
+            // contiguously, each of size m_size*m_size.
+            for (int is = 0; is < 4; ++is)
             {
                 int start = is * m_size * m_size;
+                double diag = (is == 0) ? diag_coeff : 0.0;
                 for (int m1 = 0; m1 < m_size; m1++)
                 {
                     for (int m2 = 0; m2 < m_size; m2++)
                     {
                         vu_iat[start + m1 * m_size + m2] = u_value *
-                          (0 - this->occ_mat[iat][target_l][0][0].c[start + m2 * m_size + m1]);
+                          (diag * (m1 == m2) - this->occ_mat[iat][target_l][0][0].c[start + m2 * m_size + m1]);
                         this->energy_u += u_value * weight_eu
                                  * this->occ_mat[iat][target_l][0][0].c[start + m2 * m_size + m1]
                                  * this->occ_mat[iat][target_l][0][0].c[start + m1 * m_size + m2];
