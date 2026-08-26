@@ -116,16 +116,16 @@ class Plus_U : public Plus_U_Base
 #endif
 
 #ifdef __LCAO
-private:
     //=============================================================
     // In dftu_tools.cpp
     // For calculating onsite potential, which is used
     // for both Hamiltonian and force/stress
     //=============================================================
-
+  public:
     void cal_VU_pot_mat_complex(const int spin, const bool newlocale, std::complex<double>* VU, const int npol);
     void cal_VU_pot_mat_real(const int spin, const bool newlocale, double* VU, const int npol);
 
+  private:
     double get_onebody_eff_pot(const int T,
                                const int iat,
                                const int L,
@@ -135,58 +135,6 @@ private:
                                const int m1,
                                const bool newlocale);
 
-    //=============================================================
-    // In dftu_force.cpp
-    // For calculating force and stress fomr DFT+U
-    //=============================================================
- public:
-   void force_stress(const UnitCell& ucell,
-                     const Grid_Driver& gd,
-					 std::vector<std::vector<double>>* dmk_d,
-					 std::vector<std::vector<std::complex<double>>>* dmk_c,
-					 const Parallel_Orbitals& pv,
-                     ForceStressArrays& fsr,
-                     ModuleBase::matrix& force_dftu,
-                     ModuleBase::matrix& stress_dftu,
-                     const K_Vectors& kv,
-                     const int npol);
-
- private:
-   void cal_force_k(const UnitCell& ucell,
-                    const Grid_Driver& gd,
-                    ForceStressArrays& fsr,
-                    const Parallel_Orbitals& pv,
-                    const int ik,
-                    const std::complex<double>* rho_VU,
-                    ModuleBase::matrix& force_dftu,
-                    const ModuleBase::Vector3<double>& kvec_d);
-
-   void cal_stress_k(const UnitCell& ucell,
-                     const Grid_Driver& gd,
-                     ForceStressArrays& fsr,
-                     const Parallel_Orbitals& pv,
-                     const int ik,
-                     const std::complex<double>* rho_VU,
-                     ModuleBase::matrix& stress_dftu,
-                     const ModuleBase::Vector3<double>& kvec_d);
-
-   void cal_force_gamma(const UnitCell& ucell,
-                        const double* rho_VU,
-                        const Parallel_Orbitals& pv,
-                        double* dsloc_x,
-                        double* dsloc_y,
-                        double* dsloc_z,
-                        ModuleBase::matrix& force_dftu);
-
-   void cal_stress_gamma(const UnitCell& ucell,
-                         const Parallel_Orbitals& pv,
-                         const Grid_Driver* gd,
-                         double* dsloc_x,
-                         double* dsloc_y,
-                         double* dsloc_z,
-                         double* dh_r,
-                         const double* rho_VU,
-                         ModuleBase::matrix& stress_dftu);
 #endif
 
     //=============================================================
@@ -218,6 +166,16 @@ private:
     */
     void set_dmr(const elecstate::DensityMatrix<double, double>* dm_in_dftu_d);
     void set_dmr(const elecstate::DensityMatrix<std::complex<double>, double>* dm_in_dftu_cd);
+
+    /// read-only accessors for state needed by DFTU_LCAO free functions
+    const Parallel_Orbitals* get_paraV() const { return paraV; }
+    int get_npol() const { return npol; }
+    int get_nlocal() const { return nlocal; }
+    const std::string& get_ks_solver() const { return ks_solver; }
+    const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
+    bool is_gamma_only_local() const { return gamma_only_local; }
+    bool is_cal_force() const { return cal_force; }
+    bool is_cal_stress() const { return cal_stress; }
 
   private:
     const UnitCell* ucell = nullptr;

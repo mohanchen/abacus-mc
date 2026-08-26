@@ -49,6 +49,13 @@ class Plus_U_Base
     bool has_correlated_orbital(int it) const { return orbital_corr[it] != -1; }
     const int* get_orbital_corr_data() const { return orbital_corr.data(); }
 
+    /// read-only access to the orbital_corr vector (length ntype)
+    const std::vector<int>& get_orbital_corr_vec() const { return orbital_corr; }
+
+    /// read-only access to the iat->(l,n,m,ipol)->iwt lookup table
+    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>&
+    get_iatlnmipol2iwt() const { return iatlnmipol2iwt; }
+
     // --- Accessors for DFT+U configuration ---
     double get_uramping() const { return uramping; }
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }

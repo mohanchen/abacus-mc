@@ -38,7 +38,7 @@ void Plus_U::cal_occup_m_k(const int iter,
     for (int ik = 0; ik < kv.get_nks(); ik++)
     {
         // srho(mu,nu) = \sum_{iw} S(mu,iw)*dm_k(iw,nu)
-        dftu_folding::folding_matrix_k_new(this->ks_solver, this->gamma_only_local, this->nspin, ik, p_ham);
+        DFTU_LCAO::folding_matrix_k_new(this->ks_solver, this->gamma_only_local, this->nspin, ik, p_ham);
 
         std::complex<double>* s_k_pointer = nullptr;
 

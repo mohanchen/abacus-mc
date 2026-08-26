@@ -19,7 +19,7 @@
 
 #ifdef __LCAO
 
-namespace dftu_folding {
+namespace DFTU_LCAO {
 
 /// @brief Judge whether atom pair (T1,I1) and (T2,I2,tau2) are adjacent
 ///        by direct orbital cutoff overlap or three-body bridging via a
@@ -85,7 +85,7 @@ void folding_matrix_k_new(const std::string& ks_solver,
                           int ik,
                           hamilt::Hamilt<std::complex<double>>* p_ham);
 
-} // namespace dftu_folding
+} // namespace DFTU_LCAO
 
 #endif // __LCAO
 

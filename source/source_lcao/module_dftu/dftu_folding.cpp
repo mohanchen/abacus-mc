@@ -8,7 +8,7 @@
 #include "source_hamilt/module_hcontainer/hcontainer.h"
 #include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 
-namespace dftu_folding {
+namespace DFTU_LCAO {
 
 bool is_adjacent_pair(const std::vector<double>& orb_cutoff,
                       const UnitCell& ucell,
@@ -296,6 +296,6 @@ void folding_matrix_k_new(const std::string& ks_solver,
     ModuleBase::timer::end("Plus_U", "folding_matrix_k_new");
 }
 
-} // namespace dftu_folding
+} // namespace DFTU_LCAO
 
 #endif // __LCAO
