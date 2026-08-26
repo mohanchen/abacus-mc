@@ -189,7 +189,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbi
  * Case 2: Occ_mat IS initialized (is_occ_mat_initialized, i.e., read from dm_onsite.txt file)
  *   - First electronic iteration: uses pre-read occ_mat directly without DMR calculation
  *     * Skips DMR-based occ calculation entirely
- *     * Reads locale from stored data via get_occ_mat()
+ *     * Reads occ_mat from stored data via get_occ_mat()
  *     * Different indexing for nspin=4 vs nspin=1/2 (see below)
  *   - After first iteration: mark_occ_mat_dirty() is called to force recomputation
  * 
