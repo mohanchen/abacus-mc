@@ -1,21 +1,30 @@
 #include "vnl_pw.h"
 
 #include "source_io/module_parameter/parameter.h"
-#include "source_base/clebsch_gordan_coeff.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
-#include "source_base/math_integral.h"
-#include "source_base/math_polyint.h"
 #include "source_base/output.h"
-#include "source_base/math_sphbes.h"
-#include "source_base/math_ylmreal.h"
 #include "source_base/memory_recorder.h"
-#include "source_base/parallel_reduce.h"
 #include "source_base/module_device/device.h"
 #include "source_base/timer.h"
-#include "source_pw/module_pwdft/kernels/vnl_op.h"
 
-#include "source_base/parallel_comm.h" // use POOL_WORLD
+#include <cmath>
+
+/**
+ * @file vnl_pw.cpp
+ * @brief Core resource management for pseudopot_cell_vnl.
+ *
+ * This file now keeps only the central lifecycle and accessor glue:
+ * - ctor / dtor / release_memory(): device buffer cleanup
+ * - init(): allocate and wire vkb, tab, tab_at, deeq, qq_nt/qq_so, nhtol etc.
+ * - print_vnl(): dump tab to stream
+ * - rescale_vnl(): rescale tab/tab_at/qrad when the cell volume changes
+ * - get_*_data<T>() template specializations for CPU/GPU typed pointer access
+ *
+ * Heavy logic (getvnl, init_vnl, qrad, deeq, alpha channel) lives in:
+ *   vnl_pw_getvnl.cpp, vnl_pw_init_vnl.cpp, vnl_pw_qrad.cpp,
+ *   vnl_pw_deeq.cpp, vnl_pw_alpha.cpp, vnl_pw_grad.cpp
+ */
 
 
 pseudopot_cell_vnl::pseudopot_cell_vnl()
