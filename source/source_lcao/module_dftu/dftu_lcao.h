@@ -38,8 +38,6 @@ class Plus_U : public Plus_U_Base
                 const int nlocal,
                 const bool gamma_only_local,
                 const std::string& ks_solver,
-                const bool cal_force,
-                const bool cal_stress,
                 const std::string& device,
                 const int kpar,
                 const std::vector<double>& hubbard_u,
@@ -63,8 +61,6 @@ class Plus_U : public Plus_U_Base
     int nlocal = 0;
     bool gamma_only_local = false;
     std::string ks_solver;
-    bool cal_force = false;
-    bool cal_stress = false;
 
 #ifdef __LCAO
     const LCAO_Orbitals* ptr_orb_ = nullptr;
@@ -160,8 +156,6 @@ class Plus_U : public Plus_U_Base
     const std::string& get_ks_solver() const { return ks_solver; }
     const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
     bool is_gamma_only_local() const { return gamma_only_local; }
-    bool is_cal_force() const { return cal_force; }
-    bool is_cal_stress() const { return cal_stress; }
 
   private:
     const UnitCell* ucell = nullptr;

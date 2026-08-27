@@ -14,6 +14,8 @@
 namespace DFTU_LCAO {
 
 void force_stress(Plus_U& dftu,
+                  const bool cal_force,
+                  const bool cal_stress,
                   const UnitCell& ucell,
                   const Grid_Driver& gd,
                   std::vector<std::vector<double>>* dmk_d,
@@ -37,14 +39,14 @@ void force_stress(Plus_U& dftu,
     // See force_stress_lcao.cpp for the historical background.
     if (dftu.is_gamma_only_local())
     {
-        if (dftu.is_cal_force()
+        if (cal_force
             && (fsr.DSloc_x == nullptr || fsr.DSloc_y == nullptr || fsr.DSloc_z == nullptr))
         {
             ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
                 "fsr.DSloc_x/y/z are nullptr in gamma_only path; the caller must allocate and fill them. "
                 "See notes in source/source_lcao/force_stress_lcao.cpp.");
         }
-        if (dftu.is_cal_stress()
+        if (cal_stress
             && (fsr.DSloc_x == nullptr || fsr.DSloc_y == nullptr || fsr.DSloc_z == nullptr
                 || fsr.DH_r == nullptr))
         {
@@ -56,14 +58,14 @@ void force_stress(Plus_U& dftu,
     }
     else
     {
-        if (dftu.is_cal_force()
+        if (cal_force
             && (fsr.DSloc_Rx == nullptr || fsr.DSloc_Ry == nullptr || fsr.DSloc_Rz == nullptr))
         {
             ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
                 "fsr.DSloc_Rx/Ry/Rz are nullptr in multik path; the caller must allocate and fill them. "
                 "See notes in source/source_lcao/force_stress_lcao.cpp.");
         }
-        if (dftu.is_cal_stress()
+        if (cal_stress
             && (fsr.DSloc_Rx == nullptr || fsr.DSloc_Ry == nullptr || fsr.DSloc_Rz == nullptr
                 || fsr.DH_r == nullptr))
         {
@@ -79,7 +81,7 @@ void force_stress(Plus_U& dftu,
     // explicit ic * pv.nrow + ir indices. All ks_solvers accepted by INPUT
     // validation are column-major today; abort loudly instead of silently
     // producing wrong forces/stresses if that assumption ever changes.
-    if ((dftu.is_cal_force() || dftu.is_cal_stress())
+    if ((cal_force || cal_stress)
         && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(dftu.get_ks_solver()))
     {
         ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
@@ -89,11 +91,11 @@ void force_stress(Plus_U& dftu,
 
     const int nlocal = dftu.get_nlocal();
 
-    if (dftu.is_cal_force())
+    if (cal_force)
     {
         force_dftu.zero_out();
     }
-    if (dftu.is_cal_stress())
+    if (cal_stress)
     {
         stress_dftu.zero_out();
     }
@@ -127,7 +129,7 @@ void force_stress(Plus_U& dftu,
 
             delete[] pot_onsite;
 
-            if (dftu.is_cal_force())
+            if (cal_force)
             {
                 cal_force_gamma(dftu.get_nlocal(), dftu.get_npol(),
                                 dftu.get_orbital_corr_vec(), dftu.get_iatlnmipol2iwt(),
@@ -135,7 +137,7 @@ void force_stress(Plus_U& dftu,
                                 fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, force_dftu);
             }
 
-            if (dftu.is_cal_stress())
+            if (cal_stress)
             {
                 cal_stress_gamma(dftu.get_nlocal(), dftu.get_npol(),
                                  dftu.get_ks_solver(), dftu.get_orb_cutoff(),
@@ -173,14 +175,14 @@ void force_stress(Plus_U& dftu,
 
             delete[] pot_onsite;
 
-            if (dftu.is_cal_force())
+            if (cal_force)
             {
                 cal_force_k(dftu.get_nlocal(), dftu.get_npol(),
                             dftu.get_ks_solver(), dftu.get_orb_cutoff(),
                             dftu.get_orbital_corr_vec(), dftu.get_iatlnmipol2iwt(),
                             ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], force_dftu, kv.kvec_d[ik]);
             }
-            if (dftu.is_cal_stress())
+            if (cal_stress)
             {
                 cal_stress_k(dftu.get_nlocal(), dftu.get_npol(),
                              dftu.get_ks_solver(), dftu.get_orb_cutoff(),
@@ -189,12 +191,12 @@ void force_stress(Plus_U& dftu,
         } // ik
     }
 
-    if (dftu.is_cal_force())
+    if (cal_force)
     {
         Parallel_Reduce::reduce_pool(force_dftu.c, force_dftu.nr * force_dftu.nc);
     }
 
-    if (dftu.is_cal_stress())
+    if (cal_stress)
     {
         Parallel_Reduce::reduce_pool(stress_dftu.c, stress_dftu.nr * stress_dftu.nc);
 

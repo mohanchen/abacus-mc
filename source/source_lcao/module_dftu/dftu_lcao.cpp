@@ -28,8 +28,6 @@ void Plus_U::init(UnitCell& cell,
                 const int nlocal,
                 const bool gamma_only_local,
                 const std::string& ks_solver,
-                const bool cal_force,
-                const bool cal_stress,
                 const std::string& device,
                 const int kpar,
                 const std::vector<double>& hubbard_u,
@@ -50,8 +48,6 @@ void Plus_U::init(UnitCell& cell,
     this->nlocal = nlocal;
     this->gamma_only_local = gamma_only_local;
     this->ks_solver = ks_solver;
-    this->cal_force = cal_force;
-    this->cal_stress = cal_stress;
 
 #ifdef __LCAO
     ptr_orb_ = orb;

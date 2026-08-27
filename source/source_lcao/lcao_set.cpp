@@ -90,8 +90,6 @@ void LCAO_domain::set_pot(
                   pv.get_global_row_size(),
                   PARAM.globalv.gamma_only_local,
                   inp.ks_solver,
-                  inp.cal_force,
-                  inp.cal_stress,
                   inp.device,
                   inp.kpar,
                   PARAM.globalv.hubbard_u,
