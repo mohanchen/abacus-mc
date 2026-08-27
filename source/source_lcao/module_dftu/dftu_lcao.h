@@ -89,7 +89,8 @@ class Plus_U : public Plus_U_Base
                        const int nspin,
                        const int npol,
                        const int nlocal,
-                       const std::string& ks_solver);
+                       const std::string& ks_solver,
+                       const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt);
 
     void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                            const int iter,
@@ -99,7 +100,8 @@ class Plus_U : public Plus_U_Base
                            hamilt::Hamilt<double>* p_ham,
                            const int nspin,
                            const int npol,
-                           const int nlocal);
+                           const int nlocal,
+                           const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt);
 
     //=============================================================
     // In dftu_tools.cpp

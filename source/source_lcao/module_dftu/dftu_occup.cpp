@@ -24,7 +24,8 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const int nspin,
                          const int npol,
                          const int nlocal,
-                         const std::string& ks_solver)
+                         const std::string& ks_solver,
+                         const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
@@ -116,7 +117,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                         {
                             for (int ipol0 = 0; ipol0 < npol; ipol0++)
                             {
-                                const int iwt0 = this->iatlnmipol2iwt[iat][l][n][m0][ipol0];
+                                const int iwt0 = iatlnmipol2iwt[iat][l][n][m0][ipol0];
                                 const int mu = pv->global2local_row(iwt0);
                                 const int mu_prime = pv->global2local_col(iwt0);
 
@@ -124,7 +125,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                                 {
                                     for (int ipol1 = 0; ipol1 < npol; ipol1++)
                                     {
-                                        const int iwt1 = this->iatlnmipol2iwt[iat][l][n][m1][ipol1];
+                                        const int iwt1 = iatlnmipol2iwt[iat][l][n][m1][ipol1];
                                         const int nu = pv->global2local_col(iwt1);
                                         const int nu_prime = pv->global2local_row(iwt1);
 
@@ -261,7 +262,8 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              hamilt::Hamilt<double>* p_ham,
                              const int nspin,
                              const int npol,
-                             const int nlocal)
+                             const int nlocal,
+                             const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
@@ -334,7 +336,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                         {
                             for (int ipol0 = 0; ipol0 < npol; ipol0++)
                             {
-                                const int iwt0 = this->iatlnmipol2iwt[iat][l][n][m0][ipol0];
+                                const int iwt0 = iatlnmipol2iwt[iat][l][n][m0][ipol0];
                                 const int mu = pv->global2local_row(iwt0);
                                 const int mu_prime = pv->global2local_col(iwt0);
 
@@ -342,7 +344,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                                 {
                                     for (int ipol1 = 0; ipol1 < npol; ipol1++)
                                     {
-                                        const int iwt1 = this->iatlnmipol2iwt[iat][l][n][m1][ipol1];
+                                        const int iwt1 = iatlnmipol2iwt[iat][l][n][m1][ipol1];
                                         const int nu = pv->global2local_col(iwt1);
                                         const int nu_prime = pv->global2local_row(iwt1);
 
