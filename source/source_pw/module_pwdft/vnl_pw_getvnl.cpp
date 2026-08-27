@@ -8,6 +8,8 @@
 #include "source_base/module_device/device.h"
 #include "source_pw/module_pwdft/kernels/vnl_op.h"
 
+#include <vector>
+
 //----------------------------------------------------------
 // Calculates beta functions (Kleinman-Bylander projectors),
 // with structure factor, for all atoms, in reciprocal space
@@ -44,9 +46,9 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
     int* atom_nh = nullptr;
     int* atom_na = nullptr;
     int* atom_nb = nullptr;
-    int* h_atom_nh = new int[ucell.ntype];
-    int* h_atom_na = new int[ucell.ntype];
-    int* h_atom_nb = new int[ucell.ntype];
+    std::vector<int> h_atom_nh(ucell.ntype);
+    std::vector<int> h_atom_na(ucell.ntype);
+    std::vector<int> h_atom_nb(ucell.ntype);
     for (int it = 0; it < ucell.ntype; it++)
     {
         h_atom_nb[it] = ucell.atoms[it].ncpp.nbeta;
@@ -65,39 +67,39 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
     resmem_var_op()(ylm, x1 * npw, "VNL::ylm");
     resmem_var_op()(vkb1, nhm * npw, "VNL::vkb1");
 
-    ModuleBase::Vector3<double>* _gk = new ModuleBase::Vector3<double>[npw];
+    std::vector<ModuleBase::Vector3<double>> gk_vec(npw);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)
 #endif
     for (int ig = 0; ig < npw; ig++)
     {
-        _gk[ig] = this->wfcpw->getgpluskcar(ik, ig);
+        gk_vec[ig] = this->wfcpw->getgpluskcar(ik, ig);
     }
     if (this->use_gpu_)
     {
         resmem_int_op()(atom_nh, ucell.ntype);
         resmem_int_op()(atom_nb, ucell.ntype);
         resmem_int_op()(atom_na, ucell.ntype);
-        syncmem_int_op()(atom_nh, h_atom_nh, ucell.ntype);
-        syncmem_int_op()(atom_nb, h_atom_nb, ucell.ntype);
-        syncmem_int_op()(atom_na, h_atom_na, ucell.ntype);
+        syncmem_int_op()(atom_nh, h_atom_nh.data(), ucell.ntype);
+        syncmem_int_op()(atom_nb, h_atom_nb.data(), ucell.ntype);
+        syncmem_int_op()(atom_na, h_atom_na.data(), ucell.ntype);
 
         resmem_var_op()(gk, npw * 3);
-        castmem_var_h2d_op()(gk, reinterpret_cast<double*>(_gk), npw * 3);
+        castmem_var_h2d_op()(gk, reinterpret_cast<double*>(gk_vec.data()), npw * 3);
     }
     else
     {
-        atom_nh = h_atom_nh;
-        atom_nb = h_atom_nb;
-        atom_na = h_atom_na;
+        atom_nh = h_atom_nh.data();
+        atom_nb = h_atom_nb.data();
+        atom_na = h_atom_na.data();
         if (std::is_same<FPTYPE, float>::value)
         {
             resmem_var_op()(gk, npw * 3);
-            castmem_var_h2h_op()(gk, reinterpret_cast<double*>(_gk), npw * 3);
+            castmem_var_h2h_op()(gk, reinterpret_cast<double*>(gk_vec.data()), npw * 3);
         }
         else
         {
-            gk = reinterpret_cast<FPTYPE*>(_gk);
+            gk = reinterpret_cast<FPTYPE*>(gk_vec.data());
         }
     }
 
@@ -130,10 +132,6 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
                  sk,
                  vkb_in);
 
-    delete[] _gk;
-    delete[] h_atom_nh;
-    delete[] h_atom_na;
-    delete[] h_atom_nb;
     delmem_var_op()(ylm);
     delmem_var_op()(vkb1);
     delmem_complex_op()(sk);
