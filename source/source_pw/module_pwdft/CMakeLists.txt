@@ -47,6 +47,7 @@ list(APPEND objects
     vnl_pw_deeq.cpp
     vnl_pw_getvnl.cpp
     vnl_pw_grad.cpp
+    vnl_pw_init_vnl.cpp
     vnl_pw_qrad.cpp
     stru_fac.cpp
     stru_fac_k.cpp
