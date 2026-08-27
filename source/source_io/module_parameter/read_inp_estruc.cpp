@@ -757,7 +757,7 @@ This setting takes effect only when the selected exchange-correlation functional
     }
     {
         Input_Item item("mixing_dftu");
-        item.annotation = "whether to mix locale in DFT+U calculation";
+        item.annotation = "whether to mix occ_mat in DFT+U calculation";
         item.category = "Electronic structure";
         item.type = "Boolean";
         item.description = R"(Whether to mix the occupation matrices.
