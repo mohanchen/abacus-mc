@@ -91,7 +91,10 @@ class Plus_U : public Plus_U_Base
                        const int nlocal,
                        const std::string& ks_solver,
                        const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                       const std::vector<int>& orbital_corr);
+                       const std::vector<int>& orbital_corr,
+                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                       const bool& occ_mat_initialized);
 
     void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                            const int iter,
@@ -103,7 +106,10 @@ class Plus_U : public Plus_U_Base
                            const int npol,
                            const int nlocal,
                            const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                           const std::vector<int>& orbital_corr);
+                           const std::vector<int>& orbital_corr,
+                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                       const bool& occ_mat_initialized);
 
     //=============================================================
     // In dftu_tools.cpp

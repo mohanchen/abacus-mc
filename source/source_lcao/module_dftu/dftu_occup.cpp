@@ -26,13 +26,58 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const int nlocal,
                          const std::string& ks_solver,
                          const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                         const std::vector<int>& orbital_corr)
+                         const std::vector<int>& orbital_corr,
+                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                         const bool& occ_mat_initialized)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
 
-    this->copy_occ_mat(ucell);
-    this->zero_occ_mat(ucell);
+    // copy occ_mat to occ_mat_save
+    for (int T = 0; T < ucell.ntype; T++)
+    {
+        int target_l = orbital_corr[T];
+        if (target_l == -1) continue;
+        for (int I = 0; I < ucell.atoms[T].na; I++)
+        {
+            const int iat = ucell.itia2iat(T, I);
+            if (nspin == 4)
+            {
+                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
+            }
+            else if (nspin == 1 || nspin == 2)
+            {
+                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
+                occ_mat_save[iat][target_l][0][1] = occ_mat[iat][target_l][0][1];
+            }
+        }
+    }
+    // zero occ_mat
+    for (int T = 0; T < ucell.ntype; T++)
+    {
+        if (orbital_corr[T] == -1) continue;
+        for (int I = 0; I < ucell.atoms[T].na; I++)
+        {
+            const int iat = ucell.itia2iat(T, I);
+            for (int l = 0; l < ucell.atoms[T].nwl + 1; l++)
+            {
+                const int N = ucell.atoms[T].l_nchi[l];
+                for (int n = 0; n < N; n++)
+                {
+                    if (nspin == 4)
+                    {
+                        occ_mat[iat][l][n][0].zero_out();
+                    }
+                    else if (nspin == 1 || nspin == 2)
+                    {
+                        occ_mat[iat][l][n][0].zero_out();
+                        occ_mat[iat][l][n][1].zero_out();
+                    }
+                }
+            }
+        }
+    }
 
     //=================Part 1======================
     // call SCALAPACK routine to calculate the product of the S and density matrix
@@ -245,9 +290,38 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
         } // end ia
     } // end it
 
-    if(is_mixing_enabled() && is_occ_mat_initialized())
+    if(is_mixing_enabled() && occ_mat_initialized)
     {
-        this->mix_occ_mat(ucell,mixing_beta);
+        double beta = mixing_beta;
+        for (int T = 0; T < ucell.ntype; T++)
+        {
+            int target_l = orbital_corr[T];
+            if (target_l == -1) continue;
+            for (int I = 0; I < ucell.atoms[T].na; I++)
+            {
+                const int iat = ucell.itia2iat(T, I);
+                if (nspin == 4)
+                {
+                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
+                    for (int mm = 0; mm < size; mm++)
+                    {
+                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
+                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
+                    }
+                }
+                else if (nspin == 1 || nspin == 2)
+                {
+                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
+                    for (int mm = 0; mm < size; mm++)
+                    {
+                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
+                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
+                        occ_mat[iat][target_l][0][1].c[mm] = occ_mat[iat][target_l][0][1].c[mm] * beta
+                            + occ_mat_save[iat][target_l][0][1].c[mm] * (1.0 - beta);
+                    }
+                }
+            }
+        }
     }
 
     mark_occ_mat_initialized();
@@ -265,12 +339,57 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const int npol,
                              const int nlocal,
                              const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                             const std::vector<int>& orbital_corr)
+                             const std::vector<int>& orbital_corr,
+                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                         const bool& occ_mat_initialized)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
-    this->copy_occ_mat(ucell);
-    this->zero_occ_mat(ucell);
+    // copy occ_mat to occ_mat_save
+    for (int T = 0; T < ucell.ntype; T++)
+    {
+        int target_l = orbital_corr[T];
+        if (target_l == -1) continue;
+        for (int I = 0; I < ucell.atoms[T].na; I++)
+        {
+            const int iat = ucell.itia2iat(T, I);
+            if (nspin == 4)
+            {
+                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
+            }
+            else if (nspin == 1 || nspin == 2)
+            {
+                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
+                occ_mat_save[iat][target_l][0][1] = occ_mat[iat][target_l][0][1];
+            }
+        }
+    }
+    // zero occ_mat
+    for (int T = 0; T < ucell.ntype; T++)
+    {
+        if (orbital_corr[T] == -1) continue;
+        for (int I = 0; I < ucell.atoms[T].na; I++)
+        {
+            const int iat = ucell.itia2iat(T, I);
+            for (int l = 0; l < ucell.atoms[T].nwl + 1; l++)
+            {
+                const int N = ucell.atoms[T].l_nchi[l];
+                for (int n = 0; n < N; n++)
+                {
+                    if (nspin == 4)
+                    {
+                        occ_mat[iat][l][n][0].zero_out();
+                    }
+                    else if (nspin == 1 || nspin == 2)
+                    {
+                        occ_mat[iat][l][n][0].zero_out();
+                        occ_mat[iat][l][n][1].zero_out();
+                    }
+                }
+            }
+        }
+    }
 
     //=================Part 1======================
     // call PBLAS routine to calculate the product of the S and density matrix
@@ -408,9 +527,38 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         } // it
     } // is
 
-    if(is_mixing_enabled() && is_occ_mat_initialized())
+    if(is_mixing_enabled() && occ_mat_initialized)
     {
-        this->mix_occ_mat(ucell,mixing_beta);
+        double beta = mixing_beta;
+        for (int T = 0; T < ucell.ntype; T++)
+        {
+            int target_l = orbital_corr[T];
+            if (target_l == -1) continue;
+            for (int I = 0; I < ucell.atoms[T].na; I++)
+            {
+                const int iat = ucell.itia2iat(T, I);
+                if (nspin == 4)
+                {
+                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
+                    for (int mm = 0; mm < size; mm++)
+                    {
+                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
+                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
+                    }
+                }
+                else if (nspin == 1 || nspin == 2)
+                {
+                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
+                    for (int mm = 0; mm < size; mm++)
+                    {
+                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
+                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
+                        occ_mat[iat][target_l][0][1].c[mm] = occ_mat[iat][target_l][0][1].c[mm] * beta
+                            + occ_mat_save[iat][target_l][0][1].c[mm] * (1.0 - beta);
+                    }
+                }
+            }
+        }
     }
 
     mark_occ_mat_initialized();

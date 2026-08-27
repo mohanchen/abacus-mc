@@ -131,10 +131,17 @@ class Plus_U_Base
 
     /// set occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
     void set_occ_mat(const int iat, const int l, const int n, const int spin,
-                   const int m1, const int m2, const double val)
+                     const int m1, const int m2, const double val)
     {
         occ_mat[iat][l][n][spin](m1, m2) = val;
     }
+
+    /// get reference to occ_mat data
+    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& get_occ_mat_data() { return occ_mat; }
+    /// get reference to occ_mat_save data
+    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& get_occ_mat_save_data() { return occ_mat_save; }
+    /// get occ_mat_initialized flag
+    bool get_occ_mat_initialized() const { return occ_mat_initialized; }
 
     /// get flat occupation matrix for an atom's correlated orbital.
     /// nspin=1: fills occ with occ_mat[iat][l][0][0] data
