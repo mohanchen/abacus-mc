@@ -43,6 +43,7 @@ list(APPEND objects
     stress_pw.cpp
     vl_pw.cpp
     vnl_pw.cpp
+    vnl_pw_getvnl.cpp
     vnl_pw_grad.cpp
     stru_fac.cpp
     stru_fac_k.cpp
