@@ -18,10 +18,7 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
                                 const int& ik,
                                 std::complex<FPTYPE>* vkb_in) const
 {
-    if (PARAM.inp.test_pp)
-    {
-        ModuleBase::TITLE("pseudopot_cell_vnl", "getvnl");
-    }
+    ModuleBase::TITLE("pseudopot_cell_vnl", "getvnl");
     ModuleBase::timer::start("pp_cell_vnl", "getvnl");
 
     using cal_vnl_op = hamilt::cal_vnl_op<FPTYPE, Device>;
@@ -44,8 +41,12 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
     const int x1 = (lmaxkb + 1) * (lmaxkb + 1);
     const int npw = this->wfcpw->npwk[ik];
 
-    int *atom_nh = nullptr, *atom_na = nullptr, *atom_nb = nullptr, *h_atom_nh = new int[ucell.ntype],
-        *h_atom_na = new int[ucell.ntype], *h_atom_nb = new int[ucell.ntype];
+    int* atom_nh = nullptr;
+    int* atom_na = nullptr;
+    int* atom_nb = nullptr;
+    int* h_atom_nh = new int[ucell.ntype];
+    int* h_atom_na = new int[ucell.ntype];
+    int* h_atom_nb = new int[ucell.ntype];
     for (int it = 0; it < ucell.ntype; it++)
     {
         h_atom_nb[it] = ucell.atoms[it].ncpp.nbeta;
@@ -54,9 +55,13 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
     }
     // When the internal memory is large enough, it is better to make vkb1 be the number of pseudopot_cell_vnl.
     // We only need to initialize it once as long as the cell is unchanged.
-    FPTYPE *vkb1 = nullptr, *gk = nullptr, *ylm = nullptr, *_tab = this->get_tab_data<FPTYPE>(),
-           *_indv = this->get_indv_data<FPTYPE>(), *_nhtol = this->get_nhtol_data<FPTYPE>(),
-           *_nhtolm = this->get_nhtolm_data<FPTYPE>();
+    FPTYPE* vkb1 = nullptr;
+    FPTYPE* gk = nullptr;
+    FPTYPE* ylm = nullptr;
+    FPTYPE* tab_ptr = this->get_tab_data<FPTYPE>();
+    FPTYPE* indv_ptr = this->get_indv_data<FPTYPE>();
+    FPTYPE* nhtol_ptr = this->get_nhtol_data<FPTYPE>();
+    FPTYPE* nhtolm_ptr = this->get_nhtolm_data<FPTYPE>();
     resmem_var_op()(ylm, x1 * npw, "VNL::ylm");
     resmem_var_op()(vkb1, nhm * npw, "VNL::vkb1");
 
@@ -117,10 +122,10 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
                  static_cast<std::complex<FPTYPE>>(ModuleBase::NEG_IMAG_UNIT),
                  gk,
                  ylm,
-                 _indv,
-                 _nhtol,
-                 _nhtolm,
-                 _tab,
+                 indv_ptr,
+                 nhtol_ptr,
+                 nhtolm_ptr,
+                 tab_ptr,
                  vkb1,
                  sk,
                  vkb_in);
