@@ -288,9 +288,10 @@ void cal_occ_mat(const int iter,
                  const double& mixing_beta,
                  hamilt::Hamilt<double>* p_ham,
                  Plus_U& dftu,
-                 const bool gamma_only_local)
+                 const bool gamma_only_local,
+                 const int nspin)
 {
-    dftu.cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham);
+    dftu.cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham, nspin);
 }
 
 //! dftu occupation matrix for multiple k-points using dm(complex)
@@ -302,9 +303,10 @@ void cal_occ_mat(const int iter,
                  const double& mixing_beta,
                  hamilt::Hamilt<std::complex<double>>* p_ham,
                  Plus_U& dftu,
-                 const bool gamma_only_local)
+                 const bool gamma_only_local,
+                 const int nspin)
 {
-    dftu.cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local);
+    dftu.cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin);
 }
 
 } // namespace DFTU_LCAO

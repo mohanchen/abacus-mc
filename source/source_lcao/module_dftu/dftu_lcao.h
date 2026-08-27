@@ -85,14 +85,16 @@ class Plus_U : public Plus_U_Base
                        const K_Vectors& kv,
                        const double& mixing_beta,
                        hamilt::Hamilt<std::complex<double>>* p_ham,
-                       const bool gamma_only_local);
+                       const bool gamma_only_local,
+                       const int nspin);
 
     void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                            const int iter,
                            const UnitCell& ucell,
                            const std::vector<std::vector<double>>& dm_gamma,
                            const double& mixing_beta,
-                           hamilt::Hamilt<double>* p_ham);
+                           hamilt::Hamilt<double>* p_ham,
+                           const int nspin);
 
     //=============================================================
     // In dftu_tools.cpp

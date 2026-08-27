@@ -20,7 +20,8 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const K_Vectors& kv,
                          const double& mixing_beta,
                          hamilt::Hamilt<std::complex<double>>* p_ham,
-                         const bool gamma_only_local)
+                         const bool gamma_only_local,
+                         const int nspin)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
@@ -40,11 +41,11 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
     for (int ik = 0; ik < kv.get_nks(); ik++)
     {
         // srho(mu,nu) = \sum_{iw} S(mu,iw)*dm_k(iw,nu)
-        DFTU_LCAO::folding_matrix_k_new(this->ks_solver, gamma_only_local, this->nspin, ik, p_ham);
+        DFTU_LCAO::folding_matrix_k_new(this->ks_solver, gamma_only_local, nspin, ik, p_ham);
 
         std::complex<double>* s_k_pointer = nullptr;
 
-        if(this->nspin != 4)
+        if(nspin != 4)
         {
             s_k_pointer = dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, double>*>(p_ham)->getSk();
         }
@@ -183,7 +184,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
 					// set the local occupation mumber matrix of spin up and down zeros
 
 #ifdef __MPI
-                    if (this->nspin == 1 || this->nspin == 4)
+                    if (nspin == 1 || nspin == 4)
                     {
                         ModuleBase::matrix temp(occ_mat[iat][l][n][0]);
                         MPI_Allreduce(&temp(0, 0),
@@ -193,7 +194,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                                       MPI_SUM,
                                       MPI_COMM_WORLD);
                     }
-                    else if (this->nspin == 2)
+                    else if (nspin == 2)
                     {
                         ModuleBase::matrix temp0(occ_mat[iat][l][n][0]);
                         MPI_Allreduce(&temp0(0, 0),
@@ -213,7 +214,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                     }
 #endif
 
-                    switch (this->nspin)
+                    switch (nspin)
                     {
                     case 1:
                         occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
@@ -222,7 +223,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                         break;
 
                     case 2:
-                        for (int is = 0; is < this->nspin; is++)
+                        for (int is = 0; is < nspin; is++)
                             occ_mat[iat][l][n][is] += transpose(occ_mat[iat][l][n][is]);
                         break;
 
@@ -254,7 +255,8 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const UnitCell &ucell,
                              const std::vector<std::vector<double>> &dm_gamma,
                              const double& mixing_beta,
-                             hamilt::Hamilt<double>* p_ham)
+                             hamilt::Hamilt<double>* p_ham,
+                             const int nspin)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
@@ -268,7 +270,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
     const double alpha = 1.0, beta = 0.0;
 
     std::vector<double> srho(pv->nloc);
-    for (int is = 0; is < this->nspin; is++)
+    for (int is = 0; is < nspin; is++)
     {
         double* s_gamma_pointer = dynamic_cast<hamilt::HamiltLCAO<double, double>*>(p_ham)->getSk();
 
@@ -374,7 +376,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 #endif
 
                         // for the case spin independent calculation
-                        switch (this->nspin)
+                        switch (nspin)
                         {
                         case 1:
                             occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
