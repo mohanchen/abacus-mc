@@ -22,7 +22,8 @@ void cal_occ_mat(const int iter,
                  const K_Vectors& kv,
                  const double& mixing_beta,
                  hamilt::Hamilt<T>* p_ham,
-                 Plus_U& dftu);
+                 Plus_U& dftu,
+                 const bool gamma_only_local);
 
 } // namespace DFTU_LCAO
 #endif

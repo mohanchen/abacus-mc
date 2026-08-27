@@ -41,7 +41,8 @@ void force_stress(Plus_U& dftu,
                   ModuleBase::matrix& force_dftu,
                   ModuleBase::matrix& stress_dftu,
                   const K_Vectors& kv,
-                  const int npol);
+                  const int npol,
+                  const bool gamma_only_local);
 
 /// @brief Force contribution at a k-point (multik path).
 void cal_force_k(int nlocal,

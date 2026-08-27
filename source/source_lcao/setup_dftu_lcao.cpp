@@ -48,16 +48,17 @@ void finish_dftu_lcao(const int iter,
                        void* hamilt_lcao,
                        const std::string& global_out_dir,
                        int nspin,
-                       int npol)
+                       int npol,
+                       const bool gamma_only_local)
 {
     if (!dft_plus_u)
     {
         return;
     }
-    
+
     auto* dftu_ptr = static_cast<Plus_U*>(dftu);
     auto* hamilt_lcao_ptr = static_cast<hamilt::HamiltLCAO<TK, double>*>(hamilt_lcao);
-    
+
     /// old DFT+U method calculates energy correction in esolver,
     /// new DFT+U method calculates energy in Hamiltonian
     if (dft_plus_u == 2)
@@ -65,7 +66,8 @@ void finish_dftu_lcao(const int iter,
         if (dftu_ptr->get_occ_mat_ctrl() != 2)
         {
             DFTU_LCAO::cal_occ_mat(iter, ucell, dm_vec, kv, mixing_beta,
-                                   static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr);
+                                   static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr,
+                                   gamma_only_local);
         }
         dftu_ptr->cal_energy_correction(ucell, iter);
     }
@@ -109,7 +111,8 @@ template void finish_dftu_lcao<double>(const int iter,
                                         void* hamilt_lcao,
                                         const std::string& global_out_dir,
                                         int nspin,
-                                        int npol);
+                                        int npol,
+                                        const bool gamma_only_local);
 
 template void finish_dftu_lcao<std::complex<double>>(const int iter,
                                                       const bool conv_esolver,
@@ -123,6 +126,7 @@ template void finish_dftu_lcao<std::complex<double>>(const int iter,
                                                       void* hamilt_lcao,
                                                       const std::string& global_out_dir,
                                                       int nspin,
-                                                      int npol);
+                                                      int npol,
+                                                      const bool gamma_only_local);
 
 } // namespace ModuleESolver

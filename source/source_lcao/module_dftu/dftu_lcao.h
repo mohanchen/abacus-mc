@@ -36,7 +36,6 @@ class Plus_U : public Plus_U_Base
                 const std::string& global_out_dir,
                 const std::string& init_chg,
                 const int nlocal,
-                const bool gamma_only_local,
                 const std::string& ks_solver,
                 const std::string& device,
                 const int kpar,
@@ -59,53 +58,54 @@ class Plus_U : public Plus_U_Base
     double yukawa_lambda = 0.0;
     int npol = 1;
     int nlocal = 0;
-    bool gamma_only_local = false;
     std::string ks_solver;
 
 #ifdef __LCAO
     const LCAO_Orbitals* ptr_orb_ = nullptr;
     std::vector<double> orb_cutoff_;
-#endif
 
-#ifdef __LCAO
     //=============================================================
     // In dftu_hamilt.cpp
     // For calculating contribution to Hamiltonian matrices
     //=============================================================
   public:
-    void cal_eff_pot_mat_R_double(const int ispin, double* SR, double* HR, const int npol);
+    void cal_eff_pot_mat_R_double(const Parallel_Orbitals* pv, const int ispin, double* SR, double* HR, const int npol);
 
-	void cal_eff_pot_mat_R_complex_double(const int ispin,
+	void cal_eff_pot_mat_R_complex_double(const Parallel_Orbitals* pv,
+			const int ispin,
 			std::complex<double>* SR,
 			std::complex<double>* HR,
 			const int npol);
-#endif
 
-#ifdef __LCAO
     // calculate the local occupation number matrix
-    void cal_occ_mat_k(const int iter,
+    void cal_occ_mat_k(const Parallel_Orbitals* pv,
+                       const int iter,
                        const UnitCell& ucell,
                        const std::vector<std::vector<std::complex<double>>>& dm_k,
                        const K_Vectors& kv,
                        const double& mixing_beta,
-                       hamilt::Hamilt<std::complex<double>>* p_ham);
+                       hamilt::Hamilt<std::complex<double>>* p_ham,
+                       const bool gamma_only_local);
 
-    void cal_occ_mat_gamma(const int iter,
+    void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
+                           const int iter,
                            const UnitCell& ucell,
                            const std::vector<std::vector<double>>& dm_gamma,
                            const double& mixing_beta,
                            hamilt::Hamilt<double>* p_ham);
-#endif
 
-#ifdef __LCAO
     //=============================================================
     // In dftu_tools.cpp
     // For calculating onsite potential, which is used
     // for both Hamiltonian and force/stress
     //=============================================================
   public:
-    void pot_onsite_complex(const int spin, const bool newlocale, std::complex<double>* pot_onsite, const int npol);
-    void pot_onsite_real(const int spin, const bool newlocale, double* pot_onsite, const int npol);
+    void pot_onsite_complex(const Parallel_Orbitals* pv,
+                            const int spin,
+                            const bool newlocale,
+                            std::complex<double>* pot_onsite,
+                            const int npol);
+    void pot_onsite_real(const Parallel_Orbitals* pv, const int spin, const bool newlocale, double* pot_onsite, const int npol);
 
   private:
     double get_onebody_eff_pot(const int T,
@@ -155,7 +155,6 @@ class Plus_U : public Plus_U_Base
     int get_nlocal() const { return nlocal; }
     const std::string& get_ks_solver() const { return ks_solver; }
     const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
-    bool is_gamma_only_local() const { return gamma_only_local; }
 
   private:
     const UnitCell* ucell = nullptr;

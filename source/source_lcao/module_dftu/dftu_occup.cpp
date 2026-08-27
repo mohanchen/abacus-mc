@@ -2,6 +2,7 @@
 #include "dftu_folding.h"
 #include "source_base/timer.h"
 #include "source_base/module_external/scalapack_connector.h"
+#include "source_io/module_parameter/parameter.h"
 #ifdef __LCAO
 #include "source_lcao/hamilt_lcao.h"
 #endif
@@ -12,12 +13,14 @@
 
 #ifdef __LCAO
 
-void Plus_U::cal_occ_mat_k(const int iter,
+void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
+                         const int iter,
                          const UnitCell& ucell,
                          const std::vector<std::vector<std::complex<double>>>& dm_k,
                          const K_Vectors& kv,
                          const double& mixing_beta,
-                         hamilt::Hamilt<std::complex<double>>* p_ham)
+                         hamilt::Hamilt<std::complex<double>>* p_ham,
+                         const bool gamma_only_local)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
@@ -32,12 +35,12 @@ void Plus_U::cal_occ_mat_k(const int iter,
     const int one_int = 1;
     const std::complex<double> beta(0.0,0.0), alpha(1.0,0.0);
 
-    std::vector<std::complex<double>> srho(this->paraV->nloc);
+    std::vector<std::complex<double>> srho(pv->nloc);
 
     for (int ik = 0; ik < kv.get_nks(); ik++)
     {
         // srho(mu,nu) = \sum_{iw} S(mu,iw)*dm_k(iw,nu)
-        DFTU_LCAO::folding_matrix_k_new(this->ks_solver, this->gamma_only_local, this->nspin, ik, p_ham);
+        DFTU_LCAO::folding_matrix_k_new(this->ks_solver, gamma_only_local, this->nspin, ik, p_ham);
 
         std::complex<double>* s_k_pointer = nullptr;
 
@@ -60,16 +63,16 @@ void Plus_U::cal_occ_mat_k(const int iter,
             s_k_pointer,
             one_int,
             one_int,
-            &this->paraV->desc[0],
+            &pv->desc[0],
             dm_k[ik].data(),
             one_int,
             one_int,
-            &this->paraV->desc[0],
+            &pv->desc[0],
             beta,
             srho.data(),
             one_int,
             one_int,
-            &this->paraV->desc[0]);
+            &pv->desc[0]);
 #endif
 
         const int spin = kv.isk[ik];
@@ -110,19 +113,19 @@ void Plus_U::cal_occ_mat_k(const int iter,
                             for (int ipol0 = 0; ipol0 < this->npol; ipol0++)
                             {
                                 const int iwt0 = this->iatlnmipol2iwt[iat][l][n][m0][ipol0];
-                                const int mu = this->paraV->global2local_row(iwt0);
-                                const int mu_prime = this->paraV->global2local_col(iwt0);
+                                const int mu = pv->global2local_row(iwt0);
+                                const int mu_prime = pv->global2local_col(iwt0);
 
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
                                     for (int ipol1 = 0; ipol1 < this->npol; ipol1++)
                                     {
                                         const int iwt1 = this->iatlnmipol2iwt[iat][l][n][m1][ipol1];
-                                        const int nu = this->paraV->global2local_col(iwt1);
-                                        const int nu_prime = this->paraV->global2local_row(iwt1);
+                                        const int nu = pv->global2local_col(iwt1);
+                                        const int nu_prime = pv->global2local_row(iwt1);
 
-                                        const int irc = nu * this->paraV->nrow + mu;
-                                        const int irc_prime = mu_prime * this->paraV->nrow + nu_prime;
+                                        const int irc = nu * pv->nrow + mu;
+                                        const int irc_prime = mu_prime * pv->nrow + nu_prime;
 
                                         const int m0_all = m0 + ipol0 * (2 * l + 1);
                                         const int m1_all = m1 + ipol1 * (2 * l + 1);
@@ -246,7 +249,8 @@ void Plus_U::cal_occ_mat_k(const int iter,
     return;
 }
 
-void Plus_U::cal_occ_mat_gamma(const int iter,
+void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
+                             const int iter,
                              const UnitCell &ucell,
                              const std::vector<std::vector<double>> &dm_gamma,
                              const double& mixing_beta,
@@ -263,7 +267,7 @@ void Plus_U::cal_occ_mat_gamma(const int iter,
     const int one_int = 1;
     const double alpha = 1.0, beta = 0.0;
 
-    std::vector<double> srho(this->paraV->nloc);
+    std::vector<double> srho(pv->nloc);
     for (int is = 0; is < this->nspin; is++)
     {
         double* s_gamma_pointer = dynamic_cast<hamilt::HamiltLCAO<double, double>*>(p_ham)->getSk();
@@ -278,17 +282,17 @@ void Plus_U::cal_occ_mat_gamma(const int iter,
             s_gamma_pointer,
             one_int,
             one_int,
-            &this->paraV->desc[0],
+            &pv->desc[0],
             dm_gamma[is].data(),
             //dm_gamma[is].c,
             one_int,
             one_int,
-            &this->paraV->desc[0],
+            &pv->desc[0],
             beta,
             srho.data(),
             one_int,
             one_int,
-            &this->paraV->desc[0]);
+            &pv->desc[0]);
 #endif
 
         for (int it = 0; it < ucell.ntype; it++)
@@ -324,19 +328,19 @@ void Plus_U::cal_occ_mat_gamma(const int iter,
                             for (int ipol0 = 0; ipol0 < this->npol; ipol0++)
                             {
                                 const int iwt0 = this->iatlnmipol2iwt[iat][l][n][m0][ipol0];
-                                const int mu = this->paraV->global2local_row(iwt0);
-                                const int mu_prime = this->paraV->global2local_col(iwt0);
+                                const int mu = pv->global2local_row(iwt0);
+                                const int mu_prime = pv->global2local_col(iwt0);
 
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
                                     for (int ipol1 = 0; ipol1 < this->npol; ipol1++)
                                     {
                                         const int iwt1 = this->iatlnmipol2iwt[iat][l][n][m1][ipol1];
-                                        const int nu = this->paraV->global2local_col(iwt1);
-                                        const int nu_prime = this->paraV->global2local_row(iwt1);
+                                        const int nu = pv->global2local_col(iwt1);
+                                        const int nu_prime = pv->global2local_row(iwt1);
 
-                                        const int irc = nu * this->paraV->nrow + mu;
-                                        const int irc_prime = mu_prime * this->paraV->nrow + nu_prime;
+                                        const int irc = nu * pv->nrow + mu;
+                                        const int irc_prime = mu_prime * pv->nrow + nu_prime;
 
                                         if ((nu >= 0) && (mu >= 0))
                                         {

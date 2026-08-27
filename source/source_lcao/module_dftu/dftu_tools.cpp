@@ -1,10 +1,14 @@
 #include "dftu_lcao.h"
 
 #ifdef __LCAO
-void Plus_U::pot_onsite_complex(const int spin, const bool new_occ_mat, std::complex<double>* pot_onsite, const int npol)
+void Plus_U::pot_onsite_complex(const Parallel_Orbitals* pv,
+                                const int spin,
+                                const bool new_occ_mat,
+                                std::complex<double>* pot_onsite,
+                                const int npol)
 {
     ModuleBase::TITLE("Plus_U", "pot_onsite_complex");
-    ModuleBase::GlobalFunc::ZEROS(pot_onsite, this->paraV->nloc);
+    ModuleBase::GlobalFunc::ZEROS(pot_onsite, pv->nloc);
 
     for (int it = 0; it < this->ucell->ntype; ++it)
     {
@@ -33,8 +37,8 @@ void Plus_U::pot_onsite_complex(const int spin, const bool new_occ_mat, std::com
                     {
                         for (int ipol1 = 0; ipol1 < npol; ipol1++)
                         {
-                            const int mu = this->paraV->global2local_row(this->iatlnmipol2iwt[iat][L][n][m1][ipol1]);
-                            if (mu < 0) 
+                            const int mu = pv->global2local_row(this->iatlnmipol2iwt[iat][L][n][m1][ipol1]);
+                            if (mu < 0)
                             {
                                 continue;
                             }
@@ -44,15 +48,15 @@ void Plus_U::pot_onsite_complex(const int spin, const bool new_occ_mat, std::com
                                 for (int ipol2 = 0; ipol2 < npol; ipol2++)
                                 {
                                     const int nu
-                                        = this->paraV->global2local_col(this->iatlnmipol2iwt[iat][L][n][m2][ipol2]);
-                                    if (nu < 0) 
+                                        = pv->global2local_col(this->iatlnmipol2iwt[iat][L][n][m2][ipol2]);
+                                    if (nu < 0)
                                     {
                                         continue;
                                     }
                                     int m1_all = m1 + (2 * L + 1) * ipol1;
                                     int m2_all = m2 + (2 * L + 1) * ipol2;
                                     double val = get_onebody_eff_pot(it, iat, L, n, spin, m1_all, m2_all, new_occ_mat);
-                                    pot_onsite[nu * this->paraV->nrow + mu] = std::complex<double>(val, 0.0);
+                                    pot_onsite[nu * pv->nrow + mu] = std::complex<double>(val, 0.0);
                                 } // ipol2
                             } // m2
                         } // ipol1
@@ -65,10 +69,14 @@ void Plus_U::pot_onsite_complex(const int spin, const bool new_occ_mat, std::com
     return;
 }
 
-void Plus_U::pot_onsite_real(const int spin, const bool new_occ_mat, double* pot_onsite, const int npol)
+void Plus_U::pot_onsite_real(const Parallel_Orbitals* pv,
+                             const int spin,
+                             const bool new_occ_mat,
+                             double* pot_onsite,
+                             const int npol)
 {
     ModuleBase::TITLE("Plus_U", "pot_onsite_real");
-    ModuleBase::GlobalFunc::ZEROS(pot_onsite, this->paraV->nloc);
+    ModuleBase::GlobalFunc::ZEROS(pot_onsite, pv->nloc);
 
     for (int it = 0; it < this->ucell->ntype; ++it)
     {
@@ -96,8 +104,8 @@ void Plus_U::pot_onsite_real(const int spin, const bool new_occ_mat, double* pot
                     {
                         for (int ipol1 = 0; ipol1 < npol; ipol1++)
                         {
-                            const int mu = this->paraV->global2local_row(this->iatlnmipol2iwt[iat][L][n][m1][ipol1]);
-                            if (mu < 0) 
+                            const int mu = pv->global2local_row(this->iatlnmipol2iwt[iat][L][n][m1][ipol1]);
+                            if (mu < 0)
                             {
                                 continue;
                             }
@@ -106,8 +114,8 @@ void Plus_U::pot_onsite_real(const int spin, const bool new_occ_mat, double* pot
                                 for (int ipol2 = 0; ipol2 < npol; ipol2++)
                                 {
                                     const int nu
-                                        = this->paraV->global2local_col(this->iatlnmipol2iwt[iat][L][n][m2][ipol2]);
-                                    if (nu < 0) 
+                                        = pv->global2local_col(this->iatlnmipol2iwt[iat][L][n][m2][ipol2]);
+                                    if (nu < 0)
                                     {
                                         continue;
                                     }
@@ -115,7 +123,7 @@ void Plus_U::pot_onsite_real(const int spin, const bool new_occ_mat, double* pot
                                     int m1_all = m1 + (2 * L + 1) * ipol1;
                                     int m2_all = m2 + (2 * L + 1) * ipol2;
 
-                                    pot_onsite[nu * this->paraV->nrow + mu]
+                                    pot_onsite[nu * pv->nrow + mu]
                                         = this->get_onebody_eff_pot(it, iat, L, n, spin, m1_all, m2_all, new_occ_mat);
 
                                 } // ipol2

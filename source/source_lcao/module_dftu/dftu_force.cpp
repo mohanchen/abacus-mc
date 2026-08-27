@@ -25,7 +25,8 @@ void force_stress(Plus_U& dftu,
                   ModuleBase::matrix& force_dftu,
                   ModuleBase::matrix& stress_dftu,
                   const K_Vectors& kv,
-                  const int npol)
+                  const int npol,
+                  const bool gamma_only_local)
 {
     ModuleBase::TITLE("DFTU_LCAO", "force_stress");
     ModuleBase::timer::start("DFTU_LCAO", "force_stress");
@@ -37,7 +38,7 @@ void force_stress(Plus_U& dftu,
     // fsr_dftu is created without allocation), we fail early with a clear
     // message instead of letting pdgemm_ dereference nullptr and crash.
     // See force_stress_lcao.cpp for the historical background.
-    if (dftu.is_gamma_only_local())
+    if (gamma_only_local)
     {
         if (cal_force
             && (fsr.DSloc_x == nullptr || fsr.DSloc_y == nullptr || fsr.DSloc_z == nullptr))
@@ -100,7 +101,7 @@ void force_stress(Plus_U& dftu,
         stress_dftu.zero_out();
     }
 
-    if (dftu.is_gamma_only_local())
+    if (gamma_only_local)
     {
         const char transN = 'N';
         const char transT = 'T';
@@ -117,7 +118,7 @@ void force_stress(Plus_U& dftu,
 
             double* pot_onsite = new double[pv.nloc];
 
-            dftu.pot_onsite_real(spin, false, pot_onsite, npol);
+            dftu.pot_onsite_real(&pv, spin, false, pot_onsite, npol);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
@@ -163,7 +164,7 @@ void force_stress(Plus_U& dftu,
 
             std::complex<double>* pot_onsite = new std::complex<double>[pv.nloc];
 
-            dftu.pot_onsite_complex(spin, false, pot_onsite, npol);
+            dftu.pot_onsite_complex(&pv, spin, false, pot_onsite, npol);
 
 
 #ifdef __MPI

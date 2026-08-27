@@ -85,7 +85,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::initialize_HR(const Grid_Driver
 }
 
 template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbitals* paraV)
+void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbitals* pv)
 {
     ModuleBase::TITLE("DFTU", "cal_nlm_all");
 	if (this->precal_nlm_done) 
@@ -122,8 +122,8 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbi
             const ModuleBase::Vector3<double>& tau1 = adjs.adjacent_tau[ad];
             const Atom* atom1 = &ucell->atoms[T1];
 
-            auto all_indexes = paraV->get_indexes_row(iat1);
-            auto col_indexes = paraV->get_indexes_col(iat1);
+            auto all_indexes = pv->get_indexes_row(iat1);
+            auto col_indexes = pv->get_indexes_col(iat1);
             // insert col_indexes into all_indexes to get universal set with no repeat elements
             all_indexes.insert(all_indexes.end(), col_indexes.begin(), col_indexes.end());
             std::sort(all_indexes.begin(), all_indexes.end());
@@ -245,11 +245,11 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
 	}
     ModuleBase::timer::start("DFTU", "contributeHR");
 
-    const Parallel_Orbitals* paraV = this->hR->get_atom_pair(0).get_paraV();
+    const Parallel_Orbitals* pv = this->hR->get_atom_pair(0).get_paraV();
     const int npol = this->ucell->get_npol();
     // 1. Calculate <psi|alpha> two-center integrals for all atom pairs
     //    This is reused in both occ and HR calculations
-    this->cal_nlm_all(paraV);
+    this->cal_nlm_all(pv);
 
     // 2. Loop over all Hubbard-projector center atoms (iat0)
     int atom_index = 0;
@@ -306,7 +306,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
                         = dmR_current->find_matrix(iat1, iat2, R_vector[0], R_vector[1], R_vector[2]);
                     if (tmp != nullptr)
                     {
-                        this->cal_occ(iat1, iat2, paraV, nlm1, nlm2, tmp->get_pointer(), occ);
+                        this->cal_occ(iat1, iat2, pv, nlm1, nlm2, tmp->get_pointer(), occ);
                     }
                 }
             }
@@ -415,7 +415,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
 #pragma omp critical(dftu_hr_update)
 #endif
                     {
-                        this->cal_HR_IJR(iat1, iat2, paraV, nlm1, nlm2, pot_onsite, tmp->get_pointer());
+                        this->cal_HR_IJR(iat1, iat2, pv, nlm1, nlm2, pot_onsite, tmp->get_pointer());
                     }
                 }
             }
@@ -467,7 +467,7 @@ template <typename TK, typename TR>
 void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_HR_IJR(
     const int& iat1,
     const int& iat2,
-    const Parallel_Orbitals* paraV,
+    const Parallel_Orbitals* pv,
     const std::unordered_map<int, std::vector<double>>& nlm1_all,
     const std::unordered_map<int, std::vector<double>>& nlm2_all,
     const std::vector<TR>& pot_onsite,
@@ -481,8 +481,8 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_HR_IJR(
     // ---------------------------------------------
     // calculate the Nonlocal matrix for each pair of orbitals
     // ---------------------------------------------
-    auto row_indexes = paraV->get_indexes_row(iat1);
-    auto col_indexes = paraV->get_indexes_col(iat2);
+    auto row_indexes = pv->get_indexes_row(iat1);
+    auto col_indexes = pv->get_indexes_col(iat2);
     const int m_size = int(sqrt(pot_onsite.size()) / npol);
     // step_trace = 0 for NSPIN=1,2; ={0, 1, local_col, local_col+1} for NSPIN=4
     std::vector<int> step_trace(npol * npol, 0);
@@ -490,7 +490,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_HR_IJR(
     {
         for (int is2 = 0; is2 < npol; is2++)
         {
-            step_trace[is * npol + is2] = paraV->get_ncol_atom(iat2) * is + is2;
+            step_trace[is * npol + is2] = pv->get_ncol_atom(iat2) * is + is2;
         }
     }
     // calculate the local matrix
@@ -526,7 +526,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_HR_IJR(
 template <typename TK, typename TR>
 void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_occ(const int& iat1,
                                                          const int& iat2,
-                                                         const Parallel_Orbitals* paraV,
+                                                         const Parallel_Orbitals* pv,
                                                          const std::unordered_map<int, std::vector<double>>& nlm1_all,
                                                          const std::unordered_map<int, std::vector<double>>& nlm2_all,
                                                          const double* dm_pointer,
@@ -540,8 +540,8 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_occ(const int& iat1,
     // ---------------------------------------------
     // calculate the Nonlocal matrix for each pair of orbitals
     // ---------------------------------------------
-    auto row_indexes = paraV->get_indexes_row(iat1);
-    auto col_indexes = paraV->get_indexes_col(iat2);
+    auto row_indexes = pv->get_indexes_row(iat1);
+    auto col_indexes = pv->get_indexes_col(iat2);
     const int m_size = int(sqrt(occ.size()) / npol);
     const int m_size2 = m_size * m_size;
 #ifdef __DEBUG
@@ -553,7 +553,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_occ(const int& iat1,
     {
         for (int is2 = 0; is2 < npol; is2++)
         {
-            step_trace[is * npol + is2] = paraV->get_ncol_atom(iat2) * is + is2;
+            step_trace[is * npol + is2] = pv->get_ncol_atom(iat2) * is + is2;
         }
     }
     // calculate the local matrix
