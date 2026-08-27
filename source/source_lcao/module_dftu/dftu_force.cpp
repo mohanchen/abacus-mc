@@ -74,6 +74,19 @@ void force_stress(Plus_U& dftu,
         }
     }
 
+    // Layout invariant: the folded dSR/mat buffers are consumed by ScaLAPACK
+    // GEMM through pv.desc (local column-major storage) and read back with
+    // explicit ic * pv.nrow + ir indices. All ks_solvers accepted by INPUT
+    // validation are column-major today; abort loudly instead of silently
+    // producing wrong forces/stresses if that assumption ever changes.
+    if ((dftu.is_cal_force() || dftu.is_cal_stress())
+        && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(dftu.get_ks_solver()))
+    {
+        ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
+            "non column-major ks_solver is not supported for DFT+U force/stress; "
+            "the folded matrix layout assumption would be violated");
+    }
+
     const int nlocal = dftu.get_nlocal();
 
     if (dftu.is_cal_force())
