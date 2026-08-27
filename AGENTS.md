@@ -23,6 +23,7 @@ rules. Read the complete governance document before making or reviewing changes:
   6. Add focused tests for key features, bug fixes, INPUT behavior changes,
      heterogeneous kernels, and core-module refactors.
   7. Keep code compatible with the repository C++11 baseline.
+  8. Declare one variable per line; do not use comma-separated declarations.
 - Use LF line endings for text files. Only `.bat` and `.cmd` files may use CRLF.
 - Keep source file additions deterministic: update the relevant `CMakeLists.txt`
   or explain why the file is generated or included indirectly.
