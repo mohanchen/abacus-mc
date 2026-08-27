@@ -10,10 +10,32 @@
 
 #include <vector>
 
-//----------------------------------------------------------
-// Calculates beta functions (Kleinman-Bylander projectors),
-// with structure factor, for all atoms, in reciprocal space
-//----------------------------------------------------------
+/**
+ * @file vnl_pw_getvnl.cpp
+ * @brief Compute the Kleinman-Bylander projector functions (beta functions)
+ *        in reciprocal space for a given k-point.
+ *
+ * This file contains the getvnl() template implementation and its explicit
+ * instantiations for CPU/GPU and float/double precision.
+ */
+
+/**
+ * @brief Calculate beta functions (Kleinman-Bylander projectors) with
+ *        structure factor for all atoms in reciprocal space.
+ *
+ * Workflow:
+ * 1. Collect per-atom-type counts (nbeta/nh/na) into host vectors.
+ * 2. Build the |G+k| Cartesian vectors for the current k-point.
+ * 3. Move data to device when GPU is enabled; reuse host vectors otherwise.
+ * 4. Evaluate real spherical harmonics Ylm on all G+k vectors.
+ * 5. Build structure factors sk for all atoms.
+ * 6. Launch cal_vnl_op kernel to assemble vkb = beta * Ylm * sk * tab.
+ *
+ * @param ctx     device context (CPU or GPU)
+ * @param ucell   unit cell (read-only)
+ * @param ik      index of the k-point
+ * @param vkb_in  output projector array of shape (nkb, npw)
+ */
 template <typename FPTYPE, typename Device>
 void pseudopot_cell_vnl::getvnl(Device* ctx,
                                 const UnitCell& ucell,
@@ -148,6 +170,8 @@ void pseudopot_cell_vnl::getvnl(Device* ctx,
     ModuleBase::timer::end("pp_cell_vnl", "getvnl");
 } // end subroutine getvnl
 
+// Explicit instantiations for CPU/GPU and float/double precision.
+// These must stay in the same translation unit as the template definition.
 template void pseudopot_cell_vnl::getvnl<float, base_device::DEVICE_CPU>(base_device::DEVICE_CPU*,
                                                                          const UnitCell&,
                                                                          int const&,
