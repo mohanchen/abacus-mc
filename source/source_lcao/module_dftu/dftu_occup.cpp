@@ -25,7 +25,8 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const int npol,
                          const int nlocal,
                          const std::string& ks_solver,
-                         const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt)
+                         const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
+                         const std::vector<int>& orbital_corr)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
@@ -84,7 +85,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
         for (int it = 0; it < ucell.ntype; it++)
         {
             const int NL = ucell.atoms[it].nwl + 1;
-            const int LC = get_orbital_corr(it);
+            const int LC = orbital_corr[it];
 
 			if (LC == -1)
 			{
@@ -97,7 +98,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
                 for (int l = 0; l < NL; l++)
                 {
-					if (l != get_orbital_corr(it))
+					if (l != orbital_corr[it])
 					{
 						continue;
 					}
@@ -158,7 +159,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
     for (int it = 0; it < ucell.ntype; it++)
     {
         const int NL = ucell.atoms[it].nwl + 1;
-        const int LC = get_orbital_corr(it);
+        const int LC = orbital_corr[it];
 
 		if (LC == -1)
 		{
@@ -171,7 +172,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
             for (int l = 0; l < NL; l++)
             {
-				if (l != get_orbital_corr(it))
+				if (l != orbital_corr[it])
 				{
 					continue;
 				}
@@ -263,7 +264,8 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const int nspin,
                              const int npol,
                              const int nlocal,
-                             const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt)
+                             const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
+                             const std::vector<int>& orbital_corr)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
@@ -307,7 +309,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         for (int it = 0; it < ucell.ntype; it++)
         {
             const int NL = ucell.atoms[it].nwl + 1;
-			if (!has_correlated_orbital(it))
+			if (!orbital_corr[it] != -1)
 			{
 				continue;
 			}
@@ -317,7 +319,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 
                 for (int l = 0; l < NL; l++)
                 {
-					if (l != get_orbital_corr(it))
+					if (l != orbital_corr[it])
 					{
 						continue;
 					}
