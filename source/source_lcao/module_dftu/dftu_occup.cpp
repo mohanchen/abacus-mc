@@ -21,7 +21,10 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const double& mixing_beta,
                          hamilt::Hamilt<std::complex<double>>* p_ham,
                          const bool gamma_only_local,
-                         const int nspin)
+                         const int nspin,
+                         const int npol,
+                         const int nlocal,
+                         const std::string& ks_solver)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
@@ -41,7 +44,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
     for (int ik = 0; ik < kv.get_nks(); ik++)
     {
         // srho(mu,nu) = \sum_{iw} S(mu,iw)*dm_k(iw,nu)
-        DFTU_LCAO::folding_matrix_k_new(this->ks_solver, gamma_only_local, nspin, ik, p_ham);
+        DFTU_LCAO::folding_matrix_k_new(ks_solver, gamma_only_local, nspin, ik, p_ham);
 
         std::complex<double>* s_k_pointer = nullptr;
 
@@ -57,9 +60,9 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
             transT,
-            this->nlocal,
-            this->nlocal,
-            this->nlocal,
+            nlocal,
+            nlocal,
+            nlocal,
             alpha,
             s_k_pointer,
             one_int,
@@ -111,7 +114,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                         // Calculate the local occupation number matrix
                         for (int m0 = 0; m0 < 2 * l + 1; m0++)
                         {
-                            for (int ipol0 = 0; ipol0 < this->npol; ipol0++)
+                            for (int ipol0 = 0; ipol0 < npol; ipol0++)
                             {
                                 const int iwt0 = this->iatlnmipol2iwt[iat][l][n][m0][ipol0];
                                 const int mu = pv->global2local_row(iwt0);
@@ -119,7 +122,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
-                                    for (int ipol1 = 0; ipol1 < this->npol; ipol1++)
+                                    for (int ipol1 = 0; ipol1 < npol; ipol1++)
                                     {
                                         const int iwt1 = this->iatlnmipol2iwt[iat][l][n][m1][ipol1];
                                         const int nu = pv->global2local_col(iwt1);
@@ -189,7 +192,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                         ModuleBase::matrix temp(occ_mat[iat][l][n][0]);
                         MPI_Allreduce(&temp(0, 0),
                                       &occ_mat[iat][l][n][0](0, 0),
-                                      (2 * l + 1) * this->npol * (2 * l + 1) * this->npol,
+                                      (2 * l + 1) * npol * (2 * l + 1) * npol,
                                       MPI_DOUBLE,
                                       MPI_SUM,
                                       MPI_COMM_WORLD);
@@ -256,7 +259,9 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const std::vector<std::vector<double>> &dm_gamma,
                              const double& mixing_beta,
                              hamilt::Hamilt<double>* p_ham,
-                             const int nspin)
+                             const int nspin,
+                             const int npol,
+                             const int nlocal)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
@@ -277,9 +282,9 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
             transT,
-            this->nlocal,
-            this->nlocal,
-            this->nlocal,
+            nlocal,
+            nlocal,
+            nlocal,
             alpha,
             s_gamma_pointer,
             one_int,
@@ -327,7 +332,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                         // Calculate the local occupation number matrix
                         for (int m0 = 0; m0 < 2 * l + 1; m0++)
                         {
-                            for (int ipol0 = 0; ipol0 < this->npol; ipol0++)
+                            for (int ipol0 = 0; ipol0 < npol; ipol0++)
                             {
                                 const int iwt0 = this->iatlnmipol2iwt[iat][l][n][m0][ipol0];
                                 const int mu = pv->global2local_row(iwt0);
@@ -335,7 +340,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
-                                    for (int ipol1 = 0; ipol1 < this->npol; ipol1++)
+                                    for (int ipol1 = 0; ipol1 < npol; ipol1++)
                                     {
                                         const int iwt1 = this->iatlnmipol2iwt[iat][l][n][m1][ipol1];
                                         const int nu = pv->global2local_col(iwt1);
@@ -369,7 +374,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 #ifdef __MPI
                         MPI_Allreduce(&temp(0, 0),
                                       &occ_mat[iat][l][n][is](0, 0),
-                                      (2 * l + 1) * this->npol * (2 * l + 1) * this->npol,
+                                      (2 * l + 1) * npol * (2 * l + 1) * npol,
                                       MPI_DOUBLE,
                                       MPI_SUM,
                                       MPI_COMM_WORLD);

@@ -291,7 +291,8 @@ void cal_occ_mat(const int iter,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    dftu.cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham, nspin);
+    dftu.cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham, nspin,
+                           dftu.get_npol(), dftu.get_nlocal());
 }
 
 //! dftu occupation matrix for multiple k-points using dm(complex)
@@ -306,7 +307,8 @@ void cal_occ_mat(const int iter,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    dftu.cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin);
+    dftu.cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
+                       dftu.get_npol(), dftu.get_nlocal(), dftu.get_ks_solver());
 }
 
 } // namespace DFTU_LCAO
