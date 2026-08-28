@@ -59,6 +59,7 @@ list(APPEND objects
     onsite_proj.cpp
     onsite_proj_init.cpp
     onsite_proj_overlap.cpp
+    onsite_proj_force_stress.cpp
     onsite_proj_tools.cpp
     onsite_proj_print.cpp
     vsep_pw.cpp
