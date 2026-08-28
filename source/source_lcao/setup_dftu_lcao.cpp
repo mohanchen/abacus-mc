@@ -1,6 +1,6 @@
 #include "setup_dftu_lcao.h"
 #include "source_lcao/module_dftu/dftu_lcao.h"
-#include "source_lcao/module_dftu/dftu_occup.h"
+#include "source_lcao/module_dftu/dftu_lcao_occ.h"
 #include "source_pw/module_pwdft/dftu_output.h" // mohan add 2025-11-08
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/hamilt_lcao.h"

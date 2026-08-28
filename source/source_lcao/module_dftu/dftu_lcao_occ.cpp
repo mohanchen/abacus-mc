@@ -1,4 +1,4 @@
-#include "dftu_lcao.h"
+#include "dftu_lcao_occ.h"
 #include "dftu_folding.h"
 #include "source_base/timer.h"
 #include "source_base/module_external/scalapack_connector.h"

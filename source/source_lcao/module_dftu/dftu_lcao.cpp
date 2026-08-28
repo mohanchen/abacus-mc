@@ -1,5 +1,5 @@
 #include "dftu_lcao.h"
-#include "dftu_occup.h"
+#include "dftu_lcao_occ.h"
 
 #include "source_base/matrix.h"  // occ_mat uses ModuleBase::matrix::operator()
 #include "source_base/tool_quit.h"

@@ -813,7 +813,7 @@ OBJS_DFTU=dftu.o\
       dftu_yukawa.o\
       dftu_folding.o\
       dftu_tools.o\
-      dftu_occup.o\
+      dftu_lcao_occ.o\
       dftu_hamilt.o\
       setup_dftu_pw.o
 
