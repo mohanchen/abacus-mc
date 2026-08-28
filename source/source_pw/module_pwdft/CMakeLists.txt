@@ -57,6 +57,7 @@ list(APPEND objects
     fs_kin_tools.cpp
     radial_proj.cpp
     onsite_proj.cpp
+    onsite_proj_init.cpp
     onsite_proj_tools.cpp
     onsite_proj_print.cpp
     vsep_pw.cpp
