@@ -4,6 +4,7 @@ add_library(
     xc_functional.cpp
     xc_pot.cpp
     xc_grad.cpp
+    xc_grad_prepare.cpp
     xc_grad_wfc.cpp
     xc_grad_utils.cpp
     xc_lda_wrap.cpp

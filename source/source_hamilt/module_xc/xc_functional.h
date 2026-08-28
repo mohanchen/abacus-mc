@@ -271,6 +271,34 @@ class XC_Functional
         const double* ux_,
         const bool lsign_);
 
+    static void gradcorr_prepare_rho(
+        const Charge* const chr,
+        ModulePW::PW_Basis* rhopw,
+        const UnitCell* ucell,
+        const int nspin,
+        const int nspin0,
+        const double fac,
+        const bool need_laplacian,
+        const bool is_stress,
+        const bool domag,
+        const bool domag_z,
+        ModuleBase::matrix& v,
+        double*& rhotmp1,
+        double*& rhotmp2,
+        std::complex<double>*& rhogsum1,
+        std::complex<double>*& rhogsum2,
+        ModuleBase::Vector3<double>*& gdr1,
+        ModuleBase::Vector3<double>*& gdr2,
+        ModuleBase::Vector3<double>*& h1,
+        ModuleBase::Vector3<double>*& h2,
+        double*& neg,
+        double**& vsave,
+        double**& vgg,
+        std::vector<double>& lapl1,
+        std::vector<double>& lapl2,
+        std::vector<double>& vlapl_arr1,
+        std::vector<double>& vlapl_arr2);
+
     //-------------------
     //  xc_lda_exch.cpp
     //-------------------
