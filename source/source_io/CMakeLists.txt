@@ -51,6 +51,9 @@ list(APPEND objects_advanced
     module_wannier/to_wannier90_pw.cpp
     module_wannier/to_w90_lcao_pw.cpp
     module_wannier/to_wannier90_lcao.cpp
+    module_wannier/to_wannier90_lcao_io.cpp
+    module_wannier/to_wannier90_lcao_setup.cpp
+    module_wannier/to_wannier90_lcao_overlap.cpp
     module_wannier/fr_overlap.cpp
 )
 
