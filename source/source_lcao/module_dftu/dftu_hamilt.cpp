@@ -1,5 +1,6 @@
 #include "dftu_lcao.h"
 #include "dftu_hamilt.h"
+#include "dftu_lcao_pots.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/timer.h"
 
@@ -38,7 +39,7 @@ void pot_uterm_complex(Plus_U& dftu,
     const std::complex<double> zero = 0.0;
 
     std::vector<std::complex<double>> pot_onsite(pv->nloc);
-    dftu.pot_onsite_complex(pv, spin, true, &pot_onsite[0], npol);
+    DFTU_LCAO::pot_onsite_complex(dftu, dftu.get_ucell(), pv, spin, true, &pot_onsite[0], npol);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,
@@ -95,7 +96,7 @@ void pot_uterm_real(Plus_U& dftu,
     double alpha = 1.0, beta = 0.0, half = 0.5, one = 1.0;
 
     std::vector<double> pot_onsite(pv->nloc);
-    dftu.pot_onsite_real(pv, spin, 1, &pot_onsite[0], npol);
+    DFTU_LCAO::pot_onsite_real(dftu, dftu.get_ucell(), pv, spin, true, &pot_onsite[0], npol);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,
@@ -131,7 +132,7 @@ void Plus_U::cal_eff_pot_mat_R_double(const Parallel_Orbitals* pv, const int isp
     const double alpha = 1.0, beta = 0.0, one = 1.0, half = 0.5;
 
     std::vector<double> pot_onsite(pv->nloc);
-    this->pot_onsite_real(pv, ispin, 1, &pot_onsite[0], npol);
+    DFTU_LCAO::pot_onsite_real(*this, *this->ucell, pv, ispin, true, &pot_onsite[0], npol);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,
@@ -161,7 +162,7 @@ void Plus_U::cal_eff_pot_mat_R_complex_double(const Parallel_Orbitals* pv, const
     const std::complex<double> zero = 0.0, one = 1.0, half = 0.5;
 
     std::vector<std::complex<double>> pot_onsite(pv->nloc);
-    this->pot_onsite_complex(pv, ispin, 1, &pot_onsite[0], npol);
+    DFTU_LCAO::pot_onsite_complex(*this, *this->ucell, pv, ispin, true, &pot_onsite[0], npol);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,

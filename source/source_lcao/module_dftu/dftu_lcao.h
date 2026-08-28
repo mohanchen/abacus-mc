@@ -71,18 +71,6 @@ class Plus_U : public Plus_U_Base
             std::complex<double>* HR,
             const int npol);
 
-    //=============================================================
-    // In dftu_lcao_pots.cpp
-    // For calculating onsite potential, which is used
-    // for both Hamiltonian and force/stress
-    //=============================================================
-    void pot_onsite_complex(const Parallel_Orbitals* pv,
-                            const int spin,
-                            const bool newlocale,
-                            std::complex<double>* pot_onsite,
-                            const int npol);
-    void pot_onsite_real(const Parallel_Orbitals* pv, const int spin, const bool newlocale, double* pot_onsite, const int npol);
-
 
     /**
      * @brief get the density matrix of target spin
@@ -104,6 +92,9 @@ class Plus_U : public Plus_U_Base
     const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
     double get_yukawa_lambda() const { return yukawa_lambda; }
     const LCAO_Orbitals* get_ptr_orb() const { return ptr_orb_; }
+    /// @brief unit cell backing the DFT+U calculation; set once in init().
+    ///        Freed callers source it from here instead of holding a separate pointer.
+    const UnitCell& get_ucell() const { return *ucell; }
 
   private:
     const UnitCell* ucell = nullptr;

@@ -2,24 +2,6 @@
 #include "dftu_lcao_pots.h"
 
 #ifdef __LCAO
-void Plus_U::pot_onsite_complex(const Parallel_Orbitals* pv,
-                                const int spin,
-                                const bool new_occ_mat,
-                                std::complex<double>* pot_onsite,
-                                const int npol)
-{
-    DFTU_LCAO::pot_onsite_complex(*this, *this->ucell, pv, spin, new_occ_mat, pot_onsite, npol);
-}
-
-void Plus_U::pot_onsite_real(const Parallel_Orbitals* pv,
-                             const int spin,
-                             const bool new_occ_mat,
-                             double* pot_onsite,
-                             const int npol)
-{
-    DFTU_LCAO::pot_onsite_real(*this, *this->ucell, pv, spin, new_occ_mat, pot_onsite, npol);
-}
-
 void DFTU_LCAO::pot_onsite_complex(const Plus_U& dftu,
                                    const UnitCell& ucell,
                                    const Parallel_Orbitals* pv,

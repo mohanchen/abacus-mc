@@ -2,6 +2,7 @@
 #include "dftu_force.h"
 #include "dftu_folding.h"
 #include "dftu_lcao.h"
+#include "dftu_lcao_pots.h"
 #include "source_base/global_function.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/parallel_reduce.h"
@@ -118,7 +119,7 @@ void force_stress(Plus_U& dftu,
 
             double* pot_onsite = new double[pv.nloc];
 
-            dftu.pot_onsite_real(&pv, spin, false, pot_onsite, npol);
+            DFTU_LCAO::pot_onsite_real(dftu, ucell, &pv, spin, false, pot_onsite, npol);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
@@ -164,7 +165,7 @@ void force_stress(Plus_U& dftu,
 
             std::complex<double>* pot_onsite = new std::complex<double>[pv.nloc];
 
-            dftu.pot_onsite_complex(&pv, spin, false, pot_onsite, npol);
+            DFTU_LCAO::pot_onsite_complex(dftu, ucell, &pv, spin, false, pot_onsite, npol);
 
 
 #ifdef __MPI
