@@ -132,10 +132,10 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
             const int NL = ucell.atoms[it].nwl + 1;
             const int LC = orbital_corr[it];
 
-			if (LC == -1)
-			{
-				continue;
-			}
+            if (LC == -1)
+            {
+                continue;
+            }
 
             for (int ia = 0; ia < ucell.atoms[it].na; ia++)
             {
@@ -143,20 +143,20 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
                 for (int l = 0; l < NL; l++)
                 {
-					if (l != orbital_corr[it])
-					{
-						continue;
-					}
+                    if (l != orbital_corr[it])
+                    {
+                        continue;
+                    }
 
                     const int N = ucell.atoms[it].l_nchi[l];
 
                     for (int n = 0; n < N; n++)
                     {
                         // if(!Yukawa && n!=0) continue;
-						if (n != 0)
-						{
-							continue;
-						}
+                        if (n != 0)
+                        {
+                            continue;
+                        }
 
                         // Calculate the local occupation number matrix
                         for (int m0 = 0; m0 < 2 * l + 1; m0++)
@@ -181,16 +181,16 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                                         const int m0_all = m0 + ipol0 * (2 * l + 1);
                                         const int m1_all = m1 + ipol1 * (2 * l + 1);
 
-										if ((nu >= 0) && (mu >= 0))
-										{
-											occ_mat[iat][l][n][spin](m0_all, m1_all) += (srho[irc]).real() / 4.0;
-										}
+                                        if ((nu >= 0) && (mu >= 0))
+                                        {
+                                            occ_mat[iat][l][n][spin](m0_all, m1_all) += (srho[irc]).real() / 4.0;
+                                        }
 
-										if ((nu_prime >= 0) && (mu_prime >= 0))
-										{
-											occ_mat[iat][l][n][spin](m0_all, m1_all)
-												+= (std::conj(srho[irc_prime])).real() / 4.0;
-										}
+                                        if ((nu_prime >= 0) && (mu_prime >= 0))
+                                        {
+                                            occ_mat[iat][l][n][spin](m0_all, m1_all)
+                                                += (std::conj(srho[irc_prime])).real() / 4.0;
+                                        }
                                     } // ipol1
                                 } // m1
                             } // ipol0
@@ -206,10 +206,10 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
         const int NL = ucell.atoms[it].nwl + 1;
         const int LC = orbital_corr[it];
 
-		if (LC == -1)
-		{
-			continue;
-		}
+        if (LC == -1)
+        {
+            continue;
+        }
 
         for (int ia = 0; ia < ucell.atoms[it].na; ia++)
         {
@@ -217,21 +217,21 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
             for (int l = 0; l < NL; l++)
             {
-				if (l != orbital_corr[it])
-				{
-					continue;
-				}
+                if (l != orbital_corr[it])
+                {
+                    continue;
+                }
 
                 const int N = ucell.atoms[it].l_nchi[l];
 
                 for (int n = 0; n < N; n++)
                 {
                     // if(!Yukawa && n!=0) continue;
-					if (n != 0)
-					{
-						continue;
-					}
-					// set the local occupation mumber matrix of spin up and down zeros
+                    if (n != 0)
+                    {
+                        continue;
+                    }
+                    // set the local occupation mumber matrix of spin up and down zeros
 
 #ifdef __MPI
                     if (nspin == 1 || nspin == 4)
@@ -440,19 +440,19 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 
                 for (int l = 0; l < NL; l++)
                 {
-					if (l != orbital_corr[it])
-					{
-						continue;
-					}
+                    if (l != orbital_corr[it])
+                    {
+                        continue;
+                    }
 
                     const int N = ucell.atoms[it].l_nchi[l];
 
                     for (int n = 0; n < N; n++)
                     {
-						if (n != 0)
-						{
-							continue;
-						}
+                        if (n != 0)
+                        {
+                            continue;
+                        }
 
                         // Calculate the local occupation number matrix
                         for (int m0 = 0; m0 < 2 * l + 1; m0++)

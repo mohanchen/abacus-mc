@@ -71,11 +71,11 @@ class Plus_U : public Plus_U_Base
   public:
     void cal_eff_pot_mat_R_double(const Parallel_Orbitals* pv, const int ispin, double* SR, double* HR, const int npol);
 
-	void cal_eff_pot_mat_R_complex_double(const Parallel_Orbitals* pv,
-			const int ispin,
-			std::complex<double>* SR,
-			std::complex<double>* HR,
-			const int npol);
+    void cal_eff_pot_mat_R_complex_double(const Parallel_Orbitals* pv,
+            const int ispin,
+            std::complex<double>* SR,
+            std::complex<double>* HR,
+            const int npol);
 
     //=============================================================
     // In dftu_tools.cpp

@@ -21,9 +21,9 @@ void Plus_U::cal_yukawa_lambda(double** rho, const int& nrxx)
     for (int is = 0; is < this->nspin; is++)
     {
         if(this->nspin == 4 && is > 0) 
-		{ 
-			continue;// for non-collinear spin case, first spin contains the charge density
-		}
+        { 
+            continue;// for non-collinear spin case, first spin contains the charge density
+        }
         for (int ir = 0; ir < nrxx; ir++)
         {
             double rho_ir = rho[is][ir];
@@ -60,7 +60,7 @@ void Plus_U::cal_slater_Fk(const UnitCell& ucell,
     {
         for (int chi = 0; chi < ucell.atoms[T].l_nchi[L]; chi++)
         {
-            //	if(chi!=0) continue;
+            //    if(chi!=0) continue;
             const int mesh = ptr_orb_->Phi[T].PhiLN(L, chi).getNr();
 
             for (int k = 0; k <= L; k++)
@@ -104,9 +104,9 @@ void Plus_U::cal_slater_UJ(const UnitCell& ucell, double** rho, const int& nrxx)
 {
     ModuleBase::TITLE("Plus_U", "cal_slater_UJ");
     if (!use_yukawa_)
-	{
-		return;
-	}
+    {
+        return;
+    }
 
     this->cal_yukawa_lambda(rho, nrxx);
 
@@ -135,10 +135,10 @@ void Plus_U::cal_slater_UJ(const UnitCell& ucell, double** rho, const int& nrxx)
             if (L >= this->get_orbital_corr(T) && this->get_orbital_corr(T) != -1)
             {
                 if (L != this->get_orbital_corr(T))
-				{
-					continue;
-				}
-				this->cal_slater_Fk(ucell,L, T);
+                {
+                    continue;
+                }
+                this->cal_slater_Fk(ucell,L, T);
 
 
                 if( L == 1)

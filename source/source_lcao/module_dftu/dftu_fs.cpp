@@ -21,14 +21,14 @@ void DFTU<OperatorLCAO<TK, TR>>::cal_force_stress(const bool cal_force,
     const hamilt::HContainer<double>* dmR_tmp[this->nspin];
     dmR_tmp[0] = this->dftu->get_dmr(0);
 
-	if (this->nspin == 2) 
-	{
-		dmR_tmp[1] = this->dftu->get_dmr(1);
-	}
-	if (dmR_tmp[0]->size_atom_pairs() == 0)
-	{
-		return;
-	}
+    if (this->nspin == 2) 
+    {
+        dmR_tmp[1] = this->dftu->get_dmr(1);
+    }
+    if (dmR_tmp[0]->size_atom_pairs() == 0)
+    {
+        return;
+    }
 
     // begin the calculation of force and stress
     ModuleBase::timer::start("DFTU", "cal_force_stress");
@@ -296,9 +296,9 @@ void DFTU<OperatorLCAO<TK, TR>>::cal_force_IJR(const int& iat1,
     // step_trace = 0 for NSPIN=1,2; ={0, 1, local_col, local_col+1} for NSPIN=4
     std::vector<int> step_trace(npol * npol, 0);
 
-	if (npol == 2) 
-	{
-		step_trace[1] = 1;
+    if (npol == 2) 
+    {
+        step_trace[1] = 1;
         step_trace[2] = col_indexes.size();
         step_trace[3] = col_indexes.size() + 1;
     }
@@ -374,9 +374,9 @@ void DFTU<OperatorLCAO<TK, TR>>::cal_stress_IJR(const int& iat1,
     // step_trace = 0 for NSPIN=1,2; ={0, 1, local_col, local_col+1} for NSPIN=4
     std::vector<int> step_trace(npol * npol, 0);
 
-	if (npol == 2) 
-	{
-		step_trace[1] = 1;
+    if (npol == 2) 
+    {
+        step_trace[1] = 1;
         step_trace[2] = col_indexes.size();
         step_trace[3] = col_indexes.size() + 1;
     }

@@ -88,10 +88,10 @@ template <typename TK, typename TR>
 void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbitals* pv)
 {
     ModuleBase::TITLE("DFTU", "cal_nlm_all");
-	if (this->precal_nlm_done) 
-	{
-		return;
-	}
+    if (this->precal_nlm_done) 
+    {
+        return;
+    }
 
     ModuleBase::timer::start("DFTU", "cal_nlm_all");
     nlm_tot.resize(this->ucell->nat);
@@ -238,11 +238,11 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         // Reset DFT+U energy at start of each spin cycle
         // For nspin=2: reset when current_spin==0 (start of spin-up calculation)
         // For nspin=1/4: reset once (current_spin always 0)
-		if (this->current_spin == 0) 
-		{
+        if (this->current_spin == 0) 
+        {
             this->dftu->set_energy(0.0);
-		}
-	}
+        }
+    }
     ModuleBase::timer::start("DFTU", "contributeHR");
 
     const Parallel_Orbitals* pv = this->hR->get_atom_pair(0).get_paraV();
@@ -426,11 +426,11 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     // 6. Post-processing: Energy correction and occ_mat state management
     // For nspin=1: DFT+U energy computed for single spin channel, but should count both spins
     // set_double_energy() doubles the energy to account for degenerate spin-up/down
-	if (this->nspin == 1) 
-	{
+    if (this->nspin == 1) 
+    {
         this->dftu->set_double_energy();
-	}
-	
+    }
+    
     // 7. Mark occ_mat as dirty to force recomputation in next iteration
     // This is called when:
     // - nspin=4: Always (all spins handled simultaneously, current_spin==0==nspin-1)
@@ -440,10 +440,10 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     // Purpose: Ensure occ_mat is recomputed from updated DMR in next SCF iteration,
     // rather than using stale pre-read data from file.
     // TODO: This logic is confusing. Consider explicit variable like `is_last_spin_channel`.
-	if (this->current_spin == this->nspin - 1 || this->nspin == 4) 
-	{
-		this->dftu->mark_occ_mat_dirty();
-	}
+    if (this->current_spin == this->nspin - 1 || this->nspin == 4) 
+    {
+        this->dftu->mark_occ_mat_dirty();
+    }
 
     // 8. Spin channel toggling for nspin=2
     // nspin=2 requires separate HR updates for spin-up (current_spin=0) and spin-down (current_spin=1)
@@ -454,10 +454,10 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     // TODO: UNSAFE - This assumes contributeHR() is called in strict alternating order.
     // If called out of order (e.g., due to parallel k-point distribution), current_spin may be wrong.
     // TODO: Consider deriving current_spin from ik or explicit parameter instead of toggling.
-	if (this->nspin == 2) 
-	{
-		this->current_spin = 1 - this->current_spin;
-	}
+    if (this->nspin == 2) 
+    {
+        this->current_spin = 1 - this->current_spin;
+    }
 
     ModuleBase::timer::end("DFTU", "contributeHR");
 }

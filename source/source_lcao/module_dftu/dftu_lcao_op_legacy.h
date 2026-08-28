@@ -23,10 +23,10 @@ class OperatorDFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
   public:
     OperatorDFTU<OperatorLCAO<TK, TR>>(HS_Matrix_K<TK>* hsk_in,
                                   const std::vector<ModuleBase::Vector3<double>>& kvec_d_in,
-								  hamilt::HContainer<TR>* hR_in,
-								  Plus_U* dftu_in,
-								  const std::vector<int>& isk_in,
-								  const int npol_in)
+                                  hamilt::HContainer<TR>* hR_in,
+                                  Plus_U* dftu_in,
+                                  const std::vector<int>& isk_in,
+                                  const int npol_in)
         : isk(isk_in), npol(npol_in), OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in)
     {
         this->cal_type = calculation_type::lcao_dftu;
