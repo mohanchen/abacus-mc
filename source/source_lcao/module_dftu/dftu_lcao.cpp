@@ -49,7 +49,6 @@ void Plus_U::init(UnitCell& cell,
     {
         orb_cutoff_ = orb->cutoffs();
     }
-    ucell = &cell;
 #endif
 
     if (pv != nullptr)

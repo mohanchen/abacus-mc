@@ -63,9 +63,15 @@ class Plus_U : public Plus_U_Base
     // For calculating contribution to Hamiltonian matrices
     //=============================================================
   public:
-    void cal_eff_pot_mat_R_double(const Parallel_Orbitals* pv, const int ispin, double* SR, double* HR, const int npol);
+    void cal_eff_pot_mat_R_double(const UnitCell& ucell,
+                                 const Parallel_Orbitals* pv,
+                                 const int ispin,
+                                 double* SR,
+                                 double* HR,
+                                 const int npol);
 
-    void cal_eff_pot_mat_R_complex_double(const Parallel_Orbitals* pv,
+    void cal_eff_pot_mat_R_complex_double(const UnitCell& ucell,
+            const Parallel_Orbitals* pv,
             const int ispin,
             std::complex<double>* SR,
             std::complex<double>* HR,
@@ -92,12 +98,8 @@ class Plus_U : public Plus_U_Base
     const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
     double get_yukawa_lambda() const { return yukawa_lambda; }
     const LCAO_Orbitals* get_ptr_orb() const { return ptr_orb_; }
-    /// @brief unit cell backing the DFT+U calculation; set once in init().
-    ///        Freed callers source it from here instead of holding a separate pointer.
-    const UnitCell& get_ucell() const { return *ucell; }
 
   private:
-    const UnitCell* ucell = nullptr;
     const elecstate::DensityMatrix<double, double>* dm_in_dftu_d = nullptr;
     const elecstate::DensityMatrix<std::complex<double>, double>* dm_in_dftu_cd = nullptr;
 #endif
