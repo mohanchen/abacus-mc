@@ -148,6 +148,11 @@ class Plus_U : public Plus_U_Base
 
 
 
+namespace hamilt {
+template <typename T>
+class Hamilt;
+}
+
 // Free functions for occupation matrix calculation in DFTU_LCAO namespace
 namespace DFTU_LCAO {
 
