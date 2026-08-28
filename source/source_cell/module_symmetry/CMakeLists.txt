@@ -5,6 +5,7 @@ add_library(
     symm_basic.cpp
     symm_basic_order.cpp
     symm_basic_setgroup.cpp
+    symm_basic_pointgroup.cpp
     symm_analysis.cpp
     symm_check.cpp
     symm_getgroup.cpp
