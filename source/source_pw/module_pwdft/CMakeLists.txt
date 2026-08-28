@@ -63,6 +63,8 @@ list(APPEND objects
     onsite_proj_tools.cpp
     onsite_proj_tools_becp.cpp
     onsite_proj_tools_dbecp.cpp
+    onsite_proj_tools_force.cpp
+    onsite_proj_tools_stress.cpp
     onsite_proj_print.cpp
     vsep_pw.cpp
 )
