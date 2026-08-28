@@ -325,5 +325,27 @@ template void FS_Nonlocal_tools<double, base_device::DEVICE_CPU>::cal_force(cons
                                                                             const bool&,
                                                                             double*,
                                                                             const int&);
+#if ((defined __CUDA) || (defined __ROCM))
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_vkb_deri_f(const int&,
+                                                                                  const int&,
+                                                                                  const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_dbecp_f(const int&,
+                                                                               const int&,
+                                                                               const int&,
+                                                                               const int&,
+                                                                               const std::complex<double>*,
+                                                                               const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::save_vkb(const int&, const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::revert_vkb(const int&, const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::transfer_gcar(const int&,
+                                                                                const int&,
+                                                                                const double*);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_force(const int&,
+                                                                            const int&,
+                                                                            const int&,
+                                                                            const bool&,
+                                                                            double*,
+                                                                            const int&);
+#endif
 
 } // namespace hamilt

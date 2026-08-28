@@ -179,5 +179,11 @@ template double Onsite_Proj_tools<double, base_device::DEVICE_CPU>::cal_stress_d
     int, int, const int*, const std::complex<double>*, const int, const double*);
 template double Onsite_Proj_tools<double, base_device::DEVICE_CPU>::cal_stress_dspin(
     int, int, const ModuleBase::Vector3<double>*, const double*);
+#if ((defined __CUDA) || (defined __ROCM))
+template double Onsite_Proj_tools<double, base_device::DEVICE_GPU>::cal_stress_dftu(
+    int, int, const int*, const std::complex<double>*, const int, const double*);
+template double Onsite_Proj_tools<double, base_device::DEVICE_GPU>::cal_stress_dspin(
+    int, int, const ModuleBase::Vector3<double>*, const double*);
+#endif
 
 } // namespace hamilt

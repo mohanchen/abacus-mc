@@ -132,5 +132,11 @@ template void Onsite_Proj_tools<double, base_device::DEVICE_CPU>::cal_force_dftu
     int, int, double*, const int*, const std::complex<double>*, const int, const double*);
 template void Onsite_Proj_tools<double, base_device::DEVICE_CPU>::cal_force_dspin(
     int, int, double*, const ModuleBase::Vector3<double>*, const double*);
+#if ((defined __CUDA) || (defined __ROCM))
+template void Onsite_Proj_tools<double, base_device::DEVICE_GPU>::cal_force_dftu(
+    int, int, double*, const int*, const std::complex<double>*, const int, const double*);
+template void Onsite_Proj_tools<double, base_device::DEVICE_GPU>::cal_force_dspin(
+    int, int, double*, const ModuleBase::Vector3<double>*, const double*);
+#endif
 
 } // namespace hamilt

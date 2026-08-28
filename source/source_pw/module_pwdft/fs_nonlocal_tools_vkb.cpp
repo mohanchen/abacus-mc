@@ -158,5 +158,13 @@ template void FS_Nonlocal_tools<double, base_device::DEVICE_CPU>::cal_becp(const
                                                                             const std::complex<double>*,
                                                                             const int&);
 template void FS_Nonlocal_tools<double, base_device::DEVICE_CPU>::reduce_pool_becp(const int&);
+#if ((defined __CUDA) || (defined __ROCM))
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_vkb(const int&, const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_becp(const int&,
+                                                                            const int&,
+                                                                            const std::complex<double>*,
+                                                                            const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::reduce_pool_becp(const int&);
+#endif
 
 } // namespace hamilt

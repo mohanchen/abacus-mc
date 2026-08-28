@@ -259,5 +259,22 @@ template void FS_Nonlocal_tools<double, base_device::DEVICE_CPU>::cal_stress(con
                                                                               const int&,
                                                                               double*,
                                                                               const int&);
+#if ((defined __CUDA) || (defined __ROCM))
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_vkb_deri_s(const int&,
+                                                                                  const int&,
+                                                                                  const int&,
+                                                                                  const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_dbecp_s(const int&,
+                                                                               const int&,
+                                                                               const std::complex<double>*,
+                                                                               const int&);
+template void FS_Nonlocal_tools<double, base_device::DEVICE_GPU>::cal_stress(const int&,
+                                                                              const int&,
+                                                                              const bool&,
+                                                                              const int&,
+                                                                              const int&,
+                                                                              double*,
+                                                                              const int&);
+#endif
 
 } // namespace hamilt

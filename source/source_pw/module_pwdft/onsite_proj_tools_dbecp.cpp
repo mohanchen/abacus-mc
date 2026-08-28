@@ -359,5 +359,12 @@ template void Onsite_Proj_tools<double, base_device::DEVICE_CPU>::cal_dbecp_f(in
 template void Onsite_Proj_tools<double, base_device::DEVICE_CPU>::save_vkb(int, int);
 template void Onsite_Proj_tools<double, base_device::DEVICE_CPU>::revert_vkb(int, int);
 template void Onsite_Proj_tools<double, base_device::DEVICE_CPU>::transfer_gcar(int, int, const double*);
+#if ((defined __CUDA) || (defined __ROCM))
+template void Onsite_Proj_tools<double, base_device::DEVICE_GPU>::cal_dbecp_s(int, int, int, int);
+template void Onsite_Proj_tools<double, base_device::DEVICE_GPU>::cal_dbecp_f(int, int, int);
+template void Onsite_Proj_tools<double, base_device::DEVICE_GPU>::save_vkb(int, int);
+template void Onsite_Proj_tools<double, base_device::DEVICE_GPU>::revert_vkb(int, int);
+template void Onsite_Proj_tools<double, base_device::DEVICE_GPU>::transfer_gcar(int, int, const double*);
+#endif
 
 } // namespace hamilt
