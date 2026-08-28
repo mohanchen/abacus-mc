@@ -19,8 +19,12 @@ namespace DFTU_LCAO {
 /// @brief Compute the occupation matrix and delegate to Plus_U member.
 /// Dispatches to DFTU_LCAO::cal_occ_mat_gamma (gamma-only, double) or
 /// DFTU_LCAO::cal_occ_mat_k (multi-k, std::complex<double>) via template.
+/// @param pv parallel-orbitals descriptor that owns BLACS context and
+///        global<->local index maps; sourced by the caller from the same
+///        Parallel_Orbitals used to build the Hamiltonian and density matrix.
 template <typename T>
-void cal_occ_mat(const int iter,
+void cal_occ_mat(const Parallel_Orbitals* pv,
+                 const int iter,
                  const UnitCell& ucell,
                  const std::vector<std::vector<T>>& dm,
                  const K_Vectors& kv,

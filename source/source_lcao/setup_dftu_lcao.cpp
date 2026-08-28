@@ -67,7 +67,7 @@ void finish_dftu_lcao(const int iter,
     {
         if (dftu_ptr->get_occ_mat_ctrl() != 2)
         {
-            DFTU_LCAO::cal_occ_mat(iter, ucell, dm_vec, kv, mixing_beta,
+            DFTU_LCAO::cal_occ_mat(hamilt_lcao_ptr->getHR()->get_paraV(), iter, ucell, dm_vec, kv, mixing_beta,
                                    static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr,
                                    gamma_only_local, nspin);
         }

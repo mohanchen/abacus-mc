@@ -23,7 +23,6 @@ class Plus_U : public Plus_U_Base
     Plus_U();
     ~Plus_U();
 
-  public:
     // allocate relevant data strcutures
     void init(UnitCell& cell,
                 const Parallel_Orbitals* pv,
@@ -49,8 +48,6 @@ class Plus_U : public Plus_U_Base
                 );
 
   private:
-
-    const Parallel_Orbitals* paraV = nullptr;
 
     double yukawa_lambda = 0.0;
     int npol = 1;
@@ -79,7 +76,6 @@ class Plus_U : public Plus_U_Base
     // For calculating onsite potential, which is used
     // for both Hamiltonian and force/stress
     //=============================================================
-  public:
     void pot_onsite_complex(const Parallel_Orbitals* pv,
                             const int spin,
                             const bool newlocale,
@@ -87,10 +83,7 @@ class Plus_U : public Plus_U_Base
                             const int npol);
     void pot_onsite_real(const Parallel_Orbitals* pv, const int spin, const bool newlocale, double* pot_onsite, const int npol);
 
-#endif
 
-#ifdef __LCAO
-  public:
     /**
      * @brief get the density matrix of target spin
      * nspin = 1 and 4 : ispin should be 0
@@ -105,7 +98,6 @@ class Plus_U : public Plus_U_Base
     void set_dmr(const elecstate::DensityMatrix<std::complex<double>, double>* dm_in_dftu_cd);
 
     /// read-only accessors for state needed by DFTU_LCAO free functions
-    const Parallel_Orbitals* get_paraV() const { return paraV; }
     int get_npol() const { return npol; }
     int get_nlocal() const { return nlocal; }
     const std::string& get_ks_solver() const { return ks_solver; }

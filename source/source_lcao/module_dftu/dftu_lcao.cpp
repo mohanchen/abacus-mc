@@ -38,8 +38,6 @@ void Plus_U::init(UnitCell& cell,
 {
     ModuleBase::TITLE("Plus_U", "init");
 
-    this->paraV = pv;
-
     this->yukawa_lambda = yukawa_lambda;
     this->npol = npol;
     this->nlocal = nlocal;

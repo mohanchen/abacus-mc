@@ -573,7 +573,8 @@ namespace DFTU_LCAO {
 
 //! dftu occupation matrix for gamma only using dm(double)
 template <>
-void cal_occ_mat(const int iter,
+void cal_occ_mat(const Parallel_Orbitals* pv,
+                 const int iter,
                  const UnitCell& ucell,
                  const std::vector<std::vector<double>>& dm,
                  const K_Vectors& kv,
@@ -584,7 +585,7 @@ void cal_occ_mat(const int iter,
                  const int nspin)
 {
     bool occ_mat_initialized = dftu.get_occ_mat_initialized();
-    DFTU_LCAO::cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham, nspin,
+    DFTU_LCAO::cal_occ_mat_gamma(pv, iter, ucell, dm, mixing_beta, p_ham, nspin,
                                  dftu.get_npol(), dftu.get_nlocal(), dftu.get_iatlnmipol2iwt(),
                                  dftu.get_orbital_corr_vec(),
                                  dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
@@ -594,7 +595,8 @@ void cal_occ_mat(const int iter,
 
 //! dftu occupation matrix for multiple k-points using dm(complex)
 template <>
-void cal_occ_mat(const int iter,
+void cal_occ_mat(const Parallel_Orbitals* pv,
+                 const int iter,
                  const UnitCell& ucell,
                  const std::vector<std::vector<std::complex<double>>>& dm,
                  const K_Vectors& kv,
@@ -605,7 +607,7 @@ void cal_occ_mat(const int iter,
                  const int nspin)
 {
     bool occ_mat_initialized = dftu.get_occ_mat_initialized();
-    DFTU_LCAO::cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
+    DFTU_LCAO::cal_occ_mat_k(pv, iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
                              dftu.get_npol(), dftu.get_nlocal(), dftu.get_ks_solver(), dftu.get_iatlnmipol2iwt(),
                              dftu.get_orbital_corr_vec(),
                              dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
