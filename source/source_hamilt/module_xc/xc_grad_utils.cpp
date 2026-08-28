@@ -21,7 +21,7 @@ void XC_Functional::grad_rho(
     const ModulePW::PW_Basis* rho_basis,
     const double tpiba)
 {
-    std::complex<double> *gdrtmp = new std::complex<double>[rho_basis->nmaxgr];
+    std::vector<std::complex<double>> gdrtmp(rho_basis->nmaxgr);
 
     // the formula is : rho(r)^prime = int iG * rho(G)e^{iGr} dG
     for(int i = 0 ; i < 3 ; ++i)
@@ -36,7 +36,7 @@ void XC_Functional::grad_rho(
         }
 
         // bring the gdr from G --> R
-        rho_basis->recip2real(gdrtmp, gdrtmp);
+        rho_basis->recip2real(gdrtmp.data(), gdrtmp.data());
 
         // remember to multily 2pi/a0, which belongs to G vectors.
 #ifdef _OPENMP
@@ -48,7 +48,6 @@ void XC_Functional::grad_rho(
         }
     }
 
-    delete[] gdrtmp;
     return;
 }
 
@@ -59,8 +58,8 @@ void XC_Functional::grad_dot(
     const ModulePW::PW_Basis* rho_basis,
     const double tpiba)
 {
-    std::complex<double> *aux = new std::complex<double>[rho_basis->nmaxgr];
-    std::complex<double> *gaux = new std::complex<double>[rho_basis->npw];
+    std::vector<std::complex<double>> aux(rho_basis->nmaxgr);
+    std::vector<std::complex<double>> gaux(rho_basis->npw);
 
     for(int i = 0 ; i < 3 ; ++i)
     {
@@ -73,7 +72,7 @@ void XC_Functional::grad_dot(
         }
 
         // bring to G space.
-        rho_basis->real2recip(aux,aux);
+        rho_basis->real2recip(aux.data(), aux.data());
         if (i == 0)
         {
 #ifdef _OPENMP
@@ -97,7 +96,7 @@ void XC_Functional::grad_dot(
     }
 
     // bring back to R space
-    rho_basis->recip2real(gaux,aux);
+    rho_basis->recip2real(gaux.data(), aux.data());
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
@@ -107,8 +106,6 @@ void XC_Functional::grad_dot(
         dh[ir] = aux[ir].real() * tpiba;
     }
 
-    delete[] aux;
-    delete[] gaux;
     return;
 }
 

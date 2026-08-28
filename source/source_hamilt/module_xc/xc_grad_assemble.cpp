@@ -105,17 +105,17 @@ void XC_Functional::gradcorr_assemble_vxc(
         // sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
 
         // dh is in real sapce.
-        double* dh = new double[rhopw->nrxx];
+        std::vector<double> dh(rhopw->nrxx);
 
         for(int is=0; is<nspin0; is++)
         {
             if(is==0)
             {
-                XC_Functional::grad_dot(h1,dh,rhopw,ucell->tpiba);
+                XC_Functional::grad_dot(h1, dh.data(), rhopw, ucell->tpiba);
             }
             if(is==1)
             {
-                XC_Functional::grad_dot(h2,dh,rhopw,ucell->tpiba);
+                XC_Functional::grad_dot(h2, dh.data(), rhopw, ucell->tpiba);
             }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
@@ -148,8 +148,6 @@ void XC_Functional::gradcorr_assemble_vxc(
             }
             vtxcgc -= sum;
         }
-
-        delete[] dh;
 
         vtxc += vtxcgc;
         etxc += etxcgc;
