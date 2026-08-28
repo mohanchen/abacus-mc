@@ -328,6 +328,32 @@ class XC_Functional
         std::vector<double>& vlapl_arr2,
         ModuleBase::matrix& v);
 
+    static void gradcorr_assemble_vxc(
+        const Charge* const chr,
+        ModulePW::PW_Basis* rhopw,
+        const UnitCell* ucell,
+        const int nspin,
+        const int nspin0,
+        const double fac,
+        const bool is_stress,
+        const bool domag,
+        const bool domag_z,
+        double vtxcgc,
+        double etxcgc,
+        double& vtxc,
+        double& etxc,
+        std::vector<double>& stress_gga,
+        ModuleBase::matrix& v,
+        double* rhotmp1,
+        double* rhotmp2,
+        ModuleBase::Vector3<double>* h1,
+        ModuleBase::Vector3<double>* h2,
+        std::vector<double>& vlapl_arr1,
+        std::vector<double>& vlapl_arr2,
+        const double* neg,
+        double** vsave,
+        double** vgg);
+
     //-------------------
     //  xc_lda_exch.cpp
     //-------------------
