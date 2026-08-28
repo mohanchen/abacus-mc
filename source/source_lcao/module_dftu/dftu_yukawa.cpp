@@ -6,6 +6,8 @@
 #include "source_io/module_parameter/parameter.h"
 
 #include <cmath>
+#include <limits>
+#include <sstream>
 
 
 void DFTU_LCAO::cal_yukawa_lambda(Plus_U& dftu, double** rho, const int& nrxx)
@@ -22,31 +24,70 @@ void DFTU_LCAO::cal_yukawa_lambda(Plus_U& dftu, double** rho, const int& nrxx)
         return;
     }
 
+    // Track sum_rho, sum_rho_lambda, and the global min of rho. min_rho is
+    // kept only for the diagnostic message: negative grid-point values are
+    // expected (atomic-density superposition on a coarse FFT grid oscillates
+    // near atom boundaries) and are clamped to 0 before being raised to the
+    // 1/6 power below, so they no longer produce NaN here. The remaining
+    // failure mode is sum_rho == 0 (rho not populated, or grid/normalization
+    // mismatch), which still makes lambda = sum_rho_lambda/sum_rho = 0/0.
     double sum_rho = 0.0;
     double sum_rho_lambda = 0.0;
+    double min_rho = std::numeric_limits<double>::max();
     for (int is = 0; is < nspin; is++)
     {
-        if(nspin == 4 && is > 0) 
-        { 
+        if(nspin == 4 && is > 0)
+        {
             continue;// for non-collinear spin case, first spin contains the charge density
         }
         for (int ir = 0; ir < nrxx; ir++)
         {
-            double rho_ir = rho[is][ir];
+            const double rho_ir = rho[is][ir];
+            if (rho_ir < min_rho)
+            {
+                min_rho = rho_ir;
+            }
             sum_rho += rho_ir;
 
-            double lambda_ir = 2 * pow(3 * rho_ir / ModuleBase::PI, (double)1.0 / 6.0);
+            // Clamp rho to 0 before pow(3*rho/PI, 1/6): pow(negative, 1/6)
+            // returns NaN in C++ and would silently poison sum_rho_lambda,
+            // lambda, U/J and the Hamiltonian. Negative rho here is a
+            // numerical artifact of superposing atomic densities onto the
+            // FFT grid; the physical charge density is non-negative, and
+            // the contribution of these near-boundary points to the
+            // Thomas-Fermi-like integral is negligible.
+            const double rho_safe = std::max(rho_ir, 0.0);
+            const double lambda_ir = 2 * pow(3 * rho_safe / ModuleBase::PI, (double)1.0 / 6.0);
             sum_rho_lambda += lambda_ir * rho_ir;
         }
     }
 
     double val1 = 0.0;
     double val2 = 0.0;
+    double min_rho_global = min_rho;
 
 #ifdef __MPI
     MPI_Allreduce(&sum_rho, &val1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&sum_rho_lambda, &val2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&min_rho, &min_rho_global, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+#else
+    val1 = sum_rho;
+    val2 = sum_rho_lambda;
 #endif
+
+    // Fail loud instead of writing NaN into lambda -> U/J -> Hamiltonian.
+    // After the clamp above, NaN can only slip in if sum_rho == 0 (0/0);
+    // min_rho is still reported for diagnosis when this fires.
+    if (!std::isfinite(val1) || !std::isfinite(val2) || val1 <= 0.0)
+    {
+        std::ostringstream oss;
+        oss << "rho sanity check failed: sum_rho=" << val1
+            << " sum_rho_lambda=" << val2
+            << " min_rho=" << min_rho_global
+            << " (need finite sum_rho > 0); nspin=" << nspin
+            << " nrxx=" << nrxx;
+        ModuleBase::WARNING_QUIT("DFTU_LCAO::cal_yukawa_lambda", oss.str());
+    }
 
     dftu.set_lambda(val2 / val1);
 
