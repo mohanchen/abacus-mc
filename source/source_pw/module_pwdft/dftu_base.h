@@ -142,6 +142,8 @@ class Plus_U_Base
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& get_occ_mat_save_data() { return occ_mat_save; }
     /// get occ_mat_initialized flag
     bool get_occ_mat_initialized() const { return occ_mat_initialized; }
+    /// set occ_mat_initialized flag
+    void set_occ_mat_initialized(bool val) { occ_mat_initialized = val; }
 
     /// get flat occupation matrix for an atom's correlated orbital.
     /// nspin=1: fills occ with occ_mat[iat][l][0][0] data

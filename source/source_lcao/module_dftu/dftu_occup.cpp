@@ -13,7 +13,7 @@
 
 #ifdef __LCAO
 
-void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
+void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const int iter,
                          const UnitCell& ucell,
                          const std::vector<std::vector<std::complex<double>>>& dm_k,
@@ -29,7 +29,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const std::vector<int>& orbital_corr,
                          std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
                          std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                         const bool& occ_mat_initialized)
+                         bool& occ_mat_initialized)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
@@ -290,7 +290,7 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
         } // end ia
     } // end it
 
-    if(is_mixing_enabled() && occ_mat_initialized)
+    if(PARAM.inp.mixing_dftu && occ_mat_initialized)
     {
         double beta = mixing_beta;
         for (int T = 0; T < ucell.ntype; T++)
@@ -324,12 +324,12 @@ void Plus_U::cal_occ_mat_k(const Parallel_Orbitals* pv,
         }
     }
 
-    mark_occ_mat_initialized();
+    occ_mat_initialized = true;
     ModuleBase::timer::end("Plus_U", "cal_occ_mat_k");
     return;
 }
 
-void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
+void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const int iter,
                              const UnitCell &ucell,
                              const std::vector<std::vector<double>> &dm_gamma,
@@ -342,7 +342,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const std::vector<int>& orbital_corr,
                          std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
                          std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                         const bool& occ_mat_initialized)
+                         bool& occ_mat_initialized)
 {
     ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
     ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
@@ -527,7 +527,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         } // it
     } // is
 
-    if(is_mixing_enabled() && occ_mat_initialized)
+    if(PARAM.inp.mixing_dftu && occ_mat_initialized)
     {
         double beta = mixing_beta;
         for (int T = 0; T < ucell.ntype; T++)
@@ -561,7 +561,7 @@ void Plus_U::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         }
     }
 
-    mark_occ_mat_initialized();
+    occ_mat_initialized = true;
     ModuleBase::timer::end("Plus_U", "cal_occ_mat_gamma");
     return;
 }

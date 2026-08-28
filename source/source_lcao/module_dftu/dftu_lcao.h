@@ -77,40 +77,6 @@ class Plus_U : public Plus_U_Base
 			std::complex<double>* HR,
 			const int npol);
 
-    // calculate the local occupation number matrix
-    void cal_occ_mat_k(const Parallel_Orbitals* pv,
-                       const int iter,
-                       const UnitCell& ucell,
-                       const std::vector<std::vector<std::complex<double>>>& dm_k,
-                       const K_Vectors& kv,
-                       const double& mixing_beta,
-                       hamilt::Hamilt<std::complex<double>>* p_ham,
-                       const bool gamma_only_local,
-                       const int nspin,
-                       const int npol,
-                       const int nlocal,
-                       const std::string& ks_solver,
-                       const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                       const std::vector<int>& orbital_corr,
-                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
-                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                       const bool& occ_mat_initialized);
-
-    void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
-                           const int iter,
-                           const UnitCell& ucell,
-                           const std::vector<std::vector<double>>& dm_gamma,
-                           const double& mixing_beta,
-                           hamilt::Hamilt<double>* p_ham,
-                           const int nspin,
-                           const int npol,
-                           const int nlocal,
-                           const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                           const std::vector<int>& orbital_corr,
-                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
-                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                       const bool& occ_mat_initialized);
-
     //=============================================================
     // In dftu_tools.cpp
     // For calculating onsite potential, which is used
@@ -180,5 +146,46 @@ class Plus_U : public Plus_U_Base
 #endif
 };
 
+
+
+// Free functions for occupation matrix calculation in DFTU_LCAO namespace
+namespace DFTU_LCAO {
+
+// calculate the local occupation number matrix (k-point version)
+void cal_occ_mat_k(const Parallel_Orbitals* pv,
+                   const int iter,
+                   const UnitCell& ucell,
+                   const std::vector<std::vector<std::complex<double>>>& dm_k,
+                   const K_Vectors& kv,
+                   const double& mixing_beta,
+                   hamilt::Hamilt<std::complex<double>>* p_ham,
+                   const bool gamma_only_local,
+                   const int nspin,
+                   const int npol,
+                   const int nlocal,
+                   const std::string& ks_solver,
+                   const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
+                   const std::vector<int>& orbital_corr,
+                   std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                   std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                   bool& occ_mat_initialized);
+
+// calculate the local occupation number matrix (gamma-point version)
+void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
+                       const int iter,
+                       const UnitCell& ucell,
+                       const std::vector<std::vector<double>>& dm_gamma,
+                       const double& mixing_beta,
+                       hamilt::Hamilt<double>* p_ham,
+                       const int nspin,
+                       const int npol,
+                       const int nlocal,
+                       const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
+                       const std::vector<int>& orbital_corr,
+                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                       bool& occ_mat_initialized);
+
+} // namespace DFTU_LCAO
 
 #endif

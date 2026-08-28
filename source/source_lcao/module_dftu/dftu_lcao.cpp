@@ -291,11 +291,13 @@ void cal_occ_mat(const int iter,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    dftu.cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham, nspin,
-                           dftu.get_npol(), dftu.get_nlocal(), dftu.get_iatlnmipol2iwt(),
-                           dftu.get_orbital_corr_vec(),
-                           dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
-                           dftu.get_occ_mat_initialized());
+    bool occ_mat_initialized = dftu.get_occ_mat_initialized();
+    DFTU_LCAO::cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham, nspin,
+                                 dftu.get_npol(), dftu.get_nlocal(), dftu.get_iatlnmipol2iwt(),
+                                 dftu.get_orbital_corr_vec(),
+                                 dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
+                                 occ_mat_initialized);
+    dftu.set_occ_mat_initialized(occ_mat_initialized);
 }
 
 //! dftu occupation matrix for multiple k-points using dm(complex)
@@ -310,11 +312,13 @@ void cal_occ_mat(const int iter,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    dftu.cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
-                       dftu.get_npol(), dftu.get_nlocal(), dftu.get_ks_solver(), dftu.get_iatlnmipol2iwt(),
-                       dftu.get_orbital_corr_vec(),
-                       dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
-                       dftu.get_occ_mat_initialized());
+    bool occ_mat_initialized = dftu.get_occ_mat_initialized();
+    DFTU_LCAO::cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
+                             dftu.get_npol(), dftu.get_nlocal(), dftu.get_ks_solver(), dftu.get_iatlnmipol2iwt(),
+                             dftu.get_orbital_corr_vec(),
+                             dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
+                             occ_mat_initialized);
+    dftu.set_occ_mat_initialized(occ_mat_initialized);
 }
 
 } // namespace DFTU_LCAO
