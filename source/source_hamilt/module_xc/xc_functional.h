@@ -299,6 +299,35 @@ class XC_Functional
         std::vector<double>& vlapl_arr1,
         std::vector<double>& vlapl_arr2);
 
+    static void gradcorr_xc_kernel(
+        const Charge* const chr,
+        ModulePW::PW_Basis* rhopw,
+        const int nspin,
+        const int nspin0,
+        const double fac,
+        const bool need_laplacian,
+        const bool is_stress,
+        const bool igcc_is_lyp,
+        const bool domag,
+        const bool domag_z,
+        const double hybrid_alpha_in,
+        const double hse_omega_in,
+        const double* const rhotmp1,
+        const double* const rhotmp2,
+        const ModuleBase::Vector3<double>* const gdr1,
+        const ModuleBase::Vector3<double>* const gdr2,
+        const std::vector<double>& lapl1,
+        const std::vector<double>& lapl2,
+        const double* const neg,
+        double& vtxcgc,
+        double& etxcgc,
+        std::vector<double>& stress_gga,
+        ModuleBase::Vector3<double>* const h1,
+        ModuleBase::Vector3<double>* const h2,
+        std::vector<double>& vlapl_arr1,
+        std::vector<double>& vlapl_arr2,
+        ModuleBase::matrix& v);
+
     //-------------------
     //  xc_lda_exch.cpp
     //-------------------
