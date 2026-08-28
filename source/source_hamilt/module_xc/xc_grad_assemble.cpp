@@ -38,8 +38,8 @@ void XC_Functional::gradcorr_assemble_vxc(
     std::vector<double>& vlapl_arr1,
     std::vector<double>& vlapl_arr2,
     const double* neg,
-    double** vsave,
-    double** vgg)
+    double* vsave,
+    double* vgg)
 {
     // Add Laplacian stress contribution from meta-GGA functionals
     if(is_stress && use_libxc && !vlapl_arr1.empty())
@@ -188,32 +188,33 @@ void XC_Functional::gradcorr_assemble_vxc(
 
         if(nspin == 4 && (domag||domag_z))
         {
+            const int nrxx = rhopw->nrxx;
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 1024)
 #endif
             for(int is=0;is<nspin;is++)
             {
-                for(int ir=0;ir<rhopw->nrxx;ir++)
+                for(int ir=0;ir<nrxx;ir++)
                 {
                     if(is<nspin0)
                     {
-                        vgg[is][ir] = v(is,ir);
+                        vgg[is * nrxx + ir] = v(is,ir);
                     }
-                    v(is,ir) = vsave[is][ir];
+                    v(is,ir) = vsave[is * nrxx + ir];
                 }
             }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
-            for(int ir=0;ir<rhopw->nrxx;ir++)
+            for(int ir=0;ir<nrxx;ir++)
             {
-                v(0,ir) += 0.5 * (vgg[0][ir] + vgg[1][ir]);
+                v(0,ir) += 0.5 * (vgg[ir] + vgg[nrxx + ir]);
                 double amag = sqrt(pow(chr->rho[1][ir],2)+pow(chr->rho[2][ir],2)+pow(chr->rho[3][ir],2));
                 if(amag>1e-12)
                 {
                     for(int i=1;i<4;i++)
                     {
-                        v(i,ir)+= neg[ir] * 0.5 *(vgg[0][ir]-vgg[1][ir])*chr->rho[i][ir]/amag;
+                        v(i,ir)+= neg[ir] * 0.5 *(vgg[ir]-vgg[nrxx + ir])*chr->rho[i][ir]/amag;
                     }
                 }
             }

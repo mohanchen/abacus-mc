@@ -101,17 +101,17 @@ void XC_Functional::gradcorr(
 
     // sum up (rho_core+rho) for each spin in real space
     // and reciprocal space.
-    double* rhotmp1 = nullptr;
-    double* rhotmp2 = nullptr;
-    std::complex<double>* rhogsum1 = nullptr;
-    std::complex<double>* rhogsum2 = nullptr;
-    ModuleBase::Vector3<double>* gdr1 = nullptr;
-    ModuleBase::Vector3<double>* gdr2 = nullptr;
-    ModuleBase::Vector3<double>* h1 = nullptr;
-    ModuleBase::Vector3<double>* h2 = nullptr;
-    double* neg = nullptr;
-    double** vsave = nullptr;
-    double** vgg = nullptr;
+    std::vector<double> rhotmp1;
+    std::vector<double> rhotmp2;
+    std::vector<std::complex<double>> rhogsum1;
+    std::vector<std::complex<double>> rhogsum2;
+    std::vector<ModuleBase::Vector3<double>> gdr1;
+    std::vector<ModuleBase::Vector3<double>> gdr2;
+    std::vector<ModuleBase::Vector3<double>> h1;
+    std::vector<ModuleBase::Vector3<double>> h2;
+    std::vector<double> neg;
+    std::vector<double> vsave;
+    std::vector<double> vgg;
     std::vector<double> lapl1;
     std::vector<double> lapl2;
     std::vector<double> vlapl_arr1;
@@ -128,56 +128,17 @@ void XC_Functional::gradcorr(
     gradcorr_xc_kernel(chr, rhopw, nspin, nspin0, fac,
         need_laplacian, is_stress, igcc_is_lyp, domag, domag_z,
         hybrid_alpha_in, hse_omega_in,
-        rhotmp1, rhotmp2, gdr1, gdr2, lapl1, lapl2, neg,
-        vtxcgc, etxcgc, stress_gga, h1, h2,
+        rhotmp1.data(), rhotmp2.data(), gdr1.data(), gdr2.data(), lapl1, lapl2, neg.data(),
+        vtxcgc, etxcgc, stress_gga, h1.data(), h2.data(),
         vlapl_arr1, vlapl_arr2, v);
 
     gradcorr_assemble_vxc(chr, rhopw, ucell, nspin, nspin0, fac,
         is_stress, domag, domag_z, vtxcgc, etxcgc,
         vtxc, etxc, stress_gga, v,
-        rhotmp1, rhotmp2, h1, h2,
-        vlapl_arr1, vlapl_arr2, neg, vsave, vgg);
-    // deacllocate
-    delete[] rhotmp1;
-    delete[] rhogsum1;
-    delete[] gdr1;
-    if(!is_stress)
-    {
-        delete[] h1;
-    }
-
-    if(nspin==2)
-    {
-        delete[] rhotmp2;
-        delete[] rhogsum2;
-        delete[] gdr2;
-        if(!is_stress)
-        {
-            delete[] h2;
-        }
-    }
-    if(nspin == 4 && (domag||domag_z))
-    {
-        delete[] neg;
-        if(!is_stress)
-        {
-            for(int i=0; i<nspin0; i++)
-            {
-                delete[] vgg[i];
-            }
-            delete[] vgg;
-            for(int i=0; i<nspin; i++)
-            {
-                delete[] vsave[i];
-            }
-            delete[] vsave;
-            delete[] h2;
-        }
-        delete[] rhotmp2;
-        delete[] rhogsum2;
-        delete[] gdr2;
-    }
+        rhotmp1.data(), rhotmp2.data(), h1.data(), h2.data(),
+        vlapl_arr1, vlapl_arr2, neg.data(), vsave.data(), vgg.data());
 
     return;
 }
+
 
