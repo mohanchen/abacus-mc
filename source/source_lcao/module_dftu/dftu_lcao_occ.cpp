@@ -428,11 +428,13 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         for (int it = 0; it < ucell.ntype; it++)
         {
             const int NL = ucell.atoms[it].nwl + 1;
-			if (!orbital_corr[it] != -1)
-			{
-				continue;
-			}
-			for (int ia = 0; ia < ucell.atoms[it].na; ia++)
+            const int LC = orbital_corr[it];
+
+            if (LC == -1)
+            {
+                continue;
+            }
+            for (int ia = 0; ia < ucell.atoms[it].na; ia++)
             {
                 const int iat = ucell.itia2iat(it, ia);
 
