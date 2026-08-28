@@ -3,6 +3,7 @@ add_library(
     OBJECT
     symm_other.cpp
     symm_basic.cpp
+    symm_basic_order.cpp
     symm_analysis.cpp
     symm_check.cpp
     symm_getgroup.cpp
