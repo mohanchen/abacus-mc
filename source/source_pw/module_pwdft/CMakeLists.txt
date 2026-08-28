@@ -54,6 +54,9 @@ list(APPEND objects
     soc.cpp
     elecond.cpp
     fs_nonlocal_tools.cpp
+    fs_nonlocal_tools_vkb.cpp
+    fs_nonlocal_tools_stress.cpp
+    fs_nonlocal_tools_force.cpp
     fs_kin_tools.cpp
     radial_proj.cpp
     onsite_proj.cpp
