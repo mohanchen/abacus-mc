@@ -63,6 +63,12 @@ class Plus_U_Base
 
     double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
     double get_J_Yukawa(int it, int l, int n) const { return J_Yukawa[it][l][n]; }
+    void set_U_Yukawa(int it, int l, int n, double val) { U_Yukawa[it][l][n] = val; }
+    void set_J_Yukawa(int it, int l, int n, double val) { J_Yukawa[it][l][n] = val; }
+    double get_lambda() const { return lambda; }
+    void set_lambda(double l) { lambda = l; }
+    std::vector<std::vector<std::vector<std::vector<double>>>>& get_Fk_data() { return Fk; }
+    void set_u_current(int it, double val) { u_current[it] = val; }
 
     double get_energy() const { return energy_u; }
     void set_energy(const double &e) { energy_u = e; }

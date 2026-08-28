@@ -89,21 +89,6 @@ class Plus_U : public Plus_U_Base
 
 #endif
 
-    //=============================================================
-    // In dftu_yukawa.cpp
-    // Relevant for calculating U using Yukawa potential
-    //=============================================================
-
-  public:
-    void cal_slater_UJ(const UnitCell& ucell, double** rho, const int& nrxx);
-
-  private:
-    void cal_slater_Fk(const UnitCell& ucell,const int L, const int T); // L:angular momnet, T:atom type
-    void cal_yukawa_lambda(double** rho, const int& nrxx);
-
-    double spherical_Bessel(const int k, const double r, const double lambda);
-    double spherical_Hankel(const int k, const double r, const double lambda);
-
 #ifdef __LCAO
   public:
     /**
@@ -125,6 +110,8 @@ class Plus_U : public Plus_U_Base
     int get_nlocal() const { return nlocal; }
     const std::string& get_ks_solver() const { return ks_solver; }
     const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
+    double get_yukawa_lambda() const { return yukawa_lambda; }
+    const LCAO_Orbitals* get_ptr_orb() const { return ptr_orb_; }
 
   private:
     const UnitCell* ucell = nullptr;

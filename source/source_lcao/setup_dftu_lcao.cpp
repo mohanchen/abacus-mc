@@ -2,6 +2,7 @@
 #include "source_lcao/module_dftu/dftu_lcao.h"
 #include "source_lcao/module_dftu/dftu_lcao_occ.h"
 #include "source_lcao/module_dftu/dftu_lcao_energy.h"
+#include "source_lcao/module_dftu/dftu_yukawa.h"
 #include "source_pw/module_pwdft/dftu_output.h" // mohan add 2025-11-08
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/hamilt_lcao.h"
@@ -33,7 +34,7 @@ void init_dftu_lcao(const int istep,
     }
     
     /// Calculate U and J if Yukawa potential is used
-    dftu_ptr->cal_slater_UJ(ucell, rho, nrxx);
+    DFTU_LCAO::cal_slater_UJ(*dftu_ptr, ucell, rho, nrxx);
 }
 
 template <typename TK>
