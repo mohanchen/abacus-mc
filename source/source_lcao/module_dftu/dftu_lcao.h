@@ -48,9 +48,6 @@ class Plus_U : public Plus_U_Base
 #endif
                 );
 
-    // calculate the energy correction
-    void cal_energy_correction(const UnitCell& ucell, const int istep);
-
   private:
 
     const Parallel_Orbitals* paraV = nullptr;
@@ -78,7 +75,7 @@ class Plus_U : public Plus_U_Base
             const int npol);
 
     //=============================================================
-    // In dftu_tools.cpp
+    // In dftu_lcao_pots.cpp
     // For calculating onsite potential, which is used
     // for both Hamiltonian and force/stress
     //=============================================================
@@ -89,16 +86,6 @@ class Plus_U : public Plus_U_Base
                             std::complex<double>* pot_onsite,
                             const int npol);
     void pot_onsite_real(const Parallel_Orbitals* pv, const int spin, const bool newlocale, double* pot_onsite, const int npol);
-
-  private:
-    double get_onebody_eff_pot(const int T,
-                               const int iat,
-                               const int L,
-                               const int N,
-                               const int spin,
-                               const int m0,
-                               const int m1,
-                               const bool newlocale);
 
 #endif
 

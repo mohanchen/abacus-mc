@@ -1,6 +1,7 @@
 #include "setup_dftu_lcao.h"
 #include "source_lcao/module_dftu/dftu_lcao.h"
 #include "source_lcao/module_dftu/dftu_lcao_occ.h"
+#include "source_lcao/module_dftu/dftu_lcao_energy.h"
 #include "source_pw/module_pwdft/dftu_output.h" // mohan add 2025-11-08
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/hamilt_lcao.h"
@@ -69,7 +70,7 @@ void finish_dftu_lcao(const int iter,
                                    static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr,
                                    gamma_only_local, nspin);
         }
-        dftu_ptr->cal_energy_correction(ucell, iter);
+        DFTU_LCAO::cal_energy_correction(*dftu_ptr, ucell);
     }
     dftu_io::output(*dftu_ptr, ucell, out_chg, global_out_dir, nspin, npol);
     

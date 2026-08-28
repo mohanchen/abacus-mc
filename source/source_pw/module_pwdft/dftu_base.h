@@ -58,6 +58,7 @@ class Plus_U_Base
     // --- Accessors for DFT+U configuration ---
     double get_uramping() const { return uramping; }
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
+    int get_cal_type() const { return cal_type; }
     bool use_yukawa() const { return use_yukawa_; }
 
     double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
@@ -127,6 +128,13 @@ class Plus_U_Base
                      const int m1, const int m2) const
     {
         return occ_mat[iat][l][n][spin](m1, m2);
+    }
+
+    /// get saved occupation matrix element occ_mat_save[iat][l][n][spin](m1,m2)
+    double get_occ_mat_save(const int iat, const int l, const int n, const int spin,
+                          const int m1, const int m2) const
+    {
+        return occ_mat_save[iat][l][n][spin](m1, m2);
     }
 
     /// set occupation matrix element occ_mat[iat][l][n][spin](m1,m2)

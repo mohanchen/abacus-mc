@@ -32,8 +32,8 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
                          bool& occ_mat_initialized)
 {
-    ModuleBase::TITLE("Plus_U", "cal_occ_mat_k");
-    ModuleBase::timer::start("Plus_U", "cal_occ_mat_k");
+    ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_k");
+    ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_k");
 
     // copy occ_mat to occ_mat_save
     for (int T = 0; T < ucell.ntype; T++)
@@ -326,7 +326,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
     }
 
     occ_mat_initialized = true;
-    ModuleBase::timer::end("Plus_U", "cal_occ_mat_k");
+    ModuleBase::timer::end("DFTU_LCAO", "cal_occ_mat_k");
     return;
 }
 
@@ -345,8 +345,8 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                          std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
                          bool& occ_mat_initialized)
 {
-    ModuleBase::TITLE("Plus_U", "cal_occ_mat_gamma");
-    ModuleBase::timer::start("Plus_U", "cal_occ_mat_gamma");
+    ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_gamma");
+    ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_gamma");
     // copy occ_mat to occ_mat_save
     for (int T = 0; T < ucell.ntype; T++)
     {
@@ -565,7 +565,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
     }
 
     occ_mat_initialized = true;
-    ModuleBase::timer::end("Plus_U", "cal_occ_mat_gamma");
+    ModuleBase::timer::end("DFTU_LCAO", "cal_occ_mat_gamma");
     return;
 }
 
