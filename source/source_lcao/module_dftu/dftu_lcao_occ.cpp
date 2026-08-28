@@ -1,4 +1,5 @@
 #include "dftu_lcao_occ.h"
+#include "dftu_lcao.h"
 #include "dftu_folding.h"
 #include "source_base/timer.h"
 #include "source_base/module_external/scalapack_connector.h"
@@ -567,4 +568,50 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
     ModuleBase::timer::end("Plus_U", "cal_occ_mat_gamma");
     return;
 }
+
+namespace DFTU_LCAO {
+
+//! dftu occupation matrix for gamma only using dm(double)
+template <>
+void cal_occ_mat(const int iter,
+                 const UnitCell& ucell,
+                 const std::vector<std::vector<double>>& dm,
+                 const K_Vectors& kv,
+                 const double& mixing_beta,
+                 hamilt::Hamilt<double>* p_ham,
+                 Plus_U& dftu,
+                 const bool gamma_only_local,
+                 const int nspin)
+{
+    bool occ_mat_initialized = dftu.get_occ_mat_initialized();
+    DFTU_LCAO::cal_occ_mat_gamma(dftu.get_paraV(), iter, ucell, dm, mixing_beta, p_ham, nspin,
+                                 dftu.get_npol(), dftu.get_nlocal(), dftu.get_iatlnmipol2iwt(),
+                                 dftu.get_orbital_corr_vec(),
+                                 dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
+                                 occ_mat_initialized);
+    dftu.set_occ_mat_initialized(occ_mat_initialized);
+}
+
+//! dftu occupation matrix for multiple k-points using dm(complex)
+template <>
+void cal_occ_mat(const int iter,
+                 const UnitCell& ucell,
+                 const std::vector<std::vector<std::complex<double>>>& dm,
+                 const K_Vectors& kv,
+                 const double& mixing_beta,
+                 hamilt::Hamilt<std::complex<double>>* p_ham,
+                 Plus_U& dftu,
+                 const bool gamma_only_local,
+                 const int nspin)
+{
+    bool occ_mat_initialized = dftu.get_occ_mat_initialized();
+    DFTU_LCAO::cal_occ_mat_k(dftu.get_paraV(), iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
+                             dftu.get_npol(), dftu.get_nlocal(), dftu.get_ks_solver(), dftu.get_iatlnmipol2iwt(),
+                             dftu.get_orbital_corr_vec(),
+                             dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
+                             occ_mat_initialized);
+    dftu.set_occ_mat_initialized(occ_mat_initialized);
+}
+
+} // namespace DFTU_LCAO
 #endif
