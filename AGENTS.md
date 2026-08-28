@@ -84,6 +84,12 @@ rules. Read the complete governance document before making or reviewing changes:
 - Exceptions must be recorded in the PR with reason, scope, risk, and a follow-up
   cleanup plan.
 
+## Refactoring Patterns
+
+- Member -> free function: inventory `this->` reads; pass as params (const
+  for config, ref for mutable state); move only when body is `this`-free;
+  keep thin wrapper; compile each step.
+
 ## Local Commands
 
 ```bash
