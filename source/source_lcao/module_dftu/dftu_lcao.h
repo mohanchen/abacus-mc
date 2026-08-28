@@ -50,9 +50,6 @@ class Plus_U : public Plus_U_Base
   private:
 
     double yukawa_lambda = 0.0;
-    int npol = 1;
-    int nlocal = 0;
-    std::string ks_solver;
 
 #ifdef __LCAO
     const LCAO_Orbitals* ptr_orb_ = nullptr;
@@ -92,9 +89,6 @@ class Plus_U : public Plus_U_Base
     void set_dmr(const elecstate::DensityMatrix<std::complex<double>, double>* dm_in_dftu_cd);
 
     /// read-only accessors for state needed by DFTU_LCAO free functions
-    int get_npol() const { return npol; }
-    int get_nlocal() const { return nlocal; }
-    const std::string& get_ks_solver() const { return ks_solver; }
     const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
     double get_yukawa_lambda() const { return yukawa_lambda; }
     const LCAO_Orbitals* get_ptr_orb() const { return ptr_orb_; }

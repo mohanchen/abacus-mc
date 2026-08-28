@@ -6,6 +6,7 @@
 #include "source_base/global_function.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/parallel_reduce.h"
+#include "source_io/module_parameter/parameter.h"
 #include "source_base/timer.h"
 
 #include <complex>
@@ -84,14 +85,14 @@ void force_stress(Plus_U& dftu,
     // validation are column-major today; abort loudly instead of silently
     // producing wrong forces/stresses if that assumption ever changes.
     if ((cal_force || cal_stress)
-        && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(dftu.get_ks_solver()))
+        && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(PARAM.inp.ks_solver))
     {
         ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
             "non column-major ks_solver is not supported for DFT+U force/stress; "
             "the folded matrix layout assumption would be violated");
     }
 
-    const int nlocal = dftu.get_nlocal();
+    const int nlocal = pv.get_global_row_size();
 
     if (cal_force)
     {
@@ -133,7 +134,7 @@ void force_stress(Plus_U& dftu,
 
             if (cal_force)
             {
-                cal_force_gamma(dftu.get_nlocal(), dftu.get_npol(),
+                cal_force_gamma(nlocal, npol,
                                 dftu.get_orbital_corr_vec(), dftu.get_iatlnmipol2iwt(),
                                 ucell, &rho_pot_onsite[0], pv,
                                 fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, force_dftu);
@@ -141,8 +142,8 @@ void force_stress(Plus_U& dftu,
 
             if (cal_stress)
             {
-                cal_stress_gamma(dftu.get_nlocal(), dftu.get_npol(),
-                                 dftu.get_ks_solver(), dftu.get_orb_cutoff(),
+                cal_stress_gamma(nlocal, npol,
+                                 PARAM.inp.ks_solver, dftu.get_orb_cutoff(),
                                  ucell, pv, &gd,
                                  fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, fsr.DH_r,
                                  &rho_pot_onsite[0], stress_dftu);
@@ -179,15 +180,15 @@ void force_stress(Plus_U& dftu,
 
             if (cal_force)
             {
-                cal_force_k(dftu.get_nlocal(), dftu.get_npol(),
-                            dftu.get_ks_solver(), dftu.get_orb_cutoff(),
+                cal_force_k(nlocal, npol,
+                            PARAM.inp.ks_solver, dftu.get_orb_cutoff(),
                             dftu.get_orbital_corr_vec(), dftu.get_iatlnmipol2iwt(),
                             ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], force_dftu, kv.kvec_d[ik]);
             }
             if (cal_stress)
             {
-                cal_stress_k(dftu.get_nlocal(), dftu.get_npol(),
-                             dftu.get_ks_solver(), dftu.get_orb_cutoff(),
+                cal_stress_k(nlocal, npol,
+                             PARAM.inp.ks_solver, dftu.get_orb_cutoff(),
                              ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], stress_dftu, kv.kvec_d[ik]);
             }
         } // ik

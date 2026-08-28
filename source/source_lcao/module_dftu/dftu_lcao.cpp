@@ -39,9 +39,6 @@ void Plus_U::init(UnitCell& cell,
     ModuleBase::TITLE("Plus_U", "init");
 
     this->yukawa_lambda = yukawa_lambda;
-    this->npol = npol;
-    this->nlocal = nlocal;
-    this->ks_solver = ks_solver;
 
 #ifdef __LCAO
     ptr_orb_ = orb;

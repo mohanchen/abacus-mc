@@ -24,7 +24,7 @@ void DFTU_LCAO::cal_energy_correction(Plus_U& dftu, const UnitCell& ucell)
     // read from the global PARAM.inp.nspin instead of a Plus_U member;
     // the member indirection is being removed during the refactor
     const int nspin = PARAM.inp.nspin;
-    const int npol = dftu.get_npol();
+    const int npol = ucell.get_npol();
 
     for (int T = 0; T < ucell.ntype; T++)
     {
