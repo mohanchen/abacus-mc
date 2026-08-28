@@ -18,6 +18,7 @@ list(APPEND objects
     module_energy/write_eig_occ.cpp
     module_bessel/numerical_basis.cpp
     module_bessel/numerical_basis_overlap.cpp
+    module_bessel/numerical_basis_output.cpp
     module_bessel/numerical_basis_jyjy.cpp
     module_bessel/numerical_descriptor.cpp
     module_output/print_info.cpp
