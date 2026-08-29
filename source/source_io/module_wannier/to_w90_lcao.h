@@ -34,9 +34,8 @@
 #include "fr_overlap.h"
 #include "source_base/math_lebedev_laikov.h"
 
-class Coordinate_3D
+struct Coordinate_3D
 {
-  public:
     double x = 0;
     double y = 0;
     double z = 0;
@@ -87,7 +86,7 @@ class toW90_LCAO : public toW90
         ModuleBase::WARNING_QUIT("toW90_LCAO::calculate", 
                                  "The wave function is real (double type), indicating 'gamma_only = 1'. "
                                  "The Wannier90 interface does not support Gamma-only calculations. "
-                                 "Please set 'gamma_only 0' in your INPUT file.");
+                                 "Please set 'gamma_only 0' in your input file.");
     }
 
     void cal_Amn(const UnitCell& ucell, const K_Vectors& kv, const psi::Psi<std::complex<double>>& psi);
@@ -106,7 +105,7 @@ class toW90_LCAO : public toW90
     int orb_r_ntype = 0;
 
     ModuleBase::Sph_Bessel_Recursive::D2* psb_ = nullptr;
-    ORB_gaunt_table MGT;
+    ORB_gaunt_table mgt_;
     double kmesh_times = 1;
 
     Numerical_Orbital_Lm orb_r;

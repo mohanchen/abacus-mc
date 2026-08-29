@@ -40,8 +40,8 @@ void toW90_LCAO::initialize_orb_table(const UnitCell& ucell)
                                              Rmesh,
                                              psb_);
     ModuleBase::Ylm::set_coefficients();
-    MGT.init_Gaunt_CH(Lmax);
-    MGT.init_Gaunt(Lmax);
+    mgt_.init_Gaunt_CH(Lmax);
+    mgt_.init_Gaunt(Lmax);
 #endif
 }
 
@@ -118,8 +118,7 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
     int row = this->ParaV->get_row_size();
     int col = this->ParaV->get_col_size();
     int nloc = row * col;
-    std::complex<double>* midmatrix = new std::complex<double>[nloc];
-    ModuleBase::GlobalFunc::ZEROS(midmatrix, nloc);
+    std::vector<std::complex<double>> midmatrix(nloc);
 
     int R_num = R_coor_car.size();
     ModuleBase::Vector3<double> ik_car = kv.kvec_c[ik];
@@ -170,10 +169,8 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
     std::complex<double> alpha = {1.0, 0.0}, beta = {0.0, 0.0};
     int one = 1;
 
-    std::complex<double>* C_matrix = new std::complex<double>[nloc];
-    std::complex<double>* out_matrix = new std::complex<double>[nloc];
-    ModuleBase::GlobalFunc::ZEROS(C_matrix, nloc);
-    ModuleBase::GlobalFunc::ZEROS(out_matrix, nloc);
+    std::vector<std::complex<double>> C_matrix(nloc);
+    std::vector<std::complex<double>> out_matrix(nloc);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transa,
@@ -186,12 +183,12 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
             one,
             one,
             this->ParaV->desc,
-            midmatrix,
+            midmatrix.data(),
             one,
             one,
             this->ParaV->desc,
             beta,
-            C_matrix,
+            C_matrix.data(),
             one,
             one,
             this->ParaV->desc);
@@ -202,7 +199,7 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
             Bands,
             nlocal,
             alpha,
-            C_matrix,
+            C_matrix.data(),
             one,
             one,
             this->ParaV->desc,
@@ -211,7 +208,7 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
             one,
             this->ParaV->desc,
             beta,
-            out_matrix,
+            out_matrix.data(),
             one,
             one,
             this->ParaV->desc);
@@ -249,10 +246,6 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
 #ifdef __MPI
     Parallel_Reduce::reduce_all(Mmn.c, num_bands * num_bands);
 #endif
-
-    delete[] midmatrix;
-    delete[] C_matrix;
-    delete[] out_matrix;
 }
 
 void toW90_LCAO::produce_basis_orb()
@@ -301,8 +294,8 @@ void toW90_LCAO::produce_trial_in_lcao()
 {
     A_orbs.resize(num_wannier);
 
-    double* r = new double[mesh_r];
-    double* rab = new double[mesh_r];
+    std::vector<double> r(mesh_r);
+    std::vector<double> rab(mesh_r);
 
     for (int ir = 0; ir < mesh_r; ir++)
     {
@@ -312,9 +305,9 @@ void toW90_LCAO::produce_trial_in_lcao()
 
     const auto& orb_origin = orb_.Phi[orb_r_ntype].PhiLN(0, 0);
 
-    double* psi = new double[mesh_r];
-    double* psir = new double[mesh_r];
-    double* inner = new double[mesh_r];
+    std::vector<double> psi(mesh_r);
+    std::vector<double> psir(mesh_r);
+    std::vector<double> inner(mesh_r);
     for (int i = 0; i < num_wannier; i++)
     {
         double alfa32 = pow(alfa[i], 3.0 / 2.0);
@@ -358,7 +351,7 @@ void toW90_LCAO::produce_trial_in_lcao()
             inner[ir] = psir[ir] * psir[ir];
         }
         double unit = 0.0;
-        ModuleBase::Integral::Simpson_Integral(mesh_r, inner, rab, unit);
+        ModuleBase::Integral::Simpson_Integral(mesh_r, inner.data(), rab.data(), unit);
 
         for (int ir = 0; ir < mesh_r; ir++)
         {
@@ -374,10 +367,10 @@ void toW90_LCAO::produce_trial_in_lcao()
                                           L[i],
                                           1,
                                           mesh_r,
-                                          rab,
-                                          r,
+                                          rab.data(),
+                                          r.data(),
                                           Numerical_Orbital_Lm::Psi_Type::Psi,
-                                          psi,
+                                          psi.data(),
                                           static_cast<int>(orb_origin.getNk() * kmesh_times) | 1,
                                           orb_origin.getDk(),
                                           orb_origin.getDruniform(),
@@ -406,10 +399,10 @@ void toW90_LCAO::produce_trial_in_lcao()
                                                   tmp_L,
                                                   1,
                                                   mesh_r,
-                                                  rab,
-                                                  r,
+                                                  rab.data(),
+                                                  r.data(),
                                                   Numerical_Orbital_Lm::Psi_Type::Psi,
-                                                  psi,
+                                                  psi.data(),
                                                   static_cast<int>(orb_origin.getNk() * kmesh_times) | 1,
                                                   orb_origin.getDk(),
                                                   orb_origin.getDruniform(),
@@ -419,12 +412,6 @@ void toW90_LCAO::produce_trial_in_lcao()
             }
         }
     }
-
-    delete[] r;
-    delete[] rab;
-    delete[] psi;
-    delete[] psir;
-    delete[] inner;
 }
 
 void toW90_LCAO::construct_overlap_table_project()
@@ -446,7 +433,7 @@ void toW90_LCAO::construct_overlap_table_project()
                     Center2_Orb::Orb11(orbs[iw2it[orb_index_row]][iw2iL[orb_index_row]][iw2iN[orb_index_row]],
                                        A_orbs[wannier_index][0],
                                        psb_,
-                                       MGT)));
+                                       mgt_)));
             }
             else
             {
@@ -467,7 +454,7 @@ void toW90_LCAO::construct_overlap_table_project()
                         Center2_Orb::Orb11(orbs[iw2it[orb_index_row]][iw2iL[orb_index_row]][iw2iN[orb_index_row]],
                                            A_orbs[wannier_index][tmp_L],
                                            psb_,
-                                           MGT)));
+                                           mgt_)));
                 }
             }
         }
