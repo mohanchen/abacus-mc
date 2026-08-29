@@ -1,3 +1,6 @@
+// Gradient of the wavefunction in reciprocal space
+// (XC_Functional::grad_wfc), used by stress_func_mgga.cpp.
+
 #include "xc_functional.h"
 #include "source_base/timer.h"
 #include "source_base/constants.h"

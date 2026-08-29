@@ -1,3 +1,10 @@
+// Second stage of the gradient-correction pipeline: evaluate the
+// GGA/meta-GGA kernel on every real-space grid point (own implementation
+// or libxc) and accumulate vtxcgc, etxcgc, stress_gga and v.
+// The stage functions and their shared parameter/buffer structs are
+// declared in xc_grad_internal.h; the public entry point
+// XC_Functional::gradcorr lives in xc_grad.cpp.
+
 #include "xc_functional.h"
 #include "xc_grad_internal.h"
 #include "source_base/timer.h"

@@ -1,3 +1,10 @@
+// Final stage of the gradient-correction pipeline: assemble the kernel
+// contribution into vtxc/etxc/stress_gga/v, subtract the core density,
+// and restore the nspin = 4 non-collinear case via spin rotation.
+// The stage functions and their shared parameter/buffer structs are
+// declared in xc_grad_internal.h; the public entry point
+// XC_Functional::gradcorr lives in xc_grad.cpp.
+
 #include "xc_functional.h"
 #include "xc_grad_internal.h"
 #include "source_base/timer.h"

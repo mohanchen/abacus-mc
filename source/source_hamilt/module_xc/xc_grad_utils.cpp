@@ -1,3 +1,11 @@
+// Auxiliary real/reciprocal-space utilities shared by the gradient
+// correction and meta-GGA stress:
+// 1. grad_rho      : gradient of the density
+// 2. grad_dot      : divergence of a vector field
+// 3. laplacian_rho : Laplacian of the density
+// 4. noncolin_rho  : diagonalizes the spin density matrix and gives the
+//                    spin up and spin down components of the charge.
+
 #include "xc_functional.h"
 #include "source_base/timer.h"
 #include "source_base/constants.h"

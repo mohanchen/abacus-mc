@@ -1,3 +1,10 @@
+// First stage of the gradient-correction pipeline: build the real- and
+// reciprocal-space density buffers (rhotmp/rhogsum) and their gradients
+// (gdr) for every spin channel, including the non-collinear spin case.
+// The stage functions and their shared parameter/buffer structs are
+// declared in xc_grad_internal.h; the public entry point
+// XC_Functional::gradcorr lives in xc_grad.cpp.
+
 #include "xc_functional.h"
 #include "xc_grad_internal.h"
 #include "source_base/timer.h"
