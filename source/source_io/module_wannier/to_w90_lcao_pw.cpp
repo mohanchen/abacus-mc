@@ -45,10 +45,11 @@ void toW90_LCAO_IN_PW::calculate(
 
     Structure_Factor* sf_ptr = const_cast<Structure_Factor*>(&sf);
     ModulePW::PW_Basis_K* wfcpw_ptr = const_cast<ModulePW::PW_Basis_K*>(wfcpw);
+    using NaoInitCd = psi_init_nao<std::complex<double>>;
     delete this->psi_initer_;
-    psi_init_nao<std::complex<double>>* nao_initer = new psi_init_nao<std::complex<double>>();
+    std::unique_ptr<NaoInitCd> nao_initer(new NaoInitCd());
     nao_initer->prepare_params(PARAM.globalv.nqx, PARAM.globalv.dq, PARAM.inp.nspin, PARAM.inp.orbital_dir);
-    this->psi_initer_ = nao_initer;
+    this->psi_initer_ = nao_initer.release();
     this->psi_initer_->initialize(sf_ptr, wfcpw_ptr, &ucell, kv.ik2iktot, 1, GlobalV::MY_RANK,
                                   PARAM.globalv.npol, PARAM.inp.nbands);
     this->psi_initer_->tabulate();
@@ -56,11 +57,13 @@ void toW90_LCAO_IN_PW::calculate(
     const int nks_psi = (PARAM.inp.calculation == "nscf" && PARAM.inp.mem_saver == 1)? 1 : wfcpw->nks;
     const int nks_psig = (PARAM.inp.basis_type == "pw")? 1 : nks_psi;
     const int nbands_actual = this->psi_initer_->nbands_start();
-    this->psi = new psi::Psi<std::complex<double>, base_device::DEVICE_CPU>(nks_psig, 
-                                                                            nbands_actual, 
-                                                                            wfcpw->npwk_max*PARAM.globalv.npol, 
-                                                                            kv.ngk,
-                                                                            true);
+    using PsiCdCpu = psi::Psi<std::complex<double>, base_device::DEVICE_CPU>;
+    std::unique_ptr<PsiCdCpu> psi_new(new PsiCdCpu(nks_psig,
+                                                   nbands_actual,
+                                                   wfcpw->npwk_max*PARAM.globalv.npol,
+                                                   kv.ngk,
+                                                   true));
+    this->psi = psi_new.release();
     read_nnkp(ucell,kv);
 
     if (PARAM.inp.nspin == 2)
@@ -122,12 +125,12 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
 {
     // init
     int npwx = wfcpw->npwk_max;
-    std::unique_ptr<psi::Psi<std::complex<double>>> unk_inLcao(
-        new psi::Psi<std::complex<double>>(num_kpts,
-                                           num_bands,
-                                           npwx*PARAM.globalv.npol,
-                                           kv.ngk,
-                                           true));
+    using PsiCd = psi::Psi<std::complex<double>>;
+    std::unique_ptr<PsiCd> unk_inLcao(new PsiCd(num_kpts,
+                                                num_bands,
+                                                npwx*PARAM.globalv.npol,
+                                                kv.ngk,
+                                                true));
     unk_inLcao->zero_out();
 
     for (int ik = 0; ik < num_kpts; ik++)
