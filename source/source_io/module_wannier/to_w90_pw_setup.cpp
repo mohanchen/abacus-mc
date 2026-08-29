@@ -129,7 +129,7 @@ void toW90_PW::produce_trial_in_pw(
     std::vector<std::complex<double>> sf(npw);
     for (int wannier_index = 0; wannier_index < num_wannier; wannier_index++)
     {
-        double* radial_c = radial_c;
+        double* radial_c = radial_in_q[wannier_index].c;
         const int nqx = nqx_;
 
         if (L[wannier_index] >= 0)
