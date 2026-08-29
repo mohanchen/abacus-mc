@@ -4,7 +4,7 @@
 #include "source_base/parallel_reduce.h"
 
 void toW90_PW::unkdotkb(
-    const psi::Psi<std::complex<double>>& psi_pw, 
+    const psi::Psi<std::complex<double>>& psi_pw,
     const ModulePW::PW_Basis_K* wfcpw,
     const int& cal_ik,
     const int& cal_ikb,
@@ -17,8 +17,7 @@ void toW90_PW::unkdotkb(
     for (int m = 0; m < num_bands; m++)
     {
         int im = cal_band_index[m];
-        std::complex<double>* phase = new std::complex<double>[wfcpw->nmaxgr];
-        ModuleBase::GlobalFunc::ZEROS(phase, wfcpw->nmaxgr);
+        std::vector<std::complex<double>> phase(wfcpw->nmaxgr);
 
         // get the phase value in realspace
         for (int ig = 0; ig < wfcpw->npwk[cal_ik]; ig++)
@@ -32,30 +31,28 @@ void toW90_PW::unkdotkb(
             }
         }
 
-        wfcpw->recip2real(phase, phase, cal_ik);
+        wfcpw->recip2real(phase.data(), phase.data(), cal_ik);
 
         if (PARAM.inp.nspin == 4)
         {
             // (1) set value
-            std::complex<double>* psir_up = new std::complex<double>[wfcpw->nmaxgr];
-            std::complex<double>* psir_dn = new std::complex<double>[wfcpw->nmaxgr];
-            ModuleBase::GlobalFunc::ZEROS(psir_up, wfcpw->nmaxgr);
-            ModuleBase::GlobalFunc::ZEROS(psir_dn, wfcpw->nmaxgr);
+            std::vector<std::complex<double>> psir_up(wfcpw->nmaxgr);
+            std::vector<std::complex<double>> psir_dn(wfcpw->nmaxgr);
 
             // (2) fft and get value
             // int npw_ik = wfcpw->npwk[cal_ik];
             int npwx = wfcpw->npwk_max;
-            wfcpw->recip2real(&psi_pw(cal_ik, im, 0), psir_up, cal_ik);
+            wfcpw->recip2real(&psi_pw(cal_ik, im, 0), psir_up.data(), cal_ik);
             // wfcpw->recip2real(&psi_pw(cal_ik, im, npw_ik), psir_dn, cal_ik);
-            wfcpw->recip2real(&psi_pw(cal_ik, im, npwx), psir_dn, cal_ik);
+            wfcpw->recip2real(&psi_pw(cal_ik, im, npwx), psir_dn.data(), cal_ik);
             for (int ir = 0; ir < wfcpw->nrxx; ir++)
             {
                 psir_up[ir] *= phase[ir];
                 psir_dn[ir] *= phase[ir];
             }
 
-            wfcpw->real2recip(psir_up, psir_up, cal_ikb);
-            wfcpw->real2recip(psir_dn, psir_dn, cal_ikb);
+            wfcpw->real2recip(psir_up.data(), psir_up.data(), cal_ikb);
+            wfcpw->real2recip(psir_dn.data(), psir_dn.data(), cal_ikb);
 
             for (int n = 0; n < num_bands; n++)
             {
@@ -71,7 +68,8 @@ void toW90_PW::unkdotkb(
                     // Can be accelerated using lapack
                     for (int ig = 0; ig < pwNumberMax; ig++)
                     {
-                        result_tem = result_tem + conj(psir_up[ig]) * psi_pw(cal_ikb, in, ig) + conj(psir_dn[ig]) * psi_pw(cal_ikb, in, ig+pwNumberMax);
+                        result_tem = result_tem + conj(psir_up[ig]) * psi_pw(cal_ikb, in, ig)
+                                                   + conj(psir_dn[ig]) * psi_pw(cal_ikb, in, ig+pwNumberMax);
                     }
 #ifdef __MPI
                     Parallel_Reduce::reduce_all(result_tem);
@@ -85,24 +83,20 @@ void toW90_PW::unkdotkb(
 
             }
 
-            delete[] psir_up;
-            delete[] psir_dn;
-
         }
         else
         {
             // (1) set value
-            std::complex<double>* psir = new std::complex<double>[wfcpw->nmaxgr];
-            ModuleBase::GlobalFunc::ZEROS(psir, wfcpw->nmaxgr);
+            std::vector<std::complex<double>> psir(wfcpw->nmaxgr);
 
             // (2) fft and get value
-            wfcpw->recip2real(&psi_pw(cal_ik, im, 0), psir, cal_ik);
+            wfcpw->recip2real(&psi_pw(cal_ik, im, 0), psir.data(), cal_ik);
             for (int ir = 0; ir < wfcpw->nrxx; ir++)
             {
                 psir[ir] *= phase[ir];
             }
 
-            wfcpw->real2recip(psir, psir, cal_ikb);
+            wfcpw->real2recip(psir.data(), psir.data(), cal_ikb);
 
             for (int n = 0; n < num_bands; n++)
             {
@@ -130,11 +124,7 @@ void toW90_PW::unkdotkb(
 
             }
 
-            delete[] psir;
-            
         }
-
-        delete[] phase;
 
     }
 
