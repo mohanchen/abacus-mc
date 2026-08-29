@@ -1,5 +1,5 @@
-#ifndef DFTU_TOOLS_PW_H
-#define DFTU_TOOLS_PW_H
+#ifndef DFTU_BASE_TOOLS_H
+#define DFTU_BASE_TOOLS_H
 
 #include <complex>
 #include "source_base/matrix.h"
@@ -8,9 +8,9 @@
 ///
 /// These functions are pure (no access to Plus_U_Base members) so they can be
 /// unit-tested directly by including this header. The member functions in
-/// dftu_pw.cpp call them after computing per-atom offsets and fetching the
-/// relevant member state (occ_mat, pot_uterm_pw, u_current, etc.).
-namespace dftu_pw {
+/// dftu_base_occ.cpp call them after computing per-atom offsets and fetching
+/// the relevant member state (occ_mat, pot_uterm_pw, u_current, etc.).
+namespace DFTU_BASE {
 
 /// transform pot_onsite from Pauli basis to spin basis (in-place, nspin==4 only).
 ///
@@ -96,6 +96,6 @@ void accumulate_occ_scalar(
     const ModuleBase::matrix& wg,
     int ik);
 
-} // namespace dftu_pw
+} // namespace DFTU_BASE
 
 #endif

@@ -4,7 +4,7 @@ AddTest(
   TARGET dftu_pw_test
   LIBS base device parameter
   SOURCES dftu_pw_test.cpp
-                ../../../source_pw/module_pwdft/dftu_tools_pw.cpp
+                ../../../source_pw/module_pwdft/dftu_base_tools.cpp
 )
 
 AddTest(
@@ -25,6 +25,7 @@ AddTest(
   LIBS parameter psi base device container
   SOURCES dftu_lcao_test.cpp ../dftu_lcao_op.cpp ../dftu_fs.cpp
   ../../../source_pw/module_pwdft/dftu_base.cpp
+  ../../../source_pw/module_pwdft/dftu_base_io.cpp
   ../../../source_hamilt/module_hcontainer/func_folding.cpp
   ../../../source_hamilt/module_hcontainer/base_matrix.cpp
   ../../../source_hamilt/module_hcontainer/hcontainer.cpp

@@ -1,5 +1,6 @@
 #include "source_pw/module_pwdft/dftu_base.h"
-#include "source_pw/module_pwdft/dftu_tools_pw.h"
+#include "source_pw/module_pwdft/dftu_base_io.h"
+#include "source_pw/module_pwdft/dftu_base_tools.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
 #include "source_cell/unitcell.h"
 #include "source_estate/module_charge/charge_mixing.h"
@@ -7,6 +8,9 @@
 #include "source_base/global_variable.h"
 #include "source_base/timer.h"
 #include "source_base/parallel_global.h"
+
+
+
 
 /// calculate occupation matrix for DFT+U (PW basis)
 ///
@@ -184,7 +188,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
             //   is=1,2,3: spin channels (sigma_x/y/z), no U diagonal term
             // The occupation matrix occ_mat[...][0][0].c packs all 4 blocks
             // contiguously, each of size m_size*m_size.
-            this->energy_u += dftu_pw::compute_pot_onsite_spinor(
+            this->energy_u += DFTU_BASE::compute_pot_onsite_spinor(
                 pot_onsite_iat,
                 this->occ_mat[iat][target_l][0][0].c,
                 u_value, diag_coeff, weight_eu, m_size);
@@ -192,7 +196,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
         else // nspin=1 or nspin=2
         {
             // spin-up channel
-            this->energy_u += dftu_pw::compute_pot_onsite_scalar(
+            this->energy_u += DFTU_BASE::compute_pot_onsite_scalar(
                 pot_onsite_iat,
                 this->occ_mat[iat][target_l][0][0].c,
                 u_value, diag_coeff, weight_eu, m_size);
@@ -200,7 +204,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
             if(this->nspin == 2)
             {
                 std::complex<double>* pot_onsite_iat1 = &(this->pot_uterm_pw[this->pot_uterm_pw.size()/2 + this->pot_uterm_pw_index[iat]]);
-                this->energy_u += dftu_pw::compute_pot_onsite_scalar(
+                this->energy_u += DFTU_BASE::compute_pot_onsite_scalar(
                     pot_onsite_iat1,
                     this->occ_mat[iat][target_l][0][1].c,
                     u_value, diag_coeff, weight_eu, m_size);
@@ -245,14 +249,14 @@ void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
             const int tlp1 = 2 * target_l + 1;
             if(this->nspin == 4)
             {
-                dftu_pw::accumulate_occ_spinor(
+                DFTU_BASE::accumulate_occ_spinor(
                     this->occ_mat[iat][target_l][0][0].c,
                     becp, nbands, npol, nkb, begin_ih, m_begin, tlp1,
                     wg_in, ik);
             }
             else // nspin=1 or nspin=2
             {
-                dftu_pw::accumulate_occ_scalar(
+                DFTU_BASE::accumulate_occ_scalar(
                     this->occ_mat[iat][target_l][0][is].c,
                     becp, nbands, nkb, begin_ih, m_begin, tlp1,
                     wg_in, ik);

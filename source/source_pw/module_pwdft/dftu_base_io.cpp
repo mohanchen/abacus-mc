@@ -1,19 +1,25 @@
-#include "source_pw/module_pwdft/dftu_output.h"
+#include "source_pw/module_pwdft/dftu_base_io.h"
 
 #include "source_cell/unitcell.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
+#include "source_base/parallel_common.h"
+#include "source_base/parallel_global.h"
 #include "source_base/timer.h"
 
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <vector>
 
-// local inline helpers for eigenvalue calculation
+// local helpers for eigenvalue calculation
 // migrated from dftu_base.cpp, mohan 2025-11-08
+namespace
+{
+
 inline void JacobiRotate(std::vector<std::vector<double>>& A, int p, int q, int n)
 {
     if (std::abs(A[p][q]) > 1e-10)
@@ -80,9 +86,226 @@ inline std::vector<double> CalculateEigenvalues(std::vector<std::vector<double>>
     return eigenvalues;
 }
 
+} // namespace
 
-namespace dftu_io
+
+namespace DFTU_BASE
 {
+
+void read_occup_m(const UnitCell& ucell,
+                  OccMatData& occ_mat,
+                  const std::vector<int>& orbital_corr,
+                  const int occ_mat_ctrl,
+                  const std::string& fn,
+                  const std::string& init_chg,
+                  int nspin,
+                  int npol)
+{
+    ModuleBase::TITLE("DFTU_BASE", "read_occup_m");
+
+    if (GlobalV::MY_RANK != 0)
+    {
+        return;
+    }
+
+    std::ifstream ifdftu(fn.c_str(), std::ios::in);
+
+    if (!ifdftu)
+    {
+        if (occ_mat_ctrl > 0)
+        {
+            ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "Can not find the file dm_onsite_ini.txt. Please check your dm_onsite_ini.txt");
+        }
+        else
+        {
+            if (init_chg == "file")
+            {
+                ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "Can not find the file dm_onsite.txt. Please do scf calculation first");
+            }
+        }
+        ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "Can not open dm_onsite.txt file");
+    }
+
+    ifdftu.clear();
+    ifdftu.seekg(0);
+
+    char word[20];
+
+    int T = 0;
+    int iat = 0;
+    int spin = 0;
+    int L = 0;
+    int zeta = 0;
+
+    ifdftu.rdstate();
+
+    while (ifdftu.good())
+    {
+        ifdftu >> word;
+        if (ifdftu.eof())
+        {
+            break;
+        }
+
+        if (strcmp("Atom=", word) == 0)
+        {
+            ifdftu >> iat;
+            iat -= 1;
+            ifdftu >> word;
+
+            if (strcmp("L=", word) != 0)
+            {
+                ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
+            }
+            ifdftu >> L;
+            ifdftu >> word;
+
+            if (strcmp("ORBITAL=", word) != 0)
+            {
+                ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
+            }
+            ifdftu >> zeta;
+            ifdftu.ignore(150, '\n');
+
+            T = ucell.iat2it[iat];
+            const int NL = ucell.atoms[T].nwl + 1;
+
+            for (int l = 0; l < NL; l++)
+            {
+                if (l != orbital_corr[T])
+                {
+                    continue;
+                }
+
+                if (nspin == 1 || nspin == 2)
+                {
+                    for (int is = 0; is < 2; is++)
+                    {
+                        ifdftu >> word;
+                        if (strcmp("spin=", word) == 0)
+                        {
+                            ifdftu >> spin;
+                            spin -= 1;
+                            ifdftu.ignore(150, '\n');
+
+                            double value = 0.0;
+                            for (int m0 = 0; m0 < 2 * L + 1; m0++)
+                            {
+                                for (int m1 = 0; m1 < 2 * L + 1; m1++)
+                                {
+                                    ifdftu >> value;
+                                    occ_mat[iat][L][zeta][spin](m0, m1) = value;
+                                }
+                                ifdftu.ignore(150, '\n');
+                            }
+                        }
+                        else
+                        {
+                            ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
+                        }
+                    }
+                }
+                else if (nspin == 4) // SOC
+                {
+                    double value = 0.0;
+                    for (int m0 = 0; m0 < 2 * L + 1; m0++)
+                    {
+                        for (int ipol0 = 0; ipol0 < npol; ipol0++)
+                        {
+                            const int m0_all = m0 + (2 * L + 1) * ipol0;
+
+                            for (int m1 = 0; m1 < 2 * L + 1; m1++)
+                            {
+                                for (int ipol1 = 0; ipol1 < npol; ipol1++)
+                                {
+                                    int m1_all = m1 + (2 * L + 1) * ipol1;
+                                    ifdftu >> value;
+                                    occ_mat[iat][L][zeta][0](m0_all, m1_all) = value;
+                                }
+                            }
+                            ifdftu.ignore(150, '\n');
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
+        }
+
+        ifdftu.rdstate();
+
+        if (ifdftu.eof() != 0)
+        {
+            break;
+        }
+    }
+
+    return;
+}
+
+#ifdef __MPI
+/// Broadcast the local occupation number matrices from rank 0 to all ranks.
+///
+/// Each occupation matrix is broadcast as one contiguous block
+/// (matrix::c stores nr * nc consecutive doubles) instead of element by
+/// element.
+void local_occup_bcast(const UnitCell& ucell,
+                       OccMatData& occ_mat,
+                       const std::vector<int>& orbital_corr,
+                       int nspin,
+                       int npol)
+{
+    ModuleBase::TITLE("DFTU_BASE", "local_occup_bcast");
+
+    for (int T = 0; T < ucell.ntype; T++)
+    {
+        if (orbital_corr[T] == -1)
+        {
+            continue;
+        }
+
+        for (int I = 0; I < ucell.atoms[T].na; I++)
+        {
+            const int iat = ucell.itia2iat(T, I);
+            const int L = orbital_corr[T];
+
+            for (int l = 0; l <= ucell.atoms[T].nwl; l++)
+            {
+                if (l != orbital_corr[T])
+                {
+                    continue;
+                }
+
+                for (int n = 0; n < ucell.atoms[T].l_nchi[l]; n++)
+                {
+                    if (n != 0)
+                    {
+                        continue;
+                    }
+
+                    if (nspin == 1 || nspin == 2)
+                    {
+                        for (int spin = 0; spin < 2; spin++)
+                        {
+                            Parallel_Common::bcast_double(occ_mat[iat][l][n][spin].c,
+                                                          occ_mat[iat][l][n][spin].nr * occ_mat[iat][l][n][spin].nc);
+                        }
+                    }
+                    else if (nspin == 4) // SOC
+                    {
+                        Parallel_Common::bcast_double(occ_mat[iat][l][n][0].c,
+                                                      occ_mat[iat][l][n][0].nr * occ_mat[iat][l][n][0].nc);
+                    }
+                }
+            }
+        }
+    }
+    return;
+}
+#endif
+
 
 void output(const Plus_U_Base& dftu,
             const UnitCell& ucell,
@@ -91,7 +314,7 @@ void output(const Plus_U_Base& dftu,
             int nspin,
             int npol)
 {
-    ModuleBase::TITLE("dftu_io", "output");
+    ModuleBase::TITLE("DFTU_BASE", "output");
 
     GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
     GlobalV::ofs_running << " | #DFT+U INFORMATION# |" << std::endl;
@@ -137,7 +360,7 @@ void output(const Plus_U_Base& dftu,
     }
 
     GlobalV::ofs_running << " Local Occupation Matrices for each atom" << std::endl;
-    dftu_io::write_occup_m(dftu, ucell, GlobalV::ofs_running, true, nspin, npol);
+    write_occup_m(dftu, ucell, GlobalV::ofs_running, true, nspin, npol);
 
     // Write dm_onsite.txt
     if (out_chg && GlobalV::MY_RANK == 0)
@@ -146,9 +369,9 @@ void output(const Plus_U_Base& dftu,
         ofdftu.open(global_out_dir + "dm_onsite.txt");
         if (!ofdftu)
         {
-            ModuleBase::WARNING_QUIT("dftu_io::output", "Can't create file dm_onsite.txt");
+            ModuleBase::WARNING_QUIT("DFTU_BASE::output", "Can't create file dm_onsite.txt");
         }
-        dftu_io::write_occup_m(dftu, ucell, ofdftu, false, nspin, npol);
+        write_occup_m(dftu, ucell, ofdftu, false, nspin, npol);
         ofdftu.close();
     }
 
@@ -167,7 +390,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                    int nspin,
                    int npol)
 {
-    ModuleBase::TITLE("dftu_io", "write_occup_m");
+    ModuleBase::TITLE("DFTU_BASE", "write_occup_m");
 
     if (GlobalV::MY_RANK != 0)
     {
@@ -317,4 +540,4 @@ void write_occup_m(const Plus_U_Base& dftu,
 }
 
 
-} // namespace dftu_io
+} // namespace DFTU_BASE

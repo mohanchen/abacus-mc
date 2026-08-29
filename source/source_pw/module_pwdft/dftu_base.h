@@ -214,15 +214,6 @@ class Plus_U_Base
     std::vector<std::vector<std::vector<std::vector<double>>>> Fk;
     std::vector<std::vector<std::vector<double>>> U_Yukawa;
     std::vector<std::vector<std::vector<double>>> J_Yukawa;
-
-    void read_occup_m(const UnitCell& ucell,
-                      const std::string& fn,
-                      const std::string& init_chg,
-                      int nspin,
-                      int npol);
-    void local_occup_bcast(const UnitCell& ucell,
-                           int nspin,
-                           int npol);
 };
 
 

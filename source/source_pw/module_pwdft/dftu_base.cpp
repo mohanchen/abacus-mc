@@ -1,6 +1,7 @@
 #include "source_pw/module_pwdft/dftu_base.h"
 
 #include "source_cell/unitcell.h"
+#include "source_pw/module_pwdft/dftu_base_io.h"
 #include "source_base/global_function.h"
 #include "source_base/memory_recorder.h"
 #include "source_base/parallel_global.h"
@@ -13,7 +14,7 @@
 #include <vector>
 
 // local inline helpers for eigenvalue calculation (JacobiRotate, CalculateEigenvalues)
-// have been migrated to dftu_output.cpp, where they are used by dftu_io::write_occup_m.
+// have been migrated to dftu_base_io.cpp, where they are used by DFTU_BASE::write_occup_m.
 // mohan refactored 2025-11-08
 // All members are now non-static; default values are in the header.
 
@@ -211,9 +212,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
     {
         std::stringstream sst;
         sst << global_readin_dir << "dm_onsite_ini.txt";
-        this->read_occup_m(cell, sst.str(), init_chg, nspin, npol);
+        DFTU_BASE::read_occup_m(cell, this->occ_mat, this->orbital_corr, this->occ_mat_ctrl,
+                                sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-        this->local_occup_bcast(cell, nspin, npol);
+        DFTU_BASE::local_occup_bcast(cell, this->occ_mat, this->orbital_corr, nspin, npol);
 #endif
 
         mark_occ_mat_initialized();
@@ -225,9 +227,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
         {
             std::stringstream sst;
             sst << global_readin_dir << "dm_onsite.txt";
-            this->read_occup_m(cell, sst.str(), init_chg, nspin, npol);
+            DFTU_BASE::read_occup_m(cell, this->occ_mat, this->orbital_corr, this->occ_mat_ctrl,
+                                    sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-            this->local_occup_bcast(cell, nspin, npol);
+            DFTU_BASE::local_occup_bcast(cell, this->occ_mat, this->orbital_corr, nspin, npol);
 #endif
             mark_occ_mat_initialized();
         }
@@ -442,238 +445,6 @@ void Plus_U_Base::set_occ_mat_flat(const int iat, const int l, const int spin,
 }
 
 
-void Plus_U_Base::read_occup_m(const UnitCell& ucell,
-                               const std::string& fn,
-                               const std::string& init_chg,
-                               int nspin,
-                               int npol)
-{
-    ModuleBase::TITLE("Plus_U_Base", "read_occup_m");
-
-    if (GlobalV::MY_RANK != 0)
-    {
-        return;
-    }
-
-    std::ifstream ifdftu(fn.c_str(), std::ios::in);
-
-    if (!ifdftu)
-    {
-        if (occ_mat_ctrl > 0)
-        {
-            ModuleBase::WARNING_QUIT("Plus_U_Base::read_occup_m", "Can not find the file dm_onsite_ini.txt. Please check your dm_onsite_ini.txt");
-        }
-        else
-        {
-            if (init_chg == "file")
-            {
-                ModuleBase::WARNING_QUIT("Plus_U_Base::read_occup_m", "Can not find the file dm_onsite.txt. Please do scf calculation first");
-            }
-        }
-        ModuleBase::WARNING_QUIT("Plus_U_Base::read_occup_m", "Can not open dm_onsite.txt file");
-    }
-
-    ifdftu.clear();
-    ifdftu.seekg(0);
-
-    char word[20];
-
-    int T = 0;
-    int iat = 0;
-    int spin = 0;
-    int L = 0;
-    int zeta = 0;
-
-    ifdftu.rdstate();
-
-    while (ifdftu.good())
-    {
-        ifdftu >> word;
-        if (ifdftu.eof())
-        {
-            break;
-        }
-
-        if (strcmp("Atom=", word) == 0)
-        {
-            ifdftu >> iat;
-            iat -= 1;
-            ifdftu >> word;
-
-            if (strcmp("L=", word) != 0)
-            {
-                ModuleBase::WARNING_QUIT("Plus_U_Base::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
-            }
-            ifdftu >> L;
-            ifdftu >> word;
-
-            if (strcmp("ORBITAL=", word) != 0)
-            {
-                ModuleBase::WARNING_QUIT("Plus_U_Base::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
-            }
-            ifdftu >> zeta;
-            ifdftu.ignore(150, '\n');
-
-            T = ucell.iat2it[iat];
-            const int NL = ucell.atoms[T].nwl + 1;
-            const int LC = get_orbital_corr(T);
-
-            for (int l = 0; l < NL; l++)
-            {
-                if (l != get_orbital_corr(T))
-                {
-                    continue;
-                }
-
-                if (nspin == 1 || nspin == 2)
-                {
-                    for (int is = 0; is < 2; is++)
-                    {
-                        ifdftu >> word;
-                        if (strcmp("spin=", word) == 0)
-                        {
-                            ifdftu >> spin;
-                            spin -= 1;
-                            ifdftu.ignore(150, '\n');
-
-                            double value = 0.0;
-                            for (int m0 = 0; m0 < 2 * L + 1; m0++)
-                            {
-                                for (int m1 = 0; m1 < 2 * L + 1; m1++)
-                                {
-                                    ifdftu >> value;
-                                    occ_mat[iat][L][zeta][spin](m0, m1) = value;
-                                }
-                                ifdftu.ignore(150, '\n');
-                            }
-                        }
-                        else
-                        {
-                            ModuleBase::WARNING_QUIT("Plus_U_Base::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
-                        }
-                    }
-                }
-                else if (nspin == 4) // SOC
-                {
-                    double value = 0.0;
-                    for (int m0 = 0; m0 < 2 * L + 1; m0++)
-                    {
-                        for (int ipol0 = 0; ipol0 < npol; ipol0++)
-                        {
-                            const int m0_all = m0 + (2 * L + 1) * ipol0;
-
-                            for (int m1 = 0; m1 < 2 * L + 1; m1++)
-                            {
-                                for (int ipol1 = 0; ipol1 < npol; ipol1++)
-                                {
-                                    int m1_all = m1 + (2 * L + 1) * ipol1;
-                                    ifdftu >> value;
-                                    occ_mat[iat][L][zeta][0](m0_all, m1_all) = value;
-                                }
-                            }
-                            ifdftu.ignore(150, '\n');
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            ModuleBase::WARNING_QUIT("Plus_U_Base::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
-        }
-
-        ifdftu.rdstate();
-
-        if (ifdftu.eof() != 0)
-        {
-            break;
-        }
-    }
-
-    return;
-}
-
-
-void Plus_U_Base::local_occup_bcast(const UnitCell& ucell,
-                                    int nspin,
-                                    int npol)
-{
-    ModuleBase::TITLE("Plus_U_Base", "local_occup_bcast");
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        if (!has_correlated_orbital(T))
-        {
-            continue;
-        }
-
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-            const int L = get_orbital_corr(T);
-
-            for (int l = 0; l <= ucell.atoms[T].nwl; l++)
-            {
-                if (l != get_orbital_corr(T))
-                {
-                    continue;
-                }
-
-                for (int n = 0; n < ucell.atoms[T].l_nchi[l]; n++)
-                {
-                    if (n != 0)
-                    {
-                        continue;
-                    }
-
-                    if (nspin == 1 || nspin == 2)
-                    {
-                        for (int spin = 0; spin < 2; spin++)
-                        {
-                            for (int m0 = 0; m0 < 2 * l + 1; m0++)
-                            {
-                                for (int m1 = 0; m1 < 2 * l + 1; m1++)
-                                {
-#ifdef __MPI
-                                    MPI_Bcast(&occ_mat[iat][l][n][spin](m0, m1), 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-                                }
-                            }
-                        }
-                    }
-                    else if (nspin == 4) // SOC
-                    {
-                        for (int m0 = 0; m0 < 2 * L + 1; m0++)
-                        {
-                            for (int ipol0 = 0; ipol0 < npol; ipol0++)
-                            {
-                                const int m0_all = m0 + (2 * L + 1) * ipol0;
-
-                                for (int m1 = 0; m1 < 2 * L + 1; m1++)
-                                {
-                                    for (int ipol1 = 0; ipol1 < npol; ipol1++)
-                                    {
-                                        int m1_all = m1 + (2 * L + 1) * ipol1;
-#ifdef __MPI
-                                        MPI_Bcast(&occ_mat[iat][l][n][0](m0_all, m1_all),
-                                                  1,
-                                                  MPI_DOUBLE,
-                                                  0,
-                                                  MPI_COMM_WORLD);
-#endif
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return;
-}
-
-
-// cal_occ_pw() is implemented in source_pw/module_pwdft/dftu_cal_occ_pw.cpp
-// as a Plus_U_Base method. Pure per-atom kernels live in dftu_tools_pw.{h,cpp}
-// as free functions in namespace dftu_pw.
+// cal_occ_pw() is implemented in source_pw/module_pwdft/dftu_base_occ.cpp
+// as a Plus_U_Base method. Pure per-atom kernels live in dftu_base_tools.{h,cpp}
+// as free functions in namespace DFTU_BASE.

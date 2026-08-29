@@ -1,6 +1,6 @@
-#include "source_pw/module_pwdft/dftu_tools_pw.h"
+#include "source_pw/module_pwdft/dftu_base_tools.h"
 
-namespace dftu_pw {
+namespace DFTU_BASE {
 
 void pauli_to_spin_basis(std::complex<double>* pot_onsite, int m_size)
 {
@@ -146,4 +146,4 @@ void accumulate_occ_scalar(
     }
 }
 
-} // namespace dftu_pw
+} // namespace DFTU_BASE
