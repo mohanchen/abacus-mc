@@ -6,6 +6,8 @@
 #include "source_base/math_integral.h"
 #include "source_base/math_polyint.h"
 
+#include <vector>
+
 void pseudopot_cell_vnl::initgradq_vnl(const UnitCell &cell)
 {
     const int nbrx = 10;
@@ -31,8 +33,8 @@ void pseudopot_cell_vnl::initgradq_vnl(const UnitCell &cell)
             kkbeta--;
         }
 
-        double *djl = new double[kkbeta];
-        double *aux  = new double[kkbeta];
+        std::vector<double> djl(kkbeta);
+        std::vector<double> aux(kkbeta);
 
         for (int ib = 0;ib < nbeta;ib++)
         {
@@ -40,7 +42,7 @@ void pseudopot_cell_vnl::initgradq_vnl(const UnitCell &cell)
             for (int iq=0; iq<PARAM.globalv.nqx; iq++)  
             {
                 const double q = iq * PARAM.globalv.dq;
-                ModuleBase::Sphbes::dSpherical_Bessel_dx(kkbeta, cell.atoms[it].ncpp.r.data(), q, l, djl);
+                ModuleBase::Sphbes::dSpherical_Bessel_dx(kkbeta, cell.atoms[it].ncpp.r.data(), q, l, djl.data());
 
                 for (int ir = 0;ir < kkbeta;ir++)
                 {
@@ -48,12 +50,10 @@ void pseudopot_cell_vnl::initgradq_vnl(const UnitCell &cell)
                               djl[ir] * pow(cell.atoms[it].ncpp.r[ir],2);
                 } 
                 double vqint = 0.0;
-                ModuleBase::Integral::Simpson_Integral(kkbeta, aux, cell.atoms[it].ncpp.rab.data(), vqint);
+                ModuleBase::Integral::Simpson_Integral(kkbeta, aux.data(), cell.atoms[it].ncpp.rab.data(), vqint);
                 this->tab_dq(it, ib, iq) = vqint * pref;
-            } 
-        } 
-        delete[] aux;
-        delete[] djl;
+            }
+        }
     }
 
 }
@@ -75,21 +75,24 @@ void pseudopot_cell_vnl::getgradq_vnl(const UnitCell& ucell,
     // We only need to initialize them once as long as the cell is unchanged.
     ModuleBase::realArray tmpgradvkb(3, nhm, npw);
     ModuleBase::matrix tmpvkb(nhm, npw);
-    double *vq = new double[npw];
-    double *dvq = new double[npw];
+    std::vector<double> vq(npw);
+    std::vector<double> dvq(npw);
 
     const int x1= (lmaxkb + 1)*(lmaxkb + 1);
 
     ModuleBase::matrix ylm(x1, npw);
-    ModuleBase::matrix *dylm = new ModuleBase::matrix[3]{ModuleBase::matrix(x1,npw),ModuleBase::matrix(x1,npw),ModuleBase::matrix(x1,npw)};
+    std::vector<ModuleBase::matrix> dylm(3);
+    dylm[0].create(x1, npw);
+    dylm[1].create(x1, npw);
+    dylm[2].create(x1, npw);
 
-    ModuleBase::Vector3<double> *gk = new ModuleBase::Vector3<double>[npw];
+    std::vector<ModuleBase::Vector3<double>> gk(npw);
     for (int ig = 0;ig < npw;ig++) 
     {
         gk[ig] = this->wfcpw->getgpluskcar(ik,ig);
     }
 
-    ModuleBase::YlmReal::grad_Ylm_Real(x1, npw, gk, ylm, dylm[0], dylm[1], dylm[2]);
+    ModuleBase::YlmReal::grad_Ylm_Real(x1, npw, gk.data(), ylm, dylm[0], dylm[1], dylm[2]);
 
     // GPU path skips vkb allocation in init(); allocate now if needed
     if (this->vkb.nc == 0 && this->nkb > 0 && this->vkbnc > 0) {
@@ -179,11 +182,6 @@ void pseudopot_cell_vnl::getgradq_vnl(const UnitCell& ucell,
             delete [] sk;
         } // end ia
     } // enddo
-
-    delete [] gk;
-    delete [] vq;
-    delete [] dvq;
-    delete [] dylm;
 
     ModuleBase::timer::end("pp_cell_vnl","getvnl");
 

@@ -72,8 +72,7 @@ void pseudopot_cell_vnl::init_vnl(UnitCell& cell, const ModulePW::PW_Basis* rho_
     // the atomic D terms
     this->dvan.zero_out();
     this->dvan_so.zero_out(); // added by zhengdy-soc
-    delete[] indv_ijkb0;
-    this->indv_ijkb0 = new int[cell.nat];
+    this->indv_ijkb0.assign(cell.nat, 0);
     int ijkb0 = 0;
     for (int it = 0; it < cell.ntype; it++)
     {

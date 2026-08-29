@@ -6,6 +6,8 @@
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_cell/unitcell.h"
 
+#include <vector>
+
 class pseudopot_cell_vl
 {
 public:
@@ -27,7 +29,7 @@ public:
 
 private:
 
-	double * zp = nullptr;   // (npsx),the charge of the pseudopotential
+    std::vector<double> zp;  // (npsx),the charge of the pseudopotential
 
 	void allocate(const UnitCell& ucell,
                   const int ngg);

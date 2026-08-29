@@ -34,7 +34,6 @@ pseudopot_cell_vnl::pseudopot_cell_vnl()
 
 pseudopot_cell_vnl::~pseudopot_cell_vnl()
 {
-    delete[] indv_ijkb0;
 }
 
 void pseudopot_cell_vnl::release_memory()

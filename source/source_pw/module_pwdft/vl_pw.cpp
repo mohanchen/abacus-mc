@@ -5,16 +5,16 @@
 #include "source_base/math_integral.h"
 #include "source_base/timer.h"
 
+#include <algorithm>
+
 pseudopot_cell_vl::pseudopot_cell_vl()
 {
 	numeric = nullptr;
-	zp = nullptr; 
 }
 
 pseudopot_cell_vl::~pseudopot_cell_vl()
 {
 	delete[] numeric;
-	delete[] zp;
 }
 
 void pseudopot_cell_vl::init_vloc(const UnitCell& ucell,
@@ -27,8 +27,7 @@ void pseudopot_cell_vl::init_vloc(const UnitCell& ucell,
 	// potential vloc(ig,it) for each type of atom
 	ModuleBase::timer::start("ppcell_vl","init_vloc");
 
-	double *vloc1d = new double[rho_basis->ngg];
-	ModuleBase::GlobalFunc::ZEROS(vloc1d, rho_basis->ngg);
+	std::vector<double> vloc1d(rho_basis->ngg, 0.0);
 
 	this->allocate(ucell,rho_basis->ngg);
 	
@@ -36,23 +35,23 @@ void pseudopot_cell_vl::init_vloc(const UnitCell& ucell,
 	{
 		const Atom* atom = &ucell.atoms[it];
 
-		ModuleBase::GlobalFunc::ZEROS(vloc1d, rho_basis->ngg);
+		std::fill(vloc1d.begin(), vloc1d.end(), 0.0);
 
 		this->zp[it] = atom->ncpp.zv;
 		// compute V_loc(G) for a given type of atom
 		if(atom->coulomb_potential)
 		{
-			this->vloc_coulomb(ucell,this->zp[it], vloc1d, rho_basis);
+			this->vloc_coulomb(ucell,this->zp[it], vloc1d.data(), rho_basis);
 		}
 		else if(numeric[it]==true)
 		{
 			this->vloc_of_g(
-					atom->ncpp.msh, // after cutoff 
+					atom->ncpp.msh, // after cutoff
 					atom->ncpp.rab.data(),
-		          	atom->ncpp.r.data(), 
-					atom->ncpp.vloc_at.data(), // local potential in real space radial form.  
+		          	atom->ncpp.r.data(),
+					atom->ncpp.vloc_at.data(), // local potential in real space radial form.
 		          	this->zp[it],
-					vloc1d,
+					vloc1d.data(),
 					ucell,
 					rho_basis);
 		}
@@ -63,12 +62,10 @@ void pseudopot_cell_vl::init_vloc(const UnitCell& ucell,
 
 		if(it>=0 && it<this->vloc.nr && this->vloc.nc>=0)
 		{
-			ModuleBase::GlobalFunc::COPYARRAY(vloc1d, &this->vloc(it, 0), rho_basis->ngg);
+			std::copy(vloc1d.begin(), vloc1d.end(), &this->vloc(it, 0));
 		}
-	} 
+	}
 
-
-	delete[] vloc1d;
 
 	this->print_vloc(ucell,rho_basis);
 
@@ -100,9 +97,7 @@ void pseudopot_cell_vl::allocate(const UnitCell& ucell,
 	// npsx( max number of different PPs)
 	// 2021-02-22
 	int npsx = 50;
-	delete[] zp; 
-	this->zp = new double[npsx];
-	ModuleBase::GlobalFunc::ZEROS(zp, npsx);
+	this->zp.assign(npsx, 0.0);
 
 	return;
 }
@@ -174,15 +169,15 @@ void pseudopot_cell_vl::vloc_of_g(const int& msh,
 	// subtracted in real space and added again in G space
 
     assert(msh>0);
-	
-	double *aux1 = new double[msh];
+
+    std::vector<double> aux1(msh);
 
     // (1)
 	if(rho_basis->gg_uniq[0] < 1.0e-8)
 	{
-		double *aux = new double[msh];
+		std::vector<double> aux(msh);
 		// first the g=0 term
-		for (int ir=0; ir<msh; ir++) 
+		for (int ir=0; ir<msh; ir++)
 		{
 			// This is the |G| = 0 component of the local
 			// potential giving rise to the so-called
@@ -190,9 +185,8 @@ void pseudopot_cell_vl::vloc_of_g(const int& msh,
 			aux[ir] = r [ir] * (r [ir] * vloc_at [ir] + zp_in * ModuleBase::e2);
 			//aux[ir] = r [ir] * (r [ir] * vloc_at [ir] );
 		}
-		ModuleBase::Integral::Simpson_Integral(msh, aux, rab, vloc_1d[0] );
-		igl0 = 1;	
-		delete [] aux;
+		ModuleBase::Integral::Simpson_Integral(msh, aux.data(), rab, vloc_1d[0] );
+		igl0 = 1;
 	}
 	else
 	{
@@ -213,20 +207,20 @@ void pseudopot_cell_vl::vloc_of_g(const int& msh,
 #pragma omp parallel
 {
 #endif
-	double *aux = new double[msh];
+	std::vector<double> aux(msh);
 
 #ifdef _OPENMP
 #pragma omp for
 #endif
-	for (int ig = igl0;ig < rho_basis->ngg;ig++) 
+	for (int ig = igl0;ig < rho_basis->ngg;ig++)
 	{
 		double gx2= rho_basis->gg_uniq[ig] * ucell.tpiba2;
 		double gx = std::sqrt(gx2);
-		for (int ir = 0;ir < msh;ir++) 
+		for (int ir = 0;ir < msh;ir++)
 		{
 			aux [ir] = aux1 [ir] * ModuleBase::libm::sin(gx * r [ir]) / gx;
 		}
-		ModuleBase::Integral::Simpson_Integral(msh, aux, rab, vloc_1d[ig] );
+		ModuleBase::Integral::Simpson_Integral(msh, aux.data(), rab, vloc_1d[ig] );
 		vloc_1d[ig] -= fac *  ModuleBase::truncated_exp(- gx2 * 0.25)/ gx2;
 	} // enddo
 
@@ -239,12 +233,10 @@ void pseudopot_cell_vl::vloc_of_g(const int& msh,
 		vloc_1d[ig] *= d_fpi_omega;
 	}
 
-	delete [] aux;
 #ifdef _OPENMP
 }
 #endif
 
-	delete [] aux1;
 	return;
 } // end subroutine vloc_of_g
 
