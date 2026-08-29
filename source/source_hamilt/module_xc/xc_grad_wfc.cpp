@@ -2,21 +2,11 @@
 // (XC_Functional::grad_wfc), used by stress_func_mgga.cpp.
 
 #include "xc_functional.h"
-#include "source_base/timer.h"
-#include "source_base/constants.h"
 #include "source_basis/module_pw/pw_basis_k.h"
-#include "source_io/module_parameter/parameter.h"
 #include <ATen/core/tensor.h>
 #include <ATen/core/tensor_map.h>
 #include <ATen/core/tensor_types.h>
 #include <source_hamilt/module_xc/kernels/xc_functional_op.h>
-
-#ifdef __LIBXC
-#include "libxc_abacus.h"
-#ifdef __EXX
-#include "source_hamilt/module_xc/exx_info.h"
-#endif
-#endif
 
 template <typename T, typename Device, typename Real>
 void XC_Functional::grad_wfc(
