@@ -206,17 +206,19 @@ class XC_Functional
         double &v2c);
 
 //-------------------
-//  xc_grad.cpp
+//  xc_grad*.cpp
 //-------------------
 
-// This file contains subroutines realted to gradient calculations
-// it contains 5 subroutines:
-// 1. gradcorr, which calculates gradient correction
-// 2. grad_wfc, which calculates gradient of wavefunction
+// The gradient correction is a pipeline: XC_Functional::gradcorr is the
+// public entry point declared below, and its three internal stage
+// functions (gradcorr_prepare_rho / gradcorr_xc_kernel /
+// gradcorr_assemble_vxc) are declared in xc_grad_internal.h.
+// This file group also provides:
+// 1. grad_wfc, which calculates gradient of wavefunction
 //      it is used in stress_func_mgga.cpp
-// 3. grad_rho, which calculates gradient of density
-// 4. grad_dot, which calculates divergence of something
-// 5. noncolin_rho, which diagonalizes the spin density matrix
+// 2. grad_rho, which calculates gradient of density
+// 3. grad_dot, which calculates divergence of something
+// 4. noncolin_rho, which diagonalizes the spin density matrix
 //  and gives the spin up and spin down components of the charge.
 
     static void gradcorr(
@@ -270,89 +272,6 @@ class XC_Functional
         const int nrxx,
         const double* ux_,
         const bool lsign_);
-
-    static void gradcorr_prepare_rho(
-        const Charge* const chr,
-        ModulePW::PW_Basis* rhopw,
-        const UnitCell* ucell,
-        const int nspin,
-        const int nspin0,
-        const double fac,
-        const bool need_laplacian,
-        const bool is_stress,
-        const bool domag,
-        const bool domag_z,
-        ModuleBase::matrix& v,
-        std::vector<double>& rhotmp1,
-        std::vector<double>& rhotmp2,
-        std::vector<std::complex<double>>& rhogsum1,
-        std::vector<std::complex<double>>& rhogsum2,
-        std::vector<ModuleBase::Vector3<double>>& gdr1,
-        std::vector<ModuleBase::Vector3<double>>& gdr2,
-        std::vector<ModuleBase::Vector3<double>>& h1,
-        std::vector<ModuleBase::Vector3<double>>& h2,
-        std::vector<double>& neg,
-        std::vector<double>& vsave,
-        std::vector<double>& vgg,
-        std::vector<double>& lapl1,
-        std::vector<double>& lapl2,
-        std::vector<double>& vlapl_arr1,
-        std::vector<double>& vlapl_arr2);
-
-    static void gradcorr_xc_kernel(
-        const Charge* const chr,
-        ModulePW::PW_Basis* rhopw,
-        const int nspin,
-        const int nspin0,
-        const double fac,
-        const bool need_laplacian,
-        const bool is_stress,
-        const bool igcc_is_lyp,
-        const bool domag,
-        const bool domag_z,
-        const double hybrid_alpha_in,
-        const double hse_omega_in,
-        const double* const rhotmp1,
-        const double* const rhotmp2,
-        const ModuleBase::Vector3<double>* const gdr1,
-        const ModuleBase::Vector3<double>* const gdr2,
-        const std::vector<double>& lapl1,
-        const std::vector<double>& lapl2,
-        const double* const neg,
-        double& vtxcgc,
-        double& etxcgc,
-        std::vector<double>& stress_gga,
-        ModuleBase::Vector3<double>* const h1,
-        ModuleBase::Vector3<double>* const h2,
-        std::vector<double>& vlapl_arr1,
-        std::vector<double>& vlapl_arr2,
-        ModuleBase::matrix& v);
-
-    static void gradcorr_assemble_vxc(
-        const Charge* const chr,
-        ModulePW::PW_Basis* rhopw,
-        const UnitCell* ucell,
-        const int nspin,
-        const int nspin0,
-        const double fac,
-        const bool is_stress,
-        const bool domag,
-        const bool domag_z,
-        double vtxcgc,
-        double etxcgc,
-        double& vtxc,
-        double& etxc,
-        std::vector<double>& stress_gga,
-        ModuleBase::matrix& v,
-        double* rhotmp1,
-        double* rhotmp2,
-        ModuleBase::Vector3<double>* h1,
-        ModuleBase::Vector3<double>* h2,
-        std::vector<double>& vlapl_arr1,
-        std::vector<double>& vlapl_arr2,
-        const double* neg,
-        double* vsave,
-        double* vgg);
 
     //-------------------
     //  xc_lda_exch.cpp

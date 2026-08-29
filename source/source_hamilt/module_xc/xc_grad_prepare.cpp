@@ -1,4 +1,5 @@
 #include "xc_functional.h"
+#include "xc_grad_internal.h"
 #include "source_base/timer.h"
 #include "source_base/constants.h"
 #include "source_basis/module_pw/pw_basis_k.h"
@@ -15,34 +16,22 @@
 #endif
 #endif
 
-void XC_Functional::gradcorr_prepare_rho(
-    const Charge* const chr,
-    ModulePW::PW_Basis* rhopw,
-    const UnitCell* ucell,
-    const int nspin,
-    const int nspin0,
-    const double fac,
-    const bool need_laplacian,
-    const bool is_stress,
-    const bool domag,
-    const bool domag_z,
+void gradcorr_prepare_rho(
+    const GradCorrParams& params,
     ModuleBase::matrix& v,
-    std::vector<double>& rhotmp1,
-    std::vector<double>& rhotmp2,
-    std::vector<std::complex<double>>& rhogsum1,
-    std::vector<std::complex<double>>& rhogsum2,
-    std::vector<ModuleBase::Vector3<double>>& gdr1,
-    std::vector<ModuleBase::Vector3<double>>& gdr2,
-    std::vector<ModuleBase::Vector3<double>>& h1,
-    std::vector<ModuleBase::Vector3<double>>& h2,
-    std::vector<double>& neg,
-    std::vector<double>& vsave,
-    std::vector<double>& vgg,
-    std::vector<double>& lapl1,
-    std::vector<double>& lapl2,
-    std::vector<double>& vlapl_arr1,
-    std::vector<double>& vlapl_arr2)
+    GradCorrBuffers& buf)
 {
+    const Charge* const chr = params.chr;
+    ModulePW::PW_Basis* rhopw = params.rhopw;
+    const UnitCell* ucell = params.ucell;
+    const int nspin = params.nspin;
+    const int nspin0 = params.nspin0;
+    const double fac = params.fac;
+    const bool need_laplacian = params.need_laplacian;
+    const bool is_stress = params.is_stress;
+    const bool domag = params.domag;
+    const bool domag_z = params.domag_z;
+
     // doing FFT to get rho in G space: rhog1
     rhopw->real2recip(chr->rho[0], chr->rhog[0]);
     if(nspin==2)
@@ -56,38 +45,38 @@ void XC_Functional::gradcorr_prepare_rho(
 
     // for spin unpolarized case,
     // calculate the gradient of (rho_core+rho) in reciprocal space.
-    rhotmp1.resize(rhopw->nrxx);
-    rhogsum1.resize(rhopw->npw);
+    buf.rhotmp1.resize(rhopw->nrxx);
+    buf.rhogsum1.resize(rhopw->npw);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
     for(int ir=0; ir<rhopw->nrxx; ir++)
     {
-        rhotmp1[ir] = chr->rho[0][ir] + fac * chr->rho_core[ir];
+        buf.rhotmp1[ir] = chr->rho[0][ir] + fac * chr->rho_core[ir];
     }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
     for(int ig=0; ig<rhopw->npw; ig++)
     {
-        rhogsum1[ig] = chr->rhog[0][ig] + fac * chr->rhog_core[ig];
+        buf.rhogsum1[ig] = chr->rhog[0][ig] + fac * chr->rhog_core[ig];
     }
 
-    gdr1.resize(rhopw->nrxx);
+    buf.gdr1.resize(rhopw->nrxx);
     if(!is_stress)
     {
-        h1.resize(rhopw->nrxx);
+        buf.h1.resize(rhopw->nrxx);
     }
 
-    XC_Functional::grad_rho(rhogsum1.data(), gdr1.data(), rhopw, ucell->tpiba);
+    XC_Functional::grad_rho(buf.rhogsum1.data(), buf.gdr1.data(), rhopw, ucell->tpiba);
 
     if(need_laplacian)
     {
-        lapl1.resize(rhopw->nrxx);
-        XC_Functional::laplacian_rho(rhogsum1.data(), lapl1.data(), rhopw, ucell->tpiba);
-        if(use_libxc)
+        buf.lapl1.resize(rhopw->nrxx);
+        XC_Functional::laplacian_rho(buf.rhogsum1.data(), buf.lapl1.data(), rhopw, ucell->tpiba);
+        if(params.use_libxc)
         {
-            vlapl_arr1.resize(rhopw->nrxx, 0.0);
+            buf.vlapl_arr1.resize(rhopw->nrxx, 0.0);
         }
     }
 
@@ -95,68 +84,68 @@ void XC_Functional::gradcorr_prepare_rho(
     // calculate the gradient of (rho_core+rho) in reciprocal space.
     if(nspin==2)
     {
-        rhotmp2.resize(rhopw->nrxx);
-        rhogsum2.resize(rhopw->npw);
+        buf.rhotmp2.resize(rhopw->nrxx);
+        buf.rhogsum2.resize(rhopw->npw);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
         for(int ir=0; ir<rhopw->nrxx; ir++)
         {
-            rhotmp2[ir] = chr->rho[1][ir] + fac * chr->rho_core[ir];
+            buf.rhotmp2[ir] = chr->rho[1][ir] + fac * chr->rho_core[ir];
         }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
         for(int ig=0; ig<rhopw->npw; ig++)
         {
-            rhogsum2[ig] = chr->rhog[1][ig] + fac * chr->rhog_core[ig];
+            buf.rhogsum2[ig] = chr->rhog[1][ig] + fac * chr->rhog_core[ig];
         }
 
-        gdr2.resize(rhopw->nrxx);
+        buf.gdr2.resize(rhopw->nrxx);
         if(!is_stress)
         {
-            h2.resize(rhopw->nrxx);
+            buf.h2.resize(rhopw->nrxx);
         }
 
-        XC_Functional::grad_rho(rhogsum2.data(), gdr2.data(), rhopw, ucell->tpiba);
+        XC_Functional::grad_rho(buf.rhogsum2.data(), buf.gdr2.data(), rhopw, ucell->tpiba);
 
         if(need_laplacian)
         {
-            lapl2.resize(rhopw->nrxx);
-            XC_Functional::laplacian_rho(rhogsum2.data(), lapl2.data(), rhopw, ucell->tpiba);
-            if(use_libxc)
+            buf.lapl2.resize(rhopw->nrxx);
+            XC_Functional::laplacian_rho(buf.rhogsum2.data(), buf.lapl2.data(), rhopw, ucell->tpiba);
+            if(params.use_libxc)
             {
-                vlapl_arr2.resize(rhopw->nrxx, 0.0);
+                buf.vlapl_arr2.resize(rhopw->nrxx, 0.0);
             }
         }
     }
 
     if(nspin == 4&&(domag||domag_z))
     {
-        rhotmp2.resize(rhopw->nrxx);
-        rhogsum2.resize(rhopw->npw);
-        neg.resize(rhopw->nrxx);
+        buf.rhotmp2.resize(rhopw->nrxx);
+        buf.rhogsum2.resize(rhopw->npw);
+        buf.neg.resize(rhopw->nrxx);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
         for(int ir=0; ir<rhopw->nrxx; ir++)
         {
-            rhotmp1[ir] = 0.0;
-            rhotmp2[ir] = 0.0;
-            neg[ir] = 0.0;
+            buf.rhotmp1[ir] = 0.0;
+            buf.rhotmp2[ir] = 0.0;
+            buf.neg[ir] = 0.0;
         }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
         for(int ig=0; ig<rhopw->npw; ig++)
         {
-            rhogsum1[ig] = 0.0;
-            rhogsum2[ig] = 0.0;
+            buf.rhogsum1[ig] = 0.0;
+            buf.rhogsum2[ig] = 0.0;
         }
         if(!is_stress)
         {
-            vsave.assign(nspin * rhopw->nrxx, 0.0);
-            vgg.assign(nspin0 * rhopw->nrxx, 0.0);
+            buf.vsave.assign(nspin * rhopw->nrxx, 0.0);
+            buf.vgg.assign(nspin0 * rhopw->nrxx, 0.0);
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 1024)
 #endif
@@ -164,50 +153,50 @@ void XC_Functional::gradcorr_prepare_rho(
             {
                 for(int ir =0;ir<rhopw->nrxx;ir++)
                 {
-                    vsave[is * rhopw->nrxx + ir] = v(is,ir);
+                    buf.vsave[is * rhopw->nrxx + ir] = v(is,ir);
                     v(is,ir) = 0;
                 }
             }
         }
-        noncolin_rho(rhotmp1.data(), rhotmp2.data(), neg.data(), chr->rho, rhopw->nrxx, ucell->magnet.ux_, ucell->magnet.lsign_);
-        rhopw->real2recip(rhotmp1.data(), rhogsum1.data());
-        rhopw->real2recip(rhotmp2.data(), rhogsum2.data());
+        XC_Functional::noncolin_rho(buf.rhotmp1.data(), buf.rhotmp2.data(), buf.neg.data(), chr->rho, rhopw->nrxx, ucell->magnet.ux_, ucell->magnet.lsign_);
+        rhopw->real2recip(buf.rhotmp1.data(), buf.rhogsum1.data());
+        rhopw->real2recip(buf.rhotmp2.data(), buf.rhogsum2.data());
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
         for(int ir=0; ir<rhopw->nrxx; ir++)
         {
-            rhotmp2[ir] += fac * chr->rho_core[ir];
-            rhotmp1[ir] += fac * chr->rho_core[ir];
+            buf.rhotmp2[ir] += fac * chr->rho_core[ir];
+            buf.rhotmp1[ir] += fac * chr->rho_core[ir];
         }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
 #endif
         for(int ig=0; ig<rhopw->npw; ig++)
         {
-            rhogsum2[ig] += fac * chr->rhog_core[ig];
-            rhogsum1[ig] += fac * chr->rhog_core[ig];
+            buf.rhogsum2[ig] += fac * chr->rhog_core[ig];
+            buf.rhogsum1[ig] += fac * chr->rhog_core[ig];
         }
 
-        gdr2.resize(rhopw->nrxx);
+        buf.gdr2.resize(rhopw->nrxx);
         if(!is_stress)
         {
-            h2.resize(rhopw->nrxx);
+            buf.h2.resize(rhopw->nrxx);
         }
 
-        XC_Functional::grad_rho(rhogsum1.data(), gdr1.data(), rhopw, ucell->tpiba);
-        XC_Functional::grad_rho(rhogsum2.data(), gdr2.data(), rhopw, ucell->tpiba);
+        XC_Functional::grad_rho(buf.rhogsum1.data(), buf.gdr1.data(), rhopw, ucell->tpiba);
+        XC_Functional::grad_rho(buf.rhogsum2.data(), buf.gdr2.data(), rhopw, ucell->tpiba);
 
         if(need_laplacian)
         {
-            lapl1.resize(rhopw->nrxx);
-            XC_Functional::laplacian_rho(rhogsum1.data(), lapl1.data(), rhopw, ucell->tpiba);
-            lapl2.resize(rhopw->nrxx);
-            XC_Functional::laplacian_rho(rhogsum2.data(), lapl2.data(), rhopw, ucell->tpiba);
-            if(use_libxc)
+            buf.lapl1.resize(rhopw->nrxx);
+            XC_Functional::laplacian_rho(buf.rhogsum1.data(), buf.lapl1.data(), rhopw, ucell->tpiba);
+            buf.lapl2.resize(rhopw->nrxx);
+            XC_Functional::laplacian_rho(buf.rhogsum2.data(), buf.lapl2.data(), rhopw, ucell->tpiba);
+            if(params.use_libxc)
             {
-                vlapl_arr1.resize(rhopw->nrxx, 0.0);
-                vlapl_arr2.resize(rhopw->nrxx, 0.0);
+                buf.vlapl_arr1.resize(rhopw->nrxx, 0.0);
+                buf.vlapl_arr2.resize(rhopw->nrxx, 0.0);
             }
         }
     }

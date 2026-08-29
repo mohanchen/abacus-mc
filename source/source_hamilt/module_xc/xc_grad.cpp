@@ -1,14 +1,20 @@
-// This file contains subroutines realted to gradient calculations
-// it contains 5 subroutines:
-// 1. gradcorr, which calculates gradient correction
-// 2. grad_wfc, which calculates gradient of wavefunction
-//		it is used in stress_func_mgga.cpp
-// 3. grad_rho, which calculates gradient of density
-// 4. grad_dot, which calculates divergence of something
-// 5. noncolin_rho, which diagonalizes the spin density matrix
-//  and gives the spin up and spin down components of the charge.
+// This file implements the public entry point of the gradient
+// correction, XC_Functional::gradcorr, which drives a three-stage
+// pipeline:
+// 1. gradcorr_prepare_rho (xc_grad_prepare.cpp): builds the real- and
+//      reciprocal-space density buffers and their gradients
+// 2. gradcorr_xc_kernel (xc_grad_kernel.cpp): evaluates the GGA/meta-GGA
+//      kernel on every grid point
+// 3. gradcorr_assemble_vxc (xc_grad_assemble.cpp): assembles the
+//      correction into etxc/vtxc/v/stress_gga
+// The internal stage functions and their shared parameter/buffer
+// structs are declared in xc_grad_internal.h.
+// xc_grad_utils.cpp / xc_grad_wfc.cpp provide the auxiliary
+// subroutines: grad_wfc, grad_rho, grad_dot, laplacian_rho and
+// noncolin_rho.
 
 #include "xc_functional.h"
+#include "xc_grad_internal.h"
 #include "source_base/timer.h"
 #include "source_base/constants.h"
 #include "source_basis/module_pw/pw_basis_k.h"
@@ -52,7 +58,7 @@ void XC_Functional::gradcorr(
         return;
     }
 
-    // No (semi-)local functional at all. `set_xc_type("HF")` sets func_type = 4 but leaves func_id empty, 
+    // No (semi-)local functional at all. `set_xc_type("HF")` sets func_type = 4 but leaves func_id empty,
     // Without this block, it will read back whatever the previous functional left in the cleared-but-not-freed
     // buffer (PBE, from set_xc_first_loop), producing a phantom XC energy and potential. (issue deepmodeling/abacus-develop#5404)
     if(func_id.empty())
@@ -99,46 +105,35 @@ void XC_Functional::gradcorr(
         }
     }
 
-    // sum up (rho_core+rho) for each spin in real space
-    // and reciprocal space.
-    std::vector<double> rhotmp1;
-    std::vector<double> rhotmp2;
-    std::vector<std::complex<double>> rhogsum1;
-    std::vector<std::complex<double>> rhogsum2;
-    std::vector<ModuleBase::Vector3<double>> gdr1;
-    std::vector<ModuleBase::Vector3<double>> gdr2;
-    std::vector<ModuleBase::Vector3<double>> h1;
-    std::vector<ModuleBase::Vector3<double>> h2;
-    std::vector<double> neg;
-    std::vector<double> vsave;
-    std::vector<double> vgg;
-    std::vector<double> lapl1;
-    std::vector<double> lapl2;
-    std::vector<double> vlapl_arr1;
-    std::vector<double> vlapl_arr2;
+    // Parameters and scratch buffers shared by the three pipeline stages.
+    GradCorrParams params;
+    params.chr = chr;
+    params.rhopw = rhopw;
+    params.ucell = ucell;
+    params.nspin = nspin;
+    params.nspin0 = nspin0;
+    params.fac = fac;
+    params.need_laplacian = need_laplacian;
+    params.is_stress = is_stress;
+    params.igcc_is_lyp = igcc_is_lyp;
+    params.domag = domag;
+    params.domag_z = domag_z;
+    params.hybrid_alpha = hybrid_alpha_in;
+    params.hse_omega = hse_omega_in;
+    params.use_libxc = use_libxc;
+    params.func_type = func_type;
+    params.func_id = func_id;
 
-    gradcorr_prepare_rho(chr, rhopw, ucell, nspin, nspin0, fac,
-        need_laplacian, is_stress, domag, domag_z, v, rhotmp1, rhotmp2,
-        rhogsum1, rhogsum2, gdr1, gdr2, h1, h2, neg,
-        vsave, vgg, lapl1, lapl2, vlapl_arr1, vlapl_arr2);
+    GradCorrBuffers buf;
+
+    gradcorr_prepare_rho(params, v, buf);
 
     double vtxcgc = 0.0;
     double etxcgc = 0.0;
 
-    gradcorr_xc_kernel(chr, rhopw, nspin, nspin0, fac,
-        need_laplacian, is_stress, igcc_is_lyp, domag, domag_z,
-        hybrid_alpha_in, hse_omega_in,
-        rhotmp1.data(), rhotmp2.data(), gdr1.data(), gdr2.data(), lapl1, lapl2, neg.data(),
-        vtxcgc, etxcgc, stress_gga, h1.data(), h2.data(),
-        vlapl_arr1, vlapl_arr2, v);
+    gradcorr_xc_kernel(params, vtxcgc, etxcgc, stress_gga, v, buf);
 
-    gradcorr_assemble_vxc(chr, rhopw, ucell, nspin, nspin0, fac,
-        is_stress, domag, domag_z, vtxcgc, etxcgc,
-        vtxc, etxc, stress_gga, v,
-        rhotmp1.data(), rhotmp2.data(), h1.data(), h2.data(),
-        vlapl_arr1, vlapl_arr2, neg.data(), vsave.data(), vgg.data());
+    gradcorr_assemble_vxc(params, vtxcgc, etxcgc, vtxc, etxc, stress_gga, v, buf);
 
     return;
 }
-
-

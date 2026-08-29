@@ -1,4 +1,5 @@
 #include "xc_functional.h"
+#include "xc_grad_internal.h"
 #include "source_base/timer.h"
 #include "source_base/constants.h"
 #include "source_basis/module_pw/pw_basis_k.h"
@@ -15,37 +16,29 @@
 #endif
 #endif
 
-void XC_Functional::gradcorr_xc_kernel(
-    const Charge* const chr,
-    ModulePW::PW_Basis* rhopw,
-    const int nspin,
-    const int nspin0,
-    const double fac,
-    const bool need_laplacian,
-    const bool is_stress,
-    const bool igcc_is_lyp,
-    const bool domag,
-    const bool domag_z,
-    const double hybrid_alpha_in,
-    const double hse_omega_in,
-    const double* const rhotmp1,
-    const double* const rhotmp2,
-    const ModuleBase::Vector3<double>* const gdr1,
-    const ModuleBase::Vector3<double>* const gdr2,
-    const std::vector<double>& lapl1,
-    const std::vector<double>& lapl2,
-    const double* const neg,
-    double& vtxcgc,
-    double& etxcgc,
-    std::vector<double>& stress_gga,
-    ModuleBase::Vector3<double>* const h1,
-    ModuleBase::Vector3<double>* const h2,
-    std::vector<double>& vlapl_arr1,
-    std::vector<double>& vlapl_arr2,
-    ModuleBase::matrix& v)
+void gradcorr_xc_kernel(const GradCorrParams& params,
+                        double& vtxcgc,
+                        double& etxcgc,
+                        std::vector<double>& stress_gga,
+                        ModuleBase::matrix& v,
+                        GradCorrBuffers& buf)
 {
+    const Charge* const chr = params.chr;
+    ModulePW::PW_Basis* rhopw = params.rhopw;
+    const int nspin = params.nspin;
+    const int nspin0 = params.nspin0;
+    const double fac = params.fac;
+    const bool is_stress = params.is_stress;
+    const bool igcc_is_lyp = params.igcc_is_lyp;
+    const bool domag = params.domag;
+    const bool domag_z = params.domag_z;
+    const double hybrid_alpha_in = params.hybrid_alpha;
+    const double hse_omega_in = params.hse_omega;
+    const bool use_libxc = params.use_libxc;
+    const int func_type = params.func_type;
+    const std::vector<int>& func_id = params.func_id;
+
     const double epsr = 1.0e-6;
-    const double epsg = 1.0e-10;
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -82,20 +75,20 @@ void XC_Functional::gradcorr_xc_kernel(
 #endif
             for(int ir=0; ir<rhopw->nrxx; ir++)
             {
-                const double arho = std::abs( rhotmp1[ir] );
+                const double arho = std::abs( buf.rhotmp1[ir] );
                 if(!is_stress)
                 {
-                    h1[ir].x = 0.0;
-                    h1[ir].y = 0.0;
-                    h1[ir].z = 0.0;
+                    buf.h1[ir].x = 0.0;
+                    buf.h1[ir].y = 0.0;
+                    buf.h1[ir].z = 0.0;
                 }
 
                 if(arho > epsr)
                 {
-                    grho2a = gdr1[ir].norm2();
+                    grho2a = buf.gdr1[ir].norm2();
 
                     //normally values in rhotmp can either be >= 0 or < 0.
-                    if( rhotmp1[ir] >= 0.0 )
+                    if( buf.rhotmp1[ir] >= 0.0 )
                     {
                         segno = 1.0;
                     }
@@ -111,9 +104,9 @@ void XC_Functional::gradcorr_xc_kernel(
                             double v3xc = 0.0;
                             double vlaplxc = 0.0;
                             double atau = chr->kin_r[0][ir]/2.0;
-                            double lapl_val = (!lapl1.empty()) ? lapl1[ir] : 0.0;
+                            double lapl_val = (!buf.lapl1.empty()) ? buf.lapl1[ir] : 0.0;
                             XC_Functional_Libxc::tau_xc( func_id, arho, grho2a, lapl_val, atau, sxc, v1xc, v2xc, v3xc, vlaplxc, hybrid_alpha_in, hse_omega_in);
-                            if(!vlapl_arr1.empty()) vlapl_arr1[ir] = vlaplxc;
+                            if(!buf.vlapl_arr1.empty()) buf.vlapl_arr1[ir] = vlaplxc;
                         }
                         else
                         {
@@ -128,9 +121,9 @@ void XC_Functional::gradcorr_xc_kernel(
                     if(is_stress)
                     {
                         double tt[3];
-                        tt[0] = gdr1[ir].x;
-                        tt[1] = gdr1[ir].y;
-                        tt[2] = gdr1[ir].z;
+                        tt[0] = buf.gdr1[ir].x;
+                        tt[1] = buf.gdr1[ir].y;
+                        tt[2] = buf.gdr1[ir].z;
                         for(int l = 0;l< 3;l++)
                         {
                             for(int m = 0;m< l+1;m++)
@@ -148,9 +141,9 @@ void XC_Functional::gradcorr_xc_kernel(
 
                         // h contains
                         // D(rho*Exc) / D(|grad rho|) * (grad rho) / |grad rho|
-                        h1[ir] = ModuleBase::e2 * v2xc * gdr1[ir];
+                        buf.h1[ir] = ModuleBase::e2 * v2xc * buf.gdr1[ir];
 
-                        local_vtxcgc += ModuleBase::e2* v1xc * ( rhotmp1[ir] - chr->rho_core[ir] );
+                        local_vtxcgc += ModuleBase::e2* v1xc * ( buf.rhotmp1[ir] - chr->rho_core[ir] );
                         local_etxcgc += ModuleBase::e2* sxc  * segno;
                     }
                 }
@@ -180,20 +173,20 @@ void XC_Functional::gradcorr_xc_kernel(
                         double vlaplxcdw = 0.0;
                         double atau1 = chr->kin_r[0][ir]/2.0;
                         double atau2 = chr->kin_r[1][ir]/2.0;
-                        double laplup_val = (!lapl1.empty()) ? lapl1[ir] : 0.0;
-                        double lapldw_val = (!lapl2.empty()) ? lapl2[ir] : 0.0;
+                        double laplup_val = (!buf.lapl1.empty()) ? buf.lapl1[ir] : 0.0;
+                        double lapldw_val = (!buf.lapl2.empty()) ? buf.lapl2[ir] : 0.0;
                         XC_Functional_Libxc::tau_xc_spin(
                             func_id,
-                            rhotmp1[ir], rhotmp2[ir], gdr1[ir], gdr2[ir],
+                            buf.rhotmp1[ir], buf.rhotmp2[ir], buf.gdr1[ir], buf.gdr2[ir],
                             laplup_val, lapldw_val, atau1, atau2, sxc, v1xcup, v1xcdw, v2xcup, v2xcdw, v2xcud, v3xcup, v3xcdw, vlaplxcup, vlaplxcdw, hybrid_alpha_in, hse_omega_in);
-                        if(!vlapl_arr1.empty()) vlapl_arr1[ir] = vlaplxcup;
-                        if(!vlapl_arr2.empty()) vlapl_arr2[ir] = vlaplxcdw;
+                        if(!buf.vlapl_arr1.empty()) buf.vlapl_arr1[ir] = vlaplxcup;
+                        if(!buf.vlapl_arr2.empty()) buf.vlapl_arr2[ir] = vlaplxcdw;
                     }
                     else
                     {
                         XC_Functional_Libxc::gcxc_spin_libxc(
                             func_id,
-                            rhotmp1[ir], rhotmp2[ir], gdr1[ir], gdr2[ir],
+                            buf.rhotmp1[ir], buf.rhotmp2[ir], buf.gdr1[ir], buf.gdr2[ir],
                             sxc, v1xcup, v1xcdw, v2xcup, v2xcdw, v2xcud,
                             hybrid_alpha_in, hse_omega_in);
                     }
@@ -201,12 +194,12 @@ void XC_Functional::gradcorr_xc_kernel(
                     {
                         double tt1[3],tt2[3];
                         {
-                            tt1[0] = gdr1[ir].x;
-                            tt1[1] = gdr1[ir].y;
-                            tt1[2] = gdr1[ir].z;
-                            tt2[0] = gdr2[ir].x;
-                            tt2[1] = gdr2[ir].y;
-                            tt2[2] = gdr2[ir].z;
+                            tt1[0] = buf.gdr1[ir].x;
+                            tt1[1] = buf.gdr1[ir].y;
+                            tt1[2] = buf.gdr1[ir].z;
+                            tt2[0] = buf.gdr2[ir].x;
+                            tt2[1] = buf.gdr2[ir].y;
+                            tt2[2] = buf.gdr2[ir].z;
                         }
                         for(int l = 0;l< 3;l++)
                         {
@@ -226,11 +219,11 @@ void XC_Functional::gradcorr_xc_kernel(
                         v(1,ir) += ModuleBase::e2 * v1xcdw;
 
                         // h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-                        h1[ir] += ModuleBase::e2 * ( v2xcup * gdr1[ir] + v2xcud * gdr2[ir] );
-                        h2[ir] += ModuleBase::e2 * ( v2xcdw * gdr2[ir] + v2xcud * gdr1[ir] );
+                        buf.h1[ir] += ModuleBase::e2 * ( v2xcup * buf.gdr1[ir] + v2xcud * buf.gdr2[ir] );
+                        buf.h2[ir] += ModuleBase::e2 * ( v2xcdw * buf.gdr2[ir] + v2xcud * buf.gdr1[ir] );
 
-                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * v1xcup * ( rhotmp1[ir] - chr->rho_core[ir] * fac );
-                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * v1xcdw * ( rhotmp2[ir] - chr->rho_core[ir] * fac );
+                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * v1xcup * ( buf.rhotmp1[ir] - chr->rho_core[ir] * fac );
+                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * v1xcdw * ( buf.rhotmp2[ir] - chr->rho_core[ir] * fac );
                         local_etxcgc = local_etxcgc + ModuleBase::e2 * sxc;
                     }
 #endif
@@ -249,10 +242,10 @@ void XC_Functional::gradcorr_xc_kernel(
                     double v2c = 0.0;
                     double sx = 0.0;
                     double sc = 0.0;
-                    double rh = rhotmp1[ir] + rhotmp2[ir];
-                    grho2a = gdr1[ir].norm2();
-                    grho2b = gdr2[ir].norm2();
-                    XC_Functional::gcx_spin(rhotmp1[ir], rhotmp2[ir], grho2a, grho2b,
+                    double rh = buf.rhotmp1[ir] + buf.rhotmp2[ir];
+                    grho2a = buf.gdr1[ir].norm2();
+                    grho2b = buf.gdr2[ir].norm2();
+                    XC_Functional::gcx_spin(buf.rhotmp1[ir], buf.rhotmp2[ir], grho2a, grho2b,
                         sx, v1xup, v1xdw, v2xup, v2xdw);
 
                     if(rh > epsr)
@@ -263,12 +256,12 @@ void XC_Functional::gradcorr_xc_kernel(
                         }
                         else
                         {
-                            double zeta = ( rhotmp1[ir] - rhotmp2[ir] ) / rh;
+                            double zeta = ( buf.rhotmp1[ir] - buf.rhotmp2[ir] ) / rh;
                             if(nspin==4&&(domag||domag_z))
                             {
-                                zeta = fabs(zeta) * neg[ir];
+                                zeta = fabs(zeta) * buf.neg[ir];
                             }
-                            const double grh2 = (gdr1[ir]+gdr2[ir]).norm2();
+                            const double grh2 = (buf.gdr1[ir]+buf.gdr2[ir]).norm2();
                             XC_Functional::gcc_spin(rh, zeta, grh2, sc, v1cup, v1cdw, v2c);
                             v2cup = v2c;
                             v2cdw = v2c;
@@ -290,12 +283,12 @@ void XC_Functional::gradcorr_xc_kernel(
                     {
                         double tt1[3],tt2[3];
                         {
-                            tt1[0] = gdr1[ir].x;
-                            tt1[1] = gdr1[ir].y;
-                            tt1[2] = gdr1[ir].z;
-                            tt2[0] = gdr2[ir].x;
-                            tt2[1] = gdr2[ir].y;
-                            tt2[2] = gdr2[ir].z;
+                            tt1[0] = buf.gdr1[ir].x;
+                            tt1[1] = buf.gdr1[ir].y;
+                            tt1[2] = buf.gdr1[ir].z;
+                            tt2[0] = buf.gdr2[ir].x;
+                            tt2[1] = buf.gdr2[ir].y;
+                            tt2[2] = buf.gdr2[ir].z;
                         }
                         for(int l = 0;l< 3;l++)
                         {
@@ -319,11 +312,11 @@ void XC_Functional::gradcorr_xc_kernel(
                         v(1,ir) = v(1,ir) + ModuleBase::e2 * ( v1xdw + v1cdw );
 
                         // h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-                        h1[ir] = ModuleBase::e2 * ( ( v2xup + v2cup ) * gdr1[ir] + v2cud * gdr2[ir] );
-                        h2[ir] = ModuleBase::e2 * ( ( v2xdw + v2cdw ) * gdr2[ir] + v2cud * gdr1[ir] );
+                        buf.h1[ir] = ModuleBase::e2 * ( ( v2xup + v2cup ) * buf.gdr1[ir] + v2cud * buf.gdr2[ir] );
+                        buf.h2[ir] = ModuleBase::e2 * ( ( v2xdw + v2cdw ) * buf.gdr2[ir] + v2cud * buf.gdr1[ir] );
 
-                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * ( v1xup + v1cup ) * ( rhotmp1[ir] - chr->rho_core[ir] * fac );
-                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * ( v1xdw + v1cdw ) * ( rhotmp2[ir] - chr->rho_core[ir] * fac );
+                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * ( v1xup + v1cup ) * ( buf.rhotmp1[ir] - chr->rho_core[ir] * fac );
+                        local_vtxcgc = local_vtxcgc + ModuleBase::e2 * ( v1xdw + v1cdw ) * ( buf.rhotmp2[ir] - chr->rho_core[ir] * fac );
                         local_etxcgc = local_etxcgc + ModuleBase::e2 * ( sx + sc );
                     }
                 }

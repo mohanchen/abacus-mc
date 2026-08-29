@@ -1,4 +1,5 @@
 #include "xc_functional.h"
+#include "xc_grad_internal.h"
 #include "source_base/timer.h"
 #include "source_base/constants.h"
 #include "source_basis/module_pw/pw_basis_k.h"
@@ -15,34 +16,28 @@
 #endif
 #endif
 
-void XC_Functional::gradcorr_assemble_vxc(
-    const Charge* const chr,
-    ModulePW::PW_Basis* rhopw,
-    const UnitCell* ucell,
-    const int nspin,
-    const int nspin0,
-    const double fac,
-    const bool is_stress,
-    const bool domag,
-    const bool domag_z,
-    double vtxcgc,
-    double etxcgc,
-    double& vtxc,
-    double& etxc,
-    std::vector<double>& stress_gga,
-    ModuleBase::matrix& v,
-    double* rhotmp1,
-    double* rhotmp2,
-    ModuleBase::Vector3<double>* h1,
-    ModuleBase::Vector3<double>* h2,
-    std::vector<double>& vlapl_arr1,
-    std::vector<double>& vlapl_arr2,
-    const double* neg,
-    double* vsave,
-    double* vgg)
+void gradcorr_assemble_vxc(const GradCorrParams& params,
+                           double vtxcgc,
+                           double etxcgc,
+                           double& vtxc,
+                           double& etxc,
+                           std::vector<double>& stress_gga,
+                           ModuleBase::matrix& v,
+                           GradCorrBuffers& buf)
 {
+    const Charge* const chr = params.chr;
+    ModulePW::PW_Basis* rhopw = params.rhopw;
+    const UnitCell* ucell = params.ucell;
+    const int nspin = params.nspin;
+    const int nspin0 = params.nspin0;
+    const double fac = params.fac;
+    const bool is_stress = params.is_stress;
+    const bool domag = params.domag;
+    const bool domag_z = params.domag_z;
+    const bool use_libxc = params.use_libxc;
+
     // Add Laplacian stress contribution from meta-GGA functionals
-    if(is_stress && use_libxc && !vlapl_arr1.empty())
+    if(is_stress && use_libxc && !buf.vlapl_arr1.empty())
     {
         const int ng = rhopw->npw;
         const int nrxx = rhopw->nrxx;
@@ -51,8 +46,8 @@ void XC_Functional::gradcorr_assemble_vxc(
 
         for(int is = 0; is < nspin0; is++)
         {
-            double* vlapl_ptr = (is == 0) ? vlapl_arr1.data() : vlapl_arr2.data();
-            double* rho_ptr = (is == 0) ? rhotmp1 : rhotmp2;
+            double* vlapl_ptr = (is == 0) ? buf.vlapl_arr1.data() : buf.vlapl_arr2.data();
+            double* rho_ptr = (is == 0) ? buf.rhotmp1.data() : buf.rhotmp2.data();
             if(vlapl_ptr == nullptr || rho_ptr == nullptr) continue;
 
             std::vector<std::complex<double>> rho_g(rhopw->nmaxgr);
@@ -88,7 +83,7 @@ void XC_Functional::gradcorr_assemble_vxc(
 #endif
         for(int ir=0; ir<rhopw->nrxx; ir++)
         {
-            rhotmp1[ir] -= fac * chr->rho_core[ir];
+            buf.rhotmp1[ir] -= fac * chr->rho_core[ir];
         }
         if(nspin0==2)
         {
@@ -97,7 +92,7 @@ void XC_Functional::gradcorr_assemble_vxc(
 #endif
             for(int ir=0; ir<rhopw->nrxx; ir++)
             {
-                rhotmp2[ir] -= fac * chr->rho_core[ir];
+                buf.rhotmp2[ir] -= fac * chr->rho_core[ir];
             }
         }
 
@@ -111,11 +106,11 @@ void XC_Functional::gradcorr_assemble_vxc(
         {
             if(is==0)
             {
-                XC_Functional::grad_dot(h1, dh.data(), rhopw, ucell->tpiba);
+                XC_Functional::grad_dot(buf.h1.data(), dh.data(), rhopw, ucell->tpiba);
             }
             if(is==1)
             {
-                XC_Functional::grad_dot(h2, dh.data(), rhopw, ucell->tpiba);
+                XC_Functional::grad_dot(buf.h2.data(), dh.data(), rhopw, ucell->tpiba);
             }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 1024)
@@ -133,7 +128,7 @@ void XC_Functional::gradcorr_assemble_vxc(
 #endif
                 for(int ir=0; ir<rhopw->nrxx; ir++)
                 {
-                    sum += dh[ir] * rhotmp1[ir];
+                    sum += dh[ir] * buf.rhotmp1[ir];
                 }
             }
             else if(is==1)
@@ -143,7 +138,7 @@ void XC_Functional::gradcorr_assemble_vxc(
 #endif
                 for(int ir=0; ir<rhopw->nrxx; ir++)
                 {
-                    sum += dh[ir] * rhotmp2[ir];
+                    sum += dh[ir] * buf.rhotmp2[ir];
                 }
             }
             vtxcgc -= sum;
@@ -154,7 +149,7 @@ void XC_Functional::gradcorr_assemble_vxc(
 
         // Add Laplacian contribution from meta-GGA functionals
         // v_xc += nabla^2(vlapl) where vlapl = d(rho*eps_xc)/d(nabla^2 rho)
-        if(use_libxc && !vlapl_arr1.empty())
+        if(use_libxc && !buf.vlapl_arr1.empty())
         {
             const int ng = rhopw->npw;
             const int nrxx = rhopw->nrxx;
@@ -163,7 +158,7 @@ void XC_Functional::gradcorr_assemble_vxc(
 
             for(int is = 0; is < nspin0; is++)
             {
-                double* vlapl_ptr = (is == 0) ? vlapl_arr1.data() : vlapl_arr2.data();
+                double* vlapl_ptr = (is == 0) ? buf.vlapl_arr1.data() : buf.vlapl_arr2.data();
                 if(vlapl_ptr == nullptr) continue;
 
                 for(int ir = 0; ir < nrxx; ir++)
@@ -196,9 +191,9 @@ void XC_Functional::gradcorr_assemble_vxc(
                 {
                     if(is<nspin0)
                     {
-                        vgg[is * nrxx + ir] = v(is,ir);
+                        buf.vgg[is * nrxx + ir] = v(is,ir);
                     }
-                    v(is,ir) = vsave[is * nrxx + ir];
+                    v(is,ir) = buf.vsave[is * nrxx + ir];
                 }
             }
 #ifdef _OPENMP
@@ -206,13 +201,13 @@ void XC_Functional::gradcorr_assemble_vxc(
 #endif
             for(int ir=0;ir<nrxx;ir++)
             {
-                v(0,ir) += 0.5 * (vgg[ir] + vgg[nrxx + ir]);
+                v(0,ir) += 0.5 * (buf.vgg[ir] + buf.vgg[nrxx + ir]);
                 double amag = sqrt(pow(chr->rho[1][ir],2)+pow(chr->rho[2][ir],2)+pow(chr->rho[3][ir],2));
                 if(amag>1e-12)
                 {
                     for(int i=1;i<4;i++)
                     {
-                        v(i,ir)+= neg[ir] * 0.5 *(vgg[ir]-vgg[nrxx + ir])*chr->rho[i][ir]/amag;
+                        v(i,ir)+= buf.neg[ir] * 0.5 *(buf.vgg[ir]-buf.vgg[nrxx + ir])*chr->rho[i][ir]/amag;
                     }
                 }
             }
