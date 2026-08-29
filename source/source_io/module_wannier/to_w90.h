@@ -51,17 +51,17 @@ class toW90
 
     // Parameters related to trial orbitals
     int num_wannier=0; // Number of Wannier orbits
-    ModuleBase::Vector3<double> *R_centre = nullptr;
-    int *L = nullptr;
-    int *m = nullptr;
-    int *rvalue = nullptr;
-    ModuleBase::Vector3<double> *z_axis = nullptr;
-    ModuleBase::Vector3<double> *x_axis = nullptr;
-    double *alfa = nullptr;
-    int *spin_eig = nullptr; // 'up' state is 1, 'down' state is -1
-    ModuleBase::Vector3<double> *spin_qaxis = nullptr; // spin quantisation axis
-    std::complex<double> *up_con = nullptr;
-    std::complex<double> *dn_con = nullptr;
+    std::vector<ModuleBase::Vector3<double>> R_centre;
+    std::vector<int> L;
+    std::vector<int> m;
+    std::vector<int> rvalue;
+    std::vector<ModuleBase::Vector3<double>> z_axis;
+    std::vector<ModuleBase::Vector3<double>> x_axis;
+    std::vector<double> alfa;
+    std::vector<int> spin_eig; // 'up' state is 1, 'down' state is -1
+    std::vector<ModuleBase::Vector3<double>> spin_qaxis; // spin quantisation axis
+    std::vector<std::complex<double>> up_con;
+    std::vector<std::complex<double>> dn_con;
 
     // Wannier control parameters
     bool out_wannier_mmn = true;
@@ -75,11 +75,9 @@ class toW90
     std::string wannier_spin = "up";
 
     int num_exclude_bands = 0;
-    // int *exclude_bands = nullptr;
     std::unordered_set<int> exclude_bands;
-    // bool *tag_cal_band = nullptr;
     int num_bands = 0;
-    int *cal_band_index = nullptr;
+    std::vector<int> cal_band_index;
     bool gamma_only_wannier = false;
     
 

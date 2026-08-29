@@ -42,28 +42,6 @@ toW90::toW90(const bool& out_wannier_mmn,
 
 toW90::~toW90()
 {
-    if (out_wannier_amn)
-    {
-        delete[] R_centre;
-        delete[] L;
-        delete[] m;
-        delete[] rvalue;
-        delete[] z_axis;
-        delete[] x_axis;
-        delete[] alfa;
-
-        if (PARAM.inp.nspin == 4)
-        {
-            delete[] spin_eig;
-            delete[] spin_qaxis;
-            delete[] up_con;
-            delete[] dn_con;
-        }
-    }
-
-    // delete[] exclude_bands;
-    // delete[] tag_cal_band;
-    delete[] cal_band_index;
 }
 
 void toW90::calculate()
@@ -214,7 +192,7 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
             ModuleBase::WARNING_QUIT("toW90::read_nnkp", "Error kpoints in *.nnkp file");
         }
 
-        ModuleBase::Vector3<double>* kpoints_direct_nnkp = new ModuleBase::Vector3<double>[numkpt_nnkp];
+        std::vector<ModuleBase::Vector3<double>> kpoints_direct_nnkp(numkpt_nnkp);
         for (int ik = 0; ik < numkpt_nnkp; ik++)
         {
             nnkp_read >> kpoints_direct_nnkp[ik].x >> kpoints_direct_nnkp[ik].y >> kpoints_direct_nnkp[ik].z;
@@ -225,7 +203,6 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
                 ModuleBase::WARNING_QUIT("toW90::read_nnkp", "Error kpoints in *.nnkp file");
             }
         }
-        delete[] kpoints_direct_nnkp;
 
         // ModuleBase::Vector3<double> my_gamma_point(0.0, 0.0, 0.0);
         // if( (num_kpts == 1) && (kv.kvec_d[0] == my_gamma_point) ) gamma_only_wannier = true;
@@ -249,13 +226,13 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
                     ModuleBase::WARNING_QUIT("toW90::read_nnkp", "wannier number is lower than 0");
                 }
 
-                R_centre = new ModuleBase::Vector3<double>[num_wannier];
-                L = new int[num_wannier];
-                m = new int[num_wannier];
-                rvalue = new int[num_wannier];
-                z_axis = new ModuleBase::Vector3<double>[num_wannier];
-                x_axis = new ModuleBase::Vector3<double>[num_wannier];
-                alfa = new double[num_wannier];
+                R_centre.resize(num_wannier);
+                L.resize(num_wannier);
+                m.resize(num_wannier);
+                rvalue.resize(num_wannier);
+                z_axis.resize(num_wannier);
+                x_axis.resize(num_wannier);
+                alfa.resize(num_wannier);
 
                 for (int count = 0; count < num_wannier; count++)
                 {
@@ -283,15 +260,15 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
                     ModuleBase::WARNING_QUIT("toW90::read_nnkp", "wannier number is lower than 0");
                 }
 
-                R_centre = new ModuleBase::Vector3<double>[num_wannier];
-                L = new int[num_wannier];
-                m = new int[num_wannier];
-                rvalue = new int[num_wannier];
-                z_axis = new ModuleBase::Vector3<double>[num_wannier];
-                x_axis = new ModuleBase::Vector3<double>[num_wannier];
-                alfa = new double[num_wannier];
-                spin_eig = new int[num_wannier];
-                spin_qaxis = new ModuleBase::Vector3<double>[num_wannier];
+                R_centre.resize(num_wannier);
+                L.resize(num_wannier);
+                m.resize(num_wannier);
+                rvalue.resize(num_wannier);
+                z_axis.resize(num_wannier);
+                x_axis.resize(num_wannier);
+                alfa.resize(num_wannier);
+                spin_eig.resize(num_wannier);
+                spin_qaxis.resize(num_wannier);
 
                 for (int count = 0; count < num_wannier; count++)
                 {
@@ -344,8 +321,8 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
         // Generate spin-related coefficients
         if (PARAM.inp.nspin == 4)
         {
-            up_con = new std::complex<double>[num_wannier];
-            dn_con = new std::complex<double>[num_wannier];
+            up_con.resize(num_wannier);
+            dn_con.resize(num_wannier);
 
             bool spin_z_pos = false;
             bool spin_z_neg = false;
@@ -485,14 +462,10 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
                                  "you set the band numer is not enough, please add bands number.");
     }
 
-    // tag_cal_band = new bool[PARAM.inp.nbands];
-    // for (int ib = 0; ib < PARAM.inp.nbands; ib++) tag_cal_band[ib] = true;
-    // for (int ib = 0; ib < num_exclude_bands; ib++) tag_cal_band[ib] = false;
-
     if (num_exclude_bands == 0)
     {
         num_bands = PARAM.inp.nbands;
-        cal_band_index = new int[num_bands];
+        cal_band_index.resize(num_bands);
         for (int ib = 0; ib < PARAM.inp.nbands; ib++)
         {
             cal_band_index[ib] = ib;
@@ -501,7 +474,7 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
     else
     {
         num_bands = PARAM.inp.nbands - num_exclude_bands;
-        cal_band_index = new int[num_bands];
+        cal_band_index.resize(num_bands);
         int count = 0;
         for (int ib = 0; ib < PARAM.inp.nbands; ib++)
         {
