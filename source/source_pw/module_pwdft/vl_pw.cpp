@@ -66,8 +66,6 @@ void pseudopot_cell_vl::init_vloc(const UnitCell& ucell,
     }
 
 
-    this->print_vloc(ucell,rho_basis);
-
     ModuleBase::timer::end("ppcell_vl","init_vloc");
     return;
 }
@@ -240,21 +238,23 @@ void pseudopot_cell_vl::vloc_of_g(const int& msh,
 
 
 void pseudopot_cell_vl::print_vloc(const UnitCell& ucell,
-                                   const ModulePW::PW_Basis* rho_basis) const
+                                   const ModulePW::PW_Basis* rho_basis,
+                                   const bool& out_element_info,
+                                   const std::string& global_out_dir) const
 {
-    if(GlobalV::MY_RANK!=0) 
-    { 
+    if(GlobalV::MY_RANK!=0)
+    {
         return; //mohan fix bug 2011-10-13
     }
 
-    bool check_vl = PARAM.inp.out_element_info;
+    bool check_vl = out_element_info;
 
     if(check_vl)
     {
         for(int it=0; it<ucell.ntype; it++)
         {
             std::stringstream ss ;
-            ss << PARAM.globalv.global_out_dir << ucell.atoms[it].label << "/v_loc_g.txt" ;
+            ss << global_out_dir << ucell.atoms[it].label << "/v_loc_g.txt" ;
             std::ofstream ofs_vg( ss.str().c_str() );
             for(int ig=0;ig<rho_basis->ngg;ig++)
             {

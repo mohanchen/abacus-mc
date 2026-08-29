@@ -69,6 +69,7 @@ void LCAO_domain::set_pot(
 {
     //! 1) init local pseudopotentials
     locpp.init_vloc(ucell, &pw_rho);
+    locpp.print_vloc(ucell, &pw_rho, inp.out_element_info, PARAM.globalv.global_out_dir);
 
     //! 2) init potentials
     if (pelec->pot == nullptr)
