@@ -67,7 +67,7 @@ class pseudopot_cell_vnl
     ModuleBase::matrix indv;   // indes linking  atomic beta's to beta's in the solid
     ModuleBase::matrix nhtol;  // correspondence n <-> angular momentum l
     ModuleBase::matrix nhtolm; // correspondence n <-> combined lm index for (l,m)
-    ModuleBase::matrix nhtoj;  // new added
+    ModuleBase::matrix nhtoj;  // 
 
     ModuleBase::realArray dvan;       //(:,:,:),  the D functions of the solid
     ModuleBase::ComplexArray dvan_so; //(:,:,:),  spin-orbit case,  added by zhengdy-soc
