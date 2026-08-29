@@ -64,7 +64,7 @@ void toW90_PW::gen_radial_function_in_q(std::vector<ModuleBase::matrix> &radial_
         auto &tmp_radial = radial_in_q[wannier_index];
         if (L[wannier_index] >= 0)
         {
-            tmp_radial.create(1, PARAM.globalv.nqx);
+            tmp_radial.create(1, nqx_);
             integral(mesh_r, psir.data(), r.data(), dr.data(), L[wannier_index], tmp_radial.c);
         }
         else
@@ -75,11 +75,11 @@ void toW90_PW::gen_radial_function_in_q(std::vector<ModuleBase::matrix> &radial_
 
             if (L[wannier_index] == -4 || L[wannier_index] == -5) tmp_size = 3;
 
-            tmp_radial.create(tmp_size, PARAM.globalv.nqx);
+            tmp_radial.create(tmp_size, nqx_);
 
             for (int tmp_L = 0; tmp_L < tmp_size; tmp_L++)
             {
-                integral(mesh_r, psir.data(), r.data(), dr.data(), tmp_L, tmp_radial.c+tmp_L*PARAM.globalv.nqx);
+                integral(mesh_r, psir.data(), r.data(), dr.data(), tmp_L, tmp_radial.c+tmp_L*nqx_);
             }
         }
 
@@ -130,7 +130,7 @@ void toW90_PW::produce_trial_in_pw(
     for (int wannier_index = 0; wannier_index < num_wannier; wannier_index++)
     {
         double* radial_c = radial_c;
-        const int nqx = PARAM.globalv.nqx;
+        const int nqx = nqx_;
 
         if (L[wannier_index] >= 0)
         {
@@ -442,7 +442,7 @@ void toW90_PW::get_trial_orbitals_lm_k(
     for (int ig = 0; ig < npw; ig++)
     {
         orbital_in_G_single[ig] = ModuleBase::PolyInt::Polynomial_Interpolation(
-            radial_in_q_single, PARAM.globalv.nqx, PARAM.globalv.dq, gk[ig].norm() * tpiba);
+            radial_in_q_single, nqx_, dq_, gk[ig].norm() * tpiba);
     }
 
     std::complex<double> lphase = pow(ModuleBase::NEG_IMAG_UNIT, orbital_L);
@@ -477,9 +477,9 @@ void toW90_PW::integral(
 
     std::vector<double> aux(meshr);
     std::vector<double> vchi(meshr);
-    for (int iq = 0; iq < PARAM.globalv.nqx; iq++)
+    for (int iq = 0; iq < nqx_; iq++)
     {
-        const double q = PARAM.globalv.dq * iq;
+        const double q = dq_ * iq;
         ModuleBase::Sphbes::Spherical_Bessel(meshr, r, q, l, aux.data());
         for (int ir = 0; ir < meshr; ir++)
         {

@@ -27,7 +27,11 @@ class toW90
       const bool &out_wannier_wvfn_formatted, 
       const std::string &nnkpfile,
       const std::string &wannier_spin,
-      const int &nspin
+      const int &nspin,
+      const int &nbands,
+      const int &nqx,
+      const double &dq,
+      const int &npol
     );
     ~toW90();
 
@@ -76,6 +80,10 @@ class toW90
     std::string wannier_spin = "up";
 
     int nspin_ = 1; // number of spin states, 1, 2 or 4
+    int nbands_ = 0; // number of bands from input
+    int nqx_ = 0; // number of points in q-space integration
+    double dq_ = 0.0; // step of dq for q-space integration
+    int npol_ = 1; // number of polar states
 
     int num_exclude_bands = 0;
     std::unordered_set<int> exclude_bands;

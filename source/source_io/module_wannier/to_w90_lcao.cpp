@@ -23,6 +23,10 @@ toW90_LCAO::toW90_LCAO(const bool& out_wannier_mmn,
                                    const std::string& nnkpfile,
                                    const std::string& wannier_spin,
                                    const int& nspin,
+                                   const int& nbands,
+                                   const int& nqx,
+                                   const double& dq,
+                                   const int& npol,
                                    const LCAO_Orbitals& orb)
     : toW90(out_wannier_mmn,
                   out_wannier_amn,
@@ -31,7 +35,11 @@ toW90_LCAO::toW90_LCAO(const bool& out_wannier_mmn,
                   out_wannier_wvfn_formatted,
                   nnkpfile,
                   wannier_spin,
-                  nspin),
+                  nspin,
+                  nbands,
+                  nqx,
+                  dq,
+                  npol),
     orb_(orb)
 {
 }

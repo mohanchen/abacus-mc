@@ -164,7 +164,7 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
 
     char transa = 'C';
     char transb = 'N';
-    int Bands = PARAM.inp.nbands;
+    int Bands = nbands_;
     int nlocal = PARAM.globalv.nlocal;
     std::complex<double> alpha = {1.0, 0.0}, beta = {0.0, 0.0};
     int one = 1;
@@ -215,7 +215,7 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
 #endif
 
     int count_m = -1;
-    for (int m = 0; m < PARAM.inp.nbands; m++)
+    for (int m = 0; m < nbands_; m++)
     {
         if (exclude_bands.count(m)) {
             continue;
@@ -226,7 +226,7 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
         if (ir >= 0)
         {
             int count_n = -1;
-            for (int n = 0; n < PARAM.inp.nbands; n++)
+            for (int n = 0; n < nbands_; n++)
             {
                 if (exclude_bands.count(n)) {
                     continue;
@@ -419,10 +419,10 @@ void toW90_LCAO::construct_overlap_table_project()
     int row = this->ParaV->get_row_size();
     int global_ir = 0;
 
-    for (int ir = 0; ir < row; ir += PARAM.globalv.npol)
+    for (int ir = 0; ir < row; ir += npol_)
     {
         global_ir = ParaV->local2global_row(ir);
-        int orb_index_row = global_ir / PARAM.globalv.npol;
+        int orb_index_row = global_ir / npol_;
 
         for (int wannier_index = 0; wannier_index < num_wannier; wannier_index++)
         {

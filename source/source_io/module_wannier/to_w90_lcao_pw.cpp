@@ -18,10 +18,14 @@ toW90_LCAO_IN_PW::toW90_LCAO_IN_PW(
     const bool &out_wannier_wvfn_formatted, 
     const std::string &nnkpfile,
     const std::string &wannier_spin,
-    const int &nspin
+    const int &nspin,
+    const int &nbands,
+    const int &nqx,
+    const double &dq,
+    const int &npol
 )
     : toW90_PW(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig,
-      out_wannier_wvfn_formatted, nnkpfile, wannier_spin, nspin)
+      out_wannier_wvfn_formatted, nnkpfile, wannier_spin, nspin, nbands, nqx, dq, npol)
 {
 }
 
@@ -49,10 +53,10 @@ void toW90_LCAO_IN_PW::calculate(
     using NaoInitCd = psi_init_nao<std::complex<double>>;
     delete this->psi_initer_;
     std::unique_ptr<NaoInitCd> nao_initer(new NaoInitCd());
-    nao_initer->prepare_params(PARAM.globalv.nqx, PARAM.globalv.dq, nspin_, PARAM.inp.orbital_dir);
+    nao_initer->prepare_params(nqx_, dq_, nspin_, PARAM.inp.orbital_dir);
     this->psi_initer_ = nao_initer.release();
     this->psi_initer_->initialize(sf_ptr, wfcpw_ptr, &ucell, kv.ik2iktot, 1, GlobalV::MY_RANK,
-                                  PARAM.globalv.npol, PARAM.inp.nbands);
+                                  npol_, nbands_);
     this->psi_initer_->tabulate();
     delete this->psi;
     const int nks_psi = (PARAM.inp.calculation == "nscf" && PARAM.inp.mem_saver == 1)? 1 : wfcpw->nks;
@@ -61,7 +65,7 @@ void toW90_LCAO_IN_PW::calculate(
     using PsiCdCpu = psi::Psi<std::complex<double>, base_device::DEVICE_CPU>;
     std::unique_ptr<PsiCdCpu> psi_new(new PsiCdCpu(nks_psig,
                                                    nbands_actual,
-                                                   wfcpw->npwk_max*PARAM.globalv.npol,
+                                                   wfcpw->npwk_max*npol_,
                                                    kv.ngk,
                                                    true));
     this->psi = psi_new.release();
@@ -129,7 +133,7 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
     using PsiCd = psi::Psi<std::complex<double>>;
     std::unique_ptr<PsiCd> unk_inLcao(new PsiCd(num_kpts,
                                                 num_bands,
-                                                npwx*PARAM.globalv.npol,
+                                                npwx*npol_,
                                                 kv.ngk,
                                                 true));
     unk_inLcao->zero_out();
@@ -137,7 +141,7 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
     for (int ik = 0; ik < num_kpts; ik++)
     {
         int npw = kv.ngk[ik];
-        ModuleBase::ComplexMatrix orbital_in_G(PARAM.globalv.nlocal, npwx*PARAM.globalv.npol);
+        ModuleBase::ComplexMatrix orbital_in_G(PARAM.globalv.nlocal, npwx*npol_);
         nao_G_expansion(ik, wfcpw, orbital_in_G);
 
         ModuleBase::ComplexMatrix lcao_wfc_global;
@@ -175,7 +179,7 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
         {
             for (int ib = 0; ib < num_bands; ib++)
             {
-                // for (int ig = 0; ig < npwx*PARAM.globalv.npol; ig++)
+                // for (int ig = 0; ig < npwx*npol_; ig++)
                 // {
                 //     for (int iw = 0; iw < PARAM.globalv.nlocal; iw++)
                 //     {
@@ -231,7 +235,7 @@ void toW90_LCAO_IN_PW::nao_G_expansion(
     this->psi->fix_k(ik);
     this->psi_initer_->init_psig(this->psi->get_pointer(), ik);
     int nbands = PARAM.globalv.nlocal;
-    int nbasis = npwx*PARAM.globalv.npol;
+    int nbasis = npwx*npol_;
     for (int ib = 0; ib < nbands; ib++)
     {
         for (int ig = 0; ig < nbasis; ig++)
@@ -252,7 +256,7 @@ void toW90_LCAO_IN_PW::get_lcao_wfc_global_ik(
     int count_b = -1;
     int row = this->ParaV->get_row_size();
     int global_row_index = 0;
-    for (int ib = 0; ib < PARAM.inp.nbands; ib++)
+    for (int ib = 0; ib < nbands_; ib++)
     {
         if (exclude_bands.count(ib)) { continue;
 }

@@ -191,7 +191,11 @@ void ModuleIO::ctrl_scf_pw(const int istep,
                            inp.out_wannier_wvfn_formatted,
                            inp.nnkpfile,
                            inp.wannier_spin,
-                           inp.nspin);
+                           inp.nspin,
+                           PARAM.inp.nbands,
+                           PARAM.globalv.nqx,
+                           PARAM.globalv.dq,
+                           PARAM.globalv.npol);
         wan.set_tpiba_omega(ucell.tpiba, ucell.omega);
         wan.calculate(ucell, pelec->ekb, pw_wfc, pw_big, kv, stp.psi_cpu);
         std::cout << FmtCore::format(" >> Finish %s.\n * * * * * *\n", "Wannier functions calculation");

@@ -28,7 +28,11 @@ class toW90_PW : public toW90
       const bool &out_wannier_wvfn_formatted, 
       const std::string &nnkpfile,
       const std::string &wannier_spin,
-      const int &nspin
+      const int &nspin,
+      const int &nbands,
+      const int &nqx,
+      const double &dq,
+      const int &npol
     );
     ~toW90_PW();
 

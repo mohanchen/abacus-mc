@@ -34,7 +34,11 @@ class toW90_LCAO_IN_PW : public toW90_PW
                            const bool& out_wannier_wvfn_formatted,
                            const std::string& nnkpfile,
                            const std::string& wannier_spin,
-                           const int& nspin);
+                           const int& nspin,
+                           const int& nbands,
+                           const int& nqx,
+                           const double& dq,
+                           const int& npol);
     ~toW90_LCAO_IN_PW();
 
     void calculate(UnitCell& ucell,

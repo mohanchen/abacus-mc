@@ -66,6 +66,10 @@ class toW90_LCAO : public toW90
                      const std::string& nnkpfile,
                      const std::string& wannier_spin,
                      const int& nspin,
+                     const int& nbands,
+                     const int& nqx,
+                     const double& dq,
+                     const int& npol,
                      const LCAO_Orbitals& orb
                      );
     ~toW90_LCAO();

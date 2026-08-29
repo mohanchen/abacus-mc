@@ -18,7 +18,11 @@ toW90::toW90(const bool& out_wannier_mmn,
                          const bool& out_wannier_wvfn_formatted,
                          const std::string& nnkpfile,
                          const std::string& wannier_spin,
-                         const int& nspin)
+                         const int& nspin,
+                         const int& nbands,
+                         const int& nqx,
+                         const double& dq,
+                         const int& npol)
 {
     this->out_wannier_mmn = out_wannier_mmn;
     this->out_wannier_amn = out_wannier_amn;
@@ -30,6 +34,10 @@ toW90::toW90(const bool& out_wannier_mmn,
     this->wannier_file_name = wannier_file_name.substr(0, wannier_file_name.length() - 5);
     this->wannier_spin = wannier_spin;
     this->nspin_ = nspin;
+    this->nbands_ = nbands;
+    this->nqx_ = nqx;
+    this->dq_ = dq;
+    this->npol_ = npol;
 
     if (GlobalV::KPAR != 1)
     {
@@ -456,7 +464,7 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
 
     nnkp_read.close();
 
-    if (PARAM.inp.nbands <= num_exclude_bands)
+    if (nbands_ <= num_exclude_bands)
     {
         ModuleBase::WARNING_QUIT("toW90::read_nnkp",
                                  "you set the band numer is not enough, please add bands number.");
@@ -464,19 +472,19 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
 
     if (num_exclude_bands == 0)
     {
-        num_bands = PARAM.inp.nbands;
+        num_bands = nbands_;
         cal_band_index.resize(num_bands);
-        for (int ib = 0; ib < PARAM.inp.nbands; ib++)
+        for (int ib = 0; ib < nbands_; ib++)
         {
             cal_band_index[ib] = ib;
         }
     }
     else
     {
-        num_bands = PARAM.inp.nbands - num_exclude_bands;
+        num_bands = nbands_ - num_exclude_bands;
         cal_band_index.resize(num_bands);
         int count = 0;
-        for (int ib = 0; ib < PARAM.inp.nbands; ib++)
+        for (int ib = 0; ib < nbands_; ib++)
         {
             if (exclude_bands.count(ib) != 1)
             {

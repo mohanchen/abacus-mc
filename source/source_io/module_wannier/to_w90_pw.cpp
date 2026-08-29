@@ -10,8 +10,12 @@ toW90_PW::toW90_PW(
     const bool &out_wannier_wvfn_formatted, 
     const std::string &nnkpfile,
     const std::string &wannier_spin,
-    const int &nspin
-):toW90(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin, nspin)
+    const int &nspin,
+    const int &nbands,
+    const int &nqx,
+    const double &dq,
+    const int &npol
+):toW90(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin, nspin, nbands, nqx, dq, npol)
 {
 
 }

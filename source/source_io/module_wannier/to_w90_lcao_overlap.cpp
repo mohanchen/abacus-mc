@@ -42,7 +42,7 @@ void toW90_LCAO::cal_orbA_overlap_R(const UnitCell& ucell)
     for (int ir = 0; ir < row; ir++)
     {
         global_ir = ParaV->local2global_row(ir);
-        int orb_index_row = global_ir / PARAM.globalv.npol;
+        int orb_index_row = global_ir / npol_;
 
         int it1 = iw2it[orb_index_row];
         int ia1 = iw2ia[orb_index_row];
@@ -413,7 +413,7 @@ void toW90_LCAO::unkdotA(const K_Vectors& kv,
     int R_num = R_coor_car.size();
     if (nspin_ != 4)
     {
-        for (int ib = 0; ib < PARAM.inp.nbands; ib++)
+        for (int ib = 0; ib < nbands_; ib++)
         {
             if (exclude_bands.count(ib)) {
                 continue;
@@ -445,7 +445,7 @@ void toW90_LCAO::unkdotA(const K_Vectors& kv,
     }
     else
     {
-        for (int ib = 0; ib < PARAM.inp.nbands; ib++)
+        for (int ib = 0; ib < nbands_; ib++)
         {
             if (exclude_bands.count(ib)) {
                 continue;
