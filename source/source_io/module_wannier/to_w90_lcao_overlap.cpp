@@ -479,9 +479,7 @@ void toW90_LCAO::unkdotA(const K_Vectors& kv,
         }
     }
 
-#ifdef __MPI
     Parallel_Reduce::reduce_all(Amn.c, Amn.size);
-#endif
 }
 
 #endif

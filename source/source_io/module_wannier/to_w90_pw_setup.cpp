@@ -418,9 +418,7 @@ void toW90_PW::produce_trial_in_pw(
             anorm += conj(trial_orbitals_k(wannier_index, ig)) * trial_orbitals_k(wannier_index, ig);
         }
 
-#ifdef __MPI
         Parallel_Reduce::reduce_all(anorm);
-#endif
         for (int ig = 0; ig < npw; ig++)
         {
             trial_orbitals_k(wannier_index, ig) = trial_orbitals_k(wannier_index, ig) / sqrt(anorm);

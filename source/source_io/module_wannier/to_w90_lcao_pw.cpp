@@ -165,9 +165,7 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
                     anorm = anorm + conj((*unk_inLcao)(ik, ib, ig)) * (*unk_inLcao)(ik, ib, ig);
                 }
 
-#ifdef __MPI
                 Parallel_Reduce::reduce_all(anorm);
-#endif
 
                 for (int ig = 0; ig < npw; ig++)
                 {
@@ -179,14 +177,6 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
         {
             for (int ib = 0; ib < num_bands; ib++)
             {
-                // for (int ig = 0; ig < npwx*npol_; ig++)
-                // {
-                //     for (int iw = 0; iw < PARAM.globalv.nlocal; iw++)
-                //     {
-                //         (*unk_inLcao)(ik, ib, ig) +=  lcao_wfc_global(ib, iw) * orbital_in_G(iw, ig);
-                //     }
-                // }
-
                 for (int ig = 0; ig < npw; ig++)
                 {
                     int basis_num = PARAM.globalv.nlocal / 2;
@@ -204,9 +194,7 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
                             + conj((*unk_inLcao)(ik, ib, ig+npwx)) * (*unk_inLcao)(ik, ib, ig+npwx);
                 }
 
-#ifdef __MPI
                 Parallel_Reduce::reduce_all(anorm);
-#endif
 
                 for (int ig = 0; ig < npw; ig++)
                 {
@@ -274,9 +262,7 @@ void toW90_LCAO_IN_PW::get_lcao_wfc_global_ik(
         }
     }
 
-#ifdef __MPI
     Parallel_Reduce::reduce_all(lcao_wfc_global.c, lcao_wfc_global.size);
-#endif
 
 }
 #endif

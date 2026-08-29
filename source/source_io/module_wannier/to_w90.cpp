@@ -69,9 +69,7 @@ void toW90::read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
         read_success = try_read_nnkp(ucell,kv);
     }
 
-#ifdef __MPI
     Parallel_Common::bcast_bool(read_success);
-#endif
 
     if (GlobalV::MY_RANK != 0 && read_success)
     {

@@ -71,9 +71,7 @@ void toW90_PW::unkdotkb(
                         result_tem = result_tem + conj(psir_up[ig]) * psi_pw(cal_ikb, in, ig)
                                                    + conj(psir_dn[ig]) * psi_pw(cal_ikb, in, ig+pwNumberMax);
                     }
-#ifdef __MPI
                     Parallel_Reduce::reduce_all(result_tem);
-#endif
                     Mmn(m, n) = result_tem;
                 }
                 else
@@ -112,9 +110,7 @@ void toW90_PW::unkdotkb(
                         result_tem = result_tem + conj(psir[ig]) * psi_pw(cal_ikb, in, ig);
                     }
 
-#ifdef __MPI
                     Parallel_Reduce::reduce_all(result_tem);
-#endif
                     Mmn(m, n) = result_tem;
                 }
                 else
@@ -169,8 +165,6 @@ void toW90_PW::unkdotW_A(
         }
     }
 
-#ifdef __MPI
     Parallel_Reduce::reduce_all(Amn.c, Amn.size);
-#endif
 
 }

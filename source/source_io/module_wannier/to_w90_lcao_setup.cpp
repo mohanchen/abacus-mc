@@ -243,9 +243,7 @@ void toW90_LCAO::unkdotkb(const UnitCell& ucell,
         }
     }
 
-#ifdef __MPI
     Parallel_Reduce::reduce_all(Mmn.c, num_bands * num_bands);
-#endif
 }
 
 void toW90_LCAO::produce_basis_orb()
