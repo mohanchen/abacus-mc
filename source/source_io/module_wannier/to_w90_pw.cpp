@@ -1,8 +1,8 @@
-#include "to_wannier90_pw.h"
+#include "to_w90_pw.h"
 
 #include "source_io/module_parameter/parameter.h"
 
-toWannier90_PW::toWannier90_PW(
+toW90_PW::toW90_PW(
     const bool &out_wannier_mmn, 
     const bool &out_wannier_amn, 
     const bool &out_wannier_unk, 
@@ -10,17 +10,17 @@ toWannier90_PW::toWannier90_PW(
     const bool &out_wannier_wvfn_formatted, 
     const std::string &nnkpfile,
     const std::string &wannier_spin
-):toWannier90(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
+):toW90(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
 {
 
 }
 
-toWannier90_PW::~toWannier90_PW()
+toW90_PW::~toW90_PW()
 {
     
 }
 
-void toWannier90_PW::calculate(
+void toW90_PW::calculate(
     const UnitCell& ucell,
     const ModuleBase::matrix& ekb,
     const ModulePW::PW_Basis_K* wfcpw,
@@ -43,7 +43,7 @@ void toWannier90_PW::calculate(
         }
         else
         {
-            ModuleBase::WARNING_QUIT("toWannier90::calculate", "Error wannier_spin set,is not \"up\" or \"down\" ");
+            ModuleBase::WARNING_QUIT("toW90::calculate", "Error wannier_spin set,is not \"up\" or \"down\" ");
         }
     }
 
@@ -68,7 +68,7 @@ void toWannier90_PW::calculate(
     }
 
 }
-void toWannier90_PW::set_tpiba_omega(const double& tpiba, const double& omega)
+void toW90_PW::set_tpiba_omega(const double& tpiba, const double& omega)
 {
     this->tpiba = &tpiba;
     this->omega = &omega;

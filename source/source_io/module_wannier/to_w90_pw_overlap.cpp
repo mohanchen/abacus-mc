@@ -1,9 +1,9 @@
-#include "to_wannier90_pw.h"
+#include "to_w90_pw.h"
 
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/parallel_reduce.h"
 
-void toWannier90_PW::unkdotkb(
+void toW90_PW::unkdotkb(
     const psi::Psi<std::complex<double>>& psi_pw, 
     const ModulePW::PW_Basis_K* wfcpw,
     const int& cal_ik,
@@ -140,7 +140,7 @@ void toWannier90_PW::unkdotkb(
 
 }
 
-void toWannier90_PW::unkdotW_A(
+void toW90_PW::unkdotW_A(
     const psi::Psi<std::complex<double>>& psi_pw,
     const ModulePW::PW_Basis_K* wfcpw,
     const int& ik,

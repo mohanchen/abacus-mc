@@ -10,7 +10,7 @@
 
 #include "source_psi/psi_init_nao.h"
 #ifdef __LCAO
-toWannier90_LCAO_IN_PW::toWannier90_LCAO_IN_PW(
+toW90_LCAO_IN_PW::toW90_LCAO_IN_PW(
     const bool &out_wannier_mmn, 
     const bool &out_wannier_amn, 
     const bool &out_wannier_unk, 
@@ -18,17 +18,17 @@ toWannier90_LCAO_IN_PW::toWannier90_LCAO_IN_PW(
     const bool &out_wannier_wvfn_formatted, 
     const std::string &nnkpfile,
     const std::string &wannier_spin
-):toWannier90_PW(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
+):toW90_PW(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
 {
 }
 
-toWannier90_LCAO_IN_PW::~toWannier90_LCAO_IN_PW()
+toW90_LCAO_IN_PW::~toW90_LCAO_IN_PW()
 {
     delete psi_initer_;
     delete psi;   
 }
 
-void toWannier90_LCAO_IN_PW::calculate(
+void toW90_LCAO_IN_PW::calculate(
     UnitCell& ucell,
     const ModuleBase::matrix& ekb,
     const ModulePW::PW_Basis_K* wfcpw,
@@ -72,7 +72,7 @@ void toWannier90_LCAO_IN_PW::calculate(
         }
         else
         {
-            ModuleBase::WARNING_QUIT("toWannier90::calculate", "Error wannier_spin set,is not \"up\" or \"down\" ");
+            ModuleBase::WARNING_QUIT("toW90::calculate", "Error wannier_spin set,is not \"up\" or \"down\" ");
         }
     }
 
@@ -112,7 +112,7 @@ void toWannier90_LCAO_IN_PW::calculate(
     delete unk_inLcao;
 }
 
-psi::Psi<std::complex<double>>* toWannier90_LCAO_IN_PW::get_unk_from_lcao(
+psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
     const UnitCell& ucell,
     const psi::Psi<std::complex<double>>& psi_in,
     const ModulePW::PW_Basis_K* wfcpw,
@@ -214,7 +214,7 @@ psi::Psi<std::complex<double>>* toWannier90_LCAO_IN_PW::get_unk_from_lcao(
     return unk_inLcao;
 }
 
-void toWannier90_LCAO_IN_PW::nao_G_expansion(
+void toW90_LCAO_IN_PW::nao_G_expansion(
     const int& ik,
     const ModulePW::PW_Basis_K* wfcpw,
     ModuleBase::ComplexMatrix& psi
@@ -234,7 +234,7 @@ void toWannier90_LCAO_IN_PW::nao_G_expansion(
     }
 }
 
-void toWannier90_LCAO_IN_PW::get_lcao_wfc_global_ik(
+void toW90_LCAO_IN_PW::get_lcao_wfc_global_ik(
     const int ik, 
     const psi::Psi<std::complex<double>>& psi_in, 
     ModuleBase::ComplexMatrix &lcao_wfc_global

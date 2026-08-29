@@ -6,7 +6,7 @@
 #include "../module_dos/cal_ldos.h"
 #include "../module_dos/write_dos_pw.h" // use write_dos_pw
 #include "../module_unk/berryphase.h"
-#include "../module_wannier/to_wannier90_pw.h" // wannier90 interface
+#include "../module_wannier/to_w90_pw.h" // wannier90 interface
 #include "../module_wf/get_wf_pw.h"
 #include "../module_wf/write_wfc_pw.h" // use write_wfc_pw
 #include "source_base/formatter.h"
@@ -184,7 +184,7 @@ void ModuleIO::ctrl_scf_pw(const int istep,
     if (inp.calculation == "nscf" && inp.towannier90)
     {
         std::cout << FmtCore::format("\n * * * * * *\n << Start %s.\n", "Wannier functions calculation");
-        toWannier90_PW wan(inp.out_wannier_mmn,
+        toW90_PW wan(inp.out_wannier_mmn,
                            inp.out_wannier_amn,
                            inp.out_wannier_unk,
                            inp.out_wannier_eig,

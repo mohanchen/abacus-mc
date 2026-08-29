@@ -1,4 +1,4 @@
-#include "to_wannier90_lcao.h"
+#include "to_w90_lcao.h"
 
 #include "source_lcao/module_ri/abfs_vector3_order.h"
 #include "source_io/module_parameter/parameter.h"
@@ -16,7 +16,7 @@
 
 #ifdef __LCAO
 
-void toWannier90_LCAO::initialize_orb_table(const UnitCell& ucell)
+void toW90_LCAO::initialize_orb_table(const UnitCell& ucell)
 {
 #ifdef __LCAO
     const int ntype = orb_.get_ntype();
@@ -45,7 +45,7 @@ void toWannier90_LCAO::initialize_orb_table(const UnitCell& ucell)
 #endif
 }
 
-void toWannier90_LCAO::set_R_coor(const UnitCell& ucell, const Grid_Driver& gd)
+void toW90_LCAO::set_R_coor(const UnitCell& ucell, const Grid_Driver& gd)
 {
     int R_minX = int(-gd.getGlayerX_minus());
     int R_minY = int(-gd.getGlayerY_minus());
@@ -73,7 +73,7 @@ void toWannier90_LCAO::set_R_coor(const UnitCell& ucell, const Grid_Driver& gd)
     }
 }
 
-void toWannier90_LCAO::count_delta_k(const UnitCell& ucell, const K_Vectors& kv)
+void toW90_LCAO::count_delta_k(const UnitCell& ucell, const K_Vectors& kv)
 {
     std::set<Coordinate_3D> delta_k_all_tmp;
     for (int ik = 0; ik < cal_num_kpts; ik++)
@@ -105,7 +105,7 @@ void toWannier90_LCAO::count_delta_k(const UnitCell& ucell, const K_Vectors& kv)
     }
 }
 
-void toWannier90_LCAO::unkdotkb(const UnitCell& ucell,
+void toW90_LCAO::unkdotkb(const UnitCell& ucell,
                                 const K_Vectors& kv,
                                 const psi::Psi<std::complex<double>>& psi_in,
                                 const int& ik,
@@ -255,7 +255,7 @@ void toWannier90_LCAO::unkdotkb(const UnitCell& ucell,
     delete[] out_matrix;
 }
 
-void toWannier90_LCAO::produce_basis_orb()
+void toW90_LCAO::produce_basis_orb()
 {
     int mat_Nr = orb_.Phi[0].PhiLN(0, 0).getNr();
     int count_Nr = 0;
@@ -297,7 +297,7 @@ void toWannier90_LCAO::produce_basis_orb()
     }
 }
 
-void toWannier90_LCAO::produce_trial_in_lcao()
+void toW90_LCAO::produce_trial_in_lcao()
 {
     A_orbs.resize(num_wannier);
 
@@ -427,7 +427,7 @@ void toWannier90_LCAO::produce_trial_in_lcao()
     delete[] inner;
 }
 
-void toWannier90_LCAO::construct_overlap_table_project()
+void toW90_LCAO::construct_overlap_table_project()
 {
     int row = this->ParaV->get_row_size();
     int global_ir = 0;

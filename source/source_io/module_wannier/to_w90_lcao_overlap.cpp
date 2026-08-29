@@ -1,4 +1,4 @@
-#include "to_wannier90_lcao.h"
+#include "to_w90_lcao.h"
 
 #include "source_lcao/module_ri/abfs_vector3_order.h"
 #include "source_io/module_parameter/parameter.h"
@@ -16,7 +16,7 @@
 
 #ifdef __LCAO
 
-void toWannier90_LCAO::cal_orbA_overlap_R(const UnitCell& ucell)
+void toW90_LCAO::cal_orbA_overlap_R(const UnitCell& ucell)
 {
     int row = this->ParaV->get_row_size();
     int R_num = R_coor_car.size();
@@ -401,7 +401,7 @@ void toWannier90_LCAO::cal_orbA_overlap_R(const UnitCell& ucell)
     }
 }
 
-void toWannier90_LCAO::unkdotA(const K_Vectors& kv,
+void toW90_LCAO::unkdotA(const K_Vectors& kv,
                                const psi::Psi<std::complex<double>>& psi_in,
                                const int& ik,
                                ModuleBase::ComplexMatrix& Amn)

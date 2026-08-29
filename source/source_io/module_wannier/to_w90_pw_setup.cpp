@@ -1,4 +1,4 @@
-#include "to_wannier90_pw.h"
+#include "to_w90_pw.h"
 
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/math_integral.h"
@@ -7,7 +7,7 @@
 #include "source_base/math_ylmreal.h"
 #include "source_base/parallel_reduce.h"
 
-void toWannier90_PW::gen_radial_function_in_q(std::vector<ModuleBase::matrix> &radial_in_q)
+void toW90_PW::gen_radial_function_in_q(std::vector<ModuleBase::matrix> &radial_in_q)
 {
     // The radial function is Fourier transformed into the q-space.
     radial_in_q.resize(num_wannier);
@@ -92,7 +92,7 @@ void toWannier90_PW::gen_radial_function_in_q(std::vector<ModuleBase::matrix> &r
 
 }
 
-void toWannier90_PW::produce_trial_in_pw(
+void toW90_PW::produce_trial_in_pw(
     const psi::Psi<std::complex<double>>& psi_pw,
     const int& ik,
     const ModulePW::PW_Basis_K* wfcpw,
@@ -459,7 +459,7 @@ void toWannier90_PW::produce_trial_in_pw(
     delete[] sf;
 }
 
-void toWannier90_PW::get_trial_orbitals_lm_k(
+void toW90_PW::get_trial_orbitals_lm_k(
     const int &orbital_L,
     const int &orbital_m,
     const ModuleBase::matrix &ylm,
@@ -485,7 +485,7 @@ void toWannier90_PW::get_trial_orbitals_lm_k(
     return;
 }
 
-void toWannier90_PW::integral(
+void toW90_PW::integral(
     const int meshr,
     const double *psir,
     const double *r,

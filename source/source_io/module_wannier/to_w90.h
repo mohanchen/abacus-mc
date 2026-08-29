@@ -1,5 +1,5 @@
-#ifndef TOWannier90_H
-#define TOWannier90_H
+#ifndef TO_W90_H
+#define TO_W90_H
 
 #include <iostream>
 #include <algorithm>
@@ -14,12 +14,12 @@
 #include "source_base/matrix3.h"
 #include "source_cell/klist.h"
 
-class toWannier90
+class toW90
 {
   public:
-    toWannier90();
+    toW90();
 
-    toWannier90(
+    toW90(
       const bool &out_wannier_mmn, 
       const bool &out_wannier_amn, 
       const bool &out_wannier_unk, 
@@ -28,7 +28,7 @@ class toWannier90
       const std::string &nnkpfile,
       const std::string &wannier_spin
     );
-    ~toWannier90();
+    ~toW90();
 
     void calculate();
     void read_nnkp(const UnitCell& ucell, const K_Vectors& kv);

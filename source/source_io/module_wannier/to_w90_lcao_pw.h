@@ -10,8 +10,8 @@
 #include "source_base/ylm.h"
 #include "source_cell/klist.h"
 #include "source_psi/psi.h"
-#include "to_wannier90.h"
-#include "to_wannier90_pw.h"
+#include "to_w90.h"
+#include "to_w90_pw.h"
 
 #include <algorithm>
 #include <cmath>
@@ -23,17 +23,17 @@
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_psi/psi_base.h"
 
-class toWannier90_LCAO_IN_PW : public toWannier90_PW
+class toW90_LCAO_IN_PW : public toW90_PW
 {
   public:
-    toWannier90_LCAO_IN_PW(const bool& out_wannier_mmn,
+    toW90_LCAO_IN_PW(const bool& out_wannier_mmn,
                            const bool& out_wannier_amn,
                            const bool& out_wannier_unk,
                            const bool& out_wannier_eig,
                            const bool& out_wannier_wvfn_formatted,
                            const std::string& nnkpfile,
                            const std::string& wannier_spin);
-    ~toWannier90_LCAO_IN_PW();
+    ~toW90_LCAO_IN_PW();
 
     void calculate(UnitCell& ucell,
                    const ModuleBase::matrix& ekb,
@@ -53,7 +53,7 @@ class toWannier90_LCAO_IN_PW : public toWannier90_PW
                    const psi::Psi<double>* psi,
                    const Parallel_Orbitals* pv)
     {
-        throw std::logic_error("The wave function of toWannier90_LCAO_IN_PW is generally a std::complex<double> type.");
+        throw std::logic_error("The wave function of toW90_LCAO_IN_PW is generally a std::complex<double> type.");
     }
 
   protected:

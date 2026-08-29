@@ -1,4 +1,4 @@
-#include "to_wannier90_lcao.h"
+#include "to_w90_lcao.h"
 
 #include "source_lcao/module_ri/abfs_vector3_order.h"
 #include "source_io/module_parameter/parameter.h"
@@ -16,7 +16,7 @@
 
 #ifdef __LCAO
 
-void toWannier90_LCAO::cal_Mmn(const UnitCell& ucell, const K_Vectors& kv, const psi::Psi<std::complex<double>>& psi)
+void toW90_LCAO::cal_Mmn(const UnitCell& ucell, const K_Vectors& kv, const psi::Psi<std::complex<double>>& psi)
 {
     // write .mmn file
     std::ofstream mmn_file;
@@ -70,7 +70,7 @@ void toWannier90_LCAO::cal_Mmn(const UnitCell& ucell, const K_Vectors& kv, const
 }
 }
 
-void toWannier90_LCAO::cal_Amn(const UnitCell& ucell, const K_Vectors& kv, const psi::Psi<std::complex<double>>& psi)
+void toW90_LCAO::cal_Amn(const UnitCell& ucell, const K_Vectors& kv, const psi::Psi<std::complex<double>>& psi)
 {
     produce_trial_in_lcao();
     construct_overlap_table_project();
@@ -118,7 +118,7 @@ void toWannier90_LCAO::cal_Amn(const UnitCell& ucell, const K_Vectors& kv, const
 }
 }
 
-void toWannier90_LCAO::out_unk(const psi::Psi<std::complex<double>>& psi)
+void toW90_LCAO::out_unk(const psi::Psi<std::complex<double>>& psi)
 {
 }
 

@@ -1,4 +1,4 @@
-#include "to_wannier90_lcao.h"
+#include "to_w90_lcao.h"
 
 #include "source_lcao/module_ri/abfs_vector3_order.h"
 #include "source_io/module_parameter/parameter.h"
@@ -15,7 +15,7 @@
 #include <functional>
 
 #ifdef __LCAO
-toWannier90_LCAO::toWannier90_LCAO(const bool& out_wannier_mmn,
+toW90_LCAO::toW90_LCAO(const bool& out_wannier_mmn,
                                    const bool& out_wannier_amn,
                                    const bool& out_wannier_unk,
                                    const bool& out_wannier_eig,
@@ -23,7 +23,7 @@ toWannier90_LCAO::toWannier90_LCAO(const bool& out_wannier_mmn,
                                    const std::string& nnkpfile,
                                    const std::string& wannier_spin,
                                    const LCAO_Orbitals& orb)
-    : toWannier90(out_wannier_mmn,
+    : toW90(out_wannier_mmn,
                   out_wannier_amn,
                   out_wannier_unk,
                   out_wannier_eig,
@@ -34,11 +34,11 @@ toWannier90_LCAO::toWannier90_LCAO(const bool& out_wannier_mmn,
 {
 }
 
-toWannier90_LCAO::~toWannier90_LCAO()
+toW90_LCAO::~toW90_LCAO()
 {
 }
 
-void toWannier90_LCAO::calculate(const UnitCell& ucell,
+void toW90_LCAO::calculate(const UnitCell& ucell,
                                  const Grid_Driver& gd,
                                  const ModuleBase::matrix& ekb,
                                  const K_Vectors& kv,
@@ -61,7 +61,7 @@ void toWannier90_LCAO::calculate(const UnitCell& ucell,
         }
         else
         {
-            ModuleBase::WARNING_QUIT("toWannier90::calculate", "Error wannier_spin set,is not \"up\" or \"down\" ");
+            ModuleBase::WARNING_QUIT("toW90::calculate", "Error wannier_spin set,is not \"up\" or \"down\" ");
         }
     }
 

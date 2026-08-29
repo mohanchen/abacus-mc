@@ -1,10 +1,10 @@
-#include "to_wannier90_pw.h"
+#include "to_w90_pw.h"
 #include "source_base/parallel_comm.h" // use POOL_WORLD
 
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/module_out/binstream.h"
 
-void toWannier90_PW::cal_Mmn(
+void toW90_PW::cal_Mmn(
     const psi::Psi<std::complex<double>>& psi_pw,
     const ModulePW::PW_Basis_K* wfcpw
 )
@@ -60,7 +60,7 @@ void toWannier90_PW::cal_Mmn(
 }
 
 
-void toWannier90_PW::cal_Amn(
+void toW90_PW::cal_Amn(
     const psi::Psi<std::complex<double>>& psi_pw, 
     const ModulePW::PW_Basis_K* wfcpw
 )
@@ -107,7 +107,7 @@ void toWannier90_PW::cal_Amn(
 
 }
 
-void toWannier90_PW::out_unk(
+void toW90_PW::out_unk(
     const psi::Psi<std::complex<double>>& psi_pw,
     const ModulePW::PW_Basis_K* wfcpw,
     const ModulePW::PW_Basis_Big* bigpw

@@ -1,5 +1,5 @@
-#ifndef TOWannier90_LCAO_H
-#define TOWannier90_LCAO_H
+#ifndef TO_W90_LCAO_H
+#define TO_W90_LCAO_H
 
 #include "source_base/complexmatrix.h"
 #include "source_base/global_function.h"
@@ -20,7 +20,7 @@
 #include "source_lcao/center2orb_orb21.h"
 #include "source_lcao/center2orb.h"
 #include "source_psi/psi.h"
-#include "to_wannier90.h"
+#include "to_w90.h"
 
 #include <algorithm>
 #include <cmath>
@@ -56,10 +56,10 @@ class Coordinate_3D
     }
 };
 
-class toWannier90_LCAO : public toWannier90
+class toW90_LCAO : public toW90
 {
   public:
-    toWannier90_LCAO(const bool& out_wannier_mmn,
+    toW90_LCAO(const bool& out_wannier_mmn,
                      const bool& out_wannier_amn,
                      const bool& out_wannier_unk,
                      const bool& out_wannier_eig,
@@ -68,7 +68,7 @@ class toWannier90_LCAO : public toWannier90
                      const std::string& wannier_spin,
                      const LCAO_Orbitals& orb
                      );
-    ~toWannier90_LCAO();
+    ~toW90_LCAO();
 
     void calculate(const UnitCell& ucell,
                    const Grid_Driver& gd,
@@ -84,7 +84,7 @@ class toWannier90_LCAO : public toWannier90
                    const psi::Psi<double>& psi,
                    const Parallel_Orbitals* pv)
     {
-        ModuleBase::WARNING_QUIT("toWannier90_LCAO::calculate", 
+        ModuleBase::WARNING_QUIT("toW90_LCAO::calculate", 
                                  "The wave function is real (double type), indicating 'gamma_only = 1'. "
                                  "The Wannier90 interface does not support Gamma-only calculations. "
                                  "Please set 'gamma_only 0' in your INPUT file.");
