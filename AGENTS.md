@@ -8,7 +8,7 @@ rules. Read the complete governance document before making or reviewing changes:
 
 ## Required Baseline
 
-- Follow the seven ABACUS coding rules summarized from the project governance:
+- Follow the nine ABACUS coding rules summarized from the project governance:
   1. Do not increase cross-layer control through `GlobalV`, `GlobalC`, or
      `PARAM`; pass dependencies explicitly where practical. Migration-neutral
      moves must keep the PR-level global dependency budget non-increasing and
@@ -24,6 +24,8 @@ rules. Read the complete governance document before making or reviewing changes:
      heterogeneous kernels, and core-module refactors.
   7. Keep code compatible with the repository C++11 baseline.
   8. Declare one variable per line; do not use comma-separated declarations.
+  9. Do not call MPI routines directly; use the internally-guarded wrappers
+     (e.g., `Parallel_Reduce::reduce_*`, `Parallel_Common::bcast_*`) instead.
 - Use LF line endings for text files. Only `.bat` and `.cmd` files may use CRLF.
 - Keep source file additions deterministic: update the relevant `CMakeLists.txt`
   or explain why the file is generated or included indirectly.
@@ -84,6 +86,9 @@ rules. Read the complete governance document before making or reviewing changes:
   test sufficiency, and exception approval require human review.
 - Exceptions must be recorded in the PR with reason, scope, risk, and a follow-up
   cleanup plan.
+- After a refactor, propose brief lessons worth recording in this file, then
+  ask the developer whether to write them in; be cautious and skip unclear
+  or unverified lessons.
 
 ## Local Commands
 
