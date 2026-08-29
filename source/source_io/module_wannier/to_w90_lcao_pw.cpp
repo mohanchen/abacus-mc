@@ -18,7 +18,9 @@ toW90_LCAO_IN_PW::toW90_LCAO_IN_PW(
     const bool &out_wannier_wvfn_formatted, 
     const std::string &nnkpfile,
     const std::string &wannier_spin
-):toW90_PW(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
+)
+    : toW90_PW(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig,
+      out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
 {
 }
 
@@ -47,7 +49,8 @@ void toW90_LCAO_IN_PW::calculate(
     psi_init_nao<std::complex<double>>* nao_initer = new psi_init_nao<std::complex<double>>();
     nao_initer->prepare_params(PARAM.globalv.nqx, PARAM.globalv.dq, PARAM.inp.nspin, PARAM.inp.orbital_dir);
     this->psi_initer_ = nao_initer;
-    this->psi_initer_->initialize(sf_ptr, wfcpw_ptr, &ucell, kv.ik2iktot, 1, GlobalV::MY_RANK, PARAM.globalv.npol, PARAM.inp.nbands);
+    this->psi_initer_->initialize(sf_ptr, wfcpw_ptr, &ucell, kv.ik2iktot, 1, GlobalV::MY_RANK,
+                                  PARAM.globalv.npol, PARAM.inp.nbands);
     this->psi_initer_->tabulate();
     delete this->psi;
     const int nks_psi = (PARAM.inp.calculation == "nscf" && PARAM.inp.mem_saver == 1)? 1 : wfcpw->nks;
@@ -76,7 +79,7 @@ void toW90_LCAO_IN_PW::calculate(
         }
     }
 
-    psi::Psi<std::complex<double>> *unk_inLcao = get_unk_from_lcao(ucell,*psi, wfcpw, kv);
+    std::unique_ptr<psi::Psi<std::complex<double>>> unk_inLcao = get_unk_from_lcao(ucell,*psi, wfcpw, kv);
 
     if (out_wannier_eig)
     {
@@ -108,11 +111,9 @@ void toW90_LCAO_IN_PW::calculate(
     {
         out_unk(*unk_inLcao, wfcpw, bigpw);
     }
-
-    delete unk_inLcao;
 }
 
-psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
+std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_lcao(
     const UnitCell& ucell,
     const psi::Psi<std::complex<double>>& psi_in,
     const ModulePW::PW_Basis_K* wfcpw,
@@ -121,11 +122,12 @@ psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
 {
     // init
     int npwx = wfcpw->npwk_max;
-    psi::Psi<std::complex<double>> *unk_inLcao = new psi::Psi<std::complex<double>>(num_kpts, 
-                                                                                    num_bands, 
-                                                                                    npwx*PARAM.globalv.npol, 
-                                                                                    kv.ngk,
-                                                                                    true);
+    std::unique_ptr<psi::Psi<std::complex<double>>> unk_inLcao(
+        new psi::Psi<std::complex<double>>(num_kpts,
+                                           num_bands,
+                                           npwx*PARAM.globalv.npol,
+                                           kv.ngk,
+                                           true));
     unk_inLcao->zero_out();
 
     for (int ik = 0; ik < num_kpts; ik++)
@@ -145,14 +147,14 @@ psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
                 {
                     for (int iw = 0; iw < PARAM.globalv.nlocal; iw++)
                     {
-                        unk_inLcao[0](ik, ib, ig) +=  lcao_wfc_global(ib, iw) * orbital_in_G(iw, ig);
+                        (*unk_inLcao)(ik, ib, ig) +=  lcao_wfc_global(ib, iw) * orbital_in_G(iw, ig);
                     }
                 }
 
                 std::complex<double> anorm(0.0, 0.0);
                 for (int ig = 0; ig < npw; ig++)
                 {
-                    anorm = anorm + conj(unk_inLcao[0](ik, ib, ig)) * unk_inLcao[0](ik, ib, ig);
+                    anorm = anorm + conj((*unk_inLcao)(ik, ib, ig)) * (*unk_inLcao)(ik, ib, ig);
                 }
 
 #ifdef __MPI
@@ -161,7 +163,7 @@ psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
 
                 for (int ig = 0; ig < npw; ig++)
                 {
-                    unk_inLcao[0](ik, ib, ig) = unk_inLcao[0](ik, ib, ig) / sqrt(anorm);
+                    (*unk_inLcao)(ik, ib, ig) = (*unk_inLcao)(ik, ib, ig) / sqrt(anorm);
                 }
             }
         }
@@ -173,7 +175,7 @@ psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
                 // {
                 //     for (int iw = 0; iw < PARAM.globalv.nlocal; iw++)
                 //     {
-                //         unk_inLcao[0](ik, ib, ig) +=  lcao_wfc_global(ib, iw) * orbital_in_G(iw, ig);
+                //         (*unk_inLcao)(ik, ib, ig) +=  lcao_wfc_global(ib, iw) * orbital_in_G(iw, ig);
                 //     }
                 // }
 
@@ -182,15 +184,16 @@ psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
                     int basis_num = PARAM.globalv.nlocal / 2;
                     for (int iw = 0; iw < basis_num; iw++)
                     {
-                        unk_inLcao[0](ik, ib, ig) +=  lcao_wfc_global(ib, 2*iw) * orbital_in_G(iw, ig);
-                        unk_inLcao[0](ik, ib, ig+npwx) +=  lcao_wfc_global(ib, 2*iw+1) * orbital_in_G(iw, ig);
+                        (*unk_inLcao)(ik, ib, ig) +=  lcao_wfc_global(ib, 2*iw) * orbital_in_G(iw, ig);
+                        (*unk_inLcao)(ik, ib, ig+npwx) +=  lcao_wfc_global(ib, 2*iw+1) * orbital_in_G(iw, ig);
                     }
                 }
 
                 std::complex<double> anorm(0.0, 0.0);
                 for (int ig = 0; ig < npw; ig++)
                 {
-                    anorm = anorm + conj(unk_inLcao[0](ik, ib, ig)) * unk_inLcao[0](ik, ib, ig) + conj(unk_inLcao[0](ik, ib, ig+npwx)) * unk_inLcao[0](ik, ib, ig+npwx);
+                    anorm = anorm + conj((*unk_inLcao)(ik, ib, ig)) * (*unk_inLcao)(ik, ib, ig)
+                            + conj((*unk_inLcao)(ik, ib, ig+npwx)) * (*unk_inLcao)(ik, ib, ig+npwx);
                 }
 
 #ifdef __MPI
@@ -199,8 +202,8 @@ psi::Psi<std::complex<double>>* toW90_LCAO_IN_PW::get_unk_from_lcao(
 
                 for (int ig = 0; ig < npw; ig++)
                 {
-                    unk_inLcao[0](ik, ib, ig) = unk_inLcao[0](ik, ib, ig) / sqrt(anorm);
-                    unk_inLcao[0](ik, ib, ig+npwx) = unk_inLcao[0](ik, ib, ig+npwx) / sqrt(anorm);
+                    (*unk_inLcao)(ik, ib, ig) = (*unk_inLcao)(ik, ib, ig) / sqrt(anorm);
+                    (*unk_inLcao)(ik, ib, ig+npwx) = (*unk_inLcao)(ik, ib, ig+npwx) / sqrt(anorm);
                 }
             }
         }

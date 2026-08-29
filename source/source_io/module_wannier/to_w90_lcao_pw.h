@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #ifdef __LCAO
@@ -67,8 +68,8 @@ class toW90_LCAO_IN_PW : public toW90_PW
     /// @param psi_in
     /// @param wfcpw [in] data carrier, storing planewave basis number and k information
     /// @param kv [in] data carrier, storing kpoints information
-    /// @return psi::Psi<std::complex<double>>*
-    psi::Psi<std::complex<double>>* get_unk_from_lcao(const UnitCell& ucell,
+    /// @return std::unique_ptr<psi::Psi<std::complex<double>>>
+    std::unique_ptr<psi::Psi<std::complex<double>>> get_unk_from_lcao(const UnitCell& ucell,
                                                       const psi::Psi<std::complex<double>>& psi_in,
                                                       const ModulePW::PW_Basis_K* wfcpw,
                                                       const K_Vectors& kv);
