@@ -1,12 +1,15 @@
 #ifndef DFTU_BASE_H
 #define DFTU_BASE_H
 
-#include "source_cell/unitcell.h"
-#include "source_estate/module_charge/charge_mixing.h"
+#include "source_base/matrix.h"
 
+#include <complex>
 #include <string>
 #include <vector>
 
+
+class UnitCell;
+class Charge_Mixing;
 
 class DFTUTest;
 
@@ -42,11 +45,9 @@ class Plus_U_Base
 
     // --- Accessors for U values and orbital configuration ---
     double get_u_current(int it) const { return u_current[it]; }
-    double get_u_target(int it) const { return u_target[it]; }
     int get_num_u_types() const { return static_cast<int>(u_current.size()); }
     int get_orbital_corr(int it) const { return orbital_corr[it]; }
     bool has_correlated_orbital(int it) const { return orbital_corr[it] != -1; }
-    const int* get_orbital_corr_data() const { return orbital_corr.data(); }
 
     /// read-only access to the orbital_corr vector (length ntype)
     const std::vector<int>& get_orbital_corr_vec() const { return orbital_corr; }
@@ -108,14 +109,6 @@ class Plus_U_Base
                             : static_cast<int>(pot_uterm_pw.size());
     }
 
-    /// get effective potential matrix for PW base (per-atom, raw index)
-    /// @deprecated Use get_pot_uterm_pw_spin() for nspin-aware access.
-    [[deprecated("Use get_pot_uterm_pw_spin() for nspin-aware access")]]
-    const std::complex<double>* get_pot_uterm_pw(const int iat) const
-    {
-        return &(pot_uterm_pw[pot_uterm_pw_index[iat]]);
-    }
-
     int get_size_pot_uterm_pw() const
     {
         return pot_uterm_pw.size();
@@ -143,21 +136,10 @@ class Plus_U_Base
         return occ_mat_save[iat][l][n][spin](m1, m2);
     }
 
-    /// set occupation matrix element occ_mat[iat][l][n][spin](m1,m2)
-    void set_occ_mat(const int iat, const int l, const int n, const int spin,
-                     const int m1, const int m2, const double val)
-    {
-        occ_mat[iat][l][n][spin](m1, m2) = val;
-    }
-
     /// get reference to occ_mat data
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& get_occ_mat_data() { return occ_mat; }
     /// get reference to occ_mat_save data
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& get_occ_mat_save_data() { return occ_mat_save; }
-    /// get occ_mat_initialized flag
-    bool get_occ_mat_initialized() const { return occ_mat_initialized; }
-    /// set occ_mat_initialized flag
-    void set_occ_mat_initialized(bool val) { occ_mat_initialized = val; }
 
     /// get flat occupation matrix for an atom's correlated orbital.
     /// nspin=1: fills occ with occ_mat[iat][l][0][0] data
@@ -203,7 +185,6 @@ class Plus_U_Base
 
     void copy_occ_mat(const UnitCell& ucell);
     void zero_occ_mat(const UnitCell& ucell);
-    void mix_occ_mat(const UnitCell& ucell, const double& mixing_beta);
     void set_occ_mat(const UnitCell& ucell);
 
     /// accumulate occ_mat from psi for all k-points (per-device template)

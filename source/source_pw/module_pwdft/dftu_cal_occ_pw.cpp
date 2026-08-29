@@ -1,6 +1,8 @@
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_pw/module_pwdft/dftu_tools_pw.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
+#include "source_cell/unitcell.h"
+#include "source_estate/module_charge/charge_mixing.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/global_variable.h"
 #include "source_base/timer.h"

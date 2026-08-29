@@ -8,7 +8,7 @@
 #include "source_lcao/hamilt_lcao.h"
 #endif
 
-// copy_occ_mat(), zero_occ_mat(), mix_occ_mat(), set_occ_mat(ucell),
+// copy_occ_mat(), zero_occ_mat(), set_occ_mat(ucell),
 // get_occ_mat_flat(), set_occ_mat_flat()
 // are now implemented in dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
 
@@ -584,13 +584,20 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    bool occ_mat_initialized = dftu.get_occ_mat_initialized();
+    bool occ_mat_initialized = dftu.is_occ_mat_initialized();
     DFTU_LCAO::cal_occ_mat_gamma(pv, iter, ucell, dm, mixing_beta, p_ham, nspin,
                                  ucell.get_npol(), pv->get_global_row_size(), dftu.get_iatlnmipol2iwt(),
                                  dftu.get_orbital_corr_vec(),
                                  dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
                                  occ_mat_initialized);
-    dftu.set_occ_mat_initialized(occ_mat_initialized);
+    if (occ_mat_initialized)
+    {
+        dftu.mark_occ_mat_initialized();
+    }
+    else
+    {
+        dftu.mark_occ_mat_dirty();
+    }
 }
 
 //! dftu occupation matrix for multiple k-points using dm(complex)
@@ -606,13 +613,20 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    bool occ_mat_initialized = dftu.get_occ_mat_initialized();
+    bool occ_mat_initialized = dftu.is_occ_mat_initialized();
     DFTU_LCAO::cal_occ_mat_k(pv, iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
                              ucell.get_npol(), pv->get_global_row_size(), PARAM.inp.ks_solver, dftu.get_iatlnmipol2iwt(),
                              dftu.get_orbital_corr_vec(),
                              dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
                              occ_mat_initialized);
-    dftu.set_occ_mat_initialized(occ_mat_initialized);
+    if (occ_mat_initialized)
+    {
+        dftu.mark_occ_mat_initialized();
+    }
+    else
+    {
+        dftu.mark_occ_mat_dirty();
+    }
 }
 
 } // namespace DFTU_LCAO

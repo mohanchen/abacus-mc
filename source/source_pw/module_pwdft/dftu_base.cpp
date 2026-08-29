@@ -1,5 +1,6 @@
 #include "source_pw/module_pwdft/dftu_base.h"
 
+#include "source_cell/unitcell.h"
 #include "source_base/global_function.h"
 #include "source_base/memory_recorder.h"
 #include "source_base/parallel_global.h"
@@ -368,63 +369,6 @@ void Plus_U_Base::zero_occ_mat(const UnitCell& ucell)
         }
     }
     ModuleBase::timer::end("Plus_U_Base", "zero_occ_mat");
-}
-
-
-void Plus_U_Base::mix_occ_mat(const UnitCell& ucell,
-                              const double& mixing_beta)
-{
-    ModuleBase::TITLE("Plus_U_Base", "mix_occ_mat");
-    ModuleBase::timer::start("Plus_U_Base", "mix_occ_mat");
-
-    double beta = mixing_beta;
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        int target_l = get_orbital_corr(T);
-        if (target_l == -1)
-            continue;
-
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-
-            if (this->nspin == 4)
-            {
-                const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                for (int mm = 0; mm < size; mm++)
-                {
-                    occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                }
-                if (this->uom_save.size() != 0)
-                {
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        this->uom_save[pot_uterm_pw_index[iat] + mm] = occ_mat[iat][target_l][0][0].c[mm];
-                    }
-                }
-            }
-            else if (this->nspin == 1 || this->nspin == 2)
-            {
-                const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                const int half_size = this->uom_save.size() / 2;
-                for (int mm = 0; mm < size; mm++)
-                {
-                    occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                    occ_mat[iat][target_l][0][1].c[mm] = occ_mat[iat][target_l][0][1].c[mm] * beta + occ_mat_save[iat][target_l][0][1].c[mm] * (1.0 - beta);
-                }
-                if (this->uom_save.size() != 0)
-                {
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        this->uom_save[pot_uterm_pw_index[iat] + mm] = occ_mat[iat][target_l][0][0].c[mm];
-                        this->uom_save[half_size + pot_uterm_pw_index[iat] + mm] = occ_mat[iat][target_l][0][1].c[mm];
-                    }
-                }
-            }
-        }
-    }
-    ModuleBase::timer::end("Plus_U_Base", "mix_occ_mat");
 }
 
 

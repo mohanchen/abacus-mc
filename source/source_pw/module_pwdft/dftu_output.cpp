@@ -1,5 +1,6 @@
 #include "source_pw/module_pwdft/dftu_output.h"
 
+#include "source_cell/unitcell.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
