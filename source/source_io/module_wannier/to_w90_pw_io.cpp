@@ -16,7 +16,7 @@ void toW90_PW::cal_Mmn(
         std::string fileaddress = PARAM.globalv.global_out_dir + wannier_file_name + ".mmn";
         mmn_file.open(fileaddress.c_str(), std::ios::out);
 
-        time_t time_now = time(NULL);
+        time_t time_now = time(nullptr);
         mmn_file << " Created on " << ctime(&time_now);
         mmn_file << std::setw(12) << num_bands << std::setw(12) << cal_num_kpts << std::setw(12) << nntot << std::endl;
     }
@@ -42,7 +42,8 @@ void toW90_PW::cal_Mmn(
                 {
                     for (int m = 0; m < num_bands; m++)
                     {
-                        mmn_file << std::setw(18) << std::setprecision(12) << std::showpoint << std::fixed << Mmn(m, n).real()
+                        mmn_file << std::setw(18) << std::setprecision(12) << std::showpoint << std::fixed
+                                 << Mmn(m, n).real()
                                  << std::setw(18) << std::setprecision(12) << std::showpoint << std::fixed
                                  << Mmn(m, n).imag()
                                  // jingan test
@@ -72,7 +73,7 @@ void toW90_PW::cal_Amn(
 
     if (GlobalV::MY_RANK == 0)
     {
-        time_t time_now = time(NULL);
+        time_t time_now = time(nullptr);
         std::string fileaddress = PARAM.globalv.global_out_dir + wannier_file_name + ".amn";
         Amn_file.open(fileaddress.c_str(), std::ios::out);
         Amn_file << " Created on " << ctime(&time_now);
@@ -92,8 +93,10 @@ void toW90_PW::cal_Amn(
                 for (int ib_w = 0; ib_w < num_bands; ib_w++)
                 {
                     Amn_file << std::setw(5) << ib_w + 1 << std::setw(5) << iw + 1 << std::setw(5)
-                            << ik + 1 - start_k_index << std::setw(18) << std::showpoint << std::fixed << std::setprecision(12)
-                            << Amn(ib_w, iw).real() << std::setw(18) << std::showpoint << std::fixed << std::setprecision(12)
+                            << ik + 1 - start_k_index
+                            << std::setw(18) << std::showpoint << std::fixed << std::setprecision(12)
+                            << Amn(ib_w, iw).real()
+                            << std::setw(18) << std::showpoint << std::fixed << std::setprecision(12)
                             << Amn(ib_w, iw).imag()
                             // jingan test
                             //<< "   " << std::setw(18) << std::setprecision(13) << std::abs(Amn(ib_w, iw))
@@ -130,9 +133,9 @@ void toW90_PW::out_unk(
     }
 
     // only do in the first pool.
-    std::complex<double>* porter = new std::complex<double>[wfcpw->nrxx];
+    std::vector<std::complex<double>> porter(wfcpw->nrxx);
     int nxy = wfcpw->nx * wfcpw->ny;
-    std::complex<double> *zpiece = new std::complex<double>[nxy];
+    std::vector<std::complex<double>> zpiece(nxy);
 
     if (GlobalV::MY_POOL == 0)
     {
@@ -147,7 +150,8 @@ void toW90_PW::out_unk(
                 std::stringstream name;
                 if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 4)
                 {
-                    name << PARAM.globalv.global_out_dir << "UNK" << std::setw(5) << std::setfill('0') << ik + 1 << ".1";
+                    name << PARAM.globalv.global_out_dir << "UNK" << std::setw(5) << std::setfill('0')
+                        << ik + 1 << ".1";
                 }
                 else if (PARAM.inp.nspin == 2)
                 {
@@ -175,7 +179,7 @@ void toW90_PW::out_unk(
             {
                 int ib = cal_band_index[ib_w];
 
-                wfcpw->recip2real(&psi_pw(ik, ib, 0), porter, ik);
+                wfcpw->recip2real(&psi_pw(ik, ib, 0), porter.data(), ik);
 
                 if (GlobalV::RANK_IN_POOL == 0)
                 {
@@ -189,7 +193,7 @@ void toW90_PW::out_unk(
                 for (int iz = 0; iz < wfcpw->nz; iz++)
                 {
                     // tag must be different for different iz.
-                    ModuleBase::GlobalFunc::ZEROS(zpiece, nxy);
+                    std::fill(zpiece.begin(), zpiece.end(), std::complex<double>(0.0, 0.0));
                     int tag = iz;
                     MPI_Status ierror;
 
@@ -209,14 +213,14 @@ void toW90_PW::out_unk(
                         {
                             zpiece[ir] = porter[ir * wfcpw->nplane + iz - wfcpw->startz_current];
                         }
-                        MPI_Send(zpiece, nxy, MPI_DOUBLE_COMPLEX, 0, tag, POOL_WORLD);
+                        MPI_Send(zpiece.data(), nxy, MPI_DOUBLE_COMPLEX, 0, tag, POOL_WORLD);
                     }
 
                     // case 2: > first part rho: processor 0 receive the rho
                     // from other processors
                     else if (GlobalV::RANK_IN_POOL == 0)
                     {
-                        MPI_Recv(zpiece, nxy, MPI_DOUBLE_COMPLEX, which_ip[iz], tag, POOL_WORLD, &ierror);
+                        MPI_Recv(zpiece.data(), nxy, MPI_DOUBLE_COMPLEX, which_ip[iz], tag, POOL_WORLD, &ierror);
                     }
 
                     // write data
@@ -228,9 +232,12 @@ void toW90_PW::out_unk(
                             {
                                 for (int ix = 0; ix < wfcpw->nx; ix++)
                                 {
-                                    unkfile << std::setw(20) << std::setprecision(9) << std::setiosflags(std::ios::scientific)
-                                            << zpiece[ix * wfcpw->ny + iy].real() << std::setw(20) << std::setprecision(9)
-                                            << std::setiosflags(std::ios::scientific) << zpiece[ix * wfcpw->ny + iy].imag()
+                                    unkfile << std::setw(20) << std::setprecision(9)
+                                            << std::setiosflags(std::ios::scientific)
+                                            << zpiece[ix * wfcpw->ny + iy].real()
+                                            << std::setw(20) << std::setprecision(9)
+                                            << std::setiosflags(std::ios::scientific)
+                                            << zpiece[ix * wfcpw->ny + iy].imag()
                                             << std::endl;
                                 }
                             }
@@ -241,7 +248,8 @@ void toW90_PW::out_unk(
                             {
                                 for (int ix = 0; ix < wfcpw->nx; ix++)
                                 {
-                                    unkfile_b << zpiece[ix * wfcpw->ny + iy].real() << zpiece[ix * wfcpw->ny + iy].imag();
+                                    unkfile_b << zpiece[ix * wfcpw->ny + iy].real()
+                                              << zpiece[ix * wfcpw->ny + iy].imag();
                                 }
                             }
                         }
@@ -267,9 +275,6 @@ void toW90_PW::out_unk(
         }
     }
     MPI_Barrier(MPI_COMM_WORLD);
-
-    delete[] porter;
-    delete[] zpiece;
 
 #endif
 
