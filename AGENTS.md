@@ -94,6 +94,12 @@ rules. Read the complete governance document before making or reviewing changes:
   ask the developer whether to write them in; be cautious and skip unclear
   or unverified lessons.
 
+## Refactoring Patterns
+
+- Member -> free function: inventory `this->` reads; pass as params (const
+  for config, ref for mutable state); move only when body is `this`-free;
+  keep thin wrapper; compile each step.
+
 ## Local Commands
 
 ```bash
