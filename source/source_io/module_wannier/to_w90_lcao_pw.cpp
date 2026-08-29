@@ -17,10 +17,11 @@ toW90_LCAO_IN_PW::toW90_LCAO_IN_PW(
     const bool &out_wannier_eig,
     const bool &out_wannier_wvfn_formatted, 
     const std::string &nnkpfile,
-    const std::string &wannier_spin
+    const std::string &wannier_spin,
+    const int &nspin
 )
     : toW90_PW(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig,
-      out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
+      out_wannier_wvfn_formatted, nnkpfile, wannier_spin, nspin)
 {
 }
 
@@ -48,7 +49,7 @@ void toW90_LCAO_IN_PW::calculate(
     using NaoInitCd = psi_init_nao<std::complex<double>>;
     delete this->psi_initer_;
     std::unique_ptr<NaoInitCd> nao_initer(new NaoInitCd());
-    nao_initer->prepare_params(PARAM.globalv.nqx, PARAM.globalv.dq, PARAM.inp.nspin, PARAM.inp.orbital_dir);
+    nao_initer->prepare_params(PARAM.globalv.nqx, PARAM.globalv.dq, nspin_, PARAM.inp.orbital_dir);
     this->psi_initer_ = nao_initer.release();
     this->psi_initer_->initialize(sf_ptr, wfcpw_ptr, &ucell, kv.ik2iktot, 1, GlobalV::MY_RANK,
                                   PARAM.globalv.npol, PARAM.inp.nbands);
@@ -66,7 +67,7 @@ void toW90_LCAO_IN_PW::calculate(
     this->psi = psi_new.release();
     read_nnkp(ucell,kv);
 
-    if (PARAM.inp.nspin == 2)
+    if (nspin_ == 2)
     {
         if (wannier_spin == "up")
         {
@@ -142,7 +143,7 @@ std::unique_ptr<psi::Psi<std::complex<double>>> toW90_LCAO_IN_PW::get_unk_from_l
         ModuleBase::ComplexMatrix lcao_wfc_global;
         get_lcao_wfc_global_ik(ik, psi_in, lcao_wfc_global);
 
-        if (PARAM.inp.nspin != 4)
+        if (nspin_ != 4)
         {
             for (int ib = 0; ib < num_bands; ib++)
             {

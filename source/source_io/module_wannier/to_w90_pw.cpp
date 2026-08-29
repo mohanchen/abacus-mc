@@ -9,8 +9,9 @@ toW90_PW::toW90_PW(
     const bool &out_wannier_eig,
     const bool &out_wannier_wvfn_formatted, 
     const std::string &nnkpfile,
-    const std::string &wannier_spin
-):toW90(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin)
+    const std::string &wannier_spin,
+    const int &nspin
+):toW90(out_wannier_mmn, out_wannier_amn, out_wannier_unk, out_wannier_eig, out_wannier_wvfn_formatted, nnkpfile, wannier_spin, nspin)
 {
 
 }
@@ -31,7 +32,7 @@ void toW90_PW::calculate(
 {
     read_nnkp(ucell,kv);
 
-    if (PARAM.inp.nspin == 2)
+    if (nspin_ == 2)
     {
         if (wannier_spin == "up")
         {

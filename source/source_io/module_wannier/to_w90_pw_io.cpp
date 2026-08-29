@@ -148,12 +148,12 @@ void toW90_PW::out_unk(
             {
                 
                 std::stringstream name;
-                if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 4)
+                if (nspin_ == 1 || nspin_ == 4)
                 {
                     name << PARAM.globalv.global_out_dir << "UNK" << std::setw(5) << std::setfill('0')
                         << ik + 1 << ".1";
                 }
-                else if (PARAM.inp.nspin == 2)
+                else if (nspin_ == 2)
                 {
                     if (wannier_spin == "up")
                         name << PARAM.globalv.global_out_dir << "UNK" << std::setw(5) << std::setfill('0')

@@ -33,7 +33,7 @@ void toW90_PW::unkdotkb(
 
         wfcpw->recip2real(phase.data(), phase.data(), cal_ik);
 
-        if (PARAM.inp.nspin == 4)
+        if (nspin_ == 4)
         {
             // (1) set value
             std::vector<std::complex<double>> psir_up(wfcpw->nmaxgr);
@@ -151,7 +151,7 @@ void toW90_PW::unkdotW_A(
         {
             int ib = cal_band_index[ib_w];
 
-            if (PARAM.inp.nspin != 4)
+            if (nspin_ != 4)
             {
                 for (int ig = 0; ig < npw; ig++)
                 {

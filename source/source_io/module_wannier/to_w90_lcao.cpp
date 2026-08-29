@@ -22,6 +22,7 @@ toW90_LCAO::toW90_LCAO(const bool& out_wannier_mmn,
                                    const bool& out_wannier_wvfn_formatted,
                                    const std::string& nnkpfile,
                                    const std::string& wannier_spin,
+                                   const int& nspin,
                                    const LCAO_Orbitals& orb)
     : toW90(out_wannier_mmn,
                   out_wannier_amn,
@@ -29,7 +30,8 @@ toW90_LCAO::toW90_LCAO(const bool& out_wannier_mmn,
                   out_wannier_eig,
                   out_wannier_wvfn_formatted,
                   nnkpfile,
-                  wannier_spin),
+                  wannier_spin,
+                  nspin),
     orb_(orb)
 {
 }
@@ -49,7 +51,7 @@ void toW90_LCAO::calculate(const UnitCell& ucell,
 
     read_nnkp(ucell,kv);
 
-    if (PARAM.inp.nspin == 2)
+    if (nspin_ == 2)
     {
         if (wannier_spin == "up")
         {

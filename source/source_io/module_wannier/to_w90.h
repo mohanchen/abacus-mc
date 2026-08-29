@@ -26,7 +26,8 @@ class toW90
       const bool &out_wannier_eig,
       const bool &out_wannier_wvfn_formatted, 
       const std::string &nnkpfile,
-      const std::string &wannier_spin
+      const std::string &wannier_spin,
+      const int &nspin
     );
     ~toW90();
 
@@ -73,6 +74,8 @@ class toW90
     std::string nnkpfile = "";
     std::string wannier_file_name = "seedname";
     std::string wannier_spin = "up";
+
+    int nspin_ = 1; // number of spin states, 1, 2 or 4
 
     int num_exclude_bands = 0;
     std::unordered_set<int> exclude_bands;

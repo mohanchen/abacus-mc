@@ -587,7 +587,8 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                        inp.out_wannier_eig,
                                        inp.out_wannier_wvfn_formatted,
                                        inp.nnkpfile,
-                                       inp.wannier_spin);
+                                       inp.wannier_spin,
+                                       inp.nspin);
             wan.set_tpiba_omega(ucell.tpiba, ucell.omega);
             wan.calculate(ucell, pelec->ekb, pw_wfc, pw_big, sf, kv, psi, &pv);
         }
@@ -600,6 +601,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                  inp.out_wannier_wvfn_formatted,
                                  inp.nnkpfile,
                                  inp.wannier_spin,
+                                 inp.nspin,
                                  orb);
 
             wan.calculate(ucell, gd, pelec->ekb, kv, *psi, &pv);

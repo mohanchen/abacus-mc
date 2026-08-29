@@ -17,7 +17,8 @@ toW90::toW90(const bool& out_wannier_mmn,
                          const bool& out_wannier_eig,
                          const bool& out_wannier_wvfn_formatted,
                          const std::string& nnkpfile,
-                         const std::string& wannier_spin)
+                         const std::string& wannier_spin,
+                         const int& nspin)
 {
     this->out_wannier_mmn = out_wannier_mmn;
     this->out_wannier_amn = out_wannier_amn;
@@ -28,6 +29,7 @@ toW90::toW90(const bool& out_wannier_mmn,
     this->wannier_file_name = nnkpfile;
     this->wannier_file_name = wannier_file_name.substr(0, wannier_file_name.length() - 5);
     this->wannier_spin = wannier_spin;
+    this->nspin_ = nspin;
 
     if (GlobalV::KPAR != 1)
     {
@@ -75,9 +77,7 @@ void toW90::read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
 
 void toW90::out_eig(const ModuleBase::matrix& ekb)
 {
-#ifdef __MPI
     if (GlobalV::MY_RANK == 0)
-#endif
     {
         std::string fileaddress = PARAM.globalv.global_out_dir + wannier_file_name + ".eig";
         std::ofstream eig_file(fileaddress.c_str());
@@ -172,22 +172,22 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
     if (ModuleBase::GlobalFunc::SCAN_BEGIN(nnkp_read, "kpoints"))
     {
         num_kpts = kv.get_nkstot();
-        if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 4)
+        if (nspin_ == 1 || nspin_ == 4)
         {
             cal_num_kpts = num_kpts;
         }
-        else if (PARAM.inp.nspin == 2)
+        else if (nspin_ == 2)
         {
             cal_num_kpts = num_kpts / 2;
         }
 
         int numkpt_nnkp = 0;
         ModuleBase::GlobalFunc::READ_VALUE(nnkp_read, numkpt_nnkp);
-        if ((PARAM.inp.nspin == 1 || PARAM.inp.nspin == 4) && numkpt_nnkp != num_kpts)
+        if ((nspin_ == 1 || nspin_ == 4) && numkpt_nnkp != num_kpts)
         {
             ModuleBase::WARNING_QUIT("toW90::read_nnkp", "Error kpoints in *.nnkp file");
         }
-        else if (PARAM.inp.nspin == 2 && numkpt_nnkp != (num_kpts / 2))
+        else if (nspin_ == 2 && numkpt_nnkp != (num_kpts / 2))
         {
             ModuleBase::WARNING_QUIT("toW90::read_nnkp", "Error kpoints in *.nnkp file");
         }
@@ -215,7 +215,7 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
     // read projections
     if (out_wannier_amn)
     {
-        if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 2)
+        if (nspin_ == 1 || nspin_ == 2)
         {
             if (ModuleBase::GlobalFunc::SCAN_BEGIN(nnkp_read, "projections"))
             {
@@ -249,7 +249,7 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
                 ModuleBase::WARNING_QUIT("toW90::read_nnkp", "Cannot find projections in *.nnkp file");
             }
         }
-        else if (PARAM.inp.nspin == 4)
+        else if (nspin_ == 4)
         {
             if (ModuleBase::GlobalFunc::SCAN_BEGIN(nnkp_read, "spinor_projections"))
             {
@@ -319,7 +319,7 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
         }
 
         // Generate spin-related coefficients
-        if (PARAM.inp.nspin == 4)
+        if (nspin_ == 4)
         {
             up_con.resize(num_wannier);
             dn_con.resize(num_wannier);
@@ -393,11 +393,11 @@ bool toW90::try_read_nnkp(const UnitCell& ucell, const K_Vectors& kv)
             }
 
             int numkpt_nnkp;
-            if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 4)
+            if (nspin_ == 1 || nspin_ == 4)
             {
                 numkpt_nnkp = kv.get_nkstot();
             }
-            else if (PARAM.inp.nspin == 2)
+            else if (nspin_ == 2)
             {
                 numkpt_nnkp = kv.get_nkstot() / 2;
             }

@@ -411,7 +411,7 @@ void toW90_LCAO::unkdotA(const K_Vectors& kv,
     int row = this->ParaV->get_row_size();
     int index_band = -1;
     int R_num = R_coor_car.size();
-    if (PARAM.inp.nspin != 4)
+    if (nspin_ != 4)
     {
         for (int ib = 0; ib < PARAM.inp.nbands; ib++)
         {
