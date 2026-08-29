@@ -110,6 +110,8 @@ rules. Read the complete governance document before making or reviewing changes:
 python3 tools/03_code_analysis/agent_governance_check.py --staged
 python3 tools/03_code_analysis/agent_governance_check.py --base upstream/develop --head HEAD --format text
 pre-commit run abacus-agent-governance --all-files
+# Score changed C++ files for quality debt (pass line is 60):
+python3 tools/03_code_analysis/code_quality_score.py $(git diff --name-only upstream/develop...HEAD | grep -E '\.(cpp|h)$')
 ```
 
 The repository text files have been normalized to LF once. Day-to-day line
