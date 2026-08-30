@@ -4,6 +4,7 @@
 #include "source_hsolver/diago_iter_assist.h"
 #include "source_io/module_parameter/parameter.h"
 #include "spin_constrain.h"
+#include "deltaspin_pw_mi.h"
 #include "mi_tools.h"
 #include "source_pw/module_pwdft/onsite_proj.h"
 #include "source_base/parallel_reduce.h"
@@ -189,7 +190,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mw_from_lambda(
                     memcpy(h_tmp.data(), h_k, sizeof(std::complex<double>) * nbands * nbands);
                     memcpy(s_tmp.data(), s_k, sizeof(std::complex<double>) * nbands * nbands);
                     // Apply DeltaSpin correction (skip for initialization step i_step=-1)
-                    if (i_step != -1) this->calculate_delta_hcc(h_tmp.data(), becp_k, this->state_.lambda_.data(), nbands, nkb, nh_iat, ik, true);
+                    if (i_step != -1) pw::calculate_delta_hcc(this->state_, this->pw_cache_, this->pelec, h_tmp.data(), becp_k, this->state_.lambda_.data(), nbands, nkb, nh_iat, ik, true);
 
                     // Diagonalize in subspace, update becp (response wavefunctions)
                     hsolver::DiagoIterAssist<std::complex<double>>::diag_responce(h_tmp.data(),
@@ -245,7 +246,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mw_from_lambda(
                     }
                     base_device::memory::synchronize_memory_op<std::complex<double>, base_device::DEVICE_GPU, base_device::DEVICE_GPU>()(h_tmp, h_k, nbands * nbands);
                     base_device::memory::synchronize_memory_op<std::complex<double>, base_device::DEVICE_GPU, base_device::DEVICE_GPU>()(s_tmp, s_k, nbands * nbands);
-                    if (i_step != -1) this->calculate_delta_hcc(h_tmp, becp_k, this->state_.lambda_.data(), nbands, nkb, nh_iat, ik, true);
+                    if (i_step != -1) pw::calculate_delta_hcc(this->state_, this->pw_cache_, this->pelec, h_tmp, becp_k, this->state_.lambda_.data(), nbands, nkb, nh_iat, ik, true);
 
                     hsolver::DiagoIterAssist<std::complex<double>, base_device::DEVICE_GPU>::diag_responce(h_tmp,
                                                                                   s_tmp,
@@ -324,12 +325,14 @@ void spinconstrain::SpinConstrain<std::complex<double>>::update_psi_charge(const
     {
         if (PARAM.inp.device == "cpu")
         {
-            this->update_psi_charge_pw_cpu(delta_lambda, pw_solve, full_update);
+            pw::update_psi_charge_pw_cpu(this->state_, this->pw_cache_, this->psi, this->p_hamilt,
+                                         this->pelec, this->pw_wfc_, delta_lambda, pw_solve, full_update);
         }
 #if ((defined __CUDA) || (defined __ROCM))
         else
         {
-            this->update_psi_charge_pw_gpu(delta_lambda, pw_solve, full_update);
+            pw::update_psi_charge_pw_gpu(this->state_, this->pw_cache_, this->psi, this->p_hamilt,
+                                         this->pelec, this->pw_wfc_, delta_lambda, pw_solve, full_update);
         }
 #endif
     }

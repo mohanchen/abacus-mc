@@ -10,6 +10,7 @@ list(APPEND objects
     deltaspin_lcao.cpp
     deltaspin_lcao_mi.cpp
     deltaspin_state.cpp
+    deltaspin_pw_mi.cpp
     mi_tools.cpp
 )
 

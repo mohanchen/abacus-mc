@@ -172,16 +172,8 @@ public:
    */
   void cal_mi_lcao(const int& step, bool print = false);
 
-  /**
-   * @brief Calculate atomic magnetic moments using projector overlap (PW basis).
-   *
-   * @details For each k-point:
-   *   1. Call OnsiteProjector::tabulate_atomic() to set up atomic projectors
-   *   2. Call OnsiteProjector::overlap_proj_psi() to compute becp = <alpha|psi>
-   *   3. Call accumulate_Mi_from_becp() to decompose becp into magnetic moments
-   * Finally, sum Mi across all MPI k-pool ranks via Parallel_Reduce.
-   */
-  void cal_mi_pw();
+  // The PW-basis magnetic-moment path (cal_mi_pw) has been lifted to the
+  // free function spinconstrain::pw::cal_mi_pw() in deltaspin_pw_mi.h.
 
   /**
    * @brief Core workflow: apply lambda -> solve Hamiltonian -> compute magnetic moments.
@@ -268,46 +260,11 @@ public:
    */
   void update_psi_charge(const ModuleBase::Vector3<double>* delta_lambda, bool pw_solve = true, bool full_update = false);
 
-  /**
-   * @brief Wavefunction and charge density update implementation for PW basis.
-   * @details Two-stage process:
-   *          1. Subspace diagonalization: apply DeltaSpin correction and solve for each k-point
-   *          2. Charge update: full-space diagonalization or direct charge update based on pw_solve
-   */
-  void update_psi_charge_pw(const ModuleBase::Vector3<double>* delta_lambda, bool pw_solve, bool full_update = false);
-
-  /// CPU implementation of PW basis update
-  void update_psi_charge_pw_cpu(const ModuleBase::Vector3<double>* delta_lambda, bool pw_solve, bool full_update = false);
-
-#if ((defined __CUDA) || (defined __ROCM))
-  /// GPU implementation of PW basis update
-  void update_psi_charge_pw_gpu(const ModuleBase::Vector3<double>* delta_lambda, bool pw_solve, bool full_update = false);
-#endif
-
-  /**
-   * @brief Compute DeltaSpin correction to the subspace Hamiltonian.
-   *
-   * @details Adds the constraint term to the Hamiltonian in the subspace:
-   *   H_corrected = H_original + becp^† * delta_lambda * becp
-   * For npol=2 (nspin=4), uses full 2x2 Pauli matrix coefficients:
-   *   coeff = | lambda_z      lambda_x + i*lambda_y |
-   *           | lambda_x - i*lambda_y   -lambda_z   |
-   * For npol=1 (nspin=2), only the z-component with spin_sign.
-   *
-   * @param h_tmp Subspace Hamiltonian (nbands x nbands, in/out)
-   * @param becp_k Projector coefficients for k-point ik
-   * @param delta_lambda Lambda change per atom (or full lambda if full_update)
-   * @param nbands Number of bands
-   * @param nkb Total number of projectors
-   * @param nh_iat Number of projectors per atom
-   * @param ik K-point index
-   * @param full_update If true, compute delta = lambda_current - lambda_at_save
-   */
-  void calculate_delta_hcc(std::complex<double>* h_tmp,
-		  const std::complex<double>* becp_k,
-		  const ModuleBase::Vector3<double>* delta_lambda,
-		  const int nbands, const int nkb, const int* nh_iat, const int ik,
-		  bool full_update = false);
+  // The PW-basis update implementation (update_psi_charge_pw_cpu/gpu) and the
+  // subspace Hamiltonian correction (calculate_delta_hcc) have been lifted to
+  // free functions spinconstrain::pw::update_psi_charge_pw_{cpu,gpu}() and
+  // spinconstrain::pw::calculate_delta_hcc() in deltaspin_pw_mi.h.
+  // (The old declaration update_psi_charge_pw() never had a definition.)
 
 #ifdef __LCAO
   /// LCAO magnetic-moment helpers (orbital-matrix and mu*dm paths) have been

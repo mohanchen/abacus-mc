@@ -4,6 +4,7 @@
 #include "source_lcao/module_operator_lcao/dspin_lcao.h"
 
 #include <cmath>
+#include <complex>
 
 namespace spinconstrain
 {

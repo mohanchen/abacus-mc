@@ -6,6 +6,7 @@
 #include <iomanip>
 
 #include "basic_funcs.h"
+#include "deltaspin_pw_mi.h"
 #include "lambda_loop_helper.h"
 #include "source_base/constants.h"
 #include "source_io/module_parameter/parameter.h"
@@ -269,7 +270,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::run_lambda_loop(int out
             // [PW basis] Extra verification: re-compute Mi from scratch
             if(PARAM.inp.basis_type == "pw")
             {
-                this->cal_mi_pw();
+                pw::cal_mi_pw(this->state_, this->psi, this->pelec);
                 subtract_2d(this->state_.Mi_, this->state_.target_mag_, delta_spin);
                 where_fill_scalar_2d(this->state_.constrain_, 0, zero, delta_spin);
                 search = delta_spin;
