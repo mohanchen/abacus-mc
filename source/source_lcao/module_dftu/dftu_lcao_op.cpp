@@ -324,7 +324,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
             {
                 for (auto& v : occ) { v *= 0.5; }
             }
-            this->dftu->set_occ_mat_flat(iat0, target_L, this->current_spin, occ);
+            this->dftu->occmat().set_flat(iat0, target_L, this->current_spin, occ);
         }
         // ============================================================
         // BRANCH 2: Occ_mat IS initialized (use pre-read data)
@@ -343,7 +343,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
                 // For nspin=4, occ_mat is stored as 4 stacked tlp1^2 blocks
                 // at offsets 0, tlp1^2, 2*tlp1^2, 3*tlp1^2 for the 4 Pauli channels.
                 // Use get_occ_mat_flat to read the stacked blocks directly
-                this->dftu->get_occ_mat_flat(iat0, target_L, occ);
+                this->dftu->occmat().get_flat(iat0, target_L, occ);
             }
             // nspin=1 or nspin=2: Collinear spin case
             // Occ_mat stored separately for each spin channel
@@ -354,7 +354,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
                     // TODO: UNSAFE - current_spin must be correct for nspin=2.
                     // If current_spin is not toggled properly, wrong spin channel's occ_mat is read.
                     // This can happen if contributeHR() is called out of expected order.
-                    occ[i] = this->dftu->get_occ_mat(iat0, target_L, 0, this->current_spin,
+                    occ[i] = this->dftu->occmat().get(iat0, target_L, 0, this->current_spin,
                                                       i / (2 * target_L + 1), i % (2 * target_L + 1));
                 }
             }

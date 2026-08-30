@@ -138,7 +138,7 @@ void DFTU<OperatorLCAO<TK, TR>>::cal_force_stress(const bool cal_force,
         }
         // first iteration to calculate occupation matrix
         std::vector<double> occ(tlp1 * tlp1 * this->nspin, 0);
-        this->dftu->get_occ_mat_flat(iat0, target_L, occ);
+        this->dftu->occmat().get_flat(iat0, target_L, occ);
 
         // calculate pot_onsite
         const double u_value = this->dftu->get_u_current(T0);

@@ -442,7 +442,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                 {
                                     for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                     {
-                                        A[m0][m1] = dftu.get_occ_mat(iat, l, n, is, m0, m1);
+                                        A[m0][m1] = dftu.occmat().get(iat, l, n, is, m0, m1);
                                     }
                                 }
                                 std::vector<double> eigenvalues = CalculateEigenvalues(A, 2 * l + 1);
@@ -464,7 +464,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
                                     ofs << std::setw(12)
-                                        << dftu.get_occ_mat(iat, l, n, is, m0, m1);
+                                        << dftu.occmat().get(iat, l, n, is, m0, m1);
                                 }
                                 ofs << std::endl;
                             }
@@ -489,7 +489,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                 {
                                     for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                     {
-                                        A[m0][m1] = dftu.get_occ_mat(iat, l, n, 0, m0, m1);
+                                        A[m0][m1] = dftu.occmat().get(iat, l, n, 0, m0, m1);
                                         index++;
                                     }
                                 }
@@ -523,7 +523,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                         {
                                             int m1_all = m1 + (2 * l + 1) * ipol1;
                                             ofs << std::setw(12) << std::setprecision(8) << std::fixed
-                                                << dftu.get_occ_mat(iat, l, n, 0, m0_all, m1_all);
+                                                << dftu.occmat().get(iat, l, n, 0, m0_all, m1_all);
                                         }
                                     }
                                     ofs << std::endl;

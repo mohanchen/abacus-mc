@@ -53,10 +53,6 @@ class Plus_U_Base
     /// read-only access to the orbital_corr vector (length ntype)
     const std::vector<int>& get_orbital_corr_vec() const { return orbital_corr; }
 
-    /// read-only access to the iat->(l,n,m,ipol)->iwt lookup table
-    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>&
-    get_iatlnmipol2iwt() const { return occmat_.iatlnmipol2iwt(); }
-
     // --- Accessors for DFT+U configuration ---
     double get_uramping() const { return uramping; }
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
@@ -119,35 +115,6 @@ class Plus_U_Base
 
     bool is_mixing_enabled() const { return mixing_dftu != 0; }
     void enable_mixing() { mixing_dftu = 1; }
-
-    /// get occupation matrix element occ[iat][l][n][spin](m1,m2)
-    double get_occ_mat(const int iat, const int l, const int n, const int spin,
-                     const int m1, const int m2) const
-    {
-        return occmat_.get(iat, l, n, spin, m1, m2);
-    }
-
-    /// get saved occupation matrix element occ_save[iat][l][n][spin](m1,m2)
-    double get_occ_mat_save(const int iat, const int l, const int n, const int spin,
-                          const int m1, const int m2) const
-    {
-        return occmat_.get_save(iat, l, n, spin, m1, m2);
-    }
-
-    /// get reference to occ data
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& get_occ_mat_data() { return occmat_.data(); }
-    /// get reference to occ_save data
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& get_occ_mat_save_data() { return occmat_.data_save(); }
-
-    /// get flat occupation matrix for an atom's correlated orbital.
-    /// nspin=1: fills occ with occ_mat[iat][l][0][0] data
-    /// nspin=2: fills occ with interleaved occ_mat[iat][l][0][0] and [1] data
-    /// nspin=4: fills occ with occ_mat[iat][l][0][0] data (all 4 Pauli blocks)
-    void get_occ_mat_flat(const int iat, const int l, std::vector<double>& occ) const;
-
-    /// set flat occupation matrix for an atom's correlated orbital (write-back)
-    void set_occ_mat_flat(const int iat, const int l, const int spin,
-                        const std::vector<double>& occ);
 
     /// direct access to the occupation matrix object (new write path)
     OccupationMatrix& occmat() { return occmat_; }

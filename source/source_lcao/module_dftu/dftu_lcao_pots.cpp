@@ -13,7 +13,7 @@ void DFTU_LCAO::pot_onsite_complex(const Plus_U& dftu,
     ModuleBase::TITLE("DFTU_LCAO", "pot_onsite_complex");
     ModuleBase::GlobalFunc::ZEROS(pot_onsite, pv->nloc);
 
-    const auto& iatlnmipol2iwt = dftu.get_iatlnmipol2iwt();
+    const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
 
     for (int it = 0; it < ucell.ntype; ++it)
     {
@@ -86,7 +86,7 @@ void DFTU_LCAO::pot_onsite_real(const Plus_U& dftu,
     ModuleBase::TITLE("DFTU_LCAO", "pot_onsite_real");
     ModuleBase::GlobalFunc::ZEROS(pot_onsite, pv->nloc);
 
-    const auto& iatlnmipol2iwt = dftu.get_iatlnmipol2iwt();
+    const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
 
     for (int it = 0; it < ucell.ntype; ++it)
     {
@@ -179,12 +179,12 @@ double DFTU_LCAO::get_onsite_pot(const Plus_U& dftu,
                 if (m0 == m1)
                 {
                     pot_onsite = (dftu.yukawa().get_U(T, L, N) - dftu.yukawa().get_J(T, L, N))
-                                 * (0.5 - dftu.get_occ_mat(iat, L, N, spin, m0, m1));
+                                 * (0.5 - dftu.occmat().get(iat, L, N, spin, m0, m1));
                 }
                 else
                 {
                     pot_onsite = -(dftu.yukawa().get_U(T, L, N) - dftu.yukawa().get_J(T, L, N))
-                                 * dftu.get_occ_mat(iat, L, N, spin, m0, m1);
+                                 * dftu.occmat().get(iat, L, N, spin, m0, m1);
                 }
             }
             else
@@ -192,12 +192,12 @@ double DFTU_LCAO::get_onsite_pot(const Plus_U& dftu,
                 if (m0 == m1)
                 {
                     pot_onsite = dftu.get_u_current(T)
-                                 * (0.5 - dftu.get_occ_mat(iat, L, N, spin, m0, m1));
+                                 * (0.5 - dftu.occmat().get(iat, L, N, spin, m0, m1));
                 }
                 else
                 {
                     pot_onsite = -dftu.get_u_current(T)
-                                 * dftu.get_occ_mat(iat, L, N, spin, m0, m1);
+                                 * dftu.occmat().get(iat, L, N, spin, m0, m1);
                 }
             }
         }
@@ -208,12 +208,12 @@ double DFTU_LCAO::get_onsite_pot(const Plus_U& dftu,
                 if (m0 == m1)
                 {
                     pot_onsite = (dftu.yukawa().get_U(T, L, N) - dftu.yukawa().get_J(T, L, N))
-                                 * (0.5 - dftu.get_occ_mat_save(iat, L, N, spin, m0, m1));
+                                 * (0.5 - dftu.occmat().get_save(iat, L, N, spin, m0, m1));
                 }
                 else
                 {
                     pot_onsite = -(dftu.yukawa().get_U(T, L, N) - dftu.yukawa().get_J(T, L, N))
-                                 * dftu.get_occ_mat_save(iat, L, N, spin, m0, m1);
+                                 * dftu.occmat().get_save(iat, L, N, spin, m0, m1);
                 }
             }
             else
@@ -221,12 +221,12 @@ double DFTU_LCAO::get_onsite_pot(const Plus_U& dftu,
                 if (m0 == m1)
                 {
                     pot_onsite = dftu.get_u_current(T)
-                                 * (0.5 - dftu.get_occ_mat_save(iat, L, N, spin, m0, m1));
+                                 * (0.5 - dftu.occmat().get_save(iat, L, N, spin, m0, m1));
                 }
                 else
                 {
                     pot_onsite = -dftu.get_u_current(T)
-                                 * dftu.get_occ_mat_save(iat, L, N, spin, m0, m1);
+                                 * dftu.occmat().get_save(iat, L, N, spin, m0, m1);
                 }
             }
         }

@@ -586,9 +586,9 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
 {
     bool occ_mat_initialized = dftu.is_occ_mat_initialized();
     DFTU_LCAO::cal_occ_mat_gamma(pv, iter, ucell, dm, mixing_beta, p_ham, nspin,
-                                 ucell.get_npol(), pv->get_global_row_size(), dftu.get_iatlnmipol2iwt(),
+                                 ucell.get_npol(), pv->get_global_row_size(), dftu.occmat().iatlnmipol2iwt(),
                                  dftu.get_orbital_corr_vec(),
-                                 dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
+                                 dftu.occmat().data(), dftu.occmat().data_save(),
                                  occ_mat_initialized);
     if (occ_mat_initialized)
     {
@@ -615,9 +615,9 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
 {
     bool occ_mat_initialized = dftu.is_occ_mat_initialized();
     DFTU_LCAO::cal_occ_mat_k(pv, iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
-                             ucell.get_npol(), pv->get_global_row_size(), PARAM.inp.ks_solver, dftu.get_iatlnmipol2iwt(),
+                             ucell.get_npol(), pv->get_global_row_size(), PARAM.inp.ks_solver, dftu.occmat().iatlnmipol2iwt(),
                              dftu.get_orbital_corr_vec(),
-                             dftu.get_occ_mat_data(), dftu.get_occ_mat_save_data(),
+                             dftu.occmat().data(), dftu.occmat().data_save(),
                              occ_mat_initialized);
     if (occ_mat_initialized)
     {

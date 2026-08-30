@@ -233,19 +233,6 @@ void Plus_U_Base::set_occ_mat(const UnitCell& ucell)
 }
 
 
-void Plus_U_Base::get_occ_mat_flat(const int iat, const int l, std::vector<double>& occ) const
-{
-    this->occmat_.get_flat(iat, l, occ);
-}
-
-
-void Plus_U_Base::set_occ_mat_flat(const int iat, const int l, const int spin,
-                                   const std::vector<double>& occ)
-{
-    this->occmat_.set_flat(iat, l, spin, occ);
-}
-
-
 // cal_occ_pw() is implemented in source_pw/module_pwdft/dftu_base_occ.cpp
 // as a Plus_U_Base method. Pure per-atom kernels live in dftu_base_tools.{h,cpp}
 // as free functions in namespace DFTU_BASE.
