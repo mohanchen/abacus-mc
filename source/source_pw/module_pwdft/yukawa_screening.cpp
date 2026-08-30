@@ -135,6 +135,7 @@ void YukawaScreening::cal_slater_Fk(const UnitCell& ucell, int L, int T, const L
 {
     ModuleBase::TITLE("YukawaScreening", "cal_slater_Fk");
 
+#ifdef __LCAO
     const double lambda_val = this->lambda_;
 
     for (int chi = 0; chi < ucell.atoms[T].l_nchi[L]; chi++)
@@ -173,6 +174,14 @@ void YukawaScreening::cal_slater_Fk(const UnitCell& ucell, int L, int T, const L
             }
         }
     }
+#else
+    (void)ucell;
+    (void)L;
+    (void)T;
+    (void)orb;
+    ModuleBase::WARNING_QUIT("YukawaScreening::cal_slater_Fk",
+                             "Slater integrals require numerical orbitals; compile with __LCAO");
+#endif
 }
 
 void YukawaScreening::cal_slater_UJ(const UnitCell& ucell,
