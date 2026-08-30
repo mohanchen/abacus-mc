@@ -70,6 +70,8 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->energy_u = 0.0;
 
+    this->occmat_.init(cell, orbital_corr, nspin, npol);
+
     this->occ_mat.resize(cell.nat);
     this->occ_mat_save.resize(cell.nat);
     this->pot_uterm_pw_index.resize(cell.nat);

@@ -2,6 +2,7 @@
 #define DFTU_BASE_H
 
 #include "source_base/matrix.h"
+#include "source_pw/module_pwdft/occ_matrix.h"
 #include "source_pw/module_pwdft/yukawa_screening.h"
 
 #include <complex>
@@ -148,6 +149,10 @@ class Plus_U_Base
     void set_occ_mat_flat(const int iat, const int l, const int spin,
                         const std::vector<double>& occ);
 
+    /// direct access to the occupation matrix object (new write path)
+    OccupationMatrix& occmat() { return occmat_; }
+    const OccupationMatrix& occmat() const { return occmat_; }
+
   protected:
     // --- U values and orbital configuration (set in init_base) ---
     std::vector<double> u_current;
@@ -165,6 +170,9 @@ class Plus_U_Base
     bool occ_mat_initialized = false;
 
     // --- Occupation matrices ---
+    OccupationMatrix occmat_;
+    // legacy arrays; initialized alongside occmat_ and removed once all
+    // internal writers go through occmat_
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat;
     std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat_save;
 
