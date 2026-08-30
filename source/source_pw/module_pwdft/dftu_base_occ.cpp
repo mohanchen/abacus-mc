@@ -39,18 +39,22 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
 
     if(this->device == "cpu")
     {
-        this->accumulate_occ_one_k<base_device::DEVICE_CPU>(psi_in, wg_in, cell, isk);
+        DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_CPU>(
+            psi_in, wg_in, cell, isk, this->nspin, this->orbital_corr, this->occmat_);
     }
 #if defined(__CUDA) || defined(__ROCM)
     else
     {
-        this->accumulate_occ_one_k<base_device::DEVICE_GPU>(psi_in, wg_in, cell, isk);
+        DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_GPU>(
+            psi_in, wg_in, cell, isk, this->nspin, this->orbital_corr, this->occmat_);
     }
 #endif
 
     // reduce occ_mat across k-pools, then copy to uom_array for mixing
-    this->reduce_occ_mat(cell);
-    this->sync_occ_to_uom(cell);
+    DFTU_BASE::reduce_occ_mat(cell, this->nspin, this->kpar,
+                              this->orbital_corr, this->occmat_);
+    this->occmat_.write_to_flat(cell, this->orbital_corr,
+                                this->pot_uterm_pw_index, this->uom_array);
 
     // mixing
     if(is_mixing_enabled() && p_chgmix != nullptr)
@@ -60,103 +64,84 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
                                      this->pot_uterm_pw_index, this->uom_array);
     }
 
-    this->compute_eff_pot_and_energy(cell);
+    DFTU_BASE::compute_pot_uterm_and_energy(cell, this->nspin,
+        this->u_current, this->orbital_corr, this->pot_uterm_pw_index,
+        this->occmat_, this->pot_uterm_pw, this->energy_u);
 
     ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
 }
 
-/// reduce occ_mat across all k-pools.
-///
-/// Each k-pool only accumulates occ_mat contributions from the k-points it
-/// owns; this sums them across pools so occ_mat holds the full result.
-/// nspin=1: single channel, size elements
-/// nspin=2: two channels (spin-up/down) reduced separately
-/// nspin=4: 4 Pauli blocks packed contiguously, reduced in one shot
-void Plus_U_Base::reduce_occ_mat(const UnitCell& cell)
+namespace DFTU_BASE {
+
+void reduce_occ_mat(const UnitCell& cell,
+                    const int nspin,
+                    const int kpar,
+                    const std::vector<int>& orbital_corr,
+                    OccupationMatrix& occmat)
 {
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];
-        const int target_l = get_orbital_corr(it);
-        if(!has_correlated_orbital(it))
+        const int target_l = orbital_corr[it];
+        if(target_l == -1)
         {
             continue;
         }
         const int size = (2 * target_l + 1) * (2 * target_l + 1);
 
-        if(this->nspin != 4)
+        if(nspin != 4)
         {
-            Parallel_Reduce::reduce_double_allpool(this->kpar,
+            Parallel_Reduce::reduce_double_allpool(kpar,
                     GlobalV::NPROC_IN_POOL,
-                    this->occmat_.mat(iat, target_l, 0, 0).c,
+                    occmat.mat(iat, target_l, 0, 0).c,
                     size);
-            if(this->nspin == 2)
+            if(nspin == 2)
             {
-                Parallel_Reduce::reduce_double_allpool(this->kpar,
+                Parallel_Reduce::reduce_double_allpool(kpar,
                         GlobalV::NPROC_IN_POOL,
-                        this->occmat_.mat(iat, target_l, 0, 1).c,
+                        occmat.mat(iat, target_l, 0, 1).c,
                         size);
             }
         }
         else
         {
-            Parallel_Reduce::reduce_double_allpool(this->kpar,
+            Parallel_Reduce::reduce_double_allpool(kpar,
                     GlobalV::NPROC_IN_POOL,
-                    this->occmat_.mat(iat, target_l, 0, 0).c,
+                    occmat.mat(iat, target_l, 0, 0).c,
                     size * 4);
         }
     }
 }
 
-/// copy occ_mat to uom_array for mixing.
-///
-/// Layout:
-///   nspin=1: uom_array[pot_uterm_pw_index[iat] + mm] = occ_mat[...][0][0]
-///   nspin=2: split layout [all_up | all_dn], each atom's spin-up in the
-///            first half and spin-down in the second half, both indexed by
-///            pot_uterm_pw_index[iat]
-///   nspin=4: not used here (uom_array mixing only covers nspin=1/2 in the
-///            current code path; the nspin=4 branch is a no-op)
-void Plus_U_Base::sync_occ_to_uom(const UnitCell& cell)
+void compute_pot_uterm_and_energy(const UnitCell& cell,
+                                  const int nspin,
+                                  const std::vector<double>& u_current,
+                                  const std::vector<int>& orbital_corr,
+                                  const std::vector<int>& pot_uterm_pw_index,
+                                  const OccupationMatrix& occmat,
+                                  std::vector<std::complex<double>>& pot_uterm_pw,
+                                  double& energy_u)
 {
-    this->occmat_.write_to_flat(cell, this->orbital_corr,
-                                this->pot_uterm_pw_index, this->uom_array);
-}
-
-/// compute effective potential pot_onsite and DFT+U energy from occ_mat.
-///
-/// Preconditions:
-///   - occ_mat has been accumulated from psi and reduced across k-pools
-///     (cal_occ_pw calls this after the reduce + mixing steps).
-///
-/// Outputs:
-///   - pot_uterm_pw: pot_onsite = U * (diag*delta - occ) written per atom
-///     nspin=4: 4 Pauli blocks per atom, then transformed to spin basis
-///     nspin=1: single channel
-///     nspin=2: two channels in split layout [all_up | all_dn]
-///   - energy_u: E_U = sum U * weight_eu * occ(m2,m1) * occ(m1,m2)
-void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
-{
-    this->energy_u = 0.0;
-    const double weight_eu = (this->nspin == 1) ? 1.0 : (this->nspin == 2) ? 0.5 : 0.25;
-    const double diag_coeff = (this->nspin == 4) ? 1.0 : 0.5;
+    energy_u = 0.0;
+    const double weight_eu = (nspin == 1) ? 1.0 : (nspin == 2) ? 0.5 : 0.25;
+    const double diag_coeff = (nspin == 4) ? 1.0 : 0.5;
     // calculate pot_onsite and energy (occ_mat already reduced above)
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];
-        const int target_l = get_orbital_corr(it);
-        if(!has_correlated_orbital(it))
+        const int target_l = orbital_corr[it];
+        if(target_l == -1)
         {
             continue;
         }
         const int size = (2 * target_l + 1) * (2 * target_l + 1);
 
         //update effective potential
-        const double u_value = this->u_current[it];
-        std::complex<double>* pot_onsite_iat = &(this->pot_uterm_pw[this->pot_uterm_pw_index[iat]]);
+        const double u_value = u_current[it];
+        std::complex<double>* pot_onsite_iat = &(pot_uterm_pw[pot_uterm_pw_index[iat]]);
         const int m_size = 2 * target_l + 1;
 
-        if(this->nspin == 4)
+        if(nspin == 4)
         {
             // pot_onsite is stored as 4 contiguous Pauli blocks per atom:
             //   is=0: charge channel (identity), Hubbard U contributes the
@@ -164,36 +149,43 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
             //   is=1,2,3: spin channels (sigma_x/y/z), no U diagonal term
             // The occupation matrix occ_mat[...][0][0].c packs all 4 blocks
             // contiguously, each of size m_size*m_size.
-            this->energy_u += DFTU_BASE::compute_pot_onsite_spinor(
+            energy_u += compute_pot_onsite_spinor(
                 pot_onsite_iat,
-                this->occmat_.mat(iat, target_l, 0, 0).c,
+                occmat.mat(iat, target_l, 0, 0).c,
                 u_value, diag_coeff, weight_eu, m_size);
         }
         else // nspin=1 or nspin=2
         {
             // spin-up channel
-            this->energy_u += DFTU_BASE::compute_pot_onsite_scalar(
+            energy_u += compute_pot_onsite_scalar(
                 pot_onsite_iat,
-                this->occmat_.mat(iat, target_l, 0, 0).c,
+                occmat.mat(iat, target_l, 0, 0).c,
                 u_value, diag_coeff, weight_eu, m_size);
             // spin-down channel for nspin=2
-            if(this->nspin == 2)
+            if(nspin == 2)
             {
-                std::complex<double>* pot_onsite_iat1 = &(this->pot_uterm_pw[this->pot_uterm_pw.size()/2 + this->pot_uterm_pw_index[iat]]);
-                this->energy_u += DFTU_BASE::compute_pot_onsite_scalar(
+                std::complex<double>* pot_onsite_iat1 = &(pot_uterm_pw[pot_uterm_pw.size()/2 + pot_uterm_pw_index[iat]]);
+                energy_u += compute_pot_onsite_scalar(
                     pot_onsite_iat1,
-                    this->occmat_.mat(iat, target_l, 0, 1).c,
+                    occmat.mat(iat, target_l, 0, 1).c,
                     u_value, diag_coeff, weight_eu, m_size);
             }
         }
     }
 }
 
+} // namespace DFTU_BASE
+
+namespace DFTU_BASE {
+
 template <typename Device>
-void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
-                                       const ModuleBase::matrix& wg_in,
-                                       const UnitCell& cell,
-                                       const int* isk)
+void accumulate_occ_one_k(const void* psi_in,
+                          const ModuleBase::matrix& wg_in,
+                          const UnitCell& cell,
+                          const int* isk,
+                          const int nspin,
+                          const std::vector<int>& orbital_corr,
+                          OccupationMatrix& occmat)
 {
     auto* onsite_p = projectors::OnsiteProjector<double, Device>::get_instance();
     const psi::Psi<std::complex<double>, Device>* psi_p =
@@ -202,7 +194,7 @@ void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
     const int npol = psi_p->get_npol();
     for(int ik = 0; ik < psi_p->get_nk(); ik++)
     {
-        int is = (this->nspin == 2) ? isk[ik] : 0;
+        int is = (nspin == 2) ? isk[ik] : 0;
         psi_p->fix_k(ik);
         onsite_p->tabulate_atomic(ik);
 
@@ -215,25 +207,25 @@ void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
         {
             const int it = cell.iat2it[iat];
             const int nh = onsite_p->get_nh(iat);
-            const int target_l = get_orbital_corr(it);
-            if(!has_correlated_orbital(it))
+            const int target_l = orbital_corr[it];
+            if(target_l == -1)
             {
                 begin_ih += nh;
                 continue;
             }
             const int m_begin = target_l * target_l;
             const int tlp1 = 2 * target_l + 1;
-            if(this->nspin == 4)
+            if(nspin == 4)
             {
-                DFTU_BASE::accumulate_occ_spinor(
-                    this->occmat_.mat(iat, target_l, 0, 0).c,
+                accumulate_occ_spinor(
+                    occmat.mat(iat, target_l, 0, 0).c,
                     becp, nbands, npol, nkb, begin_ih, m_begin, tlp1,
                     wg_in, ik);
             }
             else // nspin=1 or nspin=2
             {
-                DFTU_BASE::accumulate_occ_scalar(
-                    this->occmat_.mat(iat, target_l, 0, is).c,
+                accumulate_occ_scalar(
+                    occmat.mat(iat, target_l, 0, is).c,
                     becp, nbands, nkb, begin_ih, m_begin, tlp1,
                     wg_in, ik);
             }
@@ -242,10 +234,14 @@ void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
     }
 }
 
+} // namespace DFTU_BASE
+
 // explicit instantiations
-template void Plus_U_Base::accumulate_occ_one_k<base_device::DEVICE_CPU>(
-    const void*, const ModuleBase::matrix&, const UnitCell&, const int*);
+template void DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_CPU>(
+    const void*, const ModuleBase::matrix&, const UnitCell&, const int*,
+    const int, const std::vector<int>&, OccupationMatrix&);
 #if defined(__CUDA) || defined(__ROCM)
-template void Plus_U_Base::accumulate_occ_one_k<base_device::DEVICE_GPU>(
-    const void*, const ModuleBase::matrix&, const UnitCell&, const int*);
+template void DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_GPU>(
+    const void*, const ModuleBase::matrix&, const UnitCell&, const int*,
+    const int, const std::vector<int>&, OccupationMatrix&);
 #endif

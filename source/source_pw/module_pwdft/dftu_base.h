@@ -146,23 +146,6 @@ class Plus_U_Base
     std::string device;
     int kpar = 1;
 
-    /// accumulate occ_mat from psi for all k-points (per-device template)
-    template <typename Device>
-    void accumulate_occ_one_k(const void* psi_in,
-                              const ModuleBase::matrix& wg_in,
-                              const UnitCell& cell,
-                              const int* isk);
-
-    /// reduce occ_mat across k-pools (per-atom, nspin-aware)
-    void reduce_occ_mat(const UnitCell& cell);
-
-    /// copy occ_mat to uom_array for mixing (nspin-aware split layout)
-    void sync_occ_to_uom(const UnitCell& cell);
-
-    /// compute effective potential pot_onsite and DFT+U energy from occ_mat
-    /// (assumes occ_mat has already been reduced across k-pools)
-    void compute_eff_pot_and_energy(const UnitCell& cell);
-
     std::vector<std::complex<double>> pot_uterm_pw;
     std::vector<int> pot_uterm_pw_index;
     std::vector<double> uom_array;

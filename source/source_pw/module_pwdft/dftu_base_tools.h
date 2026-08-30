@@ -2,7 +2,11 @@
 #define DFTU_BASE_TOOLS_H
 
 #include <complex>
+#include <vector>
 #include "source_base/matrix.h"
+
+class UnitCell;
+class OccupationMatrix;
 
 /// Free functions for DFT+U PW basis calculations.
 ///
@@ -95,6 +99,53 @@ void accumulate_occ_scalar(
     int tlp1,
     const ModuleBase::matrix& wg,
     int ik);
+
+/// reduce occ_mat across all k-pools (per-atom, nspin-aware).
+///
+/// Each k-pool only accumulates occ_mat contributions from the k-points it
+/// owns; this sums them across pools so occmat holds the full result.
+/// nspin=1: single channel, size elements
+/// nspin=2: two channels (spin-up/down) reduced separately
+/// nspin=4: 4 Pauli blocks packed contiguously, reduced in one shot
+void reduce_occ_mat(const UnitCell& cell,
+                    const int nspin,
+                    const int kpar,
+                    const std::vector<int>& orbital_corr,
+                    OccupationMatrix& occmat);
+
+/// compute effective potential pot_onsite and DFT+U energy from occ_mat.
+///
+/// Preconditions:
+///   - occmat has been accumulated from psi and reduced across k-pools.
+///
+/// Outputs:
+///   - pot_uterm_pw: pot_onsite = U * (diag*delta - occ) written per atom
+///     nspin=4: 4 Pauli blocks per atom, then transformed to spin basis
+///     nspin=1: single channel
+///     nspin=2: two channels in split layout [all_up | all_dn]
+///   - energy_u (out): E_U = sum U * weight_eu * occ(m2,m1) * occ(m1,m2),
+///     overwritten with the total energy of this call
+void compute_pot_uterm_and_energy(const UnitCell& cell,
+                                  const int nspin,
+                                  const std::vector<double>& u_current,
+                                  const std::vector<int>& orbital_corr,
+                                  const std::vector<int>& pot_uterm_pw_index,
+                                  const OccupationMatrix& occmat,
+                                  std::vector<std::complex<double>>& pot_uterm_pw,
+                                  double& energy_u);
+
+/// accumulate occ_mat from psi for all k-points (per-device template).
+///
+/// Explicitly instantiated for DEVICE_CPU (and DEVICE_GPU when available)
+/// in dftu_base_occ.cpp.
+template <typename Device>
+void accumulate_occ_one_k(const void* psi_in,
+                          const ModuleBase::matrix& wg_in,
+                          const UnitCell& cell,
+                          const int* isk,
+                          const int nspin,
+                          const std::vector<int>& orbital_corr,
+                          OccupationMatrix& occmat);
 
 } // namespace DFTU_BASE
 
