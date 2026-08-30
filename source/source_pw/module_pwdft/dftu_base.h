@@ -2,8 +2,10 @@
 #define DFTU_BASE_H
 
 #include "source_base/matrix.h"
+#include "source_pw/module_pwdft/yukawa_screening.h"
 
 #include <complex>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,9 +19,6 @@ class Plus_U_Base
 {
   friend class DFTUTest;
 
-  //=============================================================
-  // public section
-  //=============================================================
   public:
     Plus_U_Base();
     ~Plus_U_Base();
@@ -61,6 +60,10 @@ class Plus_U_Base
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
     int get_cal_type() const { return cal_type; }
     bool use_yukawa() const { return use_yukawa_; }
+
+    /// access the Yukawa screening object (non-null only when use_yukawa_)
+    YukawaScreening& yukawa() { return *yukawa_; }
+    const YukawaScreening& yukawa() const { return *yukawa_; }
 
     double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
     double get_J_Yukawa(int it, int l, int n) const { return J_Yukawa[it][l][n]; }
@@ -214,6 +217,11 @@ class Plus_U_Base
     std::vector<std::vector<std::vector<std::vector<double>>>> Fk;
     std::vector<std::vector<std::vector<double>>> U_Yukawa;
     std::vector<std::vector<std::vector<double>>> J_Yukawa;
+
+    // Yukawa screening object; constructed only when use_yukawa_ is true.
+    // Owns the screening length, Slater integrals and derived U/J going
+    // forward; the legacy members above are kept in sync until removed.
+    std::unique_ptr<YukawaScreening> yukawa_;
 };
 
 

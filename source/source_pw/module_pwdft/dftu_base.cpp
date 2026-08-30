@@ -179,6 +179,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     if (use_yukawa_)
     {
+        this->yukawa_.reset(new YukawaScreening());
+        // yukawa_lambda config is wired in a later step; pass 0 for now.
+        this->yukawa_->init(cell, orbital_corr, 0.0);
+
         this->Fk.resize(cell.ntype);
 
         this->U_Yukawa.resize(cell.ntype);
