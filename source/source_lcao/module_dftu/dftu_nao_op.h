@@ -1,5 +1,5 @@
-#ifndef DFTPLUSU_H
-#define DFTPLUSU_H
+#ifndef DFTU_NAO_OP_H
+#define DFTU_NAO_OP_H
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_basis/module_nao/two_center_integrator.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
@@ -60,6 +60,20 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                           ModuleBase::matrix& force,
                           ModuleBase::matrix& stress);
 
+    // Getters for free functions in dftu_nao_fs_r/dftu_nao_for_r/dftu_nao_str_r
+    const UnitCell* get_ucell() const { return ucell; }
+    Plus_U* get_dftu() const { return dftu; }
+    const TwoCenterIntegrator* get_intor() const { return intor_; }
+    int get_nspin() const { return nspin; }
+    std::vector<AdjacentAtomInfo>& get_adjs_all() { return adjs_all; }
+
+    /// pot_onsite_{m, m'} = sum_{m,m'} (1/2*delta_{m, m'} - occ_{m, m'}) * U
+    /// EU = sum_{m,m'} 1/2 * U * occ_{m, m'} * occ_{m', m}
+    void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value, double* pot_onsite, double& eu);
+
+    /// transfer pot_onsite format from pauli matrix to normal for non-collinear spin case
+    void transfer_pot_onsite(std::vector<double>& pot_onsite_tmp, std::vector<TR>& pot_onsite);
+
   private:
     const UnitCell* ucell = nullptr;
 
@@ -97,12 +111,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                  const std::unordered_map<int, std::vector<double>>& nlm2_all,
                  const double* data_pointer,
                  std::vector<double>& occupations);
-
-    /// transfer pot_onsite format from pauli matrix to normal for non-collinear spin case
-    void transfer_pot_onsite(std::vector<double>& pot_onsite_tmp, std::vector<TR>& pot_onsite);
-    /// pot_onsite_{m, m'} = sum_{m,m'} (1/2*delta_{m, m'} - occ_{m, m'}) * U
-    /// EU = sum_{m,m'} 1/2 * U * occ_{m, m'} * occ_{m', m}
-    void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value, double* pot_onsite, double& eu);
 
     /**
      * @brief calculate the HR local matrix of <I,J,R> atom pair

@@ -31,7 +31,7 @@
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 #include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 #include "source_hsolver/hsolver_lcao.h"
-#include "module_dftu/dftu_lcao_op.h"
+#include "module_dftu/dftu_nao_op.h"
 #include "module_operator_lcao/dspin_lcao.h"
 #include "module_operator_lcao/ekinetic.h"
 #include "module_operator_lcao/meta_lcao.h"

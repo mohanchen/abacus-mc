@@ -1,4 +1,4 @@
-#include "dftu_lcao_op.h"
+#include "dftu_nao_op.h"
 
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
@@ -6,6 +6,9 @@
 #include "source_lcao/module_operator_lcao/operator_lcao.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/parallel_reduce.h"
+
+// Include the free function implementations for force/stress in real space
+#include "dftu_nao_fs_r.h"
 
 template <typename TK, typename TR>
 hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
@@ -680,6 +683,17 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_pot_onsite(const std::vecto
             }
         }
     }
+}
+
+// cal_force_stress(): thin wrapper calling the real-space free function implementation
+// See dftu_nao_fs_r.cpp for the actual implementation and mathematical formulas
+template <typename TK, typename TR>
+void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_force_stress(const bool cal_force,
+                                                                  const bool cal_stress,
+                                                                  ModuleBase::matrix& force,
+                                                                  ModuleBase::matrix& stress)
+{
+    cal_fs_nao_r(this, cal_force, cal_stress, force, stress);
 }
 
 template class hamilt::DFTU<hamilt::OperatorLCAO<double, double>>;
