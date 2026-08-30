@@ -164,23 +164,21 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mw_from_lambda(
                 becp_tmp.resize(size_becp * nk);
                 std::vector<std::complex<double>> h_tmp(nbands * nbands), s_tmp(nbands * nbands);
                 int initial_hs = 0;
-                if(this->sub_h_save == nullptr)
+                if(!this->pw_cache_.allocated())
                 {
                     // FIRST CALL: save subspace data for reuse across lambda steps
                     initial_hs = 1;
-                    this->sub_h_save = new std::complex<double>[nbands * nbands * nk];
-                    this->sub_s_save = new std::complex<double>[nbands * nbands * nk];
-                    this->becp_save = new std::complex<double>[size_becp * nk];
-                    this->lambda_in_sub_ = this->state_.lambda_;
+                    this->pw_cache_.allocate_cpu(nbands, nk, size_becp);
+                    this->pw_cache_.lambda_in_sub() = this->state_.lambda_;
                 }
                 for (int ik = 0; ik < nk; ++ik)
                 {
 
                     psi_t->fix_k(ik);
 
-                    std::complex<double>* h_k = this->sub_h_save + ik * nbands * nbands;
-                    std::complex<double>* s_k = this->sub_s_save + ik * nbands * nbands;
-                    std::complex<double>* becp_k = this->becp_save + ik * size_becp;
+                    std::complex<double>* h_k = this->pw_cache_.h_k(ik, nbands);
+                    std::complex<double>* s_k = this->pw_cache_.s_k(ik, nbands);
+                    std::complex<double>* becp_k = this->pw_cache_.becp_k(ik, size_becp);
                     if(initial_hs)
                     {
                         /// Compute H(k) and extract subspace matrices for this k-point
@@ -224,13 +222,11 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mw_from_lambda(
                 base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(h_tmp, nbands * nbands);
                 base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(s_tmp, nbands * nbands);
                 int initial_hs = 0;
-                if(this->sub_h_save == nullptr)
+                if(!this->pw_cache_.allocated())
                 {
                     initial_hs = 1;
-                    base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(this->sub_h_save, nbands * nbands * nk);
-                    base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(this->sub_s_save, nbands * nbands * nk);
-                    base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(this->becp_save, size_becp * nk);
-                    this->lambda_in_sub_ = this->state_.lambda_;
+                    this->pw_cache_.allocate_gpu(nbands, nk, size_becp);
+                    this->pw_cache_.lambda_in_sub() = this->state_.lambda_;
                 }
                 std::complex<double>* becp_pointer = nullptr;
                 base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(becp_pointer, size_becp);
@@ -238,9 +234,9 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mw_from_lambda(
                 {
                     psi_t->fix_k(ik);
 
-                    std::complex<double>* h_k = this->sub_h_save + ik * nbands * nbands;
-                    std::complex<double>* s_k = this->sub_s_save + ik * nbands * nbands;
-                    std::complex<double>* becp_k = this->becp_save + ik * size_becp;
+                    std::complex<double>* h_k = this->pw_cache_.h_k(ik, nbands);
+                    std::complex<double>* s_k = this->pw_cache_.s_k(ik, nbands);
+                    std::complex<double>* becp_k = this->pw_cache_.becp_k(ik, size_becp);
                     if(initial_hs)
                     {
                         hamilt_t->updateHk(ik);

@@ -125,7 +125,7 @@ void SpinConstrain<std::complex<double>>::calculate_delta_hcc(std::complex<doubl
         actual_delta.resize(nat);
         for (int iat = 0; iat < nat; iat++)
         {
-            actual_delta[iat] = delta_lambda[iat] - this->lambda_in_sub_[iat];
+            actual_delta[iat] = delta_lambda[iat] - this->pw_cache_.lambda_in_sub()[iat];
         }
         effective_lambda = actual_delta.data();
     }
@@ -315,9 +315,7 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_cpu(const ModuleB
     std::vector<std::complex<double>> h_tmp(nbands * nbands), s_tmp(nbands * nbands);
 
     // CRITICAL: subspace data must have been saved by cal_mw_from_lambda()
-    assert(this->sub_h_save != nullptr);
-    assert(this->sub_s_save != nullptr);
-    assert(this->becp_save != nullptr);
+    assert(this->pw_cache_.allocated());
 
     // Determine which lambda to use for H correction
     const ModuleBase::Vector3<double>* lambda_for_hcc = delta_lambda;
@@ -332,9 +330,9 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_cpu(const ModuleB
     // =============================================================
     for (int ik = 0; ik < nk; ++ik)
     {
-        std::complex<double>* h_k = this->sub_h_save + ik * nbands * nbands;
-        std::complex<double>* s_k = this->sub_s_save + ik * nbands * nbands;
-        std::complex<double>* becp_k = this->becp_save + ik * size_becp;
+        std::complex<double>* h_k = this->pw_cache_.h_k(ik, nbands);
+        std::complex<double>* s_k = this->pw_cache_.s_k(ik, nbands);
+        std::complex<double>* becp_k = this->pw_cache_.becp_k(ik, size_becp);
 
         psi_t->fix_k(ik);
 
@@ -354,12 +352,7 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_cpu(const ModuleB
     }
 
     // Free saved subspace data (allocated in cal_mw_from_lambda)
-    delete[] this->sub_h_save;
-    delete[] this->sub_s_save;
-    delete[] this->becp_save;
-    this->sub_h_save = nullptr;
-    this->sub_s_save = nullptr;
-    this->becp_save = nullptr;
+    this->pw_cache_.release_cpu();
 
     // =============================================================
     // STAGE 2: Full-space update
@@ -435,9 +428,7 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_gpu(const ModuleB
     base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(h_tmp, nbands * nbands);
     base_device::memory::resize_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(s_tmp, nbands * nbands);
 
-    assert(this->sub_h_save != nullptr);
-    assert(this->sub_s_save != nullptr);
-    assert(this->becp_save != nullptr);
+    assert(this->pw_cache_.allocated());
 
     const ModuleBase::Vector3<double>* lambda_for_hcc = delta_lambda;
     std::vector<ModuleBase::Vector3<double>> computed_delta;
@@ -449,9 +440,9 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_gpu(const ModuleB
     // STAGE 1: Subspace diagonalization for each k-point (GPU)
     for (int ik = 0; ik < nk; ++ik)
     {
-        std::complex<double>* h_k = this->sub_h_save + ik * nbands * nbands;
-        std::complex<double>* s_k = this->sub_s_save + ik * nbands * nbands;
-        std::complex<double>* becp_k = this->becp_save + ik * size_becp;
+        std::complex<double>* h_k = this->pw_cache_.h_k(ik, nbands);
+        std::complex<double>* s_k = this->pw_cache_.s_k(ik, nbands);
+        std::complex<double>* becp_k = this->pw_cache_.becp_k(ik, size_becp);
 
         psi_t->fix_k(ik);
 
@@ -471,12 +462,7 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_gpu(const ModuleB
     base_device::memory::delete_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(s_tmp);
 
     // Free GPU memory for saved subspace data
-    base_device::memory::delete_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(sub_h_save);
-    base_device::memory::delete_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(sub_s_save);
-    base_device::memory::delete_memory_op<std::complex<double>, base_device::DEVICE_GPU>()(becp_save);
-    this->sub_h_save = nullptr;
-    this->sub_s_save = nullptr;
-    this->becp_save = nullptr;
+    this->pw_cache_.release_gpu();
 
     // STAGE 2: Full-space update (GPU)
     if (pw_solve)

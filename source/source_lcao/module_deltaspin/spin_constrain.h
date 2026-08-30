@@ -60,6 +60,7 @@
 #include "source_estate/elecstate.h"
 
 #include "deltaspin_state.h"
+#include "deltaspin_pw_cache.h"
 
 #ifdef __LCAO
 #include "source_estate/module_dm/density_matrix.h" // mohan add 2025-11-02
@@ -456,15 +457,10 @@ public:
 
   private:
     SpinConstrain(){};
-    ~SpinConstrain()
-    {
-        delete[] sub_h_save;
-        delete[] sub_s_save;
-        delete[] becp_save;
-        sub_h_save = nullptr;
-        sub_s_save = nullptr;
-        becp_save = nullptr;
-    };
+    // Subspace buffers are owned by `pw_cache_` (RAII via release_cpu/gpu in the
+    // PW update paths). The destructor is trivial; the singleton lives for the
+    // whole program and the cache is released by the PW update functions.
+    ~SpinConstrain() = default;
     SpinConstrain& operator=(SpinConstrain const&) = delete;  ///< Copy assignment deleted
     SpinConstrain& operator=(SpinConstrain &&) = delete;      ///< Move assignment deleted
 
@@ -509,10 +505,9 @@ public:
      * update_psi_charge_pw_cpu/gpu() after final subspace diagonalization.
      */
   public:
-    TK* sub_h_save = nullptr;       ///< Cached subspace Hamiltonian for all k-points
-    TK* sub_s_save = nullptr;       ///< Cached subspace overlap matrix for all k-points
-    TK* becp_save = nullptr;        ///< Cached becp coefficients for all k-points
-    std::vector<ModuleBase::Vector3<double>> lambda_in_sub_; ///< Lambda values when subspace was saved
+    /// PW subspace data cache (H_sub/S_sub/becp + lambda snapshot). Owned object;
+    /// buffers are device/host memory managed via allocate_cpu/gpu + release_cpu/gpu.
+    pw::SubspaceCache pw_cache_;
 
   private:
     /// RMS error of the most recent lambda optimization loop; -1.0 if no loop has run.
