@@ -72,12 +72,8 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->occmat_.init(cell, orbital_corr, nspin, npol);
 
-    this->occ_mat.resize(cell.nat);
-    this->occ_mat_save.resize(cell.nat);
     this->pot_uterm_pw_index.resize(cell.nat);
     int pot_index = 0;
-
-    this->iatlnmipol2iwt.resize(cell.nat);
 
     int num_locale = 0;
     for (int it = 0; it < cell.ntype; ++it)
@@ -85,11 +81,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
         for (int ia = 0; ia < cell.atoms[it].na; ia++)
         {
             const int iat = cell.itia2iat(it, ia);
-
-            occ_mat[iat].resize(cell.atoms[it].nwl + 1);
-            occ_mat_save[iat].resize(cell.atoms[it].nwl + 1);
-
-            this->iatlnmipol2iwt[iat].resize(cell.atoms[it].nwl + 1);
 
             if(!has_correlated_orbital(it))
             {
@@ -114,61 +105,17 @@ void Plus_U_Base::init_base(UnitCell& cell,
             {
                 const int N = cell.atoms[it].l_nchi[l];
 
-                occ_mat[iat][l].resize(N);
-                occ_mat_save[iat][l].resize(N);
-
                 for (int n = 0; n < N; n++)
                 {
                     if (nspin == 1 || nspin == 2)
                     {
-                        occ_mat[iat][l][n].resize(2);
-                        occ_mat_save[iat][l][n].resize(2);
-
-                        occ_mat[iat][l][n][0].create(2 * l + 1, 2 * l + 1);
-                        occ_mat[iat][l][n][1].create(2 * l + 1, 2 * l + 1);
-
-                        occ_mat_save[iat][l][n][0].create(2 * l + 1, 2 * l + 1);
-                        occ_mat_save[iat][l][n][1].create(2 * l + 1, 2 * l + 1);
                         num_locale += (2 * l + 1) * (2 * l + 1) * 2;
                     }
                     else if (nspin == 4)
                     {
-                        occ_mat[iat][l][n].resize(1);
-                        occ_mat_save[iat][l][n].resize(1);
-
-                        occ_mat[iat][l][n][0].create((2 * l + 1) * npol, (2 * l + 1) * npol);
-                        occ_mat_save[iat][l][n][0].create((2 * l + 1) * npol, (2 * l + 1) * npol);
                         num_locale += (2 * l + 1) * (2 * l + 1) * npol * npol;
                     }
                 }
-            }
-
-            this->iatlnmipol2iwt[iat].resize(cell.atoms[it].nwl + 1);
-            for (int L = 0; L <= cell.atoms[it].nwl; L++)
-            {
-                this->iatlnmipol2iwt[iat][L].resize(cell.atoms[it].l_nchi[L]);
-
-                for (int n = 0; n < cell.atoms[it].l_nchi[L]; n++)
-                {
-                    this->iatlnmipol2iwt[iat][L][n].resize(2 * L + 1);
-
-                    for (int m = 0; m < 2 * L + 1; m++)
-                    {
-                        this->iatlnmipol2iwt[iat][L][n][m].resize(npol);
-                    }
-                }
-            }
-
-            for (int iw = 0; iw < cell.atoms[it].nw * npol; iw++)
-            {
-                int iw0 = iw / npol;
-                int ipol = iw % npol;
-                int iwt = cell.itiaiw2iwt(it, ia, iw);
-                int l = cell.atoms[it].iw2l[iw0];
-                int n = cell.atoms[it].iw2n[iw0];
-                int m = cell.atoms[it].iw2m[iw0];
-
-                this->iatlnmipol2iwt[iat][l][n][m][ipol] = iwt;
             }
         }
     }
@@ -189,10 +136,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
     {
         std::stringstream sst;
         sst << global_readin_dir << "dm_onsite_ini.txt";
-        DFTU_BASE::read_occup_m(cell, this->occmat_.data(), this->orbital_corr, this->occ_mat_ctrl,
+        DFTU_BASE::read_occup_m(cell, this->occmat_, this->orbital_corr, this->occ_mat_ctrl,
                                 sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-        DFTU_BASE::local_occup_bcast(cell, this->occmat_.data(), this->orbital_corr, nspin, npol);
+        DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->orbital_corr, nspin, npol);
 #endif
 
         mark_occ_mat_initialized();
@@ -204,10 +151,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
         {
             std::stringstream sst;
             sst << global_readin_dir << "dm_onsite.txt";
-            DFTU_BASE::read_occup_m(cell, this->occmat_.data(), this->orbital_corr, this->occ_mat_ctrl,
+            DFTU_BASE::read_occup_m(cell, this->occmat_, this->orbital_corr, this->occ_mat_ctrl,
                                     sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-            DFTU_BASE::local_occup_bcast(cell, this->occmat_.data(), this->orbital_corr, nspin, npol);
+            DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->orbital_corr, nspin, npol);
 #endif
             mark_occ_mat_initialized();
         }

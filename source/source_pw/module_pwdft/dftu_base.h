@@ -171,10 +171,6 @@ class Plus_U_Base
 
     // --- Occupation matrices ---
     OccupationMatrix occmat_;
-    // legacy arrays; initialized alongside occmat_ and removed once all
-    // internal writers go through occmat_
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat;
-    std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>> occ_mat_save;
 
     // --- Internal state ---
     double energy_u = 0.0;
@@ -182,10 +178,6 @@ class Plus_U_Base
     int cal_type = 3;
     std::string device;
     int kpar = 1;
-
-    // transform between iwt index and it, ia, L, N and m index
-    std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>
-        iatlnmipol2iwt;
 
     void copy_occ_mat(const UnitCell& ucell);
     void zero_occ_mat(const UnitCell& ucell);

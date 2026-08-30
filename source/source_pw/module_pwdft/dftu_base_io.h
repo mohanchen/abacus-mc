@@ -2,6 +2,7 @@
 #define DFTU_BASE_IO_H
 
 #include "source_base/matrix.h"
+#include "source_pw/module_pwdft/occ_matrix.h"
 
 #include <iosfwd>
 #include <string>
@@ -16,13 +17,13 @@ namespace DFTU_BASE
 /// nested occupation-matrix type used by DFT+U: occ_mat[iat][l][n][spin](m0, m1)
 using OccMatData = std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>;
 
-/// Read the local occupation number matrix from file into occ_mat (rank 0 only).
+/// Read the local occupation number matrix from file (rank 0 only).
 ///
 /// The file format matches the output of write_occup_m(). When the file can
 /// not be opened, the run quits with an error message that depends on
 /// occ_mat_ctrl and init_chg.
 void read_occup_m(const UnitCell& ucell,
-                  OccMatData& occ_mat,
+                  OccupationMatrix& occ,
                   const std::vector<int>& orbital_corr,
                   const int occ_mat_ctrl,
                   const std::string& fn,
@@ -34,7 +35,7 @@ void read_occup_m(const UnitCell& ucell,
 ///
 /// Implemented in dftu_base_io.cpp (only available in MPI builds).
 void local_occup_bcast(const UnitCell& ucell,
-                       OccMatData& occ_mat,
+                       OccupationMatrix& occ,
                        const std::vector<int>& orbital_corr,
                        int nspin,
                        int npol);

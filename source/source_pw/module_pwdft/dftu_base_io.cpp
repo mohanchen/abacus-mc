@@ -93,7 +93,7 @@ namespace DFTU_BASE
 {
 
 void read_occup_m(const UnitCell& ucell,
-                  OccMatData& occ_mat,
+                  OccupationMatrix& occ,
                   const std::vector<int>& orbital_corr,
                   const int occ_mat_ctrl,
                   const std::string& fn,
@@ -194,7 +194,7 @@ void read_occup_m(const UnitCell& ucell,
                                 for (int m1 = 0; m1 < 2 * L + 1; m1++)
                                 {
                                     ifdftu >> value;
-                                    occ_mat[iat][L][zeta][spin](m0, m1) = value;
+                                    occ.set(iat, L, zeta, spin, m0, m1, value);
                                 }
                                 ifdftu.ignore(150, '\n');
                             }
@@ -220,7 +220,7 @@ void read_occup_m(const UnitCell& ucell,
                                 {
                                     int m1_all = m1 + (2 * L + 1) * ipol1;
                                     ifdftu >> value;
-                                    occ_mat[iat][L][zeta][0](m0_all, m1_all) = value;
+                                    occ.set(iat, L, zeta, 0, m0_all, m1_all, value);
                                 }
                             }
                             ifdftu.ignore(150, '\n');
@@ -252,7 +252,7 @@ void read_occup_m(const UnitCell& ucell,
 /// (matrix::c stores nr * nc consecutive doubles) instead of element by
 /// element.
 void local_occup_bcast(const UnitCell& ucell,
-                       OccMatData& occ_mat,
+                       OccupationMatrix& occ,
                        const std::vector<int>& orbital_corr,
                        int nspin,
                        int npol)
@@ -289,14 +289,14 @@ void local_occup_bcast(const UnitCell& ucell,
                     {
                         for (int spin = 0; spin < 2; spin++)
                         {
-                            Parallel_Common::bcast_double(occ_mat[iat][l][n][spin].c,
-                                                          occ_mat[iat][l][n][spin].nr * occ_mat[iat][l][n][spin].nc);
+                            Parallel_Common::bcast_double(occ.mat(iat, l, n, spin).c,
+                                                          occ.mat(iat, l, n, spin).nr * occ.mat(iat, l, n, spin).nc);
                         }
                     }
                     else if (nspin == 4) // SOC
                     {
-                        Parallel_Common::bcast_double(occ_mat[iat][l][n][0].c,
-                                                      occ_mat[iat][l][n][0].nr * occ_mat[iat][l][n][0].nc);
+                        Parallel_Common::bcast_double(occ.mat(iat, l, n, 0).c,
+                                                      occ.mat(iat, l, n, 0).nr * occ.mat(iat, l, n, 0).nc);
                     }
                 }
             }
