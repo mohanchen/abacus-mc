@@ -34,9 +34,9 @@ std::vector<std::vector<std::vector<double>>> spinconstrain::SpinConstrain<std::
     const ModuleBase::matrix& orbMulP)
 {
     std::vector<std::vector<std::vector<double>>> AorbMulP;
-    AorbMulP.resize(this->nspin_);
+    AorbMulP.resize(this->state_.nspin_);
     int nat = this->get_nat();
-    for (int is = 0; is < this->nspin_; ++is)
+    for (int is = 0; is < this->state_.nspin_; ++is)
     {
         int num = 0;
         AorbMulP[is].resize(nat);
@@ -86,7 +86,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::calculate_MW(
 
     this->zero_Mi();
 
-    const int nlocal = (this->nspin_ == 4) ? nw / 2 : nw;
+    const int nlocal = (this->state_.nspin_ == 4) ? nw / 2 : nw;
     for (const auto& sc_elem: this->get_atomCounts())
     {
         int it = sc_elem.first;
@@ -96,51 +96,51 @@ void spinconstrain::SpinConstrain<std::complex<double>>::calculate_MW(
             int num = 0;
             int iat = this->get_iat(it, ia);
             double atom_mag = 0.0;
-            std::vector<double> total_charge_soc(this->nspin_, 0.0);
+            std::vector<double> total_charge_soc(this->state_.nspin_, 0.0);
             for (const auto& lnchi: this->get_lnchiCounts().at(it))
             {
-                std::vector<double> sum_l(this->nspin_, 0.0);
+                std::vector<double> sum_l(this->state_.nspin_, 0.0);
                 int L = lnchi.first;
                 int nchi = lnchi.second;
                 for (int Z = 0; Z < nchi; ++Z)
                 {
-                    std::vector<double> sum_m(this->nspin_, 0.0);
+                    std::vector<double> sum_m(this->state_.nspin_, 0.0);
                     for (int M = 0; M < (2 * L + 1); ++M)
                     {
-                        for (int j = 0; j < this->nspin_; j++)
+                        for (int j = 0; j < this->state_.nspin_; j++)
                         {
                             sum_m[j] += AorbMulP[j][iat][num];
                         }
                         num++;
                     }
-                    for (int j = 0; j < this->nspin_; j++)
+                    for (int j = 0; j < this->state_.nspin_; j++)
                     {
                         sum_l[j] += sum_m[j];
                     }
                 }
-                if (this->nspin_ == 2)
+                if (this->state_.nspin_ == 2)
                 {
                     atom_mag += sum_l[0] - sum_l[1];
                 }
-                else if (this->nspin_ == 4)
+                else if (this->state_.nspin_ == 4)
                 {
-                    for (int j = 0; j < this->nspin_; j++)
+                    for (int j = 0; j < this->state_.nspin_; j++)
                     {
                         total_charge_soc[j] += sum_l[j];
                     }
                 }
             }
-            if (this->nspin_ == 2)
+            if (this->state_.nspin_ == 2)
             {
-                this->Mi_[iat].x = 0.0;
-                this->Mi_[iat].y = 0.0;
-                this->Mi_[iat].z = atom_mag;
+                this->state_.Mi_[iat].x = 0.0;
+                this->state_.Mi_[iat].y = 0.0;
+                this->state_.Mi_[iat].z = atom_mag;
             }
-            else if (this->nspin_ == 4)
+            else if (this->state_.nspin_ == 4)
             {
-                this->Mi_[iat].x = (std::abs(total_charge_soc[1]) < this->sc_thr_)? 0.0 : total_charge_soc[1];
-                this->Mi_[iat].y = (std::abs(total_charge_soc[2]) < this->sc_thr_)? 0.0 : total_charge_soc[2];
-                this->Mi_[iat].z = (std::abs(total_charge_soc[3]) < this->sc_thr_)? 0.0 : total_charge_soc[3];
+                this->state_.Mi_[iat].x = (std::abs(total_charge_soc[1]) < this->state_.sc_thr_)? 0.0 : total_charge_soc[1];
+                this->state_.Mi_[iat].y = (std::abs(total_charge_soc[2]) < this->state_.sc_thr_)? 0.0 : total_charge_soc[2];
+                this->state_.Mi_[iat].z = (std::abs(total_charge_soc[3]) < this->state_.sc_thr_)? 0.0 : total_charge_soc[3];
             }
         }
     }
@@ -174,7 +174,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::collect_MW(ModuleBase::
                                                       int nw,
                                                       int isk)
 {
-    if (this->nspin_ == 2)
+    if (this->state_.nspin_ == 2)
     {
         for (size_t i=0; i < nw; ++i)
         {
@@ -186,7 +186,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::collect_MW(ModuleBase::
             }
         }
     }
-    else if (this->nspin_ == 4)
+    else if (this->state_.nspin_ == 4)
     {
         for (size_t i = 0; i < nw; ++i)
         {

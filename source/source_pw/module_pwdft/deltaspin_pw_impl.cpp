@@ -55,7 +55,7 @@ void SpinConstrain<std::complex<double>>::cal_mi_pw()
             int nkb = onsite_p->get_tot_nproj();
             const int spin_sign = (npol == 2) ? 1 : this->get_spin_sign(ik);
             accumulate_Mi_from_becp(becp, nkb, nbands, npol, spin_sign,
-                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0), this->Mi_);
+                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0), this->state_.Mi_);
         }
     }
 #if ((defined __CUDA) || (defined __ROCM))
@@ -77,12 +77,12 @@ void SpinConstrain<std::complex<double>>::cal_mi_pw()
             int nkb = onsite_p->get_size_becp() / nbands / npol;
             const int spin_sign = (npol == 2) ? 1 : this->get_spin_sign(ik);
             accumulate_Mi_from_becp(becp, nkb, nbands, npol, spin_sign,
-                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0), this->Mi_);
+                &this->pelec->wg(ik, 0), &onsite_p->get_nh(0), this->state_.Mi_);
         }
     }
 #endif
     // MPI reduction: sum Mi across all k-pool ranks
-    Parallel_Reduce::reduce_double_allpool(PARAM.inp.kpar, GlobalV::NPROC_IN_POOL, &(this->Mi_[0][0]), 3 * this->Mi_.size());
+    Parallel_Reduce::reduce_double_allpool(PARAM.inp.kpar, GlobalV::NPROC_IN_POOL, &(this->state_.Mi_[0][0]), 3 * this->state_.Mi_.size());
 
     ModuleBase::timer::end("spinconstrain::SpinConstrain", "cal_mi_pw");
 }
@@ -131,7 +131,7 @@ void SpinConstrain<std::complex<double>>::calculate_delta_hcc(std::complex<doubl
     }
 
     int sum = 0; // Running sum of projectors across atoms
-    int size_ps = nkb * this->npol_ * nbands; // Total size of ps array
+    int size_ps = nkb * this->state_.npol_ * nbands; // Total size of ps array
     std::complex<double>* becp_cpu = nullptr;
 
     // Handle GPU/CPU memory for becp
@@ -149,7 +149,7 @@ void SpinConstrain<std::complex<double>>::calculate_delta_hcc(std::complex<doubl
 
     // Compute modified projector coefficients: ps = delta_lambda * becp
     std::vector<std::complex<double>> ps(size_ps, 0.0);
-    if(this->npol_ == 2)
+    if(this->state_.npol_ == 2)
     {
         // =============================================================
         // nspin=4 (non-collinear): full Pauli matrix treatment
@@ -159,14 +159,14 @@ void SpinConstrain<std::complex<double>>::calculate_delta_hcc(std::complex<doubl
         //   | lambda_x - i*lambda_y   -lambda_z   |
         // Then: ps_up = coeff0 * becp_up + coeff2 * becp_dn
         //        ps_dn = coeff1 * becp_up + coeff3 * becp_dn
-        for (int iat = 0; iat < this->Mi_.size(); iat++)
+        for (int iat = 0; iat < this->state_.Mi_.size(); iat++)
         {
             const int nproj = nh_iat[iat];
             const std::complex<double> coefficients0(effective_lambda[iat][2], 0.0);
             const std::complex<double> coefficients1(effective_lambda[iat][0] , effective_lambda[iat][1]);
             const std::complex<double> coefficients2(effective_lambda[iat][0] , -1 * effective_lambda[iat][1]);
             const std::complex<double> coefficients3(-1 * effective_lambda[iat][2], 0.0);
-            for (int ib = 0; ib < nbands * this->npol_; ib += this->npol_)
+            for (int ib = 0; ib < nbands * this->state_.npol_; ib += this->state_.npol_)
             {
                 for (int ip = 0; ip < nproj; ip++)
                 {
@@ -182,14 +182,14 @@ void SpinConstrain<std::complex<double>>::calculate_delta_hcc(std::complex<doubl
             sum += nproj;
         }
     }
-    else if(this->npol_ == 1)
+    else if(this->state_.npol_ == 1)
     {
         // =============================================================
         // nspin=2 (collinear): only z-component with spin_sign
         // =============================================================
         // ps = lambda_z * spin_sign * becp
         // spin_sign = +1 for spin-up k-points, -1 for spin-down
-        for (int iat = 0; iat < this->Mi_.size(); iat++)
+        for (int iat = 0; iat < this->state_.Mi_.size(); iat++)
         {
             const int nproj = nh_iat[iat];
             double coefficients0 = effective_lambda[iat][2] * this->get_spin_sign(ik);
@@ -226,7 +226,7 @@ void SpinConstrain<std::complex<double>>::calculate_delta_hcc(std::complex<doubl
     // =============================================================
     char transa = 'C'; // Conjugate transpose of becp
     char transb = 'N'; // Normal ps
-    const int npm = nkb * this->npol_;
+    const int npm = nkb * this->state_.npol_;
     if (PARAM.inp.device == "gpu")
     {
 #if ((defined __CUDA) || (defined __ROCM))
@@ -324,7 +324,7 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_cpu(const ModuleB
     std::vector<ModuleBase::Vector3<double>> computed_delta;
     if (full_update)
     {
-        lambda_for_hcc = this->lambda_.data();
+        lambda_for_hcc = this->state_.lambda_.data();
     }
 
     // =============================================================
@@ -387,7 +387,7 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_cpu(const ModuleB
             PARAM.inp.use_k_continuity);
 
         hsolver_pw_obj.solve(hamilt_t, psi_t[0], this->pelec, this->pelec->ekb.c,
-            GlobalV::RANK_IN_POOL, GlobalV::NPROC_IN_POOL, false, this->tpiba, this->get_nat());
+            GlobalV::RANK_IN_POOL, GlobalV::NPROC_IN_POOL, false, this->state_.tpiba, this->get_nat());
     }
     else
     {
@@ -443,7 +443,7 @@ void SpinConstrain<std::complex<double>>::update_psi_charge_pw_gpu(const ModuleB
     std::vector<ModuleBase::Vector3<double>> computed_delta;
     if (full_update)
     {
-        lambda_for_hcc = this->lambda_.data();
+        lambda_for_hcc = this->state_.lambda_.data();
     }
 
     // STAGE 1: Subspace diagonalization for each k-point (GPU)

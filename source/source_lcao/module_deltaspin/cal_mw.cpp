@@ -47,7 +47,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mi_lcao(const int& 
     this->zero_Mi();
     const hamilt::HContainer<double>* dmr = this->dm_->get_DMR_pointer(1);
     std::vector<double> moments;
-    if(this->nspin_==2)
+    if(this->state_.nspin_==2)
     {
         // Switch to spin-difference density matrix (rho_up - rho_dn)
         this->dm_->switch_dmr(2);
@@ -59,22 +59,22 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mi_lcao(const int& 
         this->dm_->switch_dmr(0);
 
         // For nspin=2, only z-component is meaningful
-        for(int iat=0;iat<this->Mi_.size();iat++)
+        for(int iat=0;iat<this->state_.Mi_.size();iat++)
         {
-            this->Mi_[iat].x = 0.0;
-            this->Mi_[iat].y = 0.0;
-            this->Mi_[iat].z = moments[iat];
+            this->state_.Mi_[iat].x = 0.0;
+            this->state_.Mi_[iat].y = 0.0;
+            this->state_.Mi_[iat].z = moments[iat];
         }
     }
-    else if(this->nspin_==4)
+    else if(this->state_.nspin_==4)
     {
         // For nspin=4, moments array contains interleaved [Mx, My, Mz] per atom
         moments = static_cast<hamilt::DeltaSpin<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>>*>(this->p_operator)->cal_moment(dmr, this->get_constrain());
-        for(int iat=0;iat<this->Mi_.size();iat++)
+        for(int iat=0;iat<this->state_.Mi_.size();iat++)
         {
-            this->Mi_[iat].x = moments[iat*3];
-            this->Mi_[iat].y = moments[iat*3+1];
-            this->Mi_[iat].z = moments[iat*3+2];
+            this->state_.Mi_[iat].x = moments[iat*3];
+            this->state_.Mi_[iat].y = moments[iat*3+1];
+            this->state_.Mi_[iat].z = moments[iat*3+2];
         }
     }
 

@@ -14,6 +14,7 @@ AddTest(
   LIBS base device parameter
   SOURCES spin_constrain_test.cpp
     ../spin_constrain.cpp
+    ../deltaspin_state.cpp
     ../../../source_basis/module_ao/parallel_orbitals.cpp
 )
 
@@ -22,6 +23,7 @@ AddTest(
   LIBS base device parameter
   SOURCES template_helpers_test.cpp
     ../spin_constrain.cpp
+    ../deltaspin_state.cpp
     ../template_helpers.cpp
     ../lambda_loop_helper.cpp
     ../basic_funcs.cpp
