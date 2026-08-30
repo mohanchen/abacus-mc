@@ -3,6 +3,7 @@
 #include "dftu_lcao_pots.h"
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
+#include "source_cell/unitcell.h"
 #include "source_io/module_parameter/parameter.h"
 
 #ifdef __LCAO

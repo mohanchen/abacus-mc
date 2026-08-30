@@ -3,6 +3,11 @@
 #include "source_base/tool_quit.h"
 #include "source_base/tool_title.h"
 #include "source_base/timer.h"
+#include "source_basis/module_ao/parallel_orbitals.h"
+#ifdef __LCAO
+#include "source_basis/module_ao/orb_read.h"
+#include "source_estate/module_dm/density_matrix.h"
+#endif
 
 #include <complex>
 #include <vector>

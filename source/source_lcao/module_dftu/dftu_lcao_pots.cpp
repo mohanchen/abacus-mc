@@ -1,6 +1,11 @@
 #include "dftu_lcao.h"
 #include "dftu_lcao_pots.h"
 
+#include "source_base/global_function.h"
+#include "source_base/tool_title.h"
+#include "source_basis/module_ao/parallel_orbitals.h"
+#include "source_cell/unitcell.h"
+
 #ifdef __LCAO
 void DFTU_LCAO::pot_onsite_complex(const Plus_U& dftu,
                                    const UnitCell& ucell,

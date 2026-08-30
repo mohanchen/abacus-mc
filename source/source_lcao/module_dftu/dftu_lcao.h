@@ -1,19 +1,29 @@
 #ifndef DFTU_LCAO_H
 #define DFTU_LCAO_H
 
-#include "source_cell/klist.h"
-#include "source_cell/unitcell.h"
-#include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_pw/module_pwdft/dftu_base.h"
-#ifdef __LCAO
-#include "source_basis/module_ao/orb_read.h"
-#include "source_hamilt/hamilt.h"
-#include "source_hamilt/module_hcontainer/hcontainer.h"
-#include "source_estate/module_dm/density_matrix.h"
-#endif
 
+#include <complex>
 #include <string>
 #include <vector>
+
+
+class UnitCell;
+class Parallel_Orbitals;
+
+#ifdef __LCAO
+class LCAO_Orbitals;
+namespace hamilt
+{
+template <typename T>
+class HContainer;
+} // namespace hamilt
+namespace elecstate
+{
+template <typename TK, typename TR>
+class DensityMatrix;
+} // namespace elecstate
+#endif
 
 
 class Plus_U : public Plus_U_Base
@@ -54,25 +64,10 @@ class Plus_U : public Plus_U_Base
     std::vector<double> orb_cutoff_;
 
     //=============================================================
-    // In dftu_hamilt.cpp
+    // In dftu_hamilt.cpp (DFTU_LCAO free functions)
     // For calculating contribution to Hamiltonian matrices
     //=============================================================
   public:
-    void cal_eff_pot_mat_R_double(const UnitCell& ucell,
-                                 const Parallel_Orbitals* pv,
-                                 const int ispin,
-                                 double* SR,
-                                 double* HR,
-                                 const int npol);
-
-    void cal_eff_pot_mat_R_complex_double(const UnitCell& ucell,
-            const Parallel_Orbitals* pv,
-            const int ispin,
-            std::complex<double>* SR,
-            std::complex<double>* HR,
-            const int npol);
-
-
     /**
      * @brief get the density matrix of target spin
      * nspin = 1 and 4 : ispin should be 0
