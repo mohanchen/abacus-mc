@@ -309,15 +309,8 @@ public:
 		  bool full_update = false);
 
 #ifdef __LCAO
-  /// @brief Convert orbital matrix to nested vector format [nspin][iat][iw]
-  std::vector<std::vector<std::vector<double>>> convert(const ModuleBase::matrix& orbMulP);
-  /// @brief Calculate magnetic moment from orbital matrix (LCAO alternative path)
-  void calculate_MW(const std::vector<std::vector<std::vector<double>>>& AorbMulP);
-  /// @brief Collect magnetic moment contributions from complex matrix mu*dm
-  void collect_MW(ModuleBase::matrix& MecMulP,
-                  const ModuleBase::ComplexMatrix& mud,
-                  int nw,
-                  int isk);
+  /// LCAO magnetic-moment helpers (orbital-matrix and mu*dm paths) have been
+  /// lifted to free functions in deltaspin_lcao_mi.h (namespace spinconstrain::lcao).
 #endif
 
   /// Lambda loop helpers (print_rms_stop, check_restriction, check_gradient_decay,

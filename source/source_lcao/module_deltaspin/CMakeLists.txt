@@ -8,7 +8,7 @@ list(APPEND objects
     cal_mw_from_lambda.cpp
     template_helpers.cpp
     deltaspin_lcao.cpp
-    cal_mw_helper.cpp
+    deltaspin_lcao_mi.cpp
     deltaspin_state.cpp
     mi_tools.cpp
 )
