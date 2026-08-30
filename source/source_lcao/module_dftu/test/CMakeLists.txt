@@ -26,6 +26,7 @@ AddTest(
   SOURCES dftu_lcao_test.cpp ../dftu_lcao_op.cpp ../dftu_fs.cpp
   ../../../source_pw/module_pwdft/dftu_base.cpp
   ../../../source_pw/module_pwdft/dftu_base_io.cpp
+  ../../../source_pw/module_pwdft/yukawa_screening.cpp
   ../../../source_hamilt/module_hcontainer/func_folding.cpp
   ../../../source_hamilt/module_hcontainer/base_matrix.cpp
   ../../../source_hamilt/module_hcontainer/hcontainer.cpp

@@ -77,7 +77,7 @@ void DFTU_LCAO::cal_energy_correction(Plus_U& dftu, const UnitCell& ucell)
                             }
                             if (dftu.use_yukawa())
                             {
-                                energy_u += 0.5 * (dftu.get_U_Yukawa(T, l, n) - dftu.get_J_Yukawa(T, l, n))
+                                energy_u += 0.5 * (dftu.yukawa().get_U(T, l, n) - dftu.yukawa().get_J(T, l, n))
                                             * (nm_trace - nm2_trace);
                             }
                             else
@@ -112,7 +112,7 @@ void DFTU_LCAO::cal_energy_correction(Plus_U& dftu, const UnitCell& ucell)
                         }
                         if (dftu.use_yukawa())
                         {
-                            energy_u += 0.5 * (dftu.get_U_Yukawa(T, l, n) - dftu.get_J_Yukawa(T, l, n))
+                            energy_u += 0.5 * (dftu.yukawa().get_U(T, l, n) - dftu.yukawa().get_J(T, l, n))
                               * (nm_trace - nm2_trace);
                         }
                         else

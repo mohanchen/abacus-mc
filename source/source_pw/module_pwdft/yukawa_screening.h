@@ -48,6 +48,12 @@ class YukawaScreening
     double get_lambda() const { return lambda_; }
     double get_U(int it, int l, int n) const { return U_Yukawa_[it][l][n]; }
     double get_J(int it, int l, int n) const { return J_Yukawa_[it][l][n]; }
+    /// effective U-J of the correlated orbital (n = 0) for atom type it
+    double get_Ueff(int it) const
+    {
+        const int l = orbital_corr_[it];
+        return U_Yukawa_[it][l][0] - J_Yukawa_[it][l][0];
+    }
 
   private:
     /// spherical modified Bessel function of the first kind, orders 0/2/4/6

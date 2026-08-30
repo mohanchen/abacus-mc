@@ -1,7 +1,6 @@
 list(APPEND objects
       dftu_lcao.cpp
       dftu_force.cpp
-      dftu_yukawa.cpp
       dftu_folding.cpp
       dftu_lcao_pots.cpp
       dftu_lcao_occ.cpp

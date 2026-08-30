@@ -348,10 +348,10 @@ void output(const Plus_U_Base& dftu,
                         {
                             continue;
                         }
-                        double Ueff = (dftu.get_U_Yukawa(T, L, n) - dftu.get_J_Yukawa(T, L, n)) * ModuleBase::Ry_to_eV;
+                        double Ueff = (dftu.yukawa().get_U(T, L, n) - dftu.yukawa().get_J(T, L, n)) * ModuleBase::Ry_to_eV;
                         GlobalV::ofs_running << " Type=" << T+1 << " L=" << L << "  ORBITAL=" << n
-                                             << " U=" << dftu.get_U_Yukawa(T, L, n) * ModuleBase::Ry_to_eV << " eV"
-                                             << " J=" << dftu.get_J_Yukawa(T, L, n) * ModuleBase::Ry_to_eV << " eV"
+                                             << " U=" << dftu.yukawa().get_U(T, L, n) * ModuleBase::Ry_to_eV << " eV"
+                                             << " J=" << dftu.yukawa().get_J(T, L, n) * ModuleBase::Ry_to_eV << " eV"
                                              << std::endl;
                     }
                 }

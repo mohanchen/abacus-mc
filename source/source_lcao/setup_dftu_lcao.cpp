@@ -2,8 +2,8 @@
 #include "source_lcao/module_dftu/dftu_lcao.h"
 #include "source_lcao/module_dftu/dftu_lcao_occ.h"
 #include "source_lcao/module_dftu/dftu_lcao_energy.h"
-#include "source_lcao/module_dftu/dftu_yukawa.h"
 #include "source_pw/module_pwdft/dftu_base_io.h" // mohan add 2025-11-08
+#include "source_io/module_parameter/parameter.h"
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/hamilt_lcao.h"
 
@@ -34,7 +34,18 @@ void init_dftu_lcao(const int istep,
     }
     
     /// Calculate U and J if Yukawa potential is used
-    DFTU_LCAO::cal_slater_UJ(*dftu_ptr, ucell, rho, nrxx);
+    if (dftu_ptr->use_yukawa())
+    {
+        dftu_ptr->yukawa().cal_slater_UJ(ucell, rho, nrxx, PARAM.inp.nspin, dftu_ptr->get_ptr_orb());
+        // update current U with calculated U-J from Slater integrals
+        for (int T = 0; T < ucell.ntype; T++)
+        {
+            if (dftu_ptr->has_correlated_orbital(T))
+            {
+                dftu_ptr->set_u_current(T, dftu_ptr->yukawa().get_Ueff(T));
+            }
+        }
+    }
 }
 
 template <typename TK>

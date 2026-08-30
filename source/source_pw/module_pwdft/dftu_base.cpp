@@ -34,6 +34,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
                              const int nspin,
                              const std::vector<int>& orbital_corr,
                              const bool yukawa_potential,
+                             const double yukawa_lambda,
                              const std::string& global_readin_dir,
                              const std::string& global_out_dir,
                              const std::string& init_chg,
@@ -180,8 +181,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
     if (use_yukawa_)
     {
         this->yukawa_.reset(new YukawaScreening());
-        // yukawa_lambda config is wired in a later step; pass 0 for now.
-        this->yukawa_->init(cell, orbital_corr, 0.0);
+        this->yukawa_->init(cell, orbital_corr, yukawa_lambda);
 
         this->Fk.resize(cell.ntype);
 
