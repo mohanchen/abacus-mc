@@ -1,4 +1,4 @@
-#include "dftu_lcao.h"
+#include "dftu_nao.h"
 
 #include "source_base/tool_quit.h"
 #include "source_base/tool_title.h"

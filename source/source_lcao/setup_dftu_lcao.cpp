@@ -1,7 +1,7 @@
 #include "setup_dftu_lcao.h"
-#include "source_lcao/module_dftu/dftu_lcao.h"
-#include "source_lcao/module_dftu/dftu_lcao_occ.h"
-#include "source_lcao/module_dftu/dftu_lcao_energy.h"
+#include "source_lcao/module_dftu/dftu_nao.h"
+#include "source_lcao/module_dftu/dftu_nao_occ.h"
+#include "source_lcao/module_dftu/dftu_nao_energy.h"
 #include "source_pw/module_pwdft/dftu_base_io.h" // mohan add 2025-11-08
 #include "source_io/module_parameter/parameter.h"
 #include "source_estate/module_dm/density_matrix.h"

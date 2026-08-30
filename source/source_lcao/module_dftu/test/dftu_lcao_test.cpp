@@ -6,7 +6,7 @@
 #include "source_io/module_parameter/parameter.h"
 #undef private
 #include "../dftu_nao_op.h"
-#include "source_lcao/module_dftu/dftu_lcao.h"
+#include "source_lcao/module_dftu/dftu_nao.h"
 
 Plus_U::Plus_U(){};
 Plus_U::~Plus_U(){};

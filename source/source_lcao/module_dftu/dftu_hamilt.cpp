@@ -1,6 +1,6 @@
-#include "dftu_lcao.h"
+#include "dftu_nao.h"
 #include "dftu_hamilt.h"
-#include "dftu_lcao_pots.h"
+#include "dftu_nao_pots.h"
 #include "source_base/global_function.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/timer.h"

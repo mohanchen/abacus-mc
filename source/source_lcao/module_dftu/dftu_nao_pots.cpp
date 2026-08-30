@@ -1,5 +1,5 @@
-#include "dftu_lcao.h"
-#include "dftu_lcao_pots.h"
+#include "dftu_nao.h"
+#include "dftu_nao_pots.h"
 
 #include "source_base/global_function.h"
 #include "source_base/tool_title.h"
