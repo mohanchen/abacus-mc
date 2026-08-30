@@ -85,13 +85,13 @@ void Plus_U_Base::reduce_occ_mat(const UnitCell& cell)
         {
             Parallel_Reduce::reduce_double_allpool(this->kpar,
                     GlobalV::NPROC_IN_POOL,
-                    this->occ_mat[iat][target_l][0][0].c,
+                    this->occmat_.mat(iat, target_l, 0, 0).c,
                     size);
             if(this->nspin == 2)
             {
                 Parallel_Reduce::reduce_double_allpool(this->kpar,
                         GlobalV::NPROC_IN_POOL,
-                        this->occ_mat[iat][target_l][0][1].c,
+                        this->occmat_.mat(iat, target_l, 0, 1).c,
                         size);
             }
         }
@@ -99,7 +99,7 @@ void Plus_U_Base::reduce_occ_mat(const UnitCell& cell)
         {
             Parallel_Reduce::reduce_double_allpool(this->kpar,
                     GlobalV::NPROC_IN_POOL,
-                    this->occ_mat[iat][target_l][0][0].c,
+                    this->occmat_.mat(iat, target_l, 0, 0).c,
                     size * 4);
         }
     }
@@ -116,35 +116,8 @@ void Plus_U_Base::reduce_occ_mat(const UnitCell& cell)
 ///            current code path; the nspin=4 branch is a no-op)
 void Plus_U_Base::sync_occ_to_uom(const UnitCell& cell)
 {
-    if(this->uom_array.size() == 0)
-    {
-        return;
-    }
-    for(int iat = 0; iat < cell.nat; iat++)
-    {
-        const int it = cell.iat2it[iat];
-        const int target_l = get_orbital_corr(it);
-        if(!has_correlated_orbital(it))
-        {
-            continue;
-        }
-        const int size = (2 * target_l + 1) * (2 * target_l + 1);
-
-        for(int mm = 0; mm < size; mm++)
-        {
-            this->uom_array[pot_uterm_pw_index[iat] + mm] =
-                this->occ_mat[iat][target_l][0][0].c[mm];
-        }
-        if(this->nspin == 2)
-        {
-            const int half_size = this->uom_array.size() / 2;
-            for(int mm = 0; mm < size; mm++)
-            {
-                this->uom_array[half_size + pot_uterm_pw_index[iat] + mm] =
-                    this->occ_mat[iat][target_l][0][1].c[mm];
-            }
-        }
-    }
+    this->occmat_.write_to_flat(cell, this->orbital_corr,
+                                this->pot_uterm_pw_index, this->uom_array);
 }
 
 /// compute effective potential pot_onsite and DFT+U energy from occ_mat.
@@ -190,7 +163,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
             // contiguously, each of size m_size*m_size.
             this->energy_u += DFTU_BASE::compute_pot_onsite_spinor(
                 pot_onsite_iat,
-                this->occ_mat[iat][target_l][0][0].c,
+                this->occmat_.mat(iat, target_l, 0, 0).c,
                 u_value, diag_coeff, weight_eu, m_size);
         }
         else // nspin=1 or nspin=2
@@ -198,7 +171,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
             // spin-up channel
             this->energy_u += DFTU_BASE::compute_pot_onsite_scalar(
                 pot_onsite_iat,
-                this->occ_mat[iat][target_l][0][0].c,
+                this->occmat_.mat(iat, target_l, 0, 0).c,
                 u_value, diag_coeff, weight_eu, m_size);
             // spin-down channel for nspin=2
             if(this->nspin == 2)
@@ -206,7 +179,7 @@ void Plus_U_Base::compute_eff_pot_and_energy(const UnitCell& cell)
                 std::complex<double>* pot_onsite_iat1 = &(this->pot_uterm_pw[this->pot_uterm_pw.size()/2 + this->pot_uterm_pw_index[iat]]);
                 this->energy_u += DFTU_BASE::compute_pot_onsite_scalar(
                     pot_onsite_iat1,
-                    this->occ_mat[iat][target_l][0][1].c,
+                    this->occmat_.mat(iat, target_l, 0, 1).c,
                     u_value, diag_coeff, weight_eu, m_size);
             }
         }
@@ -250,14 +223,14 @@ void Plus_U_Base::accumulate_occ_one_k(const void* psi_in,
             if(this->nspin == 4)
             {
                 DFTU_BASE::accumulate_occ_spinor(
-                    this->occ_mat[iat][target_l][0][0].c,
+                    this->occmat_.mat(iat, target_l, 0, 0).c,
                     becp, nbands, npol, nkb, begin_ih, m_begin, tlp1,
                     wg_in, ik);
             }
             else // nspin=1 or nspin=2
             {
                 DFTU_BASE::accumulate_occ_scalar(
-                    this->occ_mat[iat][target_l][0][is].c,
+                    this->occmat_.mat(iat, target_l, 0, is).c,
                     becp, nbands, nkb, begin_ih, m_begin, tlp1,
                     wg_in, ik);
             }

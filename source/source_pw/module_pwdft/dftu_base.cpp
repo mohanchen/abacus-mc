@@ -189,10 +189,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
     {
         std::stringstream sst;
         sst << global_readin_dir << "dm_onsite_ini.txt";
-        DFTU_BASE::read_occup_m(cell, this->occ_mat, this->orbital_corr, this->occ_mat_ctrl,
+        DFTU_BASE::read_occup_m(cell, this->occmat_.data(), this->orbital_corr, this->occ_mat_ctrl,
                                 sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-        DFTU_BASE::local_occup_bcast(cell, this->occ_mat, this->orbital_corr, nspin, npol);
+        DFTU_BASE::local_occup_bcast(cell, this->occmat_.data(), this->orbital_corr, nspin, npol);
 #endif
 
         mark_occ_mat_initialized();
@@ -204,10 +204,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
         {
             std::stringstream sst;
             sst << global_readin_dir << "dm_onsite.txt";
-            DFTU_BASE::read_occup_m(cell, this->occ_mat, this->orbital_corr, this->occ_mat_ctrl,
+            DFTU_BASE::read_occup_m(cell, this->occmat_.data(), this->orbital_corr, this->occ_mat_ctrl,
                                     sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-            DFTU_BASE::local_occup_bcast(cell, this->occ_mat, this->orbital_corr, nspin, npol);
+            DFTU_BASE::local_occup_bcast(cell, this->occmat_.data(), this->orbital_corr, nspin, npol);
 #endif
             mark_occ_mat_initialized();
         }
@@ -264,161 +264,38 @@ bool Plus_U_Base::u_converged()
 }
 
 
-// copy_locale — save current occ_mat to occ_mat_save and uom_save
+// copy_occ_mat — save current occ to occ_save and uom_save
 void Plus_U_Base::copy_occ_mat(const UnitCell& ucell)
 {
-    ModuleBase::TITLE("Plus_U_Base", "copy_occ_mat");
-    ModuleBase::timer::start("Plus_U_Base", "copy_occ_mat");
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        int target_l = get_orbital_corr(T);
-        if (target_l == -1)
-            continue;
-
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-
-            if (this->nspin == 4)
-            {
-                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
-                if(this->uom_save.size() != 0)
-                {
-                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                    for(int mm=0; mm<size; mm++)
-                    {
-                        this->uom_save[pot_uterm_pw_index[iat]+mm] = occ_mat[iat][target_l][0][0].c[mm];
-                    }
-                }
-            }
-            else if (this->nspin == 1 || this->nspin == 2)
-            {
-                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
-                occ_mat_save[iat][target_l][0][1] = occ_mat[iat][target_l][0][1];
-                if(this->uom_save.size() != 0)
-                {
-                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                    const int half_size = this->uom_save.size() / 2;
-                    for(int mm=0; mm<size; mm++)
-                    {
-                        this->uom_save[pot_uterm_pw_index[iat]+mm] = occ_mat[iat][target_l][0][0].c[mm];
-                        this->uom_save[half_size + pot_uterm_pw_index[iat]+mm] = occ_mat[iat][target_l][0][1].c[mm];
-                    }
-                }
-            }
-        }
-    }
-    ModuleBase::timer::end("Plus_U_Base", "copy_occ_mat");
+    this->occmat_.copy_to_save(ucell, this->orbital_corr);
+    this->occmat_.write_save_to_flat(ucell, this->orbital_corr,
+                                     this->pot_uterm_pw_index, this->uom_save);
 }
 
 
 void Plus_U_Base::zero_occ_mat(const UnitCell& ucell)
 {
-    ModuleBase::TITLE("Plus_U_Base", "zero_occ_mat");
-    ModuleBase::timer::start("Plus_U_Base", "zero_occ_mat");
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        if (!has_correlated_orbital(T))
-        {
-            continue;
-        }
-
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-
-            for (int l = 0; l < ucell.atoms[T].nwl + 1; l++)
-            {
-                const int N = ucell.atoms[T].l_nchi[l];
-
-                for (int n = 0; n < N; n++)
-                {
-                    if (this->nspin == 4)
-                    {
-                        occ_mat[iat][l][n][0].zero_out();
-                    }
-                    else if (this->nspin == 1 || this->nspin == 2)
-                    {
-                        occ_mat[iat][l][n][0].zero_out();
-                        occ_mat[iat][l][n][1].zero_out();
-                    }
-                }
-            }
-        }
-    }
-    ModuleBase::timer::end("Plus_U_Base", "zero_occ_mat");
+    this->occmat_.zero(ucell, this->orbital_corr);
 }
 
 
 void Plus_U_Base::set_occ_mat(const UnitCell& ucell)
 {
-    ModuleBase::TITLE("Plus_U_Base", "set_occ_mat");
-    ModuleBase::timer::start("Plus_U_Base", "set_occ_mat");
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        if (!has_correlated_orbital(T)) continue;
-        const int l = get_orbital_corr(T);
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-            if (this->nspin == 4)
-            {
-                for(int mm = 0; mm < occ_mat[iat][l][0][0].nr * occ_mat[iat][l][0][0].nc; mm++)
-                    occ_mat[iat][l][0][0].c[mm] = this->uom_array[pot_uterm_pw_index[iat] + mm];
-            }
-            else if (this->nspin == 1 || this->nspin == 2)
-            {
-                const int half_size = this->uom_array.size() / 2;
-                for(int mm = 0; mm < occ_mat[iat][l][0][0].nr * occ_mat[iat][l][0][0].nc; mm++)
-                {
-                    occ_mat[iat][l][0][0].c[mm] = this->uom_array[pot_uterm_pw_index[iat] + mm];
-                    if (this->nspin == 2)
-                    {
-                        occ_mat[iat][l][0][1].c[mm] = this->uom_array[half_size + pot_uterm_pw_index[iat] + mm];
-                    }
-                }
-            }
-        }
-    }
-
-    ModuleBase::timer::end("Plus_U_Base", "set_occ_mat");
+    this->occmat_.read_from_flat(ucell, this->orbital_corr,
+                                 this->pot_uterm_pw_index, this->uom_array);
 }
 
 
 void Plus_U_Base::get_occ_mat_flat(const int iat, const int l, std::vector<double>& occ) const
 {
-    const int tlp1 = 2 * l + 1;
-    const int size = tlp1 * tlp1;
-    if (nspin == 2)
-    {
-        for (int is = 0; is < 2; is++)
-        {
-            for (int i = 0; i < size; i++)
-            {
-                occ[is * size + i] = occ_mat[iat][l][0][is].c[i];
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < static_cast<int>(occ.size()); i++)
-        {
-            occ[i] = occ_mat[iat][l][0][0].c[i];
-        }
-    }
+    this->occmat_.get_flat(iat, l, occ);
 }
 
 
 void Plus_U_Base::set_occ_mat_flat(const int iat, const int l, const int spin,
                                    const std::vector<double>& occ)
 {
-    for (int i = 0; i < static_cast<int>(occ.size()); i++)
-    {
-        occ_mat[iat][l][0][spin].c[i] = occ[i];
-    }
+    this->occmat_.set_flat(iat, l, spin, occ);
 }
 
 
