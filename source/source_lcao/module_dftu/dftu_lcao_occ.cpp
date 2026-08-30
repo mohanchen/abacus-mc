@@ -3,15 +3,15 @@
 #include "dftu_folding.h"
 #include "source_base/timer.h"
 #include "source_base/module_external/scalapack_connector.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_estate/occ_matrix.h"
+#include "source_io/module_parameter/parameter.h"
 #ifdef __LCAO
 #include "source_lcao/hamilt_lcao.h"
 #endif
 
-// copy_occ_mat(), zero_occ_mat(), set_occ_mat(ucell),
-// get_occ_mat_flat(), set_occ_mat_flat()
-// are now implemented in dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
+// cal_occ_mat_k / cal_occ_mat_gamma take Plus_U& dftu directly and read all
+// occupation-matrix state (occ/save arrays, lookup table, nspin/npol, and the
+// occ_mat_initialized flag) from dftu.occmat() and the Plus_U_Base accessors.
 
 #ifdef __LCAO
 
@@ -23,63 +23,21 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const double& mixing_beta,
                          hamilt::Hamilt<std::complex<double>>* p_ham,
                          const bool gamma_only_local,
-                         const int nspin,
-                         const int npol,
-                         const int nlocal,
-                         const std::string& ks_solver,
-                         const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                         const std::vector<int>& orbital_corr,
-                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
-                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                         bool& occ_mat_initialized)
+                         Plus_U& dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_k");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_k");
 
-    // copy occ_mat to occ_mat_save
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        int target_l = orbital_corr[T];
-        if (target_l == -1) continue;
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-            if (nspin == 4)
-            {
-                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
-            }
-            else if (nspin == 1 || nspin == 2)
-            {
-                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
-                occ_mat_save[iat][target_l][0][1] = occ_mat[iat][target_l][0][1];
-            }
-        }
-    }
-    // zero occ_mat
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        if (orbital_corr[T] == -1) continue;
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-            for (int l = 0; l < ucell.atoms[T].nwl + 1; l++)
-            {
-                const int N = ucell.atoms[T].l_nchi[l];
-                for (int n = 0; n < N; n++)
-                {
-                    if (nspin == 4)
-                    {
-                        occ_mat[iat][l][n][0].zero_out();
-                    }
-                    else if (nspin == 1 || nspin == 2)
-                    {
-                        occ_mat[iat][l][n][0].zero_out();
-                        occ_mat[iat][l][n][1].zero_out();
-                    }
-                }
-            }
-        }
-    }
+    const int nspin = dftu.occmat().nspin();
+    const int npol = dftu.occmat().npol();
+    const int nlocal = pv->get_global_row_size();
+    const std::string& ks_solver = PARAM.inp.ks_solver;
+    const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
+    const std::vector<int>& orbital_corr = dftu.get_orbital_corr_vec();
+
+    // copy occ_mat to occ_mat_save, then zero occ_mat
+    dftu.occmat().copy_to_save(ucell, orbital_corr);
+    dftu.occmat().zero(ucell, orbital_corr);
 
     //=================Part 1======================
     // call SCALAPACK routine to calculate the product of the S and density matrix
@@ -161,6 +119,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                         }
 
                         // Calculate the local occupation number matrix
+                        ModuleBase::matrix& occ = dftu.occmat().mat(iat, l, n, spin);
                         for (int m0 = 0; m0 < 2 * l + 1; m0++)
                         {
                             for (int ipol0 = 0; ipol0 < npol; ipol0++)
@@ -185,12 +144,12 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
                                         if ((nu >= 0) && (mu >= 0))
                                         {
-                                            occ_mat[iat][l][n][spin](m0_all, m1_all) += (srho[irc]).real() / 4.0;
+                                            occ(m0_all, m1_all) += (srho[irc]).real() / 4.0;
                                         }
 
                                         if ((nu_prime >= 0) && (mu_prime >= 0))
                                         {
-                                            occ_mat[iat][l][n][spin](m0_all, m1_all)
+                                            occ(m0_all, m1_all)
                                                 += (std::conj(srho[irc_prime])).real() / 4.0;
                                         }
                                     } // ipol1
@@ -238,9 +197,10 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 #ifdef __MPI
                     if (nspin == 1 || nspin == 4)
                     {
-                        ModuleBase::matrix temp(occ_mat[iat][l][n][0]);
+                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
+                        ModuleBase::matrix temp(occ0);
                         MPI_Allreduce(&temp(0, 0),
-                                      &occ_mat[iat][l][n][0](0, 0),
+                                      &occ0(0, 0),
                                       (2 * l + 1) * npol * (2 * l + 1) * npol,
                                       MPI_DOUBLE,
                                       MPI_SUM,
@@ -248,17 +208,19 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                     }
                     else if (nspin == 2)
                     {
-                        ModuleBase::matrix temp0(occ_mat[iat][l][n][0]);
+                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
+                        ModuleBase::matrix temp0(occ0);
                         MPI_Allreduce(&temp0(0, 0),
-                                      &occ_mat[iat][l][n][0](0, 0),
+                                      &occ0(0, 0),
                                       (2 * l + 1) * (2 * l + 1),
                                       MPI_DOUBLE,
                                       MPI_SUM,
                                       MPI_COMM_WORLD);
 
-                        ModuleBase::matrix temp1(occ_mat[iat][l][n][1]);
+                        ModuleBase::matrix& occ1 = dftu.occmat().mat(iat, l, n, 1);
+                        ModuleBase::matrix temp1(occ1);
                         MPI_Allreduce(&temp1(0, 0),
-                                      &occ_mat[iat][l][n][1](0, 0),
+                                      &occ1(0, 0),
                                       (2 * l + 1) * (2 * l + 1),
                                       MPI_DOUBLE,
                                       MPI_SUM,
@@ -269,19 +231,28 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                     switch (nspin)
                     {
                     case 1:
-                        occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
-                        occ_mat[iat][l][n][0] *= 0.5;
-                        occ_mat[iat][l][n][1] += occ_mat[iat][l][n][0];
+                    {
+                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
+                        occ0 += transpose(occ0);
+                        occ0 *= 0.5;
+                        dftu.occmat().mat(iat, l, n, 1) += occ0;
                         break;
+                    }
 
                     case 2:
                         for (int is = 0; is < nspin; is++)
-                            occ_mat[iat][l][n][is] += transpose(occ_mat[iat][l][n][is]);
+                        {
+                            ModuleBase::matrix& occ_is = dftu.occmat().mat(iat, l, n, is);
+                            occ_is += transpose(occ_is);
+                        }
                         break;
 
                     case 4:
-                        occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
+                    {
+                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
+                        occ0 += transpose(occ0);
                         break;
+                    }
 
                     default:
                         std::cout << "Not supported NSPIN parameter" << std::endl;
@@ -292,12 +263,13 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
         } // end ia
     } // end it
 
-    if(PARAM.inp.mixing_dftu && occ_mat_initialized)
+    if(PARAM.inp.mixing_dftu && dftu.is_occ_mat_initialized())
     {
-        elecstate::mix_occ_with_save(occ_mat, occ_mat_save, ucell, orbital_corr, nspin, mixing_beta);
+        elecstate::mix_occ_with_save(dftu.occmat().data(), dftu.occmat().data_save(),
+                                     ucell, orbital_corr, nspin, mixing_beta);
     }
 
-    occ_mat_initialized = true;
+    dftu.mark_occ_mat_initialized();
     ModuleBase::timer::end("DFTU_LCAO", "cal_occ_mat_k");
     return;
 }
@@ -308,61 +280,20 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const std::vector<std::vector<double>> &dm_gamma,
                              const double& mixing_beta,
                              hamilt::Hamilt<double>* p_ham,
-                             const int nspin,
-                             const int npol,
-                             const int nlocal,
-                             const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                             const std::vector<int>& orbital_corr,
-                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
-                         std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                         bool& occ_mat_initialized)
+                             Plus_U& dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_gamma");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_gamma");
-    // copy occ_mat to occ_mat_save
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        int target_l = orbital_corr[T];
-        if (target_l == -1) continue;
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-            if (nspin == 4)
-            {
-                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
-            }
-            else if (nspin == 1 || nspin == 2)
-            {
-                occ_mat_save[iat][target_l][0][0] = occ_mat[iat][target_l][0][0];
-                occ_mat_save[iat][target_l][0][1] = occ_mat[iat][target_l][0][1];
-            }
-        }
-    }
-    // zero occ_mat
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        if (orbital_corr[T] == -1) continue;
-        for (int I = 0; I < ucell.atoms[T].na; I++)
-        {
-            const int iat = ucell.itia2iat(T, I);
-            for (int l = 0; l < ucell.atoms[T].nwl + 1; l++)
-            {
-                const int N = ucell.atoms[T].l_nchi[l];
-                for (int n = 0; n < N; n++)
-                {
-                    if (nspin == 4)
-                    {
-                        occ_mat[iat][l][n][0].zero_out();
-                    }
-                    else if (nspin == 1 || nspin == 2)
-                    {
-                        occ_mat[iat][l][n][0].zero_out();
-                        occ_mat[iat][l][n][1].zero_out();
-                    }
-                }
-            }
-        }
-    }
+
+    const int nspin = dftu.occmat().nspin();
+    const int npol = dftu.occmat().npol();
+    const int nlocal = pv->get_global_row_size();
+    const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
+    const std::vector<int>& orbital_corr = dftu.get_orbital_corr_vec();
+
+    // copy occ_mat to occ_mat_save, then zero occ_mat
+    dftu.occmat().copy_to_save(ucell, orbital_corr);
+    dftu.occmat().zero(ucell, orbital_corr);
 
     //=================Part 1======================
     // call PBLAS routine to calculate the product of the S and density matrix
@@ -428,6 +359,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                         }
 
                         // Calculate the local occupation number matrix
+                        ModuleBase::matrix& occ_is = dftu.occmat().mat(iat, l, n, is);
                         for (int m0 = 0; m0 < 2 * l + 1; m0++)
                         {
                             for (int ipol0 = 0; ipol0 < npol; ipol0++)
@@ -452,7 +384,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                                             int m0_all = m0 + (2 * l + 1) * ipol0;
                                             int m1_all = m0 + (2 * l + 1) * ipol1;
 
-                                            occ_mat[iat][l][n][is](m0, m1) += srho[irc] / 4.0;
+                                            occ_is(m0, m1) += srho[irc] / 4.0;
                                         }
 
                                         if ((nu_prime >= 0) && (mu_prime >= 0))
@@ -460,18 +392,18 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                                             int m0_all = m0 + (2 * l + 1) * ipol0;
                                             int m1_all = m0 + (2 * l + 1) * ipol1;
 
-                                            occ_mat[iat][l][n][is](m0, m1) += srho[irc_prime] / 4.0;
+                                            occ_is(m0, m1) += srho[irc_prime] / 4.0;
                                         }
                                     }
                                 }
                             }
                         }
 
-                        ModuleBase::matrix temp(occ_mat[iat][l][n][is]);
+                        ModuleBase::matrix temp(occ_is);
 
 #ifdef __MPI
                         MPI_Allreduce(&temp(0, 0),
-                                      &occ_mat[iat][l][n][is](0, 0),
+                                      &occ_is(0, 0),
                                       (2 * l + 1) * npol * (2 * l + 1) * npol,
                                       MPI_DOUBLE,
                                       MPI_SUM,
@@ -482,13 +414,16 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                         switch (nspin)
                         {
                         case 1:
-                            occ_mat[iat][l][n][0] += transpose(occ_mat[iat][l][n][0]);
-                            occ_mat[iat][l][n][0] *= 0.5;
-                            occ_mat[iat][l][n][1] += occ_mat[iat][l][n][0];
+                        {
+                            ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
+                            occ0 += transpose(occ0);
+                            occ0 *= 0.5;
+                            dftu.occmat().mat(iat, l, n, 1) += occ0;
                             break;
+                        }
 
                         case 2:
-                            occ_mat[iat][l][n][is] += transpose(occ_mat[iat][l][n][is]);
+                            occ_is += transpose(occ_is);
                             break;
 
                         default:
@@ -502,12 +437,13 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         } // it
     } // is
 
-    if(PARAM.inp.mixing_dftu && occ_mat_initialized)
+    if(PARAM.inp.mixing_dftu && dftu.is_occ_mat_initialized())
     {
-        elecstate::mix_occ_with_save(occ_mat, occ_mat_save, ucell, orbital_corr, nspin, mixing_beta);
+        elecstate::mix_occ_with_save(dftu.occmat().data(), dftu.occmat().data_save(),
+                                     ucell, orbital_corr, nspin, mixing_beta);
     }
 
-    occ_mat_initialized = true;
+    dftu.mark_occ_mat_initialized();
     ModuleBase::timer::end("DFTU_LCAO", "cal_occ_mat_gamma");
     return;
 }
@@ -527,20 +463,7 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    bool occ_mat_initialized = dftu.is_occ_mat_initialized();
-    DFTU_LCAO::cal_occ_mat_gamma(pv, iter, ucell, dm, mixing_beta, p_ham, nspin,
-                                 ucell.get_npol(), pv->get_global_row_size(), dftu.occmat().iatlnmipol2iwt(),
-                                 dftu.get_orbital_corr_vec(),
-                                 dftu.occmat().data(), dftu.occmat().data_save(),
-                                 occ_mat_initialized);
-    if (occ_mat_initialized)
-    {
-        dftu.mark_occ_mat_initialized();
-    }
-    else
-    {
-        dftu.mark_occ_mat_dirty();
-    }
+    DFTU_LCAO::cal_occ_mat_gamma(pv, iter, ucell, dm, mixing_beta, p_ham, dftu);
 }
 
 //! dftu occupation matrix for multiple k-points using dm(complex)
@@ -556,20 +479,7 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const bool gamma_only_local,
                  const int nspin)
 {
-    bool occ_mat_initialized = dftu.is_occ_mat_initialized();
-    DFTU_LCAO::cal_occ_mat_k(pv, iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, nspin,
-                             ucell.get_npol(), pv->get_global_row_size(), PARAM.inp.ks_solver, dftu.occmat().iatlnmipol2iwt(),
-                             dftu.get_orbital_corr_vec(),
-                             dftu.occmat().data(), dftu.occmat().data_save(),
-                             occ_mat_initialized);
-    if (occ_mat_initialized)
-    {
-        dftu.mark_occ_mat_initialized();
-    }
-    else
-    {
-        dftu.mark_occ_mat_dirty();
-    }
+    DFTU_LCAO::cal_occ_mat_k(pv, iter, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, dftu);
 }
 
 } // namespace DFTU_LCAO
