@@ -38,8 +38,6 @@ void Plus_U::init(UnitCell& cell,
 {
     ModuleBase::TITLE("Plus_U", "init");
 
-    this->yukawa_lambda = yukawa_lambda;
-
 #ifdef __LCAO
     ptr_orb_ = orb;
     if(ptr_orb_ != nullptr)

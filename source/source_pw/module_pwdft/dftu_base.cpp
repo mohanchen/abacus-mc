@@ -54,7 +54,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->nspin = nspin;
     this->orbital_corr = orbital_corr;
-    this->use_yukawa_ = yukawa_potential;
     this->uramping = uramping;
     this->occ_mat_ctrl = occ_mat_ctrl;
     this->mixing_dftu = mixing_dftu;
@@ -178,38 +177,10 @@ void Plus_U_Base::init_base(UnitCell& cell,
     this->uom_array.resize(pot_index, 0.0);
     this->uom_save.resize(pot_index, 0.0);
 
-    if (use_yukawa_)
+    if (yukawa_potential)
     {
         this->yukawa_.reset(new YukawaScreening());
         this->yukawa_->init(cell, orbital_corr, yukawa_lambda);
-
-        this->Fk.resize(cell.ntype);
-
-        this->U_Yukawa.resize(cell.ntype);
-        this->J_Yukawa.resize(cell.ntype);
-
-        for (int it = 0; it < cell.ntype; it++)
-        {
-            const int NL = cell.atoms[it].nwl + 1;
-
-            this->Fk[it].resize(NL);
-            this->U_Yukawa[it].resize(NL);
-            this->J_Yukawa[it].resize(NL);
-
-            for (int l = 0; l < NL; l++)
-            {
-                int N = cell.atoms[it].l_nchi[l];
-
-                this->Fk[it][l].resize(N);
-                for (int n = 0; n < N; n++)
-                {
-                    this->Fk[it][l][n].resize(l + 1, 0.0);
-                }
-
-                this->U_Yukawa[it][l].resize(N, 0.0);
-                this->J_Yukawa[it][l].resize(N, 0.0);
-            }
-        }
     }
 
     if (occ_mat_ctrl != 0)
@@ -252,7 +223,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 void Plus_U_Base::uramping_update()
 {
     // Yukawa calculates U directly every iteration, no need for ramping
-    if (use_yukawa_) {
+    if (use_yukawa()) {
         return;
     }
     // if uramping < 0.1, use the original U
@@ -277,7 +248,7 @@ void Plus_U_Base::uramping_update()
 bool Plus_U_Base::u_converged()
 {
     // Yukawa calculates U directly every iteration, always considered converged
-    if (use_yukawa_) {
+    if (use_yukawa()) {
         return true;
     }
     for (int i = 0; i < static_cast<int>(this->u_target.size()); i++)

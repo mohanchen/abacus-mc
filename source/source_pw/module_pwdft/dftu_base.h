@@ -60,19 +60,12 @@ class Plus_U_Base
     double get_uramping() const { return uramping; }
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
     int get_cal_type() const { return cal_type; }
-    bool use_yukawa() const { return use_yukawa_; }
+    bool use_yukawa() const { return yukawa_ != nullptr; }
 
-    /// access the Yukawa screening object (non-null only when use_yukawa_)
+    /// access the Yukawa screening object (non-null only when use_yukawa())
     YukawaScreening& yukawa() { return *yukawa_; }
     const YukawaScreening& yukawa() const { return *yukawa_; }
 
-    double get_U_Yukawa(int it, int l, int n) const { return U_Yukawa[it][l][n]; }
-    double get_J_Yukawa(int it, int l, int n) const { return J_Yukawa[it][l][n]; }
-    void set_U_Yukawa(int it, int l, int n, double val) { U_Yukawa[it][l][n] = val; }
-    void set_J_Yukawa(int it, int l, int n, double val) { J_Yukawa[it][l][n] = val; }
-    double get_lambda() const { return lambda; }
-    void set_lambda(double l) { lambda = l; }
-    std::vector<std::vector<std::vector<std::vector<double>>>>& get_Fk_data() { return Fk; }
     void set_u_current(int it, double val) { u_current[it] = val; }
 
     double get_energy() const { return energy_u; }
@@ -166,7 +159,6 @@ class Plus_U_Base
     int occ_mat_ctrl = 0;
     int mixing_dftu = 0;
     int nspin = 0;
-    bool use_yukawa_ = false;
 
     // --- State flags ---
     // dftu can be calculated only after occ_mat has been initialized
@@ -213,15 +205,8 @@ class Plus_U_Base
     std::vector<double> uom_array;
     std::vector<double> uom_save;
 
-    // Yukawa-related members (base part, no LCAO dependency)
-    double lambda = 0.0;
-    std::vector<std::vector<std::vector<std::vector<double>>>> Fk;
-    std::vector<std::vector<std::vector<double>>> U_Yukawa;
-    std::vector<std::vector<std::vector<double>>> J_Yukawa;
-
-    // Yukawa screening object; constructed only when use_yukawa_ is true.
-    // Owns the screening length, Slater integrals and derived U/J going
-    // forward; the legacy members above are kept in sync until removed.
+    // Yukawa screening object; constructed only when use_yukawa() is true.
+    // Owns the screening length, Slater integrals and derived U/J.
     std::unique_ptr<YukawaScreening> yukawa_;
 };
 

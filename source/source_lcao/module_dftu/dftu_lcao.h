@@ -49,8 +49,6 @@ class Plus_U : public Plus_U_Base
 
   private:
 
-    double yukawa_lambda = 0.0;
-
 #ifdef __LCAO
     const LCAO_Orbitals* ptr_orb_ = nullptr;
     std::vector<double> orb_cutoff_;
@@ -90,7 +88,6 @@ class Plus_U : public Plus_U_Base
 
     /// read-only accessors for state needed by DFTU_LCAO free functions
     const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
-    double get_yukawa_lambda() const { return yukawa_lambda; }
     const LCAO_Orbitals* get_ptr_orb() const { return ptr_orb_; }
 
   private:
