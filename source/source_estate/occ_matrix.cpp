@@ -301,3 +301,44 @@ void OccupationMatrix::write_save_to_flat(const UnitCell& cell,
         }
     }
 }
+
+namespace elecstate
+{
+
+/// occ = beta * occ + (1-beta) * occ_save, applied to the correlated orbital
+/// of every atom. nspin-aware: nspin=4 mixes the single Pauli block,
+/// nspin=1/2 mixes both spin channels. Replaces the duplicated LCAO
+/// k/gamma mixing loops.
+void mix_occ_with_save(std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                       const std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                       const UnitCell& cell,
+                       const std::vector<int>& orbital_corr,
+                       const int nspin,
+                       const double beta)
+{
+    for (int T = 0; T < cell.ntype; T++)
+    {
+        const int target_l = orbital_corr[T];
+        if (target_l == -1)
+        {
+            continue;
+        }
+        for (int I = 0; I < cell.atoms[T].na; I++)
+        {
+            const int iat = cell.itia2iat(T, I);
+            const int nchan = (nspin == 4) ? 1 : 2;
+            for (int is = 0; is < nchan; is++)
+            {
+                ModuleBase::matrix& occ = occ_mat[iat][target_l][0][is];
+                const ModuleBase::matrix& occ_save = occ_mat_save[iat][target_l][0][is];
+                const int size = occ.nr * occ.nc;
+                for (int mm = 0; mm < size; mm++)
+                {
+                    occ.c[mm] = occ.c[mm] * beta + occ_save.c[mm] * (1.0 - beta);
+                }
+            }
+        }
+    }
+}
+
+} // namespace elecstate

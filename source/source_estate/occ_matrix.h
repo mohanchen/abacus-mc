@@ -113,4 +113,17 @@ class OccupationMatrix
     int npol_ = 0;
 };
 
+namespace elecstate
+{
+/// occ = beta * occ + (1-beta) * occ_save on every atom's correlated orbital.
+/// nspin-aware: nspin=4 mixes the single Pauli block, nspin=1/2 mixes both
+/// spin channels. Replaces the duplicated LCAO k/gamma mixing loops.
+void mix_occ_with_save(std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
+                       const std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
+                       const UnitCell& cell,
+                       const std::vector<int>& orbital_corr,
+                       const int nspin,
+                       const double beta);
+} // namespace elecstate
+
 #endif

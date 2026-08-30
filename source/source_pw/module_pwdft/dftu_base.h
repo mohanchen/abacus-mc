@@ -146,10 +146,6 @@ class Plus_U_Base
     std::string device;
     int kpar = 1;
 
-    void copy_occ_mat(const UnitCell& ucell);
-    void zero_occ_mat(const UnitCell& ucell);
-    void set_occ_mat(const UnitCell& ucell);
-
     /// accumulate occ_mat from psi for all k-points (per-device template)
     template <typename Device>
     void accumulate_occ_one_k(const void* psi_in,

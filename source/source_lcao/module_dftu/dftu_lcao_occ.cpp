@@ -4,6 +4,7 @@
 #include "source_base/timer.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_io/module_parameter/parameter.h"
+#include "source_estate/occ_matrix.h"
 #ifdef __LCAO
 #include "source_lcao/hamilt_lcao.h"
 #endif
@@ -293,36 +294,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
     if(PARAM.inp.mixing_dftu && occ_mat_initialized)
     {
-        double beta = mixing_beta;
-        for (int T = 0; T < ucell.ntype; T++)
-        {
-            int target_l = orbital_corr[T];
-            if (target_l == -1) continue;
-            for (int I = 0; I < ucell.atoms[T].na; I++)
-            {
-                const int iat = ucell.itia2iat(T, I);
-                if (nspin == 4)
-                {
-                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
-                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                    }
-                }
-                else if (nspin == 1 || nspin == 2)
-                {
-                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
-                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                        occ_mat[iat][target_l][0][1].c[mm] = occ_mat[iat][target_l][0][1].c[mm] * beta
-                            + occ_mat_save[iat][target_l][0][1].c[mm] * (1.0 - beta);
-                    }
-                }
-            }
-        }
+        elecstate::mix_occ_with_save(occ_mat, occ_mat_save, ucell, orbital_corr, nspin, mixing_beta);
     }
 
     occ_mat_initialized = true;
@@ -532,36 +504,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 
     if(PARAM.inp.mixing_dftu && occ_mat_initialized)
     {
-        double beta = mixing_beta;
-        for (int T = 0; T < ucell.ntype; T++)
-        {
-            int target_l = orbital_corr[T];
-            if (target_l == -1) continue;
-            for (int I = 0; I < ucell.atoms[T].na; I++)
-            {
-                const int iat = ucell.itia2iat(T, I);
-                if (nspin == 4)
-                {
-                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
-                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                    }
-                }
-                else if (nspin == 1 || nspin == 2)
-                {
-                    const int size = occ_mat[iat][target_l][0][0].nr * occ_mat[iat][target_l][0][0].nc;
-                    for (int mm = 0; mm < size; mm++)
-                    {
-                        occ_mat[iat][target_l][0][0].c[mm] = occ_mat[iat][target_l][0][0].c[mm] * beta
-                            + occ_mat_save[iat][target_l][0][0].c[mm] * (1.0 - beta);
-                        occ_mat[iat][target_l][0][1].c[mm] = occ_mat[iat][target_l][0][1].c[mm] * beta
-                            + occ_mat_save[iat][target_l][0][1].c[mm] * (1.0 - beta);
-                    }
-                }
-            }
-        }
+        elecstate::mix_occ_with_save(occ_mat, occ_mat_save, ucell, orbital_corr, nspin, mixing_beta);
     }
 
     occ_mat_initialized = true;

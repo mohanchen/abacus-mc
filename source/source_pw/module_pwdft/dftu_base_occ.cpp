@@ -32,8 +32,10 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
             const int* isk)
 {
     ModuleBase::timer::start("Plus_U_Base", "cal_occ_pw");
-    this->copy_occ_mat(cell);
-    this->zero_occ_mat(cell);
+    this->occmat_.copy_to_save(cell, this->orbital_corr);
+    this->occmat_.write_save_to_flat(cell, this->orbital_corr,
+                                     this->pot_uterm_pw_index, this->uom_save);
+    this->occmat_.zero(cell, this->orbital_corr);
 
     if(this->device == "cpu")
     {
@@ -54,7 +56,8 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
     if(is_mixing_enabled() && p_chgmix != nullptr)
     {
         p_chgmix->mix_uom(this->uom_array, this->uom_save);
-        this->set_occ_mat(cell);
+        this->occmat_.read_from_flat(cell, this->orbital_corr,
+                                     this->pot_uterm_pw_index, this->uom_array);
     }
 
     this->compute_eff_pot_and_energy(cell);

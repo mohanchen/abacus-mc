@@ -143,7 +143,9 @@ void Plus_U_Base::init_base(UnitCell& cell,
 #endif
 
         mark_occ_mat_initialized();
-        this->copy_occ_mat(cell);
+        this->occmat_.copy_to_save(cell, this->orbital_corr);
+        this->occmat_.write_save_to_flat(cell, this->orbital_corr,
+                                         this->pot_uterm_pw_index, this->uom_save);
     }
     else
     {
@@ -160,7 +162,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
         }
         else
         {
-            this->zero_occ_mat(cell);
+            this->occmat_.zero(cell, this->orbital_corr);
         }
     }
 
@@ -208,28 +210,6 @@ bool Plus_U_Base::u_converged()
         }
     }
     return true;
-}
-
-
-// copy_occ_mat — save current occ to occ_save and uom_save
-void Plus_U_Base::copy_occ_mat(const UnitCell& ucell)
-{
-    this->occmat_.copy_to_save(ucell, this->orbital_corr);
-    this->occmat_.write_save_to_flat(ucell, this->orbital_corr,
-                                     this->pot_uterm_pw_index, this->uom_save);
-}
-
-
-void Plus_U_Base::zero_occ_mat(const UnitCell& ucell)
-{
-    this->occmat_.zero(ucell, this->orbital_corr);
-}
-
-
-void Plus_U_Base::set_occ_mat(const UnitCell& ucell)
-{
-    this->occmat_.read_from_flat(ucell, this->orbital_corr,
-                                 this->pot_uterm_pw_index, this->uom_array);
 }
 
 
