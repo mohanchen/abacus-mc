@@ -1,4 +1,4 @@
-#include "source_pw/module_pwdft/occ_matrix.h"
+#include "source_estate/occ_matrix.h"
 
 #include "source_base/timer.h"
 #include "source_cell/unitcell.h"

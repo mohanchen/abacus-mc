@@ -2,7 +2,7 @@
 #define DFTU_BASE_H
 
 #include "source_base/matrix.h"
-#include "source_pw/module_pwdft/occ_matrix.h"
+#include "source_estate/occ_matrix.h"
 #include "source_pw/module_pwdft/yukawa_screening.h"
 
 #include <complex>

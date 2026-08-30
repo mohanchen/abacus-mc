@@ -17,7 +17,6 @@ list(APPEND objects
     dftu_base_occ.cpp
     dftu_base_tools.cpp
     yukawa_screening.cpp
-    occ_matrix.cpp
     setup_pot.cpp
     setup_pwrho.cpp
     setup_pwwfc.cpp
