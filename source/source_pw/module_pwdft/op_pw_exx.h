@@ -175,6 +175,13 @@ class OperatorEXXPW : public OperatorPW<T, Device>
 
 };
 
+extern template class OperatorEXXPW<std::complex<float>, base_device::DEVICE_CPU>;
+extern template class OperatorEXXPW<std::complex<double>, base_device::DEVICE_CPU>;
+#if ((defined __CUDA) || (defined __ROCM))
+extern template class OperatorEXXPW<std::complex<float>, base_device::DEVICE_GPU>;
+extern template class OperatorEXXPW<std::complex<double>, base_device::DEVICE_GPU>;
+#endif
+
 template <typename Real, typename Device>
 void get_exx_potential(const K_Vectors* kv,
                        const ModulePW::PW_Basis_K* wfcpw,
