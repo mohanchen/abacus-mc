@@ -399,13 +399,16 @@ OBJS_HAMILT_LCAO=hamilt_lcao.o\
     veff_lcao.o\
     veff_dh.o\
     meta_lcao.o\
-    dftu_lcao_op.o\
+    dftu_nao_op.o\
     deepks_lcao.o\
     op_exx_lcao.o\
     dspin_lcao.o\
     dspin_fs.o\
     setup_dftu_lcao.o\
-    dftu_fs.o\
+    dftu_nao_fs_k.o\
+    dftu_nao_for_r.o\
+    dftu_nao_fs_r.o\
+    dftu_nao_str_r.o\
     operator_fs_utils.o\
 
 OBJS_HCONTAINER=base_matrix.o\
@@ -885,14 +888,17 @@ OBJS_VDW=vdw.o\
     vdwd3_autoset_xcname.o\
     vdwd3_auto_xcpar.o
 
-OBJS_DFTU=dftu_lcao.o\
-      dftu_force.o\
+OBJS_DFTU=dftu_nao.o\
+      dftu_nao_fs_k.o\
+      dftu_nao_for_r.o\
+      dftu_nao_fs_r.o\
+      dftu_nao_str_r.o\
       dftu_yukawa.o\
-      dftu_folding.o\
-      dftu_lcao_pots.o\
-      dftu_lcao_energy.o\
-      dftu_lcao_op_legacy.o\
-      dftu_lcao_occ.o\
+      dftu_nao_folding.o\
+      dftu_nao_pots.o\
+      dftu_nao_energy.o\
+      dftu_nao_op_legacy.o\
+      dftu_nao_occ.o\
       dftu_hamilt.o
 
 OBJS_DELTASPIN=basic_funcs.o\
