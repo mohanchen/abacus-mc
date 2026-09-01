@@ -283,6 +283,99 @@ void Parallel_Global::divide_pools(const int& NPROC,
     return;
 }
 
+ProcessTopology Parallel_Global::create_topology(int world_nproc,
+                                                 int my_rank,
+                                                 int kpar,
+                                                 int bndpar,
+                                                 int diag_np,
+                                                 int /*grid_np*/)
+{
+#ifdef __MPI
+    // ---- Build the nproc_in_pool vector (arithmetic, no MPI). ----
+    //
+    // divide_mpi_groups(..., num_groups=kpar, even=false) assigns
+    // the first `extra_procs` groups (extra_procs = world_nproc %
+    // kpar) to size (base+1) and the remaining (kpar-extra_procs)
+    // groups to size base, where base = world_nproc / kpar. No MPI;
+    // build the vector directly.
+    const int base = world_nproc / kpar;
+    const int extra_procs = world_nproc % kpar;
+    std::vector<int> nproc_in_pool(kpar, base);
+    for (int g = 0; g < extra_procs; ++g) { nproc_in_pool[g] = base + 1; }
+
+    // ---- Validation: sum of nproc_in_pool must equal world_nproc. ----
+    {
+        int total = 0;
+        for (int s : nproc_in_pool) { total += s; }
+        if (total != world_nproc)
+        {
+            ModuleBase::WARNING_QUIT("Parallel_Global::create_topology",
+                                     "internal: nproc_in_pool sum differs from world_nproc.");
+        }
+    }
+
+    // ---- Invoke the legacy divide_pools flow: it fills the 6 legacy
+    //      global communicators AND returns scalar int values. ----
+    //
+    // NOTE(mohan): order matters. divide_pools internally calls
+    //   kpar_group .divide_group_comm(KPAR, false);
+    //   bndpar_group.divide_group_comm(BNDPAR, true);
+    //   -> sets POOL_WORLD, KP_WORLD, INT_BGROUP, BP_WORLD.
+    int nproc_in_bndgroup = -1;
+    int rank_in_bpgroup   = -1;
+    int my_bndgroup       = -1;
+    int nproc_in_pool_local = -1; // output alias of bndpar_group.nprocs_in_group
+    int rank_in_pool_local  = -1; // output alias of bndpar_group.rank_in_group
+    int my_pool_local       = -1; // output alias of kpar_group.my_group
+    Parallel_Global::divide_pools(world_nproc, my_rank, bndpar, kpar,
+                                  nproc_in_bndgroup, rank_in_bpgroup, my_bndgroup,
+                                  nproc_in_pool_local, rank_in_pool_local, my_pool_local);
+
+    // ---- split diag / rgrid worlds. ----
+    // These two helpers currently write DIAG_WORLD / GRID_WORLD as a
+    // side effect; they were always called by drivers in the old flow
+    // right after divide_pools, so we fold them into the factory to
+    // centralise all 6 legacy comm + scalar topology construction.
+    //
+    // diag_np == 0 is not meaningful; fall back to 1 so the
+    // even-partition guard in divide_mpi_groups (called inside
+    // split_diag_world / split_grid_world) does not fire on
+    // "num_groups == 0".
+    const int effective_diag_np = (diag_np > 0) ? diag_np : 1;
+    int drank = -1, dsize = -1, dcolor = -1;
+    Parallel_Global::split_diag_world(effective_diag_np, world_nproc, my_rank, drank, dsize, dcolor);
+    int grank = -1, gsize = -1;
+    Parallel_Global::split_grid_world(effective_diag_np, world_nproc, my_rank, grank, gsize);
+
+    return ProcessTopology(world_nproc,
+                           my_rank,
+                           kpar,
+                           my_pool_local,
+                           rank_in_pool_local,
+                           nproc_in_pool,
+                           bndpar,
+                           my_bndgroup,
+                           rank_in_bpgroup,
+                           nproc_in_bndgroup,
+                           POOL_WORLD,      // -> pw_world_comm        (legacy duped handle)
+                           KP_WORLD,        // -> kmesh_world_comm     (KP_WORLD alias back)
+                           INT_BGROUP,      // -> bsame_kdiff_world_comm
+                           BP_WORLD,        // -> bdiff_ksame_world_comm
+                           GRID_WORLD,      // -> rgrid_world_comm
+                           DIAG_WORLD,      // -> diag_world_comm
+                           MPI_COMM_NULL,   // -> matrix_world_comm (caller-filled later)
+                           MPI_COMM_NULL);  // -> atom_world_comm   (caller-filled later)
+#else
+    // Serial / non-MPI fallback: a single-process trivial topology.
+    (void)world_nproc;
+    (void)my_rank;
+    (void)kpar;
+    (void)bndpar;
+    (void)diag_np;
+    return ProcessTopology();
+#endif
+}
+
 void Parallel_Global::divide_mpi_groups(const int& procs,
                                         const int& num_groups,
                                         const int& rank,
@@ -315,7 +408,10 @@ void Parallel_Global::divide_mpi_groups(const int& procs,
     {
         std::cout << "Error: Number of processes (" << procs << ") must be evenly divisible by the number of groups ("
                   << num_groups << " in the even partition case)." << std::endl;
-        exit(1);
+        ModuleBase::WARNING_QUIT(
+            "Parallel_Global::divide_mpi_groups",
+            "Even partition requested but procs is not divisible by num_groups."
+        );
     }
 
     if(rank < extra_procs * (procs_in_group + 1))

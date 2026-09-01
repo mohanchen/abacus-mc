@@ -5,7 +5,7 @@ AddTest(
     LIBS parameter psi device
     SOURCES pw_op_test.cpp
     ../../../../source_base/tool_quit.cpp ../../../../source_base/global_variable.cpp
-    ../../../../source_base/parallel_global.cpp ../../../../source_base/parallel_reduce.cpp
+    ../../../../source_base/parallel_global.cpp ../../../../source_base/parallel_topology.cpp ../../../../source_base/parallel_reduce.cpp
     ../../../../source_base/parallel_comm.cpp
     ../../../../source_base/complexmatrix.cpp ../../../../source_base/matrix.cpp ../../../../source_base/memory_recorder.cpp
     ../../../../source_base/libm/branred.cpp ../../../../source_base/libm/sincos.cpp

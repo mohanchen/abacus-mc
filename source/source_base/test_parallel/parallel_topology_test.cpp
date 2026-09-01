@@ -308,4 +308,162 @@ TEST(ProcessTopology, ConstructAndAccessors)
 #endif
 }
 
+// Integration: Parallel_Global::create_topology builds a real topology
+// on a live MPI_COMM_WORLD. This test is only meaningful when run via
+// mpirun with exactly 4 ranks.
+TEST(ParallelGlobalCreateTopology, FourRanksKpar2Bndpar2DiagNp2)
+{
+    int world_size = 1;
+    int world_rank = 0;
+#ifdef __MPI
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+#endif
+    if (world_size != 4)
+    {
+        GTEST_SKIP() << "create_topology integration case requires exactly 4 MPI ranks (got "
+                     << world_size << ").";
+    }
+    const int kpar = 2;
+    const int bndpar = 2;
+    const int diag_np = 2;
+    const int grid_np = 2; // reserved; topology today derives rgrid from diag_np
+    const ProcessTopology t = Parallel_Global::create_topology(
+        world_size, world_rank, kpar, bndpar, diag_np, grid_np);
+
+    // ---- scalar invariants (same for every rank) -------------------
+    EXPECT_EQ(t.world_size(), 4);
+    EXPECT_EQ(t.world_rank(), world_rank);
+    EXPECT_EQ(t.kpar(), 2);
+    EXPECT_EQ(t.bndpar(), 2);
+    EXPECT_EQ(t.bndpar() * t.nproc_in_band_group(), t.world_size());
+
+    // 4 ranks, KPAR=2 (even=false): nproc_in_pool = {2, 2}
+    ASSERT_EQ(static_cast<int>(t.nproc_in_pool().size()), 2);
+    EXPECT_EQ(t.nproc_in_pool(0), 2);
+    EXPECT_EQ(t.nproc_in_pool(1), 2);
+    EXPECT_EQ(t.pool_root_rank(0), 0);
+    EXPECT_EQ(t.pool_root_rank(1), 2);
+
+    // BNDPAR=2 (even=true) in each pool of 2 procs -> each bg gets 1 proc
+    // Global union bg size = kpar*1 = 2 = nproc_in_band_group
+    EXPECT_EQ(t.nproc_in_band_group(), 2);
+    EXPECT_EQ(t.band_group_root_rank(0), 0);
+    EXPECT_EQ(t.band_group_root_rank(1), 2); // band_group * nproc_in_band_group = 1 * 2
+
+    // ---- per-rank local values -------------------------------------
+    // World ranks 0..3, KPAR=2 (even=false) -> pools {0: {0,1}, 1: {2,3}}.
+    // BNDPAR=2 even split inside each pool -> for a pool of size 2,
+    // each band-group receives exactly 1 process (nprocs_in_group =
+    // pool_size / bndpar = 1). Therefore within every pool the
+    // bndpar-group rank_in_group is always 0 for whichever
+    // band-group the rank belongs to, and NPROC_IN_POOL (aka the
+    // band-group slice size per pool) equals 1 globally across all
+    // 4 ranks.
+    //
+    // Per-rank expected (verified by factory stdout against real
+    // divide_pools run on R0..R3):
+    //   wr | pool | rank_in_pool | band_group | rank_in_band_group
+    //    0 |   0  |       0      |     0      | pool*1 + 0 = 0
+    //    1 |   0  |       0      |     1      | pool*1 + 0 = 0
+    //    2 |   1  |       0      |     0      | pool*1 + 0 = 1
+    //    3 |   1  |       0      |     1      | pool*1 + 0 = 1
+    const int expected_pool = (world_rank < 2) ? 0 : 1;
+    const int expected_band_group = world_rank % 2; // bndpar even slices by world order inside pool
+    const int expected_rank_in_pool = 0; // 1 process per (pool, band-group) tile
+    const int expected_rk_in_bg = expected_pool * 1 + 0; // formula with nproc_per_bg_in_pool = 1
+
+    EXPECT_EQ(t.my_pool(), expected_pool);
+    EXPECT_EQ(t.rank_in_pool(), expected_rank_in_pool);
+    EXPECT_EQ(t.my_band_group(), expected_band_group);
+    EXPECT_EQ(t.rank_in_band_group(), expected_rk_in_bg);
+
+#ifdef __MPI
+    // ---- communicator sizes / memberships --------------------------
+    int size = -1;
+    int rk = -1;
+    // pw_world_comm : (same pool, same band group) intersection of
+    // 2x2 = 4 total PW tiles -> singleton size 1 each
+    ASSERT_NE(t.pw_world_comm(), MPI_COMM_NULL);
+    MPI_Comm_size(t.pw_world_comm(), &size);
+    MPI_Comm_rank(t.pw_world_comm(), &rk);
+    EXPECT_EQ(size, 1);
+    EXPECT_EQ(rk, 0);
+
+    // kmesh_world_comm (KP_WORLD inter_comm bridge): non-null only on
+    // ranks where rank_in_pool == 0 (pool 0 rank 0 = wr 0; pool 1 rank 0
+    // = wr 2) -> size 2 on those ranks, MPI_COMM_NULL otherwise.
+    if (t.rank_in_pool() == 0)
+    {
+        ASSERT_NE(t.kmesh_world_comm(), MPI_COMM_NULL);
+        MPI_Comm_size(t.kmesh_world_comm(), &size);
+        MPI_Comm_rank(t.kmesh_world_comm(), &rk);
+        EXPECT_EQ(size, kpar);
+        EXPECT_EQ(rk, t.my_pool()); // key order in inter_comm = my_group
+    }
+    else
+    {
+        EXPECT_EQ(t.kmesh_world_comm(), MPI_COMM_NULL);
+    }
+
+    // bsame_kdiff_world_comm (INT_BGROUP): same band group across all pools
+    // size = kpar * nproc_per_pool_per_bg = 2 * 1 = 2
+    ASSERT_NE(t.bsame_kdiff_world_comm(), MPI_COMM_NULL);
+    MPI_Comm_size(t.bsame_kdiff_world_comm(), &size);
+    MPI_Comm_rank(t.bsame_kdiff_world_comm(), &rk);
+    EXPECT_EQ(size, 2);
+    EXPECT_EQ(rk, t.rank_in_band_group()); // matches expected_rk_in_bg
+
+    // bdiff_ksame_world_comm (BP_WORLD duped): same pool, same
+    // rank_in_pool (i.e. rank_in_band_group value) pairs. With 2 bg in
+    // 1 pool of 2 processes, each BP_WORLD subgroup also has size 2.
+    ASSERT_NE(t.bdiff_ksame_world_comm(), MPI_COMM_NULL);
+    MPI_Comm_size(t.bdiff_ksame_world_comm(), &size);
+    MPI_Comm_rank(t.bdiff_ksame_world_comm(), &rk);
+    EXPECT_EQ(size, bndpar);
+    EXPECT_EQ(rk, t.my_band_group());
+
+    // rgrid_world_comm (GRID_WORLD): diag_np=2 groups, even=false -> 2+2
+    ASSERT_NE(t.rgrid_world_comm(), MPI_COMM_NULL);
+    MPI_Comm_size(t.rgrid_world_comm(), &size);
+    EXPECT_EQ(size, world_size / diag_np); // 4/2 = 2
+
+    // diag_world_comm (DIAG_WORLD): diag_np=2, divide_mpi_groups over
+    // nproc=4 groups=2 even=false -> groups {0,1} {2,3}; color = rank's
+    // in-group rank. All 4 ranks take part in MPI_Comm_split with
+    // their color so there are diag_np different DIAG_WORLD subgroups
+    // each of size diag_np = 2 (colors 0 & 1 both have 2 members:
+    // color 0 from {wr 0, 2}; color 1 from {wr 1, 3}).
+    ASSERT_NE(t.diag_world_comm(), MPI_COMM_NULL);
+    MPI_Comm_size(t.diag_world_comm(), &size);
+    MPI_Comm_rank(t.diag_world_comm(), &rk);
+    EXPECT_EQ(size, diag_np); // color 0 and 1 each 2 members
+    EXPECT_GE(rk, 0);
+    EXPECT_LT(rk, size);
+
+    // matrix / atom domains are caller-bound today -> must be null.
+    EXPECT_EQ(t.matrix_world_comm(), MPI_COMM_NULL);
+    EXPECT_EQ(t.atom_world_comm(), MPI_COMM_NULL);
+#endif
+}
+
+int main(int argc, char** argv)
+{
+#ifdef __MPI
+    MPI_Init(&argc, &argv);
+#endif
+    testing::InitGoogleTest(&argc, argv);
+    const int rc = RUN_ALL_TESTS();
+#ifdef __MPI
+    MPI_Finalize();
+#endif
+    return rc;
+}
+#else
+
+// Top-level test binary used when __MPI is not defined: fall back to
+// googletest's default main via link target. This branch is never
+// compiled in the normal unit-test build path because
+// MODULE_BASE_ProcessTopology links only under the __MPI build
+// configuration.
 #endif // __MPI

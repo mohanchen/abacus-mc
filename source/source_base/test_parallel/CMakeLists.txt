@@ -1,13 +1,13 @@
 AddTest(
   TARGET MODULE_BASE_ParaCommon
   LIBS parameter MPI::MPI_CXX
-  SOURCES parallel_common_test.cpp ../global_variable.cpp ../parallel_common.cpp ../parallel_reduce.cpp ../parallel_comm.cpp ../parallel_global.cpp ../tool_quit.cpp ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp
+  SOURCES parallel_common_test.cpp ../global_variable.cpp ../parallel_common.cpp ../parallel_reduce.cpp ../parallel_comm.cpp ../parallel_global.cpp ../parallel_topology.cpp ../tool_quit.cpp ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp
 )
 
 AddTest(
   TARGET MODULE_BASE_ParaGlobal
   LIBS parameter MPI::MPI_CXX
-  SOURCES parallel_global_test.cpp ../global_variable.cpp ../parallel_global.cpp ../parallel_comm.cpp ../tool_quit.cpp  ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp ../parallel_reduce.cpp
+  SOURCES parallel_global_test.cpp ../global_variable.cpp ../parallel_global.cpp ../parallel_comm.cpp ../tool_quit.cpp  ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp ../parallel_reduce.cpp ../parallel_topology.cpp
 )
 
 AddTest(
@@ -19,7 +19,7 @@ AddTest(
 AddTest(
   TARGET MODULE_BASE_ParaReduce
   LIBS parameter MPI::MPI_CXX
-  SOURCES parallel_reduce_test.cpp ../global_variable.cpp ../parallel_global.cpp ../parallel_comm.cpp ../parallel_common.cpp ../parallel_reduce.cpp ../tool_quit.cpp ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp
+  SOURCES parallel_reduce_test.cpp ../global_variable.cpp ../parallel_global.cpp ../parallel_comm.cpp ../parallel_common.cpp ../parallel_reduce.cpp ../tool_quit.cpp ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp ../parallel_topology.cpp
 )
 
 install(FILES parallel_common_test.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

@@ -7,6 +7,7 @@
 #define PARALLEL_GLOBAL_H
 
 #include "parallel_comm.h"
+#include "parallel_topology.h"
 
 namespace Parallel_Global
 {
@@ -18,6 +19,46 @@ extern int omp_number;
 
 // changed from read_mpi_parameters in 2024-1018
 void read_pal_param(int argc, char** argv, int& NPROC, int& NTHREAD_PER_PROC, int& MY_RANK);
+
+/**
+ * @brief Build a ProcessTopology snapshot for the given parallel parameters.
+ *
+ * This is the single factory that knows how to:
+ *   * split MPI_COMM_WORLD into KPAR k-pools via divide_group_comm(even=false);
+ *   * split each pool into BNDPAR band groups via divide_group_comm(even=true);
+ *   * derive INT_BGROUP (bsame_kdiff_world) / BP_WORLD (bdiff_ksame_world);
+ *   * split diag_np-based DIAG_WORLD and diag_np-grouped GRID_WORLD.
+ *
+ * The returned ProcessTopology::pw_world_comm (previously POOL_WORLD) is the
+ * smallest PW tile: the intersection of one k-pool and one band-group.
+ *
+ * matrix_world_comm and atom_world_comm are left as MPI_COMM_NULL in the
+ * returned value; callers that know which distributed view is required for
+ * a given step (Parallel_2D / Parallel_Orbitals / DomainDecomposition) are
+ * expected to fill them in from the appropriate view before passing the
+ * topology down.
+ *
+ * Note: The factory is only available under __MPI. The non-MPI build path
+ * uses the default ProcessTopology constructor which already produces the
+ * single-process trivial topology.
+ *
+ * @param[in] world_nproc Size of MPI_COMM_WORLD
+ * @param[in] my_rank    Rank in MPI_COMM_WORLD
+ * @param[in] kpar       KPAR   from INPUT (k-point parallelism)
+ * @param[in] bndpar     BNDPAR from INPUT (band  parallelism)
+ * @param[in] diag_np    Number of diag worlds (also serves as group count
+ *                       for the real-space grid world: GRID_WORLD groups are
+ *                       the contiguous blocks produced by split_grid_world).
+ * @param[in] grid_np    Reserved; currently the real-space grid world is
+ *                       tied to diag_np via split_grid_world(diag_np, ...).
+ */
+ProcessTopology create_topology(int world_nproc,
+                                int my_rank,
+                                int kpar,
+                                int bndpar,
+                                int diag_np,
+                                int grid_np);
+
 
 /**-------------------------------------------
  * call to split the "diago world"
