@@ -291,11 +291,17 @@ void OccupationMatrix::write_save_to_flat(const UnitCell& cell,
             }
             else if (nspin_ == 1 || nspin_ == 2)
             {
-                const int half_size = uom_save.size() / 2;
                 for (int mm = 0; mm < size; mm++)
                 {
                     uom_save[index[iat] + mm] = occ_[iat][target_l][0][0].c[mm];
-                    uom_save[half_size + index[iat] + mm] = occ_[iat][target_l][0][1].c[mm];
+                }
+                if (nspin_ == 2)
+                {
+                    const int half_size = uom_save.size() / 2;
+                    for (int mm = 0; mm < size; mm++)
+                    {
+                        uom_save[half_size + index[iat] + mm] = occ_[iat][target_l][0][1].c[mm];
+                    }
                 }
             }
         }
