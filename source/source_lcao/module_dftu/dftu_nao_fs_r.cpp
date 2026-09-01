@@ -27,7 +27,7 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
     }
 
     // try to get the density matrix, if the density matrix is empty, skip the calculation and return
-    const hamilt::HContainer<double>* dmR_tmp[dftu_op->get_nspin()];
+    std::vector<const hamilt::HContainer<double>*> dmR_tmp(dftu_op->get_nspin(), nullptr);
     dmR_tmp[0] = dftu_op->get_dftu()->get_dmr(0);
 
     if (dftu_op->get_nspin() == 2)
@@ -181,7 +181,7 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
                     ModuleBase::Vector3<int> R_vector(R_index2[0] - R_index1[0],
                                                       R_index2[1] - R_index1[1],
                                                       R_index2[2] - R_index1[2]);
-                    const hamilt::BaseMatrix<double>* tmp[dftu_op->get_nspin()];
+                    std::vector<const hamilt::BaseMatrix<double>*> tmp(dftu_op->get_nspin(), nullptr);
                     tmp[0] = dmR_tmp[0]->find_matrix(iat1, iat2, R_vector[0], R_vector[1], R_vector[2]);
                     if (dftu_op->get_nspin() == 2)
                     {
@@ -195,7 +195,7 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
                         {
                             cal_for_IJR_nao_r(dftu_op, iat1, iat2, pv,
                                             nlm_tot[ad1], nlm_tot[ad2],
-                                            pot_onsite, tmp, dftu_op->get_nspin(),
+                                            pot_onsite, tmp.data(), dftu_op->get_nspin(),
                                             force_tmp1, force_tmp2);
                         }
 
@@ -204,7 +204,7 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
                         {
                             cal_str_IJR_nao_r(dftu_op, iat1, iat2, pv,
                                              nlm_tot[ad1], nlm_tot[ad2],
-                                             pot_onsite, tmp, dftu_op->get_nspin(),
+                                             pot_onsite, tmp.data(), dftu_op->get_nspin(),
                                              dis1, dis2, stress_local.data());
                         }
                     }
