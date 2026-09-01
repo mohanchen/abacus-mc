@@ -12,16 +12,45 @@
  *
  * Replaces the six raw-global MPI_Comm (POOL_WORLD / KP_WORLD /
  * INT_BGROUP / BP_WORLD / GRID_WORLD / DIAG_WORLD) together with the
- * associated pool / band-group rank & size info from GlobalV.
- * Values captured at construction time; the object is copyable
- * (value semantics) and exposes no mutable workflow switches.
+ * associated pool / band-group rank & size info from GlobalV, and
+ * also exposes explicit handles for two long-implicit domains:
  *
+ *   - matrix_world_comm: communicator backing the 2D block-cyclic
+ *     BLACS grid used by Parallel_2D / Parallel_Orbitals to lay out
+ *     distributed H/S/projector matrices. Historically callers chose
+ *     pw_world / diag_world / MPI_COMM_WORLD ad-hoc; here we give the
+ *     concept a first-class name so call sites inject the appropriate
+ *     view explicitly in step 2.
+ *   - atom_world_comm : communicator backing the 3D Cartesian domain
+ *     decomposition used by the MD / neighlist
+ *     DomainDecomposition to distribute atoms spatially. Today the
+ *     concrete communicator is always MPI_COMM_WORLD (wrapped via the
+ *     CommunicationDomain thin shell in parallel_cell.h).
+ *
+ * All 8 communicator handles share the consistent `_world_comm`
+ * suffix. The pair (bdiff_ksame_world, bsame_kdiff_world) is named
+ * directly after the relation between band side and k side:
+ *
+ *   bdiff_ksame  ->  band groups differ, k is the same
+ *                    (legacy BP_WORLD, intra-pool cross-band pairs)
+ *   bsame_kdiff  ->  band groups are identical, k differs
+ *                    (legacy INT_BGROUP, intra-band-group union across
+ *                    all k pools)
+ *
+ * Values are captured at construction time; the object is copyable
+ * (value semantics) and exposes no mutable workflow switches.
  * Consumers currently reading the global MPI_Comm / GlobalV fields
  * should migrate to taking a `const ProcessTopology&` from their
  * callers. Parallel_Global::create_topology(...) produces one such
  * instance at startup whose communicators are also aliased back to
  * the legacy globals so existing code keeps working during the
  * migration.
+ *
+ * matrix_world_comm / atom_world_comm are not derived inside the
+ * topology constructor because the correct choice depends on where
+ * the view is used (LCAO diag, GK diag, MD step, ...). Callers that
+ * need a proper matrix or atom domain are expected to fill in the
+ * handle before passing the topology down to distributed modules.
  */
 class ProcessTopology
 {
@@ -36,6 +65,9 @@ class ProcessTopology
      * All inputs are plain values; GlobalV is never read inside the
      * constructor. Pass MPI_COMM_NULL for communicators that are
      * unused on this rank (same semantics as legacy divide_pools).
+     * matrix_world_comm / atom_world_comm default to MPI_COMM_NULL
+     * and are filled in later by whichever call site knows which
+     * domain view is needed for a given distributed calculation.
      */
     ProcessTopology(int world_nproc_in,
                     int my_rank_in,
@@ -44,17 +76,19 @@ class ProcessTopology
                     int rank_in_pool_in,
                     const std::vector<int>& nproc_in_pool_in,
                     int bndpar_in,
-                    int my_bndgroup_in,
-                    int rank_in_bgroup_in,
-                    int nproc_in_bgroup_in
+                    int my_band_group_in,
+                    int rank_in_band_group_in,
+                    int nproc_in_band_group_in
 #ifdef __MPI
                         ,
-                    MPI_Comm pool_comm_in,
-                    MPI_Comm kp_world_comm_in,
-                    MPI_Comm int_bgroup_comm_in,
-                    MPI_Comm bp_world_comm_in,
-                    MPI_Comm grid_comm_in,
-                    MPI_Comm diag_comm_in
+                    MPI_Comm pw_world_comm_in,
+                    MPI_Comm kmesh_world_comm_in,
+                    MPI_Comm bsame_kdiff_world_comm_in,
+                    MPI_Comm bdiff_ksame_world_comm_in,
+                    MPI_Comm rgrid_world_comm_in,
+                    MPI_Comm diag_world_comm_in,
+                    MPI_Comm matrix_world_comm_in = MPI_COMM_NULL,
+                    MPI_Comm atom_world_comm_in   = MPI_COMM_NULL
 #endif
     );
 
@@ -62,7 +96,7 @@ class ProcessTopology
     int world_size() const { return world_nproc_; }
     int world_rank() const { return my_rank_; }
 
-    // k-point pools -------------------------------------------------
+    // k-point pools --------------------------------------------------
     int kpar() const { return kpar_; }
     int my_pool() const { return my_pool_; }
     int rank_in_pool() const { return rank_in_pool_; }
@@ -71,20 +105,26 @@ class ProcessTopology
     /// World rank of the root (rank 0) of a given pool; -1 on bad index.
     int pool_root_rank(int pool) const;
 
-    // band groups (bndpar) ------------------------------------------
+    // band groups (BNDPAR) ------------------------------------------
     int bndpar() const { return bndpar_; }
-    int my_bndgroup() const { return my_bndgroup_; }
-    int rank_in_bgroup() const { return rank_in_bgroup_; }
-    int nproc_in_bgroup() const { return nproc_in_bgroup_; }
+    int my_band_group() const { return my_band_group_; }
+    int rank_in_band_group() const { return rank_in_band_group_; }
+    int nproc_in_band_group() const { return nproc_in_band_group_; }
+    /// World rank of the root (rank 0) inside a band-group union.
+    /// Uses the same prefix-sum logic as pool_root_rank but over the
+    /// band-group partition of MPI_COMM_WORLD. -1 on invalid index.
+    int band_group_root_rank(int band_group) const;
 
 #ifdef __MPI
-    // communicators -------------------------------------------------
-    MPI_Comm pool_comm() const { return pool_comm_; }
-    MPI_Comm kp_world_comm() const { return kp_world_comm_; }
-    MPI_Comm int_bgroup_comm() const { return int_bgroup_comm_; }
-    MPI_Comm bp_world_comm() const { return bp_world_comm_; }
-    MPI_Comm grid_comm() const { return grid_comm_; }
-    MPI_Comm diag_comm() const { return diag_comm_; }
+    // communicators (consistent `_world_comm` suffix) ---------------
+    MPI_Comm pw_world_comm()       const { return pw_world_comm_; }
+    MPI_Comm kmesh_world_comm()    const { return kmesh_world_comm_; }
+    MPI_Comm bsame_kdiff_world_comm() const { return bsame_kdiff_world_comm_; }
+    MPI_Comm bdiff_ksame_world_comm() const { return bdiff_ksame_world_comm_; }
+    MPI_Comm rgrid_world_comm()    const { return rgrid_world_comm_; }
+    MPI_Comm diag_world_comm()     const { return diag_world_comm_; }
+    MPI_Comm matrix_world_comm()   const { return matrix_world_comm_; }
+    MPI_Comm atom_world_comm()     const { return atom_world_comm_; }
 #endif
 
   private:
@@ -97,17 +137,19 @@ class ProcessTopology
     std::vector<int> nproc_in_pool_;
 
     int bndpar_ = 1;
-    int my_bndgroup_ = 0;
-    int rank_in_bgroup_ = 0;
-    int nproc_in_bgroup_ = 1;
+    int my_band_group_ = 0;
+    int rank_in_band_group_ = 0;
+    int nproc_in_band_group_ = 1;
 
 #ifdef __MPI
-    MPI_Comm pool_comm_ = MPI_COMM_SELF;
-    MPI_Comm kp_world_comm_ = MPI_COMM_NULL;
-    MPI_Comm int_bgroup_comm_ = MPI_COMM_SELF;
-    MPI_Comm bp_world_comm_ = MPI_COMM_NULL;
-    MPI_Comm grid_comm_ = MPI_COMM_NULL;
-    MPI_Comm diag_comm_ = MPI_COMM_NULL;
+    MPI_Comm pw_world_comm_       = MPI_COMM_SELF;
+    MPI_Comm kmesh_world_comm_    = MPI_COMM_NULL;
+    MPI_Comm bsame_kdiff_world_comm_ = MPI_COMM_SELF;
+    MPI_Comm bdiff_ksame_world_comm_ = MPI_COMM_NULL;
+    MPI_Comm rgrid_world_comm_    = MPI_COMM_NULL;
+    MPI_Comm diag_world_comm_     = MPI_COMM_NULL;
+    MPI_Comm matrix_world_comm_   = MPI_COMM_NULL;
+    MPI_Comm atom_world_comm_     = MPI_COMM_NULL;
 #endif
 };
 
