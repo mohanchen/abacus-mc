@@ -281,6 +281,7 @@ OBJS_ELECSTAT=elecstate.o\
     read_orb.o\
     setup_estate_pw.o\
     update_pot.o\
+    occ_matrix.o
 
 OBJS_ELECSTAT_LCAO=elecstate_lcao.o\
       init_dm.o\
