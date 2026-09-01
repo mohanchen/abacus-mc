@@ -57,6 +57,7 @@ add_library(
     parallel_reduce.cpp
     parallel_device.cpp
     parallel_grid.cpp
+    parallel_topology.cpp
     sph_bessel_tf.cpp
     cubic_spline.cpp
     parallel_2d.cpp

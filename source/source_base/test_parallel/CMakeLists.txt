@@ -11,6 +11,12 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_BASE_ProcessTopology
+  LIBS parameter MPI::MPI_CXX
+  SOURCES parallel_topology_test.cpp ../global_variable.cpp ../parallel_global.cpp ../parallel_comm.cpp ../tool_quit.cpp ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp ../parallel_reduce.cpp ../parallel_topology.cpp
+)
+
+AddTest(
   TARGET MODULE_BASE_ParaReduce
   LIBS parameter MPI::MPI_CXX
   SOURCES parallel_reduce_test.cpp ../global_variable.cpp ../parallel_global.cpp ../parallel_comm.cpp ../parallel_common.cpp ../parallel_reduce.cpp ../tool_quit.cpp ../global_file.cpp ../global_function.cpp ../memory_recorder.cpp ../timer.cpp
