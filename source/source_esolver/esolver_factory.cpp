@@ -137,7 +137,7 @@ ESolver* init_esolver(const Input_para& inp)
 {
     // determine type of esolver based on INPUT information
     const std::string esolver_type = determine_type(inp);
-    const bool gamma_only = gamma_only;
+    const bool gamma_only = PARAM.globalv.gamma_only_local;
 
     // initialize the corresponding Esolver child class
     if (esolver_type == "ksdft_pw")
