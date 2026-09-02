@@ -1,4 +1,5 @@
 #include "dfpt_pw.h"
+#include "dfpt_pw_impl.h"
 
 #include "dfpt_hamilt_shift.h"
 #include "dfpt_kq_basis.h"
@@ -22,116 +23,63 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <vector>
 
 namespace ModuleDFPT
 {
 
-class DFPT_PW::Impl
+DFPT_PW::Impl::Impl()
 {
-  public:
-    Impl()
-    {
-    }
-    ~Impl()
-    {
-        delete hamilt_;
-    }
+}
 
-    DFPT_PW_Data data_;
-    DFPT_Pert pert_;
-    DFPT_Stern stern_;
-    DFPT_Rho rho_;
-    DFPT_Phon phon_;
-    DFPT_Q0 q0_;
-    DFPT_Metal metal_;
-    ModuleCell::QList qlist_;
-    DFPT_HamiltShift* hamilt_ = nullptr;
+DFPT_PW::Impl::~Impl()
+{
+}
 
-    psi::Psi<std::complex<double>> gs_psi_;
-    UnitCell* ucell_ = nullptr;
-    ModulePW::PW_Basis* pw_rho_ = nullptr;
-    ModulePW::PW_Basis_K* pw_wfc_ = nullptr;
-    Structure_Factor* sf_ = nullptr;
-    std::vector<double> veff_r_;
-    ModuleBase::matrix wg_;
-    ModuleBase::matrix eig_;
-    const XC_First_Order* xc_ = nullptr;
-    double nelec_ = 0.0;
-    double ecutwfc_ = 0.0;
-    const Plus_U_Base* dftu_ = nullptr;
+bool DFPT_PW::Impl::wired() const
+{
+    return pw_rho_ != nullptr && pw_wfc_ != nullptr;
+}
 
-    ///< occupied states at k+q on the k+q G list, [ik][occ m][igl];
-    /// rebuilt per q (they depend on q and k only)
-    std::vector<std::vector<std::vector<std::complex<double>>>> occ_kq_;
-    ///< remembers the (q_idx, ik) the shifted operator was last cached at
-    int last_q_ = -1;
-    int last_ik_ = -1;
-    std::vector<int> ikq_of_k_;
-
-    int nqx_ = 1, nqy_ = 1, nqz_ = 1;
-    std::string qfile_;
-    double conv_thr_ = 1e-8;
-    int max_iter_ = 100;
-    double mix_beta_ = 0.4;
-
-    bool wired() const
-    {
-        return pw_rho_ != nullptr && pw_wfc_ != nullptr;
-    }
-
-    /// occupied-state projector set at k+q for every k of this q (commensurate
-    /// q: kvec_d[ik] + q must be a k point of the ground-state list mod lattice)
-    void build_occ_kq(int q_idx);
-
-    /// one self-consistent Sternheimer cycle for the displacement (iat, idir)
-    /// at q; returns the achieved density residual (zero when unwired)
-    double solve_displacement(int q_idx, int iat, int idir);
-
-    /// position legs Y^a_{k,v} = P_c x_a|psi_{k,v}> of the q = 0 mesh
-    /// (velocity-rhs Sternheimer solves, one per direction; stashed through
-    /// data as the exact position leg of the screened Born charges)
-    void solve_pos_resp(int q_idx);
-
-    /// E-field SCF response dpsi^E,a of the q = 0 mesh (QE solve_e +
-    /// dfpt_kernel form: fixed point on the rhs -(Y^a + dV_sc^E,a|psi>)
-    /// with the screening assembly of solve_displacement)
-    void solve_efield_resp(int q_idx);
-};
-
-DFPT_PW::DFPT_PW() : pimpl_(new Impl())
+DFPT_PW::DFPT_PW() : pimpl_(std::unique_ptr<Impl>(new Impl()))
 {
 }
 
 DFPT_PW::~DFPT_PW()
 {
-    delete pimpl_;
 }
 
-void DFPT_PW::init(UnitCell& ucell,
-                   const psi::Psi<std::complex<double>>& psi,
-                   ModulePW::PW_Basis* pw_rho,
-                   ModulePW::PW_Basis_K* pw_wfc,
-                   Structure_Factor* sf,
-                   const std::vector<double>& veff_r,
-                   const ModuleBase::matrix& wg,
-                   const ModuleBase::matrix& eig,
-                   const XC_First_Order* xc,
-                   double nelec,
-                   double ecutwfc,
-                   const Plus_U_Base* dftu)
+void DFPT_PW::init(const DFPT_PW_InitContext& ctx)
 {
     ModuleBase::TITLE("DFPT_PW", "init");
     ModuleBase::timer::start("DFPT_PW", "init");
-    pimpl_->ucell_ = &ucell;
-    pimpl_->gs_psi_ = psi;
+    // ctx.{psi,wg,veff_r,eig} are valid non-null pointers even in skeleton
+    // mode: the empty Psi / matrix objects still carry the queryable nk /
+    // nbands / nrxx shape fields consumed by the init helpers; ucell is
+    // always a non-null per the public wrapper (it takes a reference).
+    UnitCell* const ucell = ctx.ucell;
+    const psi::Psi<std::complex<double>>* const psi = ctx.psi;
+    ModulePW::PW_Basis* const pw_rho = ctx.pw_rho;
+    ModulePW::PW_Basis_K* const pw_wfc = ctx.pw_wfc;
+    Structure_Factor* const sf = ctx.sf;
+    const std::vector<double>* const veff_r = ctx.veff_r;
+    const ModuleBase::matrix* const wg = ctx.wg;
+    const ModuleBase::matrix* const eig = ctx.eig;
+    const XC_First_Order* const xc = ctx.xc;
+    const double nelec = ctx.nelec;
+    const double ecutwfc = ctx.ecutwfc;
+    const Plus_U_Base* const dftu = ctx.dftu;
+
+    pimpl_->ucell_ = ucell;
+    pimpl_->gs_psi_ = *psi;
     pimpl_->pw_rho_ = pw_rho;
     pimpl_->pw_wfc_ = pw_wfc;
     pimpl_->sf_ = sf;
-    pimpl_->veff_r_ = veff_r;
-    pimpl_->wg_ = wg;
-    pimpl_->eig_ = eig;
+    pimpl_->veff_r_ = *veff_r;
+    pimpl_->wg_ = *wg;
+    pimpl_->eig_ = *eig;
 
     // Metallic-sampling guard: the Sternheimer/projector flow treats every
     // band as either fully occupied or empty and carries no d(mu)/dtau
@@ -141,20 +89,20 @@ void DFPT_PW::init(UnitCell& ucell,
     // explicitly (C4 defers metallic DFPT); negligible gauss tails
     // (relative weight < 1e-3) are tolerated as the insulator limit.
     const double frac_weight_tol = 1.0e-3; ///< empirical parameter: relative band weight treated as metallic
-    for (int ik = 0; ik < wg.nr; ++ik)
+    for (int ik = 0; ik < wg->nr; ++ik)
     {
-        const double wref = wg(ik, 0);
+        const double wref = (*wg)(ik, 0);
         if (wref <= 0.0)
         {
             continue;
         }
-        for (int ib = 0; ib < wg.nc; ++ib)
+        for (int ib = 0; ib < wg->nc; ++ib)
         {
-            const double rel = wg(ik, ib) / wref;
+            const double rel = (*wg)(ik, ib) / wref;
             if (rel > frac_weight_tol && rel < 1.0 - frac_weight_tol)
             {
                 std::stringstream msg;
-                msg << "fractional band occupation at (ik=" << ik << ", ib=" << ib << ", wg=" << wg(ik, ib)
+                msg << "fractional band occupation at (ik=" << ik << ", ib=" << ib << ", wg=" << (*wg)(ik, ib)
                     << "): metallic DFPT (smearing occupations crossing the"
                        " Fermi level) is not supported; reduce smearing sigma"
                        " or use an insulating k sampling.";
@@ -185,7 +133,7 @@ void DFPT_PW::init(UnitCell& ucell,
     // q points: an explicit q list file overrides the Monkhorst-Pack mesh
     if (!pimpl_->qfile_.empty())
     {
-        pimpl_->qlist_.read_from_file(pimpl_->qfile_, ucell);
+        pimpl_->qlist_.read_from_file(pimpl_->qfile_, *ucell);
         if (pimpl_->qlist_.get_nq() == 0)
         {
             ModuleBase::WARNING_QUIT("DFPT_PW::init", "failed to read the DFPT q-point file: " + pimpl_->qfile_);
@@ -194,20 +142,20 @@ void DFPT_PW::init(UnitCell& ucell,
     else
     {
         std::vector<int> mp_grid = {pimpl_->nqx_, pimpl_->nqy_, pimpl_->nqz_};
-        pimpl_->qlist_.generate_mesh(ucell, ucell.symm, mp_grid, true);
+        pimpl_->qlist_.generate_mesh(*ucell, ucell->symm, mp_grid, true);
     }
 
-    int nq = pimpl_->qlist_.get_nq();
-    int nk = psi.get_nk();
-    int nbands = psi.get_nbands();
-    int npw_max = psi.get_current_ngk();
-    int nrxx = (pw_rho != nullptr) ? pw_rho->nrxx : 0;
-    int nspin = 1;
-    int nat = ucell.nat;
+    const int nq = pimpl_->qlist_.get_nq();
+    const int nk = psi->get_nk();
+    const int nbands = psi->get_nbands();
+    const int npw_max = psi->get_current_ngk();
+    const int nrxx = (pw_rho != nullptr) ? pw_rho->nrxx : 0;
+    const int nspin = 1;
+    const int nat = ucell->nat;
 
     if (pw_rho != nullptr && pw_wfc != nullptr && sf != nullptr)
     {
-        pimpl_->pert_.init(ucell, pw_rho, pw_wfc, *sf);
+        pimpl_->pert_.init(*ucell, pw_rho, pw_wfc, *sf);
         // plain-mixing coefficient: the response Jacobian has strongly
         // negative eigenvalues concentrated on the smallest-G shells (the
         // Coulomb stiffness 4pi/G^2; measured lambda ~ -2.2 on {111}/{200}
@@ -244,15 +192,14 @@ void DFPT_PW::init(UnitCell& ucell,
                 kerker_a2 = parsed;
             }
         }
-        pimpl_->rho_.init({nspin, nrxx, pw_rho, pw_wfc, ucell.G, mix_type, mix_beta, kerker_a2});
-        pimpl_->phon_.init(ucell, pw_rho, &pimpl_->pert_);
-        pimpl_->q0_.init(ucell, pw_rho, pw_wfc, &pimpl_->pert_);
-        delete pimpl_->hamilt_;
-        pimpl_->hamilt_ = new DFPT_HamiltShift(ucell, pw_rho, pw_wfc, veff_r, &pimpl_->pert_);
+        pimpl_->rho_.init({nspin, nrxx, pw_rho, pw_wfc, ucell->G, mix_type, mix_beta, kerker_a2});
+        pimpl_->phon_.init(*ucell, pw_rho, &pimpl_->pert_);
+        pimpl_->q0_.init(*ucell, pw_rho, pw_wfc, &pimpl_->pert_);
+        pimpl_->hamilt_.reset(new DFPT_HamiltShift(*ucell, pw_rho, pw_wfc, *veff_r, &pimpl_->pert_));
     }
     else
     {
-        pimpl_->phon_.init(ucell, nullptr, nullptr);
+        pimpl_->phon_.init(*ucell, nullptr, nullptr);
     }
     pimpl_->data_.init(&pimpl_->qlist_, nk, nbands, npw_max, nrxx, nspin, nat, dftu);
     ModuleBase::timer::end("DFPT_PW", "init");

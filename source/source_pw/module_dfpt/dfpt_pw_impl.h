@@ -1,0 +1,117 @@
+#ifndef DFPT_PW_IMPL_H
+#define DFPT_PW_IMPL_H
+
+#include "dfpt_hamilt_shift.h"
+#include "dfpt_kq_basis.h"
+#include "dfpt_metal.h"
+#include "dfpt_pert.h"
+#include "dfpt_phon.h"
+#include "dfpt_pw.h"
+#include "dfpt_pw_data.h"
+#include "dfpt_q0.h"
+#include "dfpt_rho.h"
+#include "dfpt_stern.h"
+#include "source_base/matrix.h"
+#include "source_base/vector3.h"
+#include "source_cell/qlist.h"
+#include "source_cell/unitcell.h"
+#include "source_psi/psi.h"
+
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace ModulePW
+{
+class PW_Basis;
+class PW_Basis_K;
+} // namespace ModulePW
+
+class Plus_U_Base;
+class Structure_Factor;
+
+namespace ModuleDFPT
+{
+
+class XC_First_Order;
+
+/// Private implementation body of DFPT_PW (opaque in the public header).
+///
+/// Only the constructors / destructor and the outward-facing per-solve
+/// hooks are public; all data members and per-solve helpers are private.
+class DFPT_PW::Impl
+{
+  public:
+    Impl();
+    ~Impl();
+
+    /// occupied-state projector set at k+q for every k of this q
+    /// (commensurate q: kvec_d[ik] + q must be a k point of the
+    /// ground-state list mod lattice)
+    void build_occ_kq(int q_idx);
+
+    /// one self-consistent Sternheimer cycle for the displacement
+    /// (iat, idir) at q; returns the achieved density residual (zero
+    /// when unwired)
+    double solve_displacement(int q_idx, int iat, int idir);
+
+    /// position legs Y^a_{k,v} = P_c x_a|psi_{k,v}> of the q = 0 mesh
+    void solve_pos_resp(int q_idx);
+
+    /// E-field SCF response dpsi^E,a of the q = 0 mesh
+    void solve_efield_resp(int q_idx);
+
+    /// per-iteration assembly of the screened response potential
+    /// v_sc^q = v_Hartree(drho_in) + xc(drho_in) on the shared grid;
+    /// shared by solve_displacement and solve_efield_resp so the
+    /// real-space Hartree+XC add loop is not duplicated
+    void assemble_v_sc(const ModuleBase::Vector3<double>& q_cart,
+                       const std::vector<std::complex<double>>& drho_in_g,
+                       std::vector<std::complex<double>>& v_sc_r) const;
+
+  private:
+    friend class DFPT_PW;
+
+    bool wired() const;
+
+    DFPT_PW_Data data_;
+    DFPT_Pert pert_;
+    DFPT_Stern stern_;
+    DFPT_Rho rho_;
+    DFPT_Phon phon_;
+    DFPT_Q0 q0_;
+    DFPT_Metal metal_;
+    ModuleCell::QList qlist_;
+    std::unique_ptr<DFPT_HamiltShift> hamilt_;
+
+    psi::Psi<std::complex<double>> gs_psi_;
+    UnitCell* ucell_ = nullptr;
+    ModulePW::PW_Basis* pw_rho_ = nullptr;
+    ModulePW::PW_Basis_K* pw_wfc_ = nullptr;
+    Structure_Factor* sf_ = nullptr;
+    std::vector<double> veff_r_;
+    ModuleBase::matrix wg_;
+    ModuleBase::matrix eig_;
+    const XC_First_Order* xc_ = nullptr;
+    double nelec_ = 0.0;
+    double ecutwfc_ = 0.0;
+    const Plus_U_Base* dftu_ = nullptr;
+
+    ///< occupied states at k+q on the k+q G list, [ik][occ m][igl];
+    ///< rebuilt per q (they depend on q and k only)
+    std::vector<std::vector<std::vector<std::complex<double>>>> occ_kq_;
+    ///< remembers the (q_idx, ik) the shifted operator was last cached at
+    int last_q_ = -1;
+    int last_ik_ = -1;
+    std::vector<int> ikq_of_k_;
+
+    int nqx_ = 1, nqy_ = 1, nqz_ = 1;
+    std::string qfile_;
+    double conv_thr_ = 1e-8;
+    int max_iter_ = 100;
+    double mix_beta_ = 0.4;
+};
+
+} // namespace ModuleDFPT
+
+#endif // DFPT_PW_IMPL_H
