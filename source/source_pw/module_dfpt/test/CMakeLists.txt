@@ -41,6 +41,7 @@ AddTest(
 	../dfpt_pw_init.cpp
 	../dfpt_pw_run.cpp
 	../dfpt_pw_solve.cpp
+	../dfpt_pw_q0.cpp
 	../dfpt_pw_data.cpp
 	../dfpt_pert.cpp
 	../dfpt_pert_vkb.cpp

@@ -115,6 +115,30 @@ class DFPT_PW::Impl
                                        int nk,
                                        int nbands);
 
+    // ----- q=0 solve helpers (dfpt_pw_q0.cpp) -----
+    void vel_diag_part(int ik, int a, int nbands, std::vector<std::vector<std::complex<double>>>& vel) const;
+    void vel_nl_per_atom(int ik,
+                         int a,
+                         int it,
+                         int ia,
+                         int nbands,
+                         const std::vector<ModuleBase::Vector3<double>>& gk,
+                         std::vector<std::vector<std::complex<double>>>& vel);
+    void pos_per_band_solve(int ik,
+                            int a,
+                            int nbands,
+                            int lin_max,
+                            double lin_thr,
+                            std::vector<std::vector<std::vector<std::complex<double>>>>& yvec);
+    void efield_per_band_solve(int ik,
+                               int a,
+                               int nbands,
+                               int lin_max,
+                               double lin_thr,
+                               const std::vector<std::vector<std::vector<std::complex<double>>>>& yr,
+                               const std::vector<std::vector<std::complex<double>>>& dv_sc);
+    void stash_dpsi_efield(int q_idx, int a, int nk, int nbands);
+
     bool wired() const;
 
     DFPT_PW_Data data_;
