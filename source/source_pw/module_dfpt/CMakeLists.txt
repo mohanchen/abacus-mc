@@ -4,6 +4,7 @@ set(SOURCES
     dfpt_pw.cpp
     dfpt_pw_init.cpp
     dfpt_pw_run.cpp
+    dfpt_pw_solve.cpp
     dfpt_pw_data.cpp
     dfpt_kq_basis.cpp
     dfpt_pert.cpp

@@ -101,6 +101,20 @@ class DFPT_PW::Impl
     void run_q0_post(int q_idx);
     void run_assemble(int q_idx);
 
+    // ----- solve_displacement helpers (dfpt_pw_solve.cpp) -----
+    double sternheimer_per_band(int ik,
+                                int ib,
+                                const std::vector<std::vector<std::complex<double>>>& dv_sc,
+                                int nbands,
+                                int lin_max,
+                                double lin_thr);
+    void stash_converged_disp_response(int q_idx,
+                                       int iat,
+                                       int idir,
+                                       const std::vector<std::complex<double>>& v_sc_r_last,
+                                       int nk,
+                                       int nbands);
+
     bool wired() const;
 
     DFPT_PW_Data data_;
