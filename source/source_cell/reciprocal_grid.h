@@ -103,8 +103,12 @@ class ReciprocalGrid
      * @param G reciprocal lattice matrix
      * @param R real space lattice matrix
      * @param skpt output string holding the point table
+     * @param ofs_running running-log stream
      */
-    void set_both_kvec(const ModuleBase::Matrix3& G, const ModuleBase::Matrix3& R, std::string& skpt);
+    void set_both_kvec(const ModuleBase::Matrix3& G,
+                       const ModuleBase::Matrix3& R,
+                       std::string& skpt,
+                       std::ofstream& ofs_running);
 
     /// @brief Normalize the weights so that they sum to the spin degeneracy.
     void normalize_wk(const int& degspin);

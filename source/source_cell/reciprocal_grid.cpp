@@ -167,7 +167,10 @@ void ReciprocalGrid::kvec_c2d(const ModuleBase::Matrix3& latvec)
     }
 }
 
-void ReciprocalGrid::set_both_kvec(const ModuleBase::Matrix3& G, const ModuleBase::Matrix3& R, std::string& skpt)
+void ReciprocalGrid::set_both_kvec(const ModuleBase::Matrix3& G,
+                                   const ModuleBase::Matrix3& R,
+                                   std::string& skpt,
+                                   std::ofstream& ofs_running)
 {
     // Re-derive the "which representation was read from file" flags.
     // For auto-generated meshes (k_nkstot == 0) the direct coordinates
@@ -220,7 +223,7 @@ void ReciprocalGrid::set_both_kvec(const ModuleBase::Matrix3& G, const ModuleBas
                                  this->kvec_d[i].z,
                                  this->wk[i]);
     }
-    GlobalV::ofs_running << table << std::endl;
+    ofs_running << table << std::endl;
     if (GlobalV::MY_RANK == 0)
     {
         std::stringstream ss;

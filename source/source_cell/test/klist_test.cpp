@@ -730,28 +730,28 @@ TEST_F(KlistTest, SetBothKvecFlagsFromFile)
     kv->kc_done = false;
     // case 1
     kv->k_nkstot = 0;
-//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
+//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
     EXPECT_TRUE(kv->kd_done);
     EXPECT_TRUE(kv->kc_done);
     // case 2
     kv->k_nkstot = 1;
     kv->k_kword = "D";
-//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
+//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
     EXPECT_TRUE(kv->kd_done);
     EXPECT_TRUE(kv->kc_done);
     // case 3
     kv->k_kword = "C";
-//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
+//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
     EXPECT_TRUE(kv->kc_done);
     EXPECT_TRUE(kv->kd_done);
     // case 4
     GlobalV::ofs_warning.open("klist_tmp_warning_8");
     kv->k_kword = "arbitrary";
-//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
+//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
     GlobalV::ofs_warning.close();
     ifs.open("klist_tmp_warning_8");
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
@@ -772,13 +772,13 @@ TEST_F(KlistTest, SetBothKvec)
     kv->kc_done = false;
     kv->kd_done = true;
     std::string skpt;
-//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
+//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
     EXPECT_TRUE(kv->kc_done);
     kv->kc_done = true;
     kv->kd_done = false;
-//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
+//    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt, GlobalV::ofs_running);
     EXPECT_TRUE(kv->kd_done);
 }
 

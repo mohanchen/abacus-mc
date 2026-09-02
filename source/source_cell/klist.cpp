@@ -145,7 +145,7 @@ void K_Vectors::set(const UnitCell& ucell,
     // Improve k point information
 
     // Complement the coordinates of k point
-    this->set_both_kvec(reciprocal_vec, latvec, skpt2);
+    this->set_both_kvec(reciprocal_vec, latvec, skpt2, ofs);
 
     if (GlobalV::MY_RANK == 0)
     {
