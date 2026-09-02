@@ -209,6 +209,9 @@ int DFPT_PW::Impl::match_commensurate_kq(int ik,
         if (std::abs(kj.x - target.x - rx) < tol && std::abs(kj.y - target.y - ry) < tol
             && std::abs(kj.z - target.z - rz) < tol)
         {
+            dn_out.x = static_cast<int>(rx);
+            dn_out.y = static_cast<int>(ry);
+            dn_out.z = static_cast<int>(rz);
             return j;
         }
     }
