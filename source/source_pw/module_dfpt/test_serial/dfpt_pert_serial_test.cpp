@@ -11,22 +11,17 @@
 // the real serial initgrids/initparameters/setuptransform path on a shared
 // FFT grid, exactly like the production setup_pwrho/setup_pwwfc sequence.
 
-#define private public
-#include "source_cell/atom_pseudo.h"
-#include "source_cell/atom_spec.h"
-#include "source_cell/magnetism.h"
-#include "source_cell/pseudo.h"
-#include "source_cell/qlist.h"
-#include "source_cell/unitcell.h"
-#include "source_pw/module_dfpt/dfpt_pert.h"
-#include "source_pw/module_pwdft/stru_fac.h"
-#undef private
-
 #include "dfpt_serial_fixture.h"
 #include "source_base/constants.h"
 #include "source_base/matrix3.h"
 #include "source_base/vector3.h"
+#include "source_cell/atom_pseudo.h"
+#include "source_cell/atom_spec.h"
+#include "source_cell/qlist.h"
+#include "source_cell/unitcell.h"
 #include "source_psi/psi.h"
+#include "source_pw/module_dfpt/dfpt_pert.h"
+#include "source_pw/module_pwdft/stru_fac.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 
 // ctor/dtor stubs for the cell/spepot/stru_fac link closures live in the

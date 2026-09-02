@@ -108,29 +108,19 @@ class DFPT_Pert
                   const ModuleBase::Vector3<double>& q_cart,
                   std::vector<std::vector<std::complex<double>>>& dv_psi) const;
 
-  private:
-    UnitCell* ucell_ = nullptr;
-    ModulePW::PW_Basis* pw_rho_ = nullptr;
-    ModulePW::PW_Basis_K* pw_wfc_ = nullptr;
-    Structure_Factor* sf_ = nullptr;
-
-    /// C1: first-order LOCAL potential dVloc_dtau (per displaced atom).
     /// Grid helper: reconstruct the cartesian reciprocal vector (in 2*pi/lat0
     /// units) of rho-grid index ig from the shared FFT-grid (ix,iy,iz) mapping.
+    /// A stateless building block exposed publicly so the serial analytic
+    /// tests can validate the rho-grid G layout directly.
     void rho_gvec(int ig, ModuleBase::Vector3<double>& gcar) const;
-    /// The local pseudopotential Vloc(g^2) at an arbitrary magnitude:
-    ///  Coulomb atoms use the analytic form, numeric pseudopotentials reuse the
-    ///  radial-mesh Fourier transform of vl_pw.cpp::vloc_of_g at |g| themselves.
-    double vloc_at_g(int it, double g2) const;
-    /// linear atom index -> (type, picture) of ucell_.
-    void atom_index(int atom_idx, int& it, int& ia) const;
 
     /// First-order asymmetric-part local potential on the rho grid:
     ///   dVloc_dtau(Delta) = -i (Delta+q).direction * Vloc(|Delta+q|)
     ///                       * exp(-i (Delta+q).tau_atom) * ...
     /// (GS structure-factor convention exp(-2pi g.tau); the sign/coefficient
     /// is the exact derivative of the local potential with respect to the
-    /// atomic displacement).
+    /// atomic displacement). Stateless building block validated by the serial
+    /// analytic tests against a finite difference of the displaced potential.
     void dVloc_dtau(int atom_idx, int dir, const ModuleBase::Vector3<double>& q, std::vector<std::complex<double>>& dv);
 
     /// C1: first-order NONLOCAL potential acting on psi (normal-conserving
@@ -142,12 +132,28 @@ class DFPT_Pert
     /// DFPT k+q outgoing basis are needed (dsVnl contribution per pair is
     /// i (q+G''-G')_a times the zero-order matrix element).
     /// USPP/ultrasoft and spin-orbit projectors are rejected for now.
+    /// Stateless building block validated by the serial analytic tests
+    /// against an operator finite difference.
     void dVnl_dtau(int atom_idx,
                    int dir,
                    const ModuleBase::Vector3<double>& q,
                    const psi::Psi<std::complex<double>>& psi,
                    int k_idx,
                    std::vector<std::vector<std::complex<double>>>& dv_psi);
+
+  private:
+    UnitCell* ucell_ = nullptr;
+    ModulePW::PW_Basis* pw_rho_ = nullptr;
+    ModulePW::PW_Basis_K* pw_wfc_ = nullptr;
+    Structure_Factor* sf_ = nullptr;
+
+    /// C1: first-order LOCAL potential dVloc_dtau (per displaced atom).
+    /// The local pseudopotential Vloc(g^2) at an arbitrary magnitude:
+    ///  Coulomb atoms use the analytic form, numeric pseudopotentials reuse the
+    ///  radial-mesh Fourier transform of vl_pw.cpp::vloc_of_g at |g| themselves.
+    double vloc_at_g(int it, double g2) const;
+    /// linear atom index -> (type, picture) of ucell_.
+    void atom_index(int atom_idx, int& it, int& ia) const;
 
     /// real spherical harmonic Y_{l,m}(g_hat), orthonormal convention, l<=2.
     double real_ylm(int l, int m, const ModuleBase::Vector3<double>& ghat) const;

@@ -10,24 +10,19 @@
 // serial tests; all references are closed-form or operator finite
 // differences, no ground-state solver is involved.
 
-#define private public
-#include "source_cell/atom_pseudo.h"
-#include "source_cell/atom_spec.h"
-#include "source_cell/magnetism.h"
-#include "source_cell/pseudo.h"
-#include "source_cell/qlist.h"
-#include "source_cell/unitcell.h"
-#include "source_pw/module_dfpt/dfpt_pert.h"
-#include "source_pw/module_dfpt/dfpt_q0.h"
-#include "source_pw/module_pwdft/stru_fac.h"
-#undef private
-
 #include "dfpt_serial_fixture.h"
 #include "source_base/constants.h"
 #include "source_base/matrix.h"
 #include "source_base/matrix3.h"
 #include "source_base/vector3.h"
+#include "source_cell/atom_pseudo.h"
+#include "source_cell/atom_spec.h"
+#include "source_cell/qlist.h"
+#include "source_cell/unitcell.h"
 #include "source_psi/psi.h"
+#include "source_pw/module_dfpt/dfpt_pert.h"
+#include "source_pw/module_dfpt/dfpt_q0.h"
+#include "source_pw/module_pwdft/stru_fac.h"
 
 // ctor/dtor stubs for the cell/spepot/stru_fac link closures live in the
 // shared test/dfpt_test_mocks.cpp compiled into every DFPT test binary.

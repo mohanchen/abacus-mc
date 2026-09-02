@@ -10,24 +10,20 @@
 // eigensolver and the LO-TO term. Runs without __MPI on the shared FFT grid
 // like the other DFPT serial tests.
 
-#define private public
-#include "source_cell/atom_pseudo.h"
-#include "source_cell/atom_spec.h"
-#include "source_cell/magnetism.h"
-#include "source_cell/pseudo.h"
-#include "source_cell/qlist.h"
-#include "source_cell/unitcell.h"
-#include "source_pw/module_dfpt/dfpt_pert.h"
-#include "source_pw/module_dfpt/dfpt_phon.h"
-#include "source_pw/module_pwdft/stru_fac.h"
-#undef private
-
 #include "dfpt_serial_fixture.h"
 #include "source_base/complexmatrix.h"
 #include "source_base/constants.h"
 #include "source_base/matrix3.h"
 #include "source_base/vector3.h"
+#include "source_cell/atom_pseudo.h"
+#include "source_cell/atom_spec.h"
+#include "source_cell/qlist.h"
+#include "source_cell/unitcell.h"
 #include "source_psi/psi.h"
+#include "source_pw/module_dfpt/dfpt_kq_basis.h"
+#include "source_pw/module_dfpt/dfpt_pert.h"
+#include "source_pw/module_dfpt/dfpt_phon.h"
+#include "source_pw/module_pwdft/stru_fac.h"
 
 // ctor/dtor stubs for the cell/spepot/stru_fac link closures live in the
 // shared test/dfpt_test_mocks.cpp compiled into every DFPT test binary.
@@ -212,9 +208,9 @@ TEST_F(DFPTPhonSerialTest, IonIonGammaAcousticZeroModes)
 {
     // same two-atom cell: three acoustic eigenvalues vanish at Gamma
     MakeTwoAtomCell();
-    data_.set_dynmat(0, ModuleBase::ComplexMatrix(6, 6, true));
-    ModuleBase::ComplexMatrix& dyn = data_.dynmat_[0];
+    ModuleBase::ComplexMatrix dyn(6, 6, true);
     phon_.ion_ion(ModuleBase::Vector3<double>(0.0, 0.0, 0.0), dyn);
+    data_.set_dynmat(0, dyn);
     phon_.diagonalize(0, data_);
     const std::vector<double> freq = data_.get_phon_freq(0);
     ASSERT_EQ(freq.size(), 6u);
@@ -371,8 +367,8 @@ TEST_F(DFPTPhonSerialTest, AccumulateElectronAnalyticContraction)
             expect = 2.0 * expect.real();
         }
         expect /= ucell_.atoms[0].mass;
-        EXPECT_NEAR(std::abs(phon_.dynmat_accum_(1, adir) - expect), 0.0, 1.0e-7 * (1.0 + std::abs(expect)))
-            << "adir " << adir << " got " << phon_.dynmat_accum_(1, adir) << " expect " << expect;
+        EXPECT_NEAR(std::abs(phon_.dynmat_accum()(1, adir) - expect), 0.0, 1.0e-7 * (1.0 + std::abs(expect)))
+            << "adir " << adir << " got " << phon_.dynmat_accum()(1, adir) << " expect " << expect;
     }
 
     // the dpsi slot must be restored to the injected solution
@@ -416,8 +412,8 @@ TEST_F(DFPTPhonSerialTest, AccumulateElectronD2GateOffGenericQ)
             expect = 2.0 * expect.real();
         }
         expect /= ucell_.atoms[0].mass;
-        EXPECT_NEAR(std::abs(phon_.dynmat_accum_(0, adir) - expect), 0.0, 1.0e-7 * (1.0 + std::abs(expect)))
-            << "adir " << adir << " got " << phon_.dynmat_accum_(0, adir) << " expect " << expect;
+        EXPECT_NEAR(std::abs(phon_.dynmat_accum()(0, adir) - expect), 0.0, 1.0e-7 * (1.0 + std::abs(expect)))
+            << "adir " << adir << " got " << phon_.dynmat_accum()(0, adir) << " expect " << expect;
     }
 }
 
@@ -521,8 +517,8 @@ TEST_F(DFPTPhonSerialTest, AccumulateElectronD2CommensurateQ)
             expect += wg(0, 0) * d2elem;
         }
         expect /= ucell_.atoms[0].mass;
-        EXPECT_NEAR(std::abs(phon_.dynmat_accum_(1, adir) - expect), 0.0, 1.0e-7 * (1.0 + std::abs(expect)))
-            << "adir " << adir << " got " << phon_.dynmat_accum_(1, adir) << " expect " << expect;
+        EXPECT_NEAR(std::abs(phon_.dynmat_accum()(1, adir) - expect), 0.0, 1.0e-7 * (1.0 + std::abs(expect)))
+            << "adir " << adir << " got " << phon_.dynmat_accum()(1, adir) << " expect " << expect;
     }
 }
 

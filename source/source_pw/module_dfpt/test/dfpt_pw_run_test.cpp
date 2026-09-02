@@ -2,14 +2,12 @@
 #include "gtest/gtest.h"
 #include <iostream>
 #include <streambuf>
-#define private public
 #include "source_cell/atom_pseudo.h"
 #include "source_cell/atom_spec.h"
 #include "source_cell/magnetism.h"
 #include "source_cell/pseudo.h"
 #include "source_cell/qlist.h"
 #include "source_cell/unitcell.h"
-#undef private
 #include "dfpt_stru_fixture.h"
 #include "source_base/global_variable.h"
 #include "source_base/parallel_global.h"

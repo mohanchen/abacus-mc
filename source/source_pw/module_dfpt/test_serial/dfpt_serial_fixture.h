@@ -18,11 +18,10 @@
 // initgrids/initparameters/setuptransform path on a shared FFT grid,
 // exactly like the production setup_pwrho/setup_pwwfc sequence.
 //
-// NOTE ON INCLUDE ORDER: the tests that touch private members include
-// the cell/qlist/dfpt headers with `#define private public` BEFORE this
-// header; the include guards then keep this header's own includes inert.
-// The fixture implementation (dfpt_serial_fixture.cpp) needs the same
-// define for QList, so it wraps its include accordingly.
+// All members the fixture touches (UnitCell geometry fields, the
+// Atom/pseudo public data, QList::nkstot / kvec_d and the
+// DFPT_PW_Data::init entry) are public, so the tests include the
+// cell/qlist/dfpt headers normally.
 
 class DFPTSerialBase : public testing::Test
 {

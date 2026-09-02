@@ -87,6 +87,19 @@ class DFPT_Phon
     /// from Gamma, where the rule does not apply).
     bool check_sum_rule(int q_idx, DFPT_PW_Data& data) const;
 
+    /// Ewald ion-ion force constants C^ewald_ab(q) (G-space + real-space +
+    /// Gaussian self term), mass-reduced by 1/sqrt(M_a M_b). A stateless
+    /// building block exposed publicly so the serial analytic tests can
+    /// validate it directly (no internal state is touched).
+    void ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::ComplexMatrix& dyn);
+
+    /// read-only view of the accumulated electronic dynamical-matrix rows
+    /// (see dynmat_accum_); consumed by the serial analytic tests.
+    const ModuleBase::ComplexMatrix& dynmat_accum() const
+    {
+        return dynmat_accum_;
+    }
+
   private:
     UnitCell* ucell_ = nullptr;
     ModulePW::PW_Basis* pw_rho_ = nullptr;
@@ -94,10 +107,6 @@ class DFPT_Phon
 
     double ewald_alpha_ = 0.0;
     double ewald_rcut_ = 0.0;
-
-    /// Ewald ion-ion force constants C^ewald_ab(q) (G-space + real-space +
-    /// Gaussian self term), mass-reduced by 1/sqrt(M_a M_b).
-    void ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::ComplexMatrix& dyn);
 
     /// same-atom anharmonic term <psi | d2_ab V_ext | psi> accumulated into
     /// the (rowb, cola) entries of dynmat_accum_ (upper triangle only; the

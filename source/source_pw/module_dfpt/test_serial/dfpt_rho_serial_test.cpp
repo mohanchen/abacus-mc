@@ -9,10 +9,6 @@
 // the real serial initgrids/initparameters/setuptransform path on a shared
 // FFT grid, exactly like the production setup_pwrho/setup_pwwfc sequence.
 
-#define private public
-#include "source_cell/qlist.h"
-#undef private
-
 #include "dfpt_serial_fixture.h"
 #include "source_base/constants.h"
 #include "source_base/matrix.h"
