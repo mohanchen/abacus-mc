@@ -38,6 +38,8 @@ AddTest(
   LIBS parameter base device symmetry planewave
   SOURCES dfpt_pw_run_test.cpp
 	../dfpt_pw.cpp
+	../dfpt_pw_init.cpp
+	../dfpt_pw_run.cpp
 	../dfpt_pw_data.cpp
 	../dfpt_pert.cpp
 	../dfpt_pert_vkb.cpp

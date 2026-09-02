@@ -72,6 +72,35 @@ class DFPT_PW::Impl
   private:
     friend class DFPT_PW;
 
+    // ----- initialisation helpers (dfpt_pw_init.cpp) -----
+    void check_metallic_occ(const ModuleBase::matrix& wg) const;
+    void setup_q_list(UnitCell& ucell);
+    void init_submodules(const DFPT_PW_InitContext& ctx,
+                         int nk,
+                         int nbands,
+                         int npw_max,
+                         int nrxx,
+                         int nspin,
+                         int nat);
+
+    // ----- build_occ_kq helpers (dfpt_pw_init.cpp) -----
+    int match_commensurate_kq(int ik,
+                              const ModuleBase::Vector3<double>& q_frac,
+                              double tol,
+                              ModuleBase::Vector3<int>& dn_out) const;
+    void copy_occ_state_ball(int ik,
+                             int ikq,
+                             const ModuleBase::Vector3<int>& dn,
+                             const DFPT_KQ_Basis& kq,
+                             const ModuleBase::Matrix3& ginv,
+                             std::vector<std::vector<std::complex<double>>>& occ_ik) const;
+
+    // ----- run() dispatch helpers (dfpt_pw_run.cpp) -----
+    void run_q0_pre(int q_idx);
+    double run_displacement_irrep_pass(int q_idx, int irrep);
+    void run_q0_post(int q_idx);
+    void run_assemble(int q_idx);
+
     bool wired() const;
 
     DFPT_PW_Data data_;
