@@ -1,14 +1,8 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-
 #include "dfpt_metal.h"
 
+#include "source_base/timer.h"
 #include "source_base/tool_quit.h"
+#include "source_base/tool_title.h"
 
 namespace ModuleDFPT
 {
@@ -23,12 +17,17 @@ DFPT_Metal::~DFPT_Metal()
 
 void DFPT_Metal::init(double sigma, const std::string& smearing_type)
 {
+    ModuleBase::TITLE("DFPT_Metal", "init");
+    ModuleBase::timer::start("DFPT_Metal", "init");
     sigma_ = sigma;
     smearing_type_ = smearing_type;
+    ModuleBase::timer::end("DFPT_Metal", "init");
 }
 
 void DFPT_Metal::dfdeps(const ModuleBase::matrix& eig, double efermi, ModuleBase::matrix& dfdeps)
 {
+    ModuleBase::TITLE("DFPT_Metal", "dfdeps");
+    ModuleBase::timer::start("DFPT_Metal", "dfdeps");
     // C4 interface reservation: the metallic DFPT branch (smearing
     // derivatives, Fermi-level shift dmu and the occupation-response part of
     // the first-order density) is intentionally NOT implemented in this
@@ -47,6 +46,8 @@ void DFPT_Metal::compute_dmu(int q_idx,
                              const ModuleBase::matrix& dfdeps,
                              DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Metal", "compute_dmu");
+    ModuleBase::timer::start("DFPT_Metal", "compute_dmu");
     (void)q_idx;
     (void)psi;
     (void)wg;
@@ -62,6 +63,8 @@ void DFPT_Metal::compute_drho_metal(int q_idx,
                                     double dmu,
                                     DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Metal", "compute_drho_metal");
+    ModuleBase::timer::start("DFPT_Metal", "compute_drho_metal");
     (void)q_idx;
     (void)psi;
     (void)wg;
@@ -73,15 +76,21 @@ void DFPT_Metal::compute_drho_metal(int q_idx,
 
 double DFPT_Metal::fd_dfdeps(double e, double efermi)
 {
+    ModuleBase::TITLE("DFPT_Metal", "fd_dfdeps");
+    ModuleBase::timer::start("DFPT_Metal", "fd_dfdeps");
     (void)e;
     (void)efermi;
+    ModuleBase::timer::end("DFPT_Metal", "fd_dfdeps");
     return 0.0;
 }
 
 double DFPT_Metal::gauss_dfdeps(double e, double efermi)
 {
+    ModuleBase::TITLE("DFPT_Metal", "gauss_dfdeps");
+    ModuleBase::timer::start("DFPT_Metal", "gauss_dfdeps");
     (void)e;
     (void)efermi;
+    ModuleBase::timer::end("DFPT_Metal", "gauss_dfdeps");
     return 0.0;
 }
 

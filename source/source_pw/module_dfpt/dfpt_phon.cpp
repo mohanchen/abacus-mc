@@ -1,11 +1,3 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-
 #include "dfpt_phon.h"
 
 #include "dfpt_kq_basis.h"
@@ -25,6 +17,9 @@
 #include <sstream>
 #include <vector>
 
+#include "source_base/timer.h"
+#include "source_base/tool_title.h"
+
 namespace ModuleDFPT
 {
 
@@ -43,6 +38,8 @@ namespace
 // sqrt(Ry/(bohr^2 amu)) in cm^-1 = sqrt(RYDBERG_SI/amu_kg)/(bohr*2pi*c)
 std::vector<double> signed_freqs_cm1(const std::vector<double>& eigs)
 {
+    ModuleBase::TITLE("DFPT_Phon", "signed_freqs_cm1");
+    ModuleBase::timer::start("DFPT_Phon", "signed_freqs_cm1");
     const double amu_kg = 1.0e-3 / ModuleBase::NA;
     const double ry_bohr2_amu_to_cm1 = std::sqrt(ModuleBase::RYDBERG_SI / amu_kg)
                                        / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI * 2.99792458e10);
@@ -51,6 +48,7 @@ std::vector<double> signed_freqs_cm1(const std::vector<double>& eigs)
     {
         freq[i] = ((eigs[i] >= 0.0) ? 1.0 : -1.0) * std::sqrt(std::abs(eigs[i])) * ry_bohr2_amu_to_cm1;
     }
+    ModuleBase::timer::end("DFPT_Phon", "signed_freqs_cm1");
     return freq;
 }
 
@@ -58,9 +56,12 @@ std::vector<double> signed_freqs_cm1(const std::vector<double>& eigs)
 
 void DFPT_Phon::init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, DFPT_Pert* pert)
 {
+    ModuleBase::TITLE("DFPT_Phon", "init");
+    ModuleBase::timer::start("DFPT_Phon", "init");
     ucell_ = &ucell;
     pw_rho_ = pw_rho;
     pert_ = pert;
+    ModuleBase::timer::end("DFPT_Phon", "init");
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +70,8 @@ void DFPT_Phon::init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, DFPT_Pert* per
 
 void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::ComplexMatrix& dyn)
 {
+    ModuleBase::TITLE("DFPT_Phon", "ion_ion");
+    ModuleBase::timer::start("DFPT_Phon", "ion_ion");
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     const double lat0 = ucell_->lat0;
@@ -358,6 +361,7 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::C
     // phase-free cross-atom accumulation plus the self-image phase terms
     // (both G and R pieces above). At q = 0 all phase differences vanish and
     // the acoustic sum rule holds exactly by construction.
+    ModuleBase::timer::end("DFPT_Phon", "ion_ion");
 }
 
 // ---------------------------------------------------------------------------
@@ -371,8 +375,11 @@ void DFPT_Phon::accumulate_electron(int q_idx,
                                     const ModuleBase::matrix& wg,
                                     DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Phon", "accumulate_electron");
+    ModuleBase::timer::start("DFPT_Phon", "accumulate_electron");
     if (pert_ == nullptr || pw_rho_ == nullptr || ucell_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Phon", "accumulate_electron");
         return;
     }
     const int nat = ucell_->nat;
@@ -535,6 +542,7 @@ void DFPT_Phon::accumulate_electron(int q_idx,
             }
         }
     }
+    ModuleBase::timer::end("DFPT_Phon", "accumulate_electron");
 }
 
 // ---------------------------------------------------------------------------
@@ -543,8 +551,11 @@ void DFPT_Phon::accumulate_electron(int q_idx,
 
 void DFPT_Phon::assemble(int q_idx, DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Phon", "assemble");
+    ModuleBase::timer::start("DFPT_Phon", "assemble");
     if (ucell_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Phon", "assemble");
         return;
     }
     const int nat = ucell_->nat;
@@ -583,15 +594,19 @@ void DFPT_Phon::assemble(int q_idx, DFPT_PW_Data& data)
     data.set_dynmat(q_idx, dyn);
     dynmat_accum_ = ModuleBase::ComplexMatrix();
     accum_q_ = -1;
+    ModuleBase::timer::end("DFPT_Phon", "assemble");
 }
 
 void DFPT_Phon::diagonalize(int q_idx, DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Phon", "diagonalize");
+    ModuleBase::timer::start("DFPT_Phon", "diagonalize");
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(q_idx);
     if (dyn.nr != nat3)
     {
+        ModuleBase::timer::end("DFPT_Phon", "diagonalize");
         return;
     }
 
@@ -625,20 +640,25 @@ void DFPT_Phon::diagonalize(int q_idx, DFPT_PW_Data& data)
         freq[i] = ((e >= 0.0) ? 1.0 : -1.0) * std::sqrt(std::abs(e)) * ry_bohr2_amu_to_cm1;
     }
     data.set_phon_freq(q_idx, freq);
+    ModuleBase::timer::end("DFPT_Phon", "diagonalize");
 }
 
 void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Phon", "add_loto");
+    ModuleBase::timer::start("DFPT_Phon", "add_loto");
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(0);
     if (dyn.nr != nat3)
     {
+        ModuleBase::timer::end("DFPT_Phon", "add_loto");
         return;
     }
     const ModuleBase::matrix eps = data.get_dielectric();
     if (eps.nr != 3 || eps.nc != 3)
     {
+        ModuleBase::timer::end("DFPT_Phon", "add_loto");
         return; // no dielectric tensor stored yet (C6 not run)
     }
     const double qeq = qhat.x * (qhat.x * eps(0, 0) + qhat.y * eps(1, 0) + qhat.z * eps(2, 0))
@@ -646,6 +666,7 @@ void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& 
                        + qhat.z * (qhat.x * eps(0, 2) + qhat.y * eps(1, 2) + qhat.z * eps(2, 2));
     if (std::abs(qeq) < 1.0e-10)
     {
+        ModuleBase::timer::end("DFPT_Phon", "add_loto");
         return;
     }
     const double pref = ModuleBase::FOUR_PI * ModuleBase::e2 / ucell_->omega / qeq;
@@ -674,10 +695,13 @@ void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& 
         }
     }
     data.set_dynmat(0, dyn);
+    ModuleBase::timer::end("DFPT_Phon", "add_loto");
 }
 
 void DFPT_Phon::diagonalize_loto(DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Phon", "diagonalize_loto");
+    ModuleBase::timer::start("DFPT_Phon", "diagonalize_loto");
     const int nat3 = 3 * ucell_->nat;
     // the stored Gamma matrix already carries the non-analytic term added
     // by add_loto; the copy below is destroyed by the solver, the stored
@@ -685,6 +709,7 @@ void DFPT_Phon::diagonalize_loto(DFPT_PW_Data& data)
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(0);
     if (dyn.nr != nat3)
     {
+        ModuleBase::timer::end("DFPT_Phon", "diagonalize_loto");
         return;
     }
     std::vector<double> w(nat3, 0.0);
@@ -704,10 +729,13 @@ void DFPT_Phon::diagonalize_loto(DFPT_PW_Data& data)
                            rwork.data(),
                            &info);
     data.set_phon_freq_loto(signed_freqs_cm1(w));
+    ModuleBase::timer::end("DFPT_Phon", "diagonalize_loto");
 }
 
 std::string DFPT_Phon::format_q_report(int q_idx, const DFPT_PW_Data& data) const
 {
+    ModuleBase::TITLE("DFPT_Phon", "format_q_report");
+    ModuleBase::timer::start("DFPT_Phon", "format_q_report");
     const ModuleBase::Vector3<double> qd = data.get_qvec(q_idx);
     const std::vector<double> freq = data.get_phon_freq(q_idx);
     std::ostringstream os;
@@ -718,14 +746,18 @@ std::string DFPT_Phon::format_q_report(int q_idx, const DFPT_PW_Data& data) cons
         os << "   mode " << std::setw(3) << im << " : " << std::fixed << std::setprecision(6) << freq[im] << " cm^-1"
            << "\n";
     }
+    ModuleBase::timer::end("DFPT_Phon", "format_q_report");
     return os.str();
 }
 
 std::string DFPT_Phon::format_loto_report(const DFPT_PW_Data& data) const
 {
+    ModuleBase::TITLE("DFPT_Phon", "format_loto_report");
+    ModuleBase::timer::start("DFPT_Phon", "format_loto_report");
     const std::vector<double> freq = data.get_phon_freq_loto();
     if (freq.empty())
     {
+        ModuleBase::timer::end("DFPT_Phon", "format_loto_report");
         return std::string();
     }
     const ModuleBase::Vector3<double> dir = data.get_loto_dir();
@@ -737,20 +769,25 @@ std::string DFPT_Phon::format_loto_report(const DFPT_PW_Data& data) const
         os << "   mode " << std::setw(3) << im << " : " << std::fixed << std::setprecision(6) << freq[im] << " cm^-1"
            << "\n";
     }
+    ModuleBase::timer::end("DFPT_Phon", "format_loto_report");
     return os.str();
 }
 
 bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const
 {
+    ModuleBase::TITLE("DFPT_Phon", "check_sum_rule");
+    ModuleBase::timer::start("DFPT_Phon", "check_sum_rule");
     const ModuleBase::Vector3<double> q_frac = data.get_qvec(q_idx);
     if (std::abs(q_frac.x) > 1.0e-8 || std::abs(q_frac.y) > 1.0e-8 || std::abs(q_frac.z) > 1.0e-8)
     {
+        ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
         return true; // only applies at Gamma
     }
     const int nat3 = 3 * ucell_->nat;
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(q_idx);
     if (dyn.nr != nat3)
     {
+        ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
         return false;
     }
     double max_elem = 0.0;
@@ -763,6 +800,7 @@ bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const
     }
     if (max_elem < 1.0e-12)
     {
+        ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
         return true;
     }
     for (int i = 0; i < nat3; ++i)
@@ -774,14 +812,18 @@ bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const
         }
         if (std::abs(colsum) > 1.0e-6 * max_elem)
         {
+            ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
             return false;
         }
     }
+    ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
     return true;
 }
 
 void DFPT_Phon::dftu_onsite(int q_idx, DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Phon", "dftu_onsite");
+    ModuleBase::timer::start("DFPT_Phon", "dftu_onsite");
     // Reserved DFT+U contribution to the dynamical matrix (U0).
     // The physical implementation lands with the Plus_U production wiring:
     //   sum_nk w_nk [ <psi|dV_U|dpsi> + frozen second-order U term

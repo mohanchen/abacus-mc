@@ -1,16 +1,8 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in design phase and has not been
-// put into production yet.
-// It may change in the future.
-// Please use this code with caution.
-// Only developers who know
-// what they are doing should use this code.
-// ============================================================
-
 #include "dfpt_kq_basis.h"
 
 #include "source_base/global_function.h"
+#include "source_base/timer.h"
+#include "source_base/tool_title.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_basis/module_pw/pw_basis_k.h"
 
@@ -32,6 +24,8 @@ void DFPT_KQ_Basis::init(const ModulePW::PW_Basis_K* pw_wfc,
                          const ModuleBase::Vector3<double>& q_cart,
                          int ik)
 {
+    ModuleBase::TITLE("DFPT_KQ_Basis", "init");
+    ModuleBase::timer::start("DFPT_KQ_Basis", "init");
     pw_wfc_ = pw_wfc;
     npwk_ = 0;
     ig_rho_.clear();
@@ -40,6 +34,7 @@ void DFPT_KQ_Basis::init(const ModulePW::PW_Basis_K* pw_wfc,
 
     if (pw_wfc_ == nullptr || pw_rho == nullptr)
     {
+        ModuleBase::timer::end("DFPT_KQ_Basis", "init");
         return;
     }
 
@@ -142,16 +137,20 @@ void DFPT_KQ_Basis::init(const ModulePW::PW_Basis_K* pw_wfc,
         try_push(ix, iy, iz, pw_rho->G, ig);
     }
     npwk_ = static_cast<int>(gcar_.size());
+    ModuleBase::timer::end("DFPT_KQ_Basis", "init");
 }
 
 void DFPT_KQ_Basis::clear()
 {
+    ModuleBase::TITLE("DFPT_KQ_Basis", "clear");
+    ModuleBase::timer::start("DFPT_KQ_Basis", "clear");
     pw_wfc_ = nullptr;
     kplusq_c_ = ModuleBase::Vector3<double>();
     npwk_ = 0;
     ig_rho_.clear();
     gk2_.clear();
     gcar_.clear();
+    ModuleBase::timer::end("DFPT_KQ_Basis", "clear");
 }
 
 } // namespace ModuleDFPT

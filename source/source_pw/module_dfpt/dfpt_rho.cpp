@@ -3,6 +3,8 @@
 #include "dfpt_kq_basis.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
+#include "source_base/timer.h"
+#include "source_base/tool_title.h"
 #include "source_base/module_mixing/plain_mixing.h"
 
 #include <algorithm>
@@ -36,6 +38,8 @@ void DFPT_Rho::init(int nspin,
                     double mix_beta,
                     double kerker_a2)
 {
+    ModuleBase::TITLE("DFPT_Rho", "init");
+    ModuleBase::timer::start("DFPT_Rho", "init");
     nspin_ = nspin;
     nrxx_ = nrxx;
     pw_rho_ = pw_rho;
@@ -50,6 +54,7 @@ void DFPT_Rho::init(int nspin,
     }
     delete mixer_;
     mixer_ = new Base_Mixing::Plain_Mixing(mix_beta_);
+    ModuleBase::timer::end("DFPT_Rho", "init");
 }
 
 void DFPT_Rho::compute_drho(const psi::Psi<std::complex<double>>& psi,
@@ -57,8 +62,11 @@ void DFPT_Rho::compute_drho(const psi::Psi<std::complex<double>>& psi,
                             int q_idx,
                             DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Rho", "compute_drho");
+    ModuleBase::timer::start("DFPT_Rho", "compute_drho");
     if (pw_rho_ == nullptr || pw_wfc_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Rho", "compute_drho");
         return;
     }
     if (nspin_ != 1)
@@ -219,6 +227,7 @@ void DFPT_Rho::compute_drho(const psi::Psi<std::complex<double>>& psi,
         drho_out_.resize(q_idx + 1);
     }
     drho_out_[q_idx].assign(1, drho_g);
+    ModuleBase::timer::end("DFPT_Rho", "compute_drho");
 }
 
 void DFPT_Rho::cal_docc(const psi::Psi<std::complex<double>>& psi,
@@ -226,6 +235,8 @@ void DFPT_Rho::cal_docc(const psi::Psi<std::complex<double>>& psi,
                         int q_idx,
                         DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Rho", "cal_docc");
+    ModuleBase::timer::start("DFPT_Rho", "cal_docc");
     // Reserved first-order occupation matrix (docc) for DFT+U (U0).
     // The physical cross terms need the beta projectors at both k and k+q
     // (a PW-side adapter of the build_vkb machinery); they land together
@@ -236,18 +247,23 @@ void DFPT_Rho::cal_docc(const psi::Psi<std::complex<double>>& psi,
     //   frozen term: becp(k, psi) * dbecp_f(k, psi)         (GS k)
     if (!data.with_u())
     {
+        ModuleBase::timer::end("DFPT_Rho", "cal_docc");
         return;
     }
     (void)psi;
     (void)wg;
     (void)q_idx;
     (void)data;
+    ModuleBase::timer::end("DFPT_Rho", "cal_docc");
 }
 
 void DFPT_Rho::reset_mixing(int q_idx)
 {
+    ModuleBase::TITLE("DFPT_Rho", "reset_mixing");
+    ModuleBase::timer::start("DFPT_Rho", "reset_mixing");
     if (q_idx < 0)
     {
+        ModuleBase::timer::end("DFPT_Rho", "reset_mixing");
         return;
     }
     if (q_idx < static_cast<int>(drho_in_.size()))
@@ -258,17 +274,22 @@ void DFPT_Rho::reset_mixing(int q_idx)
     {
         residual_[q_idx] = 0.0;
     }
+    ModuleBase::timer::end("DFPT_Rho", "reset_mixing");
 }
 
 void DFPT_Rho::mix_drho(int q_idx, DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Rho", "mix_drho");
+    ModuleBase::timer::start("DFPT_Rho", "mix_drho");
     if (mixer_ == nullptr || pw_rho_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Rho", "mix_drho");
         return;
     }
     const std::vector<std::complex<double>> out = data.get_drho_g(q_idx, 0);
     if (out.empty() || static_cast<int>(out.size()) != pw_rho_->npw)
     {
+        ModuleBase::timer::end("DFPT_Rho", "mix_drho");
         return;
     }
     const int npw = pw_rho_->npw;
@@ -366,15 +387,20 @@ void DFPT_Rho::mix_drho(int q_idx, DFPT_PW_Data& data)
         }
     }
     data.set_drho_r(q_idx, 0, drho_r);
+    ModuleBase::timer::end("DFPT_Rho", "mix_drho");
 }
 
 double DFPT_Rho::get_residual(int q_idx, DFPT_PW_Data& data) const
 {
+    ModuleBase::TITLE("DFPT_Rho", "get_residual");
+    ModuleBase::timer::start("DFPT_Rho", "get_residual");
     (void)data;
     if (q_idx < 0 || q_idx >= static_cast<int>(residual_.size()))
     {
+        ModuleBase::timer::end("DFPT_Rho", "get_residual");
         return 0.0;
     }
+    ModuleBase::timer::end("DFPT_Rho", "get_residual");
     return residual_[q_idx];
 }
 
@@ -382,15 +408,19 @@ void DFPT_Rho::v_hartree_q(const ModuleBase::Vector3<double>& q_cart,
                            const std::vector<std::complex<double>>& drho_g,
                            std::vector<std::complex<double>>& dv_ha_g) const
 {
+    ModuleBase::TITLE("DFPT_Rho", "v_hartree_q");
+    ModuleBase::timer::start("DFPT_Rho", "v_hartree_q");
     if (pw_rho_ == nullptr)
     {
         dv_ha_g.clear();
+        ModuleBase::timer::end("DFPT_Rho", "v_hartree_q");
         return;
     }
     const int npw = pw_rho_->npw;
     if (static_cast<int>(drho_g.size()) != npw)
     {
         dv_ha_g.clear();
+        ModuleBase::timer::end("DFPT_Rho", "v_hartree_q");
         return;
     }
     dv_ha_g.assign(npw, std::complex<double>(0.0, 0.0));
@@ -407,6 +437,7 @@ void DFPT_Rho::v_hartree_q(const ModuleBase::Vector3<double>& q_cart,
         const double fac = ModuleBase::e2 * ModuleBase::FOUR_PI / (pw_rho_->tpiba2 * w2_lat0);
         dv_ha_g[ig] = fac * drho_g[ig];
     }
+    ModuleBase::timer::end("DFPT_Rho", "v_hartree_q");
 }
 
 } // namespace ModuleDFPT

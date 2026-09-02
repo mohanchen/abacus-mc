@@ -11,6 +11,8 @@
 #include "dfpt_stern.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
+#include "source_base/timer.h"
+#include "source_base/tool_title.h"
 #include "source_cell/qlist.h"
 #include "source_pw/module_pwdft/stru_fac.h"
 
@@ -120,6 +122,8 @@ void DFPT_PW::init(UnitCell& ucell,
                    double ecutwfc,
                    const Plus_U_Base* dftu)
 {
+    ModuleBase::TITLE("DFPT_PW", "init");
+    ModuleBase::timer::start("DFPT_PW", "init");
     pimpl_->ucell_ = &ucell;
     pimpl_->gs_psi_ = psi;
     pimpl_->pw_rho_ = pw_rho;
@@ -250,6 +254,7 @@ void DFPT_PW::init(UnitCell& ucell,
         pimpl_->phon_.init(ucell, nullptr, nullptr);
     }
     pimpl_->data_.init(&pimpl_->qlist_, nk, nbands, npw_max, nrxx, nspin, nat, dftu);
+    ModuleBase::timer::end("DFPT_PW", "init");
 }
 
 bool DFPT_PW::get_with_u() const
@@ -264,6 +269,8 @@ bool DFPT_PW::get_u_active() const
 
 void DFPT_PW::Impl::build_occ_kq(int q_idx)
 {
+    ModuleBase::TITLE("DFPT_PW", "build_occ_kq");
+    ModuleBase::timer::start("DFPT_PW", "build_occ_kq");
     const int nk = pw_wfc_->nks;
     occ_kq_.assign(nk, std::vector<std::vector<std::complex<double>>>());
     ikq_of_k_.assign(nk, -1);
@@ -362,12 +369,16 @@ void DFPT_PW::Impl::build_occ_kq(int q_idx)
     }
     last_q_ = q_idx;
     last_ik_ = -1;
+    ModuleBase::timer::end("DFPT_PW", "build_occ_kq");
 }
 
 double DFPT_PW::Impl::solve_displacement(int q_idx, int iat, int idir)
 {
+    ModuleBase::TITLE("DFPT_PW", "solve_displacement");
+    ModuleBase::timer::start("DFPT_PW", "solve_displacement");
     if (!wired() || hamilt_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_PW", "solve_displacement");
         return 0.0;
     }
     const ModuleBase::Vector3<double> q_frac = data_.get_qvec(q_idx);
@@ -571,11 +582,14 @@ double DFPT_PW::Impl::solve_displacement(int q_idx, int iat, int idir)
         data_.set_dpsi_disp(iat, idir, disp);
     }
 
+    ModuleBase::timer::end("DFPT_PW", "solve_displacement");
     return residual;
 }
 
 void DFPT_PW::Impl::solve_pos_resp(int q_idx)
 {
+    ModuleBase::TITLE("DFPT_PW", "solve_pos_resp");
+    ModuleBase::timer::start("DFPT_PW", "solve_pos_resp");
     // Y^a_{k,v} = P_c x_a|psi_{k,v}> through the Sternheimer equation
     //   (H(k) - eps_v) Y^a_v = P_c [H, x_a]|psi_v>,
     //   [H, x_a]|psi> = -(i/tpiba) dH/dk_a|psi>   (velocity form),
@@ -587,6 +601,7 @@ void DFPT_PW::Impl::solve_pos_resp(int q_idx)
     // and replaces the empty-eigenvector-truncated r-matrix contraction.
     if (!wired() || hamilt_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_PW", "solve_pos_resp");
         return;
     }
     const ModuleBase::Vector3<double> q_cart = data_.get_qvec(q_idx) * ucell_->G;
@@ -742,10 +757,13 @@ void DFPT_PW::Impl::solve_pos_resp(int q_idx)
         }
         data_.set_pos_resp(a, yvec);
     }
+    ModuleBase::timer::end("DFPT_PW", "solve_pos_resp");
 }
 
 void DFPT_PW::Impl::solve_efield_resp(int q_idx)
 {
+    ModuleBase::TITLE("DFPT_PW", "solve_efield_resp");
+    ModuleBase::timer::start("DFPT_PW", "solve_efield_resp");
     // E-field SCF response (QE solve_e + dfpt_kernel form): the bare legs
     // Y^a stashed by solve_pos_resp are the field rhs base and the fixed
     // point adds the screened response potential of the mixed drho^E
@@ -754,6 +772,7 @@ void DFPT_PW::Impl::solve_efield_resp(int q_idx)
     // cross-check probe (DFPT_ALEG).
     if (!wired() || hamilt_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_PW", "solve_efield_resp");
         return;
     }
     const ModuleBase::Vector3<double> q_cart = data_.get_qvec(q_idx) * ucell_->G;
@@ -859,10 +878,13 @@ void DFPT_PW::Impl::solve_efield_resp(int q_idx)
         }
         data_.set_dpsi_efield(a, de);
     }
+    ModuleBase::timer::end("DFPT_PW", "solve_efield_resp");
 }
 
 void DFPT_PW::run()
 {
+    ModuleBase::TITLE("DFPT_PW", "run");
+    ModuleBase::timer::start("DFPT_PW", "run");
     const int nq = pimpl_->qlist_.get_nq();
     for (int q_idx = 0; q_idx < nq; ++q_idx)
     {
@@ -975,6 +997,7 @@ void DFPT_PW::run()
             pimpl_->phon_.diagonalize_loto(pimpl_->data_);
         }
     }
+    ModuleBase::timer::end("DFPT_PW", "run");
 }
 
 int DFPT_PW::get_nq() const

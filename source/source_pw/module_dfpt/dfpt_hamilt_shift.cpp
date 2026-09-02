@@ -11,6 +11,8 @@
 #include "dfpt_pert.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
+#include "source_base/timer.h"
+#include "source_base/tool_title.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_basis/module_pw/pw_basis_k.h"
 #include "source_cell/unitcell.h"
@@ -68,6 +70,8 @@ DFPT_HamiltShift::~DFPT_HamiltShift()
 
 void DFPT_HamiltShift::set_context(const ModuleBase::Vector3<double>& q_cart, int k_idx)
 {
+    ModuleBase::TITLE("DFPT_HamiltShift", "set_context");
+    ModuleBase::timer::start("DFPT_HamiltShift", "set_context");
     kq_.init(pw_wfc_, pw_rho_, q_cart, k_idx);
     ik_cache_ = k_idx;
     const int npw = kq_.get_npwk();
@@ -99,23 +103,33 @@ void DFPT_HamiltShift::set_context(const ModuleBase::Vector3<double>& q_cart, in
 
     x_recip_.assign(pw_rho_->npw, std::complex<double>(0.0, 0.0));
     x_r_.assign(nrxx_, std::complex<double>(0.0, 0.0));
+    ModuleBase::timer::end("DFPT_HamiltShift", "set_context");
 }
 
 void DFPT_HamiltShift::set_shift(double shift)
 {
+    ModuleBase::TITLE("DFPT_HamiltShift", "set_shift");
+    ModuleBase::timer::start("DFPT_HamiltShift", "set_shift");
     shift_ = shift;
+    ModuleBase::timer::end("DFPT_HamiltShift", "set_shift");
 }
 
 int DFPT_HamiltShift::dimension() const
 {
+    ModuleBase::TITLE("DFPT_HamiltShift", "dimension");
+    ModuleBase::timer::start("DFPT_HamiltShift", "dimension");
+    ModuleBase::timer::end("DFPT_HamiltShift", "dimension");
     return kq_.get_npwk();
 }
 
 void DFPT_HamiltShift::apply(const std::complex<double>* x, std::complex<double>* y) const
 {
+    ModuleBase::TITLE("DFPT_HamiltShift", "apply");
+    ModuleBase::timer::start("DFPT_HamiltShift", "apply");
     const int npw = kq_.get_npwk();
     if (npw <= 0 || x == nullptr || y == nullptr)
     {
+        ModuleBase::timer::end("DFPT_HamiltShift", "apply");
         return;
     }
     // kinetic part minus the eigenvalue shift
@@ -184,10 +198,13 @@ void DFPT_HamiltShift::apply(const std::complex<double>* x, std::complex<double>
             }
         }
     }
+    ModuleBase::timer::end("DFPT_HamiltShift", "apply");
 }
 
 double DFPT_HamiltShift::debug_t_vnl(const std::vector<std::complex<double>>& x) const
 {
+    ModuleBase::TITLE("DFPT_HamiltShift", "debug_t_vnl");
+    ModuleBase::timer::start("DFPT_HamiltShift", "debug_t_vnl");
     const int npw = kq_.get_npwk();
     double ekin = 0.0;
     for (int igl = 0; igl < npw; ++igl)
@@ -229,11 +246,14 @@ double DFPT_HamiltShift::debug_t_vnl(const std::vector<std::complex<double>>& x)
             vnl += std::real(std::conj(becp_[mu]) * dbecp_[mu]);
         }
     }
+    ModuleBase::timer::end("DFPT_HamiltShift", "debug_t_vnl");
     return ekin + vnl;
 }
 
 double DFPT_HamiltShift::debug_v_wfc(const std::vector<std::complex<double>>& x) const
 {
+    ModuleBase::TITLE("DFPT_HamiltShift", "debug_v_wfc");
+    ModuleBase::timer::start("DFPT_HamiltShift", "debug_v_wfc");
     const int npw = kq_.get_npwk();
     std::vector<std::complex<double>> ur(nrxx_, std::complex<double>(0.0, 0.0));
     pw_wfc_->recip2real(x.data(), ur.data(), ik_cache_);
@@ -249,6 +269,7 @@ double DFPT_HamiltShift::debug_v_wfc(const std::vector<std::complex<double>>& x)
     {
         dot += std::conj(x[igl]) * xg[igl];
     }
+    ModuleBase::timer::end("DFPT_HamiltShift", "debug_v_wfc");
     return dot.real();
 }
 

@@ -3,6 +3,8 @@
 #include "dfpt_pert.h"
 #include "source_base/constants.h"
 #include "source_base/global_function.h"
+#include "source_base/timer.h"
+#include "source_base/tool_title.h"
 
 #include <cmath>
 #include <complex>
@@ -23,11 +25,14 @@ DFPT_Q0::~DFPT_Q0()
 
 void DFPT_Q0::init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, ModulePW::PW_Basis_K* pw_wfc, DFPT_Pert* pert)
 {
+    ModuleBase::TITLE("DFPT_Q0", "init");
+    ModuleBase::timer::start("DFPT_Q0", "init");
     ucell_ = &ucell;
     pw_rho_ = pw_rho;
     pw_wfc_ = pw_wfc;
     pert_ = pert;
     stars_.clear();
+    ModuleBase::timer::end("DFPT_Q0", "init");
 }
 
 namespace
@@ -69,10 +74,13 @@ inline bool folded_equal(double a, double b, double tol)
 
 void DFPT_Q0::build_stars(int nk)
 {
+    ModuleBase::TITLE("DFPT_Q0", "build_stars");
+    ModuleBase::timer::start("DFPT_Q0", "build_stars");
     // every k starts with the identity member (also the permanent fallback)
     stars_.assign(nk, std::vector<StarMember>(1, StarMember()));
     if (ucell_ == nullptr || pw_wfc_ == nullptr || pw_wfc_->kvec_d == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Q0", "build_stars");
         return;
     }
     const ModuleSymmetry::Symmetry& symm = ucell_->symm;
@@ -80,6 +88,7 @@ void DFPT_Q0::build_stars(int nk)
     {
         // no point-group analysis (symmetry off / unreduced mesh): the
         // stored list is already the full mesh, identity members only
+        ModuleBase::timer::end("DFPT_Q0", "build_stars");
         return;
     }
     const int nat = ucell_->nat;
@@ -167,15 +176,19 @@ void DFPT_Q0::build_stars(int nk)
                 // inconsistent operation set: fall back to identity-only
                 // stars for every k (the unreduced-sum behavior)
                 stars_.assign(nk, std::vector<StarMember>(1, StarMember()));
+                ModuleBase::timer::end("DFPT_Q0", "build_stars");
                 return;
             }
             stars_[ik].push_back(mem);
         }
     }
+    ModuleBase::timer::end("DFPT_Q0", "build_stars");
 }
 
 void DFPT_Q0::rotate_tensor(const ModuleBase::Matrix3& r, const ModuleBase::matrix& chi, double (&chi_rot)[9])
 {
+    ModuleBase::TITLE("DFPT_Q0", "rotate_tensor");
+    ModuleBase::timer::start("DFPT_Q0", "rotate_tensor");
     for (int a = 0; a < 3; ++a)
     {
         for (int b = 0; b < 3; ++b)
@@ -191,12 +204,15 @@ void DFPT_Q0::rotate_tensor(const ModuleBase::Matrix3& r, const ModuleBase::matr
             chi_rot[3 * a + b] = s;
         }
     }
+    ModuleBase::timer::end("DFPT_Q0", "rotate_tensor");
 }
 
 void DFPT_Q0::pos_matrix(const psi::Psi<std::complex<double>>& psi,
                          const ModuleBase::matrix& eig,
                          std::vector<std::vector<std::vector<ModuleBase::Vector3<std::complex<double>>>>>& r_mat)
 {
+    ModuleBase::TITLE("DFPT_Q0", "pos_matrix");
+    ModuleBase::timer::start("DFPT_Q0", "pos_matrix");
     const int nk = psi.get_nk();
     const int nbands = psi.get_nbands();
     r_mat.assign(nk,
@@ -207,6 +223,7 @@ void DFPT_Q0::pos_matrix(const psi::Psi<std::complex<double>>& psi,
                          ModuleBase::Vector3<std::complex<double>>(0.0, 0.0, 0.0))));
     if (pw_wfc_ == nullptr || ucell_ == nullptr || pert_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Q0", "pos_matrix");
         return;
     }
     const double tpiba = ucell_->tpiba;
@@ -369,12 +386,16 @@ void DFPT_Q0::pos_matrix(const psi::Psi<std::complex<double>>& psi,
             }
         }
     }
+    ModuleBase::timer::end("DFPT_Q0", "pos_matrix");
 }
 
 void DFPT_Q0::compute_eps(const ModuleBase::matrix& wg, DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Q0", "compute_eps");
+    ModuleBase::timer::start("DFPT_Q0", "compute_eps");
     if (ucell_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Q0", "compute_eps");
         return;
     }
     const int nk = wg.nr;
@@ -390,6 +411,7 @@ void DFPT_Q0::compute_eps(const ModuleBase::matrix& wg, DFPT_PW_Data& data)
         de[a] = data.get_dpsi_efield(a);
         if (static_cast<int>(yr[a].size()) != nk || static_cast<int>(de[a].size()) != nk)
         {
+            ModuleBase::timer::end("DFPT_Q0", "compute_eps");
             return; // responses not solved: nothing to accumulate
         }
     }
@@ -464,6 +486,7 @@ void DFPT_Q0::compute_eps(const ModuleBase::matrix& wg, DFPT_PW_Data& data)
         }
     }
     data.set_dielectric(eps);
+    ModuleBase::timer::end("DFPT_Q0", "compute_eps");
 }
 
 void DFPT_Q0::compute_born(const psi::Psi<std::complex<double>>& psi,
@@ -471,8 +494,11 @@ void DFPT_Q0::compute_born(const psi::Psi<std::complex<double>>& psi,
                            const ModuleBase::matrix& eig,
                            DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Q0", "compute_born");
+    ModuleBase::timer::start("DFPT_Q0", "compute_born");
     if (ucell_ == nullptr)
     {
+        ModuleBase::timer::end("DFPT_Q0", "compute_born");
         return;
     }
     const int nk = psi.get_nk();
@@ -489,6 +515,7 @@ void DFPT_Q0::compute_born(const psi::Psi<std::complex<double>>& psi,
         yr[a] = data.get_pos_resp(a);
         if (static_cast<int>(yr[a].size()) != nk)
         {
+            ModuleBase::timer::end("DFPT_Q0", "compute_born");
             return; // position responses not solved: nothing to accumulate
         }
     }
@@ -583,16 +610,20 @@ void DFPT_Q0::compute_born(const psi::Psi<std::complex<double>>& psi,
         }
         data.set_born(iat, zstar);
     }
+    ModuleBase::timer::end("DFPT_Q0", "compute_born");
 }
 
 void DFPT_Q0::compute_q0_response(DFPT_PW_Data& data)
 {
+    ModuleBase::TITLE("DFPT_Q0", "compute_q0_response");
+    ModuleBase::timer::start("DFPT_Q0", "compute_q0_response");
     // DFT+U reservation (U0): V_U is nonlocal (onsite projector), so the
     // position operator does NOT commute with the DFT+U potential. The
     // [r, V_U] commutator term must be handled separately in addition to
     // the occupation-matrix response (docc) when u_active() runs; this is
     // the hardest DFT+U piece and is deferred with the Plus_U wiring.
     (void)data;
+    ModuleBase::timer::end("DFPT_Q0", "compute_q0_response");
 }
 
 } // namespace ModuleDFPT
