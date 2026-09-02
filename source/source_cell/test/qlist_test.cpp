@@ -66,7 +66,13 @@ Sep_Cell::~Sep_Cell() noexcept {}
  *   - get_nirr() / get_irrep_modes()
  *     - placeholder irrep data (one fully-symmetric irrep per q-point)
  *   - read_from_file()
- *     - placeholder interface, must not crash
+ *     - ReadFromFileDirect: explicit Direct list with weights
+ *     - ReadFromFileCartesian: explicit Cartesian list with weights
+ *     - ReadFromFileMonkhorstPack: auto mesh (nkstot == 0)
+ *     - ReadFromFileLinePath / ReadFromFileLineCartesian: line interpolation
+ *     - ReadFromFileNegativeNkstot: negative count is rejected cleanly
+ *     - ReadFromFileLineRejectsZeroCount: non-positive line count quits
+ *     - ReadFromFileMissing / ReadFromFileBadHeader: must not crash
  */
 
 // abbreviated from module_symmetry/test/symm_test.cpp and klist_test.cpp
@@ -423,11 +429,86 @@ TEST_F(QListTest, ReadFromFileLinePath)
     ClearUcell();
 }
 
+TEST_F(QListTest, ReadFromFileCartesian)
+{
+    construct_ucell(stru_lib[0]);
+
+    const char* fname = "tmp_qpoints_cart";
+    std::ofstream ofs(fname);
+    ofs << "Q_POINTS\n2\nCartesian\n0.0 0.0 0.0 1.0\n0.5 0.0 0.0 1.0\n";
+    ofs.close();
+
+    qlist.read_from_file(fname, ucell);
+    EXPECT_EQ(qlist.get_nq(), 2);
+    EXPECT_TRUE(qlist.kc_done);
+    EXPECT_TRUE(qlist.kd_done);
+    EXPECT_DOUBLE_EQ(qlist.kvec_c[1].x, 0.5);
+    // direct coordinates complemented from the Cartesian ones (G = I here)
+    EXPECT_DOUBLE_EQ(qlist.get_q(1).x, 0.5);
+    // weights normalized to sum 1
+    EXPECT_NEAR(qlist.wk[0] + qlist.wk[1], 1.0, 1e-10);
+
+    remove(fname);
+    ClearUcell();
+}
+
+TEST_F(QListTest, ReadFromFileLineCartesian)
+{
+    construct_ucell(stru_lib[0]);
+
+    const char* fname = "tmp_qpoints_line_cart";
+    std::ofstream ofs(fname);
+    // G -> X segment with 4 points plus the final special point (5 total)
+    ofs << "Q_POINTS\n2\nLine_Cartesian\n0.0 0.0 0.0 4\n0.5 0.0 0.0 1\n";
+    ofs.close();
+
+    qlist.read_from_file(fname, ucell);
+    EXPECT_EQ(qlist.get_nq(), 5);
+    EXPECT_TRUE(qlist.kc_done);
+    EXPECT_TRUE(qlist.kd_done);
+    EXPECT_DOUBLE_EQ(qlist.get_q(1).x, 0.5 / 4.0);
+    EXPECT_DOUBLE_EQ(qlist.get_q(4).x, 0.5);
+    // line weights are not normalized
+    EXPECT_DOUBLE_EQ(qlist.wk[0], 1.0);
+
+    remove(fname);
+    ClearUcell();
+}
+
+TEST_F(QListTest, ReadFromFileNegativeNkstot)
+{
+    // a negative count must be rejected cleanly instead of crashing in renew()
+    const char* fname = "tmp_qpoints_negative";
+    std::ofstream ofs(fname);
+    ofs << "Q_POINTS\n-3\nDirect\n0.0 0.0 0.0 1.0\n";
+    ofs.close();
+
+    qlist.read_from_file(fname, ucell);
+    EXPECT_EQ(qlist.get_nq(), 0);
+
+    remove(fname);
+}
+
+TEST_F(QListTest, ReadFromFileLineRejectsZeroCount)
+{
+    const char* fname = "tmp_qpoints_zero_count";
+    std::ofstream ofs(fname);
+    ofs << "Q_POINTS\n2\nLine_Direct\n0.0 0.0 0.0 0\n0.5 0.0 0.0 1\n";
+    ofs.close();
+
+    EXPECT_EXIT(qlist.read_from_file(fname, ucell), ::testing::ExitedWithCode(1), "");
+
+    remove(fname);
+}
+
 TEST_F(QListTest, ReadFromFileMissing)
 {
     // a nonexistent file yields an empty q-point list, not a crash
     qlist.read_from_file("nonexistent_qpoints", ucell);
     EXPECT_EQ(qlist.get_nq(), 0);
+    // out-of-range access returns the zero vector instead of crashing
+    const ModuleBase::Vector3<double> q0 = qlist.get_q(0);
+    EXPECT_DOUBLE_EQ(q0.x, 0.0);
 }
 
 TEST_F(QListTest, ReadFromFileBadHeader)

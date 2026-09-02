@@ -83,7 +83,8 @@ Magnetism::~Magnetism()
  *       according to different spin case
  *   - set_both_kvec()
  *     - SetBothKvec: set kvec_c (cartesian coor.) and kvec_d (direct coor.)
- *     - SetBothKvecFinalSCF: same as above, with PARAM.input.final_scf=1
+ *     - SetBothKvecFlagsFromFile: flags are re-derived from the k_nkstot /
+ *       k_kword file record (Cartesian/Direct/unknown)
  *   - print_klists()
  *     - PrintKlists: print kpoints coordinates
  *     - PrintKlistsWarningQuit: for nkstot < nks error
@@ -712,7 +713,7 @@ TEST_F(KlistTest, PrintKlistsWarnigQuit)
     EXPECT_THAT(output, testing::HasSubstr("nkstot < nks"));
 }
 
-TEST_F(KlistTest, SetBothKvecFinalSCF)
+TEST_F(KlistTest, SetBothKvecFlagsFromFile)
 {
     kv->nspin = 1;
     kv->set_nkstot(1);
@@ -725,7 +726,6 @@ TEST_F(KlistTest, SetBothKvecFinalSCF)
     kv->kvec_c[0].y = 0.0;
     kv->kvec_c[0].z = 0.0;
     std::string skpt;
-//    PARAM.input.final_scf = true;
     kv->kd_done = false;
     kv->kc_done = false;
     // case 1
@@ -772,7 +772,6 @@ TEST_F(KlistTest, SetBothKvec)
     kv->kc_done = false;
     kv->kd_done = true;
     std::string skpt;
-//    PARAM.input.final_scf = false;
 //    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
     KVectorUtils::set_both_kvec(*kv, ucell.G, ucell.latvec, skpt);
     EXPECT_TRUE(kv->kc_done);

@@ -148,29 +148,29 @@ void ReciprocalGrid::kvec_c2d(const ModuleBase::Matrix3& latvec)
 
 void ReciprocalGrid::set_both_kvec(const ModuleBase::Matrix3& G, const ModuleBase::Matrix3& R, std::string& skpt)
 {
-    if (true) // once-per-run gate (the FINAL_SCF hole is irrelevant here)
+    // Re-derive the "which representation was read from file" flags.
+    // For auto-generated meshes (k_nkstot == 0) the direct coordinates
+    // are always available.
+    if (this->k_nkstot == 0)
     {
-        if (this->k_nkstot == 0)
+        this->kd_done = true;
+        this->kc_done = false;
+    }
+    else
+    {
+        if (this->k_kword == "Cartesian" || this->k_kword == "C")
+        {
+            this->kc_done = true;
+            this->kd_done = false;
+        }
+        else if (this->k_kword == "Direct" || this->k_kword == "D")
         {
             this->kd_done = true;
             this->kc_done = false;
         }
         else
         {
-            if (this->k_kword == "Cartesian" || this->k_kword == "C")
-            {
-                this->kc_done = true;
-                this->kd_done = false;
-            }
-            else if (this->k_kword == "Direct" || this->k_kword == "D")
-            {
-                this->kd_done = true;
-                this->kc_done = false;
-            }
-            else
-            {
-                GlobalV::ofs_warning << " Error : neither Cartesian nor Direct kpoint." << std::endl;
-            }
+            GlobalV::ofs_warning << " Error : neither Cartesian nor Direct kpoint." << std::endl;
         }
     }
 
