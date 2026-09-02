@@ -20,40 +20,28 @@ DFPT_Rho::DFPT_Rho()
 {
 }
 
-DFPT_Rho::~DFPT_Rho()
-{
-    if (mixer_ != nullptr)
-    {
-        delete mixer_;
-        mixer_ = nullptr;
-    }
-}
+// Defined here (after plain_mixing.h is included) so the unique_ptr deleter
+// sees the complete Plain_Mixing type. The body is implicitly generated.
+DFPT_Rho::~DFPT_Rho() = default;
 
-void DFPT_Rho::init(int nspin,
-                    int nrxx,
-                    ModulePW::PW_Basis* pw_rho,
-                    ModulePW::PW_Basis_K* pw_wfc,
-                    const ModuleBase::Matrix3& recip_matrix,
-                    const std::string& mix_type,
-                    double mix_beta,
-                    double kerker_a2)
+void DFPT_Rho::init(const Config& cfg)
 {
     ModuleBase::TITLE("DFPT_Rho", "init");
     ModuleBase::timer::start("DFPT_Rho", "init");
-    nspin_ = nspin;
-    nrxx_ = nrxx;
-    pw_rho_ = pw_rho;
-    pw_wfc_ = pw_wfc;
-    recip_matrix_ = recip_matrix;
-    mix_beta_ = mix_beta;
-    mix_type_ = mix_type;
-    kerker_a2_ = kerker_a2;
-    if (mix_type != "plain" && mix_type != "kerker")
+    nspin_ = cfg.nspin;
+    nrxx_ = cfg.nrxx;
+    pw_rho_ = cfg.pw_rho;
+    pw_wfc_ = cfg.pw_wfc;
+    recip_matrix_ = cfg.recip_matrix;
+    mix_beta_ = cfg.mix_beta;
+    mix_type_ = cfg.mix_type;
+    kerker_a2_ = cfg.kerker_a2;
+    if (cfg.mix_type != "plain" && cfg.mix_type != "kerker")
     {
         ModuleBase::WARNING_QUIT("DFPT_Rho", "unsupported mix_type, expected plain or kerker");
     }
-    delete mixer_;
-    mixer_ = new Base_Mixing::Plain_Mixing(mix_beta_);
+    // make_unique is C++14; C++11 uses new directly through reset()
+    mixer_.reset(new Base_Mixing::Plain_Mixing(mix_beta_));
     ModuleBase::timer::end("DFPT_Rho", "init");
 }
 

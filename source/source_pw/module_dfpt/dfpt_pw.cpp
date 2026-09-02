@@ -243,7 +243,7 @@ void DFPT_PW::init(UnitCell& ucell,
                 kerker_a2 = parsed;
             }
         }
-        pimpl_->rho_.init(nspin, nrxx, pw_rho, pw_wfc, ucell.G, mix_type, mix_beta, kerker_a2);
+        pimpl_->rho_.init({nspin, nrxx, pw_rho, pw_wfc, ucell.G, mix_type, mix_beta, kerker_a2});
         pimpl_->phon_.init(ucell, pw_rho, &pimpl_->pert_);
         pimpl_->q0_.init(ucell, pw_rho, pw_wfc, &pimpl_->pert_);
         delete pimpl_->hamilt_;

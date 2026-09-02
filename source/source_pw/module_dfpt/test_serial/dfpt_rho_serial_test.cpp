@@ -69,7 +69,7 @@ class DFPTRhoSerialTest : public DFPTSerialBase
     void SetUp() override
     {
         DFPTSerialBase::SetUp();
-        rho_.init(1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, "plain", 0.4, 0.0);
+        rho_.init({1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, std::string("plain"), 0.4, 0.0});
     }
 
     void FillRandomStates(psi::Psi<std::complex<double>>& psi,
@@ -246,7 +246,7 @@ TEST_F(DFPTRhoSerialTest, ChargeConservationAtGamma)
     ModuleDFPT::DFPT_PW_Data data0;
     data0.init(&qlist0, 1, nbands_, pw_wfc0.npwk_max, pw_rho_.nrxx, 1, 1, nullptr);
     ModuleDFPT::DFPT_Rho rho0;
-    rho0.init(1, pw_rho_.nrxx, &pw_rho_, &pw_wfc0, G_, "plain", 0.4, 0.0);
+    rho0.init({1, pw_rho_.nrxx, &pw_rho_, &pw_wfc0, G_, std::string("plain"), 0.4, 0.0});
 
     psi::Psi<std::complex<double>> psi(1, nbands_, pw_wfc0.npwk_max, pw_wfc0.npwk[0], true);
     ModuleDFPT::DFPT_KQ_Basis kq0;
@@ -414,7 +414,7 @@ TEST_F(DFPTRhoSerialTest, MixDrhoKerkerFirstStepIsPreconditionedScaledOutput)
     }
     ASSERT_GT(w2_min, 0.0);
     const double a2 = 4.0 * w2_min;
-    rho_k.init(1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, "kerker", 0.7, a2);
+    rho_k.init({1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, std::string("kerker"), 0.7, a2});
 
     std::vector<std::complex<double>> out(pw_rho_.npw);
     int n_small = 0;
@@ -504,7 +504,7 @@ TEST_F(DFPTRhoSerialTest, MixDrhoKerkerStabilizesStiffModelProblem)
 
     // plain beta = 0.7 on the stiff model diverges
     ModuleDFPT::DFPT_Rho rho_p;
-    rho_p.init(1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, "plain", 0.7, 0.0);
+    rho_p.init({1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, std::string("plain"), 0.7, 0.0});
     data_.set_drho_g(0, 0, std::vector<std::complex<double>>(npw, std::complex<double>(0.0, 0.0)));
     for (int it = 0; it < 40; ++it)
     {
@@ -517,7 +517,7 @@ TEST_F(DFPTRhoSerialTest, MixDrhoKerkerStabilizesStiffModelProblem)
     // kerker beta = 0.7 with a^2 = 9 w2_min (f ~ 0.1 on the stiff shell)
     // converges to the target
     ModuleDFPT::DFPT_Rho rho_k;
-    rho_k.init(1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, "kerker", 0.7, 9.0 * w2_min);
+    rho_k.init({1, pw_rho_.nrxx, &pw_rho_, &pw_wfc_, G_, std::string("kerker"), 0.7, 9.0 * w2_min});
     data_.set_drho_g(0, 0, std::vector<std::complex<double>>(npw, std::complex<double>(0.0, 0.0)));
     for (int it = 0; it < 300; ++it)
     {

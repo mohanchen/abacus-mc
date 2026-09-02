@@ -7,6 +7,7 @@
 #include "source_basis/module_pw/pw_basis_k.h"
 #include "source_psi/psi.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -78,17 +79,23 @@ class XC_First_Order
 class DFPT_Rho
 {
   public:
+    /// aggregate config for init (no defaults: every field must be set)
+    struct Config
+    {
+        int nspin;
+        int nrxx;
+        ModulePW::PW_Basis* pw_rho;
+        ModulePW::PW_Basis_K* pw_wfc;
+        ModuleBase::Matrix3 recip_matrix;
+        std::string mix_type; // "plain" or "kerker"
+        double mix_beta;
+        double kerker_a2; // Kerker screen a^2, 1/lat0^2 (kerker only)
+    };
+
     DFPT_Rho();
     ~DFPT_Rho();
 
-    void init(int nspin,
-              int nrxx,
-              ModulePW::PW_Basis* pw_rho,
-              ModulePW::PW_Basis_K* pw_wfc,
-              const ModuleBase::Matrix3& recip_matrix,
-              const std::string& mix_type,
-              double mix_beta,
-              double kerker_a2);
+    void init(const Config& cfg);
 
     void compute_drho(const psi::Psi<std::complex<double>>& psi,
                       const ModuleBase::matrix& wg,
@@ -155,7 +162,7 @@ class DFPT_Rho
     ///< Kerker screening parameter a^2 in 1/lat0^2 (same units as |G+q|^2)
     double kerker_a2_ = 0.0;
 
-    Base_Mixing::Plain_Mixing* mixer_ = nullptr;
+    std::unique_ptr<Base_Mixing::Plain_Mixing> mixer_;
 
     /// mixing state, q-shifted coefficients on the rho grid, [q][spin]
     std::vector<std::vector<std::vector<std::complex<double>>>> drho_in_;
