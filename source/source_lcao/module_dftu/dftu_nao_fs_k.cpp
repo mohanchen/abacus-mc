@@ -1,8 +1,8 @@
 #ifdef __LCAO
-#include "dftu_force.h"
-#include "dftu_folding.h"
-#include "dftu_lcao.h"
-#include "dftu_lcao_pots.h"
+#include "dftu_nao_fs_k.h"
+#include "dftu_nao_folding.h"
+#include "dftu_nao.h"
+#include "dftu_nao_pots.h"
 #include "source_base/global_function.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/parallel_reduce.h"
@@ -135,7 +135,7 @@ void force_stress(Plus_U& dftu,
             if (cal_force)
             {
                 cal_force_gamma(nlocal, npol,
-                                dftu.get_orbital_corr_vec(), dftu.get_iatlnmipol2iwt(),
+                                dftu.get_orbital_corr_vec(), dftu.occmat().iatlnmipol2iwt(),
                                 ucell, &rho_pot_onsite[0], pv,
                                 fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, force_dftu);
             }
@@ -182,7 +182,7 @@ void force_stress(Plus_U& dftu,
             {
                 cal_force_k(nlocal, npol,
                             PARAM.inp.ks_solver, dftu.get_orb_cutoff(),
-                            dftu.get_orbital_corr_vec(), dftu.get_iatlnmipol2iwt(),
+                            dftu.get_orbital_corr_vec(), dftu.occmat().iatlnmipol2iwt(),
                             ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], force_dftu, kv.kvec_d[ik]);
             }
             if (cal_stress)

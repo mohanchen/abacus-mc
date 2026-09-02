@@ -13,9 +13,10 @@ list(APPEND objects
     op_pw_exx_ace.cpp
     op_pw_exx_pot.cpp
     dftu_base.cpp
-    dftu_output.cpp
-    dftu_tools_pw.cpp
-    dftu_cal_occ_pw.cpp
+    dftu_base_io.cpp
+    dftu_base_occ.cpp
+    dftu_base_tools.cpp
+    yukawa_screening.cpp
     setup_pot.cpp
     setup_pwrho.cpp
     setup_pwwfc.cpp

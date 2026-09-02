@@ -1,8 +1,13 @@
-#include "dftu_lcao.h"
+#include "dftu_nao.h"
 
 #include "source_base/tool_quit.h"
 #include "source_base/tool_title.h"
 #include "source_base/timer.h"
+#include "source_basis/module_ao/parallel_orbitals.h"
+#ifdef __LCAO
+#include "source_basis/module_ao/orb_read.h"
+#include "source_estate/module_dm/density_matrix.h"
+#endif
 
 #include <complex>
 #include <vector>
@@ -38,8 +43,6 @@ void Plus_U::init(UnitCell& cell,
 {
     ModuleBase::TITLE("Plus_U", "init");
 
-    this->yukawa_lambda = yukawa_lambda;
-
 #ifdef __LCAO
     ptr_orb_ = orb;
     if(ptr_orb_ != nullptr)
@@ -67,6 +70,7 @@ void Plus_U::init(UnitCell& cell,
                     nspin,
                     orbital_corr,
                     yukawa_potential,
+                    yukawa_lambda,
                     global_readin_dir,
                     global_out_dir,
                     init_chg,
