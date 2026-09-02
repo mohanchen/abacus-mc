@@ -8,6 +8,8 @@ set(SOURCES
     dfpt_stern.cpp
     dfpt_rho.cpp
     dfpt_phon.cpp
+    dfpt_phon_ewald.cpp
+    dfpt_phon_elec.cpp
     dfpt_q0.cpp
     dfpt_q0_pos.cpp
     dfpt_metal.cpp

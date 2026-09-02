@@ -107,6 +107,17 @@ class DFPT_Phon
     /// Gaussian self term), mass-reduced by 1/sqrt(M_a M_b).
     void ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::ComplexMatrix& dyn);
 
+    /// same-atom anharmonic term <psi | d2_ab V_ext | psi> accumulated into
+    /// the (rowb, cola) entries of dynmat_accum_ (upper triangle only; the
+    /// Hermitian partner is added here from conj(d2sum))
+    void accum_d2_same_atom(int atom_idx,
+                            int dir,
+                            int iat,
+                            int idir,
+                            int rowb,
+                            const psi::Psi<std::complex<double>>& psi,
+                            const ModuleBase::matrix& wg);
+
     /// DFT+U contribution to the dynamical matrix (U0 reservation).
     void dftu_onsite(int q_idx, DFPT_PW_Data& data);
 
