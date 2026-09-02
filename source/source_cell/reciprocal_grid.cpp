@@ -335,7 +335,10 @@ void ReciprocalGrid::reduce_ibz(const ModuleBase::Matrix3* rot_ops,
 
     int nkstot_ibz = 0;
 
-    assert(this->nkstot > 0);
+    if (this->nkstot <= 0)
+    {
+        ModuleBase::WARNING_QUIT("ReciprocalGrid::reduce_ibz", "no points to reduce (nkstot <= 0).");
+    }
     std::vector<ModuleBase::Vector3<double>> kvec_d_ibz(this->nkstot);
     std::vector<double> wk_ibz_tmp(this->nkstot); // ibz point weight
     ibz2bz.resize(this->nkstot);
@@ -524,7 +527,10 @@ bool ReciprocalGrid::build_star_ops(const UnitCell& ucell,
                                  << std::endl;
             GlobalV::ofs_running << "ibrav of real space lattice: " << symm.ilattname << std::endl;
             GlobalV::ofs_running << "ibrav of reciprocal lattice: " << recip_brav_name << std::endl;
-            GlobalV::ofs_running << "(which should be " << ibrav_a2b[symm.real_brav - 1] << ")." << std::endl;
+            if (symm.real_brav >= 1 && symm.real_brav <= 14)
+            {
+                GlobalV::ofs_running << "(which should be " << ibrav_a2b[symm.real_brav - 1] << ")." << std::endl;
+            }
             return false;
         }
 

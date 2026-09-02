@@ -659,10 +659,10 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
     }
 
     // convert kgmatrix to k-lattice
-    ModuleBase::Matrix3* kkmatrix = new ModuleBase::Matrix3[nrotkm];
+    std::vector<ModuleBase::Matrix3> kkmatrix(nrotkm);
     if (this->get_is_mp())
     {
-        symm.gmatrix_convert(kgmatrix.data(), kkmatrix, nrotkm, ucell.G, k_vec);
+        symm.gmatrix_convert(kgmatrix.data(), kkmatrix.data(), nrotkm, ucell.G, k_vec);
     }
 
     // use operation : kgmatrix to find
@@ -670,10 +670,8 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
     std::vector<ModuleBase::Vector3<double>> kvec_d_ibz;
     std::vector<double> wk_ibz;
     std::vector<int> ibz2bz;
-    this->reduce_ibz(kgmatrix.data(), nrotkm, ucell.G, k_vec, kkmatrix, symm.epsilon, kvec_d_ibz, wk_ibz, this->ibz_index, ibz2bz);
+    this->reduce_ibz(kgmatrix.data(), nrotkm, ucell.G, k_vec, kkmatrix.data(), symm.epsilon, kvec_d_ibz, wk_ibz, this->ibz_index, ibz2bz);
     const int nkstot_ibz = kvec_d_ibz.size();
-
-    delete[] kkmatrix;
 
     auto restrict_kpt = [&symm](ModuleBase::Vector3<double>& kvec) {
         // in (-0.5, 0.5]
