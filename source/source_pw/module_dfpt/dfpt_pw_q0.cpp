@@ -210,6 +210,7 @@ void DFPT_PW::Impl::efield_per_band_solve(int ik,
         std::vector<std::complex<double>> dpsi_out;
         double res = 0.0;
         stern_.solve(*hamilt_, occ_kq_[ik], rhs, lin_max, lin_thr, dpsi_out, res);
+        data_.set_dpsi(last_q_, ik, ib, dpsi_out);
         (void)res; // convergence is aggregated via drho residual, not per-band stern_
     }
 }
