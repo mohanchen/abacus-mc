@@ -1,4 +1,4 @@
-#include "dftu_lcao_op.h"
+#include "dftu_nao_op.h"
 
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
@@ -6,6 +6,9 @@
 #include "source_lcao/module_operator_lcao/operator_lcao.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/parallel_reduce.h"
+
+// Include the free function implementations for force/stress in real space
+#include "dftu_nao_fs_r.h"
 
 template <typename TK, typename TR>
 hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
@@ -324,7 +327,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
             {
                 for (auto& v : occ) { v *= 0.5; }
             }
-            this->dftu->set_occ_mat_flat(iat0, target_L, this->current_spin, occ);
+            this->dftu->occmat().set_flat(iat0, target_L, this->current_spin, occ);
         }
         // ============================================================
         // BRANCH 2: Occ_mat IS initialized (use pre-read data)
@@ -343,7 +346,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
                 // For nspin=4, occ_mat is stored as 4 stacked tlp1^2 blocks
                 // at offsets 0, tlp1^2, 2*tlp1^2, 3*tlp1^2 for the 4 Pauli channels.
                 // Use get_occ_mat_flat to read the stacked blocks directly
-                this->dftu->get_occ_mat_flat(iat0, target_L, occ);
+                this->dftu->occmat().get_flat(iat0, target_L, occ);
             }
             // nspin=1 or nspin=2: Collinear spin case
             // Occ_mat stored separately for each spin channel
@@ -354,7 +357,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
                     // TODO: UNSAFE - current_spin must be correct for nspin=2.
                     // If current_spin is not toggled properly, wrong spin channel's occ_mat is read.
                     // This can happen if contributeHR() is called out of expected order.
-                    occ[i] = this->dftu->get_occ_mat(iat0, target_L, 0, this->current_spin,
+                    occ[i] = this->dftu->occmat().get(iat0, target_L, 0, this->current_spin,
                                                       i / (2 * target_L + 1), i % (2 * target_L + 1));
                 }
             }
@@ -680,6 +683,17 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_pot_onsite(const std::vecto
             }
         }
     }
+}
+
+// cal_force_stress(): thin wrapper calling the real-space free function implementation
+// See dftu_nao_fs_r.cpp for the actual implementation and mathematical formulas
+template <typename TK, typename TR>
+void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_force_stress(const bool cal_force,
+                                                                  const bool cal_stress,
+                                                                  ModuleBase::matrix& force,
+                                                                  ModuleBase::matrix& stress)
+{
+    cal_fs_nao_r(this, cal_force, cal_stress, force, stress);
 }
 
 template class hamilt::DFTU<hamilt::OperatorLCAO<double, double>>;

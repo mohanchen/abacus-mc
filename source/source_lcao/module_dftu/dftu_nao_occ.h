@@ -43,15 +43,7 @@ void cal_occ_mat_k(const Parallel_Orbitals* pv,
                    const double& mixing_beta,
                    hamilt::Hamilt<std::complex<double>>* p_ham,
                    const bool gamma_only_local,
-                   const int nspin,
-                   const int npol,
-                   const int nlocal,
-                   const std::string& ks_solver,
-                   const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                   const std::vector<int>& orbital_corr,
-                   std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
-                   std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                   bool& occ_mat_initialized);
+                   Plus_U& dftu);
 
 // calculate the local occupation number matrix (gamma-point version)
 void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
@@ -60,14 +52,7 @@ void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                        const std::vector<std::vector<double>>& dm_gamma,
                        const double& mixing_beta,
                        hamilt::Hamilt<double>* p_ham,
-                       const int nspin,
-                       const int npol,
-                       const int nlocal,
-                       const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                       const std::vector<int>& orbital_corr,
-                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat,
-                       std::vector<std::vector<std::vector<std::vector<ModuleBase::matrix>>>>& occ_mat_save,
-                       bool& occ_mat_initialized);
+                       Plus_U& dftu);
 
 } // namespace DFTU_LCAO
 #endif

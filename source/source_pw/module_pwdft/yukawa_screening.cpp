@@ -1,26 +1,62 @@
-#ifdef __LCAO
-#include "source_base/constants.h"
-#include "source_base/global_function.h"
-#include "dftu_lcao.h"
-#include "dftu_yukawa.h"
-#include "source_io/module_parameter/parameter.h"
+#include "yukawa_screening.h"
 
+#include "source_base/constants.h"
+#include "source_base/parallel_reduce.h"
+#include "source_base/tool_quit.h"
+#include "source_base/tool_title.h"
+#include "source_cell/unitcell.h"
+#ifdef __LCAO
+#include "source_basis/module_ao/orb_read.h"
+#endif
+
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <sstream>
 
-
-void DFTU_LCAO::cal_yukawa_lambda(Plus_U& dftu, double** rho, const int& nrxx)
+void YukawaScreening::init(const UnitCell& cell,
+                           const std::vector<int>& orbital_corr,
+                           double yukawa_lambda_cfg)
 {
-    ModuleBase::TITLE("DFTU_LCAO", "cal_yukawa_lambda");
+    this->yukawa_lambda_cfg_ = yukawa_lambda_cfg;
+    this->lambda_ = 0.0;
+    this->orbital_corr_ = orbital_corr;
 
-    // read from the global PARAM.inp.nspin instead of a Plus_U member;
-    // the member indirection is being removed during the refactor
-    const int nspin = PARAM.inp.nspin;
+    this->Fk_.resize(cell.ntype);
+    this->U_Yukawa_.resize(cell.ntype);
+    this->J_Yukawa_.resize(cell.ntype);
 
-    if (dftu.get_yukawa_lambda() > 0)
+    for (int it = 0; it < cell.ntype; it++)
     {
-        dftu.set_lambda(dftu.get_yukawa_lambda());
+        const int NL = cell.atoms[it].nwl + 1;
+
+        this->Fk_[it].resize(NL);
+        this->U_Yukawa_[it].resize(NL);
+        this->J_Yukawa_[it].resize(NL);
+
+        for (int l = 0; l < NL; l++)
+        {
+            const int N = cell.atoms[it].l_nchi[l];
+
+            this->Fk_[it][l].resize(N);
+            for (int n = 0; n < N; n++)
+            {
+                this->Fk_[it][l][n].resize(l + 1, 0.0);
+            }
+
+            this->U_Yukawa_[it][l].resize(N, 0.0);
+            this->J_Yukawa_[it][l].resize(N, 0.0);
+        }
+    }
+}
+
+void YukawaScreening::cal_lambda(double** rho, int nrxx, int nspin)
+{
+    ModuleBase::TITLE("YukawaScreening", "cal_lambda");
+
+    if (this->yukawa_lambda_cfg_ > 0)
+    {
+        this->lambda_ = this->yukawa_lambda_cfg_;
         return;
     }
 
@@ -36,9 +72,9 @@ void DFTU_LCAO::cal_yukawa_lambda(Plus_U& dftu, double** rho, const int& nrxx)
     double min_rho = std::numeric_limits<double>::max();
     for (int is = 0; is < nspin; is++)
     {
-        if(nspin == 4 && is > 0)
+        if (nspin == 4 && is > 0)
         {
-            continue;// for non-collinear spin case, first spin contains the charge density
+            continue; // for non-collinear spin case, first spin contains the charge density
         }
         for (int ir = 0; ir < nrxx; ir++)
         {
@@ -86,80 +122,77 @@ void DFTU_LCAO::cal_yukawa_lambda(Plus_U& dftu, double** rho, const int& nrxx)
             << " min_rho=" << min_rho_global
             << " (need finite sum_rho > 0); nspin=" << nspin
             << " nrxx=" << nrxx;
-        ModuleBase::WARNING_QUIT("DFTU_LCAO::cal_yukawa_lambda", oss.str());
+        ModuleBase::WARNING_QUIT("YukawaScreening::cal_lambda", oss.str());
     }
 
-    dftu.set_lambda(val2 / val1);
+    this->lambda_ = val2 / val1;
 
     // rescaling
-    dftu.set_lambda(dftu.get_lambda() / 1.6);
-
-    return;
+    this->lambda_ /= 1.6;
 }
 
-void DFTU_LCAO::cal_slater_Fk(Plus_U& dftu, const UnitCell& ucell, const int L, const int T)
+void YukawaScreening::cal_slater_Fk(const UnitCell& ucell, int L, int T, const LCAO_Orbitals* orb)
 {
-    ModuleBase::TITLE("DFTU_LCAO", "cal_slater_Fk");
+    ModuleBase::TITLE("YukawaScreening", "cal_slater_Fk");
 
-    if (dftu.use_yukawa())
+#ifdef __LCAO
+    const double lambda_val = this->lambda_;
+
+    for (int chi = 0; chi < ucell.atoms[T].l_nchi[L]; chi++)
     {
-        const LCAO_Orbitals* orb = dftu.get_ptr_orb();
-        const double lambda_val = dftu.get_lambda();
-        auto& Fk = dftu.get_Fk_data();
+        const int mesh = orb->Phi[T].PhiLN(L, chi).getNr();
 
-        for (int chi = 0; chi < ucell.atoms[T].l_nchi[L]; chi++)
+        for (int k = 0; k <= L; k++)
         {
-            //    if(chi!=0) continue;
-            const int mesh = orb->Phi[T].PhiLN(L, chi).getNr();
-
-            for (int k = 0; k <= L; k++)
+            for (int ir0 = 1; ir0 < mesh; ir0++)
             {
-                for (int ir0 = 1; ir0 < mesh; ir0++)
+                double r0 = orb->Phi[T].PhiLN(L, chi).getRadial(ir0);
+                const double rab0 = orb->Phi[T].PhiLN(L, chi).getRab(ir0);
+                const double R_L0 = orb->Phi[T].PhiLN(L, chi).getPsi(ir0);
+
+                for (int ir1 = 1; ir1 < mesh; ir1++)
                 {
-                    double r0 = orb->Phi[T].PhiLN(L, chi).getRadial(ir0);
-                    const double rab0 = orb->Phi[T].PhiLN(L, chi).getRab(ir0);
-                    const double R_L0 = orb->Phi[T].PhiLN(L, chi).getPsi(ir0);
+                    double bslval, hnkval;
+                    double r1 = orb->Phi[T].PhiLN(L, chi).getRadial(ir1);
+                    const double rab1 = orb->Phi[T].PhiLN(L, chi).getRab(ir1);
+                    const double R_L1 = orb->Phi[T].PhiLN(L, chi).getPsi(ir1);
 
-                    for (int ir1 = 1; ir1 < mesh; ir1++)
+                    int l = 2 * k;
+                    if (ir0 < ir1) // less than
                     {
-                        double bslval, hnkval;
-                        double r1 = orb->Phi[T].PhiLN(L, chi).getRadial(ir1);
-                        const double rab1 = orb->Phi[T].PhiLN(L, chi).getRab(ir1);
-                        const double R_L1 = orb->Phi[T].PhiLN(L, chi).getPsi(ir1);
-
-                        int l = 2 * k;
-                        if (ir0 < ir1) // less than
-                        {
-                            bslval = DFTU_LCAO::spherical_Bessel(l, r0, lambda_val);
-                            hnkval = DFTU_LCAO::spherical_Hankel(l, r1, lambda_val);
-                        }
-                        else // greater than
-                        {
-                            bslval = DFTU_LCAO::spherical_Bessel(l, r1, lambda_val);
-                            hnkval = DFTU_LCAO::spherical_Hankel(l, r0, lambda_val);
-                        }
-                        Fk[T][L][chi][k] -= (4 * k + 1) * lambda_val * pow(R_L0, 2) * bslval * hnkval * pow(R_L1, 2)
-                                                  * pow(r0, 2) * pow(r1, 2) * rab0 * rab1;
+                        bslval = spherical_Bessel(l, r0, lambda_val);
+                        hnkval = spherical_Hankel(l, r1, lambda_val);
                     }
+                    else // greater than
+                    {
+                        bslval = spherical_Bessel(l, r1, lambda_val);
+                        hnkval = spherical_Hankel(l, r0, lambda_val);
+                    }
+                    this->Fk_[T][L][chi][k] -= (4 * k + 1) * lambda_val * pow(R_L0, 2) * bslval * hnkval
+                                               * pow(R_L1, 2) * pow(r0, 2) * pow(r1, 2) * rab0 * rab1;
                 }
             }
         }
     }
-
-    return;
+#else
+    (void)ucell;
+    (void)L;
+    (void)T;
+    (void)orb;
+    ModuleBase::WARNING_QUIT("YukawaScreening::cal_slater_Fk",
+                             "Slater integrals require numerical orbitals; compile with __LCAO");
+#endif
 }
 
-void DFTU_LCAO::cal_slater_UJ(Plus_U& dftu, const UnitCell& ucell, double** rho, const int& nrxx)
+void YukawaScreening::cal_slater_UJ(const UnitCell& ucell,
+                                    double** rho,
+                                    int nrxx,
+                                    int nspin,
+                                    const LCAO_Orbitals* orb)
 {
-    ModuleBase::TITLE("DFTU_LCAO", "cal_slater_UJ");
-    if (!dftu.use_yukawa())
-    {
-        return;
-    }
+    ModuleBase::TITLE("YukawaScreening", "cal_slater_UJ");
 
-    cal_yukawa_lambda(dftu, rho, nrxx);
-
-    auto& Fk = dftu.get_Fk_data();
+    this->cal_lambda(rho, nrxx, nspin);
 
     for (int it = 0; it < ucell.ntype; it++)
     {
@@ -170,7 +203,7 @@ void DFTU_LCAO::cal_slater_UJ(Plus_U& dftu, const UnitCell& ucell, double** rho,
             int N = ucell.atoms[it].l_nchi[l];
             for (int n = 0; n < N; n++)
             {
-                ModuleBase::GlobalFunc::ZEROS(ModuleBase::GlobalFunc::VECTOR_TO_PTR(Fk[it][l][n]), l + 1);
+                std::fill(this->Fk_[it][l][n].begin(), this->Fk_[it][l][n].end(), 0.0);
             }
         }
     }
@@ -181,52 +214,43 @@ void DFTU_LCAO::cal_slater_UJ(Plus_U& dftu, const UnitCell& ucell, double** rho,
 
         for (int L = 0; L < NL; L++)
         {
-            const int N = ucell.atoms[T].l_nchi[L];
-
-            if (L >= dftu.get_orbital_corr(T) && dftu.get_orbital_corr(T) != -1)
+            if (L >= this->orbital_corr_[T] && this->orbital_corr_[T] != -1)
             {
-                if (L != dftu.get_orbital_corr(T))
+                if (L != this->orbital_corr_[T])
                 {
                     continue;
                 }
-                cal_slater_Fk(dftu, ucell, L, T);
+                this->cal_slater_Fk(ucell, L, T, orb);
 
-
-                if( L == 1)
+                if (L == 1)
                 {
-                    dftu.set_U_Yukawa(T, L, 0, Fk[T][L][0][0]);
-                    dftu.set_J_Yukawa(T, L, 0, Fk[T][L][0][1] / 5.0);
+                    this->U_Yukawa_[T][L][0] = this->Fk_[T][L][0][0];
+                    this->J_Yukawa_[T][L][0] = this->Fk_[T][L][0][1] / 5.0;
                 }
-                else if( L == 2)
+                else if (L == 2)
                 {
-                    dftu.set_U_Yukawa(T, L, 0, Fk[T][L][0][0]);
-                    dftu.set_J_Yukawa(T, L, 0, (Fk[T][L][0][1] + Fk[T][L][0][2]) / 14.0);
+                    this->U_Yukawa_[T][L][0] = this->Fk_[T][L][0][0];
+                    this->J_Yukawa_[T][L][0] = (this->Fk_[T][L][0][1] + this->Fk_[T][L][0][2]) / 14.0;
                 }
-                else if( L == 3)
+                else if (L == 3)
                 {
-                    dftu.set_U_Yukawa(T, L, 0, Fk[T][L][0][0]);
-                    dftu.set_J_Yukawa(T, L, 0, (286.0 * Fk[T][L][0][1] + 195.0 * Fk[T][L][0][2]
-                                                + 250.0 * Fk[T][L][0][3])
-                                                / 6435.0);
+                    this->U_Yukawa_[T][L][0] = this->Fk_[T][L][0][0];
+                    this->J_Yukawa_[T][L][0] = (286.0 * this->Fk_[T][L][0][1]
+                                                + 195.0 * this->Fk_[T][L][0][2]
+                                                + 250.0 * this->Fk_[T][L][0][3]) / 6435.0;
                 }
 
                 // Hartree to Rydeberg
-                dftu.set_U_Yukawa(T, L, 0, dftu.get_U_Yukawa(T, L, 0) * 2.0);
-                dftu.set_J_Yukawa(T, L, 0, dftu.get_J_Yukawa(T, L, 0) * 2.0);
-                // update current U with calculated U-J from Slater integrals
-                dftu.set_u_current(T, dftu.get_U_Yukawa(T, L, 0) - dftu.get_J_Yukawa(T, L, 0));
+                this->U_Yukawa_[T][L][0] *= 2.0;
+                this->J_Yukawa_[T][L][0] *= 2.0;
             } // end if
         } // end L
     } // end T
-
-    return;
 }
 
-double DFTU_LCAO::spherical_Bessel(const int k, const double r, const double lambda)
+double YukawaScreening::spherical_Bessel(const int k, const double r, const double lambda)
 {
-    ModuleBase::TITLE("DFTU_LCAO", "spherical_Bessel");
-
-    double val=0.0;
+    double val = 0.0;
     double x = r * lambda;
     if (k == 0)
     {
@@ -277,11 +301,9 @@ double DFTU_LCAO::spherical_Bessel(const int k, const double r, const double lam
     return val;
 }
 
-double DFTU_LCAO::spherical_Hankel(const int k, const double r, const double lambda)
+double YukawaScreening::spherical_Hankel(const int k, const double r, const double lambda)
 {
-    ModuleBase::TITLE("DFTU_LCAO", "spherical_Hankel");
-
-    double val=0.0;
+    double val = 0.0;
     double x = r * lambda;
     if (k == 0)
     {
@@ -334,5 +356,3 @@ double DFTU_LCAO::spherical_Hankel(const int k, const double r, const double lam
     }
     return val;
 }
-
-#endif
