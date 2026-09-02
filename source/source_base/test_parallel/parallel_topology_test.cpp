@@ -215,34 +215,31 @@ TEST(ProcessTopology, DefaultConstructorIsSingleProcess)
 
 TEST(ProcessTopology, ConstructAndAccessors)
 {
-    // Procs 10 world ranks 0..9.
-    // KPAR=3 -> pool sizes {4,3,3} i.e. pools cover ranks:
-    //   pool0: 0..3, pool1:4..6, pool2:7..9
-    // BNDPAR=2 splits each pool into 2 stripe-contiguous band groups.
-    // Each band group is required globally to contain NPROC_IN_BAND_GROUP=5
-    // (bndpar * nproc_in_band_group = 10 = world), so per-pool slice
-    // sizes into band groups are:
-    //   pool0 (4) -> 2 each into bg0/bg1 -> bg0: 0,1  bg1: 2,3
-    //   pool1 (3) -> 1 (bg1 gets +1 due pool1 divide even=false via kpar)
-    //             Actually ABACUS bndpar_group.divide_group_comm(NG, even=true);
-    //             but the constructor only asserts the size invariants
-    //             provided by callers; we keep this synthetic vector
-    //             consistent with a valid layout and pick ranks such
-    //             that the band_group_root_rank helper produces 0/5:
-    //   bg0 global set  -> {0,1 of pool0;  first of pool1; first 2 of pool2} = 5 ranks -> root rank 0
-    //   bg1 global set  -> {2,3 of pool0;  last 2 of pool1; last 1 of pool2} = 5 ranks -> root rank 5
-    const std::vector<int> pool_sizes = {4, 3, 3};
+    // Real ABACUS layout with 12 world ranks 0..11, KPAR=3, BNDPAR=2.
+    // divide_pools constraint (BNDPAR>1): NPROC % (BNDPAR*KPAR) == 0,
+    // i.e. 12 % 6 == 0, so pools are even: {4,4,4} covering ranks
+    //   pool0: 0..3, pool1: 4..7, pool2: 8..11
+    // Each pool is split by BNDPAR=2 (even) into 2 slices of
+    // pool_size/bndpar = 2 ranks:
+    //   bg0: {0,1} {4,5} {8,9}   -> 6 ranks, root = world rank 0
+    //   bg1: {2,3} {6,7} {10,11} -> 6 ranks, root = world rank 2
+    // Global band-group size nproc_in_band_group = kpar * 2 = 6 and
+    // bndpar * nproc_in_band_group = 12 = world.
+    // my_rank = 6 sits in pool1 (start 4) at rank_in_pool 2, which
+    // belongs to bg1 (pool1 slice [2,4)) at global band-group rank
+    // RANK_IN_BPGROUP = my_pool * 2 + 0 = 2.
+    const std::vector<int> pool_sizes = {4, 4, 4};
 #ifdef __MPI
-    const ProcessTopology t(/*world=*/10,
+    const ProcessTopology t(/*world=*/12,
                            /*my_rank=*/6,
                            /*kpar=*/3,
-                           /*my_pool=*/2,
-                           /*rank_in_pool=*/2,   // world rank 7+2 = 9
+                           /*my_pool=*/1,
+                           /*rank_in_pool=*/2,
                            pool_sizes,
                            /*bndpar=*/2,
                            /*my_band_group=*/1,
-                           /*rank_in_band_group=*/1,
-                           /*nproc_in_band_group=*/5,
+                           /*rank_in_band_group=*/2,
+                           /*nproc_in_band_group=*/6,
                            /*pw_world=*/MPI_COMM_SELF,
                            /*kmesh_world=*/MPI_COMM_NULL,
                            /*bsame_kdiff=*/MPI_COMM_SELF,
@@ -252,35 +249,35 @@ TEST(ProcessTopology, ConstructAndAccessors)
                            /*matrix_world=*/MPI_COMM_SELF,
                            /*atom_world=*/MPI_COMM_WORLD);
 #else
-    const ProcessTopology t(10, 6, 3, 2, 2, pool_sizes, 2, 1, 1, 5);
+    const ProcessTopology t(12, 6, 3, 1, 2, pool_sizes, 2, 1, 2, 6);
 #endif
 
-    EXPECT_EQ(t.world_size(), 10);
+    EXPECT_EQ(t.world_size(), 12);
     EXPECT_EQ(t.world_rank(), 6);
 
     EXPECT_EQ(t.kpar(), 3);
-    EXPECT_EQ(t.my_pool(), 2);
+    EXPECT_EQ(t.my_pool(), 1);
     EXPECT_EQ(t.rank_in_pool(), 2);
     EXPECT_EQ(t.nproc_in_pool(0), 4);
-    EXPECT_EQ(t.nproc_in_pool(1), 3);
-    EXPECT_EQ(t.nproc_in_pool(2), 3);
+    EXPECT_EQ(t.nproc_in_pool(1), 4);
+    EXPECT_EQ(t.nproc_in_pool(2), 4);
 
     EXPECT_EQ(t.bndpar(), 2);
     EXPECT_EQ(t.my_band_group(), 1);
-    EXPECT_EQ(t.rank_in_band_group(), 1);
-    EXPECT_EQ(t.nproc_in_band_group(), 5);
+    EXPECT_EQ(t.rank_in_band_group(), 2);
+    EXPECT_EQ(t.nproc_in_band_group(), 6);
 
     // pool_root_rank prefix offsets -> pool start world rank.
     EXPECT_EQ(t.pool_root_rank(0), 0);
     EXPECT_EQ(t.pool_root_rank(1), 4);
-    EXPECT_EQ(t.pool_root_rank(2), 7);
+    EXPECT_EQ(t.pool_root_rank(2), 8);
     EXPECT_EQ(t.pool_root_rank(3), -1);
 
-    // band_group_root_rank over the 2 band groups:
-    //   bg0 root = 0 * 5 = 0 (first rank of bg0 set across all pools)
-    //   bg1 root = 1 * 5 = 5
+    // band_group_root_rank: first member of each band-group union.
+    //   bg0 root = 0 * (4/2) = 0
+    //   bg1 root = 1 * (4/2) = 2  (world rank 2, first member of bg1)
     EXPECT_EQ(t.band_group_root_rank(0), 0);
-    EXPECT_EQ(t.band_group_root_rank(1), 5);
+    EXPECT_EQ(t.band_group_root_rank(1), 2);
     EXPECT_EQ(t.band_group_root_rank(2), -1);
 
 #ifdef __MPI
@@ -348,8 +345,9 @@ TEST(ParallelGlobalCreateTopology, FourRanksKpar2Bndpar2DiagNp2)
     // BNDPAR=2 (even=true) in each pool of 2 procs -> each bg gets 1 proc
     // Global union bg size = kpar*1 = 2 = nproc_in_band_group
     EXPECT_EQ(t.nproc_in_band_group(), 2);
+    // bg0 = {0, 2} -> root 0; bg1 = {1, 3} -> root = 1 * (2/2) = 1
     EXPECT_EQ(t.band_group_root_rank(0), 0);
-    EXPECT_EQ(t.band_group_root_rank(1), 2); // band_group * nproc_in_band_group = 1 * 2
+    EXPECT_EQ(t.band_group_root_rank(1), 1);
 
     // ---- per-rank local values -------------------------------------
     // World ranks 0..3, KPAR=2 (even=false) -> pools {0: {0,1}, 1: {2,3}}.

@@ -110,9 +110,12 @@ class ProcessTopology
     int my_band_group() const { return my_band_group_; }
     int rank_in_band_group() const { return rank_in_band_group_; }
     int nproc_in_band_group() const { return nproc_in_band_group_; }
-    /// World rank of the root (rank 0) inside a band-group union.
-    /// Uses the same prefix-sum logic as pool_root_rank but over the
-    /// band-group partition of MPI_COMM_WORLD. -1 on invalid index.
+    /// World rank of the first member (root) of a band-group union.
+    /// Band-group slices are stripe-contiguous inside each k pool, and
+    /// pool 0 starts at world rank 0, so the root is
+    /// band_group * (nproc_in_pool[0] / bndpar). This equals
+    /// band_group * nproc_in_band_group() only when kpar == 1.
+    /// -1 on invalid index.
     int band_group_root_rank(int band_group) const;
 
 #ifdef __MPI

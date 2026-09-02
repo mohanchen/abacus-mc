@@ -115,21 +115,19 @@ int ProcessTopology::band_group_root_rank(int band_group) const
     // In ABACUS divide_pools the band-group layout over world ranks is
     // stripe-contiguous inside each k pool: within pool P the first
     // (nproc_in_pool[P]/bndpar) ranks belong to band-group 0, the next
-    // slice to band-group 1, and so on.  The first rank of the
-    // concatenated "same band-group across all pools" set (i.e. the
-    // root of bsame_kdiff_world for that band-group) is therefore the
-    // first occurrence in pool 0, which falls at offset band_group *
-    // (nproc_in_pool[0]/bndpar) from pool_root_rank(0).  The invariant
-    // bndpar_ * nproc_in_band_group_ == world_nproc_ + the even split
-    // enforced by MPICommGroup::divide_group_comm make that offset
-    // equal to (band_group * nproc_in_band_group_) directly because
-    // each band-group contains exactly nproc_in_band_group_ processes
-    // globally and they appear in ascending band-group id order in
-    // world rank when scanned pool by pool.
+    // slice to band-group 1, and so on.  Pool 0 always starts at world
+    // rank 0 (divide_mpi_groups assigns pools as contiguous blocks in
+    // ascending world-rank order), so the first member of the
+    // "same band-group across all pools" set -- i.e. the root of
+    // bsame_kdiff_world for that band-group -- is the first occurrence
+    // in pool 0, which falls at offset band_group * (nproc_in_pool[0]
+    // / bndpar) from world rank 0.
+    //
+    // NOTE: this is generally NOT equal to band_group *
+    // nproc_in_band_group_.  The global band-group size is
+    // kpar * (nproc_in_pool[0] / bndpar), so the two formulas coincide
+    // only when kpar == 1 (or band_group == 0).
     const int per_bg_in_pool0 = nproc_in_pool_[0] / bndpar_;
     assert(per_bg_in_pool0 * bndpar_ == nproc_in_pool_[0]);
-    const int via_pool0 = band_group * per_bg_in_pool0;
-    const int via_global = band_group * nproc_in_band_group_;
-    assert(via_pool0 == via_global);
-    return via_global;
+    return band_group * per_bg_in_pool0;
 }
