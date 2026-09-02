@@ -131,6 +131,12 @@ void Plus_U_Base::init_base(UnitCell& cell,
         this->yukawa_.reset(new YukawaScreening());
         this->yukawa_->init(cell, orbital_corr, yukawa_lambda);
     }
+    else
+    {
+        // Clear any stale object from a previous init_base() call with
+        // yukawa_potential == true, preserving the old explicit-flag semantics.
+        this->yukawa_.reset();
+    }
 
     if (occ_mat_ctrl != 0)
     {
