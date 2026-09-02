@@ -149,7 +149,8 @@ public:
      */
     void update_use_ibz(const int& nkstot_ibz,
                         const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
-                        const std::vector<double>& wk_ibz);
+                        const std::vector<double>& wk_ibz,
+                        std::ofstream& ofs_running);
 
     /**
      * @brief Sets up the k-points after a volume change.
@@ -163,7 +164,7 @@ public:
      *                 calculations and 2 for spin-polarized calculations.
      * @param G The new reciprocal lattice matrix.
      */
-    void set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G);
+    void set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G, std::ofstream& ofs_running);
 
   private:
     int nspin = 0;             ///< number of spin states
@@ -234,7 +235,8 @@ public:
                       const bool gamma_only_local,
                       const double kspacing[3],
                       const std::string& kmesh_type,
-                      const double koffset[3]); // return 0: something wrong.
+                      const double koffset[3],
+                      std::ofstream& ofs_running); // return 0: something wrong.
 
     /**
      * @brief Overwrite the KPT file with an auto-generated mesh when requested.
@@ -269,7 +271,7 @@ public:
      * @return bool Returns true if the k-points are successfully read,
      *              false otherwise.
      */
-    bool parse_kfile(const std::string& fn);
+    bool parse_kfile(const std::string& fn, std::ofstream& ofs_running);
 
     /**
      * @brief Adds k-points linearly between special points.
@@ -315,7 +317,7 @@ public:
      * @note The function also doubles the total number of k-points (nks and nkstot) for spin-polarized calculations.
      * @note The function prints the total number of k-points for spin-polarized calculations.
      */
-    void set_kup_and_kdw();
+    void set_kup_and_kdw(std::ofstream& ofs_running);
 
     /**
      * @brief Gets the global index of a k-point.
@@ -334,7 +336,7 @@ public:
      * @note Assumes nkstot > 0 and quits if some process ends up with
      *       no k-points.
      */
-    void mpi_k();
+    void mpi_k(std::ofstream& ofs_running);
 #endif
 };
 #endif // KVECT_H

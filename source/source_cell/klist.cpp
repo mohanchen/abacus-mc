@@ -83,7 +83,7 @@ void K_Vectors::set(const UnitCell& ucell,
 
     this->nspin = (this->nspin == 4) ? 1 : this->nspin;
 
-    bool read_succesfully = this->read_kpoints(ucell, k_file_name, gamma_only_local_, kspacing, kmesh_type_, koffset);
+    bool read_succesfully = this->read_kpoints(ucell, k_file_name, gamma_only_local_, kspacing, kmesh_type_, koffset, ofs);
 #ifdef __MPI
     Parallel_Common::bcast_bool(read_succesfully);
 #endif
@@ -172,11 +172,11 @@ void K_Vectors::set(const UnitCell& ucell,
                        nspin_in); // assign k points to several process pools
 #ifdef __MPI
     // distribute K point data to the corresponding process
-    this->mpi_k();
+    this->mpi_k(ofs);
 #endif
 
     // set the k vectors for the up and down spin
-    this->set_kup_and_kdw();
+    this->set_kup_and_kdw(ofs);
 
     // initialize ibz_index
     this->ibz_index.resize(this->nkstot_full);
@@ -212,7 +212,8 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
                              const bool gamma_only_local,
                              const double kspacing[3],
                              const std::string& kmesh_type,
-                             const double koffset[3])
+                             const double koffset[3],
+                             std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("K_Vectors", "read_kpoints");
     if (GlobalV::MY_RANK != 0)
@@ -225,7 +226,7 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
     this->generate_kfile(ucell, fn, gamma_only_local, kspacing, kmesh_type, koffset);
 
     // 2. Read the KPT file and build the k-point list
-    return this->parse_kfile(fn);
+    return this->parse_kfile(fn, ofs_running);
 }
 
 void K_Vectors::generate_kfile(const UnitCell& ucell,
@@ -279,7 +280,7 @@ void K_Vectors::generate_kfile(const UnitCell& ucell,
 }
 
 // 2. Generate the K-point grid automatically according to the KPT file
-bool K_Vectors::parse_kfile(const std::string& fn)
+bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
 {
     // 2.1 read the KPT file
     std::ifstream ifk(fn.c_str());
@@ -346,13 +347,13 @@ bool K_Vectors::parse_kfile(const std::string& fn)
         {
             is_mp = true;
             k_type = 0;
-            ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Input type of k points", "Monkhorst-Pack(Gamma)");
+            ModuleBase::GlobalFunc::OUT(ofs_running, "Input type of k points", "Monkhorst-Pack(Gamma)");
         }
         else if (kword == "Monkhorst-Pack" || kword == "MP" || kword == "mp")
         {
             is_mp = true;
             k_type = 1;
-            ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Input type of k points", "Monkhorst-Pack");
+            ModuleBase::GlobalFunc::OUT(ofs_running, "Input type of k points", "Monkhorst-Pack");
         }
         else
         {
@@ -436,7 +437,7 @@ bool K_Vectors::parse_kfile(const std::string& fn)
 
     this->nkstot_full = this->nks = this->nkstot;
 
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nkstot", nkstot);
+    ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot", nkstot);
     return true;
 } // END SUBROUTINE
 
@@ -515,7 +516,8 @@ void K_Vectors::interpolate_k_between(std::ifstream& ifk, std::vector<ModuleBase
 
 void K_Vectors::update_use_ibz(const int& nkstot_ibz,
                                const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
-                               const std::vector<double>& wk_ibz)
+                               const std::vector<double>& wk_ibz,
+                               std::ofstream& ofs_running)
 {
     if (GlobalV::MY_RANK != 0) {
         return;
@@ -526,7 +528,7 @@ void K_Vectors::update_use_ibz(const int& nkstot_ibz,
     // update nkstot
     this->nks = this->nkstot = nkstot_ibz;
 
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nkstot now", nkstot);
+    ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot now", nkstot);
 
     this->kvec_d.resize(this->nkstot * nspin); // qianrui fix a bug 2021-7-13 for nspin=2 in set_kup_and_kdw()
 
@@ -547,7 +549,7 @@ void K_Vectors::update_use_ibz(const int& nkstot_ibz,
 // This routine sets the k vectors for the up and down spin
 //----------------------------------------------------------
 // from set_kup_and_kdw.f90
-void K_Vectors::set_kup_and_kdw()
+void K_Vectors::set_kup_and_kdw(std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("K_Vectors", "setup_kup_and_kdw");
 
@@ -583,8 +585,8 @@ void K_Vectors::set_kup_and_kdw()
         this->nks *= 2;
         this->nkstot *= 2;
 
-        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nks(nspin=2)", nks);
-        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nkstot(nspin=2)", nkstot);
+        ModuleBase::GlobalFunc::OUT(ofs_running, "nks(nspin=2)", nks);
+        ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot(nspin=2)", nkstot);
         break;
     }
 
@@ -756,17 +758,17 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
     // resize the kpoint container according to nkstot_ibz
     if (use_symm || this->get_is_mp())
     {
-        this->update_use_ibz(nkstot_ibz, kvec_d_ibz, wk_ibz);
+        this->update_use_ibz(nkstot_ibz, kvec_d_ibz, wk_ibz, GlobalV::ofs_running);
     }
 
     return;
 }
 
-void K_Vectors::set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G)
+void K_Vectors::set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G, std::ofstream& ofs_running)
 {
-    GlobalV::ofs_running << "\n SETUP K-POINTS" << std::endl;
+    ofs_running << "\n SETUP K-POINTS" << std::endl;
     this->set_nspin(nspin_in);
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nspin", this->get_nspin());
+    ModuleBase::GlobalFunc::OUT(ofs_running, "nspin", this->get_nspin());
 
     // set cartesian k vectors.
     this->kvec_d2c(G);
@@ -783,16 +785,16 @@ void K_Vectors::set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G)
                                  this->kvec_d[i].z,
                                  this->wk[i]);
     }
-    GlobalV::ofs_running << table << std::endl;
+    ofs_running << table << std::endl;
 
     this->kd_done = true;
     this->kc_done = true;
 
-    this->print_klists(GlobalV::ofs_running);
+    this->print_klists(ofs_running);
 }
 
 #ifdef __MPI
-void K_Vectors::mpi_k()
+void K_Vectors::mpi_k(std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("K_Vectors", "mpi_k");
 
@@ -815,8 +817,8 @@ void K_Vectors::mpi_k()
 
     this->nks = this->para_k.nks_pool[GlobalV::MY_POOL];
 
-    GlobalV::ofs_running << std::endl;
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Number of k-points in this process", this->nks);
+    ofs_running << std::endl;
+    ModuleBase::GlobalFunc::OUT(ofs_running, "Number of k-points in this process", this->nks);
     int nks_minimum = this->nks;
 
     Parallel_Reduce::reduce_min(nks_minimum);
@@ -827,7 +829,7 @@ void K_Vectors::mpi_k()
     }
     else
     {
-        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Minimum distributed k-point number", nks_minimum);
+        ModuleBase::GlobalFunc::OUT(ofs_running, "Minimum distributed k-point number", nks_minimum);
     }
 
     std::vector<int> isk_aux(this->nkstot);
