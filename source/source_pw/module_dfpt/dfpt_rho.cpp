@@ -57,145 +57,66 @@ void DFPT_Rho::init(int nspin,
     ModuleBase::timer::end("DFPT_Rho", "init");
 }
 
-void DFPT_Rho::compute_drho(const psi::Psi<std::complex<double>>& psi,
-                            const ModuleBase::matrix& wg,
-                            int q_idx,
-                            DFPT_PW_Data& data)
+bool DFPT_Rho::is_gamma_q_(const ModuleBase::Vector3<double>& q)
 {
-    ModuleBase::TITLE("DFPT_Rho", "compute_drho");
-    ModuleBase::timer::start("DFPT_Rho", "compute_drho");
-    if (pw_rho_ == nullptr || pw_wfc_ == nullptr)
-    {
-        ModuleBase::timer::end("DFPT_Rho", "compute_drho");
-        return;
-    }
-    if (nspin_ != 1)
-    {
-        ModuleBase::WARNING_QUIT("DFPT_Rho", "only nspin = 1 is supported in the design phase");
-    }
-    const int nk = psi.get_nk();
-    const int nbands = psi.get_nbands();
-    const ModuleBase::Vector3<double> q_frac = data.get_qvec(q_idx);
-    const ModuleBase::Vector3<double> q_cart = q_frac * recip_matrix_;
+    return std::abs(q.x) < 1.0e-10 && std::abs(q.y) < 1.0e-10 && std::abs(q.z) < 1.0e-10;
+}
 
-    std::vector<std::complex<double>> a_r(pw_rho_->nrxx, std::complex<double>(0.0, 0.0));
+void DFPT_Rho::add_band_(int ik,
+                         int ib,
+                         double w,
+                         const std::complex<double>* c_ptr,
+                         const std::vector<std::complex<double>>& dpsi,
+                         const DFPT_KQ_Basis& kq,
+                         std::vector<std::complex<double>>& a_r)
+{
+    const int npw_kq = kq.get_npwk();
+    // k+q G index -> rho-grid ig (both bases share the FFT cell)
+    std::vector<int> kq2rho(npw_kq, -1);
+    for (int igl = 0; igl < npw_kq; ++igl)
+    {
+        kq2rho[igl] = kq.get_ig_rho(igl);
+    }
+    // periodic part u_nk(r) on the shared grid (phase-free FFT)
     std::vector<std::complex<double>> u_r(pw_rho_->nrxx);
-    std::vector<std::complex<double>> d_r(pw_rho_->nrxx);
+    pw_wfc_->recip2real(c_ptr, u_r.data(), ik);
+    // periodic part du_nk(r): scatter the k+q coefficients onto the
+    // rho grid and transform (same convention, so the product is
+    // consistent with the u transform)
     std::vector<std::complex<double>> d_recip(pw_rho_->npw, std::complex<double>(0.0, 0.0));
-    DFPT_KQ_Basis kq;
-    for (int ik = 0; ik < nk; ++ik)
+    const int nd = std::min(npw_kq, static_cast<int>(dpsi.size()));
+    for (int igl = 0; igl < nd; ++igl)
     {
-        kq.init(pw_wfc_, pw_rho_, q_cart, ik);
-        const int npw_kq = kq.get_npwk();
-        // k+q G index -> rho-grid ig (both bases share the FFT cell)
-        std::vector<int> kq2rho(npw_kq, -1);
-        for (int igl = 0; igl < npw_kq; ++igl)
+        if (kq2rho[igl] >= 0)
         {
-            kq2rho[igl] = kq.get_ig_rho(igl);
-        }
-        for (int ib = 0; ib < nbands; ++ib)
-        {
-            const double w = wg(ik, ib);
-            if (!dfpt_band_occupied(wg, ik, ib))
-            {
-                continue; // unoccupied band: no contribution to the density
-            }
-            // periodic part u_nk(r) on the shared grid (phase-free FFT)
-            pw_wfc_->recip2real(&psi(ik, ib, 0), u_r.data(), ik);
-            // periodic part du_nk(r): scatter the k+q coefficients onto the
-            // rho grid and transform (same convention, so the product is
-            // consistent with the u transform)
-            std::fill(d_recip.begin(), d_recip.end(), std::complex<double>(0.0, 0.0));
-            const std::vector<std::complex<double>> dpsi = data.get_dpsi(q_idx, ik, ib);
-            const int nd = std::min(npw_kq, static_cast<int>(dpsi.size()));
-            for (int igl = 0; igl < nd; ++igl)
-            {
-                if (kq2rho[igl] >= 0)
-                {
-                    d_recip[kq2rho[igl]] = dpsi[igl];
-                }
-            }
-            pw_rho_->recip2real(d_recip.data(), d_r.data());
-            // same normalization as the GS density accumulation
-            // (elecstate_pw.cpp rhoBandK: w1 = wg / omega), including the
-            // spin factor 2: QE incdrhoscf uses wgt = 2 * weight / omega
-            // at every q (the factor 2 is the spin degeneracy, not a
-            // Hermitian completion)
-            const double w1 = 2.0 * w / pw_rho_->omega;
-            for (int ir = 0; ir < pw_rho_->nrxx; ++ir)
-            {
-                a_r[ir] += w1 * std::conj(u_r[ir]) * d_r[ir];
-            }
+            d_recip[kq2rho[igl]] = dpsi[igl];
         }
     }
-
-    // Hermitian completion at q = 0: the band loop above stores only the
-    // u_n^* du_n piece (spin factor 2 already included in w1); the physical
-    // (real) response density at q = 0 also contains the du_n u_n^* piece,
-    // which coincides with the conjugate of the stored one, so keep only
-    // the real part of the amplitude before the FFT. The resulting
-    // coefficients are exactly Hermitian on the sphere, including
-    // one-sided sticks whose -G falls outside it. Away from q = 0 the +q
-    // harmonic of the response is exactly the one-sided object and no
-    // completion applies.
-    const bool q_is_zero
-        = (std::abs(q_frac.x) < 1.0e-10 && std::abs(q_frac.y) < 1.0e-10 && std::abs(q_frac.z) < 1.0e-10);
-    if (q_is_zero)
+    std::vector<std::complex<double>> d_r(pw_rho_->nrxx);
+    pw_rho_->recip2real(d_recip.data(), d_r.data());
+    // same normalization as the GS density accumulation
+    // (elecstate_pw.cpp rhoBandK: w1 = wg / omega), including the
+    // spin factor 2: QE incdrhoscf uses wgt = 2 * weight / omega
+    // at every q (the factor 2 is the spin degeneracy, not a
+    // Hermitian completion)
+    const double w1 = 2.0 * w / pw_rho_->omega;
+    for (int ir = 0; ir < pw_rho_->nrxx; ++ir)
     {
-        for (int ir = 0; ir < pw_rho_->nrxx; ++ir)
-        {
-            a_r[ir] = std::complex<double>(a_r[ir].real(), 0.0);
-        }
+        a_r[ir] += w1 * std::conj(u_r[ir]) * d_r[ir];
     }
+}
 
-    // q-shifted coefficients A_Delta on the rho grid
-    std::vector<std::complex<double>> drho_g(pw_rho_->npw);
-    pw_rho_->real2recip(a_r.data(), drho_g.data());
-
-    // charge conservation: the Delta = -q harmonic (G+q = 0 component of the
-    // response density) must vanish whenever -q falls on a reciprocal
-    // lattice vector; for a generic q inside the cell this never triggers
-    {
-        const ModuleBase::Vector3<double> mq_cart(-q_cart.x, -q_cart.y, -q_cart.z);
-        const ModuleBase::Vector3<double> mfrac = mq_cart * recip_matrix_.Inverse();
-        const double mr[3] = {std::round(mfrac.x), std::round(mfrac.y), std::round(mfrac.z)};
-        if (std::abs(mfrac.x - mr[0]) < 1.0e-6 && std::abs(mfrac.y - mr[1]) < 1.0e-6
-            && std::abs(mfrac.z - mr[2]) < 1.0e-6)
-        {
-            // locate the rho-grid G equal to -q through its FFT cell
-            const int cix = (static_cast<int>(mr[0]) % pw_rho_->nx + pw_rho_->nx) % pw_rho_->nx;
-            const int ciy = (static_cast<int>(mr[1]) % pw_rho_->ny + pw_rho_->ny) % pw_rho_->ny;
-            const int ciz = (static_cast<int>(mr[2]) % pw_rho_->nz + pw_rho_->nz) % pw_rho_->nz;
-            int ig0 = -1;
-            for (int ig = 0; ig < pw_rho_->npw; ++ig)
-            {
-                const int isz = pw_rho_->ig2isz[ig];
-                const int iz = isz % pw_rho_->nz;
-                const int is = isz / pw_rho_->nz;
-                const int ixy = pw_rho_->is2fftixy[is];
-                const int ix = ixy / pw_rho_->fftny;
-                const int iy = ixy % pw_rho_->fftny;
-                if (ix == cix && iy == ciy && iz == ciz)
-                {
-                    ig0 = ig;
-                    break;
-                }
-            }
-            if (ig0 >= 0)
-            {
-                drho_g[ig0] = std::complex<double>(0.0, 0.0);
-            }
-        }
-    }
-    data.set_drho_g(q_idx, 0, drho_g);
-
+void DFPT_Rho::make_drho_r_(const std::vector<std::complex<double>>& drho_g,
+                            const ModuleBase::Vector3<double>& q_frac,
+                            std::vector<double>& drho_r) const
+{
     // real-space manifest density: at q = 0 the completed coefficients are
     // already the full (real) response; away from q = 0 the manifest is the
     // real combination 2 Re[e^{i q r} A(r)] of the one-sided amplitude
     std::vector<std::complex<double>> a_clean(pw_rho_->nrxx);
     pw_rho_->recip2real(drho_g.data(), a_clean.data());
-    std::vector<double> drho_r(pw_rho_->nrxx);
-    if (q_is_zero)
+    drho_r.resize(pw_rho_->nrxx);
+    if (is_gamma_q_(q_frac))
     {
         for (int ir = 0; ir < pw_rho_->nrxx; ++ir)
         {
@@ -219,6 +140,107 @@ void DFPT_Rho::compute_drho(const psi::Psi<std::complex<double>>& psi,
             }
         }
     }
+}
+
+void DFPT_Rho::zero_neg_q_(const ModuleBase::Vector3<double>& q_cart,
+                           std::vector<std::complex<double>>& drho_g) const
+{
+    // charge conservation: the Delta = -q harmonic (G+q = 0 component of the
+    // response density) must vanish whenever -q falls on a reciprocal
+    // lattice vector; for a generic q inside the cell this never triggers
+    const ModuleBase::Vector3<double> mq_cart(-q_cart.x, -q_cart.y, -q_cart.z);
+    const ModuleBase::Vector3<double> mfrac = mq_cart * recip_matrix_.Inverse();
+    const double mr[3] = {std::round(mfrac.x), std::round(mfrac.y), std::round(mfrac.z)};
+    if (std::abs(mfrac.x - mr[0]) < 1.0e-6 && std::abs(mfrac.y - mr[1]) < 1.0e-6
+        && std::abs(mfrac.z - mr[2]) < 1.0e-6)
+    {
+        // locate the rho-grid G equal to -q through its FFT cell
+        const int cix = (static_cast<int>(mr[0]) % pw_rho_->nx + pw_rho_->nx) % pw_rho_->nx;
+        const int ciy = (static_cast<int>(mr[1]) % pw_rho_->ny + pw_rho_->ny) % pw_rho_->ny;
+        const int ciz = (static_cast<int>(mr[2]) % pw_rho_->nz + pw_rho_->nz) % pw_rho_->nz;
+        for (int ig = 0; ig < pw_rho_->npw; ++ig)
+        {
+            const int isz = pw_rho_->ig2isz[ig];
+            const int iz = isz % pw_rho_->nz;
+            const int is = isz / pw_rho_->nz;
+            const int ixy = pw_rho_->is2fftixy[is];
+            const int ix = ixy / pw_rho_->fftny;
+            const int iy = ixy % pw_rho_->fftny;
+            if (ix == cix && iy == ciy && iz == ciz)
+            {
+                drho_g[ig] = std::complex<double>(0.0, 0.0);
+                break;
+            }
+        }
+    }
+}
+
+void DFPT_Rho::compute_drho(const psi::Psi<std::complex<double>>& psi,
+                            const ModuleBase::matrix& wg,
+                            int q_idx,
+                            DFPT_PW_Data& data)
+{
+    ModuleBase::TITLE("DFPT_Rho", "compute_drho");
+    ModuleBase::timer::start("DFPT_Rho", "compute_drho");
+    if (pw_rho_ == nullptr || pw_wfc_ == nullptr)
+    {
+        ModuleBase::timer::end("DFPT_Rho", "compute_drho");
+        return;
+    }
+    if (nspin_ != 1)
+    {
+        ModuleBase::WARNING_QUIT("DFPT_Rho", "only nspin = 1 is supported in the design phase");
+    }
+    const int nk = psi.get_nk();
+    const int nbands = psi.get_nbands();
+    const ModuleBase::Vector3<double> q_frac = data.get_qvec(q_idx);
+    const ModuleBase::Vector3<double> q_cart = q_frac * recip_matrix_;
+
+    std::vector<std::complex<double>> a_r(pw_rho_->nrxx, std::complex<double>(0.0, 0.0));
+    DFPT_KQ_Basis kq;
+    for (int ik = 0; ik < nk; ++ik)
+    {
+        kq.init(pw_wfc_, pw_rho_, q_cart, ik);
+        for (int ib = 0; ib < nbands; ++ib)
+        {
+            if (!dfpt_band_occupied(wg, ik, ib))
+            {
+                continue; // unoccupied band: no contribution to the density
+            }
+            const double w = wg(ik, ib);
+            const std::vector<std::complex<double>> dpsi = data.get_dpsi(q_idx, ik, ib);
+            add_band_(ik, ib, w, &psi(ik, ib, 0), dpsi, kq, a_r);
+        }
+    }
+
+    // Hermitian completion at q = 0: the band loop above stores only the
+    // u_n^* du_n piece (spin factor 2 already included in w1); the physical
+    // (real) response density at q = 0 also contains the du_n u_n^* piece,
+    // which coincides with the conjugate of the stored one, so keep only
+    // the real part of the amplitude before the FFT. The resulting
+    // coefficients are exactly Hermitian on the sphere, including
+    // one-sided sticks whose -G falls outside it. Away from q = 0 the +q
+    // harmonic of the response is exactly the one-sided object and no
+    // completion applies.
+    if (is_gamma_q_(q_frac))
+    {
+        for (int ir = 0; ir < pw_rho_->nrxx; ++ir)
+        {
+            a_r[ir] = std::complex<double>(a_r[ir].real(), 0.0);
+        }
+    }
+
+    // q-shifted coefficients A_Delta on the rho grid
+    std::vector<std::complex<double>> drho_g(pw_rho_->npw);
+    pw_rho_->real2recip(a_r.data(), drho_g.data());
+
+    // charge conservation: zero the Delta = -q harmonic
+    zero_neg_q_(q_cart, drho_g);
+    data.set_drho_g(q_idx, 0, drho_g);
+
+    // real-space manifest density
+    std::vector<double> drho_r;
+    make_drho_r_(drho_g, q_frac, drho_r);
     data.set_drho_r(q_idx, 0, drho_r);
 
     // remember the freshly computed output for the mixing step
@@ -357,35 +379,8 @@ void DFPT_Rho::mix_drho(int q_idx, DFPT_PW_Data& data)
     // rebuild the real-space manifest from the mixed coefficients (q = 0:
     // completed coefficients are the full real response; otherwise the
     // one-sided 2 Re[e^{i q r} A(r)] manifest)
-    const bool q_is_zero
-        = (std::abs(q_frac.x) < 1.0e-10 && std::abs(q_frac.y) < 1.0e-10 && std::abs(q_frac.z) < 1.0e-10);
-    std::vector<std::complex<double>> a_clean(pw_rho_->nrxx);
-    pw_rho_->recip2real(mixed.data(), a_clean.data());
-    std::vector<double> drho_r(pw_rho_->nrxx);
-    if (q_is_zero)
-    {
-        for (int ir = 0; ir < pw_rho_->nrxx; ++ir)
-        {
-            drho_r[ir] = a_clean[ir].real();
-        }
-    }
-    else
-    {
-        for (int ix = 0; ix < pw_rho_->nx; ++ix)
-        {
-            for (int iy = 0; iy < pw_rho_->ny; ++iy)
-            {
-                for (int iz = 0; iz < pw_rho_->nz; ++iz)
-                {
-                    const int ir = (ix * pw_rho_->ny + iy) * pw_rho_->nz + iz;
-                    const double theta
-                        = ModuleBase::TWO_PI
-                          * (q_frac.x * ix / pw_rho_->nx + q_frac.y * iy / pw_rho_->ny + q_frac.z * iz / pw_rho_->nz);
-                    drho_r[ir] = 2.0 * (a_clean[ir].real() * std::cos(theta) - a_clean[ir].imag() * std::sin(theta));
-                }
-            }
-        }
-    }
+    std::vector<double> drho_r;
+    make_drho_r_(mixed, q_frac, drho_r);
     data.set_drho_r(q_idx, 0, drho_r);
     ModuleBase::timer::end("DFPT_Rho", "mix_drho");
 }

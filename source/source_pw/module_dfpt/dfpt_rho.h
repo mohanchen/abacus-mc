@@ -18,6 +18,8 @@ class Plain_Mixing;
 namespace ModuleDFPT
 {
 
+class DFPT_KQ_Basis;
+
 /**
  * @brief First-order exchange-correlation kernel contract (C6).
  *
@@ -120,6 +122,27 @@ class DFPT_Rho
     double get_residual(int q_idx, DFPT_PW_Data& data) const;
 
   private:
+    /// accumulate one (ik, ib) band contribution to the real-space amplitude
+    void add_band_(int ik,
+                   int ib,
+                   double w,
+                   const std::complex<double>* c_ptr,
+                   const std::vector<std::complex<double>>& dpsi,
+                   const DFPT_KQ_Basis& kq,
+                   std::vector<std::complex<double>>& a_r);
+
+    /// rebuild the real-space manifest drho_r from G-space coefficients
+    void make_drho_r_(const std::vector<std::complex<double>>& drho_g,
+                      const ModuleBase::Vector3<double>& q_frac,
+                      std::vector<double>& drho_r) const;
+
+    /// charge conservation: zero the Delta = -q harmonic when -q is a G vector
+    void zero_neg_q_(const ModuleBase::Vector3<double>& q_cart,
+                     std::vector<std::complex<double>>& drho_g) const;
+
+    /// true if q is Gamma within 1e-10
+    static bool is_gamma_q_(const ModuleBase::Vector3<double>& q);
+
     int nspin_ = 1;
     int nrxx_ = 0;
     ModulePW::PW_Basis* pw_rho_ = nullptr;
