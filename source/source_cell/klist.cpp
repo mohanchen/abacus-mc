@@ -222,14 +222,22 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
         return true;
     }
 
-    const bool gamma_only_local_ = gamma_only_local;
-    const double kspacing_[3] = {kspacing[0], kspacing[1], kspacing[2]};
-    const std::string kmesh_type_ = kmesh_type;
-    const double koffset_[3] = {koffset[0], koffset[1], koffset[2]};
-
     // 1. Overwrite the KPT file and default K-point information if needed
     // mohan add 2010-09-04
-    if (gamma_only_local_)
+    this->generate_kfile(ucell, fn, gamma_only_local, kspacing, kmesh_type, koffset);
+
+    // 2. Read the KPT file and build the k-point list
+    return this->parse_kfile(fn);
+}
+
+void K_Vectors::generate_kfile(const UnitCell& ucell,
+                               const std::string& fn,
+                               const bool gamma_only_local,
+                               const double kspacing[3],
+                               const std::string& kmesh_type,
+                               const double koffset[3])
+{
+    if (gamma_only_local)
     {
         GlobalV::ofs_warning << " Auto generating k-points file: " << fn << std::endl;
         std::ofstream ofs(fn.c_str());
@@ -239,9 +247,9 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
         ofs << "1 1 1 0 0 0" << std::endl;
         ofs.close();
     }
-    else if (kspacing_[0] > 0.0)
+    else if (kspacing[0] > 0.0)
     {
-        if (kspacing_[1] <= 0 || kspacing_[2] <= 0)
+        if (kspacing[1] <= 0 || kspacing[2] <= 0)
         {
             ModuleBase::WARNING_QUIT("K_Vectors", "kspacing should > 0");
         };
@@ -250,18 +258,15 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
         double b1 = sqrt(btmp.e11 * btmp.e11 + btmp.e12 * btmp.e12 + btmp.e13 * btmp.e13);
         double b2 = sqrt(btmp.e21 * btmp.e21 + btmp.e22 * btmp.e22 + btmp.e23 * btmp.e23);
         double b3 = sqrt(btmp.e31 * btmp.e31 + btmp.e32 * btmp.e32 + btmp.e33 * btmp.e33);
-        int nk1
-            = std::max(1, static_cast<int>(b1 * ModuleBase::TWO_PI / kspacing_[0] / ucell.lat0 + 1));
-        int nk2
-            = std::max(1, static_cast<int>(b2 * ModuleBase::TWO_PI / kspacing_[1] / ucell.lat0 + 1));
-        int nk3
-            = std::max(1, static_cast<int>(b3 * ModuleBase::TWO_PI / kspacing_[2] / ucell.lat0 + 1));
+        int nk1 = std::max(1, static_cast<int>(b1 * ModuleBase::TWO_PI / kspacing[0] / ucell.lat0 + 1));
+        int nk2 = std::max(1, static_cast<int>(b2 * ModuleBase::TWO_PI / kspacing[1] / ucell.lat0 + 1));
+        int nk3 = std::max(1, static_cast<int>(b3 * ModuleBase::TWO_PI / kspacing[2] / ucell.lat0 + 1));
 
         GlobalV::ofs_warning << " Generate k-points file according to KSPACING: " << fn << std::endl;
         std::ofstream ofs(fn.c_str());
         ofs << "K_POINTS" << std::endl;
         ofs << "0" << std::endl;
-        if (kmesh_type_ == "mp")
+        if (kmesh_type == "mp")
         {
             ofs << "Monkhorst-Pack" << std::endl;
         }
@@ -269,12 +274,15 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
         {
             ofs << "Gamma" << std::endl;
         }
-        ofs << nk1 << " " << nk2 << " " << nk3 << " " << koffset_[0] << " " << koffset_[1] << " "
-            << koffset_[2] << std::endl;
+        ofs << nk1 << " " << nk2 << " " << nk3 << " " << koffset[0] << " " << koffset[1] << " "
+            << koffset[2] << std::endl;
         ofs.close();
     }
+}
 
-    // 2. Generate the K-point grid automatically according to the KPT file
+// 2. Generate the K-point grid automatically according to the KPT file
+bool K_Vectors::parse_kfile(const std::string& fn)
+{
     // 2.1 read the KPT file
     std::ifstream ifk(fn.c_str());
     if (!ifk)

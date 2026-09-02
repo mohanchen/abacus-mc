@@ -4,10 +4,12 @@
 
 #include "qlist.h"
 
+#include "module_symmetry/symmetry.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
 #include "source_base/formatter.h"
 #include "source_base/tool_quit.h"
+#include "unitcell.h"
 #include <algorithm>
 #include <cassert>
 #include <iomanip>

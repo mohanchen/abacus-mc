@@ -11,10 +11,14 @@
 
 #include "source_base/vector3.h"
 #include "module_symmetry/little_group.h"
-#include "module_symmetry/symmetry.h"
-#include "unitcell.h"
 #include "reciprocal_grid.h"
 #include <vector>
+
+class UnitCell;
+namespace ModuleSymmetry
+{
+class Symmetry;
+}
 
 namespace ModuleCell {
 

@@ -224,6 +224,41 @@ public:
                       const double koffset[3]); // return 0: something wrong.
 
     /**
+     * @brief Overwrite the KPT file with an auto-generated mesh when requested.
+     *
+     * Writes a Gamma-mesh KPT file if gamma_only_local is set, or a
+     * KSPACING-derived Gamma/Monkhorst-Pack mesh if kspacing is positive.
+     * Does nothing when neither condition holds.
+     *
+     * @param ucell unit cell (reciprocal lattice and lat0 for the mesh size)
+     * @param fn KPT filename to (over)write
+     * @param gamma_only_local whether to force a single Gamma point
+     * @param kspacing target k-point spacing in 1/bohr (three components)
+     * @param kmesh_type "mp" for Monkhorst-Pack, anything else for Gamma
+     * @param koffset mesh offsets (three components)
+     */
+    void generate_kfile(const UnitCell& ucell,
+                        const std::string& fn,
+                        const bool gamma_only_local,
+                        const double kspacing[3],
+                        const std::string& kmesh_type,
+                        const double koffset[3]);
+
+    /**
+     * @brief Read the KPT file and build the k-point list from it.
+     *
+     * Locates the "K_POINTS" header, reads the point count and type keyword,
+     * then dispatches to the Monkhorst-Pack mesh, the explicit Cartesian/
+     * Direct list, or the Line-mode interpolation accordingly.
+     *
+     * @param fn KPT filename to read
+     *
+     * @return bool Returns true if the k-points are successfully read,
+     *              false otherwise.
+     */
+    bool parse_kfile(const std::string& fn);
+
+    /**
      * @brief Adds k-points linearly between special points.
      *
      * This function adds k-points linearly between special points in the Brillouin zone.
