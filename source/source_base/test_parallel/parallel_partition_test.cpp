@@ -542,6 +542,191 @@ TEST(ParallelGlobalCreatePartition, FourRanksKpar2Bndpar2DiagNp2)
 #endif
 }
 
+// ================================================================
+// Boundary tests: pure arithmetic, no MPI needed.
+// ================================================================
+
+// Non-uniform kpar: 10 procs / kpar=3 -> pools {4, 3, 3}.
+// pool_root_rank must return the world rank of rank 0 in each pool.
+TEST(ParallelPartition, NonUniformKparPoolRootRank)
+{
+    const std::vector<int> pool_sizes = {4, 3, 3};
+    const ParallelPartition t(/*world=*/10,
+                              /*my_rank=*/5,
+                              /*kpar=*/3,
+                              /*my_pool=*/1,
+                              /*rank_in_pool=*/2,
+                              pool_sizes,
+                              /*bndpar=*/1,
+                              /*my_band_group=*/0,
+                              /*rank_in_band_group=*/5,
+                              /*nproc_in_band_group=*/10
+#ifdef __MPI
+                              ,
+                              MPI_COMM_SELF, MPI_COMM_NULL, MPI_COMM_SELF,
+                              MPI_COMM_NULL, MPI_COMM_NULL, MPI_COMM_NULL,
+                              MPI_COMM_NULL, MPI_COMM_NULL
+#endif
+    );
+
+    EXPECT_EQ(t.kpar(), 3);
+    EXPECT_EQ(t.nproc_in_pool(), pool_sizes);
+    EXPECT_EQ(t.nproc_in_pool(0), 4);
+    EXPECT_EQ(t.nproc_in_pool(1), 3);
+    EXPECT_EQ(t.nproc_in_pool(2), 3);
+
+    // Pool roots: pool 0 starts at wr 0; pool 1 at wr 4; pool 2 at wr 7.
+    EXPECT_EQ(t.pool_root_rank(0), 0);
+    EXPECT_EQ(t.pool_root_rank(1), 4);
+    EXPECT_EQ(t.pool_root_rank(2), 7);
+}
+
+// bndpar>1 + kpar>1 cross: 12 procs / kpar=3 / bndpar=2.
+// Each pool {4,4,4}, each pool split into 2 band-groups of 2.
+TEST(ParallelPartition, BndparKparCrossBandGroupRootRank)
+{
+    const std::vector<int> pool_sizes = {4, 4, 4};
+    const ParallelPartition t(/*world=*/12,
+                              /*my_rank=*/5,
+                              /*kpar=*/3,
+                              /*my_pool=*/1,
+                              /*rank_in_pool=*/1,
+                              pool_sizes,
+                              /*bndpar=*/2,
+                              /*my_band_group=*/1,
+                              /*rank_in_band_group=*/5,
+                              /*nproc_in_band_group=*/6
+#ifdef __MPI
+                              ,
+                              MPI_COMM_SELF, MPI_COMM_NULL, MPI_COMM_SELF,
+                              MPI_COMM_NULL, MPI_COMM_NULL, MPI_COMM_NULL,
+                              MPI_COMM_NULL, MPI_COMM_NULL
+#endif
+    );
+
+    // nproc_in_band_group = kpar * (nproc_in_pool[0] / bndpar) = 3 * 2 = 6
+    EXPECT_EQ(t.nproc_in_band_group(), 6);
+
+    // band_group_root_rank uses pool 0's slice:
+    //   bg0 root = 0 * (4/2) = 0
+    //   bg1 root = 1 * (4/2) = 2
+    // NOT band_group * nproc_in_band_group (would give 6, wrong).
+    EXPECT_EQ(t.band_group_root_rank(0), 0);
+    EXPECT_EQ(t.band_group_root_rank(1), 2);
+}
+
+// Out-of-range indices must return -1, not crash.
+TEST(ParallelPartition, OutOfRangeReturnsMinusOne)
+{
+    const std::vector<int> pool_sizes = {4, 4, 4};
+    const ParallelPartition t(/*world=*/12,
+                              /*my_rank=*/0,
+                              /*kpar=*/3,
+                              /*my_pool=*/0,
+                              /*rank_in_pool=*/0,
+                              pool_sizes,
+                              /*bndpar=*/2,
+                              /*my_band_group=*/0,
+                              /*rank_in_band_group=*/0,
+                              /*nproc_in_band_group=*/6
+#ifdef __MPI
+                              ,
+                              MPI_COMM_SELF, MPI_COMM_NULL, MPI_COMM_SELF,
+                              MPI_COMM_NULL, MPI_COMM_NULL, MPI_COMM_NULL,
+                              MPI_COMM_NULL, MPI_COMM_NULL
+#endif
+    );
+
+    // pool_root_rank: valid 0..2, invalid otherwise
+    EXPECT_EQ(t.pool_root_rank(-1), -1);
+    EXPECT_EQ(t.pool_root_rank(0), 0);
+    EXPECT_EQ(t.pool_root_rank(2), 8);
+    EXPECT_EQ(t.pool_root_rank(3), -1);
+    EXPECT_EQ(t.pool_root_rank(99), -1);
+
+    // band_group_root_rank: valid 0..1, invalid otherwise
+    EXPECT_EQ(t.band_group_root_rank(-1), -1);
+    EXPECT_EQ(t.band_group_root_rank(0), 0);
+    EXPECT_EQ(t.band_group_root_rank(1), 2);
+    EXPECT_EQ(t.band_group_root_rank(2), -1);
+    EXPECT_EQ(t.band_group_root_rank(99), -1);
+
+    // nproc_in_pool(int pool): valid 0..2 returns size, invalid returns 0
+    EXPECT_EQ(t.nproc_in_pool(0), 4);
+    EXPECT_EQ(t.nproc_in_pool(2), 4);
+    EXPECT_EQ(t.nproc_in_pool(3), 0);
+    EXPECT_EQ(t.nproc_in_pool(99), 0);
+    EXPECT_EQ(t.nproc_in_pool(-1), 0);
+}
+
+// Serial fallback: default-constructed partition is a safe trivial
+// single-process topology. This test runs even without MPI.
+TEST(ParallelPartition, SerialFallbackDefaultConstructor)
+{
+    ParallelPartition t;
+    EXPECT_EQ(t.world_size(), 1);
+    EXPECT_EQ(t.world_rank(), 0);
+    EXPECT_EQ(t.kpar(), 1);
+    EXPECT_EQ(t.my_pool(), 0);
+    EXPECT_EQ(t.rank_in_pool(), 0);
+    EXPECT_EQ(t.nproc_in_pool(), std::vector<int>{1});
+    EXPECT_EQ(t.nproc_in_pool(0), 1);
+    EXPECT_EQ(t.pool_root_rank(0), 0);
+    EXPECT_EQ(t.bndpar(), 1);
+    EXPECT_EQ(t.my_band_group(), 0);
+    EXPECT_EQ(t.rank_in_band_group(), 0);
+    EXPECT_EQ(t.nproc_in_band_group(), 1);
+    EXPECT_EQ(t.band_group_root_rank(0), 0);
+    EXPECT_EQ(t.band_group_root_rank(1), -1); // only bg 0 exists
+#ifdef __MPI
+    EXPECT_EQ(t.pw_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(t.matrix_world_comm(), MPI_COMM_NULL);
+    EXPECT_EQ(t.atom_world_comm(), MPI_COMM_NULL);
+#endif
+}
+
+// Integration: create_partition with non-uniform kpar (7 procs / kpar=3
+// -> pools {3,2,2}). Verifies the factory's nproc_in_pool vector matches
+// the arithmetic from divide_mpi_groups(even=false).
+TEST(ParallelGlobalCreatePartition, NonUniformKparSevenProcsThreePools)
+{
+    int world_size = 1;
+    int world_rank = 0;
+#ifdef __MPI
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+#endif
+    if (world_size != 7)
+    {
+        GTEST_SKIP() << "non-uniform kpar integration case requires exactly 7 MPI ranks (got "
+                     << world_size << ").";
+    }
+
+    const int kpar = 3;
+    const int bndpar = 1;
+    const int diag_np = 1;
+    const ParallelPartition t = Parallel_Global::create_partition(
+        world_size, world_rank, kpar, bndpar, diag_np, diag_np);
+
+    // divide_mpi_groups(7, 3, even=false) -> base=2, extra=1
+    //   group 0: 3 procs, group 1: 2, group 2: 2
+    const std::vector<int> expected_pools = {3, 2, 2};
+    EXPECT_EQ(t.kpar(), 3);
+    EXPECT_EQ(t.nproc_in_pool(), expected_pools);
+    EXPECT_EQ(t.world_size(), 7);
+
+    // Pool roots: 0, 3, 5
+    EXPECT_EQ(t.pool_root_rank(0), 0);
+    EXPECT_EQ(t.pool_root_rank(1), 3);
+    EXPECT_EQ(t.pool_root_rank(2), 5);
+
+    // Every rank must end up in exactly one pool whose size matches.
+    const int my_pool = t.my_pool();
+    ASSERT_GE(my_pool, 0);
+    ASSERT_LT(my_pool, kpar);
+    EXPECT_EQ(t.nproc_in_pool(my_pool), expected_pools[my_pool]);
+}
+
 int main(int argc, char** argv)
 {
 #ifdef __MPI

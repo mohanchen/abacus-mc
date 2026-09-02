@@ -101,7 +101,12 @@ class ParallelPartition
     int my_pool() const { return my_pool_; }
     int rank_in_pool() const { return rank_in_pool_; }
     const std::vector<int>& nproc_in_pool() const { return nproc_in_pool_; }
-    int nproc_in_pool(int pool) const { return nproc_in_pool_[pool]; }
+    int nproc_in_pool(int pool) const
+    {
+        return (pool >= 0 && pool < static_cast<int>(nproc_in_pool_.size()))
+                   ? nproc_in_pool_[pool]
+                   : 0;
+    }
     /// World rank of the root (rank 0) of a given pool; -1 on bad index.
     int pool_root_rank(int pool) const;
 
