@@ -5,7 +5,6 @@
 #include "source_base/matrix3.h"
 #include "source_cell/unitcell.h"
 #include "parallel_kpoints.h"
-#include "k_vector_utils.h"
 #include "reciprocal_grid.h"
 #include <vector>
 
@@ -151,6 +150,20 @@ public:
     void update_use_ibz(const int& nkstot_ibz,
                         const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
                         const std::vector<double>& wk_ibz);
+
+    /**
+     * @brief Sets up the k-points after a volume change.
+     *
+     * Sets the number of spins, converts the direct coordinates (which are
+     * kept across the volume change) to the new Cartesian coordinates using
+     * the new reciprocal lattice, prints the resulting table, and marks both
+     * coordinate sets as up to date.
+     *
+     * @param nspin_in The number of spins. 1 for non-spin-polarized
+     *                 calculations and 2 for spin-polarized calculations.
+     * @param G The new reciprocal lattice matrix.
+     */
+    void set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G);
 
   private:
     int nspin = 0;             ///< number of spin states
@@ -309,14 +322,19 @@ public:
      * @return this->ik2iktot[ik]
      */
     void cal_ik_global();
-    friend void KVectorUtils::kvec_ibz_kpoint(K_Vectors& kv,
-                                             const ModuleSymmetry::Symmetry& symm,
-                                             bool use_symm,
-                                             std::string& skpt,
-                                             const UnitCell& ucell,
-                                             bool& match);
+
 #ifdef __MPI
-    friend void KVectorUtils::kvec_mpi_k(K_Vectors& kvec);
+    /**
+     * @brief Distributes k-points among MPI processes.
+     *
+     * Broadcasts the k-point metadata (flags, counts, mesh, segment IDs)
+     * from rank 0 and distributes the per-pool k-point slice (indices,
+     * weights, coordinates) to every process. Only compiled with MPI.
+     *
+     * @note Assumes nkstot > 0 and quits if some process ends up with
+     *       no k-points.
+     */
+    void mpi_k();
 #endif
 };
 #endif // KVECT_H

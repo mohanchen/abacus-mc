@@ -211,7 +211,6 @@ OBJS_CELL=atom_pseudo.o\
     print_cell.o\
     setup_nonlocal.o\
     klist.o\
-    k_vector_utils.o\
     reciprocal_grid.o\
     cell_index.o\
     cell_tools.o\

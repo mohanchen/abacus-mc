@@ -1,8 +1,8 @@
 /**
  * @file reciprocal_grid.cpp
  * @brief Implementation of the ModuleCell::ReciprocalGrid base class.
- * @note Spin-free logic migrated from K_Vectors (klist.cpp) and
- *       KVectorUtils (k_vector_utils.cpp) on 2026-08-14.
+ * @note Spin-free logic migrated from K_Vectors (klist.cpp) on 2026-08-14;
+ *       the intermediate KVectorUtils shim was removed on 2026-09-02.
  */
 #include "reciprocal_grid.h"
 

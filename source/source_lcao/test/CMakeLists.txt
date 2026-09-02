@@ -23,7 +23,6 @@ AddTest(
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/output_hcontainer.cpp
     ${ABACUS_SOURCE_DIR}/source_cell/klist.cpp
     ${ABACUS_SOURCE_DIR}/source_cell/parallel_kpoints.cpp
-    ${ABACUS_SOURCE_DIR}/source_cell/k_vector_utils.cpp
     ${ABACUS_SOURCE_DIR}/source_cell/reciprocal_grid.cpp
 )
 

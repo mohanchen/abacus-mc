@@ -4,7 +4,6 @@
  */
 #include "klist.h"
 
-#include "k_vector_utils.h"
 #include "source_base/formatter.h"
 #include "source_base/parallel_common.h"
 #include "source_base/parallel_global.h"
@@ -115,7 +114,7 @@ void K_Vectors::set(const UnitCell& ucell,
     {
         bool match = true;
         // calculate kpoints in IBZ and reduce kpoints according to symmetry
-        KVectorUtils::kvec_ibz_kpoint(*this, symm, ModuleSymmetry::Symmetry::symm_flag, skpt1, ucell, match);
+        this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt1, match);
 #ifdef __MPI
         Parallel_Common::bcast_bool(match);
 #endif
@@ -130,7 +129,7 @@ void K_Vectors::set(const UnitCell& ucell,
                 std::cout << "Automatically set symmetry to 0 and continue ..." << std::endl;
                 ModuleSymmetry::Symmetry::symm_flag = 0;
                 match = true;
-                KVectorUtils::kvec_ibz_kpoint(*this, symm, ModuleSymmetry::Symmetry::symm_flag, skpt1, ucell, match);
+                this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt1, match);
             } else {
                 ModuleBase::WARNING_QUIT("K_Vectors::ibz_kpoint",
                                          "Possible solutions: \n \
@@ -146,8 +145,7 @@ void K_Vectors::set(const UnitCell& ucell,
     // Improve k point information
 
     // Complement the coordinates of k point
-//    this->set_both_kvec(reciprocal_vec, latvec, skpt2);
-    KVectorUtils::set_both_kvec(*this, reciprocal_vec, latvec, skpt2);
+    this->set_both_kvec(reciprocal_vec, latvec, skpt2);
 
     if (GlobalV::MY_RANK == 0)
     {
@@ -174,7 +172,7 @@ void K_Vectors::set(const UnitCell& ucell,
                        nspin_in); // assign k points to several process pools
 #ifdef __MPI
     // distribute K point data to the corresponding process
-    KVectorUtils::kvec_mpi_k(*this);
+    this->mpi_k();
 #endif
 
     // set the k vectors for the up and down spin
@@ -190,7 +188,7 @@ void K_Vectors::set(const UnitCell& ucell,
     // get ik2iktot
     this->cal_ik_global();
 
-    KVectorUtils::print_klists(*this, ofs);
+    this->print_klists(ofs);
 
     // std::cout << " NUMBER OF K-POINTS   : " << nkstot << std::endl;
 
@@ -763,3 +761,161 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
 
     return;
 }
+
+void K_Vectors::set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G)
+{
+    GlobalV::ofs_running << "\n SETUP K-POINTS" << std::endl;
+    this->set_nspin(nspin_in);
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nspin", this->get_nspin());
+
+    // set cartesian k vectors.
+    this->kvec_d2c(G);
+
+    std::string table;
+    table += "K-POINTS DIRECT COORDINATES\n";
+    table += FmtCore::format("%8s%12s%12s%12s%8s\n", "KPOINTS", "DIRECT_X", "DIRECT_Y", "DIRECT_Z", "WEIGHT");
+    for (int i = 0; i < this->nks; i++)
+    {
+        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f\n",
+                                 i + 1,
+                                 this->kvec_d[i].x,
+                                 this->kvec_d[i].y,
+                                 this->kvec_d[i].z,
+                                 this->wk[i]);
+    }
+    GlobalV::ofs_running << table << std::endl;
+
+    this->kd_done = true;
+    this->kc_done = true;
+
+    this->print_klists(GlobalV::ofs_running);
+}
+
+#ifdef __MPI
+void K_Vectors::mpi_k()
+{
+    ModuleBase::TITLE("K_Vectors", "mpi_k");
+
+    Parallel_Common::bcast_bool(this->kc_done);
+
+    Parallel_Common::bcast_bool(this->kd_done);
+
+    Parallel_Common::bcast_int(this->nspin);
+
+    Parallel_Common::bcast_int(this->nkstot);
+
+    Parallel_Common::bcast_int(this->nkstot_full);
+
+    Parallel_Common::bcast_int(this->nmp, 3);
+
+    this->kl_segids.resize(this->nkstot);
+    Parallel_Common::bcast_int(this->kl_segids.data(), this->nkstot);
+
+    Parallel_Common::bcast_double(this->koffset, 3);
+
+    this->nks = this->para_k.nks_pool[GlobalV::MY_POOL];
+
+    GlobalV::ofs_running << std::endl;
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Number of k-points in this process", this->nks);
+    int nks_minimum = this->nks;
+
+    Parallel_Reduce::reduce_min(nks_minimum);
+
+    if (nks_minimum == 0)
+    {
+        ModuleBase::WARNING_QUIT("K_Vectors::mpi_k()", " nks == 0, some processor have no k points!");
+    }
+    else
+    {
+        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Minimum distributed k-point number", nks_minimum);
+    }
+
+    std::vector<int> isk_aux(this->nkstot);
+    std::vector<double> wk_aux(this->nkstot);
+    std::vector<double> kvec_c_aux(this->nkstot * 3);
+    std::vector<double> kvec_d_aux(this->nkstot * 3);
+    std::vector<double> kvec_c_full_aux(this->nkstot_full * 3);
+
+    // collect and process in rank 0
+    if (GlobalV::MY_RANK == 0)
+    {
+        for (int ik = 0; ik < this->nkstot; ik++)
+        {
+            isk_aux[ik] = this->isk[ik];
+            wk_aux[ik] = this->wk[ik];
+            kvec_c_aux[3 * ik] = this->kvec_c[ik].x;
+            kvec_c_aux[3 * ik + 1] = this->kvec_c[ik].y;
+            kvec_c_aux[3 * ik + 2] = this->kvec_c[ik].z;
+            kvec_d_aux[3 * ik] = this->kvec_d[ik].x;
+            kvec_d_aux[3 * ik + 1] = this->kvec_d[ik].y;
+            kvec_d_aux[3 * ik + 2] = this->kvec_d[ik].z;
+            kvec_c_full_aux[3 * ik] = this->kvec_c_full[ik].x;
+            kvec_c_full_aux[3 * ik + 1] = this->kvec_c_full[ik].y;
+            kvec_c_full_aux[3 * ik + 2] = this->kvec_c_full[ik].z;
+        }
+    }
+
+    // broadcast k point data to all processors
+    Parallel_Common::bcast_int(isk_aux.data(), this->nkstot);
+
+    Parallel_Common::bcast_double(wk_aux.data(), this->nkstot);
+    Parallel_Common::bcast_double(kvec_c_aux.data(), this->nkstot * 3);
+    Parallel_Common::bcast_double(kvec_d_aux.data(), this->nkstot * 3);
+    Parallel_Common::bcast_double(kvec_c_full_aux.data(), this->nkstot_full * 3);
+
+    // process k point data in each processor
+    this->renew(this->nks * this->nspin);
+
+    // distribute
+    int k_index = 0;
+
+    for (int i = 0; i < this->nks; i++)
+    {
+        // 3 is because each k point has three value:kx, ky, kz
+        k_index = i + this->para_k.startk_pool[GlobalV::MY_POOL];
+        this->kvec_c[i].x = kvec_c_aux[k_index * 3];
+        this->kvec_c[i].y = kvec_c_aux[k_index * 3 + 1];
+        this->kvec_c[i].z = kvec_c_aux[k_index * 3 + 2];
+        this->kvec_d[i].x = kvec_d_aux[k_index * 3];
+        this->kvec_d[i].y = kvec_d_aux[k_index * 3 + 1];
+        this->kvec_d[i].z = kvec_d_aux[k_index * 3 + 2];
+        this->kvec_c_full[i].x = kvec_c_full_aux[k_index * 3];
+        this->kvec_c_full[i].y = kvec_c_full_aux[k_index * 3 + 1];
+        this->kvec_c_full[i].z = kvec_c_full_aux[k_index * 3 + 2];
+        this->wk[i] = wk_aux[k_index];
+        this->isk[i] = isk_aux[k_index];
+    }
+
+#ifdef __EXX
+    if (ModuleSymmetry::Symmetry::symm_flag == 1)
+    { // bcast kstars
+        this->kstars.resize(this->nkstot);
+        for (int ikibz = 0; ikibz < this->nkstot; ++ikibz)
+        {
+            int starsize = this->kstars[ikibz].size();
+            Parallel_Common::bcast_int(starsize);
+            auto ks = this->kstars[ikibz].begin();
+            for (int ik = 0; ik < starsize; ++ik)
+            {
+                int isym = 0;
+                ModuleBase::Vector3<double> ks_vec(0, 0, 0);
+                if (GlobalV::MY_RANK == 0)
+                {
+                    isym = ks->first;
+                    ks_vec = ks->second;
+                    ++ks;
+                }
+                Parallel_Common::bcast_int(isym);
+                Parallel_Common::bcast_double(ks_vec.x);
+                Parallel_Common::bcast_double(ks_vec.y);
+                Parallel_Common::bcast_double(ks_vec.z);
+                if (GlobalV::MY_RANK != 0)
+                {
+                    this->kstars[ikibz].insert(std::make_pair(isym, ks_vec));
+                }
+            }
+        }
+    }
+#endif
+} // END SUBROUTINE mpi_k
+#endif

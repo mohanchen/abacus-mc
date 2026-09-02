@@ -33,7 +33,6 @@ add_library(
     read_stru.cpp
     print_cell.cpp
     read_atom_species.cpp
-    k_vector_utils.cpp
     sep.cpp
     sep_cell.cpp
     qlist.cpp

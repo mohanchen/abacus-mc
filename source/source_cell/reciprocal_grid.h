@@ -1,8 +1,9 @@
 /**
  * @file reciprocal_grid.h
  * @brief Abstract base class for reciprocal-space point grids.
- * @note Extracted from K_Vectors / KVectorUtils (2026-08-14) so that both
- *       k-points (K_Vectors) and q-points (QList) share the common
+ * @note Extracted from K_Vectors (2026-08-14; the intermediate KVectorUtils
+ *       shim has since been folded back into the member functions) so that
+ *       both k-points (K_Vectors) and q-points (QList) share the common
  *       spin-free functionality: mesh generation, coordinate conversion,
  *       weight normalization, printing and star (IBZ) reduction.
  */

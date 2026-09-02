@@ -17,7 +17,6 @@ AddTest(
     ../../../source_basis/module_ao/parallel_orbitals.cpp
     ../../../source_cell/klist.cpp
     ../../../source_cell/parallel_kpoints.cpp
-    ../../../source_cell/k_vector_utils.cpp
     ../../../source_cell/reciprocal_grid.cpp
 )
 
@@ -31,7 +30,6 @@ AddTest(
     ../basic_funcs.cpp
     ../../../source_cell/klist.cpp
     ../../../source_cell/parallel_kpoints.cpp
-    ../../../source_cell/k_vector_utils.cpp
     ../../../source_cell/reciprocal_grid.cpp
 )
 

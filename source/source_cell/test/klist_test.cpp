@@ -669,7 +669,7 @@ TEST_F(KlistTest, SetAfterVC)
     kv->kvec_c[0].y = 0;
     kv->kvec_c[0].z = 0;
 //    kv->set_after_vc(PARAM.input.nspin, ucell.G, ucell.latvec);
-    KVectorUtils::set_after_vc(*kv, kv->nspin, ucell.G);
+    kv->set_after_vc(kv->nspin, ucell.G);
 
     EXPECT_TRUE(kv->kd_done);
     EXPECT_TRUE(kv->kc_done);
@@ -691,9 +691,9 @@ TEST_F(KlistTest, PrintKlists)
     kv->kvec_c[0].y = 0;
     kv->kvec_c[0].z = 0;
 //    kv->set_after_vc(PARAM.input.nspin, ucell.G, ucell.latvec);
-    KVectorUtils::set_after_vc(*kv, kv->nspin, ucell.G);
+    kv->set_after_vc(kv->nspin, ucell.G);
     EXPECT_TRUE(kv->kd_done);
-    KVectorUtils::print_klists(*kv, GlobalV::ofs_running);
+    kv->print_klists(GlobalV::ofs_running);
     GlobalV::ofs_running.close();
     remove("tmp_klist_2");
 }
@@ -708,7 +708,7 @@ TEST_F(KlistTest, PrintKlistsWarnigQuit)
     kv->kvec_c[0].y = 0;
     kv->kvec_c[0].z = 0;
     testing::internal::CaptureStdout();
-    EXPECT_EXIT(KVectorUtils::print_klists(*kv, GlobalV::ofs_running), ::testing::ExitedWithCode(1), "");
+    EXPECT_EXIT(kv->print_klists(GlobalV::ofs_running), ::testing::ExitedWithCode(1), "");
     output = testing::internal::GetCapturedStdout();
     EXPECT_THAT(output, testing::HasSubstr("nkstot < nks"));
 }
@@ -731,27 +731,27 @@ TEST_F(KlistTest, SetBothKvecFlagsFromFile)
     // case 1
     kv->k_nkstot = 0;
 //    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    KVectorUtils::set_both_kvec(*kv, ucell.G, ucell.latvec, skpt);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
     EXPECT_TRUE(kv->kd_done);
     EXPECT_TRUE(kv->kc_done);
     // case 2
     kv->k_nkstot = 1;
     kv->k_kword = "D";
 //    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    KVectorUtils::set_both_kvec(*kv, ucell.G, ucell.latvec, skpt);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
     EXPECT_TRUE(kv->kd_done);
     EXPECT_TRUE(kv->kc_done);
     // case 3
     kv->k_kword = "C";
 //    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    KVectorUtils::set_both_kvec(*kv, ucell.G, ucell.latvec, skpt);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
     EXPECT_TRUE(kv->kc_done);
     EXPECT_TRUE(kv->kd_done);
     // case 4
     GlobalV::ofs_warning.open("klist_tmp_warning_8");
     kv->k_kword = "arbitrary";
 //    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    KVectorUtils::set_both_kvec(*kv, ucell.G, ucell.latvec, skpt);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
     GlobalV::ofs_warning.close();
     ifs.open("klist_tmp_warning_8");
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
@@ -773,12 +773,12 @@ TEST_F(KlistTest, SetBothKvec)
     kv->kd_done = true;
     std::string skpt;
 //    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    KVectorUtils::set_both_kvec(*kv, ucell.G, ucell.latvec, skpt);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
     EXPECT_TRUE(kv->kc_done);
     kv->kc_done = true;
     kv->kd_done = false;
 //    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
-    KVectorUtils::set_both_kvec(*kv, ucell.G, ucell.latvec, skpt);
+    kv->set_both_kvec(ucell.G, ucell.latvec, skpt);
     EXPECT_TRUE(kv->kd_done);
 }
 
@@ -854,7 +854,7 @@ TEST_F(KlistTest, IbzKpoint)
     std::string skpt;
     ModuleSymmetry::Symmetry::symm_flag = 1;
     bool match = true;
-    KVectorUtils::kvec_ibz_kpoint(*kv, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, ucell, match);
+    kv->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
     EXPECT_EQ(kv->get_nkstot(), 35);
     GlobalV::ofs_running << skpt << std::endl;
     GlobalV::ofs_running.close();
@@ -882,7 +882,7 @@ TEST_F(KlistTest, IbzKpointIsMP)
     std::string skpt;
     ModuleSymmetry::Symmetry::symm_flag = 0;
     bool match = true;
-    KVectorUtils::kvec_ibz_kpoint(*kv, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, ucell, match);
+    kv->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
     EXPECT_EQ(kv->get_nks(), 260);
     GlobalV::ofs_running << skpt << std::endl;
     GlobalV::ofs_running.close();
@@ -918,7 +918,7 @@ TEST_F(KlistTest, IbzKpointCustomWeights)
         std::string skpt;
         ModuleSymmetry::Symmetry::symm_flag = 1;
         bool match = true;
-        KVectorUtils::kvec_ibz_kpoint(kv_test1, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, ucell, match);
+        kv_test1.reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
 
         // Verify that weights are preserved (not overwritten with 1/nkstot)
         // After IBZ reduction, weights should still reflect the input weights
@@ -959,7 +959,7 @@ TEST_F(KlistTest, IbzKpointCustomWeights)
         std::string skpt;
         ModuleSymmetry::Symmetry::symm_flag = 1;
         bool match = true;
-        KVectorUtils::kvec_ibz_kpoint(kv_test2, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, ucell, match);
+        kv_test2.reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
 
         // After IBZ reduction, the weights should be based on the custom input weights,
         // not uniform 1/nkstot weights. The total weight should be preserved.
@@ -1001,7 +1001,7 @@ TEST_F(KlistTest, IbzKpointCustomWeights)
         std::string skpt;
         ModuleSymmetry::Symmetry::symm_flag = 1;
         bool match = true;
-        KVectorUtils::kvec_ibz_kpoint(kv_test3, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, ucell, match);
+        kv_test3.reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
 
         // For MP grids, all weights should be uniform after IBZ reduction
         EXPECT_EQ(kv_test3.get_nkstot(), 35); // Known result from existing test
@@ -1026,7 +1026,7 @@ TEST_F(KlistTest, IbzKpointCustomWeights)
         std::string skpt;
         ModuleSymmetry::Symmetry::symm_flag = 1;
         bool match = true;
-        KVectorUtils::kvec_ibz_kpoint(kv_test4, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, ucell, match);
+        kv_test4.reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
 
         // Normalize weights
         int degspin = (kv_test4.nspin == 2) ? 1 : 2;
