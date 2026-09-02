@@ -5,6 +5,8 @@ set(SOURCES
     dfpt_pw_data.cpp
     dfpt_kq_basis.cpp
     dfpt_pert.cpp
+    dfpt_pert_vkb.cpp
+    dfpt_pert_nl.cpp
     dfpt_stern.cpp
     dfpt_rho.cpp
     dfpt_phon.cpp

@@ -229,10 +229,6 @@ void DFPT_Phon::accum_d2_same_atom(int atom_idx,
     // 2q not reciprocal, e.g. q=(0.25,0,0), and produced
     // imaginary phonon branches).
     const ModuleBase::Vector3<double> q_eff_cart(0.0, 0.0, 0.0);
-    // the same-atom d2 middle term is always included (its
-    // q-independence is established QE ground truth; the old
-    // 2q-commensurability gate and the D2MID A/B knob are gone)
-    const bool include_middle = true;
     std::vector<std::complex<double>> dv2_r;
     pert_->d2vloc_r(atom_idx, idir, dir, dv2_r);
     if (static_cast<int>(dv2_r.size()) != pw_rho_->nrxx)
@@ -245,7 +241,7 @@ void DFPT_Phon::accum_d2_same_atom(int atom_idx,
     std::vector<std::complex<double>> x_r(pw_rho_->nrxx);
     for (int ik = 0; ik < nk; ++ik)
     {
-        pert_->apply_d2vnl(atom_idx, idir, dir, q_eff_cart, include_middle, psi, ik, chi);
+        pert_->apply_d2vnl(atom_idx, idir, dir, q_eff_cart, psi, ik, chi);
         // k+q_eff scatter map for this k (must match apply_d2vnl)
         DFPT_KQ_Basis kq;
         kq.init(pert_->get_pw_wfc(), pert_->get_pw_rho(), q_eff_cart, ik);

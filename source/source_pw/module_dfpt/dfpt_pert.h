@@ -53,18 +53,15 @@ class DFPT_Pert
     /// C5: same-atom second-order NONLOCAL potential acting on psi,
     /// chi_n(G'') = (d^2 Vnl / d tau_{da} d tau_{db}) |psi_n> on the
     /// q_eff-shifted basis (q_eff = q when q is itself a reciprocal vector,
-    /// otherwise 2q: the second-order potential carries wavevector 2q, and
-    /// the |d beta><d beta| middle term additionally requires q to be
-    /// reciprocal, hence the include_middle switch; normal-conserving
-    /// separable case). The terms come from the phase derivatives of the out
-    /// (q_eff-shifted) and in (k+G') projectors of the SAME displaced atom;
-    /// they reduce to zero for a uniform translation at q=0 (acoustic
-    /// consistency).
+    /// otherwise 2q: the second-order potential carries wavevector 2q;
+    /// normal-conserving separable case). The terms come from the phase
+    /// derivatives of the out (q_eff-shifted) and in (k+G') projectors of
+    /// the SAME displaced atom; they reduce to zero for a uniform
+    /// translation at q=0 (acoustic consistency).
     void apply_d2vnl(int atom_idx,
                      int da,
                      int db,
                      const ModuleBase::Vector3<double>& q_eff,
-                     bool include_middle,
                      const psi::Psi<std::complex<double>>& psi,
                      int k_idx,
                      std::vector<std::vector<std::complex<double>>>& d2v_psi) const;

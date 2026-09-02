@@ -33,6 +33,8 @@ AddTest(
   LIBS parameter dfpt_planewave_serial device base symmetry
   SOURCES dfpt_pert_serial_test.cpp
 	../dfpt_pert.cpp
+	../dfpt_pert_vkb.cpp
+	../dfpt_pert_nl.cpp
 	../dfpt_pw_data.cpp
 	../dfpt_kq_basis.cpp
 	../../../source_cell/qlist.cpp
@@ -70,6 +72,8 @@ AddTest(
   ../dfpt_phon_ewald.cpp
   ../dfpt_phon_elec.cpp
   ../dfpt_pert.cpp
+  ../dfpt_pert_vkb.cpp
+  ../dfpt_pert_nl.cpp
   ../dfpt_pw_data.cpp
   ../dfpt_kq_basis.cpp
   ../../../source_cell/qlist.cpp
@@ -89,6 +93,8 @@ AddTest(
   ../dfpt_q0.cpp
   ../dfpt_q0_pos.cpp
   ../dfpt_pert.cpp
+  ../dfpt_pert_vkb.cpp
+  ../dfpt_pert_nl.cpp
   ../dfpt_pw_data.cpp
   ../dfpt_kq_basis.cpp
   ../../../source_cell/qlist.cpp
