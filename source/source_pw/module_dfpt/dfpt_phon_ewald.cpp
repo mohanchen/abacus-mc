@@ -1,11 +1,3 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-//
 // Ewald ion-ion part of DFPT_Phon::ion_ion, split out of
 // dfpt_phon.cpp: the screening-alpha search, the reciprocal-space
 // Poisson sums and the real-space erfc force constants. All formulas

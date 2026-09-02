@@ -1,11 +1,3 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-//
 // The Ewald ion-ion part of ion_ion lives in dfpt_phon_ewald.cpp and
 // the electronic (2n+1) part of accumulate_electron in
 // dfpt_phon_elec.cpp.

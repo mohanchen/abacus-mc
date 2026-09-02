@@ -1,11 +1,3 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-//
 // Nonlocal first- and second-order potentials of DFPT_Pert (normal-
 // conserving separable case), split out of dfpt_pert.cpp: dVnl_dtau
 // and apply_d2vnl with the shared projector table, D contraction and

@@ -1,11 +1,3 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-//
 // KB-projector construction of DFPT_Pert, split out of dfpt_pert.cpp:
 // the radial vq integral, the real spherical harmonics (l <= 2) with
 // their gradients, and the vkb / dvkb builders on the (k+q) basis. All

@@ -1,11 +1,3 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-//
 // Electronic (2n+1) contribution of DFPT_Phon::accumulate_electron,
 // split out of dfpt_phon.cpp: the converged-dpsi stash/restore, the
 // bare-potential cross sum and the same-atom second-order term. All
