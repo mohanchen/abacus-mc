@@ -41,8 +41,9 @@ std::vector<double> signed_freqs_cm1(const std::vector<double>& eigs)
     ModuleBase::TITLE("DFPT_Phon", "signed_freqs_cm1");
     ModuleBase::timer::start("DFPT_Phon", "signed_freqs_cm1");
     const double amu_kg = 1.0e-3 / ModuleBase::NA;
+    const double light_speed_cgs = 2.99792458e10; // cm/s, exact SI value
     const double ry_bohr2_amu_to_cm1 = std::sqrt(ModuleBase::RYDBERG_SI / amu_kg)
-                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI * 2.99792458e10);
+                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI * light_speed_cgs);
     std::vector<double> freq(eigs.size(), 0.0);
     for (size_t i = 0; i < eigs.size(); ++i)
     {
@@ -88,21 +89,28 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::C
     // the rho grid (the erfc envelope bounds the exp(-G^2/4alpha) tail);
     // ggecut counts |G_max|^2 in 1/lat0^2 units (pw_basis.h), so the bohr^2
     // cutoff is ggecut * tpiba2
-    double alpha = 1.1;
+    const double alpha_init = 1.1;        ///< empirical parameter: initial Ewald screening-alpha guess
+    const double alpha_shrink = 0.9;      ///< empirical parameter: per-iteration alpha shrink factor
+    const double alpha_min = 1.0e-4;      ///< empirical parameter: alpha floor of the search
+    const double ewald_tail_tol = 1.0e-6; ///< empirical parameter: accepted G-sum tail bound
+    const double ewald_rcut_factor = 6.0; ///< empirical parameter: real-space cutoff in 1/sqrt(alpha)
+    const double w2_floor = 1.0e-12;      ///< empirical parameter: |G+q|^2 zero-shell guard (1/lat0^2)
+    const double g2_floor = 1.0e-12;      ///< empirical parameter: |G|^2 zero-shell guard (1/lat0^2)
+    double alpha = alpha_init;
     double upperbound = 0.0;
     do
     {
-        alpha *= 0.9;
-        if (alpha < 1.0e-4)
+        alpha *= alpha_shrink;
+        if (alpha < alpha_min)
         {
             ModuleBase::WARNING_QUIT("DFPT_Phon::ion_ion", "Can't find optimal Ewald alpha.");
         }
         upperbound = 2.0 * charge * charge * std::sqrt(2.0 * alpha / ModuleBase::TWO_PI)
                      * ModuleBase::truncated_erfc(std::sqrt(pw_rho_->ggecut * ucell_->tpiba2 / 4.0 / alpha));
-    } while (upperbound > 1.0e-6);
+    } while (upperbound > ewald_tail_tol);
     ewald_alpha_ = alpha;
     // erfc(alpha R) < 1e-16 well inside 6/sqrt(alpha)
-    ewald_rcut_ = 6.0 / std::sqrt(alpha);
+    ewald_rcut_ = ewald_rcut_factor / std::sqrt(alpha);
 
     const ModuleBase::Vector3<double> q_cart = q_frac * ucell_->G;
 
@@ -133,7 +141,7 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::C
         const ModuleBase::Vector3<double> w = gcart + q_cart;
         const double w2 = w * w;
         const double g2 = gcart * gcart;
-        if (w2 < 1.0e-12)
+        if (w2 < w2_floor)
         {
             // G + q = 0 (only possible at q = 0 with G = 0): excluded, as in
             // the q = 0 G part below; its isotropic delta/3 limit belongs to
@@ -151,7 +159,7 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::C
             }
         }
         double gauss_g = 0.0;
-        if (g2 > 1.0e-12)
+        if (g2 > g2_floor)
         {
             gauss_g = ModuleBase::truncated_exp(-g2 * ucell_->tpiba2 / (4.0 * alpha));
             for (int da = 0; da < 3; ++da)
@@ -187,7 +195,7 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::C
                 // Gamma-phase on-site piece (G-only kernel, G != 0)
                 std::complex<double> phase0(1.0, 0.0);
                 double pref0 = 0.0;
-                if (g2 > 1.0e-12)
+                if (g2 > g2_floor)
                 {
                     const double arg0 = ModuleBase::TWO_PI * (gcart * (ta - tb));
                     phase0 = std::complex<double>(std::cos(arg0), std::sin(arg0));
@@ -631,8 +639,9 @@ void DFPT_Phon::diagonalize(int q_idx, DFPT_PW_Data& data)
     // signed frequencies: omega = sgn(e) sqrt(|e|), converted to cm^-1
     // sqrt(Ry/(bohr^2 amu)) in cm^-1 = sqrt(RYDBERG_SI/amu_kg)/(bohr*2pi*c)
     const double amu_kg = 1.0e-3 / ModuleBase::NA;
+    const double light_speed_cgs = 2.99792458e10; // cm/s, exact SI value
     const double ry_bohr2_amu_to_cm1 = std::sqrt(ModuleBase::RYDBERG_SI / amu_kg)
-                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI * 2.99792458e10);
+                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI * light_speed_cgs);
     std::vector<double> freq(nat3, 0.0);
     for (int i = 0; i < nat3; ++i)
     {
@@ -650,6 +659,7 @@ void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& 
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(0);
+    const double qeq_tol = 1.0e-10; ///< empirical parameter: |q eps q| floor for the non-polar-direction skip
     if (dyn.nr != nat3)
     {
         ModuleBase::timer::end("DFPT_Phon", "add_loto");
@@ -664,7 +674,7 @@ void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& 
     const double qeq = qhat.x * (qhat.x * eps(0, 0) + qhat.y * eps(1, 0) + qhat.z * eps(2, 0))
                        + qhat.y * (qhat.x * eps(0, 1) + qhat.y * eps(1, 1) + qhat.z * eps(2, 1))
                        + qhat.z * (qhat.x * eps(0, 2) + qhat.y * eps(1, 2) + qhat.z * eps(2, 2));
-    if (std::abs(qeq) < 1.0e-10)
+    if (std::abs(qeq) < qeq_tol)
     {
         ModuleBase::timer::end("DFPT_Phon", "add_loto");
         return;
@@ -777,8 +787,11 @@ bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const
 {
     ModuleBase::TITLE("DFPT_Phon", "check_sum_rule");
     ModuleBase::timer::start("DFPT_Phon", "check_sum_rule");
+    const double gamma_tol = 1.0e-8;       ///< empirical parameter: fractional-q Gamma tolerance
+    const double dyn_zero_floor = 1.0e-12; ///< empirical parameter: dynamical matrix treated as zero
+    const double asr_rel_tol = 1.0e-6;     ///< empirical parameter: tolerated relative column-sum error
     const ModuleBase::Vector3<double> q_frac = data.get_qvec(q_idx);
-    if (std::abs(q_frac.x) > 1.0e-8 || std::abs(q_frac.y) > 1.0e-8 || std::abs(q_frac.z) > 1.0e-8)
+    if (std::abs(q_frac.x) > gamma_tol || std::abs(q_frac.y) > gamma_tol || std::abs(q_frac.z) > gamma_tol)
     {
         ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
         return true; // only applies at Gamma
@@ -798,7 +811,7 @@ bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const
             max_elem = std::max(max_elem, std::abs(dyn(i, j)));
         }
     }
-    if (max_elem < 1.0e-12)
+    if (max_elem < dyn_zero_floor)
     {
         ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
         return true;
@@ -810,7 +823,7 @@ bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const
         {
             colsum += dyn(i, j);
         }
-        if (std::abs(colsum) > 1.0e-6 * max_elem)
+        if (std::abs(colsum) > asr_rel_tol * max_elem)
         {
             ModuleBase::timer::end("DFPT_Phon", "check_sum_rule");
             return false;

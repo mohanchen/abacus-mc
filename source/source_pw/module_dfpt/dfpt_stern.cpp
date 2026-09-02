@@ -96,7 +96,8 @@ int DFPT_Stern::solve(const LinearOperator& aop,
     std::vector<std::complex<double>> pb(n);
     apply_pv(occ_kq, b, pb);
     const double bnorm = std::sqrt(real_vdot(pb, pb));
-    if (bnorm < 1.0e-300)
+    const double homog_bnorm_floor = 1.0e-300; ///< empirical parameter: rhs norm floor for the homogeneous case
+    if (bnorm < homog_bnorm_floor)
     {
         // the right-hand side lies inside the occupied subspace: the
         // projected system is homogeneous and dpsi = 0 solves it exactly

@@ -47,7 +47,8 @@ void DFPT_Rho::init(const Config& cfg)
 
 bool DFPT_Rho::is_gamma_q_(const ModuleBase::Vector3<double>& q)
 {
-    return std::abs(q.x) < 1.0e-10 && std::abs(q.y) < 1.0e-10 && std::abs(q.z) < 1.0e-10;
+    const double gamma_tol = 1.0e-10; ///< empirical parameter: fractional-q tolerance for the Gamma test
+    return std::abs(q.x) < gamma_tol && std::abs(q.y) < gamma_tol && std::abs(q.z) < gamma_tol;
 }
 
 void DFPT_Rho::add_band_(int ik,
@@ -139,8 +140,9 @@ void DFPT_Rho::zero_neg_q_(const ModuleBase::Vector3<double>& q_cart,
     const ModuleBase::Vector3<double> mq_cart(-q_cart.x, -q_cart.y, -q_cart.z);
     const ModuleBase::Vector3<double> mfrac = mq_cart * recip_matrix_.Inverse();
     const double mr[3] = {std::round(mfrac.x), std::round(mfrac.y), std::round(mfrac.z)};
-    if (std::abs(mfrac.x - mr[0]) < 1.0e-6 && std::abs(mfrac.y - mr[1]) < 1.0e-6
-        && std::abs(mfrac.z - mr[2]) < 1.0e-6)
+    const double gvec_match_tol = 1.0e-6; ///< empirical parameter: folded -q reciprocal-vector match tolerance
+    if (std::abs(mfrac.x - mr[0]) < gvec_match_tol && std::abs(mfrac.y - mr[1]) < gvec_match_tol
+        && std::abs(mfrac.z - mr[2]) < gvec_match_tol)
     {
         // locate the rho-grid G equal to -q through its FFT cell
         const int cix = (static_cast<int>(mr[0]) % pw_rho_->nx + pw_rho_->nx) % pw_rho_->nx;
@@ -315,6 +317,7 @@ void DFPT_Rho::mix_drho(int q_idx, DFPT_PW_Data& data)
     }
     const std::vector<std::complex<double>>& rin = drho_in_[q_idx][0];
     std::vector<std::complex<double>> mixed(npw);
+    const double w2_floor = 1.0e-12; ///< empirical parameter: |G+q|^2 zero-shell guard (1/lat0^2, Kerker freeze)
     // the fractional q is needed both by the Kerker screen and by the
     // real-space manifest below; the q-shifted |G+q| convention matches
     // v_hartree_q (gcar + q_frac * recip, 1/lat0^2 units)
@@ -331,7 +334,7 @@ void DFPT_Rho::mix_drho(int q_idx, DFPT_PW_Data& data)
             const double w2 = w * w;
             // |G+q| = 0 harmonic: f = 0, frozen at rin (that harmonic is
             // dropped by compute_drho, so both inputs are zero there)
-            const double f = (w2 < 1.0e-12) ? 0.0 : w2 / (w2 + kerker_a2_);
+            const double f = (w2 < w2_floor) ? 0.0 : w2 / (w2 + kerker_a2_);
             rin_s[ig] = f * rin[ig];
             out_s[ig] = f * out[ig];
         }
@@ -407,13 +410,14 @@ void DFPT_Rho::v_hartree_q(const ModuleBase::Vector3<double>& q_cart,
         return;
     }
     dv_ha_g.assign(npw, std::complex<double>(0.0, 0.0));
+    const double w2_floor = 1.0e-12; ///< empirical parameter: |G+q|^2 zero-shell guard (1/lat0^2, Coulomb skip)
     for (int ig = 0; ig < npw; ++ig)
     {
         const ModuleBase::Vector3<double> w = pw_rho_->gcar[ig] + q_cart;
         const double w2_lat0 = w * w; // 1/lat0^2 units, like pw_rho_->gg
         // skip |G+q| = 0 (ig = -q): the q-shifted G=0 harmonic of the
         // Hartree kernel (v_hartree skips ig_gge0 the same way)
-        if (w2_lat0 < 1.0e-12)
+        if (w2_lat0 < w2_floor)
         {
             continue;
         }

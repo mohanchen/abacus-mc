@@ -85,6 +85,7 @@ AddTest(
   LIBS parameter dfpt_planewave_serial device base symmetry
   SOURCES dfpt_q0_serial_test.cpp
   ../dfpt_q0.cpp
+  ../dfpt_q0_pos.cpp
   ../dfpt_pert.cpp
   ../dfpt_pw_data.cpp
   ../dfpt_kq_basis.cpp

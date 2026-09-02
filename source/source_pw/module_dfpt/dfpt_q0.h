@@ -63,8 +63,8 @@ class DFPT_Pert;
 class DFPT_Q0
 {
   public:
-    DFPT_Q0();
-    ~DFPT_Q0();
+    DFPT_Q0() = default;
+    ~DFPT_Q0() = default;
 
     void init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, ModulePW::PW_Basis_K* pw_wfc, DFPT_Pert* pert);
 

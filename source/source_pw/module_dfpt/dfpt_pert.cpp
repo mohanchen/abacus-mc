@@ -92,6 +92,7 @@ double DFPT_Pert::vloc_at_g(int it, double g2) const
     ModuleBase::TITLE("DFPT_Pert", "vloc_at_g");
     ModuleBase::timer::start("DFPT_Pert", "vloc_at_g");
     // g2 is the squared magnitude in bohr^-2 units.
+    const double g_zero_tol = 1.0e-8; ///< empirical parameter: |G| floor (bohr^-1) for the G=0 radial integral
     const Atom* atom = &ucell_->atoms[it];
     const double zv = atom->ncpp.zv;
     if (atom->coulomb_potential)
@@ -108,7 +109,7 @@ double DFPT_Pert::vloc_at_g(int it, double g2) const
     const double fac = zv * ModuleBase::e2;
     std::vector<double> aux(msh);
     const double g = std::sqrt(g2);
-    if (g < 1.0e-8)
+    if (g < g_zero_tol)
     {
         double v0 = 0.0;
         for (int ir = 0; ir < msh; ++ir)
@@ -156,6 +157,7 @@ void DFPT_Pert::dVloc_dtau(int atom_idx,
     const int npw = pw_rho_->npw;
     dv.assign(npw, std::complex<double>(0.0, 0.0));
     ModuleBase::Vector3<double> gcar;
+    const double w2_floor = 1.0e-12; ///< empirical parameter: |Delta+q|^2 zero-shell guard (2*pi/lat0 units)
     for (int ig = 0; ig < npw; ++ig)
     {
         rho_gvec(ig, gcar);
@@ -164,7 +166,7 @@ void DFPT_Pert::dVloc_dtau(int atom_idx,
         // the Delta == -q component carries no displacement gradient (constant
         // potential shift) and is dropped, consistently with the G=0 handling
         // of the ground-state local potential.
-        if (w2 < 1.0e-12)
+        if (w2 < w2_floor)
         {
             continue;
         }
@@ -377,11 +379,12 @@ double DFPT_Pert::real_ylm(int l, int m, const ModuleBase::Vector3<double>& ghat
     // P_2^2 = 3 sin^2 0. The ABACUS GS vkb applies an additional (-1)^|m| phase
     // for the m>0 channels; exact GS parity is reconciled in the diamond
     // end-to-end test (C7), while the C1 identity test is convention-independent.
+    const double ghat_zero_tol = 1.0e-12; ///< empirical parameter: |ghat| floor for the zero-direction limit
     const double x = ghat.x;
     const double y = ghat.y;
     const double z = ghat.z;
     const double r = std::sqrt(x * x + y * y + z * z);
-    if (r < 1.0e-12)
+    if (r < ghat_zero_tol)
     {
         ModuleBase::timer::end("DFPT_Pert", "real_ylm");
         return (l == 0) ? 0.5 * std::sqrt(1.0 / ModuleBase::PI) : 0.0;
@@ -590,6 +593,7 @@ void DFPT_Pert::build_vkb_dk(int it,
         return;
     }
     const double dg = 1.0e-4; // bohr^-1, radial central-difference step
+    const double gmag_zero_tol = 1.0e-10; ///< empirical parameter: |G| floor (2*pi/lat0) for the angular terms
     int mu = 0;
     for (int ib = 0; ib < ncpp.nbeta; ++ib)
     {
@@ -611,7 +615,7 @@ void DFPT_Pert::build_vkb_dk(int it,
                 const std::complex<double> dphase = std::complex<double>(0.0, -ModuleBase::TWO_PI * tau[dir]) * phase;
                 double dy[3] = {0.0, 0.0, 0.0};
                 double ylm = 0.0;
-                if (gmag > 1.0e-10)
+                if (gmag > gmag_zero_tol)
                 {
                     const ModuleBase::Vector3<double> ghat = G * (1.0 / gmag);
                     ylm = real_ylm(l, mr, ghat);
@@ -837,6 +841,7 @@ void DFPT_Pert::d2vloc_r(int atom_idx, int da, int db, std::vector<std::complex<
     const int npw = pw_rho_->npw;
     std::vector<std::complex<double>> dv2_recip(npw, std::complex<double>(0.0, 0.0));
     ModuleBase::Vector3<double> gcar;
+    const double w2_floor = 1.0e-12; ///< empirical parameter: |G|^2 zero-shell guard (2*pi/lat0 units)
     for (int ig = 0; ig < npw; ++ig)
     {
         rho_gvec(ig, gcar);
@@ -847,7 +852,7 @@ void DFPT_Pert::d2vloc_r(int atom_idx, int da, int db, std::vector<std::complex<
         // reciprocal.
         const ModuleBase::Vector3<double> w = gcar;
         const double w2 = w * w;
-        if (w2 < 1.0e-12)
+        if (w2 < w2_floor)
         {
             continue;
         }

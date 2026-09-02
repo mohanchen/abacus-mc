@@ -140,6 +140,7 @@ void DFPT_PW::init(UnitCell& ucell,
     // wrong at the 100% level while still converging cleanly. Reject it
     // explicitly (C4 defers metallic DFPT); negligible gauss tails
     // (relative weight < 1e-3) are tolerated as the insulator limit.
+    const double frac_weight_tol = 1.0e-3; ///< empirical parameter: relative band weight treated as metallic
     for (int ik = 0; ik < wg.nr; ++ik)
     {
         const double wref = wg(ik, 0);
@@ -150,7 +151,7 @@ void DFPT_PW::init(UnitCell& ucell,
         for (int ib = 0; ib < wg.nc; ++ib)
         {
             const double rel = wg(ik, ib) / wref;
-            if (rel > 1.0e-3 && rel < 1.0 - 1.0e-3)
+            if (rel > frac_weight_tol && rel < 1.0 - frac_weight_tol)
             {
                 std::stringstream msg;
                 msg << "fractional band occupation at (ik=" << ik << ", ib=" << ib << ", wg=" << wg(ik, ib)
@@ -276,6 +277,7 @@ void DFPT_PW::Impl::build_occ_kq(int q_idx)
     ikq_of_k_.assign(nk, -1);
     const ModuleBase::Vector3<double> q_frac = data_.get_qvec(q_idx);
     const ModuleBase::Vector3<double> q_cart = q_frac * ucell_->G;
+    const double kmatch_tol = 1.0e-6; ///< empirical parameter: folded fractional k-list match tolerance
     for (int ik = 0; ik < nk; ++ik)
     {
         // k+q folded into [0,1) direct coordinates must be a ground-state k
@@ -288,8 +290,8 @@ void DFPT_PW::Impl::build_occ_kq(int q_idx)
             const double rx = std::round(kj.x - target.x);
             const double ry = std::round(kj.y - target.y);
             const double rz = std::round(kj.z - target.z);
-            if (std::abs(kj.x - target.x - rx) < 1.0e-6 && std::abs(kj.y - target.y - ry) < 1.0e-6
-                && std::abs(kj.z - target.z - rz) < 1.0e-6)
+            if (std::abs(kj.x - target.x - rx) < kmatch_tol && std::abs(kj.y - target.y - ry) < kmatch_tol
+                && std::abs(kj.z - target.z - rz) < kmatch_tol)
             {
                 ikq = j;
                 break;
@@ -323,7 +325,8 @@ void DFPT_PW::Impl::build_occ_kq(int q_idx)
         // same G only for dn = 0, so match through the G vectors instead.
         const ModuleBase::Vector3<double> dn = pw_wfc_->kvec_d[ik] + q_frac - pw_wfc_->kvec_d[ikq];
         const double dnr[3] = {std::round(dn.x), std::round(dn.y), std::round(dn.z)};
-        if (std::abs(dn.x - dnr[0]) > 1.0e-6 || std::abs(dn.y - dnr[1]) > 1.0e-6 || std::abs(dn.z - dnr[2]) > 1.0e-6)
+        if (std::abs(dn.x - dnr[0]) > kmatch_tol || std::abs(dn.y - dnr[1]) > kmatch_tol
+            || std::abs(dn.z - dnr[2]) > kmatch_tol)
         {
             ModuleBase::WARNING_QUIT("DFPT_PW::build_occ_kq",
                                      "k+q folds onto a k-list entry with a "

@@ -567,7 +567,8 @@ void DFPT_PW_Data::set_loto_dir(const ModuleBase::Vector3<double>& dir)
     ModuleBase::TITLE("DFPT_PW_Data", "set_loto_dir");
     ModuleBase::timer::start("DFPT_PW_Data", "set_loto_dir");
     const double norm = std::sqrt(dir * dir);
-    if (norm < 1.0e-10)
+    const double null_norm_tol = 1.0e-10; ///< empirical parameter: norm below which the direction input is null
+    if (norm < null_norm_tol)
     {
         ModuleBase::timer::end("DFPT_PW_Data", "set_loto_dir");
         return; // keep the current direction on a null input
