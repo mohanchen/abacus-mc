@@ -59,6 +59,7 @@ void Driver::driver_run()
 
     this->init_hardware();
     ModuleESolver::ESolver* p_esolver = ModuleESolver::init_esolver(PARAM.inp);
+    p_esolver->set_topology(this->topo_);
 
     // UnitCell is initialized only for workflows that require its full DFT state.
     UnitCell ucell;

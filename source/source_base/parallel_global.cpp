@@ -314,28 +314,11 @@ ParallelPartition Parallel_Global::create_partition(int world_nproc,
         }
     }
 
-    // ---- Invoke the legacy divide_pools flow: it fills the 6 legacy
-    //      global communicators AND returns scalar int values. ----
-    //
-    // NOTE(mohan): order matters. divide_pools internally calls
-    //   kpar_group .divide_group_comm(KPAR, false);
-    //   bndpar_group.divide_group_comm(BNDPAR, true);
-    //   -> sets POOL_WORLD, KP_WORLD, INT_BGROUP, BP_WORLD.
-    int nproc_in_bndgroup = -1;
-    int rank_in_bpgroup   = -1;
-    int my_bndgroup       = -1;
-    int nproc_in_pool_local = -1; // output alias of bndpar_group.nprocs_in_group
-    int rank_in_pool_local  = -1; // output alias of bndpar_group.rank_in_group
-    int my_pool_local       = -1; // output alias of kpar_group.my_group
-    Parallel_Global::divide_pools(world_nproc, my_rank, bndpar, kpar,
-                                  nproc_in_bndgroup, rank_in_bpgroup, my_bndgroup,
-                                  nproc_in_pool_local, rank_in_pool_local, my_pool_local);
-
-    // ---- split diag / rgrid worlds. ----
-    // These two helpers currently write DIAG_WORLD / GRID_WORLD as a
-    // side effect; they were always called by drivers in the old flow
-    // right after divide_pools, so we fold them into the factory to
-    // centralise all 6 legacy comm + scalar partition construction.
+    // ---- Reproduce the exact legacy driver call order: ----
+    //   1. split_diag_world  (writes DIAG_WORLD)
+    //   2. split_grid_world (writes GRID_WORLD)
+    //   3. divide_pools     (writes POOL_WORLD, KP_WORLD, INT_BGROUP, BP_WORLD)
+    // Do NOT reorder these calls without a separate validation PR.
     //
     // diag_np == 0 is not meaningful; fall back to 1 so the
     // even-partition guard in divide_mpi_groups (called inside
@@ -347,16 +330,32 @@ ParallelPartition Parallel_Global::create_partition(int world_nproc,
     int grank = -1, gsize = -1;
     Parallel_Global::split_grid_world(effective_diag_np, world_nproc, my_rank, grank, gsize);
 
+    // ---- Invoke the legacy divide_pools flow: it fills the 6 legacy
+    //      global communicators AND writes the GlobalV scalar fields
+    //      (NPROC_IN_POOL, RANK_IN_POOL, MY_POOL, etc.). ----
+    //
+    // NOTE(mohan): order matters. divide_pools internally calls
+    //   kpar_group .divide_group_comm(KPAR, false);
+    //   bndpar_group.divide_group_comm(BNDPAR, true);
+    //   -> sets POOL_WORLD, KP_WORLD, INT_BGROUP, BP_WORLD.
+    Parallel_Global::divide_pools(world_nproc, my_rank, bndpar, kpar,
+                                  GlobalV::NPROC_IN_BNDGROUP,
+                                  GlobalV::RANK_IN_BPGROUP,
+                                  GlobalV::MY_BNDGROUP,
+                                  GlobalV::NPROC_IN_POOL,
+                                  GlobalV::RANK_IN_POOL,
+                                  GlobalV::MY_POOL);
+
     return ParallelPartition(world_nproc,
                              my_rank,
                              kpar,
-                             my_pool_local,
-                             rank_in_pool_local,
+                             GlobalV::MY_POOL,
+                             GlobalV::RANK_IN_POOL,
                              nproc_in_pool,
                              bndpar,
-                             my_bndgroup,
-                             rank_in_bpgroup,
-                             nproc_in_bndgroup,
+                             GlobalV::MY_BNDGROUP,
+                             GlobalV::RANK_IN_BPGROUP,
+                             GlobalV::NPROC_IN_BNDGROUP,
                              POOL_WORLD,      // -> pw_world_comm        (legacy duped handle)
                              KP_WORLD,        // -> kmesh_world_comm     (KP_WORLD alias back)
                              INT_BGROUP,      // -> bsame_kdiff_world_comm

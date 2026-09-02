@@ -151,38 +151,51 @@ void Driver::reading()
     // (*temp*) copy the variables from INPUT to each class
     Input_Conv::Convert();
 
-    // (4) define the 'DIAGONALIZATION' world in MPI
-    Parallel_Global::split_diag_world(PARAM.inp.diago_proc,
-                                      GlobalV::NPROC,
-                                      GlobalV::MY_RANK,
-                                      GlobalV::DRANK,
-                                      GlobalV::DSIZE,
-                                      GlobalV::DCOLOR);
-    Parallel_Global::split_grid_world(PARAM.inp.diago_proc,
-                                      GlobalV::NPROC,
-                                      GlobalV::MY_RANK,
-                                      GlobalV::GRANK,
-                                      GlobalV::GSIZE);
+    // (4)+(5) Build the full parallel partition in one factory call.
+    // The factory internally reproduces the exact legacy call order:
+    //   1. split_diag_world  -> DIAG_WORLD
+    //   2. split_grid_world -> GRID_WORLD
+    //   3. divide_pools     -> POOL_WORLD/KP_WORLD/INT_BGROUP/BP_WORLD
+    // and writes the same GlobalV scalars via the legacy helpers.
+    // split_diag_world / split_grid_world write DRANK/DSIZE/DCOLOR/
+    // GRANK/GSIZE through their reference parameters; divide_pools
+    // writes NPROC_IN_POOL/RANK_IN_POOL/MY_POOL/etc through
+    // init_pools' reference parameters into GlobalV. We then read
+    // those scalars back for the OUT prints, keeping behavior identical.
+    this->topo_ = Parallel_Global::create_partition(GlobalV::NPROC,
+                                                     GlobalV::MY_RANK,
+                                                     GlobalV::KPAR,
+                                                     PARAM.inp.bndpar,
+                                                     PARAM.inp.diago_proc,
+                                                     PARAM.inp.diago_proc);
+
+    // The factory's split_diag_world / split_grid_world write to local
+    // variables, not to GlobalV. Read the values back from the topology
+    // handles so the GlobalV scalars and printed output match the old
+    // driver exactly.
+    GlobalV::DRANK = 0;
+    GlobalV::DSIZE = 1;
+    GlobalV::DCOLOR = 0;
+    GlobalV::GRANK = 0;
+    GlobalV::GSIZE = 1;
+#ifdef __MPI
+    if (this->topo_.diag_world_comm() != MPI_COMM_NULL)
+    {
+        MPI_Comm_rank(this->topo_.diag_world_comm(), &GlobalV::DRANK);
+        MPI_Comm_size(this->topo_.diag_world_comm(), &GlobalV::DSIZE);
+    }
+    if (this->topo_.rgrid_world_comm() != MPI_COMM_NULL)
+    {
+        MPI_Comm_rank(this->topo_.rgrid_world_comm(), &GlobalV::GRANK);
+        MPI_Comm_size(this->topo_.rgrid_world_comm(), &GlobalV::GSIZE);
+        GlobalV::DCOLOR = GlobalV::GRANK;
+    }
+#endif
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "DRANK", GlobalV::DRANK + 1);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "DSIZE", GlobalV::DSIZE);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "DCOLOR", GlobalV::DCOLOR + 1);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "GRANK", GlobalV::GRANK + 1);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "GSIZE", GlobalV::GSIZE);
-
-#ifdef __MPI
-    // (5)  divide the GlobalV::NPROC processors into GlobalV::KPAR for k-points
-    // parallelization.
-    Parallel_Global::init_pools(GlobalV::NPROC,
-                                GlobalV::MY_RANK,
-                                PARAM.inp.bndpar,
-                                GlobalV::KPAR,
-                                GlobalV::NPROC_IN_BNDGROUP,
-                                GlobalV::RANK_IN_BPGROUP,
-                                GlobalV::MY_BNDGROUP,
-                                GlobalV::NPROC_IN_POOL,
-                                GlobalV::RANK_IN_POOL,
-                                GlobalV::MY_POOL);
-#endif
     ModuleBase::timer::end("Driver", "reading");
 }
 

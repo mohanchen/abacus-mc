@@ -1,6 +1,7 @@
 #ifndef DRIVER_H
 #define DRIVER_H
 
+#include "source_base/parallel_partition.h"
 
 class Driver
 {
@@ -40,6 +41,10 @@ class Driver
     // Init harewares according to Input parameters
     void init_hardware();
     void finalize_hardware();
+
+    /// Parallel partition built once in reading() and injected into
+    /// the ESolver in driver_run().
+    ParallelPartition topo_;
 };
 
 #endif
