@@ -819,7 +819,6 @@ OBJS_SRCPW=h_ewald_pw.o\
     yukawa_screening.o\
     setup_dftu_pw.o\
     deltaspin_pw.o\
-    deltaspin_pw_impl.o\
     force_pw.o\
     force_pw_us.o\
     force_pw_nl.o\
@@ -912,6 +911,7 @@ OBJS_DELTASPIN=basic_funcs.o\
       spin_constrain.o\
       cal_mw_helper.o\
       deltaspin_lcao.o\
+      deltaspin_pw_mi.o\
       mi_tools.o\
       template_helpers.o\
 
