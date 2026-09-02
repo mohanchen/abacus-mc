@@ -1,4 +1,4 @@
-#include "dftu_lcao_op_legacy.h"
+#include "dftu_nao_op_legacy.h"
 #include "dftu_hamilt.h"
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"

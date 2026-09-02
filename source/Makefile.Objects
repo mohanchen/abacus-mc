@@ -281,6 +281,7 @@ OBJS_ELECSTAT=elecstate.o\
     read_orb.o\
     setup_estate_pw.o\
     update_pot.o\
+    occ_matrix.o
 
 OBJS_ELECSTAT_LCAO=elecstate_lcao.o\
       init_dm.o\
@@ -410,13 +411,12 @@ OBJS_HAMILT_LCAO=hamilt_lcao.o\
     veff_lcao.o\
     veff_dh.o\
     meta_lcao.o\
-    dftu_lcao_op.o\
+    dftu_nao_op.o\
     deepks_lcao.o\
     op_exx_lcao.o\
     dspin_lcao.o\
     dspin_fs.o\
     setup_dftu_lcao.o\
-    dftu_fs.o\
     operator_fs_utils.o\
 
 OBJS_HCONTAINER=base_matrix.o\
@@ -821,9 +821,10 @@ OBJS_SRCPW=h_ewald_pw.o\
     setup_pwwfc.o\
     update_cell_pw.o\
     dftu_base.o\
-    dftu_output.o\
-    dftu_tools_pw.o\
-    dftu_cal_occ_pw.o\
+    dftu_base_io.o\
+    dftu_base_occ.o\
+    dftu_base_tools.o\
+    yukawa_screening.o\
     setup_dftu_pw.o\
     deltaspin_pw.o\
     deltaspin_pw_impl.o\
@@ -898,14 +899,16 @@ OBJS_VDW=vdw.o\
     vdwd3_autoset_xcname.o\
     vdwd3_auto_xcpar.o
 
-OBJS_DFTU=dftu_lcao.o\
-      dftu_force.o\
-      dftu_yukawa.o\
-      dftu_folding.o\
-      dftu_lcao_pots.o\
-      dftu_lcao_energy.o\
-      dftu_lcao_op_legacy.o\
-      dftu_lcao_occ.o\
+OBJS_DFTU=dftu_nao.o\
+      dftu_nao_fs_k.o\
+      dftu_nao_for_r.o\
+      dftu_nao_fs_r.o\
+      dftu_nao_str_r.o\
+      dftu_nao_folding.o\
+      dftu_nao_pots.o\
+      dftu_nao_energy.o\
+      dftu_nao_op_legacy.o\
+      dftu_nao_occ.o\
       dftu_hamilt.o
 
 OBJS_DELTASPIN=basic_funcs.o\
