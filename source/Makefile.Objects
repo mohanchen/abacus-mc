@@ -373,14 +373,23 @@ OBJS_HAMILT_OF=kedf_tf.o\
     kedf_manager.o\
     evolve_ofdft.o\
 
-OBJS_DFPT=dfpt_metal.o\
-    dfpt_hamilt_shift.o\
+OBJS_DFPT=dfpt_hamilt_shift.o\
     dfpt_kq_basis.o\
+    dfpt_metal.o\
     dfpt_pert.o\
+    dfpt_pert_nl.o\
+    dfpt_pert_vkb.o\
     dfpt_phon.o\
+    dfpt_phon_elec.o\
+    dfpt_phon_ewald.o\
     dfpt_pw.o\
     dfpt_pw_data.o\
+    dfpt_pw_init.o\
+    dfpt_pw_q0.o\
+    dfpt_pw_run.o\
+    dfpt_pw_solve.o\
     dfpt_q0.o\
+    dfpt_q0_pos.o\
     dfpt_rho.o\
     dfpt_stern.o
 
