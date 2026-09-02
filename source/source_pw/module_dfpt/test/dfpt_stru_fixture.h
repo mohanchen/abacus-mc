@@ -1,10 +1,11 @@
 #ifndef DFPT_STRU_FIXTURE_H
 #define DFPT_STRU_FIXTURE_H
 
+#include "source_cell/unitcell.h"
+
+#include "gtest/gtest.h"
 #include <string>
 #include <vector>
-#include "source_cell/unitcell.h"
-#include "gtest/gtest.h"
 
 // Shared gtest fixture for building a minimal cubic UnitCell from a
 // hand-written structure table (abbreviated from

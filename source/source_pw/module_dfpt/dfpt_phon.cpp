@@ -25,32 +25,39 @@
 #include <sstream>
 #include <vector>
 
-namespace ModuleDFPT {
+namespace ModuleDFPT
+{
 
-DFPT_Phon::DFPT_Phon() {}
+DFPT_Phon::DFPT_Phon()
+{
+}
 
-DFPT_Phon::~DFPT_Phon() {}
+DFPT_Phon::~DFPT_Phon()
+{
+}
 
-namespace {
+namespace
+{
 
 // signed frequencies: omega = sgn(e) sqrt(|e|), converted to cm^-1
 // sqrt(Ry/(bohr^2 amu)) in cm^-1 = sqrt(RYDBERG_SI/amu_kg)/(bohr*2pi*c)
-std::vector<double> signed_freqs_cm1(const std::vector<double>& eigs) {
+std::vector<double> signed_freqs_cm1(const std::vector<double>& eigs)
+{
     const double amu_kg = 1.0e-3 / ModuleBase::NA;
     const double ry_bohr2_amu_to_cm1 = std::sqrt(ModuleBase::RYDBERG_SI / amu_kg)
-                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI
-                                          * 2.99792458e10);
+                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI * 2.99792458e10);
     std::vector<double> freq(eigs.size(), 0.0);
-    for (size_t i = 0; i < eigs.size(); ++i) {
-        freq[i] = ((eigs[i] >= 0.0) ? 1.0 : -1.0) * std::sqrt(std::abs(eigs[i]))
-                  * ry_bohr2_amu_to_cm1;
+    for (size_t i = 0; i < eigs.size(); ++i)
+    {
+        freq[i] = ((eigs[i] >= 0.0) ? 1.0 : -1.0) * std::sqrt(std::abs(eigs[i])) * ry_bohr2_amu_to_cm1;
     }
     return freq;
 }
 
 } // namespace
 
-void DFPT_Phon::init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, DFPT_Pert* pert) {
+void DFPT_Phon::init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, DFPT_Pert* pert)
+{
     ucell_ = &ucell;
     pw_rho_ = pw_rho;
     pert_ = pert;
@@ -60,8 +67,8 @@ void DFPT_Phon::init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, DFPT_Pert* per
 // Ewald ion-ion force constants (C5)
 // ---------------------------------------------------------------------------
 
-void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
-                        ModuleBase::ComplexMatrix& dyn) {
+void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac, ModuleBase::ComplexMatrix& dyn)
+{
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     const double lat0 = ucell_->lat0;
@@ -69,7 +76,8 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
 
     // total ionic charge
     double charge = 0.0;
-    for (int it = 0; it < ucell_->ntype; ++it) {
+    for (int it = 0; it < ucell_->ntype; ++it)
+    {
         charge += ucell_->atoms[it].na * ucell_->atoms[it].ncpp.zv;
     }
 
@@ -79,16 +87,15 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
     // cutoff is ggecut * tpiba2
     double alpha = 1.1;
     double upperbound = 0.0;
-    do {
+    do
+    {
         alpha *= 0.9;
-        if (alpha < 1.0e-4) {
-            ModuleBase::WARNING_QUIT("DFPT_Phon::ion_ion",
-                                     "Can't find optimal Ewald alpha.");
+        if (alpha < 1.0e-4)
+        {
+            ModuleBase::WARNING_QUIT("DFPT_Phon::ion_ion", "Can't find optimal Ewald alpha.");
         }
-        upperbound = 2.0 * charge * charge
-                     * std::sqrt(2.0 * alpha / ModuleBase::TWO_PI)
-                     * ModuleBase::truncated_erfc(
-                         std::sqrt(pw_rho_->ggecut * ucell_->tpiba2 / 4.0 / alpha));
+        upperbound = 2.0 * charge * charge * std::sqrt(2.0 * alpha / ModuleBase::TWO_PI)
+                     * ModuleBase::truncated_erfc(std::sqrt(pw_rho_->ggecut * ucell_->tpiba2 / 4.0 / alpha));
     } while (upperbound > 1.0e-6);
     ewald_alpha_ = alpha;
     // erfc(alpha R) < 1e-16 well inside 6/sqrt(alpha)
@@ -117,12 +124,14 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
     // rule holds exactly by construction.
     double sq[3][3] = {{0.0}};
     double s0[3][3] = {{0.0}};
-    for (int ig = 0; ig < pw_rho_->npw; ++ig) {
+    for (int ig = 0; ig < pw_rho_->npw; ++ig)
+    {
         const ModuleBase::Vector3<double>& gcart = pw_rho_->gcar[ig];
         const ModuleBase::Vector3<double> w = gcart + q_cart;
         const double w2 = w * w;
         const double g2 = gcart * gcart;
-        if (w2 < 1.0e-12) {
+        if (w2 < 1.0e-12)
+        {
             // G + q = 0 (only possible at q = 0 with G = 0): excluded, as in
             // the q = 0 G part below; its isotropic delta/3 limit belongs to
             // the direction-averaged q -> 0 behavior, not the exact q = 0
@@ -131,28 +140,36 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
         }
         const double w2_bohr = w2 * ucell_->tpiba2;
         const double gauss = ModuleBase::truncated_exp(-w2_bohr / (4.0 * alpha));
-        for (int da = 0; da < 3; ++da) {
-            for (int db = 0; db < 3; ++db) {
+        for (int da = 0; da < 3; ++da)
+        {
+            for (int db = 0; db < 3; ++db)
+            {
                 sq[da][db] += w[da] * w[db] / w2 * gauss;
             }
         }
         double gauss_g = 0.0;
-        if (g2 > 1.0e-12) {
+        if (g2 > 1.0e-12)
+        {
             gauss_g = ModuleBase::truncated_exp(-g2 * ucell_->tpiba2 / (4.0 * alpha));
-            for (int da = 0; da < 3; ++da) {
-                for (int db = 0; db < 3; ++db) {
+            for (int da = 0; da < 3; ++da)
+            {
+                for (int db = 0; db < 3; ++db)
+                {
                     s0[da][db] += gcart[da] * gcart[db] / g2 * gauss_g;
                 }
             }
         }
-        for (int ia = 0; ia < nat; ++ia) {
+        for (int ia = 0; ia < nat; ++ia)
+        {
             const int ita = ucell_->iat2it[ia];
             const int iia = ucell_->iat2ia[ia];
             const double za = ucell_->atoms[ita].ncpp.zv;
             const double ma = ucell_->atoms[ita].mass;
             const ModuleBase::Vector3<double>& ta = ucell_->atoms[ita].tau[iia];
-            for (int ib = 0; ib < nat; ++ib) {
-                if (ib == ia) {
+            for (int ib = 0; ib < nat; ++ib)
+            {
+                if (ib == ia)
+                {
                     continue;
                 }
                 const int itb = ucell_->iat2it[ib];
@@ -162,43 +179,43 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
                 const ModuleBase::Vector3<double>& tb = ucell_->atoms[itb].tau[iib];
                 const double arg = ModuleBase::TWO_PI * (w * (ta - tb));
                 const std::complex<double> phase(std::cos(arg), std::sin(arg));
-                const double pref = ModuleBase::FOUR_PI / ucell_->omega
-                                    * za * zb * ModuleBase::e2 * gauss
+                const double pref = ModuleBase::FOUR_PI / ucell_->omega * za * zb * ModuleBase::e2 * gauss
                                     / (std::sqrt(ma * mb) * w2);
                 // Gamma-phase on-site piece (G-only kernel, G != 0)
                 std::complex<double> phase0(1.0, 0.0);
                 double pref0 = 0.0;
-                if (g2 > 1.0e-12) {
+                if (g2 > 1.0e-12)
+                {
                     const double arg0 = ModuleBase::TWO_PI * (gcart * (ta - tb));
                     phase0 = std::complex<double>(std::cos(arg0), std::sin(arg0));
-                    pref0 = ModuleBase::FOUR_PI / ucell_->omega
-                            * za * zb * ModuleBase::e2 * gauss_g
+                    pref0 = ModuleBase::FOUR_PI / ucell_->omega * za * zb * ModuleBase::e2 * gauss_g
                             / (std::sqrt(ma * mb) * g2);
                 }
-                for (int da = 0; da < 3; ++da) {
-                    for (int db = 0; db < 3; ++db) {
+                for (int da = 0; da < 3; ++da)
+                {
+                    for (int db = 0; db < 3; ++db)
+                    {
                         const std::complex<double> elem = pref * w[da] * w[db] * phase;
                         dyn(3 * ia + da, 3 * ib + db) += elem;
                         // on-site diagonal: phase-free (Gamma) accumulation,
                         // Phi_ii = -Phi_ij => -sqrt(Mb/Ma) on the pair term
-                        dyn(3 * ia + da, 3 * ia + db)
-                            -= pref0 * gcart[da] * gcart[db] * phase0
-                               * std::sqrt(mb / ma);
+                        dyn(3 * ia + da, 3 * ia + db) -= pref0 * gcart[da] * gcart[db] * phase0 * std::sqrt(mb / ma);
                     }
                 }
             }
         }
     }
     // self-image G-space phase difference on the diagonal
-    for (int ia = 0; ia < nat; ++ia) {
+    for (int ia = 0; ia < nat; ++ia)
+    {
         const double za = ucell_->atoms[ucell_->iat2it[ia]].ncpp.zv;
         const double ma = ucell_->atoms[ucell_->iat2it[ia]].mass;
         const double f2 = za * za * ModuleBase::e2 / ma;
-        for (int da = 0; da < 3; ++da) {
-            for (int db = 0; db < 3; ++db) {
-                dyn(3 * ia + da, 3 * ia + db)
-                    += f2 * ModuleBase::FOUR_PI / ucell_->omega
-                       * (sq[da][db] - s0[da][db]);
+        for (int da = 0; da < 3; ++da)
+        {
+            for (int db = 0; db < 3; ++db)
+            {
+                dyn(3 * ia + da, 3 * ia + db) += f2 * ModuleBase::FOUR_PI / ucell_->omega * (sq[da][db] - s0[da][db]);
             }
         }
     }
@@ -215,43 +232,50 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
                                 {latvec.e21, latvec.e22, latvec.e23},
                                 {latvec.e31, latvec.e32, latvec.e33}};
     int nmax[3] = {0, 0, 0};
-    for (int d = 0; d < 3; ++d) {
+    for (int d = 0; d < 3; ++d)
+    {
         const ModuleBase::Vector3<double> a1(row_e[d][0], row_e[d][1], row_e[d][2]);
         const double len = std::sqrt(a1 * a1) * lat0; // bohr
         nmax[d] = static_cast<int>(std::ceil(ewald_rcut_ / len)) + 1;
     }
-    for (int ia = 0; ia < nat; ++ia) {
+    for (int ia = 0; ia < nat; ++ia)
+    {
         const int ita = ucell_->iat2it[ia];
         const int iia = ucell_->iat2ia[ia];
         const double za = ucell_->atoms[ita].ncpp.zv;
         const double ma = ucell_->atoms[ita].mass;
-        for (int ib = 0; ib < nat; ++ib) {
+        for (int ib = 0; ib < nat; ++ib)
+        {
             const int itb = ucell_->iat2it[ib];
             const int iib = ucell_->iat2ia[ib];
             const double zb = ucell_->atoms[itb].ncpp.zv;
             const double mb = ucell_->atoms[itb].mass;
-            const ModuleBase::Vector3<double> dt =
-                ucell_->atoms[itb].tau[iib] - ucell_->atoms[ita].tau[iia];
-            if (ib == ia) {
+            const ModuleBase::Vector3<double> dt = ucell_->atoms[itb].tau[iib] - ucell_->atoms[ita].tau[iia];
+            if (ib == ia)
+            {
                 // self-image phase difference: the on-site i-i energy is
                 // L-independent while the cross-cell i-i force constants carry
                 // e^{i2pi q.L}, so D_ii receives
                 //   -(Za^2 e2/Ma) sum_{L!=0} h_erfc(L) (e^{i2pi q.L} - 1);
                 // the imaginary part cancels over the +-L symmetric sphere
                 // (h is even) and L = 0 carries e^{i2pi q.0} - 1 = 0
-                for (int n1 = -nmax[0]; n1 <= nmax[0]; ++n1) {
-                    for (int n2 = -nmax[1]; n2 <= nmax[1]; ++n2) {
-                        for (int n3 = -nmax[2]; n3 <= nmax[2]; ++n3) {
-                            if (n1 == 0 && n2 == 0 && n3 == 0) {
+                for (int n1 = -nmax[0]; n1 <= nmax[0]; ++n1)
+                {
+                    for (int n2 = -nmax[1]; n2 <= nmax[1]; ++n2)
+                    {
+                        for (int n3 = -nmax[2]; n3 <= nmax[2]; ++n3)
+                        {
+                            if (n1 == 0 && n2 == 0 && n3 == 0)
+                            {
                                 continue;
                             }
-                            const ModuleBase::Vector3<double> lvec(
-                                n1 * latvec.e11 + n2 * latvec.e21 + n3 * latvec.e31,
-                                n1 * latvec.e12 + n2 * latvec.e22 + n3 * latvec.e32,
-                                n1 * latvec.e13 + n2 * latvec.e23 + n3 * latvec.e33);
+                            const ModuleBase::Vector3<double> lvec(n1 * latvec.e11 + n2 * latvec.e21 + n3 * latvec.e31,
+                                                                   n1 * latvec.e12 + n2 * latvec.e22 + n3 * latvec.e32,
+                                                                   n1 * latvec.e13 + n2 * latvec.e23 + n3 * latvec.e33);
                             const ModuleBase::Vector3<double> r = lvec * lat0;
                             const double r2 = r * r;
-                            if (r2 > ewald_rcut_ * ewald_rcut_) {
+                            if (r2 > ewald_rcut_ * ewald_rcut_)
+                            {
                                 continue;
                             }
                             const double rlen = std::sqrt(r2);
@@ -259,19 +283,18 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
                             const double e2a = ModuleBase::truncated_exp(-alpha * r2);
                             const double f = 2.0 * sar / std::sqrt(ModuleBase::PI) * e2a;
                             const double er = ModuleBase::truncated_erfc(sar * rlen);
-                            const double ph_arg = ModuleBase::TWO_PI
-                                                  * (q_frac.x * n1 + q_frac.y * n2
-                                                     + q_frac.z * n3);
+                            const double ph_arg = ModuleBase::TWO_PI * (q_frac.x * n1 + q_frac.y * n2 + q_frac.z * n3);
                             const double wcos = std::cos(ph_arg) - 1.0;
                             const double f2 = za * za * ModuleBase::e2 / ma;
-                            for (int da = 0; da < 3; ++da) {
-                                for (int db = 0; db < 3; ++db) {
+                            for (int da = 0; da < 3; ++da)
+                            {
+                                for (int db = 0; db < 3; ++db)
+                                {
                                     const double delta = (da == db) ? 1.0 : 0.0;
-                                    const double h = er * (3.0 * r[da] * r[db] - delta * r2)
-                                                         / (rlen * r2 * r2)
-                                                     + f * (2.0 * alpha * r[da] * r[db] / r2
-                                                            + 3.0 * r[da] * r[db] / (r2 * r2)
-                                                            - delta / r2);
+                                    const double h = er * (3.0 * r[da] * r[db] - delta * r2) / (rlen * r2 * r2)
+                                                     + f
+                                                           * (2.0 * alpha * r[da] * r[db] / r2
+                                                              + 3.0 * r[da] * r[db] / (r2 * r2) - delta / r2);
                                     dyn(3 * ia + da, 3 * ia + db) -= f2 * h * wcos;
                                 }
                             }
@@ -280,16 +303,19 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
                 }
                 continue;
             }
-            for (int n1 = -nmax[0]; n1 <= nmax[0]; ++n1) {
-                for (int n2 = -nmax[1]; n2 <= nmax[1]; ++n2) {
-                    for (int n3 = -nmax[2]; n3 <= nmax[2]; ++n3) {
-                        const ModuleBase::Vector3<double> lvec(
-                            n1 * latvec.e11 + n2 * latvec.e21 + n3 * latvec.e31,
-                            n1 * latvec.e12 + n2 * latvec.e22 + n3 * latvec.e32,
-                            n1 * latvec.e13 + n2 * latvec.e23 + n3 * latvec.e33);
+            for (int n1 = -nmax[0]; n1 <= nmax[0]; ++n1)
+            {
+                for (int n2 = -nmax[1]; n2 <= nmax[1]; ++n2)
+                {
+                    for (int n3 = -nmax[2]; n3 <= nmax[2]; ++n3)
+                    {
+                        const ModuleBase::Vector3<double> lvec(n1 * latvec.e11 + n2 * latvec.e21 + n3 * latvec.e31,
+                                                               n1 * latvec.e12 + n2 * latvec.e22 + n3 * latvec.e32,
+                                                               n1 * latvec.e13 + n2 * latvec.e23 + n3 * latvec.e33);
                         ModuleBase::Vector3<double> r = (lvec + dt) * lat0; // bohr
                         const double r2 = r * r;
-                        if (r2 > ewald_rcut_ * ewald_rcut_) {
+                        if (r2 > ewald_rcut_ * ewald_rcut_)
+                        {
                             continue;
                         }
                         const double rlen = std::sqrt(r2);
@@ -298,26 +324,26 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
                         const double e2a = ModuleBase::truncated_exp(-alpha * r2);
                         const double f = 2.0 * sar / std::sqrt(ModuleBase::PI) * e2a;
                         const double er = ModuleBase::truncated_erfc(sar * rlen);
-                        const double ph_arg = ModuleBase::TWO_PI
-                                              * (q_frac.x * n1 + q_frac.y * n2 + q_frac.z * n3);
+                        const double ph_arg = ModuleBase::TWO_PI * (q_frac.x * n1 + q_frac.y * n2 + q_frac.z * n3);
                         const std::complex<double> phase(std::cos(ph_arg), std::sin(ph_arg));
                         const double zab2 = za * zb * ModuleBase::e2 / std::sqrt(ma * mb);
-                        for (int da = 0; da < 3; ++da) {
-                            for (int db = 0; db < 3; ++db) {
+                        for (int da = 0; da < 3; ++da)
+                        {
+                            for (int db = 0; db < 3; ++db)
+                            {
                                 const double delta = (da == db) ? 1.0 : 0.0;
                                 // d^2/dR_a dR_b [erfc(sqrt(alpha) R)/R],
                                 // validated against central finite differences
                                 const double h = er * (3.0 * r[da] * r[db] - delta * r2) / (r3 * r2)
-                                                 + f * (2.0 * alpha * r[da] * r[db] / r2
-                                                        + 3.0 * r[da] * r[db] / (r2 * r2)
-                                                        - delta / r2);
+                                                 + f
+                                                       * (2.0 * alpha * r[da] * r[db] / r2
+                                                          + 3.0 * r[da] * r[db] / (r2 * r2) - delta / r2);
                                 dyn(3 * ia + da, 3 * ib + db) -= zab2 * h * phase;
                                 // on-site diagonal Phi_ii^R = sum_{j != i}
                                 // Z_iZ_j sum_L h(r_ij + L): phase-free (both
                                 // derivatives act on tau_a in cell 0), i.e.
                                 // -sqrt(Mb/Ma) times the pair term
-                                dyn(3 * ia + da, 3 * ia + db)
-                                    += zab2 * std::sqrt(mb / ma) * h;
+                                dyn(3 * ia + da, 3 * ia + db) += zab2 * std::sqrt(mb / ma) * h;
                             }
                         }
                     }
@@ -338,15 +364,21 @@ void DFPT_Phon::ion_ion(const ModuleBase::Vector3<double>& q_frac,
 // electronic contribution (2n+1 theorem)
 // ---------------------------------------------------------------------------
 
-void DFPT_Phon::accumulate_electron(int q_idx, int atom_idx, int dir,
+void DFPT_Phon::accumulate_electron(int q_idx,
+                                    int atom_idx,
+                                    int dir,
                                     const psi::Psi<std::complex<double>>& psi,
-                                    const ModuleBase::matrix& wg, DFPT_PW_Data& data) {
-    if (pert_ == nullptr || pw_rho_ == nullptr || ucell_ == nullptr) {
+                                    const ModuleBase::matrix& wg,
+                                    DFPT_PW_Data& data)
+{
+    if (pert_ == nullptr || pw_rho_ == nullptr || ucell_ == nullptr)
+    {
         return;
     }
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
-    if (accum_q_ != q_idx || dynmat_accum_.nr != nat3) {
+    if (accum_q_ != q_idx || dynmat_accum_.nr != nat3)
+    {
         dynmat_accum_ = ModuleBase::ComplexMatrix(nat3, nat3, true);
         accum_q_ = q_idx;
     }
@@ -357,20 +389,23 @@ void DFPT_Phon::accumulate_electron(int q_idx, int atom_idx, int dir,
     // stash the converged dpsi of this displacement (apply_dv reuses the slot):
     // prefer the per-displacement store of the two-pass flow; fall back to
     // the working slots for the legacy interleaved call order
-    std::vector<std::vector<std::vector<std::complex<double>>>> dpsib
-        = data.get_dpsi_disp(atom_idx, dir);
-    if (dpsib.empty() || static_cast<int>(dpsib.size()) < nk
-        || (nk > 0 && static_cast<int>(dpsib[0].size()) < nbands)) {
+    std::vector<std::vector<std::vector<std::complex<double>>>> dpsib = data.get_dpsi_disp(atom_idx, dir);
+    if (dpsib.empty() || static_cast<int>(dpsib.size()) < nk || (nk > 0 && static_cast<int>(dpsib[0].size()) < nbands))
+    {
         dpsib.assign(nk, std::vector<std::vector<std::complex<double>>>(nbands));
-        for (int ik = 0; ik < nk; ++ik) {
-            for (int ib = 0; ib < nbands; ++ib) {
+        for (int ik = 0; ik < nk; ++ik)
+        {
+            for (int ib = 0; ib < nbands; ++ib)
+            {
                 dpsib[ik][ib] = data.get_dpsi(q_idx, ik, ib);
             }
         }
     }
 
-    for (int iat = 0; iat < nat; ++iat) {
-        for (int idir = 0; idir < 3; ++idir) {
+    for (int iat = 0; iat < nat; ++iat)
+    {
+        for (int idir = 0; idir < 3; ++idir)
+        {
             const int cola = 3 * iat + idir;
             // ---- term 2 <dpsi^b | dV^a_ext | psi> over all k,n ----
             // Hermitian (2n+1) accumulation: the row element gets X_ba and
@@ -381,27 +416,31 @@ void DFPT_Phon::accumulate_electron(int q_idx, int atom_idx, int dir,
             // external perturbation appears here
             pert_->build_dv(q_idx, iat, idir, data);
             std::complex<double> cross(0.0, 0.0);
-            for (int ik = 0; ik < nk; ++ik) {
+            for (int ik = 0; ik < nk; ++ik)
+            {
                 pert_->apply_dv(q_idx, ik, psi, data);
-                for (int ib = 0; ib < nbands; ++ib) {
-                    if (!dfpt_band_occupied(wg, ik, ib)) {
+                for (int ib = 0; ib < nbands; ++ib)
+                {
+                    if (!dfpt_band_occupied(wg, ik, ib))
+                    {
                         continue;
                     }
                     const std::vector<std::complex<double>> rhs = data.get_dpsi(q_idx, ik, ib);
                     const std::vector<std::complex<double>>& sol = dpsib[ik][ib];
-                    if (rhs.size() != sol.size() || sol.empty()) {
+                    if (rhs.size() != sol.size() || sol.empty())
+                    {
                         continue;
                     }
                     std::complex<double> dot(0.0, 0.0);
-                    for (size_t i = 0; i < sol.size(); ++i) {
+                    for (size_t i = 0; i < sol.size(); ++i)
+                    {
                         dot += std::conj(sol[i]) * rhs[i];
                     }
                     cross += wg(ik, ib) * dot;
                 }
             }
             const double mass_norm
-                = std::sqrt(ucell_->atoms[ucell_->iat2it[atom_idx]].mass
-                            * ucell_->atoms[ucell_->iat2it[iat]].mass);
+                = std::sqrt(ucell_->atoms[ucell_->iat2it[atom_idx]].mass * ucell_->atoms[ucell_->iat2it[iat]].mass);
             dynmat_accum_(rowb, cola) += cross / mass_norm;
             dynmat_accum_(cola, rowb) += std::conj(cross) / mass_norm;
 
@@ -423,10 +462,12 @@ void DFPT_Phon::accumulate_electron(int q_idx, int atom_idx, int dir,
             // q-independence is established QE ground truth; the old
             // 2q-commensurability gate and the D2MID A/B knob are gone)
             const bool include_middle = true;
-            if (iat == atom_idx && cola >= rowb) {
+            if (iat == atom_idx && cola >= rowb)
+            {
                 std::vector<std::complex<double>> dv2_r;
                 pert_->d2vloc_r(atom_idx, idir, dir, dv2_r);
-                if (static_cast<int>(dv2_r.size()) != pw_rho_->nrxx) {
+                if (static_cast<int>(dv2_r.size()) != pw_rho_->nrxx)
+                {
                     dv2_r.assign(pw_rho_->nrxx, std::complex<double>(0.0, 0.0));
                 }
                 std::vector<std::vector<std::complex<double>>> chi;
@@ -434,43 +475,49 @@ void DFPT_Phon::accumulate_electron(int q_idx, int atom_idx, int dir,
                 std::vector<std::complex<double>> u_r(pw_rho_->nrxx);
                 std::vector<std::complex<double>> x_r(pw_rho_->nrxx);
                 std::vector<std::complex<double>> x_recip(pw_rho_->npw, std::complex<double>(0.0, 0.0));
-                for (int ik = 0; ik < nk; ++ik) {
+                for (int ik = 0; ik < nk; ++ik)
+                {
                     pert_->apply_d2vnl(atom_idx, idir, dir, q_eff_cart, include_middle, psi, ik, chi);
                     // k+q_eff scatter map for this k (must match apply_d2vnl)
                     DFPT_KQ_Basis kq;
                     kq.init(pert_->get_pw_wfc(), pert_->get_pw_rho(), q_eff_cart, ik);
                     const int npwk_kq = kq.get_npwk();
-                    for (int ib = 0; ib < nbands; ++ib) {
-                        if (!dfpt_band_occupied(wg, ik, ib)) {
+                    for (int ib = 0; ib < nbands; ++ib)
+                    {
+                        if (!dfpt_band_occupied(wg, ik, ib))
+                        {
                             continue;
                         }
                         pert_->get_pw_wfc()->recip2real(&psi(ik, ib, 0), u_r.data(), ik);
-                        if (static_cast<int>(chi.size()) == nbands
-                            && static_cast<int>(chi[ib].size()) == npwk_kq) {
+                        if (static_cast<int>(chi.size()) == nbands && static_cast<int>(chi[ib].size()) == npwk_kq)
+                        {
                             std::fill(x_recip.begin(), x_recip.end(), std::complex<double>(0.0, 0.0));
-                            for (int igl = 0; igl < npwk_kq; ++igl) {
+                            for (int igl = 0; igl < npwk_kq; ++igl)
+                            {
                                 const int ig_rho = kq.get_ig_rho(igl);
-                                if (ig_rho >= 0) {
+                                if (ig_rho >= 0)
+                                {
                                     x_recip[ig_rho] = chi[ib][igl];
                                 }
                             }
                             pw_rho_->recip2real(x_recip.data(), x_r.data());
                         }
-                        else {
+                        else
+                        {
                             std::fill(x_r.begin(), x_r.end(), std::complex<double>(0.0, 0.0));
                         }
                         std::complex<double> expect(0.0, 0.0);
-                        for (int ir = 0; ir < pw_rho_->nrxx; ++ir) {
-                            expect += std::conj(u_r[ir]) * u_r[ir] * dv2_r[ir]
-                                      + std::conj(u_r[ir]) * x_r[ir];
+                        for (int ir = 0; ir < pw_rho_->nrxx; ++ir)
+                        {
+                            expect += std::conj(u_r[ir]) * u_r[ir] * dv2_r[ir] + std::conj(u_r[ir]) * x_r[ir];
                         }
                         d2sum += wg(ik, ib) * expect / static_cast<double>(pw_rho_->nxyz);
                     }
                 }
-                const double inv_m
-                    = 1.0 / ucell_->atoms[ucell_->iat2it[atom_idx]].mass;
+                const double inv_m = 1.0 / ucell_->atoms[ucell_->iat2it[atom_idx]].mass;
                 dynmat_accum_(rowb, cola) += d2sum * inv_m;
-                if (cola != rowb) {
+                if (cola != rowb)
+                {
                     dynmat_accum_(cola, rowb) += std::conj(d2sum) * inv_m;
                 }
             }
@@ -478,9 +525,12 @@ void DFPT_Phon::accumulate_electron(int q_idx, int atom_idx, int dir,
     }
 
     // restore the converged dpsi of this displacement
-    for (int ik = 0; ik < nk; ++ik) {
-        for (int ib = 0; ib < nbands; ++ib) {
-            if (!dpsib[ik][ib].empty()) {
+    for (int ik = 0; ik < nk; ++ik)
+    {
+        for (int ib = 0; ib < nbands; ++ib)
+        {
+            if (!dpsib[ik][ib].empty())
+            {
                 data.set_dpsi(q_idx, ik, ib, dpsib[ik][ib]);
             }
         }
@@ -491,33 +541,41 @@ void DFPT_Phon::accumulate_electron(int q_idx, int atom_idx, int dir,
 // assemble / diagonalize / LO-TO / sum rule
 // ---------------------------------------------------------------------------
 
-void DFPT_Phon::assemble(int q_idx, DFPT_PW_Data& data) {
-    if (ucell_ == nullptr) {
+void DFPT_Phon::assemble(int q_idx, DFPT_PW_Data& data)
+{
+    if (ucell_ == nullptr)
+    {
         return;
     }
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     ModuleBase::ComplexMatrix dyn(nat3, nat3, true);
-    if (pw_rho_ != nullptr) {
+    if (pw_rho_ != nullptr)
+    {
         ion_ion(data.get_qvec(q_idx), dyn);
     }
-    if (accum_q_ == q_idx && dynmat_accum_.nr == nat3) {
-        for (int i = 0; i < nat3; ++i) {
-            for (int j = 0; j < nat3; ++j) {
+    if (accum_q_ == q_idx && dynmat_accum_.nr == nat3)
+    {
+        for (int i = 0; i < nat3; ++i)
+        {
+            for (int j = 0; j < nat3; ++j)
+            {
                 dyn(i, j) += dynmat_accum_(i, j);
             }
         }
     }
     // DFT+U dynamical-matrix term (U0 reservation, implemented with the C7/U1
     // Plus_U wiring): sum_nk w_nk [<psi|dV_U|dpsi> + frozen second-order term].
-    if (data.with_u()) {
+    if (data.with_u())
+    {
         dftu_onsite(q_idx, data);
     }
     // Hermitian symmetrization (rows filled by independent solves)
-    for (int i = 0; i < nat3; ++i) {
-        for (int j = i + 1; j < nat3; ++j) {
-            const std::complex<double> avg
-                = 0.5 * (dyn(i, j) + std::conj(dyn(j, i)));
+    for (int i = 0; i < nat3; ++i)
+    {
+        for (int j = i + 1; j < nat3; ++j)
+        {
+            const std::complex<double> avg = 0.5 * (dyn(i, j) + std::conj(dyn(j, i)));
             dyn(i, j) = avg;
             dyn(j, i) = std::conj(avg);
         }
@@ -527,11 +585,13 @@ void DFPT_Phon::assemble(int q_idx, DFPT_PW_Data& data) {
     accum_q_ = -1;
 }
 
-void DFPT_Phon::diagonalize(int q_idx, DFPT_PW_Data& data) {
+void DFPT_Phon::diagonalize(int q_idx, DFPT_PW_Data& data)
+{
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(q_idx);
-    if (dyn.nr != nat3) {
+    if (dyn.nr != nat3)
+    {
         return;
     }
 
@@ -540,57 +600,73 @@ void DFPT_Phon::diagonalize(int q_idx, DFPT_PW_Data& data) {
     std::vector<double> rwork(std::max(1, 3 * nat3 - 2), 0.0);
     std::vector<std::complex<double>> work(1);
     int info = 0;
-    LapackConnector::zheev('N', 'U', nat3, dyn, nat3, w.data(), work.data(), -1,
-                           rwork.data(), &info);
+    LapackConnector::zheev('N', 'U', nat3, dyn, nat3, w.data(), work.data(), -1, rwork.data(), &info);
     work.resize(std::max(1, static_cast<int>(work[0].real())));
-    LapackConnector::zheev('N', 'U', nat3, dyn, nat3, w.data(), work.data(),
-                            static_cast<int>(work.size()), rwork.data(), &info);
+    LapackConnector::zheev('N',
+                           'U',
+                           nat3,
+                           dyn,
+                           nat3,
+                           w.data(),
+                           work.data(),
+                           static_cast<int>(work.size()),
+                           rwork.data(),
+                           &info);
 
     // signed frequencies: omega = sgn(e) sqrt(|e|), converted to cm^-1
     // sqrt(Ry/(bohr^2 amu)) in cm^-1 = sqrt(RYDBERG_SI/amu_kg)/(bohr*2pi*c)
     const double amu_kg = 1.0e-3 / ModuleBase::NA;
     const double ry_bohr2_amu_to_cm1 = std::sqrt(ModuleBase::RYDBERG_SI / amu_kg)
-                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI
-                                          * 2.99792458e10);
+                                       / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::TWO_PI * 2.99792458e10);
     std::vector<double> freq(nat3, 0.0);
-    for (int i = 0; i < nat3; ++i) {
+    for (int i = 0; i < nat3; ++i)
+    {
         const double e = w[i];
         freq[i] = ((e >= 0.0) ? 1.0 : -1.0) * std::sqrt(std::abs(e)) * ry_bohr2_amu_to_cm1;
     }
     data.set_phon_freq(q_idx, freq);
 }
 
-void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& data) {
+void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& data)
+{
     const int nat = ucell_->nat;
     const int nat3 = 3 * nat;
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(0);
-    if (dyn.nr != nat3) {
+    if (dyn.nr != nat3)
+    {
         return;
     }
     const ModuleBase::matrix eps = data.get_dielectric();
-    if (eps.nr != 3 || eps.nc != 3) {
+    if (eps.nr != 3 || eps.nc != 3)
+    {
         return; // no dielectric tensor stored yet (C6 not run)
     }
     const double qeq = qhat.x * (qhat.x * eps(0, 0) + qhat.y * eps(1, 0) + qhat.z * eps(2, 0))
                        + qhat.y * (qhat.x * eps(0, 1) + qhat.y * eps(1, 1) + qhat.z * eps(2, 1))
                        + qhat.z * (qhat.x * eps(0, 2) + qhat.y * eps(1, 2) + qhat.z * eps(2, 2));
-    if (std::abs(qeq) < 1.0e-10) {
+    if (std::abs(qeq) < 1.0e-10)
+    {
         return;
     }
     const double pref = ModuleBase::FOUR_PI * ModuleBase::e2 / ucell_->omega / qeq;
-    for (int ia = 0; ia < nat; ++ia) {
+    for (int ia = 0; ia < nat; ++ia)
+    {
         const double ma = ucell_->atoms[ucell_->iat2it[ia]].mass;
         const ModuleBase::matrix za = data.get_born(ia);
-        if (za.nr != 3 || za.nc != 3) {
+        if (za.nr != 3 || za.nc != 3)
+        {
             continue;
         }
-        for (int ib = 0; ib < nat; ++ib) {
+        for (int ib = 0; ib < nat; ++ib)
+        {
             const double mb = ucell_->atoms[ucell_->iat2it[ib]].mass;
             const ModuleBase::matrix zb = data.get_born(ib);
-            for (int da = 0; da < 3; ++da) {
+            for (int da = 0; da < 3; ++da)
+            {
                 // (qhat Z*_a)_da = sum_gamma qhat_gamma Z_a(da,gamma)
                 const double qza = qhat.x * za(da, 0) + qhat.y * za(da, 1) + qhat.z * za(da, 2);
-                for (int db = 0; db < 3; ++db) {
+                for (int db = 0; db < 3; ++db)
+                {
                     const double qzb = qhat.x * zb(db, 0) + qhat.y * zb(db, 1) + qhat.z * zb(db, 2);
                     dyn(3 * ia + da, 3 * ib + db) += pref * qza * qzb / std::sqrt(ma * mb);
                 }
@@ -600,93 +676,112 @@ void DFPT_Phon::add_loto(const ModuleBase::Vector3<double>& qhat, DFPT_PW_Data& 
     data.set_dynmat(0, dyn);
 }
 
-void DFPT_Phon::diagonalize_loto(DFPT_PW_Data& data) {
+void DFPT_Phon::diagonalize_loto(DFPT_PW_Data& data)
+{
     const int nat3 = 3 * ucell_->nat;
     // the stored Gamma matrix already carries the non-analytic term added
     // by add_loto; the copy below is destroyed by the solver, the stored
     // one stays available for the plain report
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(0);
-    if (dyn.nr != nat3) {
+    if (dyn.nr != nat3)
+    {
         return;
     }
     std::vector<double> w(nat3, 0.0);
     std::vector<double> rwork(std::max(1, 3 * nat3 - 2), 0.0);
     std::vector<std::complex<double>> work(1);
     int info = 0;
-    LapackConnector::zheev('N', 'U', nat3, dyn, nat3, w.data(), work.data(), -1,
-                           rwork.data(), &info);
+    LapackConnector::zheev('N', 'U', nat3, dyn, nat3, w.data(), work.data(), -1, rwork.data(), &info);
     work.resize(std::max(1, static_cast<int>(work[0].real())));
-    LapackConnector::zheev('N', 'U', nat3, dyn, nat3, w.data(), work.data(),
-                           static_cast<int>(work.size()), rwork.data(), &info);
+    LapackConnector::zheev('N',
+                           'U',
+                           nat3,
+                           dyn,
+                           nat3,
+                           w.data(),
+                           work.data(),
+                           static_cast<int>(work.size()),
+                           rwork.data(),
+                           &info);
     data.set_phon_freq_loto(signed_freqs_cm1(w));
 }
 
-std::string DFPT_Phon::format_q_report(int q_idx, const DFPT_PW_Data& data) const {
+std::string DFPT_Phon::format_q_report(int q_idx, const DFPT_PW_Data& data) const
+{
     const ModuleBase::Vector3<double> qd = data.get_qvec(q_idx);
     const std::vector<double> freq = data.get_phon_freq(q_idx);
     std::ostringstream os;
-    os << " DFPT phonon frequencies at q #" << q_idx << " = ("
-       << std::fixed << std::setprecision(6)
-       << qd.x << " " << qd.y << " " << qd.z
-       << ") (direct) in cm^-1:" << "\n";
-    for (size_t im = 0; im < freq.size(); ++im) {
-        os << "   mode " << std::setw(3) << im << " : "
-           << std::fixed << std::setprecision(6) << freq[im] << " cm^-1" << "\n";
+    os << " DFPT phonon frequencies at q #" << q_idx << " = (" << std::fixed << std::setprecision(6) << qd.x << " "
+       << qd.y << " " << qd.z << ") (direct) in cm^-1:" << "\n";
+    for (size_t im = 0; im < freq.size(); ++im)
+    {
+        os << "   mode " << std::setw(3) << im << " : " << std::fixed << std::setprecision(6) << freq[im] << " cm^-1"
+           << "\n";
     }
     return os.str();
 }
 
-std::string DFPT_Phon::format_loto_report(const DFPT_PW_Data& data) const {
+std::string DFPT_Phon::format_loto_report(const DFPT_PW_Data& data) const
+{
     const std::vector<double> freq = data.get_phon_freq_loto();
-    if (freq.empty()) {
+    if (freq.empty())
+    {
         return std::string();
     }
     const ModuleBase::Vector3<double> dir = data.get_loto_dir();
     std::ostringstream os;
-    os << " DFPT LO-TO corrected frequencies at q #0 along q->0 direction ("
-       << std::fixed << std::setprecision(6)
-       << dir.x << " " << dir.y << " " << dir.z
-       << ") in cm^-1:" << "\n";
-    for (size_t im = 0; im < freq.size(); ++im) {
-        os << "   mode " << std::setw(3) << im << " : "
-           << std::fixed << std::setprecision(6) << freq[im] << " cm^-1" << "\n";
+    os << " DFPT LO-TO corrected frequencies at q #0 along q->0 direction (" << std::fixed << std::setprecision(6)
+       << dir.x << " " << dir.y << " " << dir.z << ") in cm^-1:" << "\n";
+    for (size_t im = 0; im < freq.size(); ++im)
+    {
+        os << "   mode " << std::setw(3) << im << " : " << std::fixed << std::setprecision(6) << freq[im] << " cm^-1"
+           << "\n";
     }
     return os.str();
 }
 
-bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const {
+bool DFPT_Phon::check_sum_rule(int q_idx, DFPT_PW_Data& data) const
+{
     const ModuleBase::Vector3<double> q_frac = data.get_qvec(q_idx);
-    if (std::abs(q_frac.x) > 1.0e-8 || std::abs(q_frac.y) > 1.0e-8
-        || std::abs(q_frac.z) > 1.0e-8) {
+    if (std::abs(q_frac.x) > 1.0e-8 || std::abs(q_frac.y) > 1.0e-8 || std::abs(q_frac.z) > 1.0e-8)
+    {
         return true; // only applies at Gamma
     }
     const int nat3 = 3 * ucell_->nat;
     ModuleBase::ComplexMatrix dyn = data.get_dynmat(q_idx);
-    if (dyn.nr != nat3) {
+    if (dyn.nr != nat3)
+    {
         return false;
     }
     double max_elem = 0.0;
-    for (int i = 0; i < nat3; ++i) {
-        for (int j = 0; j < nat3; ++j) {
+    for (int i = 0; i < nat3; ++i)
+    {
+        for (int j = 0; j < nat3; ++j)
+        {
             max_elem = std::max(max_elem, std::abs(dyn(i, j)));
         }
     }
-    if (max_elem < 1.0e-12) {
+    if (max_elem < 1.0e-12)
+    {
         return true;
     }
-    for (int i = 0; i < nat3; ++i) {
+    for (int i = 0; i < nat3; ++i)
+    {
         std::complex<double> colsum(0.0, 0.0);
-        for (int j = 0; j < nat3; ++j) {
+        for (int j = 0; j < nat3; ++j)
+        {
             colsum += dyn(i, j);
         }
-        if (std::abs(colsum) > 1.0e-6 * max_elem) {
+        if (std::abs(colsum) > 1.0e-6 * max_elem)
+        {
             return false;
         }
     }
     return true;
 }
 
-void DFPT_Phon::dftu_onsite(int q_idx, DFPT_PW_Data& data) {
+void DFPT_Phon::dftu_onsite(int q_idx, DFPT_PW_Data& data)
+{
     // Reserved DFT+U contribution to the dynamical matrix (U0).
     // The physical implementation lands with the Plus_U production wiring:
     //   sum_nk w_nk [ <psi|dV_U|dpsi> + frozen second-order U term

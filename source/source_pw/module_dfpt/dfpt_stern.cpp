@@ -10,16 +10,21 @@
 
 #include <cmath>
 
-namespace ModuleDFPT {
+namespace ModuleDFPT
+{
 
-DFPT_Stern::DFPT_Stern() {}
+DFPT_Stern::DFPT_Stern()
+{
+}
 
-DFPT_Stern::~DFPT_Stern() {}
+DFPT_Stern::~DFPT_Stern()
+{
+}
 
-namespace {
+namespace
+{
 
-double real_vdot(const std::vector<std::complex<double>>& a,
-                 const std::vector<std::complex<double>>& b)
+double real_vdot(const std::vector<std::complex<double>>& a, const std::vector<std::complex<double>>& b)
 {
     // Re <a|b> = Re sum_i conj(a_i) b_i (the CG scalar products of a
     // Hermitian operator are real up to roundoff)

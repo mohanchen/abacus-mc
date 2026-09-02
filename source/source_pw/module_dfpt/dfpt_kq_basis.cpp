@@ -16,11 +16,16 @@
 
 #include <set>
 
-namespace ModuleDFPT {
+namespace ModuleDFPT
+{
 
-DFPT_KQ_Basis::DFPT_KQ_Basis() {}
+DFPT_KQ_Basis::DFPT_KQ_Basis()
+{
+}
 
-DFPT_KQ_Basis::~DFPT_KQ_Basis() {}
+DFPT_KQ_Basis::~DFPT_KQ_Basis()
+{
+}
 
 void DFPT_KQ_Basis::init(const ModulePW::PW_Basis_K* pw_wfc,
                          const ModulePW::PW_Basis* pw_rho,
@@ -49,8 +54,7 @@ void DFPT_KQ_Basis::init(const ModulePW::PW_Basis_K* pw_wfc,
     }
 
     // the two bases exchange G vectors through the shared FFT cell position
-    if (pw_wfc_->nx != pw_rho->nx || pw_wfc_->ny != pw_rho->ny
-        || pw_wfc_->nz != pw_rho->nz)
+    if (pw_wfc_->nx != pw_rho->nx || pw_wfc_->ny != pw_rho->ny || pw_wfc_->nz != pw_rho->nz)
     {
         ModuleBase::WARNING_QUIT("DFPT_KQ_Basis",
                                  "DFPT requires the wavefunction and charge FFT grids to share "
@@ -75,7 +79,9 @@ void DFPT_KQ_Basis::init(const ModulePW::PW_Basis_K* pw_wfc,
     }
 
     std::set<int> taken;
-    auto try_push = [&](const int ix_in, const int iy_in, const int iz_in,
+    auto try_push = [&](const int ix_in,
+                        const int iy_in,
+                        const int iz_in,
                         const ModuleBase::Matrix3& gbase,
                         const int ig_rho_hint) {
         int ix = ix_in;
@@ -93,8 +99,7 @@ void DFPT_KQ_Basis::init(const ModulePW::PW_Basis_K* pw_wfc,
         {
             iz -= pw_wfc_->nz;
         }
-        const ModuleBase::Vector3<double> gcar
-            = ModuleBase::Vector3<double>(ix, iy, iz) * gbase;
+        const ModuleBase::Vector3<double> gcar = ModuleBase::Vector3<double>(ix, iy, iz) * gbase;
         const ModuleBase::Vector3<double> gpluskq = gcar + kplusq_c_;
         const double gk2 = gpluskq * gpluskq;
         if (gk2 > pw_wfc_->gk_ecut)

@@ -1,43 +1,41 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in the design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-
 #ifndef DFPT_PERT_H
 #define DFPT_PERT_H
 
 #include "dfpt_kq_basis.h"
 #include "dfpt_pw_data.h"
-#include "source_cell/unitcell.h"
-#include "source_psi/psi.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_basis/module_pw/pw_basis_k.h"
+#include "source_cell/unitcell.h"
+#include "source_psi/psi.h"
 
 class Structure_Factor;
 
-namespace ModuleDFPT {
+namespace ModuleDFPT
+{
 
-class DFPT_Pert {
-public:
+class DFPT_Pert
+{
+  public:
     DFPT_Pert();
     ~DFPT_Pert();
-    
-    void init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho,
-              ModulePW::PW_Basis_K* pw_wfc, Structure_Factor& sf);
+
+    void init(UnitCell& ucell, ModulePW::PW_Basis* pw_rho, ModulePW::PW_Basis_K* pw_wfc, Structure_Factor& sf);
 
     /// C5: read access to the ground-state wfc basis for the dynamical-matrix
     /// contractions in DFPT_Phon::accumulate_electron.
-    ModulePW::PW_Basis_K* get_pw_wfc() const { return pw_wfc_; }
-    ModulePW::PW_Basis* get_pw_rho() const { return pw_rho_; }
-    
+    ModulePW::PW_Basis_K* get_pw_wfc() const
+    {
+        return pw_wfc_;
+    }
+    ModulePW::PW_Basis* get_pw_rho() const
+    {
+        return pw_rho_;
+    }
+
     void build_dv(int q_idx, int atom_idx, int dir, DFPT_PW_Data& data);
-    
-    void apply_dv(int q_idx, int k_idx, const psi::Psi<std::complex<double>>& psi, 
-                  DFPT_PW_Data& data);
-    
+
+    void apply_dv(int q_idx, int k_idx, const psi::Psi<std::complex<double>>& psi, DFPT_PW_Data& data);
+
     void build_efield(const ModuleBase::Vector3<double>& field, DFPT_PW_Data& data);
 
     /// C5: real-space kernel of the same-atom second-order LOCAL potential
@@ -50,8 +48,7 @@ public:
     /// and skips otherwise. Returned on the shared real-space grid; its
     /// expectation value with |u(r)|^2 enters the electronic dynamical
     /// matrix (anharmonic term).
-    void d2vloc_r(int atom_idx, int da, int db,
-                  std::vector<std::complex<double>>& dv2_r) const;
+    void d2vloc_r(int atom_idx, int da, int db, std::vector<std::complex<double>>& dv2_r) const;
 
     /// C5: same-atom second-order NONLOCAL potential acting on psi,
     /// chi_n(G'') = (d^2 Vnl / d tau_{da} d tau_{db}) |psi_n> on the
@@ -63,10 +60,13 @@ public:
     /// (q_eff-shifted) and in (k+G') projectors of the SAME displaced atom;
     /// they reduce to zero for a uniform translation at q=0 (acoustic
     /// consistency).
-    void apply_d2vnl(int atom_idx, int da, int db,
+    void apply_d2vnl(int atom_idx,
+                     int da,
+                     int db,
                      const ModuleBase::Vector3<double>& q_eff,
                      bool include_middle,
-                     const psi::Psi<std::complex<double>>& psi, int k_idx,
+                     const psi::Psi<std::complex<double>>& psi,
+                     int k_idx,
                      std::vector<std::vector<std::complex<double>>>& d2v_psi) const;
 
     /// Build the beta-projector array (in the ABACUS vkb convention) for a
@@ -77,7 +77,8 @@ public:
     /// Usable for both the incoming k basis (G = k+G') and the outgoing DFPT
     /// k+q basis (G = k+q+G''), so the atomic phase is correct on either side.
     /// Public since C6: DFPT_Q0 reuses it for the velocity operator.
-    void build_vkb(int it, int ia,
+    void build_vkb(int it,
+                   int ia,
                    const std::vector<ModuleBase::Vector3<double>>& gk,
                    std::vector<std::vector<std::complex<double>>>& vkb) const;
 
@@ -88,7 +89,9 @@ public:
     /// and the real-harmonic direction derivative (grad_real_ylm chain
     /// (e_dir - ghat ghat_dir)/|G|). Feeds the dV_nl/dk part of the
     /// velocity operator in DFPT_Q0::pos_matrix.
-    void build_vkb_dk(int it, int ia, int dir,
+    void build_vkb_dk(int it,
+                      int ia,
+                      int dir,
                       const std::vector<ModuleBase::Vector3<double>>& gk,
                       std::vector<std::vector<std::complex<double>>>& vkb,
                       std::vector<std::vector<std::complex<double>>>& dvkb) const;
@@ -101,13 +104,14 @@ public:
     /// The potential is the q-shifted complex periodic amplitude (the same
     /// convention as dv_rc); the DFPT self-consistent loop uses it for the
     /// screened response potential (Hartree + XC) of the mixed density.
-    void apply_vr(int q_idx, int k_idx,
+    void apply_vr(int q_idx,
+                  int k_idx,
                   const std::vector<std::complex<double>>& v_rc,
                   const psi::Psi<std::complex<double>>& psi,
                   const ModuleBase::Vector3<double>& q_cart,
                   std::vector<std::vector<std::complex<double>>>& dv_psi) const;
 
-private:
+  private:
     UnitCell* ucell_ = nullptr;
     ModulePW::PW_Basis* pw_rho_ = nullptr;
     ModulePW::PW_Basis_K* pw_wfc_ = nullptr;
@@ -130,9 +134,8 @@ private:
     /// (GS structure-factor convention exp(-2pi g.tau); the sign/coefficient
     /// is the exact derivative of the local potential with respect to the
     /// atomic displacement).
-    void dVloc_dtau(int atom_idx, int dir, const ModuleBase::Vector3<double>& q, 
-                    std::vector<std::complex<double>>& dv);
-    
+    void dVloc_dtau(int atom_idx, int dir, const ModuleBase::Vector3<double>& q, std::vector<std::complex<double>>& dv);
+
     /// C1: first-order NONLOCAL potential acting on psi (normal-conserving
     /// separable case), for one displaced atom in direction dir.
     /// Uses the identity (GS exp(-2pi gk.tau) projector convention)
@@ -142,21 +145,24 @@ private:
     /// DFPT k+q outgoing basis are needed (dsVnl contribution per pair is
     /// i (q+G''-G')_a times the zero-order matrix element).
     /// USPP/ultrasoft and spin-orbit projectors are rejected for now.
-    void dVnl_dtau(int atom_idx, int dir, const ModuleBase::Vector3<double>& q,
-                   const psi::Psi<std::complex<double>>& psi, int k_idx,
-                    std::vector<std::vector<std::complex<double>>>& dv_psi);
+    void dVnl_dtau(int atom_idx,
+                   int dir,
+                   const ModuleBase::Vector3<double>& q,
+                   const psi::Psi<std::complex<double>>& psi,
+                   int k_idx,
+                   std::vector<std::vector<std::complex<double>>>& dv_psi);
 
     /// real spherical harmonic Y_{l,m}(g_hat), orthonormal convention, l<=2.
     double real_ylm(int l, int m, const ModuleBase::Vector3<double>& ghat) const;
     /// gradient of real_ylm with respect to the unit vector ghat, l<=2
     /// (dY/dghat returned per cartesian component).
-    void grad_real_ylm(int l, int m, const ModuleBase::Vector3<double>& ghat,
-                       double grad[3]) const;
+    void grad_real_ylm(int l, int m, const ModuleBase::Vector3<double>& ghat, double grad[3]) const;
 
     /// General (nonlocal and local) part of apply_dv for the compartments that
     /// live in real space (local potential); the |psi> product requires the
     /// shared real-space grid of pw_rho_/pw_wfc_.
-    void real_space_dv(int q_idx, int k_idx,
+    void real_space_dv(int q_idx,
+                       int k_idx,
                        const psi::Psi<std::complex<double>>& psi,
                        DFPT_PW_Data& data,
                        const DFPT_KQ_Basis& kq,

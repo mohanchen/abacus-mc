@@ -12,17 +12,20 @@
 #include "dfpt_kq_basis.h"
 #include "dfpt_stern.h"
 #include "source_base/vector3.h"
+
 #include <complex>
 #include <vector>
 
-namespace ModulePW {
+namespace ModulePW
+{
 class PW_Basis;
 class PW_Basis_K;
-}
+} // namespace ModulePW
 
 class UnitCell;
 
-namespace ModuleDFPT {
+namespace ModuleDFPT
+{
 
 class DFPT_Pert;
 
@@ -44,8 +47,9 @@ class DFPT_Pert;
  * goes through the (ix,iy,iz) FFT-cell reverse map (C1 finding: the rho
  * and wfc stick encodings are not interchangeable).
  */
-class DFPT_HamiltShift : public DFPT_Stern::LinearOperator {
-public:
+class DFPT_HamiltShift : public DFPT_Stern::LinearOperator
+{
+  public:
     DFPT_HamiltShift(const UnitCell& ucell,
                      ModulePW::PW_Basis* pw_rho,
                      ModulePW::PW_Basis_K* pw_wfc,
@@ -72,7 +76,7 @@ public:
     /// path (validation of the rho-grid scatter/gather convolution)
     double debug_v_wfc(const std::vector<std::complex<double>>& x) const;
 
-private:
+  private:
     const UnitCell* ucell_ = nullptr;
     ModulePW::PW_Basis* pw_rho_ = nullptr;
     ModulePW::PW_Basis_K* pw_wfc_ = nullptr;

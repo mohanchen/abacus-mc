@@ -1,11 +1,3 @@
-// ============================================================
-// This code is added by Mohan Chen on 2026-05-18.
-// This code is currently in design phase and has not been
-// put into production yet. It may change in the future.
-// Please use this code with caution. Only developers who know
-// what they are doing should use this code.
-// ============================================================
-
 #ifndef DFPT_PW_H
 #define DFPT_PW_H
 
@@ -20,12 +12,14 @@
 class Plus_U_Base;
 class Structure_Factor;
 
-namespace ModulePW {
+namespace ModulePW
+{
 class PW_Basis;
 class PW_Basis_K;
-}
+} // namespace ModulePW
 
-namespace ModuleDFPT {
+namespace ModuleDFPT
+{
 
 class XC_First_Order;
 
@@ -45,17 +39,24 @@ class XC_First_Order;
  * With null bases (design-phase skeleton) run() keeps the documented
  * first-iteration-converged fallback of the irrep bookkeeping loop.
  */
-class DFPT_PW {
-public:
+class DFPT_PW
+{
+  public:
     DFPT_PW();
     ~DFPT_PW();
 
-    void init(UnitCell& ucell, const psi::Psi<std::complex<double>>& psi,
-              ModulePW::PW_Basis* pw_rho, ModulePW::PW_Basis_K* pw_wfc,
-              Structure_Factor* sf, const std::vector<double>& veff_r,
-              const ModuleBase::matrix& wg, const ModuleBase::matrix& eig,
+    void init(UnitCell& ucell,
+              const psi::Psi<std::complex<double>>& psi,
+              ModulePW::PW_Basis* pw_rho,
+              ModulePW::PW_Basis_K* pw_wfc,
+              Structure_Factor* sf,
+              const std::vector<double>& veff_r,
+              const ModuleBase::matrix& wg,
+              const ModuleBase::matrix& eig,
               const XC_First_Order* xc,
-              double nelec, double ecutwfc, const Plus_U_Base* dftu);
+              double nelec,
+              double ecutwfc,
+              const Plus_U_Base* dftu);
 
     void run();
 
@@ -115,7 +116,7 @@ public:
 
     std::string format_loto_report() const;
 
-private:
+  private:
     class Impl;
     Impl* pimpl_;
 };
