@@ -54,6 +54,7 @@ AddTest(
     ../occupy.cpp
     ../module_charge/charge_mpi.cpp
     ../../source_lcao/module_deltaspin/spin_constrain.cpp
+    ../../source_lcao/module_deltaspin/deltaspin_state.cpp
     ../../source_psi/psi.cpp
     ../../source_base/module_device/memory_op.cpp
     ../../source_cell/klist.cpp ../../source_cell/parallel_kpoints.cpp ../../source_cell/k_vector_utils.cpp ../../source_cell/reciprocal_grid.cpp
