@@ -59,7 +59,7 @@ list(APPEND depend_files
   ../../source_esolver/esolver_lj.cpp
   ../../source_base/parallel_reduce.cpp
   ../../source_base/parallel_global.cpp
-  ../../source_base/parallel_topology.cpp
+  ../../source_base/parallel_partition.cpp
   ../../source_base/parallel_cell.cpp
   ../../source_base/parallel_comm.cpp
   ../../source_cell/read_pp_ucell.cpp

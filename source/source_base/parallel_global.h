@@ -7,7 +7,7 @@
 #define PARALLEL_GLOBAL_H
 
 #include "parallel_comm.h"
-#include "parallel_topology.h"
+#include "parallel_partition.h"
 
 namespace Parallel_Global
 {
@@ -21,7 +21,7 @@ extern int omp_number;
 void read_pal_param(int argc, char** argv, int& NPROC, int& NTHREAD_PER_PROC, int& MY_RANK);
 
 /**
- * @brief Build a ProcessTopology snapshot for the given parallel parameters.
+ * @brief Build a ParallelPartition snapshot for the given parallel parameters.
  *
  * This is the single factory that knows how to:
  *   * split MPI_COMM_WORLD into KPAR k-pools via divide_group_comm(even=false);
@@ -29,18 +29,18 @@ void read_pal_param(int argc, char** argv, int& NPROC, int& NTHREAD_PER_PROC, in
  *   * derive INT_BGROUP (bsame_kdiff_world) / BP_WORLD (bdiff_ksame_world);
  *   * split diag_np-based DIAG_WORLD and diag_np-grouped GRID_WORLD.
  *
- * The returned ProcessTopology::pw_world_comm (previously POOL_WORLD) is the
+ * The returned ParallelPartition::pw_world_comm (previously POOL_WORLD) is the
  * smallest PW tile: the intersection of one k-pool and one band-group.
  *
  * matrix_world_comm and atom_world_comm are left as MPI_COMM_NULL in the
  * returned value; callers that know which distributed view is required for
  * a given step (Parallel_2D / Parallel_Orbitals / DomainDecomposition) are
  * expected to fill them in from the appropriate view before passing the
- * topology down.
+ * partition down.
  *
  * Note: The factory is only available under __MPI. The non-MPI build path
- * uses the default ProcessTopology constructor which already produces the
- * single-process trivial topology.
+ * uses the default ParallelPartition constructor which already produces the
+ * single-process trivial partition.
  *
  * @param[in] world_nproc Size of MPI_COMM_WORLD
  * @param[in] my_rank    Rank in MPI_COMM_WORLD
@@ -52,12 +52,12 @@ void read_pal_param(int argc, char** argv, int& NPROC, int& NTHREAD_PER_PROC, in
  * @param[in] grid_np    Reserved; currently the real-space grid world is
  *                       tied to diag_np via split_grid_world(diag_np, ...).
  */
-ProcessTopology create_topology(int world_nproc,
-                                int my_rank,
-                                int kpar,
-                                int bndpar,
-                                int diag_np,
-                                int grid_np);
+ParallelPartition create_partition(int world_nproc,
+                                   int my_rank,
+                                   int kpar,
+                                   int bndpar,
+                                   int diag_np,
+                                   int grid_np);
 
 
 /**-------------------------------------------

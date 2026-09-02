@@ -283,12 +283,12 @@ void Parallel_Global::divide_pools(const int& NPROC,
     return;
 }
 
-ProcessTopology Parallel_Global::create_topology(int world_nproc,
-                                                 int my_rank,
-                                                 int kpar,
-                                                 int bndpar,
-                                                 int diag_np,
-                                                 int /*grid_np*/)
+ParallelPartition Parallel_Global::create_partition(int world_nproc,
+                                                    int my_rank,
+                                                    int kpar,
+                                                    int bndpar,
+                                                    int diag_np,
+                                                    int /*grid_np*/)
 {
 #ifdef __MPI
     // ---- Build the nproc_in_pool vector (arithmetic, no MPI). ----
@@ -309,7 +309,7 @@ ProcessTopology Parallel_Global::create_topology(int world_nproc,
         for (int s : nproc_in_pool) { total += s; }
         if (total != world_nproc)
         {
-            ModuleBase::WARNING_QUIT("Parallel_Global::create_topology",
+            ModuleBase::WARNING_QUIT("Parallel_Global::create_partition",
                                      "internal: nproc_in_pool sum differs from world_nproc.");
         }
     }
@@ -335,7 +335,7 @@ ProcessTopology Parallel_Global::create_topology(int world_nproc,
     // These two helpers currently write DIAG_WORLD / GRID_WORLD as a
     // side effect; they were always called by drivers in the old flow
     // right after divide_pools, so we fold them into the factory to
-    // centralise all 6 legacy comm + scalar topology construction.
+    // centralise all 6 legacy comm + scalar partition construction.
     //
     // diag_np == 0 is not meaningful; fall back to 1 so the
     // even-partition guard in divide_mpi_groups (called inside
@@ -347,32 +347,32 @@ ProcessTopology Parallel_Global::create_topology(int world_nproc,
     int grank = -1, gsize = -1;
     Parallel_Global::split_grid_world(effective_diag_np, world_nproc, my_rank, grank, gsize);
 
-    return ProcessTopology(world_nproc,
-                           my_rank,
-                           kpar,
-                           my_pool_local,
-                           rank_in_pool_local,
-                           nproc_in_pool,
-                           bndpar,
-                           my_bndgroup,
-                           rank_in_bpgroup,
-                           nproc_in_bndgroup,
-                           POOL_WORLD,      // -> pw_world_comm        (legacy duped handle)
-                           KP_WORLD,        // -> kmesh_world_comm     (KP_WORLD alias back)
-                           INT_BGROUP,      // -> bsame_kdiff_world_comm
-                           BP_WORLD,        // -> bdiff_ksame_world_comm
-                           GRID_WORLD,      // -> rgrid_world_comm
-                           DIAG_WORLD,      // -> diag_world_comm
-                           MPI_COMM_NULL,   // -> matrix_world_comm (caller-filled later)
-                           MPI_COMM_NULL);  // -> atom_world_comm   (caller-filled later)
+    return ParallelPartition(world_nproc,
+                             my_rank,
+                             kpar,
+                             my_pool_local,
+                             rank_in_pool_local,
+                             nproc_in_pool,
+                             bndpar,
+                             my_bndgroup,
+                             rank_in_bpgroup,
+                             nproc_in_bndgroup,
+                             POOL_WORLD,      // -> pw_world_comm        (legacy duped handle)
+                             KP_WORLD,        // -> kmesh_world_comm     (KP_WORLD alias back)
+                             INT_BGROUP,      // -> bsame_kdiff_world_comm
+                             BP_WORLD,        // -> bdiff_ksame_world_comm
+                             GRID_WORLD,      // -> rgrid_world_comm
+                             DIAG_WORLD,      // -> diag_world_comm
+                             MPI_COMM_NULL,   // -> matrix_world_comm (caller-filled later)
+                             MPI_COMM_NULL);  // -> atom_world_comm   (caller-filled later)
 #else
-    // Serial / non-MPI fallback: a single-process trivial topology.
+    // Serial / non-MPI fallback: a single-process trivial partition.
     (void)world_nproc;
     (void)my_rank;
     (void)kpar;
     (void)bndpar;
     (void)diag_np;
-    return ProcessTopology();
+    return ParallelPartition();
 #endif
 }
 

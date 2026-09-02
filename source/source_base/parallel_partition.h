@@ -1,5 +1,5 @@
-#ifndef PARALLEL_TOPOLOGY_H
-#define PARALLEL_TOPOLOGY_H
+#ifndef PARALLEL_PARTITION_H
+#define PARALLEL_PARTITION_H
 
 #include <vector>
 
@@ -8,7 +8,7 @@
 #endif
 
 /**
- * @brief Immutable description of the ABACUS process topology.
+ * @brief Immutable description of the ABACUS parallel partition.
  *
  * Replaces the six raw-global MPI_Comm (POOL_WORLD / KP_WORLD /
  * INT_BGROUP / BP_WORLD / GRID_WORLD / DIAG_WORLD) together with the
@@ -40,24 +40,24 @@
  * Values are captured at construction time; the object is copyable
  * (value semantics) and exposes no mutable workflow switches.
  * Consumers currently reading the global MPI_Comm / GlobalV fields
- * should migrate to taking a `const ProcessTopology&` from their
- * callers. Parallel_Global::create_topology(...) produces one such
+ * should migrate to taking a `const ParallelPartition&` from their
+ * callers. Parallel_Global::create_partition(...) produces one such
  * instance at startup whose communicators are also aliased back to
  * the legacy globals so existing code keeps working during the
  * migration.
  *
  * matrix_world_comm / atom_world_comm are not derived inside the
- * topology constructor because the correct choice depends on where
+ * partition constructor because the correct choice depends on where
  * the view is used (LCAO diag, GK diag, MD step, ...). Callers that
  * need a proper matrix or atom domain are expected to fill in the
- * handle before passing the topology down to distributed modules.
+ * handle before passing the partition down to distributed modules.
  */
-class ProcessTopology
+class ParallelPartition
 {
   public:
     /// Trivially-constructible serial fallback. Produces a single-
-    /// process, single-pool topology suitable for non-__MPI builds.
-    ProcessTopology();
+    /// process, single-pool partition suitable for non-__MPI builds.
+    ParallelPartition();
 
     /**
      * @brief Full constructor. Intended for Parallel_Global factory.
@@ -69,7 +69,7 @@ class ProcessTopology
      * and are filled in later by whichever call site knows which
      * domain view is needed for a given distributed calculation.
      */
-    ProcessTopology(int world_nproc_in,
+    ParallelPartition(int world_nproc_in,
                     int my_rank_in,
                     int kpar_in,
                     int my_pool_in,
@@ -139,14 +139,14 @@ class ProcessTopology
      * free that communicator itself). Serializers such as copies of the
      * returned object share the same handle, as usual for this class.
      */
-    ProcessTopology with_pw_world_comm(MPI_Comm comm) const;
-    ProcessTopology with_kmesh_world_comm(MPI_Comm comm) const;
-    ProcessTopology with_bsame_kdiff_world_comm(MPI_Comm comm) const;
-    ProcessTopology with_bdiff_ksame_world_comm(MPI_Comm comm) const;
-    ProcessTopology with_rgrid_world_comm(MPI_Comm comm) const;
-    ProcessTopology with_diag_world_comm(MPI_Comm comm) const;
-    ProcessTopology with_matrix_world_comm(MPI_Comm comm) const;
-    ProcessTopology with_atom_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_pw_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_kmesh_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_bsame_kdiff_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_bdiff_ksame_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_rgrid_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_diag_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_matrix_world_comm(MPI_Comm comm) const;
+    ParallelPartition with_atom_world_comm(MPI_Comm comm) const;
 #endif
 
   private:
@@ -175,4 +175,4 @@ class ProcessTopology
 #endif
 };
 
-#endif // PARALLEL_TOPOLOGY_H
+#endif // PARALLEL_PARTITION_H

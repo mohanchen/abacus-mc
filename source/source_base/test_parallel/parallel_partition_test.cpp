@@ -1,7 +1,7 @@
 #ifdef __MPI
 
 #include "source_base/parallel_global.h"
-#include "source_base/parallel_topology.h"
+#include "source_base/parallel_partition.h"
 
 #include "mpi.h"
 
@@ -12,7 +12,7 @@
 /************************************************
  *  Unit tests for:
  *   - Parallel_Global::divide_mpi_groups (pure arithmetic)
- *   - ProcessTopology construction and accessors
+ *   - ParallelPartition construction and accessors
  ***********************************************/
 
 namespace
@@ -180,11 +180,11 @@ TEST(DivideMpiGroups, UnevenLargePools)
     EXPECT_EQ(out.rank_in_group[23], 3);
 }
 
-// ---- ProcessTopology tests (value semantics, no MPI calls in body) ----------------
+// ---- ParallelPartition tests (value semantics, no MPI calls in body) ----------------
 
-TEST(ProcessTopology, DefaultConstructorIsSingleProcess)
+TEST(ParallelPartition, DefaultConstructorIsSingleProcess)
 {
-    const ProcessTopology t;
+    const ParallelPartition t;
     EXPECT_EQ(t.world_size(), 1);
     EXPECT_EQ(t.world_rank(), 0);
 
@@ -213,7 +213,7 @@ TEST(ProcessTopology, DefaultConstructorIsSingleProcess)
 #endif
 }
 
-TEST(ProcessTopology, ConstructAndAccessors)
+TEST(ParallelPartition, ConstructAndAccessors)
 {
     // Real ABACUS layout with 12 world ranks 0..11, KPAR=3, BNDPAR=2.
     // divide_pools constraint (BNDPAR>1): NPROC % (BNDPAR*KPAR) == 0,
@@ -230,7 +230,7 @@ TEST(ProcessTopology, ConstructAndAccessors)
     // RANK_IN_BPGROUP = my_pool * 2 + 0 = 2.
     const std::vector<int> pool_sizes = {4, 4, 4};
 #ifdef __MPI
-    const ProcessTopology t(/*world=*/12,
+    const ParallelPartition t(/*world=*/12,
                            /*my_rank=*/6,
                            /*kpar=*/3,
                            /*my_pool=*/1,
@@ -249,7 +249,7 @@ TEST(ProcessTopology, ConstructAndAccessors)
                            /*matrix_world=*/MPI_COMM_SELF,
                            /*atom_world=*/MPI_COMM_WORLD);
 #else
-    const ProcessTopology t(12, 6, 3, 1, 2, pool_sizes, 2, 1, 2, 6);
+    const ParallelPartition t(12, 6, 3, 1, 2, pool_sizes, 2, 1, 2, 6);
 #endif
 
     EXPECT_EQ(t.world_size(), 12);
@@ -293,7 +293,7 @@ TEST(ProcessTopology, ConstructAndAccessors)
 #endif
 
     // Copyable: copy should behave identically.
-    ProcessTopology copy = t;
+    ParallelPartition copy = t;
     EXPECT_EQ(copy.world_rank(), t.world_rank());
     EXPECT_EQ(copy.pool_root_rank(2), t.pool_root_rank(2));
     EXPECT_EQ(copy.band_group_root_rank(1), t.band_group_root_rank(1));
@@ -307,11 +307,11 @@ TEST(ProcessTopology, ConstructAndAccessors)
 
 // Immutable builders: a with_* call must change exactly its target
 // communicator and leave every scalar field and every other domain
-// handle identical to the source topology.
-TEST(ProcessTopology, WithBuildersChangeOnlyTargetDomain)
+// handle identical to the source partition.
+TEST(ParallelPartition, WithBuildersChangeOnlyTargetDomain)
 {
     const std::vector<int> pool_sizes = {4, 4, 4};
-    const ProcessTopology t(/*world=*/12,
+    const ParallelPartition t(/*world=*/12,
                            /*my_rank=*/6,
                            /*kpar=*/3,
                            /*my_pool=*/1,
@@ -332,7 +332,7 @@ TEST(ProcessTopology, WithBuildersChangeOnlyTargetDomain)
 
     // Every builder is exercised, including rebinding an already-bound
     // domain (pw_world: MPI_COMM_SELF -> MPI_COMM_WORLD).
-    const std::vector<ProcessTopology> bound = {
+    const std::vector<ParallelPartition> bound = {
         t.with_pw_world_comm(MPI_COMM_WORLD),
         t.with_kmesh_world_comm(MPI_COMM_SELF),
         t.with_bsame_kdiff_world_comm(MPI_COMM_WORLD),
@@ -345,7 +345,7 @@ TEST(ProcessTopology, WithBuildersChangeOnlyTargetDomain)
     ASSERT_EQ(static_cast<int>(bound.size()), 8);
 
     // Scalars are identical across every builder result.
-    for (const ProcessTopology& b : bound)
+    for (const ParallelPartition& b : bound)
     {
         EXPECT_EQ(b.world_size(), t.world_size());
         EXPECT_EQ(b.world_rank(), t.world_rank());
@@ -390,7 +390,7 @@ TEST(ProcessTopology, WithBuildersChangeOnlyTargetDomain)
     EXPECT_EQ(t.atom_world_comm(), MPI_COMM_NULL);
 
     // Chaining: two builders compose into a single derived view.
-    const ProcessTopology chained = t.with_matrix_world_comm(MPI_COMM_SELF)
+    const ParallelPartition chained = t.with_matrix_world_comm(MPI_COMM_SELF)
                                        .with_atom_world_comm(MPI_COMM_WORLD);
     EXPECT_EQ(chained.matrix_world_comm(), MPI_COMM_SELF);
     EXPECT_EQ(chained.atom_world_comm(), MPI_COMM_WORLD);
@@ -398,14 +398,14 @@ TEST(ProcessTopology, WithBuildersChangeOnlyTargetDomain)
 
     // Serializers of the injected handles (no dangling checks possible
     // for plain handles, but copies must round-trip).
-    ProcessTopology copy = bound[6];
+    ParallelPartition copy = bound[6];
     EXPECT_EQ(copy.matrix_world_comm(), MPI_COMM_SELF);
 }
 
-// Integration: Parallel_Global::create_topology builds a real topology
+// Integration: Parallel_Global::create_partition builds a real partition
 // on a live MPI_COMM_WORLD. This test is only meaningful when run via
 // mpirun with exactly 4 ranks.
-TEST(ParallelGlobalCreateTopology, FourRanksKpar2Bndpar2DiagNp2)
+TEST(ParallelGlobalCreatePartition, FourRanksKpar2Bndpar2DiagNp2)
 {
     int world_size = 1;
     int world_rank = 0;
@@ -415,14 +415,14 @@ TEST(ParallelGlobalCreateTopology, FourRanksKpar2Bndpar2DiagNp2)
 #endif
     if (world_size != 4)
     {
-        GTEST_SKIP() << "create_topology integration case requires exactly 4 MPI ranks (got "
+        GTEST_SKIP() << "create_partition integration case requires exactly 4 MPI ranks (got "
                      << world_size << ").";
     }
     const int kpar = 2;
     const int bndpar = 2;
     const int diag_np = 2;
-    const int grid_np = 2; // reserved; topology today derives rgrid from diag_np
-    const ProcessTopology t = Parallel_Global::create_topology(
+    const int grid_np = 2; // reserved; partition today derives rgrid from diag_np
+    const ParallelPartition t = Parallel_Global::create_partition(
         world_size, world_rank, kpar, bndpar, diag_np, grid_np);
 
     // ---- scalar invariants (same for every rank) -------------------
@@ -559,6 +559,6 @@ int main(int argc, char** argv)
 // Top-level test binary used when __MPI is not defined: fall back to
 // googletest's default main via link target. This branch is never
 // compiled in the normal unit-test build path because
-// MODULE_BASE_ProcessTopology links only under the __MPI build
+// MODULE_BASE_ParallelPartition links only under the __MPI build
 // configuration.
 #endif // __MPI

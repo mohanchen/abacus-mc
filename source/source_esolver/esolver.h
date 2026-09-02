@@ -2,7 +2,7 @@
 #define ESOLVER_H
 
 #include "source_base/matrix.h"
-#include "source_base/parallel_topology.h"
+#include "source_base/parallel_partition.h"
 #include "source_cell/base_cell.h"
 #include "source_cell/unitcell.h"
 
@@ -62,10 +62,10 @@ class ESolver
 
     std::string classname;
 
-    /// Inject the process topology built by the driver (value copy).
+    /// Inject the parallel partition built by the driver (value copy).
     /// Called before before_all_runners; the solver may afterwards derive
     /// solver-specific domains via topo_ = topo_.with_*_world_comm(...).
-    void set_topology(const ProcessTopology& topo)
+    void set_topology(const ParallelPartition& topo)
     {
         topo_ = topo;
     }
@@ -75,20 +75,20 @@ class ESolver
     const Input_para* inp_ = nullptr;
 
     /**
-     * @brief Process topology for this solver, injected by the driver
+     * @brief Parallel partition for this solver, injected by the driver
      *        before before_all_runners.
      *
      * The world-level domains (pw / kmesh / bsame_kdiff / bdiff_ksame /
-     * rgrid / diag) come from Parallel_Global::create_topology. An
+     * rgrid / diag) come from Parallel_Global::create_partition. An
      * ESolver variant that needs solver-specific domains (matrix, atom,
      * or a custom re-split of a world domain) derives its own view in
      * before_all_runners via the immutable with_*_world_comm builders,
      * e.g.:
      *     topo_ = topo_.with_matrix_world_comm(blacs_grid_comm);
-     * The topology does not own communicators; the owner of a split
+     * The partition does not own communicators; the owner of a split
      * communicator must free it (e.g. in the ESolver destructor).
      */
-    ProcessTopology topo_;
+    ParallelPartition topo_;
 };
 
 } // namespace ModuleESolver

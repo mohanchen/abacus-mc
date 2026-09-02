@@ -1,8 +1,8 @@
-#include "parallel_topology.h"
+#include "parallel_partition.h"
 
 #include <cassert>
 
-ProcessTopology::ProcessTopology()
+ParallelPartition::ParallelPartition()
     : world_nproc_(1),
       my_rank_(0),
       kpar_(1),
@@ -27,7 +27,7 @@ ProcessTopology::ProcessTopology()
 {
 }
 
-ProcessTopology::ProcessTopology(int world_nproc_in,
+ParallelPartition::ParallelPartition(int world_nproc_in,
                                  int my_rank_in,
                                  int kpar_in,
                                  int my_pool_in,
@@ -92,7 +92,7 @@ ProcessTopology::ProcessTopology(int world_nproc_in,
     assert(rank_in_band_group_ >= 0 && rank_in_band_group_ < nproc_in_band_group_);
 }
 
-int ProcessTopology::pool_root_rank(int pool) const
+int ParallelPartition::pool_root_rank(int pool) const
 {
     if (pool < 0 || pool >= kpar_)
     {
@@ -106,7 +106,7 @@ int ProcessTopology::pool_root_rank(int pool) const
     return offset;
 }
 
-int ProcessTopology::band_group_root_rank(int band_group) const
+int ParallelPartition::band_group_root_rank(int band_group) const
 {
     if (band_group < 0 || band_group >= bndpar_)
     {
@@ -135,58 +135,58 @@ int ProcessTopology::band_group_root_rank(int band_group) const
 #ifdef __MPI
 // Immutable builders: each returns a copy of *this with exactly one
 // communicator replaced. Scalar topology fields are never touched.
-ProcessTopology ProcessTopology::with_pw_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_pw_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.pw_world_comm_ = comm;
     return t;
 }
 
-ProcessTopology ProcessTopology::with_kmesh_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_kmesh_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.kmesh_world_comm_ = comm;
     return t;
 }
 
-ProcessTopology ProcessTopology::with_bsame_kdiff_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_bsame_kdiff_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.bsame_kdiff_world_comm_ = comm;
     return t;
 }
 
-ProcessTopology ProcessTopology::with_bdiff_ksame_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_bdiff_ksame_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.bdiff_ksame_world_comm_ = comm;
     return t;
 }
 
-ProcessTopology ProcessTopology::with_rgrid_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_rgrid_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.rgrid_world_comm_ = comm;
     return t;
 }
 
-ProcessTopology ProcessTopology::with_diag_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_diag_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.diag_world_comm_ = comm;
     return t;
 }
 
-ProcessTopology ProcessTopology::with_matrix_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_matrix_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.matrix_world_comm_ = comm;
     return t;
 }
 
-ProcessTopology ProcessTopology::with_atom_world_comm(MPI_Comm comm) const
+ParallelPartition ParallelPartition::with_atom_world_comm(MPI_Comm comm) const
 {
-    ProcessTopology t = *this;
+    ParallelPartition t = *this;
     t.atom_world_comm_ = comm;
     return t;
 }
