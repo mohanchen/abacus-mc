@@ -63,7 +63,7 @@ Magnetism::~Magnetism()
  *   - K_Vectors()
  *     - basic parameters (nks,nkstot,nkstot_ibz) are set
  *   - read_kpoints()
- *     - ReadKpointsGammaOnlyLocal: PARAM.sys.gamma_only_local = 1
+ *     - ReadKpointsGammaOnlyLocal: gamma_only_local = true
  *     - ReadKpointsKspacing: generate KPT from kspacing parameter
  *     - ReadKpointsGamma: "Gamma" mode of `KPT` file
  *     - ReadKpointsMP: "MP" mode of `KPT` file
@@ -668,7 +668,6 @@ TEST_F(KlistTest, SetAfterVC)
     kv->kvec_c[0].x = 0;
     kv->kvec_c[0].y = 0;
     kv->kvec_c[0].z = 0;
-//    kv->set_after_vc(PARAM.input.nspin, ucell.G, ucell.latvec);
     kv->set_after_vc(kv->nspin, ucell.G, GlobalV::ofs_running);
 
     EXPECT_TRUE(kv->kd_done);
@@ -690,7 +689,6 @@ TEST_F(KlistTest, PrintKlists)
     kv->kvec_c[0].x = 0;
     kv->kvec_c[0].y = 0;
     kv->kvec_c[0].z = 0;
-//    kv->set_after_vc(PARAM.input.nspin, ucell.G, ucell.latvec);
     kv->set_after_vc(kv->nspin, ucell.G, GlobalV::ofs_running);
     EXPECT_TRUE(kv->kd_done);
     kv->print_klists(GlobalV::ofs_running);
