@@ -202,7 +202,7 @@ TEST_F(DFPT_PW_DataTest, DftuReservationProviderUsability)
     EXPECT_FALSE(data.u_active());
     ASSERT_NE(data.get_dftu(), nullptr);
 
-    dftu.set_occ_mat_initialized(true);
+    dftu.mark_occ_mat_initialized();
     EXPECT_TRUE(data.u_active());
 
     data.clean();
