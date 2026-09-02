@@ -131,3 +131,63 @@ int ProcessTopology::band_group_root_rank(int band_group) const
     assert(per_bg_in_pool0 * bndpar_ == nproc_in_pool_[0]);
     return band_group * per_bg_in_pool0;
 }
+
+#ifdef __MPI
+// Immutable builders: each returns a copy of *this with exactly one
+// communicator replaced. Scalar topology fields are never touched.
+ProcessTopology ProcessTopology::with_pw_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.pw_world_comm_ = comm;
+    return t;
+}
+
+ProcessTopology ProcessTopology::with_kmesh_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.kmesh_world_comm_ = comm;
+    return t;
+}
+
+ProcessTopology ProcessTopology::with_bsame_kdiff_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.bsame_kdiff_world_comm_ = comm;
+    return t;
+}
+
+ProcessTopology ProcessTopology::with_bdiff_ksame_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.bdiff_ksame_world_comm_ = comm;
+    return t;
+}
+
+ProcessTopology ProcessTopology::with_rgrid_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.rgrid_world_comm_ = comm;
+    return t;
+}
+
+ProcessTopology ProcessTopology::with_diag_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.diag_world_comm_ = comm;
+    return t;
+}
+
+ProcessTopology ProcessTopology::with_matrix_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.matrix_world_comm_ = comm;
+    return t;
+}
+
+ProcessTopology ProcessTopology::with_atom_world_comm(MPI_Comm comm) const
+{
+    ProcessTopology t = *this;
+    t.atom_world_comm_ = comm;
+    return t;
+}
+#endif

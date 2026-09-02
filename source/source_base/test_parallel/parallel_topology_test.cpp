@@ -305,6 +305,103 @@ TEST(ProcessTopology, ConstructAndAccessors)
 #endif
 }
 
+// Immutable builders: a with_* call must change exactly its target
+// communicator and leave every scalar field and every other domain
+// handle identical to the source topology.
+TEST(ProcessTopology, WithBuildersChangeOnlyTargetDomain)
+{
+    const std::vector<int> pool_sizes = {4, 4, 4};
+    const ProcessTopology t(/*world=*/12,
+                           /*my_rank=*/6,
+                           /*kpar=*/3,
+                           /*my_pool=*/1,
+                           /*rank_in_pool=*/2,
+                           pool_sizes,
+                           /*bndpar=*/2,
+                           /*my_band_group=*/1,
+                           /*rank_in_band_group=*/2,
+                           /*nproc_in_band_group=*/6,
+                           /*pw_world=*/MPI_COMM_SELF,
+                           /*kmesh_world=*/MPI_COMM_NULL,
+                           /*bsame_kdiff=*/MPI_COMM_SELF,
+                           /*bdiff_ksame=*/MPI_COMM_NULL,
+                           /*rgrid_world=*/MPI_COMM_NULL,
+                           /*diag_world=*/MPI_COMM_NULL,
+                           /*matrix_world=*/MPI_COMM_NULL,
+                           /*atom_world=*/MPI_COMM_NULL);
+
+    // Every builder is exercised, including rebinding an already-bound
+    // domain (pw_world: MPI_COMM_SELF -> MPI_COMM_WORLD).
+    const std::vector<ProcessTopology> bound = {
+        t.with_pw_world_comm(MPI_COMM_WORLD),
+        t.with_kmesh_world_comm(MPI_COMM_SELF),
+        t.with_bsame_kdiff_world_comm(MPI_COMM_WORLD),
+        t.with_bdiff_ksame_world_comm(MPI_COMM_SELF),
+        t.with_rgrid_world_comm(MPI_COMM_SELF),
+        t.with_diag_world_comm(MPI_COMM_SELF),
+        t.with_matrix_world_comm(MPI_COMM_SELF),
+        t.with_atom_world_comm(MPI_COMM_SELF),
+    };
+    ASSERT_EQ(static_cast<int>(bound.size()), 8);
+
+    // Scalars are identical across every builder result.
+    for (const ProcessTopology& b : bound)
+    {
+        EXPECT_EQ(b.world_size(), t.world_size());
+        EXPECT_EQ(b.world_rank(), t.world_rank());
+        EXPECT_EQ(b.kpar(), t.kpar());
+        EXPECT_EQ(b.my_pool(), t.my_pool());
+        EXPECT_EQ(b.rank_in_pool(), t.rank_in_pool());
+        EXPECT_EQ(b.nproc_in_pool(), t.nproc_in_pool());
+        EXPECT_EQ(b.bndpar(), t.bndpar());
+        EXPECT_EQ(b.my_band_group(), t.my_band_group());
+        EXPECT_EQ(b.rank_in_band_group(), t.rank_in_band_group());
+        EXPECT_EQ(b.nproc_in_band_group(), t.nproc_in_band_group());
+        EXPECT_EQ(b.pool_root_rank(2), t.pool_root_rank(2));
+        EXPECT_EQ(b.band_group_root_rank(1), t.band_group_root_rank(1));
+    }
+
+    // Target domain changed; all other domains untouched.
+    EXPECT_EQ(bound[0].pw_world_comm(), MPI_COMM_WORLD);
+    EXPECT_EQ(bound[0].kmesh_world_comm(), t.kmesh_world_comm());
+    EXPECT_EQ(bound[0].bsame_kdiff_world_comm(), t.bsame_kdiff_world_comm());
+    EXPECT_EQ(bound[0].bdiff_ksame_world_comm(), t.bdiff_ksame_world_comm());
+    EXPECT_EQ(bound[0].rgrid_world_comm(), t.rgrid_world_comm());
+    EXPECT_EQ(bound[0].diag_world_comm(), t.diag_world_comm());
+    EXPECT_EQ(bound[0].matrix_world_comm(), t.matrix_world_comm());
+    EXPECT_EQ(bound[0].atom_world_comm(), t.atom_world_comm());
+
+    EXPECT_EQ(bound[1].kmesh_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(bound[2].bsame_kdiff_world_comm(), MPI_COMM_WORLD);
+    EXPECT_EQ(bound[3].bdiff_ksame_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(bound[4].rgrid_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(bound[5].diag_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(bound[6].matrix_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(bound[7].atom_world_comm(), MPI_COMM_SELF);
+
+    // Source is unchanged (immutability).
+    EXPECT_EQ(t.pw_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(t.kmesh_world_comm(), MPI_COMM_NULL);
+    EXPECT_EQ(t.bsame_kdiff_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(t.bdiff_ksame_world_comm(), MPI_COMM_NULL);
+    EXPECT_EQ(t.rgrid_world_comm(), MPI_COMM_NULL);
+    EXPECT_EQ(t.diag_world_comm(), MPI_COMM_NULL);
+    EXPECT_EQ(t.matrix_world_comm(), MPI_COMM_NULL);
+    EXPECT_EQ(t.atom_world_comm(), MPI_COMM_NULL);
+
+    // Chaining: two builders compose into a single derived view.
+    const ProcessTopology chained = t.with_matrix_world_comm(MPI_COMM_SELF)
+                                       .with_atom_world_comm(MPI_COMM_WORLD);
+    EXPECT_EQ(chained.matrix_world_comm(), MPI_COMM_SELF);
+    EXPECT_EQ(chained.atom_world_comm(), MPI_COMM_WORLD);
+    EXPECT_EQ(chained.pw_world_comm(), t.pw_world_comm());
+
+    // Serializers of the injected handles (no dangling checks possible
+    // for plain handles, but copies must round-trip).
+    ProcessTopology copy = bound[6];
+    EXPECT_EQ(copy.matrix_world_comm(), MPI_COMM_SELF);
+}
+
 // Integration: Parallel_Global::create_topology builds a real topology
 // on a live MPI_COMM_WORLD. This test is only meaningful when run via
 // mpirun with exactly 4 ranks.

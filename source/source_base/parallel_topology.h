@@ -128,6 +128,25 @@ class ProcessTopology
     MPI_Comm diag_world_comm()     const { return diag_world_comm_; }
     MPI_Comm matrix_world_comm()   const { return matrix_world_comm_; }
     MPI_Comm atom_world_comm()     const { return atom_world_comm_; }
+
+    /**
+     * @brief Immutable builders: return a copy of *this with exactly one
+     *        communicator replaced.
+     *
+     * The topology object does not own any communicator; the caller keeps
+     * the responsibility for freeing communicators it creates (e.g. an
+     * ESolver binding its own matrix/atom domain via MPI_Comm_split must
+     * free that communicator itself). Serializers such as copies of the
+     * returned object share the same handle, as usual for this class.
+     */
+    ProcessTopology with_pw_world_comm(MPI_Comm comm) const;
+    ProcessTopology with_kmesh_world_comm(MPI_Comm comm) const;
+    ProcessTopology with_bsame_kdiff_world_comm(MPI_Comm comm) const;
+    ProcessTopology with_bdiff_ksame_world_comm(MPI_Comm comm) const;
+    ProcessTopology with_rgrid_world_comm(MPI_Comm comm) const;
+    ProcessTopology with_diag_world_comm(MPI_Comm comm) const;
+    ProcessTopology with_matrix_world_comm(MPI_Comm comm) const;
+    ProcessTopology with_atom_world_comm(MPI_Comm comm) const;
 #endif
 
   private:
