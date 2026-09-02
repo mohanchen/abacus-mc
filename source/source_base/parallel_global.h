@@ -38,9 +38,9 @@ void read_pal_param(int argc, char** argv, int& NPROC, int& NTHREAD_PER_PROC, in
  * expected to fill them in from the appropriate view before passing the
  * partition down.
  *
- * Note: The factory is only available under __MPI. The non-MPI build path
- * uses the default ParallelPartition constructor which already produces the
- * single-process trivial partition.
+ * Note: Under __MPI the factory splits the real communicators as described
+ * below. The non-MPI build path returns the default ParallelPartition
+ * object, which already represents the single-process trivial partition.
  *
  * @param[in] world_nproc Size of MPI_COMM_WORLD
  * @param[in] my_rank    Rank in MPI_COMM_WORLD

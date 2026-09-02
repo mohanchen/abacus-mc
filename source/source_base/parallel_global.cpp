@@ -282,6 +282,7 @@ void Parallel_Global::divide_pools(const int& NPROC,
     }
     return;
 }
+#endif
 
 ParallelPartition Parallel_Global::create_partition(int world_nproc,
                                                     int my_rank,
@@ -427,5 +428,3 @@ void Parallel_Global::divide_mpi_groups(const int& procs,
         rank_in_group = (rank - extra_procs) % procs_in_group;
     }
 }
-
-#endif
