@@ -905,12 +905,13 @@ OBJS_DFTU=dftu_nao.o\
 OBJS_DELTASPIN=basic_funcs.o\
       cal_mw_from_lambda.o\
       cal_mw.o\
-      init_sc.o\
+      deltaspin_init.o\
       lambda_loop_helper.o\
       lambda_loop.o\
       spin_constrain.o\
-      cal_mw_helper.o\
       deltaspin_lcao.o\
+      deltaspin_lcao_mi.o\
+      deltaspin_state.o\
       deltaspin_pw_mi.o\
       mi_tools.o\
       template_helpers.o\
