@@ -25,6 +25,17 @@ namespace ModuleCell
 {
 
 /**
+ * @brief Fold a point into (-0.5, 0.5] in direct coordinates.
+ *
+ * Uses the epsilon-shifted fmod convention shared with the symmetry
+ * checker, and zeroes components below the epsilon tolerance.
+ *
+ * @param kvec    point to fold in place
+ * @param epsilon symmetry tolerance
+ */
+void restrict_kpt(ModuleBase::Vector3<double>& kvec, double epsilon);
+
+/**
  * @brief Abstract base class shared by K_Vectors (electrons) and QList (phonons).
  *
  * This base class is deliberately spin-free and irrep-free:

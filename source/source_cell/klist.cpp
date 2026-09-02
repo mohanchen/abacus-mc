@@ -549,6 +549,8 @@ void K_Vectors::set_kup_and_kdw()
     // on output: the number of points is doubled and xk and wk in the
     // first (nks/2) positions correspond to up spin
     // those in the second (nks/2) ones correspond to down spin
+    // nspin can only be 1 or 2 here: K_Vectors::set() maps nspin=4
+    // (non-collinear) to 1 before the k-list is built.
     //=========================================================================
     switch (nspin)
     {
@@ -577,14 +579,6 @@ void K_Vectors::set_kup_and_kdw()
 
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nks(nspin=2)", nks);
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nkstot(nspin=2)", nkstot);
-        break;
-    case 4:
-
-        for (int ik = 0; ik < nks; ik++)
-        {
-            this->isk[ik] = 0;
-        }
-
         break;
     }
 
@@ -673,26 +667,6 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
     this->reduce_ibz(kgmatrix.data(), nrotkm, ucell.G, k_vec, kkmatrix.data(), symm.epsilon, kvec_d_ibz, wk_ibz, this->ibz_index, ibz2bz);
     const int nkstot_ibz = kvec_d_ibz.size();
 
-    auto restrict_kpt = [&symm](ModuleBase::Vector3<double>& kvec) {
-        // in (-0.5, 0.5]
-        kvec.x = fmod(kvec.x + 100.5 - 0.5 * symm.epsilon, 1) - 0.5 + 0.5 * symm.epsilon;
-        kvec.y = fmod(kvec.y + 100.5 - 0.5 * symm.epsilon, 1) - 0.5 + 0.5 * symm.epsilon;
-        kvec.z = fmod(kvec.z + 100.5 - 0.5 * symm.epsilon, 1) - 0.5 + 0.5 * symm.epsilon;
-        if (std::abs(kvec.x) < symm.epsilon)
-        {
-            kvec.x = 0.0;
-        }
-        if (std::abs(kvec.y) < symm.epsilon)
-        {
-            kvec.y = 0.0;
-        }
-        if (std::abs(kvec.z) < symm.epsilon)
-        {
-            kvec.z = 0.0;
-        }
-        return;
-    };
-
 #ifdef __EXX
     // setup kstars according to the final (max-norm) kvec_d_ibz
     this->kstars.resize(nkstot_ibz);
@@ -706,7 +680,7 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
             for (int j = 0; j < nrotkm; ++j)
             {
                 kvec_rot = this->kvec_d[i] * kgmatrix[j];
-                restrict_kpt(kvec_rot);
+                ModuleCell::restrict_kpt(kvec_rot, symm.epsilon);
                 for (int k = 0; k < nkstot_ibz; ++k)
                 {
                     if (symm.equal(kvec_rot.x, kvec_d_ibz[k].x) && symm.equal(kvec_rot.y, kvec_d_ibz[k].y)
