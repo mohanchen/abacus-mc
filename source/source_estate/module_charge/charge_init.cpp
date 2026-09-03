@@ -55,7 +55,7 @@ void Charge::init_rho(const UnitCell& ucell,
         binary << PARAM.globalv.global_readin_dir << PARAM.inp.suffix + "-CHARGE-DENSITY.restart";
         // Temporary bridge: use factory until ParaCollection is wired into driver.
         Parallel::ParaWorld pw_world = Parallel::make_pw_world();
-        if (ModuleIO::read_rhog(binary.str(), rhopw, nspin, rhog, pw_world))
+        if (ModuleIO::read_rhog(binary.str(), rhopw, nspin, rhog, pw_world, &GlobalV::ofs_warning))
         {
             GlobalV::ofs_running << " Read electron density from file: " << binary.str() << std::endl;
             for (int is = 0; is < nspin; ++is)
@@ -152,7 +152,7 @@ void Charge::init_rho(const UnitCell& ucell,
 
                 std::stringstream binary;
                 binary << PARAM.globalv.global_readin_dir << PARAM.inp.suffix + "-TAU-DENSITY.restart";
-                if (ModuleIO::read_rhog(binary.str(), rhopw, nspin, kin_g.data(), pw_world))
+                if (ModuleIO::read_rhog(binary.str(), rhopw, nspin, kin_g.data(), pw_world, &GlobalV::ofs_warning))
                 {
                     GlobalV::ofs_running << " Read in the kinetic energy density: " << binary.str() << std::endl;
                     for (int is = 0; is < nspin; ++is)

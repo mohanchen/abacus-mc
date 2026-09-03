@@ -249,7 +249,8 @@ void ESolver_FP::iter_finish(UnitCell& ucell, const int istep, int& iter, bool& 
                                      this->inp_->nspin,
                                      ucell.GT,
                                      this->chr.rhog_save,
-                                     pw_world);
+                                     pw_world,
+                                     &GlobalV::ofs_warning);
             }
 
             if (XC_Functional::get_ked_flag())
@@ -269,7 +270,8 @@ void ESolver_FP::iter_finish(UnitCell& ucell, const int istep, int& iter, bool& 
                                          this->inp_->nspin,
                                          ucell.GT,
                                          kin_g.data(),
-                                         pw_world);
+                                         pw_world,
+                                         &GlobalV::ofs_warning);
                 }
             }
         }

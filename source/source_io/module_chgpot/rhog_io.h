@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cassert>
+#include <ostream>
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_base/module_parallel/para_world.h"
 /**
@@ -48,7 +49,8 @@ bool read_rhog(const std::string& filename,
                const ModulePW::PW_Basis* pw_rhod,
                const int nspin,
                std::complex<double>** rhog,
-               const Parallel::ParaWorld& pw_world);
+               const Parallel::ParaWorld& pw_world,
+               std::ostream* os_warning);
 
 bool write_rhog(const std::string& fchg,
                 const bool gamma_only,
@@ -56,7 +58,8 @@ bool write_rhog(const std::string& fchg,
                 const int nspin,
                 const ModuleBase::Matrix3& GT,
                 std::complex<double>** rhog,
-                const Parallel::ParaWorld& pw_world);
+                const Parallel::ParaWorld& pw_world,
+                std::ostream* os_warning);
 
 } // namespace ModuleIO
 

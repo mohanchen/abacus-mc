@@ -41,7 +41,7 @@ TEST_F(ReadRhogTest, ReadRhog)
     rhopw.setuptransform();
     rhopw.collect_local_pw();
 
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &GlobalV::ofs_warning)
 
     EXPECT_TRUE(result);
     EXPECT_DOUBLE_EQ(rhog[0][0].real(), -1.0304462993299456e-05);
@@ -58,7 +58,7 @@ TEST_F(ReadRhogTest, NotFoundFile)
     std::string filename = "notfound.txt";
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &GlobalV::ofs_warning)
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -81,7 +81,7 @@ TEST_F(ReadRhogTest, InconsistentGammaOnly)
     rhopw.gamma_only = true;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world, &GlobalV::ofs_warning);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -107,7 +107,7 @@ TEST_F(ReadRhogTest, SomePWMissing)
     rhopw.npwtot = 2000;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &GlobalV::ofs_warning)
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -126,13 +126,14 @@ TEST_F(ReadRhogTest, SomePWMissing)
 int main(int argc, char** argv)
 {
 #ifdef __MPI
-    setupmpi(argc, argv, GlobalV::NPROC, GlobalV::MY_RANK);
-    divide_pools(GlobalV::NPROC,
-                 GlobalV::MY_RANK,
-                 GlobalV::NPROC_IN_POOL,
-                 GlobalV::KPAR,
-                 GlobalV::MY_POOL,
-                 GlobalV::RANK_IN_POOL);
+    int nproc = 1;
+    int myrank = 0;
+    int nproc_in_pool = 1;
+    const int kpar = 1;
+    int mypool = 0;
+    int rank_in_pool = 0;
+    setupmpi(argc, argv, nproc, myrank);
+    divide_pools(nproc, myrank, nproc_in_pool, kpar, mypool, rank_in_pool);
 #endif
 
     testing::InitGoogleTest(&argc, argv);

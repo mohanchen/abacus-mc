@@ -1,21 +1,32 @@
 #include "source_base/module_out/binstream.h"
 #include "source_base/global_function.h"
-#include "source_base/timer.h"
 #include "source_base/vector3.h"
 #include "source_base/module_parallel/para_mpi_func.h"
 #include "rhog_io.h"
 #include <numeric>
 #include <unistd.h>
 
+namespace
+{
+inline void warn(std::ostream* os,
+                 const Parallel::ParaWorld& pw_world,
+                 const std::string& file,
+                 const std::string& desc)
+{
+    if (pw_world.rank() == 0 && os != nullptr)
+    {
+        *os << " " << file << "  warning : " << desc << std::endl;
+    }
+}
+} // namespace
+
 bool ModuleIO::read_rhog(const std::string& filename,
                          const ModulePW::PW_Basis* pw_rhod,
                          const int nspin,
                          std::complex<double>** rhog,
-                         const Parallel::ParaWorld& pw_world)
+                         const Parallel::ParaWorld& pw_world,
+                         std::ostream* os_warning)
 {
-    ModuleBase::TITLE("ModuleIO", "read_rhog");
-    ModuleBase::timer::start("ModuleIO", "read_rhog");
-
     const int nx = pw_rhod->nx;
     const int ny = pw_rhod->ny;
     const int nz = pw_rhod->nz;
@@ -41,8 +52,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
 
     if (error)
     {
-        ModuleBase::WARNING("ModuleIO::read_rhog", "Can't open file " + filename);
-        ModuleBase::timer::end("ModuleIO", "read_rhog");
+        warn(os_warning, pw_world, "ModuleIO::read_rhog", "Can't open file " + filename);
         return false;
     }
 
@@ -59,15 +69,15 @@ bool ModuleIO::read_rhog(const std::string& filename,
         }
         if (npwtot_in > pw_rhod->npwtot)
         {
-            ModuleBase::WARNING("ModuleIO::read_rhog", "some planewaves in file are not used");
+            warn(os_warning, pw_world, "ModuleIO::read_rhog", "some planewaves in file are not used");
         }
         else if (npwtot_in < pw_rhod->npwtot)
         {
-            ModuleBase::WARNING("ModuleIO::read_rhog", "some planewaves in file are missing");
+            warn(os_warning, pw_world, "ModuleIO::read_rhog", "some planewaves in file are missing");
         }
         if (nspin_in < nspin)
         {
-            ModuleBase::WARNING("ModuleIO::read_rhog", "some spin channels in file are missing");
+            warn(os_warning, pw_world, "ModuleIO::read_rhog", "some spin channels in file are missing");
         }
     }
 
@@ -75,8 +85,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
 
     if (error)
     {
-        ModuleBase::WARNING("ModuleIO::read_rhog", "gamma_only read from file is inconsistent with INPUT");
-        ModuleBase::timer::end("ModuleIO", "read_rhog");
+        warn(os_warning, pw_world, "ModuleIO::read_rhog", "gamma_only read from file is inconsistent with INPUT");
         return false;
     }
 
@@ -176,7 +185,6 @@ bool ModuleIO::read_rhog(const std::string& filename,
     {
         ifs.close();
     }
-    ModuleBase::timer::end("ModuleIO", "read_rhog");
     return true;
 }
 
@@ -186,11 +194,9 @@ bool ModuleIO::write_rhog(const std::string& fchg,
                           const int nspin,
                           const ModuleBase::Matrix3& GT,
                           std::complex<double>** rhog,
-                          const Parallel::ParaWorld& pw_world)
+                          const Parallel::ParaWorld& pw_world,
+                          std::ostream* os_warning)
 {
-    ModuleBase::TITLE("ModuleIO", "write_rhog");
-    ModuleBase::timer::start("ModuleIO", "write_rhog");
-
     // only rank 0 in the domain writes the header; all ranks cooperate
     // on sequential writes synchronized by barriers.
     const int irank = pw_world.rank();
@@ -210,8 +216,7 @@ bool ModuleIO::write_rhog(const std::string& fchg,
         ofs.open(fchg, std::ios::binary);
         if (!ofs)
         {
-            ModuleBase::WARNING_QUIT("ModuleIO::write_rhog", "File I/O failure: cannot open file " + fchg);
-            ModuleBase::timer::end("ModuleIO", "write_rhog");
+            warn(os_warning, pw_world, "ModuleIO::write_rhog", "File I/O failure: cannot open file " + fchg);
             return false;
         }
         ofs.write(reinterpret_cast<char*>(&size), sizeof(size));
@@ -306,7 +311,6 @@ bool ModuleIO::write_rhog(const std::string& fchg,
         }
         Parallel::barrier(pw_world);
     }
-    ModuleBase::timer::end("ModuleIO", "write_rhog");
     return true;
 }
 
