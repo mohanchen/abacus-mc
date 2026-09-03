@@ -783,7 +783,8 @@ OBJS_PARALLEL=parallel_common.o\
     para_collection.o\
     para_kmesh_world.o\
     para_pw_world.o\
-    para_diag_world.o
+    para_diag_world.o\
+    para_rgrid_world.o
 
 OBJS_SRCPW=h_ewald_pw.o\
     dnrm2.o\
