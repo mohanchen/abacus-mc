@@ -273,10 +273,6 @@ void pack_kpts(const std::vector<int>& isk,
         kvec_d_aux[3 * ik] = kvec_d[ik].x;
         kvec_d_aux[3 * ik + 1] = kvec_d[ik].y;
         kvec_d_aux[3 * ik + 2] = kvec_d[ik].z;
-    }
-    const int nkstot_full = static_cast<int>(kvec_c_full.size());
-    for (int ik = 0; ik < nkstot_full; ik++)
-    {
         kvec_c_full_aux[3 * ik] = kvec_c_full[ik].x;
         kvec_c_full_aux[3 * ik + 1] = kvec_c_full[ik].y;
         kvec_c_full_aux[3 * ik + 2] = kvec_c_full[ik].z;
