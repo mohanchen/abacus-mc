@@ -81,6 +81,7 @@ add_library(
     module_parallel/para_rgrid_world.cpp
     module_parallel/para_bgroup_world.cpp
     module_parallel/para_matrix_world.cpp
+    module_parallel/para_comm.cpp
     ${LIBM_SRC}
 )
 
