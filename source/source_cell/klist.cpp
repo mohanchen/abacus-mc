@@ -622,35 +622,15 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
 
 #ifdef __EXX
     // setup kstars according to the final (max-norm) kvec_d_ibz
-    this->kstars.resize(nkstot_ibz);
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
     {
-        ModuleBase::Vector3<double> kvec_rot;
-        for (int i = 0; i < this->nkstot; ++i)
-        {
-            int exist_number = -1;
-            int isym = 0;
-            for (int j = 0; j < nrotkm; ++j)
-            {
-                kvec_rot = this->kvec_d[i] * kgmatrix[j];
-                ModuleCell::restrict_kpt(kvec_rot, symm.epsilon);
-                for (int k = 0; k < nkstot_ibz; ++k)
-                {
-                    if (symm.equal(kvec_rot.x, kvec_d_ibz[k].x) && symm.equal(kvec_rot.y, kvec_d_ibz[k].y)
-                        && symm.equal(kvec_rot.z, kvec_d_ibz[k].z))
-                    {
-                        isym = j;
-                        exist_number = k;
-                        break;
-                    }
-                }
-                if (exist_number != -1)
-                {
-                    break;
-                }
-            }
-            this->kstars[exist_number].insert(std::make_pair(isym, this->kvec_d[i]));
-        }
+        KListIO::build_kstars(this->kvec_d,
+                              kgmatrix,
+                              nrotkm,
+                              kvec_d_ibz,
+                              symm.epsilon,
+                              [&symm](double a, double b) { return symm.equal(a, b); },
+                              this->kstars);
     }
 #endif
 

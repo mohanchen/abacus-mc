@@ -1,9 +1,12 @@
 #ifndef KLIST_IO_H
 #define KLIST_IO_H
 
+#include "source_base/matrix3.h"
 #include "source_base/vector3.h"
 
 #include <fstream>
+#include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -35,6 +38,19 @@ struct LineK
 /// then linearly interpolate the line-mode k points. Pure function of the
 /// stream and `nks_special`; dies via WARNING_QUIT on malformed input.
 LineK interp_line(std::ifstream& ifk, int nks_special);
+
+/// Build the EXX k-stars: for every k point, find the symmetry operation
+/// (index into `kgmatrix`) that rotates it onto an irreducible k point, and
+/// group k points by that IBZ representative. `equal` compares two doubles
+/// with the symmetry precision; `epsilon` is the k-restriction tolerance.
+/// this-free so the heavy triple loop is isolated and testable.
+void build_kstars(const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                  const std::vector<ModuleBase::Matrix3>& kgmatrix,
+                  int nrotkm,
+                  const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
+                  double epsilon,
+                  const std::function<bool(double, double)>& equal,
+                  std::vector<std::map<int, ModuleBase::Vector3<double>>>& kstars);
 } // namespace KListIO
 
 #endif // KLIST_IO_H

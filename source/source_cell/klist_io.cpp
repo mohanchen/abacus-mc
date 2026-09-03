@@ -8,6 +8,7 @@
 
 #include "source_base/formatter.h"
 #include "source_base/global_function.h"
+#include "source_cell/reciprocal_grid.h"
 
 #include <sstream>
 
@@ -135,6 +136,46 @@ LineK interp_line(std::ifstream& ifk, const int nks_special)
     assert(count == out.nks_total);
     assert(out.segids.size() == static_cast<size_t>(out.nks_total)); /* ISSUE#3482 */
     return out;
+}
+
+void build_kstars(const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                  const std::vector<ModuleBase::Matrix3>& kgmatrix,
+                  const int nrotkm,
+                  const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
+                  const double epsilon,
+                  const std::function<bool(double, double)>& equal,
+                  std::vector<std::map<int, ModuleBase::Vector3<double>>>& kstars)
+{
+    const int nkstot = static_cast<int>(kvec_d.size());
+    const int nkstot_ibz = static_cast<int>(kvec_d_ibz.size());
+    kstars.resize(nkstot_ibz);
+
+    ModuleBase::Vector3<double> kvec_rot;
+    for (int i = 0; i < nkstot; ++i)
+    {
+        int exist_number = -1;
+        int isym = 0;
+        for (int j = 0; j < nrotkm; ++j)
+        {
+            kvec_rot = kvec_d[i] * kgmatrix[j];
+            ModuleCell::restrict_kpt(kvec_rot, epsilon);
+            for (int k = 0; k < nkstot_ibz; ++k)
+            {
+                if (equal(kvec_rot.x, kvec_d_ibz[k].x) && equal(kvec_rot.y, kvec_d_ibz[k].y)
+                    && equal(kvec_rot.z, kvec_d_ibz[k].z))
+                {
+                    isym = j;
+                    exist_number = k;
+                    break;
+                }
+            }
+            if (exist_number != -1)
+            {
+                break;
+            }
+        }
+        kstars[exist_number].insert(std::make_pair(isym, kvec_d[i]));
+    }
 }
 
 } // namespace KListIO
