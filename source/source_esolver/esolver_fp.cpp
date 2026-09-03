@@ -8,13 +8,13 @@
 #include "source_hamilt/module_vdw/vdw.h"
 #include "source_io/module_output/output_log.h"
 #include "source_io/module_output/print_info.h"
-#include "source_io/module_chgpot/rhog_io.h"
+#include "source_estate/rhog_io.h"
 #include "source_io/module_parameter/parameter.h"
 
 #include "source_pw/module_pwdft/setup_pwrho.h" // mohan 20251005
 #include "source_hamilt/module_xc/xc_functional.h" // mohan 20251005
 #include "source_io/module_ctrl/ctrl_output_fp.h"
-#include "source_io/module_chgpot/write_init.h" // write_chg_init, write_pot_init
+#include "source_estate/write_init.h" // write_chg_init, write_pot_init
 #include "source_base/module_parallel/para_world.h"
 #include "source_base/module_parallel/para_tag.h"
 #include "source_base/module_parallel/para_bridge.h"

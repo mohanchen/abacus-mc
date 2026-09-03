@@ -108,4 +108,10 @@ AddTest(
     ../module_charge/gint_prec_ctrl.cpp
 )
 
+AddTest(
+  TARGET MODULE_ESTATE_read_rhog_test
+  LIBS parameter base device planewave_serial
+  SOURCES read_rhog_test.cpp ../rhog_io.cpp ../../source_basis/module_pw/test/test_tool.cpp
+)
+
 endif()

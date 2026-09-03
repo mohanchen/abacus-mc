@@ -14,7 +14,7 @@
 #include "source_cell/magnetism.h"
 #include "source_base/parallel_grid.h"
 #include "source_io/module_output/cube_io.h"
-#include "source_io/module_chgpot/rhog_io.h"
+#include "source_estate/rhog_io.h"
 #include "source_io/module_wf/read_wf2rho_pw.h"
 #include "source_io/module_restart/restart.h"
 #include "source_hamilt/module_xc/xc_functional.h"
