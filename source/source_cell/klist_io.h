@@ -117,6 +117,19 @@ void unpack_kpts(const std::vector<int>& isk_aux,
                  std::vector<ModuleBase::Vector3<double>>& kvec_c,
                  std::vector<ModuleBase::Vector3<double>>& kvec_d,
                  std::vector<ModuleBase::Vector3<double>>& kvec_c_full);
+
+/// Fill the full-list Cartesian k vectors when only one coordinate set is
+/// available: direct coordinates are converted via `reciprocal_vec` when
+/// Cartesian points are missing, otherwise the Cartesian points are copied.
+/// No-op when both coordinate sets are done. this-free helper called from
+/// K_Vectors::set() before IBZ reduction.
+void fill_full_kvec(bool kc_done,
+                    bool kd_done,
+                    int nkstot_full,
+                    const ModuleBase::Matrix3& reciprocal_vec,
+                    const std::vector<ModuleBase::Vector3<double>>& kvec_c,
+                    const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                    std::vector<ModuleBase::Vector3<double>>& kvec_c_full);
 } // namespace KListIO
 
 #endif // KLIST_IO_H

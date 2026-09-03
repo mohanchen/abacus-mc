@@ -324,6 +324,24 @@ public:
                             const bool cartesian);
 
     /**
+     * @brief Handle a reciprocal/real lattice Bravais-type mismatch after
+     *        IBZ reduction.
+     *
+     * When symmetry_autoclose is enabled, symmetry is switched off and the
+     * IBZ reduction is retried; otherwise the run aborts with a WARNING_QUIT
+     * listing the possible remedies.
+     *
+     * @param ucell unit cell used for the retried IBZ reduction
+     * @param symm symmetry operations used for the retried reduction
+     * @param skpt k-point option string forwarded to reduce_by_symmetry
+     * @param match set to true when the autoclose retry succeeds
+     */
+    void handle_symmetry_mismatch(const UnitCell& ucell,
+                                  const ModuleSymmetry::Symmetry& symm,
+                                  std::string& skpt,
+                                  bool& match);
+
+    /**
      * @brief Adds k-points linearly between special points.
      *
      * This function adds k-points linearly between special points in the Brillouin zone.

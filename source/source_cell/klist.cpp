@@ -108,16 +108,14 @@ void K_Vectors::set(const UnitCell& ucell,
     std::string skpt1;
     std::string skpt2;
 
-    if (!this->kc_done && this->kd_done)
-    {
-        for (size_t ik = 0; ik != this->nkstot_full; ++ik)
-            this->kvec_c_full[ik] = this->kvec_d[ik] * reciprocal_vec;
-    }
-    else if (this->kc_done && !this->kd_done)
-    {
-        for (size_t ik = 0; ik != this->nkstot_full; ++ik)
-            this->kvec_c_full[ik] = this->kvec_c[ik];
-    }
+    // complement the Cartesian coordinates of the full k-point list
+    KListIO::fill_full_kvec(this->kc_done,
+                            this->kd_done,
+                            this->nkstot_full,
+                            reciprocal_vec,
+                            this->kvec_c,
+                            this->kvec_d,
+                            this->kvec_c_full);
 
 
     // (2)
@@ -132,24 +130,7 @@ void K_Vectors::set(const UnitCell& ucell,
 #endif
         if (!match)
         {
-            std::cout << "Optimized lattice type of reciprocal lattice cannot match the optimized real lattice. "
-                      << std::endl;
-            std::cout << "It is often because the inaccuracy of lattice parameters in STRU." << std::endl;
-            if (ModuleSymmetry::Symmetry::symm_autoclose)
-            {
-                ModuleBase::WARNING("K_Vectors::ibz_kpoint", "Automatically set symmetry to 0 and continue ...");
-                std::cout << "Automatically set symmetry to 0 and continue ..." << std::endl;
-                ModuleSymmetry::Symmetry::symm_flag = 0;
-                match = true;
-                this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt1, match);
-            } else {
-                ModuleBase::WARNING_QUIT("K_Vectors::ibz_kpoint",
-                                         "Possible solutions: \n \
-1. Refine the lattice parameters in STRU;\n \
-2. Use a different`symmetry_prec`.  \n \
-3. Close symemtry: set `symmetry` to 0 in INPUT. \n \
-4. Set `symmetry_autoclose` to 1 in INPUT to automatically close symmetry when this error occurs.");
-            }
+            this->handle_symmetry_mismatch(ucell, symm, skpt1, match);
         }
     }
 
@@ -205,6 +186,33 @@ void K_Vectors::set(const UnitCell& ucell,
     // std::cout << " NUMBER OF K-POINTS   : " << nkstot << std::endl;
 
     return;
+}
+
+void K_Vectors::handle_symmetry_mismatch(const UnitCell& ucell,
+                                         const ModuleSymmetry::Symmetry& symm,
+                                         std::string& skpt,
+                                         bool& match)
+{
+    std::cout << "Optimized lattice type of reciprocal lattice cannot match the optimized real lattice. "
+              << std::endl;
+    std::cout << "It is often because the inaccuracy of lattice parameters in STRU." << std::endl;
+    if (ModuleSymmetry::Symmetry::symm_autoclose)
+    {
+        ModuleBase::WARNING("K_Vectors::ibz_kpoint", "Automatically set symmetry to 0 and continue ...");
+        std::cout << "Automatically set symmetry to 0 and continue ..." << std::endl;
+        ModuleSymmetry::Symmetry::symm_flag = 0;
+        match = true;
+        this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
+    }
+    else
+    {
+        ModuleBase::WARNING_QUIT("K_Vectors::ibz_kpoint",
+                                 "Possible solutions: \n \
+1. Refine the lattice parameters in STRU;\n \
+2. Use a different`symmetry_prec`.  \n \
+3. Close symemtry: set `symmetry` to 0 in INPUT. \n \
+4. Set `symmetry_autoclose` to 1 in INPUT to automatically close symmetry when this error occurs.");
+    }
 }
 
 // 1.reset the size of the K-point container according to spin_mult and nkstot
