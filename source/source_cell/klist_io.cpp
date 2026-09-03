@@ -178,4 +178,67 @@ void build_kstars(const std::vector<ModuleBase::Vector3<double>>& kvec_d,
     }
 }
 
+void pack_kpts(const std::vector<int>& isk,
+               const std::vector<double>& wk,
+               const std::vector<ModuleBase::Vector3<double>>& kvec_c,
+               const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+               const std::vector<ModuleBase::Vector3<double>>& kvec_c_full,
+               const int nkstot,
+               std::vector<int>& isk_aux,
+               std::vector<double>& wk_aux,
+               std::vector<double>& kvec_c_aux,
+               std::vector<double>& kvec_d_aux,
+               std::vector<double>& kvec_c_full_aux)
+{
+    for (int ik = 0; ik < nkstot; ik++)
+    {
+        isk_aux[ik] = isk[ik];
+        wk_aux[ik] = wk[ik];
+        kvec_c_aux[3 * ik] = kvec_c[ik].x;
+        kvec_c_aux[3 * ik + 1] = kvec_c[ik].y;
+        kvec_c_aux[3 * ik + 2] = kvec_c[ik].z;
+        kvec_d_aux[3 * ik] = kvec_d[ik].x;
+        kvec_d_aux[3 * ik + 1] = kvec_d[ik].y;
+        kvec_d_aux[3 * ik + 2] = kvec_d[ik].z;
+    }
+    const int nkstot_full = static_cast<int>(kvec_c_full.size());
+    for (int ik = 0; ik < nkstot_full; ik++)
+    {
+        kvec_c_full_aux[3 * ik] = kvec_c_full[ik].x;
+        kvec_c_full_aux[3 * ik + 1] = kvec_c_full[ik].y;
+        kvec_c_full_aux[3 * ik + 2] = kvec_c_full[ik].z;
+    }
+}
+
+void unpack_kpts(const std::vector<int>& isk_aux,
+                 const std::vector<double>& wk_aux,
+                 const std::vector<double>& kvec_c_aux,
+                 const std::vector<double>& kvec_d_aux,
+                 const std::vector<double>& kvec_c_full_aux,
+                 const int nks,
+                 const int startk,
+                 std::vector<int>& isk,
+                 std::vector<double>& wk,
+                 std::vector<ModuleBase::Vector3<double>>& kvec_c,
+                 std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                 std::vector<ModuleBase::Vector3<double>>& kvec_c_full)
+{
+    for (int i = 0; i < nks; i++)
+    {
+        // 3 is because each k point has three value:kx, ky, kz
+        const int k_index = i + startk;
+        kvec_c[i].x = kvec_c_aux[k_index * 3];
+        kvec_c[i].y = kvec_c_aux[k_index * 3 + 1];
+        kvec_c[i].z = kvec_c_aux[k_index * 3 + 2];
+        kvec_d[i].x = kvec_d_aux[k_index * 3];
+        kvec_d[i].y = kvec_d_aux[k_index * 3 + 1];
+        kvec_d[i].z = kvec_d_aux[k_index * 3 + 2];
+        kvec_c_full[i].x = kvec_c_full_aux[k_index * 3];
+        kvec_c_full[i].y = kvec_c_full_aux[k_index * 3 + 1];
+        kvec_c_full[i].z = kvec_c_full_aux[k_index * 3 + 2];
+        wk[i] = wk_aux[k_index];
+        isk[i] = isk_aux[k_index];
+    }
+}
+
 } // namespace KListIO

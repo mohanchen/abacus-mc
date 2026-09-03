@@ -727,20 +727,17 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
     // collect and process in rank 0
     if (GlobalV::MY_RANK == 0)
     {
-        for (int ik = 0; ik < this->nkstot; ik++)
-        {
-            isk_aux[ik] = this->isk[ik];
-            wk_aux[ik] = this->wk[ik];
-            kvec_c_aux[3 * ik] = this->kvec_c[ik].x;
-            kvec_c_aux[3 * ik + 1] = this->kvec_c[ik].y;
-            kvec_c_aux[3 * ik + 2] = this->kvec_c[ik].z;
-            kvec_d_aux[3 * ik] = this->kvec_d[ik].x;
-            kvec_d_aux[3 * ik + 1] = this->kvec_d[ik].y;
-            kvec_d_aux[3 * ik + 2] = this->kvec_d[ik].z;
-            kvec_c_full_aux[3 * ik] = this->kvec_c_full[ik].x;
-            kvec_c_full_aux[3 * ik + 1] = this->kvec_c_full[ik].y;
-            kvec_c_full_aux[3 * ik + 2] = this->kvec_c_full[ik].z;
-        }
+        KListIO::pack_kpts(this->isk,
+                           this->wk,
+                           this->kvec_c,
+                           this->kvec_d,
+                           this->kvec_c_full,
+                           this->nkstot,
+                           isk_aux,
+                           wk_aux,
+                           kvec_c_aux,
+                           kvec_d_aux,
+                           kvec_c_full_aux);
     }
 
     // broadcast k point data to all processors
@@ -755,24 +752,18 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
     this->renew(this->nks * this->spin_mult);
 
     // distribute
-    int k_index = 0;
-
-    for (int i = 0; i < this->nks; i++)
-    {
-        // 3 is because each k point has three value:kx, ky, kz
-        k_index = i + this->para_k.startk_pool[GlobalV::MY_POOL];
-        this->kvec_c[i].x = kvec_c_aux[k_index * 3];
-        this->kvec_c[i].y = kvec_c_aux[k_index * 3 + 1];
-        this->kvec_c[i].z = kvec_c_aux[k_index * 3 + 2];
-        this->kvec_d[i].x = kvec_d_aux[k_index * 3];
-        this->kvec_d[i].y = kvec_d_aux[k_index * 3 + 1];
-        this->kvec_d[i].z = kvec_d_aux[k_index * 3 + 2];
-        this->kvec_c_full[i].x = kvec_c_full_aux[k_index * 3];
-        this->kvec_c_full[i].y = kvec_c_full_aux[k_index * 3 + 1];
-        this->kvec_c_full[i].z = kvec_c_full_aux[k_index * 3 + 2];
-        this->wk[i] = wk_aux[k_index];
-        this->isk[i] = isk_aux[k_index];
-    }
+    KListIO::unpack_kpts(isk_aux,
+                         wk_aux,
+                         kvec_c_aux,
+                         kvec_d_aux,
+                         kvec_c_full_aux,
+                         this->nks,
+                         this->para_k.startk_pool[GlobalV::MY_POOL],
+                         this->isk,
+                         this->wk,
+                         this->kvec_c,
+                         this->kvec_d,
+                         this->kvec_c_full);
 
 #ifdef __EXX
     if (ModuleSymmetry::Symmetry::symm_flag == 1)

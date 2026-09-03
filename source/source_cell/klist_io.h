@@ -51,6 +51,35 @@ void build_kstars(const std::vector<ModuleBase::Vector3<double>>& kvec_d,
                   double epsilon,
                   const std::function<bool(double, double)>& equal,
                   std::vector<std::map<int, ModuleBase::Vector3<double>>>& kstars);
+
+/// Flatten k-point arrays into contiguous MPI buffers (x,y,z interleaved).
+/// this-free; used on rank 0 before broadcasting in K_Vectors::mpi_k.
+void pack_kpts(const std::vector<int>& isk,
+               const std::vector<double>& wk,
+               const std::vector<ModuleBase::Vector3<double>>& kvec_c,
+               const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+               const std::vector<ModuleBase::Vector3<double>>& kvec_c_full,
+               int nkstot,
+               std::vector<int>& isk_aux,
+               std::vector<double>& wk_aux,
+               std::vector<double>& kvec_c_aux,
+               std::vector<double>& kvec_d_aux,
+               std::vector<double>& kvec_c_full_aux);
+
+/// Scatter the broadcast buffers into this pool's k-point slice, starting at
+/// global index `startk`. this-free; mirrors pack_kpts after the broadcast.
+void unpack_kpts(const std::vector<int>& isk_aux,
+                 const std::vector<double>& wk_aux,
+                 const std::vector<double>& kvec_c_aux,
+                 const std::vector<double>& kvec_d_aux,
+                 const std::vector<double>& kvec_c_full_aux,
+                 int nks,
+                 int startk,
+                 std::vector<int>& isk,
+                 std::vector<double>& wk,
+                 std::vector<ModuleBase::Vector3<double>>& kvec_c,
+                 std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                 std::vector<ModuleBase::Vector3<double>>& kvec_c_full);
 } // namespace KListIO
 
 #endif // KLIST_IO_H
