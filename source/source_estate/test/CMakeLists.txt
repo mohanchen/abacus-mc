@@ -126,4 +126,18 @@ AddTest(
   KEEP_FEATURE_DEFINITIONS __MPI
 )
 
+AddTest(
+  TARGET MODULE_ESTATE_charge_mpi_test
+  LIBS parameter psi base device planewave
+  SOURCES charge_mpi_test.cpp ../module_charge/charge_mpi.cpp
+  # Real MPI test: its main() calls MPI_Init unconditionally, so it must keep
+  # __MPI despite this directory disabling it.
+  KEEP_FEATURE_DEFINITIONS __MPI
+)
+
+add_test(NAME MODULE_ESTATE_charge_mpi_test_4np
+      COMMAND mpirun -np 4 ./MODULE_ESTATE_charge_mpi_test;
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 endif()
