@@ -91,6 +91,7 @@ TEST_F(ReadRhogTest, ReadRhog)
 // Test the read_rhog function when the file is not found
 TEST_F(ReadRhogTest, NotFoundFile)
 {
+    setup_pw_basis();
     std::string filename = "notfound.txt";
 
     open_warning("test_read_rhog.txt");
@@ -106,8 +107,12 @@ TEST_F(ReadRhogTest, NotFoundFile)
 // Test the read_rhog function when gamma_only is inconsistent
 TEST_F(ReadRhogTest, InconsistentGammaOnly)
 {
+    setup_pw_basis();
     std::string filename = "./support/charge-density.dat";
     rhopw.gamma_only = true;
+    // Fewer planewaves than the file holds (1471) triggers the
+    // "some planewaves in file are not used" warning.
+    rhopw.npwtot = 1000;
 
     open_warning("test_read_rhog.txt");
     bool result = elecstate::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world, &warning_stream);
@@ -126,6 +131,7 @@ TEST_F(ReadRhogTest, InconsistentGammaOnly)
 // Test the read_rhog function when some planewaves in file are missing
 TEST_F(ReadRhogTest, SomePWMissing)
 {
+    setup_pw_basis();
     std::string filename = "./support/charge-density.dat";
     rhopw.npwtot = 2000;
 
@@ -383,7 +389,7 @@ int main(int argc, char** argv)
     int nproc = 1;
     int myrank = 0;
     int nproc_in_pool = 1;
-    const int kpar = 1;
+    int kpar = 1;
     int mypool = 0;
     int rank_in_pool = 0;
     setupmpi(argc, argv, nproc, myrank);
