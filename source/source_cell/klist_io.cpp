@@ -71,6 +71,34 @@ std::string ibz_wk_table(const int nkstot_ibz,
     return table;
 }
 
+bool find_kpoints_header(std::ifstream& ifk)
+{
+    std::string word;
+    while (ifk.good())
+    {
+        ifk >> word;
+        // LiuXh add 20180416, fix bug in k-point file when the first line with comments
+        ifk.ignore(150, '\n');
+        if (word == "K_POINTS" || word == "KPOINTS" || word == "K")
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void read_kpt_list(std::ifstream& ifk,
+                   const int nkstot,
+                   std::vector<ModuleBase::Vector3<double>>& kvec,
+                   std::vector<double>& wk)
+{
+    for (int i = 0; i < nkstot; i++)
+    {
+        ifk >> kvec[i].x >> kvec[i].y >> kvec[i].z;
+        ModuleBase::GlobalFunc::READ_VALUE(ifk, wk[i]);
+    }
+}
+
 LineK interp_line(std::ifstream& ifk, const int nks_special)
 {
     // number of points to the next k points

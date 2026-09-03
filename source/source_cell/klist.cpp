@@ -298,27 +298,9 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
     ifk.clear();
     ifk.seekg(0);
 
-    std::string word;
     std::string kword;
 
-    int ierr = 0;
-
-    ifk.rdstate();
-
-    while (ifk.good())
-    {
-        ifk >> word;
-        ifk.ignore(150, '\n'); // LiuXh add 20180416, fix bug in k-point file when the first line with comments
-        if (word == "K_POINTS" || word == "KPOINTS" || word == "K")
-        {
-            ierr = 1;
-            break;
-        }
-
-        ifk.rdstate();
-    }
-
-    if (ierr == 0)
+    if (!KListIO::find_kpoints_header(ifk))
     {
         GlobalV::ofs_warning << " symbol K_POINTS not found." << std::endl;
         return false;
@@ -381,22 +363,13 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
         if (kword == "Cartesian" || kword == "C") // Cartesian coordinates
         {
             this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
-            for (int i = 0; i < nkstot; i++)
-            {
-                ifk >> kvec_c[i].x >> kvec_c[i].y >> kvec_c[i].z;
-                ModuleBase::GlobalFunc::READ_VALUE(ifk, wk[i]);
-            }
-
+            KListIO::read_kpt_list(ifk, nkstot, this->kvec_c, this->wk);
             this->kc_done = true;
         }
         else if (kword == "Direct" || kword == "D") // Direct coordinates
         {
             this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
-            for (int i = 0; i < nkstot; i++)
-            {
-                ifk >> kvec_d[i].x >> kvec_d[i].y >> kvec_d[i].z;
-                ModuleBase::GlobalFunc::READ_VALUE(ifk, wk[i]);
-            }
+            KListIO::read_kpt_list(ifk, nkstot, this->kvec_d, this->wk);
             this->kd_done = true;
         }
         else if (kword == "Line_Cartesian")

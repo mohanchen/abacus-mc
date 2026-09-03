@@ -34,6 +34,19 @@ struct LineK
     int nks_total = 0;                             ///< total interpolated k-point count
 };
 
+/// Scan `ifk` for the "K_POINTS"/"KPOINTS"/"K" header keyword, skipping any
+/// leading comment lines. Returns true with the stream positioned after the
+/// header line; returns false if the keyword is not found before EOF.
+bool find_kpoints_header(std::ifstream& ifk);
+
+/// Read `nkstot` explicit k points (three coordinates plus a weight per line)
+/// from `ifk` into `kvec` and `wk`. The caller is responsible for sizing the
+/// arrays (K_Vectors::renew) before calling.
+void read_kpt_list(std::ifstream& ifk,
+                   int nkstot,
+                   std::vector<ModuleBase::Vector3<double>>& kvec,
+                   std::vector<double>& wk);
+
 /// Read the special k points and per-point interpolation counts from `ifk`,
 /// then linearly interpolate the line-mode k points. Pure function of the
 /// stream and `nks_special`; dies via WARNING_QUIT on malformed input.
