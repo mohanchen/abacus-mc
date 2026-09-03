@@ -781,7 +781,8 @@ OBJS_PARALLEL=parallel_common.o\
     parallel_device.o\
     para_world.o\
     para_collection.o\
-    para_kmesh_world.o
+    para_kmesh_world.o\
+    para_pw_world.o
 
 OBJS_SRCPW=h_ewald_pw.o\
     dnrm2.o\
