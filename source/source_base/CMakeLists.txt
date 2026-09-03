@@ -83,6 +83,7 @@ add_library(
     module_parallel/para_matrix_world.cpp
     module_parallel/para_mpi_func.cpp
     module_parallel/para_setup.cpp
+    module_parallel/para_bridge.cpp
     ${LIBM_SRC}
 )
 

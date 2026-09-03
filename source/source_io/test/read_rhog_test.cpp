@@ -4,6 +4,9 @@
 #include "source_io/module_parameter/parameter.h"
 #undef private
 #include "source_io/module_chgpot/rhog_io.h"
+#include "source_base/module_parallel/para_world.h"
+#include "source_base/module_parallel/para_tag.h"
+#include "source_base/module_parallel/para_bridge.h"
 #ifdef __MPI
 #include "source_basis/module_pw/test/test_tool.h"
 #include "mpi.h"
@@ -19,6 +22,7 @@ class ReadRhogTest : public ::testing::Test
   protected:
     ModulePW::PW_Basis* rhopw = nullptr;
     std::complex<double>** rhog = nullptr;
+    Parallel::ParaWorld pw_world = Parallel::make_pw_world();
 
     virtual void SetUp()
     {
@@ -53,7 +57,7 @@ TEST_F(ReadRhogTest, ReadRhog)
     rhopw->setuptransform();
     rhopw->collect_local_pw();
 
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog);
+    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
 
     EXPECT_TRUE(result);
     EXPECT_DOUBLE_EQ(rhog[0][0].real(), -1.0304462993299456e-05);
@@ -70,7 +74,7 @@ TEST_F(ReadRhogTest, NotFoundFile)
     std::string filename = "notfound.txt";
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog);
+    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -94,7 +98,7 @@ TEST_F(ReadRhogTest, InconsistentGammaOnly)
     rhopw->gamma_only = true;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog);
+    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -121,7 +125,7 @@ TEST_F(ReadRhogTest, SomePWMissing)
     rhopw->npwtot = 2000;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog);
+    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");

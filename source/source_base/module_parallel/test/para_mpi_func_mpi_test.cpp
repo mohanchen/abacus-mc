@@ -28,6 +28,13 @@ TEST(ParaMpiFuncMpiTest, GatherIntAll)
     EXPECT_EQ(all[0], 0);
 }
 
+TEST(ParaMpiFuncMpiTest, BarrierNoHang)
+{
+    auto world = Parallel::ParaWorld::serial("test");
+    Parallel::barrier(world);
+    SUCCEED();
+}
+
 int main(int argc, char** argv)
 {
     MPI_Init(&argc, &argv);

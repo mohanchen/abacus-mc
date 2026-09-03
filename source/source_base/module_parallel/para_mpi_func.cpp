@@ -166,6 +166,16 @@ void reduce_max(int& v, const ParaWorld& world)
 #endif
 }
 
+// ========== Barrier ==========
+
+void barrier(const ParaWorld& world)
+{
+#ifdef __MPI
+    if (!world.valid()) return;
+    MPI_Barrier(world.comm());
+#endif
+}
+
 // ========== Gather ==========
 
 void gather_int(int& v, int* all, const ParaWorld& world)

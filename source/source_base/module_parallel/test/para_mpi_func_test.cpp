@@ -98,4 +98,5 @@ TEST(ParaMpiFuncTest, InvalidWorldIsNoop)
     EXPECT_EQ(v, 42); // unchanged
     Parallel::reduce_all(v, world);
     EXPECT_EQ(v, 42); // unchanged
+    Parallel::barrier(world); // should not hang or crash
 }

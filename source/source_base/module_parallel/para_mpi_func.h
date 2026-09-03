@@ -42,6 +42,10 @@ void reduce_max(double& v, const ParaWorld& world);
 void reduce_min(int& v, const ParaWorld& world);
 void reduce_max(int& v, const ParaWorld& world);
 
+// ========== Barrier ==========
+
+void barrier(const ParaWorld& world);
+
 // ========== Gather ==========
 
 void gather_int(int& v, int* all, const ParaWorld& world);
