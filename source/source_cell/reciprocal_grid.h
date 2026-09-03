@@ -1,8 +1,9 @@
 /**
  * @file reciprocal_grid.h
  * @brief Abstract base class for reciprocal-space point grids.
- * @note Extracted from K_Vectors / KVectorUtils (2026-08-14) so that both
- *       k-points (K_Vectors) and q-points (QList) share the common
+ * @note Extracted from K_Vectors (2026-08-14; the intermediate KVectorUtils
+ *       shim has since been folded back into the member functions) so that
+ *       both k-points (K_Vectors) and q-points (QList) share the common
  *       spin-free functionality: mesh generation, coordinate conversion,
  *       weight normalization, printing and star (IBZ) reduction.
  */
@@ -23,6 +24,17 @@ class Symmetry;
 
 namespace ModuleCell
 {
+
+/**
+ * @brief Fold a point into (-0.5, 0.5] in direct coordinates.
+ *
+ * Uses the epsilon-shifted fmod convention shared with the symmetry
+ * checker, and zeroes components below the epsilon tolerance.
+ *
+ * @param kvec    point to fold in place
+ * @param epsilon symmetry tolerance
+ */
+void restrict_kpt(ModuleBase::Vector3<double>& kvec, double epsilon);
 
 /**
  * @brief Abstract base class shared by K_Vectors (electrons) and QList (phonons).
@@ -91,8 +103,12 @@ class ReciprocalGrid
      * @param G reciprocal lattice matrix
      * @param R real space lattice matrix
      * @param skpt output string holding the point table
+     * @param ofs_running running-log stream
      */
-    void set_both_kvec(const ModuleBase::Matrix3& G, const ModuleBase::Matrix3& R, std::string& skpt);
+    void set_both_kvec(const ModuleBase::Matrix3& G,
+                       const ModuleBase::Matrix3& R,
+                       std::string& skpt,
+                       std::ofstream& ofs_running);
 
     /// @brief Normalize the weights so that they sum to the spin degeneracy.
     void normalize_wk(const int& degspin);

@@ -5,7 +5,6 @@
 #include "source_base/matrix3.h"
 #include "source_cell/unitcell.h"
 #include "parallel_kpoints.h"
-#include "k_vector_utils.h"
 #include "reciprocal_grid.h"
 #include <vector>
 
@@ -150,7 +149,22 @@ public:
      */
     void update_use_ibz(const int& nkstot_ibz,
                         const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
-                        const std::vector<double>& wk_ibz);
+                        const std::vector<double>& wk_ibz,
+                        std::ofstream& ofs_running);
+
+    /**
+     * @brief Sets up the k-points after a volume change.
+     *
+     * Sets the number of spins, converts the direct coordinates (which are
+     * kept across the volume change) to the new Cartesian coordinates using
+     * the new reciprocal lattice, prints the resulting table, and marks both
+     * coordinate sets as up to date.
+     *
+     * @param nspin_in The number of spins. 1 for non-spin-polarized
+     *                 calculations and 2 for spin-polarized calculations.
+     * @param G The new reciprocal lattice matrix.
+     */
+    void set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G, std::ofstream& ofs_running);
 
   private:
     int nspin = 0;             ///< number of spin states
@@ -221,7 +235,43 @@ public:
                       const bool gamma_only_local,
                       const double kspacing[3],
                       const std::string& kmesh_type,
-                      const double koffset[3]); // return 0: something wrong.
+                      const double koffset[3],
+                      std::ofstream& ofs_running); // return 0: something wrong.
+
+    /**
+     * @brief Overwrite the KPT file with an auto-generated mesh when requested.
+     *
+     * Writes a Gamma-mesh KPT file if gamma_only_local is set, or a
+     * KSPACING-derived Gamma/Monkhorst-Pack mesh if kspacing is positive.
+     * Does nothing when neither condition holds.
+     *
+     * @param ucell unit cell (reciprocal lattice and lat0 for the mesh size)
+     * @param fn KPT filename to (over)write
+     * @param gamma_only_local whether to force a single Gamma point
+     * @param kspacing target k-point spacing in 1/bohr (three components)
+     * @param kmesh_type "mp" for Monkhorst-Pack, anything else for Gamma
+     * @param koffset mesh offsets (three components)
+     */
+    void generate_kfile(const UnitCell& ucell,
+                        const std::string& fn,
+                        const bool gamma_only_local,
+                        const double kspacing[3],
+                        const std::string& kmesh_type,
+                        const double koffset[3]);
+
+    /**
+     * @brief Read the KPT file and build the k-point list from it.
+     *
+     * Locates the "K_POINTS" header, reads the point count and type keyword,
+     * then dispatches to the Monkhorst-Pack mesh, the explicit Cartesian/
+     * Direct list, or the Line-mode interpolation accordingly.
+     *
+     * @param fn KPT filename to read
+     *
+     * @return bool Returns true if the k-points are successfully read,
+     *              false otherwise.
+     */
+    bool parse_kfile(const std::string& fn, std::ofstream& ofs_running);
 
     /**
      * @brief Adds k-points linearly between special points.
@@ -267,21 +317,26 @@ public:
      * @note The function also doubles the total number of k-points (nks and nkstot) for spin-polarized calculations.
      * @note The function prints the total number of k-points for spin-polarized calculations.
      */
-    void set_kup_and_kdw();
+    void set_kup_and_kdw(std::ofstream& ofs_running);
 
     /**
      * @brief Gets the global index of a k-point.
      * @return this->ik2iktot[ik]
      */
     void cal_ik_global();
-    friend void KVectorUtils::kvec_ibz_kpoint(K_Vectors& kv,
-                                             const ModuleSymmetry::Symmetry& symm,
-                                             bool use_symm,
-                                             std::string& skpt,
-                                             const UnitCell& ucell,
-                                             bool& match);
+
 #ifdef __MPI
-    friend void KVectorUtils::kvec_mpi_k(K_Vectors& kvec);
+    /**
+     * @brief Distributes k-points among MPI processes.
+     *
+     * Broadcasts the k-point metadata (flags, counts, mesh, segment IDs)
+     * from rank 0 and distributes the per-pool k-point slice (indices,
+     * weights, coordinates) to every process. Only compiled with MPI.
+     *
+     * @note Assumes nkstot > 0 and quits if some process ends up with
+     *       no k-points.
+     */
+    void mpi_k(std::ofstream& ofs_running);
 #endif
 };
 #endif // KVECT_H
