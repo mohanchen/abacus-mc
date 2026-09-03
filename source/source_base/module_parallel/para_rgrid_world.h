@@ -65,6 +65,40 @@ public:
     /// Which process owns global z-plane iz.
     int whichpro(int iz) const;
 
+    // ===== Cross-domain operations =====
+
+    /**
+     * @brief Sum local grid data across all pools (KP_WORLD or INT_BGROUP).
+     *
+     * Replaces Parallel_Grid::reduce_across_pools.
+     * In serial mode or single-pool, this is a no-op.
+     *
+     * @param[in,out] data  local grid buffer (nrxx elements), overwritten with sum
+     * @param[in] kmesh_world  k-mesh domain providing the cross-pool communicator
+     */
+    void reduce_across_pools(double* data, const ParaWorld& kmesh_world) const;
+
+    /**
+     * @brief Broadcast global grid to local z-slabs (replaces Parallel_Grid::bcast).
+     *
+     * @param[in] data_global  global grid (ncxyz elements, only valid on root)
+     * @param[out] data_local  local grid buffer (nrxx elements)
+     * @param[in] comm_world   communicator for broadcast
+     * @param[in] root         root rank in comm_world
+     */
+    void bcast_data(const double* data_global, double* data_local,
+                    const ParaWorld& comm_world, int root = 0) const;
+
+    /**
+     * @brief Gather local z-slabs into a global grid (replaces Parallel_Grid::reduce).
+     *
+     * @param[out] rhotot    global grid (ncxyz elements, only valid on root)
+     * @param[in] rhoin      local grid buffer (nrxx elements)
+     * @param[in] comm_world   communicator for gather
+     */
+    void reduce_data(double* rhotot, const double* rhoin,
+                     const ParaWorld& comm_world) const;
+
 private:
     void distribute_z();
 
