@@ -20,6 +20,11 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_BASE_para_diag_world
+  SOURCES para_diag_world_test.cpp ../para_diag_world.cpp ../para_world.cpp
+)
+
+AddTest(
   TARGET MODULE_BASE_para_world_mpi
   LIBS MPI::MPI_CXX
   SOURCES para_world_mpi_test.cpp ../para_world.cpp

@@ -77,6 +77,7 @@ add_library(
     module_parallel/para_collection.cpp
     module_parallel/para_kmesh_world.cpp
     module_parallel/para_pw_world.cpp
+    module_parallel/para_diag_world.cpp
     ${LIBM_SRC}
 )
 
