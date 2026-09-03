@@ -235,7 +235,9 @@ public:
                       const double kspacing[3],
                       const std::string& kmesh_type,
                       const double koffset[3],
-                      std::ofstream& ofs_running); // return 0: something wrong.
+                      std::ofstream& ofs_running,
+                      std::ofstream& ofs_warning,
+                      const int my_rank); // return 0: something wrong.
 
     /**
      * @brief Overwrite the KPT file with an auto-generated mesh when requested.
@@ -271,7 +273,7 @@ public:
      * @return bool Returns true if the k-points are successfully read,
      *              false otherwise.
      */
-    bool parse_kfile(const std::string& fn, std::ofstream& ofs_running);
+    bool parse_kfile(const std::string& fn, std::ofstream& ofs_running, std::ofstream& ofs_warning);
 
     /**
      * @brief Read the Monkhorst-Pack/Gamma mesh block and generate the mesh.
@@ -286,7 +288,10 @@ public:
      * @return false (after warning) when the keyword is neither Gamma nor
      *         Monkhorst-Pack; true when the mesh was generated.
      */
-    bool read_mp_mesh(std::ifstream& ifk, const std::string& kword, std::ofstream& ofs_running);
+    bool read_mp_mesh(std::ifstream& ifk,
+                      const std::string& kword,
+                      std::ofstream& ofs_running,
+                      std::ofstream& ofs_warning);
 
     /**
      * @brief Read the explicitly listed k points (nkstot > 0 form of KPT).
@@ -301,7 +306,7 @@ public:
      * @return false (after warning) for unknown keywords or line mode with
      *         symmetry enabled; true when the k-point list was built.
      */
-    bool read_listed_kpoints(std::ifstream& ifk, const std::string& kword);
+    bool read_listed_kpoints(std::ifstream& ifk, const std::string& kword, std::ofstream& ofs_warning);
 
     /**
      * @brief Build line-mode k points by interpolating between special points.
