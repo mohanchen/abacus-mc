@@ -174,7 +174,7 @@ void K_Vectors::set(const UnitCell& ucell,
                        nspin_in); // assign k points to several process pools
 #ifdef __MPI
     // distribute K point data to the corresponding process
-    this->mpi_k(ofs);
+    this->mpi_k(ofs, GlobalV::MY_RANK, GlobalV::MY_POOL);
 #endif
 
     // set the k vectors for the up and down spin
@@ -681,7 +681,7 @@ void K_Vectors::set_after_vc(const ModuleBase::Matrix3& G, std::ofstream& ofs_ru
 }
 
 #ifdef __MPI
-void K_Vectors::mpi_k(std::ofstream& ofs_running)
+void K_Vectors::mpi_k(std::ofstream& ofs_running, const int my_rank, const int my_pool)
 {
     ModuleBase::TITLE("K_Vectors", "mpi_k");
 
@@ -702,7 +702,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
 
     Parallel_Common::bcast_double(this->koffset, 3);
 
-    this->nks = this->para_k.nks_pool[GlobalV::MY_POOL];
+    this->nks = this->para_k.nks_pool[my_pool];
 
     ofs_running << std::endl;
     ModuleBase::GlobalFunc::OUT(ofs_running, "Number of k-points in this process", this->nks);
@@ -726,7 +726,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
     std::vector<double> kvec_c_full_aux(this->nkstot_full * 3);
 
     // collect and process in rank 0
-    if (GlobalV::MY_RANK == 0)
+    if (my_rank == 0)
     {
         KListIO::pack_kpts(this->isk,
                            this->wk,
@@ -759,7 +759,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
                          kvec_d_aux,
                          kvec_c_full_aux,
                          this->nks,
-                         this->para_k.startk_pool[GlobalV::MY_POOL],
+                         this->para_k.startk_pool[my_pool],
                          this->isk,
                          this->wk,
                          this->kvec_c,
@@ -779,7 +779,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
             {
                 int isym = 0;
                 ModuleBase::Vector3<double> ks_vec(0, 0, 0);
-                if (GlobalV::MY_RANK == 0)
+                if (my_rank == 0)
                 {
                     isym = ks->first;
                     ks_vec = ks->second;
@@ -789,7 +789,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
                 Parallel_Common::bcast_double(ks_vec.x);
                 Parallel_Common::bcast_double(ks_vec.y);
                 Parallel_Common::bcast_double(ks_vec.z);
-                if (GlobalV::MY_RANK != 0)
+                if (my_rank != 0)
                 {
                     this->kstars[ikibz].insert(std::make_pair(isym, ks_vec));
                 }

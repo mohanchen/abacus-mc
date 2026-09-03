@@ -336,7 +336,7 @@ public:
      * @note Assumes nkstot > 0 and quits if some process ends up with
      *       no k-points.
      */
-    void mpi_k(std::ofstream& ofs_running);
+    void mpi_k(std::ofstream& ofs_running, const int my_rank, const int my_pool);
 #endif
 };
 #endif // KVECT_H
