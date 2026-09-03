@@ -79,6 +79,15 @@ void pack_kpts(const std::vector<int>& isk,
                std::vector<double>& kvec_d_aux,
                std::vector<double>& kvec_c_full_aux);
 
+/// Broadcast the EXX k-stars (one (symmetry-index, k-vector) map per IBZ
+/// k-point) from `my_rank == 0` to every process. Rank 0 holds the filled
+/// maps; other ranks resize and rebuild them from the broadcast. MPI
+/// wrappers are compiled as no-ops without __MPI, so the call is safe in
+/// serial builds (it simply leaves the rank-0 maps untouched).
+void bcast_kstars(std::vector<std::map<int, ModuleBase::Vector3<double>>>& kstars,
+                  int nkstot,
+                  int my_rank);
+
 /// Scatter the broadcast buffers into this pool's k-point slice, starting at
 /// global index `startk`. this-free; mirrors pack_kpts after the broadcast.
 void unpack_kpts(const std::vector<int>& isk_aux,

@@ -784,34 +784,10 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running, const int my_rank, const int m
                          this->kvec_c_full);
 
 #ifdef __EXX
+    // bcast kstars (rank 0 holds the filled maps; other ranks rebuild them)
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
-    { // bcast kstars
-        this->kstars.resize(this->nkstot);
-        for (int ikibz = 0; ikibz < this->nkstot; ++ikibz)
-        {
-            int starsize = this->kstars[ikibz].size();
-            Parallel_Common::bcast_int(starsize);
-            auto ks = this->kstars[ikibz].begin();
-            for (int ik = 0; ik < starsize; ++ik)
-            {
-                int isym = 0;
-                ModuleBase::Vector3<double> ks_vec(0, 0, 0);
-                if (my_rank == 0)
-                {
-                    isym = ks->first;
-                    ks_vec = ks->second;
-                    ++ks;
-                }
-                Parallel_Common::bcast_int(isym);
-                Parallel_Common::bcast_double(ks_vec.x);
-                Parallel_Common::bcast_double(ks_vec.y);
-                Parallel_Common::bcast_double(ks_vec.z);
-                if (my_rank != 0)
-                {
-                    this->kstars[ikibz].insert(std::make_pair(isym, ks_vec));
-                }
-            }
-        }
+    {
+        KListIO::bcast_kstars(this->kstars, this->nkstot, my_rank);
     }
 #endif
 } // END SUBROUTINE mpi_k

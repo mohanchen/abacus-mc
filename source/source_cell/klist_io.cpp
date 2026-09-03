@@ -8,6 +8,7 @@
 
 #include "source_base/formatter.h"
 #include "source_base/global_function.h"
+#include "source_base/parallel_common.h"
 #include "source_cell/reciprocal_grid.h"
 
 #include <sstream>
@@ -266,6 +267,38 @@ void unpack_kpts(const std::vector<int>& isk_aux,
         kvec_c_full[i].z = kvec_c_full_aux[k_index * 3 + 2];
         wk[i] = wk_aux[k_index];
         isk[i] = isk_aux[k_index];
+    }
+}
+
+void bcast_kstars(std::vector<std::map<int, ModuleBase::Vector3<double>>>& kstars,
+                  const int nkstot,
+                  const int my_rank)
+{
+    kstars.resize(nkstot);
+    for (int ikibz = 0; ikibz < nkstot; ++ikibz)
+    {
+        int starsize = kstars[ikibz].size();
+        Parallel_Common::bcast_int(starsize);
+        auto ks = kstars[ikibz].begin();
+        for (int ik = 0; ik < starsize; ++ik)
+        {
+            int isym = 0;
+            ModuleBase::Vector3<double> ks_vec(0, 0, 0);
+            if (my_rank == 0)
+            {
+                isym = ks->first;
+                ks_vec = ks->second;
+                ++ks;
+            }
+            Parallel_Common::bcast_int(isym);
+            Parallel_Common::bcast_double(ks_vec.x);
+            Parallel_Common::bcast_double(ks_vec.y);
+            Parallel_Common::bcast_double(ks_vec.z);
+            if (my_rank != 0)
+            {
+                kstars[ikibz].insert(std::make_pair(isym, ks_vec));
+            }
+        }
     }
 }
 
