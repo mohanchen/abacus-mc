@@ -10,6 +10,71 @@
 #include "source_base/parallel_reduce.h"
 #include "source_cell/module_symmetry/symmetry.h"
 
+// Free formatting helpers for the IBZ reduction tables. Defined in this
+// file (not in a separate TU) because many test targets across the tree
+// compile klist.cpp alone; a separate TU would need registering everywhere.
+// Deliberately not static and not in an anonymous namespace.
+namespace KListSymm
+{
+
+std::string ibz_kpt_table(const int nkstot,
+                          const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                          const std::vector<int>& ibz_index,
+                          const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz)
+{
+    std::stringstream ss;
+    ss << " " << std::setw(40) << "nkstot"
+       << " = " << nkstot << std::setw(66) << "ibzkpt" << std::endl;
+    std::string table;
+    table += "K-POINTS REDUCTION ACCORDING TO SYMMETRY\n";
+    table += FmtCore::format("%8s%12s%12s%12s%8s%12s%12s%12s\n",
+                             "KPT",
+                             "DIRECT_X",
+                             "DIRECT_Y",
+                             "DIRECT_Z",
+                             "IBZ",
+                             "DIRECT_X",
+                             "DIRECT_Y",
+                             "DIRECT_Z");
+    for (int i = 0; i < nkstot; ++i)
+    {
+        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8d%12.8f%12.8f%12.8f\n",
+                                 i + 1,
+                                 kvec_d[i].x,
+                                 kvec_d[i].y,
+                                 kvec_d[i].z,
+                                 ibz_index[i] + 1,
+                                 kvec_d_ibz[ibz_index[i]].x,
+                                 kvec_d_ibz[ibz_index[i]].y,
+                                 kvec_d_ibz[ibz_index[i]].z);
+    }
+    ss << table << std::endl;
+    return ss.str();
+}
+
+std::string ibz_wk_table(const int nkstot_ibz,
+                         const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
+                         const std::vector<double>& wk_ibz,
+                         const std::vector<int>& ibz2bz)
+{
+    std::string table;
+    table += "\n K-POINTS REDUCTION ACCORDING TO SYMMETRY\n";
+    table += FmtCore::format("%8s%12s%12s%12s%8s%8s\n", "IBZ", "DIRECT_X", "DIRECT_Y", "DIRECT_Z", "WEIGHT", "ibz2bz");
+    for (int ik = 0; ik < nkstot_ibz; ik++)
+    {
+        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f%8d\n",
+                                 ik + 1,
+                                 kvec_d_ibz[ik].x,
+                                 kvec_d_ibz[ik].y,
+                                 kvec_d_ibz[ik].z,
+                                 wk_ibz[ik],
+                                 ibz2bz[ik]);
+    }
+    return table;
+}
+
+} // namespace KListSymm
+
 void K_Vectors::cal_ik_global()
 {
     const int my_pool = this->para_k.my_pool;
@@ -711,50 +776,10 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
 #endif
 
     // output in kpoints file
-    std::stringstream ss;
-    ss << " " << std::setw(40) << "nkstot"
-       << " = " << this->nkstot << std::setw(66) << "ibzkpt" << std::endl;
-    std::string table;
-    table += "K-POINTS REDUCTION ACCORDING TO SYMMETRY\n";
-    table += FmtCore::format("%8s%12s%12s%12s%8s%12s%12s%12s\n",
-                             "KPT",
-                             "DIRECT_X",
-                             "DIRECT_Y",
-                             "DIRECT_Z",
-                             "IBZ",
-                             "DIRECT_X",
-                             "DIRECT_Y",
-                             "DIRECT_Z");
-    for (int i = 0; i < this->nkstot; ++i)
-    {
-        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8d%12.8f%12.8f%12.8f\n",
-                                 i + 1,
-                                 this->kvec_d[i].x,
-                                 this->kvec_d[i].y,
-                                 this->kvec_d[i].z,
-                                 this->ibz_index[i] + 1,
-                                 kvec_d_ibz[this->ibz_index[i]].x,
-                                 kvec_d_ibz[this->ibz_index[i]].y,
-                                 kvec_d_ibz[this->ibz_index[i]].z);
-    }
-    ss << table << std::endl;
-    skpt = ss.str();
+    skpt = KListSymm::ibz_kpt_table(this->nkstot, this->kvec_d, this->ibz_index, kvec_d_ibz);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Number of irreducible k-points", nkstot_ibz);
 
-    table.clear();
-    table += "\n K-POINTS REDUCTION ACCORDING TO SYMMETRY\n";
-    table += FmtCore::format("%8s%12s%12s%12s%8s%8s\n", "IBZ", "DIRECT_X", "DIRECT_Y", "DIRECT_Z", "WEIGHT", "ibz2bz");
-    for (int ik = 0; ik < nkstot_ibz; ik++)
-    {
-        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f%8d\n",
-                                 ik + 1,
-                                 kvec_d_ibz[ik].x,
-                                 kvec_d_ibz[ik].y,
-                                 kvec_d_ibz[ik].z,
-                                 wk_ibz[ik],
-                                 ibz2bz[ik]);
-    }
-    GlobalV::ofs_running << table << std::endl;
+    GlobalV::ofs_running << KListSymm::ibz_wk_table(nkstot_ibz, kvec_d_ibz, wk_ibz, ibz2bz) << std::endl;
 
     // resize the kpoint container according to nkstot_ibz
     if (use_symm || this->get_is_mp())

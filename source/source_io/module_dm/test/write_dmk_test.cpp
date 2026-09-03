@@ -1,3 +1,14 @@
+// Pre-include standard library headers pulled in by write_dmk.h so their
+// include guards are already set when '#define private public' is active.
+// Otherwise the macro corrupts <sstream>/<fstream> and the build fails with
+// "'...__xfer_bufptrs' redeclared with different access".
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+
 #define private public
 #include "source_io/module_dm/write_dmk.h"
 #include "source_io/module_parameter/parameter.h"
