@@ -11,7 +11,10 @@
 #include "source_base/parallel_common.h"
 #include "source_cell/module_symmetry/symmetry.h"
 #include "source_cell/reciprocal_grid.h"
+#include "source_cell/unitcell.h"
 
+#include <algorithm>
+#include <cmath>
 #include <sstream>
 
 namespace KListIO
@@ -364,6 +367,131 @@ void fill_full_kvec(const bool kc_done,
         {
             kvec_c_full[ik] = kvec_c[ik];
         }
+    }
+}
+
+void build_ik2iktot(const int my_pool,
+                    const std::vector<int>& startk_pool,
+                    const int spin_mult,
+                    const int nks,
+                    const int nkstot,
+                    std::vector<int>& ik2iktot)
+{
+    ik2iktot.resize(nks);
+#ifdef __MPI
+    if (spin_mult == 2)
+    {
+        for (int ik = 0; ik < nks / 2; ++ik)
+        {
+            ik2iktot[ik] = startk_pool[my_pool] + ik;
+            ik2iktot[ik + nks / 2] = nkstot / 2 + startk_pool[my_pool] + ik;
+        }
+    }
+    else
+    {
+        for (int ik = 0; ik < nks; ++ik)
+        {
+            ik2iktot[ik] = startk_pool[my_pool] + ik;
+        }
+    }
+#else
+    for (int ik = 0; ik < nks; ++ik)
+    {
+        ik2iktot[ik] = ik;
+    }
+#endif
+}
+
+void expand_spin_kpoints(const int spin_mult,
+                         std::vector<ModuleBase::Vector3<double>>& kvec_c,
+                         std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                         std::vector<double>& wk,
+                         std::vector<int>& isk,
+                         int& nks,
+                         int& nkstot)
+{
+    //=========================================================================
+    // on output: the number of points is doubled and xk and wk in the
+    // first (nks/2) positions correspond to up spin
+    // those in the second (nks/2) ones correspond to down spin
+    // spin_mult can only be 1 or 2 here: K_Vectors::set() maps nspin=4
+    // (non-collinear) to 1 before the k-list is built.
+    //=========================================================================
+    switch (spin_mult)
+    {
+    case 1:
+        for (int ik = 0; ik < nks; ik++)
+        {
+            isk[ik] = 0;
+        }
+        break;
+
+    case 2:
+        for (int ik = 0; ik < nks; ik++)
+        {
+            kvec_c[ik + nks] = kvec_c[ik];
+            kvec_d[ik + nks] = kvec_d[ik];
+            wk[ik + nks] = wk[ik];
+            isk[ik] = 0;
+            isk[ik + nks] = 1;
+        }
+
+        nks *= 2;
+        nkstot *= 2;
+        break;
+    }
+
+    return;
+}
+
+void write_auto_kfile(const UnitCell& ucell,
+                      const std::string& fn,
+                      const bool gamma_only_local,
+                      const double kspacing[3],
+                      const std::string& kmesh_type,
+                      const double koffset[3],
+                      std::ofstream& ofs_warning)
+{
+    if (gamma_only_local)
+    {
+        ofs_warning << " Auto generating k-points file: " << fn << std::endl;
+        std::ofstream ofs(fn.c_str());
+        ofs << "K_POINTS" << std::endl;
+        ofs << "0" << std::endl;
+        ofs << "Gamma" << std::endl;
+        ofs << "1 1 1 0 0 0" << std::endl;
+        ofs.close();
+    }
+    else if (kspacing[0] > 0.0)
+    {
+        if (kspacing[1] <= 0 || kspacing[2] <= 0)
+        {
+            ModuleBase::WARNING_QUIT("K_Vectors", "kspacing should > 0");
+        };
+        // number of K points = max(1,int(|bi|/KSPACING+1))
+        ModuleBase::Matrix3 btmp = ucell.G;
+        double b1 = sqrt(btmp.e11 * btmp.e11 + btmp.e12 * btmp.e12 + btmp.e13 * btmp.e13);
+        double b2 = sqrt(btmp.e21 * btmp.e21 + btmp.e22 * btmp.e22 + btmp.e23 * btmp.e23);
+        double b3 = sqrt(btmp.e31 * btmp.e31 + btmp.e32 * btmp.e32 + btmp.e33 * btmp.e33);
+        int nk1 = std::max(1, static_cast<int>(b1 * ModuleBase::TWO_PI / kspacing[0] / ucell.lat0 + 1));
+        int nk2 = std::max(1, static_cast<int>(b2 * ModuleBase::TWO_PI / kspacing[1] / ucell.lat0 + 1));
+        int nk3 = std::max(1, static_cast<int>(b3 * ModuleBase::TWO_PI / kspacing[2] / ucell.lat0 + 1));
+
+        ofs_warning << " Generate k-points file according to KSPACING: " << fn << std::endl;
+        std::ofstream ofs(fn.c_str());
+        ofs << "K_POINTS" << std::endl;
+        ofs << "0" << std::endl;
+        if (kmesh_type == "mp")
+        {
+            ofs << "Monkhorst-Pack" << std::endl;
+        }
+        else
+        {
+            ofs << "Gamma" << std::endl;
+        }
+        ofs << nk1 << " " << nk2 << " " << nk3 << " " << koffset[0] << " " << koffset[1] << " "
+            << koffset[2] << std::endl;
+        ofs.close();
     }
 }
 

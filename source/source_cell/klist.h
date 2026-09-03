@@ -240,28 +240,6 @@ public:
                       const int my_rank); // return 0: something wrong.
 
     /**
-     * @brief Overwrite the KPT file with an auto-generated mesh when requested.
-     *
-     * Writes a Gamma-mesh KPT file if gamma_only_local is set, or a
-     * KSPACING-derived Gamma/Monkhorst-Pack mesh if kspacing is positive.
-     * Does nothing when neither condition holds.
-     *
-     * @param ucell unit cell (reciprocal lattice and lat0 for the mesh size)
-     * @param fn KPT filename to (over)write
-     * @param gamma_only_local whether to force a single Gamma point
-     * @param kspacing target k-point spacing in 1/bohr (three components)
-     * @param kmesh_type "mp" for Monkhorst-Pack, anything else for Gamma
-     * @param koffset mesh offsets (three components)
-     */
-    void generate_kfile(const UnitCell& ucell,
-                        const std::string& fn,
-                        const bool gamma_only_local,
-                        const double kspacing[3],
-                        const std::string& kmesh_type,
-                        const double koffset[3],
-                        std::ofstream& ofs_warning);
-
-    /**
      * @brief Read the KPT file and build the k-point list from it.
      *
      * Locates the "K_POINTS" header, reads the point count and type keyword,
@@ -386,12 +364,6 @@ public:
      * @note The function prints the total number of k-points for spin-polarized calculations.
      */
     void set_kup_and_kdw(std::ofstream& ofs_running);
-
-    /**
-     * @brief Gets the global index of a k-point.
-     * @return this->ik2iktot[ik]
-     */
-    void cal_ik_global();
 
 #ifdef __MPI
     /**

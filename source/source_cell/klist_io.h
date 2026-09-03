@@ -15,6 +15,8 @@ namespace ModuleSymmetry
 class Symmetry; // full definition only needed in klist_io.cpp
 }
 
+class UnitCell; // full definition only needed in klist_io.cpp
+
 /// this-free helpers extracted from K_Vectors, kept in a separate TU so they
 /// can be unit-tested and reused without dragging in the K_Vectors class.
 namespace KListIO
@@ -130,6 +132,44 @@ void fill_full_kvec(bool kc_done,
                     const std::vector<ModuleBase::Vector3<double>>& kvec_c,
                     const std::vector<ModuleBase::Vector3<double>>& kvec_d,
                     std::vector<ModuleBase::Vector3<double>>& kvec_c_full);
+
+/// Build the local-to-global k-point index map `ik2iktot` for this pool.
+/// In MPI runs the global index is offset by the pool start (with the
+/// spin_mult == 2 second half offset by nkstot/2); in serial runs it is the
+/// local index itself. `ik2iktot` is resized to `nks` here. this-free helper
+/// called from K_Vectors::set() after the pool distribution.
+void build_ik2iktot(int my_pool,
+                    const std::vector<int>& startk_pool,
+                    int spin_mult,
+                    int nks,
+                    int nkstot,
+                    std::vector<int>& ik2iktot);
+
+/// Expand the k-point list for spin-polarized runs (spin_mult == 2): copy
+/// coordinates and weights into the second half, tag isk 0 for the first
+/// half and 1 for the second, then double nks/nkstot. For spin_mult == 1
+/// only isk is zeroed. The running-log output stays in the K_Vectors
+/// wrapper. this-free helper backing K_Vectors::set_kup_and_kdw.
+void expand_spin_kpoints(int spin_mult,
+                         std::vector<ModuleBase::Vector3<double>>& kvec_c,
+                         std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                         std::vector<double>& wk,
+                         std::vector<int>& isk,
+                         int& nks,
+                         int& nkstot);
+
+/// Overwrite the KPT file with an auto-generated mesh when requested:
+/// a single Gamma point if gamma_only_local, or a KSPACING-derived
+/// Gamma/Monkhorst-Pack mesh if kspacing[0] > 0 (quits if kspacing[1] or
+/// kspacing[2] is non-positive); does nothing otherwise. this-free helper
+/// backing K_Vectors::generate_kfile.
+void write_auto_kfile(const UnitCell& ucell,
+                      const std::string& fn,
+                      bool gamma_only_local,
+                      const double kspacing[3],
+                      const std::string& kmesh_type,
+                      const double koffset[3],
+                      std::ofstream& ofs_warning);
 } // namespace KListIO
 
 #endif // KLIST_IO_H

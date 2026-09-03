@@ -11,35 +11,6 @@
 #include "source_base/parallel_reduce.h"
 #include "source_cell/module_symmetry/symmetry.h"
 
-void K_Vectors::cal_ik_global()
-{
-    const int my_pool = this->para_k.my_pool;
-    this->ik2iktot.resize(this->nks);
-#ifdef __MPI
-    if(this->spin_mult == 2)
-    {
-        for (int ik = 0; ik < this->nks / 2; ++ik)
-        {
-            this->ik2iktot[ik] = this->para_k.startk_pool[my_pool] + ik;
-            this->ik2iktot[ik + this->nks / 2] = this->nkstot / 2 + this->para_k.startk_pool[my_pool] + ik;
-        }
-    }
-    else
-    {
-        for (int ik = 0; ik < this->nks; ++ik)
-        {
-            this->ik2iktot[ik] = this->para_k.startk_pool[my_pool] + ik;
-        }
-    }
-#else
-    for (int ik = 0; ik < this->nks; ++ik)
-    {
-        this->ik2iktot[ik] = ik;
-    }
-#endif
-
-}
-
 void K_Vectors::set(const UnitCell& ucell,
                     const ModuleSymmetry::Symmetry& symm,
                     const std::string& k_file_name,
@@ -178,8 +149,13 @@ void K_Vectors::set(const UnitCell& ucell,
         this->ibz_index[ik] = ik;
     }
     
-    // get ik2iktot
-    this->cal_ik_global();
+    // get ik2iktot: map local k indices to global indices in the pool
+    KListIO::build_ik2iktot(this->para_k.my_pool,
+                            this->para_k.startk_pool,
+                            this->spin_mult,
+                            this->nks,
+                            this->nkstot,
+                            this->ik2iktot);
 
     this->print_klists(ofs);
 
@@ -245,61 +221,10 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
 
     // 1. Overwrite the KPT file and default K-point information if needed
     // mohan add 2010-09-04
-    this->generate_kfile(ucell, fn, gamma_only_local, kspacing, kmesh_type, koffset, ofs_warning);
+    KListIO::write_auto_kfile(ucell, fn, gamma_only_local, kspacing, kmesh_type, koffset, ofs_warning);
 
     // 2. Read the KPT file and build the k-point list
     return this->parse_kfile(fn, ofs_running, ofs_warning);
-}
-
-void K_Vectors::generate_kfile(const UnitCell& ucell,
-                               const std::string& fn,
-                               const bool gamma_only_local,
-                               const double kspacing[3],
-                               const std::string& kmesh_type,
-                               const double koffset[3],
-                               std::ofstream& ofs_warning)
-{
-    if (gamma_only_local)
-    {
-        ofs_warning << " Auto generating k-points file: " << fn << std::endl;
-        std::ofstream ofs(fn.c_str());
-        ofs << "K_POINTS" << std::endl;
-        ofs << "0" << std::endl;
-        ofs << "Gamma" << std::endl;
-        ofs << "1 1 1 0 0 0" << std::endl;
-        ofs.close();
-    }
-    else if (kspacing[0] > 0.0)
-    {
-        if (kspacing[1] <= 0 || kspacing[2] <= 0)
-        {
-            ModuleBase::WARNING_QUIT("K_Vectors", "kspacing should > 0");
-        };
-        // number of K points = max(1,int(|bi|/KSPACING+1))
-        ModuleBase::Matrix3 btmp = ucell.G;
-        double b1 = sqrt(btmp.e11 * btmp.e11 + btmp.e12 * btmp.e12 + btmp.e13 * btmp.e13);
-        double b2 = sqrt(btmp.e21 * btmp.e21 + btmp.e22 * btmp.e22 + btmp.e23 * btmp.e23);
-        double b3 = sqrt(btmp.e31 * btmp.e31 + btmp.e32 * btmp.e32 + btmp.e33 * btmp.e33);
-        int nk1 = std::max(1, static_cast<int>(b1 * ModuleBase::TWO_PI / kspacing[0] / ucell.lat0 + 1));
-        int nk2 = std::max(1, static_cast<int>(b2 * ModuleBase::TWO_PI / kspacing[1] / ucell.lat0 + 1));
-        int nk3 = std::max(1, static_cast<int>(b3 * ModuleBase::TWO_PI / kspacing[2] / ucell.lat0 + 1));
-
-        ofs_warning << " Generate k-points file according to KSPACING: " << fn << std::endl;
-        std::ofstream ofs(fn.c_str());
-        ofs << "K_POINTS" << std::endl;
-        ofs << "0" << std::endl;
-        if (kmesh_type == "mp")
-        {
-            ofs << "Monkhorst-Pack" << std::endl;
-        }
-        else
-        {
-            ofs << "Gamma" << std::endl;
-        }
-        ofs << nk1 << " " << nk2 << " " << nk3 << " " << koffset[0] << " " << koffset[1] << " "
-            << koffset[2] << std::endl;
-        ofs.close();
-    }
 }
 
 // 2. Generate the K-point grid automatically according to the KPT file
@@ -515,41 +440,18 @@ void K_Vectors::set_kup_and_kdw(std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("K_Vectors", "setup_kup_and_kdw");
 
-    //=========================================================================
-    // on output: the number of points is doubled and xk and wk in the
-    // first (nks/2) positions correspond to up spin
-    // those in the second (nks/2) ones correspond to down spin
-    // spin_mult can only be 1 or 2 here: K_Vectors::set() maps nspin=4
-    // (non-collinear) to 1 before the k-list is built.
-    //=========================================================================
-    switch (this->spin_mult)
+    KListIO::expand_spin_kpoints(this->spin_mult,
+                                 this->kvec_c,
+                                 this->kvec_d,
+                                 this->wk,
+                                 this->isk,
+                                 this->nks,
+                                 this->nkstot);
+
+    if (this->spin_mult == 2)
     {
-    case 1:
-
-        for (int ik = 0; ik < nks; ik++)
-        {
-            this->isk[ik] = 0;
-        }
-
-        break;
-
-    case 2:
-
-        for (int ik = 0; ik < nks; ik++)
-        {
-            this->kvec_c[ik + nks] = kvec_c[ik];
-            this->kvec_d[ik + nks] = kvec_d[ik];
-            this->wk[ik + nks] = wk[ik];
-            this->isk[ik] = 0;
-            this->isk[ik + nks] = 1;
-        }
-
-        this->nks *= 2;
-        this->nkstot *= 2;
-
-        ModuleBase::GlobalFunc::OUT(ofs_running, "nks(nspin=2)", nks);
-        ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot(nspin=2)", nkstot);
-        break;
+        ModuleBase::GlobalFunc::OUT(ofs_running, "nks(nspin=2)", this->nks);
+        ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot(nspin=2)", this->nkstot);
     }
 
     return;
