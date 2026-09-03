@@ -46,6 +46,7 @@ namespace ModuleIO
 
 bool read_rhog(const std::string& filename,
                const ModulePW::PW_Basis* pw_rhod,
+               const int nspin,
                std::complex<double>** rhog,
                const Parallel::ParaWorld& pw_world);
 

@@ -1,8 +1,5 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#define private public
-#include "source_io/module_parameter/parameter.h"
-#undef private
 #include "source_io/module_chgpot/rhog_io.h"
 #include "source_base/module_parallel/para_world.h"
 #include "source_base/module_parallel/para_tag.h"
@@ -48,7 +45,6 @@ class ReadRhogTest : public ::testing::Test
 TEST_F(ReadRhogTest, ReadRhog)
 {
     std::string filename = "./support/charge-density.dat";
-    PARAM.input.nspin = 1;
 #ifdef __MPI
     rhopw->initmpi(GlobalV::NPROC_IN_POOL, GlobalV::RANK_IN_POOL, MPI_COMM_WORLD);
 #endif
@@ -57,7 +53,7 @@ TEST_F(ReadRhogTest, ReadRhog)
     rhopw->setuptransform();
     rhopw->collect_local_pw();
 
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, rhopw, 1, rhog, pw_world);
 
     EXPECT_TRUE(result);
     EXPECT_DOUBLE_EQ(rhog[0][0].real(), -1.0304462993299456e-05);
@@ -74,7 +70,7 @@ TEST_F(ReadRhogTest, NotFoundFile)
     std::string filename = "notfound.txt";
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, rhopw, 1, rhog, pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -94,11 +90,10 @@ TEST_F(ReadRhogTest, NotFoundFile)
 TEST_F(ReadRhogTest, InconsistentGammaOnly)
 {
     std::string filename = "./support/charge-density.dat";
-    PARAM.input.nspin = 2;
     rhopw->gamma_only = true;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, rhopw, 2, rhog, pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -121,11 +116,10 @@ TEST_F(ReadRhogTest, InconsistentGammaOnly)
 TEST_F(ReadRhogTest, SomePWMissing)
 {
     std::string filename = "./support/charge-density.dat";
-    PARAM.input.nspin = 1;
     rhopw->npwtot = 2000;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, rhopw, 1, rhog, pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");

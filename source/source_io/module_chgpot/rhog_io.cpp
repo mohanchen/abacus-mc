@@ -1,7 +1,5 @@
 #include "source_base/module_out/binstream.h"
 #include "source_base/global_function.h"
-#include "source_io/module_parameter/parameter.h"
-#include "source_base/global_variable.h"
 #include "source_base/timer.h"
 #include "source_base/vector3.h"
 #include "source_base/module_parallel/para_mpi_func.h"
@@ -11,6 +9,7 @@
 
 bool ModuleIO::read_rhog(const std::string& filename,
                          const ModulePW::PW_Basis* pw_rhod,
+                         const int nspin,
                          std::complex<double>** rhog,
                          const Parallel::ParaWorld& pw_world)
 {
@@ -66,7 +65,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
         {
             ModuleBase::WARNING("ModuleIO::read_rhog", "some planewaves in file are missing");
         }
-        if (nspin_in < PARAM.inp.nspin)
+        if (nspin_in < nspin)
         {
             ModuleBase::WARNING("ModuleIO::read_rhog", "some spin channels in file are missing");
         }
@@ -105,7 +104,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
     Parallel::bcast_int(miller.data(), miller.size(), pw_world);
 
     // set to zero
-    for (int is = 0; is < PARAM.inp.nspin; ++is)
+    for (int is = 0; is < nspin; ++is)
     {
         ModuleBase::GlobalFunc::ZEROS(rhog[is], pw_rhod->npw);
     }
@@ -162,7 +161,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
             }
         }
 
-        if (nspin_in == 2 && PARAM.inp.nspin == 4 && is == 1)
+        if (nspin_in == 2 && nspin == 4 && is == 1)
         {
             for (int ig = 0; ig < pw_rhod->npw; ++ig)
             {
