@@ -289,6 +289,36 @@ public:
     bool read_mp_mesh(std::ifstream& ifk, const std::string& kword, std::ofstream& ofs_running);
 
     /**
+     * @brief Read the explicitly listed k points (nkstot > 0 form of KPT).
+     *
+     * Dispatches on the type keyword: Cartesian/Direct lists are sized via
+     * renew() and filled through KListIO::read_kpt_list; Line_Cartesian/
+     * Line_Direct delegate to setup_line_kpoints.
+     *
+     * @param ifk stream positioned after the type keyword
+     * @param kword type keyword: Cartesian, C, Direct, D, Line_Cartesian,
+     *              Line_Direct, L or Line
+     * @return false (after warning) for unknown keywords or line mode with
+     *         symmetry enabled; true when the k-point list was built.
+     */
+    bool read_listed_kpoints(std::ifstream& ifk, const std::string& kword);
+
+    /**
+     * @brief Build line-mode k points by interpolating between special points.
+     *
+     * Refuses (warning + false) when symmetry reduction is enabled, then
+     * interpolates the special points read from `ifk`, resets all weights
+     * to 1, and marks the Cartesian or Direct coordinate set as done.
+     *
+     * @param ifk stream to read the special points from
+     * @param kvec target coordinate container (kvec_c or kvec_d)
+     * @param cartesian true for Line_Cartesian, false for Line_Direct
+     */
+    bool setup_line_kpoints(std::ifstream& ifk,
+                            std::vector<ModuleBase::Vector3<double>>& kvec,
+                            const bool cartesian);
+
+    /**
      * @brief Adds k-points linearly between special points.
      *
      * This function adds k-points linearly between special points in the Brillouin zone.

@@ -332,55 +332,7 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
     }
     else if (nkstot > 0) // nkstot>0, the K-point information is clearly set
     {
-        if (kword == "Cartesian" || kword == "C") // Cartesian coordinates
-        {
-            this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
-            KListIO::read_kpt_list(ifk, nkstot, this->kvec_c, this->wk);
-            this->kc_done = true;
-        }
-        else if (kword == "Direct" || kword == "D") // Direct coordinates
-        {
-            this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
-            KListIO::read_kpt_list(ifk, nkstot, this->kvec_d, this->wk);
-            this->kd_done = true;
-        }
-        else if (kword == "Line_Cartesian")
-        {
-            if (ModuleSymmetry::Symmetry::symm_flag == 1)
-            {
-                ModuleBase::WARNING("K_Vectors::read_kpoints",
-                                    "Line mode of k-points is open, please set symmetry to 0 or -1.");
-                return false;
-            }
-
-            interpolate_k_between(ifk, kvec_c);
-
-            std::for_each(wk.begin(), wk.end(), [](double& d) { d = 1.0; });
-
-            this->kc_done = true;
-        }
-
-        else if (kword == "Line_Direct" || kword == "L" || kword == "Line")
-        {
-            if (ModuleSymmetry::Symmetry::symm_flag == 1)
-            {
-                ModuleBase::WARNING("K_Vectors::read_kpoints",
-                                    "Line mode of k-points is open, please set symmetry to 0 or -1.");
-                return false;
-            }
-
-            interpolate_k_between(ifk, kvec_d);
-
-            std::for_each(wk.begin(), wk.end(), [](double& d) { d = 1.0; });
-
-            this->kd_done = true;
-        }
-
-        else
-        {
-            GlobalV::ofs_warning << " Error : neither Cartesian nor Direct kpoint." << std::endl;
-            return false;
-        }
+        kpts_ok = this->read_listed_kpoints(ifk, kword);
     }
 
     if (!kpts_ok)
@@ -426,6 +378,61 @@ bool K_Vectors::read_mp_mesh(std::ifstream& ifk, const std::string& kword, std::
     }
 
     this->Monkhorst_Pack(nmp, this->koffset, k_type);
+    return true;
+}
+
+bool K_Vectors::read_listed_kpoints(std::ifstream& ifk, const std::string& kword)
+{
+    if (kword == "Cartesian" || kword == "C") // Cartesian coordinates
+    {
+        this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
+        KListIO::read_kpt_list(ifk, nkstot, this->kvec_c, this->wk);
+        this->kc_done = true;
+        return true;
+    }
+    if (kword == "Direct" || kword == "D") // Direct coordinates
+    {
+        this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
+        KListIO::read_kpt_list(ifk, nkstot, this->kvec_d, this->wk);
+        this->kd_done = true;
+        return true;
+    }
+    if (kword == "Line_Cartesian")
+    {
+        return this->setup_line_kpoints(ifk, this->kvec_c, true);
+    }
+    if (kword == "Line_Direct" || kword == "L" || kword == "Line")
+    {
+        return this->setup_line_kpoints(ifk, this->kvec_d, false);
+    }
+
+    GlobalV::ofs_warning << " Error : neither Cartesian nor Direct kpoint." << std::endl;
+    return false;
+}
+
+bool K_Vectors::setup_line_kpoints(std::ifstream& ifk,
+                                   std::vector<ModuleBase::Vector3<double>>& kvec,
+                                   const bool cartesian)
+{
+    if (ModuleSymmetry::Symmetry::symm_flag == 1)
+    {
+        ModuleBase::WARNING("K_Vectors::read_kpoints",
+                            "Line mode of k-points is open, please set symmetry to 0 or -1.");
+        return false;
+    }
+
+    this->interpolate_k_between(ifk, kvec);
+
+    std::for_each(this->wk.begin(), this->wk.end(), [](double& d) { d = 1.0; });
+
+    if (cartesian)
+    {
+        this->kc_done = true;
+    }
+    else
+    {
+        this->kd_done = true;
+    }
     return true;
 }
 
