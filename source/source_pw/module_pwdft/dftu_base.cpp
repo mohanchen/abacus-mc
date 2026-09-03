@@ -48,8 +48,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
     ModuleBase::TITLE("Plus_U_Base", "init_base");
 
 #ifndef __MPI
-    std::cout << "DFT+U module is only accessible in mpi version" << std::endl;
-    exit(0);
+    ModuleBase::WARNING_QUIT("Plus_U_Base::init_base", "DFT+U module is only accessible in MPI version");
 #endif
 
     this->nspin = nspin;
