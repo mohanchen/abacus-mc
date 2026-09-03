@@ -1,7 +1,11 @@
-// Pre-include standard library headers pulled in by write_dmk.h so their
-// include guards are already set when '#define private public' is active.
-// Otherwise the macro corrupts <sstream>/<fstream> and the build fails with
-// "'...__xfer_bufptrs' redeclared with different access".
+// Pre-include every standard-library header reachable from write_dmk.h so
+// their include guards are already set before '#define private public' is
+// active. The macro renames the 'private'/'public' keywords, so any system
+// header parsed while it is defined gets corrupted and the build fails with
+// "'...__xfer_bufptrs' redeclared with different access". write_dmk.h pulls
+// in <sstream> indirectly via global_variable.h -> <iomanip> ->
+// bits/quoted_string.h, so <iomanip> must be pre-included too.
+#include <iomanip>
 #include <sstream>
 #include <fstream>
 #include <iostream>
