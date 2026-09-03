@@ -17,27 +17,15 @@
 class ReadRhogTest : public ::testing::Test
 {
   protected:
-    ModulePW::PW_Basis* rhopw = nullptr;
-    std::complex<double>** rhog = nullptr;
+    ModulePW::PW_Basis rhopw;
+    std::vector<std::vector<std::complex<double>>> rhog_data;
+    std::vector<std::complex<double>*> rhog;
     Parallel::ParaWorld pw_world = Parallel::make_pw_world();
 
     virtual void SetUp()
     {
-        rhopw = new ModulePW::PW_Basis;
-        rhog = new std::complex<double>*[1];
-        rhog[0] = new std::complex<double>[1471];
-    }
-    virtual void TearDown()
-    {
-        if (rhopw != nullptr) {
-            delete rhopw;
-}
-        if (rhog[0] != nullptr) {
-            delete[] rhog[0];
-}
-        if (rhog != nullptr) {
-            delete[] rhog;
-}
+        rhog_data.resize(1, std::vector<std::complex<double>>(1471));
+        rhog.push_back(rhog_data[0].data());
     }
 };
 
@@ -46,14 +34,14 @@ TEST_F(ReadRhogTest, ReadRhog)
 {
     std::string filename = "./support/charge-density.dat";
 #ifdef __MPI
-    rhopw->initmpi(GlobalV::NPROC_IN_POOL, GlobalV::RANK_IN_POOL, MPI_COMM_WORLD);
+    rhopw.initmpi(pw_world.size(), pw_world.rank(), pw_world.comm());
 #endif
-    rhopw->initgrids(6.5, ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0), 120);
-    rhopw->initparameters(false, 120);
-    rhopw->setuptransform();
-    rhopw->collect_local_pw();
+    rhopw.initgrids(6.5, ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0), 120);
+    rhopw.initparameters(false, 120);
+    rhopw.setuptransform();
+    rhopw.collect_local_pw();
 
-    bool result = ModuleIO::read_rhog(filename, rhopw, 1, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world);
 
     EXPECT_TRUE(result);
     EXPECT_DOUBLE_EQ(rhog[0][0].real(), -1.0304462993299456e-05);
@@ -70,7 +58,7 @@ TEST_F(ReadRhogTest, NotFoundFile)
     std::string filename = "notfound.txt";
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, 1, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -90,10 +78,10 @@ TEST_F(ReadRhogTest, NotFoundFile)
 TEST_F(ReadRhogTest, InconsistentGammaOnly)
 {
     std::string filename = "./support/charge-density.dat";
-    rhopw->gamma_only = true;
+    rhopw.gamma_only = true;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, 2, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
@@ -116,10 +104,10 @@ TEST_F(ReadRhogTest, InconsistentGammaOnly)
 TEST_F(ReadRhogTest, SomePWMissing)
 {
     std::string filename = "./support/charge-density.dat";
-    rhopw->npwtot = 2000;
+    rhopw.npwtot = 2000;
 
     GlobalV::ofs_warning.open("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, rhopw, 1, rhog, pw_world);
+    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world);
     GlobalV::ofs_warning.close();
 
     std::ifstream ifs_running("test_read_rhog.txt");
