@@ -77,7 +77,7 @@ TEST_F(ReadRhogTest, ReadRhog)
     std::string filename = "./support/charge-density.dat";
     setup_pw_basis();
 
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
+    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
 
     EXPECT_TRUE(result);
     EXPECT_DOUBLE_EQ(rhog[0][0].real(), -1.0304462993299456e-05);
@@ -94,10 +94,10 @@ TEST_F(ReadRhogTest, NotFoundFile)
     std::string filename = "notfound.txt";
 
     open_warning("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
+    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
     close_warning();
 
-    std::string expected_content = " ModuleIO::read_rhog  warning : Can't open file notfound.txt\n";
+    std::string expected_content = " elecstate::read_rhog  warning : Can't open file notfound.txt\n";
     EXPECT_FALSE(result);
     EXPECT_EQ(read_warning_file("test_read_rhog.txt"), expected_content);
     std::remove("test_read_rhog.txt");
@@ -110,12 +110,12 @@ TEST_F(ReadRhogTest, InconsistentGammaOnly)
     rhopw.gamma_only = true;
 
     open_warning("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world, &warning_stream);
+    bool result = elecstate::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world, &warning_stream);
     close_warning();
 
     std::string expected_content
-        = " ModuleIO::read_rhog  warning : some planewaves in file are not used\n ModuleIO::read_rhog  warning : some "
-          "spin channels in file are missing\n ModuleIO::read_rhog  warning : gamma_only read from file is "
+        = " elecstate::read_rhog  warning : some planewaves in file are not used\n elecstate::read_rhog  warning : some "
+          "spin channels in file are missing\n elecstate::read_rhog  warning : gamma_only read from file is "
           "inconsistent with INPUT\n";
 
     EXPECT_FALSE(result);
@@ -130,10 +130,10 @@ TEST_F(ReadRhogTest, SomePWMissing)
     rhopw.npwtot = 2000;
 
     open_warning("test_read_rhog.txt");
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
+    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
     close_warning();
 
-    std::string expected_content = " ModuleIO::read_rhog  warning : some planewaves in file are missing\n";
+    std::string expected_content = " elecstate::read_rhog  warning : some planewaves in file are missing\n";
     EXPECT_TRUE(result);
     EXPECT_EQ(read_warning_file("test_read_rhog.txt"), expected_content);
     std::remove("test_read_rhog.txt");
@@ -143,7 +143,7 @@ TEST_F(ReadRhogTest, SomePWMissing)
 TEST_F(ReadRhogTest, OsNullptrSilent)
 {
     std::string filename = "notfound.txt";
-    bool result = ModuleIO::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
+    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
     EXPECT_FALSE(result);
 }
 
@@ -158,7 +158,7 @@ TEST_F(ReadRhogTest, WriteRoundTrip)
     std::string tmpfile = "test_rhog_roundtrip.dat";
 
     // write
-    bool write_result = ModuleIO::write_rhog(
+    bool write_result = elecstate::write_rhog(
         tmpfile, rhopw.gamma_only, &rhopw, 1,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -170,7 +170,7 @@ TEST_F(ReadRhogTest, WriteRoundTrip)
     std::vector<std::complex<double>*> rhog_read;
     rhog_read.push_back(rhog_read_data[0].data());
 
-    bool read_result = ModuleIO::read_rhog(tmpfile, &rhopw, 1, rhog_read.data(), pw_world, nullptr);
+    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 1, rhog_read.data(), pw_world, nullptr);
     EXPECT_TRUE(read_result);
 
     // compare: within MPI precision tolerance
@@ -194,7 +194,7 @@ TEST_F(ReadRhogTest, WriteFileFail)
     rhog_data[0].assign(rhopw.npw, std::complex<double>(1.0, 0.0));
 
     // try to write to a directory path (not a file) — should fail
-    bool result = ModuleIO::write_rhog(
+    bool result = elecstate::write_rhog(
         "/tmp", rhopw.gamma_only, &rhopw, 1,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -222,7 +222,7 @@ TEST_F(ReadRhogTest, WriteRoundTripNspin2)
     std::string tmpfile = "test_rhog_roundtrip_nspin2.dat";
 
     // write nspin=2
-    bool write_result = ModuleIO::write_rhog(
+    bool write_result = elecstate::write_rhog(
         tmpfile, rhopw.gamma_only, &rhopw, 2,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -235,7 +235,7 @@ TEST_F(ReadRhogTest, WriteRoundTripNspin2)
     rhog_read.push_back(rhog_read_data[0].data());
     rhog_read.push_back(rhog_read_data[1].data());
 
-    bool read_result = ModuleIO::read_rhog(tmpfile, &rhopw, 2, rhog_read.data(), pw_world, nullptr);
+    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 2, rhog_read.data(), pw_world, nullptr);
     EXPECT_TRUE(read_result);
 
     int diff_count = 0;
@@ -250,6 +250,129 @@ TEST_F(ReadRhogTest, WriteRoundTripNspin2)
         }
     }
     EXPECT_EQ(diff_count, 0) << diff_count << " planewave values differ after nspin=2 round-trip";
+
+    std::remove(tmpfile.c_str());
+}
+
+// Test write_rhog with nspin=4, round-trip all 4 channels
+TEST_F(ReadRhogTest, WriteRoundTripNspin4)
+{
+    setup_pw_basis();
+
+    rhog_data.resize(4, std::vector<std::complex<double>>(rhopw.npw));
+    rhog.clear();
+    for (int is = 0; is < 4; ++is)
+    {
+        rhog.push_back(rhog_data[is].data());
+    }
+
+    // initialize distinct values for each spin channel
+    for (int is = 0; is < 4; ++is)
+    {
+        for (int ig = 0; ig < rhopw.npw; ++ig)
+        {
+            rhog_data[is][ig] = std::complex<double>((is + 1) * 1.0 * ig, (is + 1) * 0.1 * ig);
+        }
+    }
+
+    std::string tmpfile = "test_rhog_roundtrip_nspin4.dat";
+
+    bool write_result = elecstate::write_rhog(
+        tmpfile, rhopw.gamma_only, &rhopw, 4,
+        ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
+        rhog.data(), pw_world, nullptr);
+    EXPECT_TRUE(write_result);
+
+    // read back as nspin=4
+    std::vector<std::vector<std::complex<double>>> rhog_read_data(
+        4, std::vector<std::complex<double>>(rhopw.npw));
+    std::vector<std::complex<double>*> rhog_read;
+    for (int is = 0; is < 4; ++is)
+    {
+        rhog_read.push_back(rhog_read_data[is].data());
+    }
+
+    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 4, rhog_read.data(), pw_world, nullptr);
+    EXPECT_TRUE(read_result);
+
+    int diff_count = 0;
+    for (int is = 0; is < 4; ++is)
+    {
+        for (int ig = 0; ig < rhopw.npw; ++ig)
+        {
+            if (std::abs(rhog[is][ig] - rhog_read[is][ig]) > 1e-10)
+            {
+                ++diff_count;
+            }
+        }
+    }
+    EXPECT_EQ(diff_count, 0) << diff_count << " planewave values differ after nspin=4 round-trip";
+
+    std::remove(tmpfile.c_str());
+}
+
+// Test the special path L173-181: file nspin=2 read as input nspin=4
+// Expected behavior: rhog[0] preserved, rhog[1] and rhog[2] zeroed,
+// rhog[3] <- old rhog[1]
+TEST_F(ReadRhogTest, ReadRhogNspin2To4SpecialPath)
+{
+    setup_pw_basis();
+
+    // Step 1: write a nspin=2 binary with known values
+    rhog_data.resize(2, std::vector<std::complex<double>>(rhopw.npw));
+    rhog.clear();
+    rhog.push_back(rhog_data[0].data());
+    rhog.push_back(rhog_data[1].data());
+
+    for (int ig = 0; ig < rhopw.npw; ++ig)
+    {
+        rhog_data[0][ig] = std::complex<double>(10.0 + ig, 0.0);
+        rhog_data[1][ig] = std::complex<double>(20.0 + ig, 0.0);
+    }
+
+    std::string tmpfile = "test_rhog_nspin2_to_4.dat";
+
+    bool write_result = elecstate::write_rhog(
+        tmpfile, rhopw.gamma_only, &rhopw, 2,
+        ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
+        rhog.data(), pw_world, nullptr);
+    EXPECT_TRUE(write_result);
+
+    // Step 2: read back as nspin=4 — triggers the L173-181 special path
+    std::vector<std::vector<std::complex<double>>> rhog_read_data(
+        4, std::vector<std::complex<double>>(rhopw.npw));
+    std::vector<std::complex<double>*> rhog_read;
+    for (int is = 0; is < 4; ++is)
+    {
+        rhog_read.push_back(rhog_read_data[is].data());
+    }
+
+    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 4, rhog_read.data(), pw_world, nullptr);
+    EXPECT_TRUE(read_result);
+
+    // Verify the special transformation at L173-181:
+    // rhog[0]  <- file spin 0
+    // rhog[1]  <- ZEROED (was file spin 1, then ZEROS)
+    // rhog[2]  <- ZEROED
+    // rhog[3]  <- file spin 1 (copied before ZEROS)
+    for (int ig = 0; ig < rhopw.npw; ++ig)
+    {
+        // rhog[0] should match original spin 0
+        EXPECT_NEAR(rhog_read_data[0][ig].real(), 10.0 + ig, 1e-10);
+        EXPECT_NEAR(rhog_read_data[0][ig].imag(), 0.0, 1e-10);
+
+        // rhog[1] should be zeroed
+        EXPECT_NEAR(rhog_read_data[1][ig].real(), 0.0, 1e-10);
+        EXPECT_NEAR(rhog_read_data[1][ig].imag(), 0.0, 1e-10);
+
+        // rhog[2] should be zeroed
+        EXPECT_NEAR(rhog_read_data[2][ig].real(), 0.0, 1e-10);
+        EXPECT_NEAR(rhog_read_data[2][ig].imag(), 0.0, 1e-10);
+
+        // rhog[3] should equal original spin 1 (copied before zero)
+        EXPECT_NEAR(rhog_read_data[3][ig].real(), 20.0 + ig, 1e-10);
+        EXPECT_NEAR(rhog_read_data[3][ig].imag(), 0.0, 1e-10);
+    }
 
     std::remove(tmpfile.c_str());
 }

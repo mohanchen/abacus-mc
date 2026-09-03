@@ -1,8 +1,8 @@
 #include "source_base/module_out/binstream.h"
-#include "source_base/global_function.h"
 #include "source_base/vector3.h"
 #include "source_base/module_parallel/para_mpi_func.h"
 #include "rhog_io.h"
+#include <algorithm>
 #include <numeric>
 #include <unistd.h>
 
@@ -20,13 +20,34 @@ inline void warn(std::ostream* os,
 }
 } // namespace
 
-bool ModuleIO::read_rhog(const std::string& filename,
+bool elecstate::read_rhog(const std::string& filename,
                          const ModulePW::PW_Basis* pw_rhod,
                          const int nspin,
                          std::complex<double>** rhog,
                          const Parallel::ParaWorld& pw_world,
                          std::ostream* os_warning)
 {
+    if (pw_rhod == nullptr)
+    {
+        warn(os_warning, pw_world, "elecstate::read_rhog", "pw_rhod is null");
+        return false;
+    }
+    if (rhog == nullptr)
+    {
+        warn(os_warning, pw_world, "elecstate::read_rhog", "rhog is null");
+        return false;
+    }
+    if (nspin <= 0 || nspin > 4)
+    {
+        warn(os_warning, pw_world, "elecstate::read_rhog", "nspin must be 1, 2, or 4");
+        return false;
+    }
+    if (pw_rhod->nx <= 0 || pw_rhod->ny <= 0 || pw_rhod->nz <= 0)
+    {
+        warn(os_warning, pw_world, "elecstate::read_rhog", "PW_Basis grid dimensions must be positive");
+        return false;
+    }
+
     const int nx = pw_rhod->nx;
     const int ny = pw_rhod->ny;
     const int nz = pw_rhod->nz;
@@ -52,7 +73,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
 
     if (error)
     {
-        warn(os_warning, pw_world, "ModuleIO::read_rhog", "Can't open file " + filename);
+        warn(os_warning, pw_world, "elecstate::read_rhog", "Can't open file " + filename);
         return false;
     }
 
@@ -69,15 +90,15 @@ bool ModuleIO::read_rhog(const std::string& filename,
         }
         if (npwtot_in > pw_rhod->npwtot)
         {
-            warn(os_warning, pw_world, "ModuleIO::read_rhog", "some planewaves in file are not used");
+            warn(os_warning, pw_world, "elecstate::read_rhog", "some planewaves in file are not used");
         }
         else if (npwtot_in < pw_rhod->npwtot)
         {
-            warn(os_warning, pw_world, "ModuleIO::read_rhog", "some planewaves in file are missing");
+            warn(os_warning, pw_world, "elecstate::read_rhog", "some planewaves in file are missing");
         }
         if (nspin_in < nspin)
         {
-            warn(os_warning, pw_world, "ModuleIO::read_rhog", "some spin channels in file are missing");
+            warn(os_warning, pw_world, "elecstate::read_rhog", "some spin channels in file are missing");
         }
     }
 
@@ -85,7 +106,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
 
     if (error)
     {
-        warn(os_warning, pw_world, "ModuleIO::read_rhog", "gamma_only read from file is inconsistent with INPUT");
+        warn(os_warning, pw_world, "elecstate::read_rhog", "gamma_only read from file is inconsistent with INPUT");
         return false;
     }
 
@@ -115,7 +136,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
     // set to zero
     for (int is = 0; is < nspin; ++is)
     {
-        ModuleBase::GlobalFunc::ZEROS(rhog[is], pw_rhod->npw);
+        std::fill(rhog[is], rhog[is] + pw_rhod->npw, std::complex<double>(0.0, 0.0));
     }
     // maps ixyz tp ig
     std::vector<int> fftixyz2ig(pw_rhod->nxyz, -1); // map isz to ig.
@@ -176,8 +197,8 @@ bool ModuleIO::read_rhog(const std::string& filename,
             {
                 rhog[3][ig] = rhog[1][ig];
             }
-            ModuleBase::GlobalFunc::ZEROS(rhog[1], pw_rhod->npw);
-            ModuleBase::GlobalFunc::ZEROS(rhog[2], pw_rhod->npw);
+            std::fill(rhog[1], rhog[1] + pw_rhod->npw, std::complex<double>(0.0, 0.0));
+            std::fill(rhog[2], rhog[2] + pw_rhod->npw, std::complex<double>(0.0, 0.0));
         }
     }
 
@@ -188,7 +209,7 @@ bool ModuleIO::read_rhog(const std::string& filename,
     return true;
 }
 
-bool ModuleIO::write_rhog(const std::string& fchg,
+bool elecstate::write_rhog(const std::string& fchg,
                           const bool gamma_only,
                           const ModulePW::PW_Basis* pw_rho,
                           const int nspin,
@@ -197,6 +218,22 @@ bool ModuleIO::write_rhog(const std::string& fchg,
                           const Parallel::ParaWorld& pw_world,
                           std::ostream* os_warning)
 {
+    if (pw_rho == nullptr)
+    {
+        warn(os_warning, pw_world, "elecstate::write_rhog", "pw_rho is null");
+        return false;
+    }
+    if (rhog == nullptr)
+    {
+        warn(os_warning, pw_world, "elecstate::write_rhog", "rhog is null");
+        return false;
+    }
+    if (nspin <= 0 || nspin > 4)
+    {
+        warn(os_warning, pw_world, "elecstate::write_rhog", "nspin must be 1, 2, or 4");
+        return false;
+    }
+
     // only rank 0 in the domain writes the header; all ranks cooperate
     // on sequential writes synchronized by barriers.
     const int irank = pw_world.rank();
@@ -216,7 +253,7 @@ bool ModuleIO::write_rhog(const std::string& fchg,
         ofs.open(fchg, std::ios::binary);
         if (!ofs)
         {
-            warn(os_warning, pw_world, "ModuleIO::write_rhog", "File I/O failure: cannot open file " + fchg);
+            warn(os_warning, pw_world, "elecstate::write_rhog", "File I/O failure: cannot open file " + fchg);
             return false;
         }
         ofs.write(reinterpret_cast<char*>(&size), sizeof(size));

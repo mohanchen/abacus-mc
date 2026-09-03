@@ -42,7 +42,7 @@
  *    rho   
  */
 
-namespace ModuleIO
+namespace elecstate
 {
 
 bool read_rhog(const std::string& filename,
@@ -61,6 +61,6 @@ bool write_rhog(const std::string& fchg,
                 const Parallel::ParaWorld& pw_world,
                 std::ostream* os_warning);
 
-} // namespace ModuleIO
+} // namespace elecstate
 
 #endif

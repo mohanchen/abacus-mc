@@ -243,7 +243,7 @@ void ESolver_FP::iter_finish(UnitCell& ucell, const int istep, int& iter, bool& 
             // Only pool 0 writes the rhog file (rhog is identical across pools).
             if (GlobalV::MY_POOL == 0)
             {
-                ModuleIO::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-CHARGE-DENSITY.restart",
+                elecstate::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-CHARGE-DENSITY.restart",
                                      PARAM.globalv.gamma_only_pw,
                                      this->pw_rhod,
                                      this->inp_->nspin,
@@ -264,7 +264,7 @@ void ESolver_FP::iter_finish(UnitCell& ucell, const int istep, int& iter, bool& 
                 }
                 if (GlobalV::MY_POOL == 0)
                 {
-                    ModuleIO::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-TAU-DENSITY.restart",
+                    elecstate::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-TAU-DENSITY.restart",
                                          PARAM.globalv.gamma_only_pw,
                                          this->pw_rhod,
                                          this->inp_->nspin,
