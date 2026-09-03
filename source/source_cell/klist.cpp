@@ -4,76 +4,12 @@
  */
 #include "klist.h"
 
+#include "klist_io.h"
 #include "source_base/formatter.h"
 #include "source_base/parallel_common.h"
 #include "source_base/parallel_global.h"
 #include "source_base/parallel_reduce.h"
 #include "source_cell/module_symmetry/symmetry.h"
-
-// Free formatting helpers for the IBZ reduction tables. Defined in this
-// file (not in a separate TU) because many test targets across the tree
-// compile klist.cpp alone; a separate TU would need registering everywhere.
-// Deliberately not static and not in an anonymous namespace.
-namespace KListSymm
-{
-
-std::string ibz_kpt_table(const int nkstot,
-                          const std::vector<ModuleBase::Vector3<double>>& kvec_d,
-                          const std::vector<int>& ibz_index,
-                          const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz)
-{
-    std::stringstream ss;
-    ss << " " << std::setw(40) << "nkstot"
-       << " = " << nkstot << std::setw(66) << "ibzkpt" << std::endl;
-    std::string table;
-    table += "K-POINTS REDUCTION ACCORDING TO SYMMETRY\n";
-    table += FmtCore::format("%8s%12s%12s%12s%8s%12s%12s%12s\n",
-                             "KPT",
-                             "DIRECT_X",
-                             "DIRECT_Y",
-                             "DIRECT_Z",
-                             "IBZ",
-                             "DIRECT_X",
-                             "DIRECT_Y",
-                             "DIRECT_Z");
-    for (int i = 0; i < nkstot; ++i)
-    {
-        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8d%12.8f%12.8f%12.8f\n",
-                                 i + 1,
-                                 kvec_d[i].x,
-                                 kvec_d[i].y,
-                                 kvec_d[i].z,
-                                 ibz_index[i] + 1,
-                                 kvec_d_ibz[ibz_index[i]].x,
-                                 kvec_d_ibz[ibz_index[i]].y,
-                                 kvec_d_ibz[ibz_index[i]].z);
-    }
-    ss << table << std::endl;
-    return ss.str();
-}
-
-std::string ibz_wk_table(const int nkstot_ibz,
-                         const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
-                         const std::vector<double>& wk_ibz,
-                         const std::vector<int>& ibz2bz)
-{
-    std::string table;
-    table += "\n K-POINTS REDUCTION ACCORDING TO SYMMETRY\n";
-    table += FmtCore::format("%8s%12s%12s%12s%8s%8s\n", "IBZ", "DIRECT_X", "DIRECT_Y", "DIRECT_Z", "WEIGHT", "ibz2bz");
-    for (int ik = 0; ik < nkstot_ibz; ik++)
-    {
-        table += FmtCore::format("%8d%12.8f%12.8f%12.8f%8.4f%8d\n",
-                                 ik + 1,
-                                 kvec_d_ibz[ik].x,
-                                 kvec_d_ibz[ik].y,
-                                 kvec_d_ibz[ik].z,
-                                 wk_ibz[ik],
-                                 ibz2bz[ik]);
-    }
-    return table;
-}
-
-} // namespace KListSymm
 
 void K_Vectors::cal_ik_global()
 {
@@ -509,75 +445,18 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
 
 void K_Vectors::interpolate_k_between(std::ifstream& ifk, std::vector<ModuleBase::Vector3<double>>& kvec)
 {
-    // how many special points.
-    int nks_special = this->nkstot;
+    // Thin wrapper: the interpolation itself is the this-free KListIO::interp_line;
+    // here we only size the member containers and copy the results back.
+    const KListIO::LineK line = KListIO::interp_line(ifk, this->nkstot);
 
-    // number of points to the next k points
-    std::vector<int> nkl(nks_special, 0);
+    this->nkstot = line.nks_total;
+    this->renew(this->nkstot * this->spin_mult); // mohan fix bug 2009-09-01
 
-    // coordinates of special points.
-    std::vector<ModuleBase::Vector3<double>> ks(nks_special);
-
-    // recalculate nkstot.
-    nkstot = 0;
-    /* ISSUE#3482: to distinguish different kline segments */
-    std::vector<int> kpt_segids;
-    kl_segids.clear();
-    kl_segids.shrink_to_fit();
-    int kpt_segid = 0;
-    for (int iks = 0; iks < nks_special; iks++)
+    for (int i = 0; i < this->nkstot; i++)
     {
-        ifk >> ks[iks].x;
-        ifk >> ks[iks].y;
-        ifk >> ks[iks].z;
-        ModuleBase::GlobalFunc::READ_VALUE(ifk, nkl[iks]);
-
-        if (nkl[iks] <= 0)
-        {
-            ModuleBase::WARNING_QUIT("K_Vectors::interpolate_k_between",
-                                     "Line-mode interpolation counts must be positive.");
-        }
-        nkstot += nkl[iks];
-        /* ISSUE#3482: to distinguish different kline segments */
-        if ((nkl[iks] == 1) && (iks != (nks_special - 1))) {
-            kpt_segid++;
-        }
-        kpt_segids.push_back(kpt_segid);
+        kvec[i] = line.kpts[i];
     }
-    if (nkl[nks_special - 1] != 1)
-    {
-        ModuleBase::WARNING_QUIT("K_Vectors::interpolate_k_between",
-                                 "The final line-mode k-point must have an interpolation count of 1.");
-    }
-
-    // std::cout << " nkstot = " << nkstot << std::endl;
-    this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
-
-    int count = 0;
-    for (int iks = 1; iks < nks_special; iks++)
-    {
-        double dxs = (ks[iks].x - ks[iks - 1].x) / nkl[iks - 1];
-        double dys = (ks[iks].y - ks[iks - 1].y) / nkl[iks - 1];
-        double dzs = (ks[iks].z - ks[iks - 1].z) / nkl[iks - 1];
-        for (int is = 0; is < nkl[iks - 1]; is++)
-        {
-            kvec[count].x = ks[iks - 1].x + is * dxs;
-            kvec[count].y = ks[iks - 1].y + is * dys;
-            kvec[count].z = ks[iks - 1].z + is * dzs;
-            kl_segids.push_back(kpt_segids[iks - 1]); /* ISSUE#3482: to distinguish different kline segments */
-            ++count;
-        }
-    }
-
-    // deal with the last special k point.
-    kvec[count].x = ks[nks_special - 1].x;
-    kvec[count].y = ks[nks_special - 1].y;
-    kvec[count].z = ks[nks_special - 1].z;
-    kl_segids.push_back(kpt_segids[nks_special - 1]); /* ISSUE#3482: to distinguish different kline segments */
-    ++count;
-
-    assert(count == nkstot);
-    assert(kl_segids.size() == nkstot); /* ISSUE#3482: to distinguish different kline segments */
+    this->kl_segids = line.segids; /* ISSUE#3482: to distinguish different kline segments */
 }
 
 void K_Vectors::update_use_ibz(const int& nkstot_ibz,
@@ -776,10 +655,10 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
 #endif
 
     // output in kpoints file
-    skpt = KListSymm::ibz_kpt_table(this->nkstot, this->kvec_d, this->ibz_index, kvec_d_ibz);
+    skpt = KListIO::ibz_kpt_table(this->nkstot, this->kvec_d, this->ibz_index, kvec_d_ibz);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Number of irreducible k-points", nkstot_ibz);
 
-    GlobalV::ofs_running << KListSymm::ibz_wk_table(nkstot_ibz, kvec_d_ibz, wk_ibz, ibz2bz) << std::endl;
+    GlobalV::ofs_running << KListIO::ibz_wk_table(nkstot_ibz, kvec_d_ibz, wk_ibz, ibz2bz) << std::endl;
 
     // resize the kpoint container according to nkstot_ibz
     if (use_symm || this->get_is_mp())
