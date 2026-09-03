@@ -45,6 +45,7 @@ list(APPEND objects
     write_init.cpp
     fp_energy.cpp
     occupy.cpp
+    occ_matrix.cpp
     param_update.cpp
     setup_estate_pw.cpp
     update_pot.cpp
