@@ -84,6 +84,24 @@ public:
         return std::unique_ptr<ParaWorld>(new ParaWorld(tag));
     }
 
+#ifdef __MPI
+    /**
+     * @brief Build a domain wrapping an MPI communicator.
+     *
+     * Factory for setup functions that need to create ParaWorld objects
+     * from split communicators.
+     */
+    static ParaWorld make_mpi(const std::string& tag, const MPI_Comm& comm)
+    {
+        return ParaWorld(tag, comm);
+    }
+
+    static std::unique_ptr<ParaWorld> make_mpi_ptr(const std::string& tag, const MPI_Comm& comm)
+    {
+        return std::unique_ptr<ParaWorld>(new ParaWorld(tag, comm));
+    }
+#endif
+
 protected:
     /**
      * @brief Construct a serial (single-process) domain.

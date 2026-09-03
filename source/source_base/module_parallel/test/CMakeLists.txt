@@ -45,6 +45,11 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_BASE_para_setup
+  SOURCES para_setup_test.cpp ../para_setup.cpp ../para_world.cpp ../para_collection.cpp
+)
+
+AddTest(
   TARGET MODULE_BASE_para_world_mpi
   LIBS MPI::MPI_CXX
   SOURCES para_world_mpi_test.cpp ../para_world.cpp
