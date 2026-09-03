@@ -632,6 +632,8 @@ TEST_F(KlistTest, SetKupKdown)
     const std::string kmesh_type = "gamma";
     const double koffset[3] = {0.0, 0.0, 0.0};
     std::string k_file = "./support/KPT4";
+
+    // case A: physical nspin=1  -> spin_mult=1 (no doubling).
     kv->spin_mult = 1;
     kv->read_kpoints(ucell, k_file, gamma_only_local, kspacing, kmesh_type, koffset, GlobalV::ofs_running);
     kv->set_kup_and_kdw(GlobalV::ofs_running);
@@ -639,15 +641,17 @@ TEST_F(KlistTest, SetKupKdown)
     {
         EXPECT_EQ(kv->isk[ik], 0);
     }
-    kv->spin_mult = 4;
+
+    // case B: physical nspin=4 (non-collinear) maps to spin_mult=1 at
+    // K_Vectors::set() time; non-collinear does not double the k-point list,
+    // so the correct spin_mult is still 1. We bypass set() here, so set the
+    // mapped value directly.
+    kv->spin_mult = 1;
     kv->read_kpoints(ucell, k_file, gamma_only_local, kspacing, kmesh_type, koffset, GlobalV::ofs_running);
     kv->set_kup_and_kdw(GlobalV::ofs_running);
     for (int ik = 0; ik < 5; ik++)
     {
         EXPECT_EQ(kv->isk[ik], 0);
-        EXPECT_EQ(kv->isk[ik + 5], 0);
-        EXPECT_EQ(kv->isk[ik + 10], 0);
-        EXPECT_EQ(kv->isk[ik + 15], 0);
     }
     kv->spin_mult = 2;
     kv->read_kpoints(ucell, k_file, gamma_only_local, kspacing, kmesh_type, koffset, GlobalV::ofs_running);

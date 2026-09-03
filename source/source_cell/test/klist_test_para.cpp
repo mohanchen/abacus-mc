@@ -183,8 +183,8 @@ TEST_F(KlistParaTest, Set)
     symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, GlobalV::ofs_running, 1e-6, 1, "scf", cal_symm_repr);
     // read KPT
     std::string k_file = "./support/KPT1";
-    // set klist
-    kv->spin_mult = 1;
+    // note: do NOT pre-set kv->spin_mult here; set() takes the physical
+    // nspin as input and performs the 4->1 mapping internally.
     if (GlobalV::NPROC == 4)
     {
         GlobalV::KPAR = 2;
@@ -207,7 +207,7 @@ TEST_F(KlistParaTest, Set)
     const double kspacing[3] = {0.0, 0.0, 0.0};
     const std::string kmesh_type = "gamma";
     const double koffset[3] = {0.0, 0.0, 0.0};
-    kv->set(ucell, symm, k_file, kv->spin_mult, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
+    kv->set(ucell, symm, k_file, /*nspin_in*/ 1, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
     EXPECT_EQ(kv->get_nkstot(), 35);
     EXPECT_EQ(kv->get_nkstot_full(), 512);
     EXPECT_GT(kv->get_nkstot_full(), kv->get_nkstot());
@@ -307,8 +307,8 @@ TEST_F(KlistParaTest, SetAfterVC)
     symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, GlobalV::ofs_running, 1e-6, 1, "scf", cal_symm_repr);
     // read KPT
     std::string k_file = "./support/KPT1";
-    // set klist
-    kv->spin_mult = 1;
+    // note: do NOT pre-set kv->spin_mult here; set() takes the physical
+    // nspin as input and performs the 4->1 mapping internally.
     if (GlobalV::NPROC == 4)
     {
         GlobalV::KPAR = 1;
@@ -331,7 +331,7 @@ TEST_F(KlistParaTest, SetAfterVC)
     const double kspacing[3] = {0.0, 0.0, 0.0};
     const std::string kmesh_type = "gamma";
     const double koffset[3] = {0.0, 0.0, 0.0};
-    kv->set(ucell, symm, k_file, kv->spin_mult, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
+    kv->set(ucell, symm, k_file, /*nspin_in*/ 1, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
     EXPECT_EQ(kv->get_nkstot(), 35);
     EXPECT_TRUE(kv->kc_done);
     EXPECT_TRUE(kv->kd_done);
