@@ -225,7 +225,7 @@ bool K_Vectors::read_kpoints(const UnitCell& ucell,
 
     // 1. Overwrite the KPT file and default K-point information if needed
     // mohan add 2010-09-04
-    this->generate_kfile(ucell, fn, gamma_only_local, kspacing, kmesh_type, koffset);
+    this->generate_kfile(ucell, fn, gamma_only_local, kspacing, kmesh_type, koffset, GlobalV::ofs_warning);
 
     // 2. Read the KPT file and build the k-point list
     return this->parse_kfile(fn, ofs_running);
@@ -236,11 +236,12 @@ void K_Vectors::generate_kfile(const UnitCell& ucell,
                                const bool gamma_only_local,
                                const double kspacing[3],
                                const std::string& kmesh_type,
-                               const double koffset[3])
+                               const double koffset[3],
+                               std::ofstream& ofs_warning)
 {
     if (gamma_only_local)
     {
-        GlobalV::ofs_warning << " Auto generating k-points file: " << fn << std::endl;
+        ofs_warning << " Auto generating k-points file: " << fn << std::endl;
         std::ofstream ofs(fn.c_str());
         ofs << "K_POINTS" << std::endl;
         ofs << "0" << std::endl;
@@ -263,7 +264,7 @@ void K_Vectors::generate_kfile(const UnitCell& ucell,
         int nk2 = std::max(1, static_cast<int>(b2 * ModuleBase::TWO_PI / kspacing[1] / ucell.lat0 + 1));
         int nk3 = std::max(1, static_cast<int>(b3 * ModuleBase::TWO_PI / kspacing[2] / ucell.lat0 + 1));
 
-        GlobalV::ofs_warning << " Generate k-points file according to KSPACING: " << fn << std::endl;
+        ofs_warning << " Generate k-points file according to KSPACING: " << fn << std::endl;
         std::ofstream ofs(fn.c_str());
         ofs << "K_POINTS" << std::endl;
         ofs << "0" << std::endl;

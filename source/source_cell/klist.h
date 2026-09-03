@@ -256,7 +256,8 @@ public:
                         const bool gamma_only_local,
                         const double kspacing[3],
                         const std::string& kmesh_type,
-                        const double koffset[3]);
+                        const double koffset[3],
+                        std::ofstream& ofs_warning);
 
     /**
      * @brief Read the KPT file and build the k-point list from it.
