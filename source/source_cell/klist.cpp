@@ -564,9 +564,7 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
     // if the operations does not already included
     // inverse operation, double it.
     //===============================================
-    bool include_inv = false;
     std::vector<ModuleBase::Matrix3> kgmatrix(48 * 2);
-    ModuleBase::Matrix3 inv(-1, 0, 0, 0, -1, 0, 0, 0, -1);
 
     ModuleBase::Matrix3 k_vec;
     int nrotkm = 0;
@@ -580,39 +578,9 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
         return;
     }
 
-    // check whether the inverse operation is already included
-    for (int i = 0; i < nrotkm; ++i)
-    {
-        if (kgmatrix[i] == inv)
-        {
-            include_inv = true;
-        }
-    }
-
-    if (symm.magnetic_nspin4)
-    {
-        // (nspin=4, magnetic) Time reversal Theta reverses the magnetization, so Theta alone is
-        // NOT a symmetry and the blanket "-k is always equivalent" doubling below is invalid.
-        // Only the antiunitary elements Theta*g with g in the moment-reversing coset belong to
-        // the Shubnikov group; append exactly those, keeping the index convention
-        // j + nrotk  <->  Theta * gmatrix_anti[j]  (decoded the same way in restore_dm).
-        // (nspin=2 is unaffected: there the antiunitary operation is plain conjugation K, which
-        //  does not touch the spin, so D_s(-k)=D_s^*(k) holds even for a ferromagnet and the
-        //  generic branch below stays correct.)
-        for (int j = 0; j < symm.nrotk_anti; ++j)
-        {
-            kgmatrix[j + symm.nrotk] = inv * symm.kgmatrix_anti[j];
-        }
-        nrotkm = symm.nrotk + symm.nrotk_anti;
-    }
-    else if (!include_inv)
-    {
-        for (int i = 0; i < symm.nrotk; ++i)
-        {
-            kgmatrix[i + symm.nrotk] = inv * symm.kgmatrix[i];
-        }
-        nrotkm = 2 * symm.nrotk;
-    }
+    // append time-reversal-related operations (Theta*g for magnetic
+    // nspin=4; -g otherwise unless inversion is already present)
+    nrotkm = KListIO::append_time_reversal_ops(symm, kgmatrix, nrotkm);
 
     // convert kgmatrix to k-lattice
     std::vector<ModuleBase::Matrix3> kkmatrix(nrotkm);

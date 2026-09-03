@@ -9,6 +9,7 @@
 #include "source_base/formatter.h"
 #include "source_base/global_function.h"
 #include "source_base/parallel_common.h"
+#include "source_cell/module_symmetry/symmetry.h"
 #include "source_cell/reciprocal_grid.h"
 
 #include <sstream>
@@ -205,6 +206,46 @@ void build_kstars(const std::vector<ModuleBase::Vector3<double>>& kvec_d,
         }
         kstars[exist_number].insert(std::make_pair(isym, kvec_d[i]));
     }
+}
+
+int append_time_reversal_ops(const ModuleSymmetry::Symmetry& symm,
+                             std::vector<ModuleBase::Matrix3>& kgmatrix,
+                             const int nrotkm)
+{
+    const ModuleBase::Matrix3 inv{-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0};
+
+    bool include_inv = false;
+    for (int i = 0; i < nrotkm; ++i)
+    {
+        if (kgmatrix[i] == inv)
+        {
+            include_inv = true;
+        }
+    }
+
+    if (symm.magnetic_nspin4)
+    {
+        // (nspin=4, magnetic) Time reversal Theta reverses the magnetization,
+        // so Theta alone is NOT a symmetry; only the antiunitary Theta*g
+        // elements with g in the moment-reversing coset belong to the
+        // Shubnikov group. The same index convention j + nrotk is decoded
+        // in restore_dm. (nspin=2 is unaffected: there the antiunitary
+        // operation is plain conjugation K, which leaves D_s(-k)=D_s*(k).)
+        for (int j = 0; j < symm.nrotk_anti; ++j)
+        {
+            kgmatrix[j + symm.nrotk] = inv * symm.kgmatrix_anti[j];
+        }
+        return symm.nrotk + symm.nrotk_anti;
+    }
+    if (!include_inv)
+    {
+        for (int i = 0; i < symm.nrotk; ++i)
+        {
+            kgmatrix[i + symm.nrotk] = inv * symm.kgmatrix[i];
+        }
+        return 2 * symm.nrotk;
+    }
+    return nrotkm;
 }
 
 void pack_kpts(const std::vector<int>& isk,

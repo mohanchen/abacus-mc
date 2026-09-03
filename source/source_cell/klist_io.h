@@ -10,6 +10,11 @@
 #include <string>
 #include <vector>
 
+namespace ModuleSymmetry
+{
+class Symmetry; // full definition only needed in klist_io.cpp
+}
+
 /// this-free helpers extracted from K_Vectors, kept in a separate TU so they
 /// can be unit-tested and reused without dragging in the K_Vectors class.
 namespace KListIO
@@ -64,6 +69,16 @@ void build_kstars(const std::vector<ModuleBase::Vector3<double>>& kvec_d,
                   double epsilon,
                   const std::function<bool(double, double)>& equal,
                   std::vector<std::map<int, ModuleBase::Vector3<double>>>& kstars);
+
+/// Append the time-reversal-related k-point symmetry operations into
+/// `kgmatrix` (the slots right after the first `nrotkm` operations must be
+/// available). For magnetic nspin=4 systems the antiunitary Theta*g coset
+/// is appended from `symm.kgmatrix_anti`; otherwise the inverted -g ops are
+/// appended unless inversion is already present. Returns the updated total
+/// operation count.
+int append_time_reversal_ops(const ModuleSymmetry::Symmetry& symm,
+                             std::vector<ModuleBase::Matrix3>& kgmatrix,
+                             int nrotkm);
 
 /// Flatten k-point arrays into contiguous MPI buffers (x,y,z interleaved).
 /// this-free; used on rank 0 before broadcasting in K_Vectors::mpi_k.
