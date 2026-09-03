@@ -73,6 +73,9 @@ add_library(
     module_mixing/plain_mixing.cpp
     module_mixing/pulay_mixing.cpp
     module_mixing/broyden_mixing.cpp
+    module_parallel/para_world.cpp
+    module_parallel/para_collection.cpp
+    module_parallel/para_kmesh_world.cpp
     ${LIBM_SRC}
 )
 
@@ -95,6 +98,7 @@ if(BUILD_TESTING)
     add_subdirectory(module_mixing/test)
     add_subdirectory(module_device/test)
     add_subdirectory(module_grid/test)
+    add_subdirectory(module_parallel/test)
     if (ENABLE_ABACUS_LIBM)
       add_subdirectory(libm/test)
     endif()
