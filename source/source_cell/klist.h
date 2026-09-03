@@ -14,7 +14,7 @@
  * Inherits the spin-free common reciprocal-grid functionality
  * (mesh generation, coordinate conversion, weights, printing, star/IBZ
  * reduction primitive) from ModuleCell::ReciprocalGrid and adds the
- * spin expansion (isk, nspin doubling) and the k-point IBZ logic.
+ * spin expansion (isk, spin-multiplicity doubling) and the k-point IBZ logic.
  */
 class K_Vectors : public ModuleCell::ReciprocalGrid
 {
@@ -92,9 +92,11 @@ public:
         return this->k_nkstot;
     }
 
-    int get_nspin() const
+    /// @brief Spin multiplicity of the k-point list: 1 (no doubling, also for
+    ///        non-collinear nspin=4) or 2 (LSDA, k points split into up/down).
+    int get_spin_mult() const
     {
-        return this->nspin;
+        return this->spin_mult;
     }
 
     std::string get_k_kword() const
@@ -115,11 +117,6 @@ public:
     void set_nkstot_full(int value)
     {
         this->nkstot_full = value;
-    }
-
-    void set_nspin(int value)
-    {
-        this->nspin = value;
     }
 
     bool get_is_mp() const
@@ -153,21 +150,23 @@ public:
                         std::ofstream& ofs_running);
 
     /**
-     * @brief Sets up the k-points after a volume change.
+     * @brief Updates the k-points after a volume change.
      *
-     * Sets the number of spins, converts the direct coordinates (which are
-     * kept across the volume change) to the new Cartesian coordinates using
-     * the new reciprocal lattice, prints the resulting table, and marks both
-     * coordinate sets as up to date.
+     * Converts the direct coordinates (which are kept across the volume
+     * change) to the new Cartesian coordinates using the new reciprocal
+     * lattice, prints the resulting table, and marks both coordinate sets
+     * as up to date. The spin multiplicity is not touched: it was fixed by
+     * set() and never changes during a run.
      *
-     * @param nspin_in The number of spins. 1 for non-spin-polarized
-     *                 calculations and 2 for spin-polarized calculations.
      * @param G The new reciprocal lattice matrix.
      */
-    void set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G, std::ofstream& ofs_running);
+    void set_after_vc(const ModuleBase::Matrix3& G, std::ofstream& ofs_running);
 
   private:
-    int nspin = 0;             ///< number of spin states
+    /// Spin multiplicity used to size the k-point list: 1 for input nspin 1
+    /// or 4 (non-collinear k points are not doubled) and 2 for input nspin 2
+    /// (LSDA up/down k points). This is NOT the physical nspin (1/2/4).
+    int spin_mult = 0;
     double koffset[3] = {0.0}; ///< used only in automatic k-points
 
     /**
@@ -182,10 +181,10 @@ public:
      */
     void renew(const int& kpoint_number) override;
 
-    /// @brief Spin multiplicity used when generating the mesh (1/2 for nspin 1/2).
+    /// @brief Spin multiplicity used when generating the mesh (1/2).
     int spin_factor() const override
     {
-        return this->nspin;
+        return this->spin_mult;
     }
 
     /**

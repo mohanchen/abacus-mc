@@ -184,7 +184,7 @@ TEST_F(KlistParaTest, Set)
     // read KPT
     std::string k_file = "./support/KPT1";
     // set klist
-    kv->nspin = 1;
+    kv->spin_mult = 1;
     if (GlobalV::NPROC == 4)
     {
         GlobalV::KPAR = 2;
@@ -207,7 +207,7 @@ TEST_F(KlistParaTest, Set)
     const double kspacing[3] = {0.0, 0.0, 0.0};
     const std::string kmesh_type = "gamma";
     const double koffset[3] = {0.0, 0.0, 0.0};
-    kv->set(ucell, symm, k_file, kv->nspin, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
+    kv->set(ucell, symm, k_file, kv->spin_mult, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
     EXPECT_EQ(kv->get_nkstot(), 35);
     EXPECT_EQ(kv->get_nkstot_full(), 512);
     EXPECT_GT(kv->get_nkstot_full(), kv->get_nkstot());
@@ -308,7 +308,7 @@ TEST_F(KlistParaTest, SetAfterVC)
     // read KPT
     std::string k_file = "./support/KPT1";
     // set klist
-    kv->nspin = 1;
+    kv->spin_mult = 1;
     if (GlobalV::NPROC == 4)
     {
         GlobalV::KPAR = 1;
@@ -331,7 +331,7 @@ TEST_F(KlistParaTest, SetAfterVC)
     const double kspacing[3] = {0.0, 0.0, 0.0};
     const std::string kmesh_type = "gamma";
     const double koffset[3] = {0.0, 0.0, 0.0};
-    kv->set(ucell, symm, k_file, kv->nspin, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
+    kv->set(ucell, symm, k_file, kv->spin_mult, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, kmesh_type, koffset);
     EXPECT_EQ(kv->get_nkstot(), 35);
     EXPECT_TRUE(kv->kc_done);
     EXPECT_TRUE(kv->kd_done);
@@ -352,7 +352,7 @@ TEST_F(KlistParaTest, SetAfterVC)
     }
     // call set_after_vc here
     kv->kc_done = false;
-    kv->set_after_vc(kv->nspin, ucell.G, GlobalV::ofs_running);
+    kv->set_after_vc(ucell.G, GlobalV::ofs_running);
     EXPECT_TRUE(kv->kc_done);
     EXPECT_TRUE(kv->kd_done);
     // clear

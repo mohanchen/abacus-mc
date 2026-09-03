@@ -1,6 +1,5 @@
-#include "source_io/module_dm/write_dmk.h"
-
 #define private public
+#include "source_io/module_dm/write_dmk.h"
 #include "source_io/module_parameter/parameter.h"
 #undef private
 #include "source_base/global_variable.h"
@@ -144,7 +143,7 @@ TEST(DMKTest,WriteDMK) {
     kv.set_nkstot(1);
     kv.set_nkstot_full(1);
     kv.set_nks(1);
-    kv.set_nspin(2);
+    kv.spin_mult = 2;
     kv.kvec_c.resize(1);
     kv.kvec_c[0].x = 0.0;
     kv.kvec_c[0].y = 0.0;

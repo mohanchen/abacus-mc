@@ -48,7 +48,7 @@ TEST_F(PrintInfoTest, SetupParameters)
 	UcellTestPrepare utp = UcellTestLib["Si"];
 	ucell = utp.SetUcellInfo();
 	std::string k_file = "./support/KPT";
-	kv->nspin = 1;
+	kv->spin_mult = 1;
 	const bool gamma_only_local = false;
 	const double kspacing[3] = {0.0, 0.0, 0.0};
 	const std::string kmesh_type = "gamma";

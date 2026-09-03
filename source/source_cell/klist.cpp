@@ -15,7 +15,7 @@ void K_Vectors::cal_ik_global()
     const int my_pool = this->para_k.my_pool;
     this->ik2iktot.resize(this->nks);
 #ifdef __MPI
-    if(this->nspin == 2)
+    if(this->spin_mult == 2)
     {
         for (int ik = 0; ik < this->nks / 2; ++ik)
         {
@@ -72,16 +72,17 @@ void K_Vectors::set(const UnitCell& ucell,
     const bool gamma_only_local_ = gamma_only_local;
     const std::string kmesh_type_ = kmesh_type;
 
-    // (1) set nspin, read kpoints.
-    this->nspin = nspin_in;
-    ModuleBase::GlobalFunc::OUT(ofs, "nspin", nspin);
+    // (1) print nspin, set the k-point spin multiplicity, read kpoints.
+    ModuleBase::GlobalFunc::OUT(ofs, "nspin", nspin_in);
 
-    if (this->nspin != 1 && this->nspin != 2 && this->nspin != 4)
+    if (nspin_in != 1 && nspin_in != 2 && nspin_in != 4)
     {
         ModuleBase::WARNING_QUIT("K_Vectors::set", "Only available for nspin = 1 or 2 or 4");
     }
 
-    this->nspin = (this->nspin == 4) ? 1 : this->nspin;
+    // non-collinear (nspin=4) does not double the k-point list, so its
+    // k-point spin multiplicity is the same as for the unpolarized case.
+    this->spin_mult = (nspin_in == 4) ? 1 : nspin_in;
 
     bool read_succesfully = this->read_kpoints(ucell, k_file_name, gamma_only_local_, kspacing, kmesh_type_, koffset, ofs);
 #ifdef __MPI
@@ -195,8 +196,8 @@ void K_Vectors::set(const UnitCell& ucell,
     return;
 }
 
-// 1.reset the size of the K-point container according to nspin and nkstot
-// 2.reserve space for nspin>2 (symmetry)
+// 1.reset the size of the K-point container according to spin_mult and nkstot
+// 2.reserve space for spin_mult>2 (symmetry)
 void K_Vectors::renew(const int& kpoint_number)
 {
     ReciprocalGrid::renew(kpoint_number);
@@ -377,7 +378,7 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
     {
         if (kword == "Cartesian" || kword == "C") // Cartesian coordinates
         {
-            this->renew(nkstot * nspin); // mohan fix bug 2009-09-01
+            this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
             for (int i = 0; i < nkstot; i++)
             {
                 ifk >> kvec_c[i].x >> kvec_c[i].y >> kvec_c[i].z;
@@ -388,7 +389,7 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
         }
         else if (kword == "Direct" || kword == "D") // Direct coordinates
         {
-            this->renew(nkstot * nspin); // mohan fix bug 2009-09-01
+            this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
             for (int i = 0; i < nkstot; i++)
             {
                 ifk >> kvec_d[i].x >> kvec_d[i].y >> kvec_d[i].z;
@@ -485,7 +486,7 @@ void K_Vectors::interpolate_k_between(std::ifstream& ifk, std::vector<ModuleBase
     }
 
     // std::cout << " nkstot = " << nkstot << std::endl;
-    this->renew(nkstot * nspin); // mohan fix bug 2009-09-01
+    this->renew(nkstot * this->spin_mult); // mohan fix bug 2009-09-01
 
     int count = 0;
     for (int iks = 1; iks < nks_special; iks++)
@@ -530,7 +531,7 @@ void K_Vectors::update_use_ibz(const int& nkstot_ibz,
 
     ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot now", nkstot);
 
-    this->kvec_d.resize(this->nkstot * nspin); // qianrui fix a bug 2021-7-13 for nspin=2 in set_kup_and_kdw()
+    this->kvec_d.resize(this->nkstot * this->spin_mult); // qianrui fix a bug 2021-7-13 for spin_mult=2 in set_kup_and_kdw()
 
     for (int i = 0; i < this->nkstot; ++i)
     {
@@ -557,10 +558,10 @@ void K_Vectors::set_kup_and_kdw(std::ofstream& ofs_running)
     // on output: the number of points is doubled and xk and wk in the
     // first (nks/2) positions correspond to up spin
     // those in the second (nks/2) ones correspond to down spin
-    // nspin can only be 1 or 2 here: K_Vectors::set() maps nspin=4
+    // spin_mult can only be 1 or 2 here: K_Vectors::set() maps nspin=4
     // (non-collinear) to 1 before the k-list is built.
     //=========================================================================
-    switch (nspin)
+    switch (this->spin_mult)
     {
     case 1:
 
@@ -764,11 +765,12 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
     return;
 }
 
-void K_Vectors::set_after_vc(const int& nspin_in, const ModuleBase::Matrix3& G, std::ofstream& ofs_running)
+void K_Vectors::set_after_vc(const ModuleBase::Matrix3& G, std::ofstream& ofs_running)
 {
     ofs_running << "\n SETUP K-POINTS" << std::endl;
-    this->set_nspin(nspin_in);
-    ModuleBase::GlobalFunc::OUT(ofs_running, "nspin", this->get_nspin());
+    // spin_mult is fixed by set() and does not change during a run, so the
+    // volume-change update only recomputes the Cartesian coordinates.
+    ModuleBase::GlobalFunc::OUT(ofs_running, "nspin", this->get_spin_mult());
 
     // set cartesian k vectors.
     this->kvec_d2c(G);
@@ -802,7 +804,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
 
     Parallel_Common::bcast_bool(this->kd_done);
 
-    Parallel_Common::bcast_int(this->nspin);
+    Parallel_Common::bcast_int(this->spin_mult);
 
     Parallel_Common::bcast_int(this->nkstot);
 
@@ -866,7 +868,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running)
     Parallel_Common::bcast_double(kvec_c_full_aux.data(), this->nkstot_full * 3);
 
     // process k point data in each processor
-    this->renew(this->nks * this->nspin);
+    this->renew(this->nks * this->spin_mult);
 
     // distribute
     int k_index = 0;
