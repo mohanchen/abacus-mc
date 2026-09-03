@@ -274,6 +274,21 @@ public:
     bool parse_kfile(const std::string& fn, std::ofstream& ofs_running);
 
     /**
+     * @brief Read the Monkhorst-Pack/Gamma mesh block and generate the mesh.
+     *
+     * Handles the nkstot == 0 form of the KPT file: validates the type
+     * keyword, reads the mesh dimensions and optional offsets, then calls
+     * Monkhorst_Pack to fill the k-point list.
+     *
+     * @param ifk stream positioned after the type keyword
+     * @param kword type keyword (Gamma / Monkhorst-Pack / MP / mp)
+     * @param ofs_running running log stream
+     * @return false (after warning) when the keyword is neither Gamma nor
+     *         Monkhorst-Pack; true when the mesh was generated.
+     */
+    bool read_mp_mesh(std::ifstream& ifk, const std::string& kword, std::ofstream& ofs_running);
+
+    /**
      * @brief Adds k-points linearly between special points.
      *
      * This function adds k-points linearly between special points in the Brillouin zone.

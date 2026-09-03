@@ -325,38 +325,10 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
     }
 
     // 2.2 Select different methods and generate K-point grid
-    int k_type = 0;
+    bool kpts_ok = true;
     if (nkstot == 0) // nkstot==0, use monkhorst_pack. add by dwan
     {
-        if (kword == "Gamma") // MP(Gamma)
-        {
-            is_mp = true;
-            k_type = 0;
-            ModuleBase::GlobalFunc::OUT(ofs_running, "Input type of k points", "Monkhorst-Pack(Gamma)");
-        }
-        else if (kword == "Monkhorst-Pack" || kword == "MP" || kword == "mp")
-        {
-            is_mp = true;
-            k_type = 1;
-            ModuleBase::GlobalFunc::OUT(ofs_running, "Input type of k points", "Monkhorst-Pack");
-        }
-        else
-        {
-            GlobalV::ofs_warning << " Error: neither Gamma nor Monkhorst-Pack." << std::endl;
-            return false;
-        }
-
-        ifk >> nmp[0] >> nmp[1] >> nmp[2];
-
-        this->koffset[0] = 0;
-        this->koffset[1] = 0;
-        this->koffset[2] = 0;
-        if (!(ifk >> this->koffset[0] >> this->koffset[1] >> this->koffset[2]))
-        {
-            ModuleBase::WARNING("K_Vectors::read_kpoints", "Missing k-point offsets in the k-points file.");
-        }
-
-        this->Monkhorst_Pack(nmp, this->koffset, k_type);
+        kpts_ok = this->read_mp_mesh(ifk, kword, ofs_running);
     }
     else if (nkstot > 0) // nkstot>0, the K-point information is clearly set
     {
@@ -411,11 +383,51 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running)
         }
     }
 
+    if (!kpts_ok)
+    {
+        return false;
+    }
+
     this->nkstot_full = this->nks = this->nkstot;
 
     ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot", nkstot);
     return true;
 } // END SUBROUTINE
+
+bool K_Vectors::read_mp_mesh(std::ifstream& ifk, const std::string& kword, std::ofstream& ofs_running)
+{
+    int k_type = 0;
+    if (kword == "Gamma") // MP(Gamma)
+    {
+        is_mp = true;
+        k_type = 0;
+        ModuleBase::GlobalFunc::OUT(ofs_running, "Input type of k points", "Monkhorst-Pack(Gamma)");
+    }
+    else if (kword == "Monkhorst-Pack" || kword == "MP" || kword == "mp")
+    {
+        is_mp = true;
+        k_type = 1;
+        ModuleBase::GlobalFunc::OUT(ofs_running, "Input type of k points", "Monkhorst-Pack");
+    }
+    else
+    {
+        GlobalV::ofs_warning << " Error: neither Gamma nor Monkhorst-Pack." << std::endl;
+        return false;
+    }
+
+    ifk >> nmp[0] >> nmp[1] >> nmp[2];
+
+    this->koffset[0] = 0;
+    this->koffset[1] = 0;
+    this->koffset[2] = 0;
+    if (!(ifk >> this->koffset[0] >> this->koffset[1] >> this->koffset[2]))
+    {
+        ModuleBase::WARNING("K_Vectors::read_kpoints", "Missing k-point offsets in the k-points file.");
+    }
+
+    this->Monkhorst_Pack(nmp, this->koffset, k_type);
+    return true;
+}
 
 void K_Vectors::interpolate_k_between(std::ifstream& ifk, std::vector<ModuleBase::Vector3<double>>& kvec)
 {
