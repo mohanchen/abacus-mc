@@ -109,9 +109,9 @@ AddTest(
 )
 
 AddTest(
-  TARGET MODULE_ESTATE_read_rhog_test
+  TARGET MODULE_ESTATE_test_rhog_io
   LIBS parameter base device planewave_serial
-  SOURCES read_rhog_test.cpp ../rhog_io.cpp ../../source_basis/module_pw/test/test_tool.cpp
+  SOURCES test_rhog_io.cpp ../rhog_io.cpp ../../source_basis/module_pw/test/test_tool.cpp
 )
 
 endif()
