@@ -37,7 +37,7 @@ bool elecstate::read_rhog(const std::string& filename,
         warn(os_warning, pw_world, "elecstate::read_rhog", "rhog is null");
         return false;
     }
-    if (nspin <= 0 || nspin > 4)
+    if (nspin != 1 && nspin != 2 && nspin != 4)
     {
         warn(os_warning, pw_world, "elecstate::read_rhog", "nspin must be 1, 2, or 4");
         return false;
@@ -228,7 +228,7 @@ bool elecstate::write_rhog(const std::string& fchg,
         warn(os_warning, pw_world, "elecstate::write_rhog", "rhog is null");
         return false;
     }
-    if (nspin <= 0 || nspin > 4)
+    if (nspin != 1 && nspin != 2 && nspin != 4)
     {
         warn(os_warning, pw_world, "elecstate::write_rhog", "nspin must be 1, 2, or 4");
         return false;
