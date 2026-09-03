@@ -40,8 +40,8 @@ AddTest(
 )
 
 AddTest(
-  TARGET MODULE_BASE_para_comm
-  SOURCES para_comm_test.cpp ../para_comm.cpp ../para_world.cpp
+  TARGET MODULE_BASE_para_mpi_func
+  SOURCES para_mpi_func_test.cpp ../para_mpi_func.cpp ../para_world.cpp
 )
 
 AddTest(
@@ -64,15 +64,15 @@ AddTest(
 target_compile_definitions(MODULE_BASE_para_collection_mpi PRIVATE __MPI)
 
 AddTest(
-  TARGET MODULE_BASE_para_comm_mpi
+  TARGET MODULE_BASE_para_mpi_func_mpi
   LIBS MPI::MPI_CXX
-  SOURCES para_comm_mpi_test.cpp ../para_comm.cpp ../para_world.cpp
+  SOURCES para_mpi_func_mpi_test.cpp ../para_mpi_func.cpp ../para_world.cpp
 )
-target_compile_definitions(MODULE_BASE_para_comm_mpi PRIVATE __MPI)
+target_compile_definitions(MODULE_BASE_para_mpi_func_mpi PRIVATE __MPI)
 
 file(COPY para_world_mpi_test.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY para_collection_mpi_test.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY para_comm_mpi_test.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY para_mpi_func_mpi_test.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 find_program(BASH bash)
 add_test(NAME MODULE_BASE_para_world_mpi_test
       COMMAND ${BASH} para_world_mpi_test.sh
@@ -82,7 +82,7 @@ add_test(NAME MODULE_BASE_para_collection_mpi_test
       COMMAND ${BASH} para_collection_mpi_test.sh
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-add_test(NAME MODULE_BASE_para_comm_mpi_test
-      COMMAND ${BASH} para_comm_mpi_test.sh
+add_test(NAME MODULE_BASE_para_mpi_func_mpi_test
+      COMMAND ${BASH} para_mpi_func_mpi_test.sh
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

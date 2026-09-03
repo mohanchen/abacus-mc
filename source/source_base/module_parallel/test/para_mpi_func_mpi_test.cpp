@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 
-#include "../para_comm.h"
+#include "../para_mpi_func.h"
 #include "../para_world.h"
 
-TEST(ParaCommMpiTest, BcastIntFromRoot)
+TEST(ParaMpiFuncMpiTest, BcastIntFromRoot)
 {
     auto world = Parallel::ParaWorld::serial("test");
     int v = (world.rank() == 0) ? 99 : 0;
@@ -11,7 +11,7 @@ TEST(ParaCommMpiTest, BcastIntFromRoot)
     EXPECT_EQ(v, 99);
 }
 
-TEST(ParaCommMpiTest, ReduceAllSum)
+TEST(ParaMpiFuncMpiTest, ReduceAllSum)
 {
     auto world = Parallel::ParaWorld::serial("test");
     int v = 1; // each rank contributes 1
@@ -19,7 +19,7 @@ TEST(ParaCommMpiTest, ReduceAllSum)
     EXPECT_EQ(v, 1); // serial: size=1
 }
 
-TEST(ParaCommMpiTest, GatherIntAll)
+TEST(ParaMpiFuncMpiTest, GatherIntAll)
 {
     auto world = Parallel::ParaWorld::serial("test");
     int v = world.rank();

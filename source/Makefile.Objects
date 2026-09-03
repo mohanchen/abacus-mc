@@ -787,7 +787,7 @@ OBJS_PARALLEL=parallel_common.o\
     para_rgrid_world.o\
     para_bgroup_world.o\
     para_matrix_world.o\
-    para_comm.o\
+    para_mpi_func.o\
     para_setup.o
 
 OBJS_SRCPW=h_ewald_pw.o\

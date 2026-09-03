@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 
-#include "../para_comm.h"
+#include "../para_mpi_func.h"
 #include "../para_world.h"
 
-TEST(ParaCommTest, BcastIntSerial)
+TEST(ParaMpiFuncTest, BcastIntSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     int v = 42;
@@ -11,7 +11,7 @@ TEST(ParaCommTest, BcastIntSerial)
     EXPECT_EQ(v, 42);
 }
 
-TEST(ParaCommTest, BcastDoubleSerial)
+TEST(ParaMpiFuncTest, BcastDoubleSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     double v = 3.14;
@@ -19,7 +19,7 @@ TEST(ParaCommTest, BcastDoubleSerial)
     EXPECT_DOUBLE_EQ(v, 3.14);
 }
 
-TEST(ParaCommTest, BcastBoolSerial)
+TEST(ParaMpiFuncTest, BcastBoolSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     bool v = true;
@@ -27,7 +27,7 @@ TEST(ParaCommTest, BcastBoolSerial)
     EXPECT_TRUE(v);
 }
 
-TEST(ParaCommTest, BcastStringSerial)
+TEST(ParaMpiFuncTest, BcastStringSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     std::string s = "hello";
@@ -35,7 +35,7 @@ TEST(ParaCommTest, BcastStringSerial)
     EXPECT_EQ(s, "hello");
 }
 
-TEST(ParaCommTest, BcastIntArraySerial)
+TEST(ParaMpiFuncTest, BcastIntArraySerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     int v[] = {1, 2, 3};
@@ -45,7 +45,7 @@ TEST(ParaCommTest, BcastIntArraySerial)
     EXPECT_EQ(v[2], 3);
 }
 
-TEST(ParaCommTest, BcastComplexSerial)
+TEST(ParaMpiFuncTest, BcastComplexSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     std::complex<double> v(1.0, 2.0);
@@ -54,7 +54,7 @@ TEST(ParaCommTest, BcastComplexSerial)
     EXPECT_DOUBLE_EQ(v.imag(), 2.0);
 }
 
-TEST(ParaCommTest, BcastCharArraySerial)
+TEST(ParaMpiFuncTest, BcastCharArraySerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     char buf[] = "abc";
@@ -62,7 +62,7 @@ TEST(ParaCommTest, BcastCharArraySerial)
     EXPECT_EQ(buf[0], 'a');
 }
 
-TEST(ParaCommTest, ReduceAllSerial)
+TEST(ParaMpiFuncTest, ReduceAllSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     double v = 5.0;
@@ -70,7 +70,7 @@ TEST(ParaCommTest, ReduceAllSerial)
     EXPECT_DOUBLE_EQ(v, 5.0);
 }
 
-TEST(ParaCommTest, ReduceMinMaxSerial)
+TEST(ParaMpiFuncTest, ReduceMinMaxSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     double v = 7.5;
@@ -80,7 +80,7 @@ TEST(ParaCommTest, ReduceMinMaxSerial)
     EXPECT_DOUBLE_EQ(v, 7.5);
 }
 
-TEST(ParaCommTest, GatherIntSerial)
+TEST(ParaMpiFuncTest, GatherIntSerial)
 {
     auto world = Parallel::ParaWorld::serial("test");
     int v = 99;
@@ -89,7 +89,7 @@ TEST(ParaCommTest, GatherIntSerial)
     EXPECT_EQ(all[0], 99);
 }
 
-TEST(ParaCommTest, InvalidWorldIsNoop)
+TEST(ParaMpiFuncTest, InvalidWorldIsNoop)
 {
     auto world = Parallel::ParaWorld::serial("");
     EXPECT_FALSE(world.valid());

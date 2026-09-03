@@ -1,4 +1,4 @@
-#include "para_comm.h"
+#include "para_mpi_func.h"
 
 #include <cstring>
 

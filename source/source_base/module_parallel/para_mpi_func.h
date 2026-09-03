@@ -1,5 +1,5 @@
-#ifndef PARA_COMM_H
-#define PARA_COMM_H
+#ifndef PARA_MPI_FUNC_H
+#define PARA_MPI_FUNC_H
 
 #include <complex>
 #include <string>
@@ -8,6 +8,12 @@
 
 namespace Parallel
 {
+
+// Domain-aware MPI communication functions.
+// Each function takes the target communication domain (const ParaWorld&)
+// explicitly instead of hardcoding MPI_COMM_WORLD/POOL_WORLD.
+// In serial builds all functions are no-ops (gather_int copies locally);
+// invalid/empty domains are safely skipped.
 
 // ========== Broadcast ==========
 
@@ -42,4 +48,4 @@ void gather_int(int& v, int* all, const ParaWorld& world);
 
 } // namespace Parallel
 
-#endif // PARA_COMM_H
+#endif // PARA_MPI_FUNC_H
