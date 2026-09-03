@@ -127,7 +127,7 @@ void unpack_kpts(const std::vector<int>& isk_aux,
 /// K_Vectors::set() before IBZ reduction.
 void fill_full_kvec(bool kc_done,
                     bool kd_done,
-                    int nkstot_full,
+                    int nkstot_nospin,
                     const ModuleBase::Matrix3& reciprocal_vec,
                     const std::vector<ModuleBase::Vector3<double>>& kvec_c,
                     const std::vector<ModuleBase::Vector3<double>>& kvec_d,

@@ -18,6 +18,7 @@ void K_Vectors::set(const UnitCell& ucell,
                     const ModuleBase::Matrix3& reciprocal_vec,
                     const ModuleBase::Matrix3& latvec,
                     std::ofstream& ofs,
+                    std::ofstream& ofs_warning,
                     const bool use_ibz,
                     const std::string& global_out_dir,
                     const bool gamma_only_local,
@@ -65,7 +66,7 @@ void K_Vectors::set(const UnitCell& ucell,
                                                kmesh_type_,
                                                koffset,
                                                ofs,
-                                               GlobalV::ofs_warning,
+                                               ofs_warning,
                                                my_rank);
 #ifdef __MPI
     Parallel_Common::bcast_bool(read_succesfully);
@@ -82,7 +83,7 @@ void K_Vectors::set(const UnitCell& ucell,
     // complement the Cartesian coordinates of the full k-point list
     KListIO::fill_full_kvec(this->kc_done,
                             this->kd_done,
-                            this->nkstot_full,
+                            this->nkstot_nospin,
                             reciprocal_vec,
                             this->kvec_c,
                             this->kvec_d,
@@ -95,13 +96,13 @@ void K_Vectors::set(const UnitCell& ucell,
     {
         bool match = true;
         // calculate kpoints in IBZ and reduce kpoints according to symmetry
-        this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt1, match);
+        this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt1, match, my_rank, ofs);
 #ifdef __MPI
         Parallel_Common::bcast_bool(match);
 #endif
         if (!match)
         {
-            this->handle_symmetry_mismatch(ucell, symm, skpt1, match);
+            this->handle_symmetry_mismatch(ucell, symm, skpt1, match, my_rank, ofs);
         }
     }
 
@@ -109,7 +110,7 @@ void K_Vectors::set(const UnitCell& ucell,
     // Improve k point information
 
     // Complement the coordinates of k point
-    this->set_both_kvec(reciprocal_vec, latvec, skpt2, ofs);
+    this->set_both_kvec(reciprocal_vec, latvec, skpt2, ofs, ofs_warning);
 
     if (my_rank == 0)
     {
@@ -143,8 +144,8 @@ void K_Vectors::set(const UnitCell& ucell,
     this->set_kup_and_kdw(ofs);
 
     // initialize ibz_index
-    this->ibz_index.resize(this->nkstot_full);
-    for (int ik = 0; ik < this->nkstot_full; ik++)
+    this->ibz_index.resize(this->nkstot_nospin);
+    for (int ik = 0; ik < this->nkstot_nospin; ik++)
     {
         this->ibz_index[ik] = ik;
     }
@@ -167,7 +168,9 @@ void K_Vectors::set(const UnitCell& ucell,
 void K_Vectors::handle_symmetry_mismatch(const UnitCell& ucell,
                                          const ModuleSymmetry::Symmetry& symm,
                                          std::string& skpt,
-                                         bool& match)
+                                         bool& match,
+                                         const int my_rank,
+                                         std::ofstream& ofs)
 {
     std::cout << "Optimized lattice type of reciprocal lattice cannot match the optimized real lattice. "
               << std::endl;
@@ -178,7 +181,7 @@ void K_Vectors::handle_symmetry_mismatch(const UnitCell& ucell,
         std::cout << "Automatically set symmetry to 0 and continue ..." << std::endl;
         ModuleSymmetry::Symmetry::symm_flag = 0;
         match = true;
-        this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match);
+        this->reduce_by_symmetry(ucell, symm, ModuleSymmetry::Symmetry::symm_flag, skpt, match, my_rank, ofs);
     }
     else
     {
@@ -285,7 +288,7 @@ bool K_Vectors::parse_kfile(const std::string& fn, std::ofstream& ofs_running, s
         return false;
     }
 
-    this->nkstot_full = this->nks = this->nkstot;
+    this->nkstot_nospin = this->nks = this->nkstot;
 
     ModuleBase::GlobalFunc::OUT(ofs_running, "nkstot", nkstot);
     return true;
@@ -322,7 +325,8 @@ bool K_Vectors::read_mp_mesh(std::ifstream& ifk,
     this->koffset[2] = 0;
     if (!(ifk >> this->koffset[0] >> this->koffset[1] >> this->koffset[2]))
     {
-        ModuleBase::WARNING("K_Vectors::read_kpoints", "Missing k-point offsets in the k-points file.");
+        ofs_warning << " K_Vectors::read_kpoints  warning : "
+                    << "Missing k-point offsets in the k-points file." << std::endl;
     }
 
     this->Monkhorst_Pack(nmp, this->koffset, k_type);
@@ -347,11 +351,11 @@ bool K_Vectors::read_listed_kpoints(std::ifstream& ifk, const std::string& kword
     }
     if (kword == "Line_Cartesian")
     {
-        return this->setup_line_kpoints(ifk, this->kvec_c, true);
+        return this->setup_line_kpoints(ifk, this->kvec_c, true, ofs_warning);
     }
     if (kword == "Line_Direct" || kword == "L" || kword == "Line")
     {
-        return this->setup_line_kpoints(ifk, this->kvec_d, false);
+        return this->setup_line_kpoints(ifk, this->kvec_d, false, ofs_warning);
     }
 
     ofs_warning << " Error : neither Cartesian nor Direct kpoint." << std::endl;
@@ -360,12 +364,14 @@ bool K_Vectors::read_listed_kpoints(std::ifstream& ifk, const std::string& kword
 
 bool K_Vectors::setup_line_kpoints(std::ifstream& ifk,
                                    std::vector<ModuleBase::Vector3<double>>& kvec,
-                                   const bool cartesian)
+                                   const bool cartesian,
+                                   std::ofstream& ofs_warning)
 {
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
     {
-        ModuleBase::WARNING("K_Vectors::read_kpoints",
-                            "Line mode of k-points is open, please set symmetry to 0 or -1.");
+        ofs_warning << " K_Vectors::read_kpoints  warning : "
+                    << "Line mode of k-points is open, please set symmetry to 0 or -1."
+                    << std::endl;
         return false;
     }
 
@@ -403,9 +409,10 @@ void K_Vectors::interpolate_k_between(std::ifstream& ifk, std::vector<ModuleBase
 void K_Vectors::update_use_ibz(const int& nkstot_ibz,
                                const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
                                const std::vector<double>& wk_ibz,
-                               std::ofstream& ofs_running)
+                               std::ofstream& ofs_running,
+                               const int my_rank)
 {
-    if (GlobalV::MY_RANK != 0) {
+    if (my_rank != 0) {
         return;
     }
     ModuleBase::TITLE("K_Vectors", "update_use_ibz");
@@ -461,9 +468,11 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
                                    const ModuleSymmetry::Symmetry& symm,
                                    bool use_symm,
                                    std::string& skpt,
-                                   bool& match)
+                                   bool& match,
+                                   const int my_rank,
+                                   std::ofstream& ofs_running)
 {
-    if (GlobalV::MY_RANK != 0)
+    if (my_rank != 0)
     {
         return;
     }
@@ -532,14 +541,14 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
 
     // output in kpoints file
     skpt = KListIO::ibz_kpt_table(this->nkstot, this->kvec_d, this->ibz_index, kvec_d_ibz);
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Number of irreducible k-points", nkstot_ibz);
+    ModuleBase::GlobalFunc::OUT(ofs_running, "Number of irreducible k-points", nkstot_ibz);
 
-    GlobalV::ofs_running << KListIO::ibz_wk_table(nkstot_ibz, kvec_d_ibz, wk_ibz, ibz2bz) << std::endl;
+    ofs_running << KListIO::ibz_wk_table(nkstot_ibz, kvec_d_ibz, wk_ibz, ibz2bz) << std::endl;
 
     // resize the kpoint container according to nkstot_ibz
     if (use_symm || this->get_is_mp())
     {
-        this->update_use_ibz(nkstot_ibz, kvec_d_ibz, wk_ibz, GlobalV::ofs_running);
+        this->update_use_ibz(nkstot_ibz, kvec_d_ibz, wk_ibz, ofs_running, my_rank);
     }
 
     return;
@@ -588,7 +597,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running, const int my_rank, const int m
 
     Parallel_Common::bcast_int(this->nkstot);
 
-    Parallel_Common::bcast_int(this->nkstot_full);
+    Parallel_Common::bcast_int(this->nkstot_nospin);
 
     Parallel_Common::bcast_int(this->nmp, 3);
 
@@ -618,7 +627,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running, const int my_rank, const int m
     std::vector<double> wk_aux(this->nkstot);
     std::vector<double> kvec_c_aux(this->nkstot * 3);
     std::vector<double> kvec_d_aux(this->nkstot * 3);
-    std::vector<double> kvec_c_full_aux(this->nkstot_full * 3);
+    std::vector<double> kvec_c_full_aux(this->nkstot_nospin * 3);
 
     // collect and process in rank 0
     if (my_rank == 0)
@@ -642,7 +651,7 @@ void K_Vectors::mpi_k(std::ofstream& ofs_running, const int my_rank, const int m
     Parallel_Common::bcast_double(wk_aux.data(), this->nkstot);
     Parallel_Common::bcast_double(kvec_c_aux.data(), this->nkstot * 3);
     Parallel_Common::bcast_double(kvec_d_aux.data(), this->nkstot * 3);
-    Parallel_Common::bcast_double(kvec_c_full_aux.data(), this->nkstot_full * 3);
+    Parallel_Common::bcast_double(kvec_c_full_aux.data(), this->nkstot_nospin * 3);
 
     // process k point data in each processor
     this->renew(this->nks * this->spin_mult);

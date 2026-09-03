@@ -344,7 +344,7 @@ void bcast_kstars(std::vector<std::map<int, ModuleBase::Vector3<double>>>& kstar
 
 void fill_full_kvec(const bool kc_done,
                     const bool kd_done,
-                    const int nkstot_full,
+                    const int nkstot_nospin,
                     const ModuleBase::Matrix3& reciprocal_vec,
                     const std::vector<ModuleBase::Vector3<double>>& kvec_c,
                     const std::vector<ModuleBase::Vector3<double>>& kvec_d,
@@ -352,14 +352,14 @@ void fill_full_kvec(const bool kc_done,
 {
     if (!kc_done && kd_done)
     {
-        for (int ik = 0; ik < nkstot_full; ++ik)
+        for (int ik = 0; ik < nkstot_nospin; ++ik)
         {
             kvec_c_full[ik] = kvec_d[ik] * reciprocal_vec;
         }
     }
     else if (kc_done && !kd_done)
     {
-        for (int ik = 0; ik < nkstot_full; ++ik)
+        for (int ik = 0; ik < nkstot_nospin; ++ik)
         {
             kvec_c_full[ik] = kvec_c[ik];
         }

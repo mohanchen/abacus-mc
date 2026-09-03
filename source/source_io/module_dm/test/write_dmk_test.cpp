@@ -156,7 +156,7 @@ TEST(DMKTest,WriteDMK) {
     const int istep = -1;
     K_Vectors kv;
     kv.set_nkstot(1);
-    kv.set_nkstot_full(1);
+    kv.set_nkstot_nospin(1);
     kv.set_nks(1);
     kv.spin_mult = 2;
     kv.kvec_c.resize(1);

@@ -60,6 +60,7 @@ public:
         const ModuleBase::Matrix3& reciprocal_vec,
         const ModuleBase::Matrix3& latvec,
         std::ofstream& ofs,
+        std::ofstream& ofs_warning,
         const bool use_ibz,
         const std::string& global_out_dir,
         const bool gamma_only_local,
@@ -77,9 +78,9 @@ public:
         return this->nkstot;
     }
 
-    int get_nkstot_full() const
+    int get_nkstot_nospin() const
     {
-        return this->nkstot_full;
+        return this->nkstot_nospin;
     }
 
     double get_koffset(const int i) const
@@ -114,9 +115,9 @@ public:
         this->nkstot = value;
     }
 
-    void set_nkstot_full(int value)
+    void set_nkstot_nospin(int value)
     {
-        this->nkstot_full = value;
+        this->nkstot_nospin = value;
     }
 
     bool get_is_mp() const
@@ -147,7 +148,8 @@ public:
     void update_use_ibz(const int& nkstot_ibz,
                         const std::vector<ModuleBase::Vector3<double>>& kvec_d_ibz,
                         const std::vector<double>& wk_ibz,
-                        std::ofstream& ofs_running);
+                        std::ofstream& ofs_running,
+                        const int my_rank);
 
     /**
      * @brief Updates the k-points after a volume change.
@@ -206,7 +208,9 @@ public:
                             const ModuleSymmetry::Symmetry& symm,
                             bool use_symm,
                             std::string& skpt,
-                            bool& match) override;
+                            bool& match,
+                            const int my_rank,
+                            std::ofstream& ofs_running) override;
 
     /// @brief step 1 : generate kpoints
 
@@ -296,10 +300,12 @@ public:
      * @param ifk stream to read the special points from
      * @param kvec target coordinate container (kvec_c or kvec_d)
      * @param cartesian true for Line_Cartesian, false for Line_Direct
+     * @param ofs_warning warning-log stream for error messages
      */
     bool setup_line_kpoints(std::ifstream& ifk,
                             std::vector<ModuleBase::Vector3<double>>& kvec,
-                            const bool cartesian);
+                            const bool cartesian,
+                            std::ofstream& ofs_warning);
 
     /**
      * @brief Handle a reciprocal/real lattice Bravais-type mismatch after
@@ -317,7 +323,9 @@ public:
     void handle_symmetry_mismatch(const UnitCell& ucell,
                                   const ModuleSymmetry::Symmetry& symm,
                                   std::string& skpt,
-                                  bool& match);
+                                  bool& match,
+                                  const int my_rank,
+                                  std::ofstream& ofs);
 
     /**
      * @brief Adds k-points linearly between special points.
