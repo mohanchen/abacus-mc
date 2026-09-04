@@ -77,6 +77,15 @@ class OccMatMixer
      */
     void write_back(OccupationMatrix& occmat);
 
+    /**
+     * @brief Plain linear mixing for the nested-matrix (LCAO) path:
+     *        occ = beta * occ + (1 - beta) * occ_save.
+     *
+     * Operates directly on the nested OccupationMatrix blocks; the flat
+     * buffers are not used. Replaces the duplicated LCAO k/gamma call sites.
+     */
+    void mix_plain(OccupationMatrix& occmat, double beta);
+
     /// Total flat-buffer size (== Charge_Mixing::allocate_mixing_uom argument).
     int flat_size() const { return static_cast<int>(uom_.size()); }
 

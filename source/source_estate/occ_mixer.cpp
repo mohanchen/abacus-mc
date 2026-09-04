@@ -40,3 +40,10 @@ void OccMatMixer::write_back(OccupationMatrix& occmat)
     occmat.read_from_flat(*this->cell_, *this->orbital_corr_,
                           *this->index_, this->uom_);
 }
+
+void OccMatMixer::mix_plain(OccupationMatrix& occmat, const double beta)
+{
+    elecstate::mix_occ_with_save(occmat.data(), occmat.data_save(),
+                                 *this->cell_, *this->orbital_corr_,
+                                 this->nspin_, beta);
+}
