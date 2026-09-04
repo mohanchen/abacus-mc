@@ -190,8 +190,10 @@ void K_Vectors::handle_symmetry_mismatch(const UnitCell& ucell,
     }
 }
 
-// 1.reset the size of the K-point container according to spin_mult and nkstot
-// 2.reserve space for spin_mult>2 (symmetry)
+// Resize the k-point containers to kpoint_number. The base class resizes
+// kvec_c/kvec_d/kvec_c_full/wk/ngk; here we additionally resize isk.
+// Callers pass nkstot * spin_mult so spin-polarized (nspin=2) runs have
+// room for the up/down doubling done in set_kup_and_kdw().
 void K_Vectors::renew(const int& kpoint_number)
 {
     ReciprocalGrid::renew(kpoint_number);
@@ -553,9 +555,6 @@ void K_Vectors::reduce_by_symmetry(const UnitCell& ucell,
 void K_Vectors::set_after_vc(const ModuleBase::Matrix3& G, std::ofstream& ofs_running)
 {
     ofs_running << "\n SETUP K-POINTS" << std::endl;
-    // spin_mult is fixed by set() and does not change during a run, so the
-    // volume-change update only recomputes the Cartesian coordinates.
-    ModuleBase::GlobalFunc::OUT(ofs_running, "nspin", this->get_spin_mult());
 
     // set cartesian k vectors.
     this->kvec_d2c(G);
