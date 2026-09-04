@@ -196,7 +196,7 @@ OBJS_BASE=assoc_laguerre.o\
     orb_io.o\
 
 OBJS_CELL=atom_pseudo.o\
-    base_cell.o\
+    basecell.o\
     qlist.o\
     atom_spec.o\
     pseudo.o\
@@ -227,8 +227,8 @@ OBJS_CELL=atom_pseudo.o\
     read_pp_ucell.o\
     cal_wfc.o\
     cal_ux.o\
-    distributed_mdcell_reader.o\
-    md_cell.o\
+    mdcell_reader.o\
+    mdcell.o\
     cif_io.o\
     ucell_io.o\
 
