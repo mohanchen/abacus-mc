@@ -22,7 +22,7 @@ AddTest(
   SOURCES
     esolver_dp_test.cpp
     ../esolver_dp.cpp
-    ../../source_cell/base_cell.cpp
+    ../../source_cell/basecell.cpp
     ../../source_cell/cif_io.cpp
     ../../source_cell/output_log.cpp
 )

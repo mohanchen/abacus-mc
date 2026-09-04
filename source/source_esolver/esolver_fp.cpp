@@ -41,7 +41,7 @@ ESolver_FP::~ESolver_FP()
 
 void ESolver_FP::before_all_runners(BaseCell& basecell, const Input_para& inp)
 {
-    basecell.require_kind(BaseCell::Kind::unit_cell, __FUNCTION__);
+    basecell.require_kind(BaseCell::Kind::unitcell, __FUNCTION__);
     UnitCell& ucell = static_cast<UnitCell&>(basecell);
 
     this->inp_ = &inp;
@@ -114,7 +114,7 @@ void ESolver_FP::before_all_runners(BaseCell& basecell, const Input_para& inp)
     const bool gamma_only_local = PARAM.globalv.gamma_only_local;
     const double kspacing[3] = {this->inp_->kspacing[0], this->inp_->kspacing[1], this->inp_->kspacing[2]};
     const double koffset[3] = {this->inp_->koffset[0], this->inp_->koffset[1], this->inp_->koffset[2]};
-    this->kv.set(ucell, ucell.symm, inp.kpoint_file, inp.nspin, ucell.G, ucell.latvec, GlobalV::ofs_running, use_ibz, global_out_dir, gamma_only_local, kspacing, this->inp_->kmesh_type, koffset);
+    this->kv.set(ucell, ucell.symm, inp.kpoint_file, inp.nspin, ucell.G, ucell.latvec, GlobalV::ofs_running, GlobalV::ofs_warning, use_ibz, global_out_dir, gamma_only_local, kspacing, this->inp_->kmesh_type, koffset);
     ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "INIT K-POINTS");
 
     //! 8) print information
@@ -195,7 +195,7 @@ void ESolver_FP::before_scf(UnitCell& ucell, const int istep)
         }
 
         // reset k-points
-        kv.set_after_vc(this->inp_->nspin, ucell.G, GlobalV::ofs_running);
+        kv.set_after_vc(ucell.G, GlobalV::ofs_running);
         ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "INIT K-POINTS");
     }
 
@@ -290,7 +290,7 @@ void ESolver_FP::iter_finish(UnitCell& ucell, const int istep, int& iter, bool& 
 
 void ESolver_FP::after_all_runners(BaseCell& basecell)
 {
-    basecell.require_kind(BaseCell::Kind::unit_cell, __FUNCTION__);
+    basecell.require_kind(BaseCell::Kind::unitcell, __FUNCTION__);
     UnitCell& ucell = static_cast<UnitCell&>(basecell);
 
     // print out the final total energy
