@@ -56,7 +56,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
     this->orbital_corr = orbital_corr;
     this->uramping = uramping;
     this->occ_mat_ctrl = occ_mat_ctrl;
-    this->mixing_dftu = mixing_dftu;
     this->u_target = hubbard_u;
     this->u_current = hubbard_u;
     if (uramping > 0.01)

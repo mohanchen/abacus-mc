@@ -191,11 +191,6 @@ void module_charge::chgmixing_ks_lcao(const int iter, // scf iteration number
         p_chgmix->mix_reset(); // init mixing
         p_chgmix->mixing_restart_step = inp.scf_nmax + 1;
         p_chgmix->mixing_restart_count = 0;
-        // enable mixing_dftu for DFT+U occupation mixing
-        if (inp.dft_plus_u && inp.mixing_dftu)
-        {
-            dftu.enable_mixing();
-        }
         // this output will be removed once the feeature is stable
         if (dftu.get_uramping() > 0.01)
         {

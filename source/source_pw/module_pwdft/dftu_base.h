@@ -114,8 +114,6 @@ class Plus_U_Base
     void mark_occ_mat_initialized() { occ_mat_initialized = true; }
     void mark_occ_mat_dirty() { occ_mat_initialized = false; }
 
-    void enable_mixing() { mixing_dftu = 1; }
-
     /// direct access to the occupation matrix object (new write path)
     OccupationMatrix& occmat() { return occmat_; }
     const OccupationMatrix& occmat() const { return occmat_; }
@@ -134,7 +132,6 @@ class Plus_U_Base
     // --- DFT+U configuration flags ---
     double uramping = 0.0;
     int occ_mat_ctrl = 0;
-    int mixing_dftu = 0;
     int nspin = 0;
 
     // --- State flags ---
