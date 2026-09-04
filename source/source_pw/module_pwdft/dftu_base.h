@@ -114,7 +114,6 @@ class Plus_U_Base
     void mark_occ_mat_initialized() { occ_mat_initialized = true; }
     void mark_occ_mat_dirty() { occ_mat_initialized = false; }
 
-    bool is_mixing_enabled() const { return mixing_dftu != 0; }
     void enable_mixing() { mixing_dftu = 1; }
 
     /// direct access to the occupation matrix object (new write path)
@@ -158,8 +157,6 @@ class Plus_U_Base
 
     std::vector<std::complex<double>> pot_uterm_pw;
     std::vector<int> pot_uterm_pw_index;
-    std::vector<double> uom_array;
-    std::vector<double> uom_save;
 
     // Yukawa screening object; constructed only when use_yukawa() is true.
     // Owns the screening length, Slater integrals and derived U/J.

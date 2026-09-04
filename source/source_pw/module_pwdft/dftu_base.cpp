@@ -123,8 +123,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
     if (nspin == 2) pot_index *= 2;
 
     this->pot_uterm_pw.resize(pot_index, 0.0);
-    this->uom_array.resize(pot_index, 0.0);
-    this->uom_save.resize(pot_index, 0.0);
 
     // construct the occupation-matrix mixer only when mixing is enabled
     if (mixing_dftu != 0)
@@ -158,8 +156,11 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
         mark_occ_mat_initialized();
         this->occmat_.copy_to_save(cell, this->orbital_corr);
-        this->occmat_.write_save_to_flat(cell, this->orbital_corr,
-                                         this->pot_uterm_pw_index, this->uom_save);
+        if (this->has_occ_mixer())
+        {
+            // seed the mixing history with the file-loaded occupation matrix
+            this->occ_mixer().seed_save(this->occmat_);
+        }
     }
     else
     {
