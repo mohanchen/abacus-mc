@@ -3,6 +3,7 @@
 
 #include "source_base/matrix.h"
 #include "source_estate/occ_matrix.h"
+#include "source_estate/occ_mixer.h"
 #include "source_pw/module_pwdft/yukawa_screening.h"
 
 #include <complex>
@@ -120,6 +121,11 @@ class Plus_U_Base
     OccupationMatrix& occmat() { return occmat_; }
     const OccupationMatrix& occmat() const { return occmat_; }
 
+    /// access the occupation-matrix mixer (non-null only when mixing enabled)
+    OccMatMixer& occ_mixer() { return *occ_mixer_; }
+    const OccMatMixer& occ_mixer() const { return *occ_mixer_; }
+    bool has_occ_mixer() const { return occ_mixer_ != nullptr; }
+
   protected:
     // --- U values and orbital configuration (set in init_base) ---
     std::vector<double> u_current;
@@ -138,6 +144,10 @@ class Plus_U_Base
 
     // --- Occupation matrices ---
     OccupationMatrix occmat_;
+
+    // Occupation-matrix mixer; constructed only when mixing_dftu != 0.
+    // Owns the flat uom/uom_save buffers and the mixing orchestration.
+    std::unique_ptr<OccMatMixer> occ_mixer_;
 
     // --- Internal state ---
     double energy_u = 0.0;

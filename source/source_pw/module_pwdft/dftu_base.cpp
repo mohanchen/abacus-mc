@@ -126,6 +126,14 @@ void Plus_U_Base::init_base(UnitCell& cell,
     this->uom_array.resize(pot_index, 0.0);
     this->uom_save.resize(pot_index, 0.0);
 
+    // construct the occupation-matrix mixer only when mixing is enabled
+    if (mixing_dftu != 0)
+    {
+        this->occ_mixer_.reset(new OccMatMixer());
+        this->occ_mixer_->init(&cell, &this->orbital_corr,
+                               &this->pot_uterm_pw_index, nspin, pot_index);
+    }
+
     if (yukawa_potential)
     {
         this->yukawa_.reset(new YukawaScreening());

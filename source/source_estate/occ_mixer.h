@@ -6,7 +6,6 @@
 #include <vector>
 
 class UnitCell;
-class Charge_Mixing;
 
 /**
  * @brief Mixing of the DFT+U on-site occupation matrix.
@@ -22,6 +21,13 @@ class Charge_Mixing;
  *
  * An OccMatMixer instance exists only when mixing is enabled, so its
  * presence doubles as the "mixing on" flag (no mutable workflow switch).
+ *
+ * This class deliberately does NOT call Charge_Mixing itself; it only owns
+ * the flat buffers and exposes them via uom()/uom_save(). The caller (the
+ * PW driver, which already links charge_mixing) feeds these buffers to
+ * Charge_Mixing::mix_uom and then calls write_back(). Keeping Charge_Mixing
+ * out of this translation unit avoids dragging the planewave/xc dependency
+ * chain into lightweight unit tests.
  */
 class OccMatMixer
 {
@@ -65,14 +71,18 @@ class OccMatMixer
     void collect(const OccupationMatrix& occmat);
 
     /**
-     * @brief Mix uom_ against uom_save_ via Charge_Mixing (PW path), then
-     *        write the mixed result back into the occupation matrix.
-     * @param chgmix  charge-mixing object (must have allocate_mixing_uom called)
+     * @brief Write the (already mixed) uom_ buffer back into the occupation
+     *        matrix. Called after the caller has run Charge_Mixing::mix_uom.
      */
-    void mix(OccupationMatrix& occmat, Charge_Mixing* chgmix);
+    void write_back(OccupationMatrix& occmat);
 
     /// Total flat-buffer size (== Charge_Mixing::allocate_mixing_uom argument).
     int flat_size() const { return static_cast<int>(uom_.size()); }
+
+    /// Mutable access to the new / mixed flat buffer (fed to mix_uom).
+    std::vector<double>& uom() { return uom_; }
+    /// Mutable access to the previous flat buffer (fed to mix_uom).
+    std::vector<double>& uom_save() { return uom_save_; }
 
   private:
     std::vector<double> uom_;      ///< new / mixed flat occupation matrix

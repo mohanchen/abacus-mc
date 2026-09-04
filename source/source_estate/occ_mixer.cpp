@@ -1,7 +1,5 @@
 #include "source_estate/occ_mixer.h"
 
-#include "source_estate/module_charge/charge_mixing.h"
-
 void OccMatMixer::init(const UnitCell* cell,
                        const std::vector<int>* orbital_corr,
                        const std::vector<int>* flat_index,
@@ -35,9 +33,8 @@ void OccMatMixer::collect(const OccupationMatrix& occmat)
                          *this->index_, this->uom_);
 }
 
-void OccMatMixer::mix(OccupationMatrix& occmat, Charge_Mixing* chgmix)
+void OccMatMixer::write_back(OccupationMatrix& occmat)
 {
-    chgmix->mix_uom(this->uom_, this->uom_save_);
     occmat.read_from_flat(*this->cell_, *this->orbital_corr_,
                           *this->index_, this->uom_);
 }
