@@ -1,5 +1,5 @@
 #include "ctrl_output_fp.h" // use ctrl_output_fp()
-#include "../module_output/cube_io.h" // use write_vdata_palgrid
+#include "source_cell/cube_io.h" // use write_vdata_palgrid
 #include "../module_dipole/dipole_io.h" // use write_dipole
 #include "source_estate/module_charge/symm_rho.h" // use Symmetry_rho
 #include "source_hamilt/module_xc/xc_functional.h"    // use XC_Functional

@@ -111,7 +111,7 @@ AddTest(
 AddTest(
   TARGET MODULE_ESTATE_charge_extra
   LIBS parameter base device cell_info
-  SOURCES charge_extra_test.cpp ../module_charge/charge_extra.cpp ../../source_io/module_output/read_cube.cpp ../../source_io/module_output/write_cube.cpp
+  SOURCES charge_extra_test.cpp ../module_charge/charge_extra.cpp ../../source_cell/read_cube.cpp ../../source_cell/write_cube.cpp
  ../../source_base/module_fft/fft_bundle.cpp ../../source_base/module_fft/fft_cpu.cpp
 )
 
