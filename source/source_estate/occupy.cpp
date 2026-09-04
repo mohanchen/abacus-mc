@@ -2,7 +2,7 @@
 
 #include "source_base/constants.h"
 #include "source_base/mymath.h"
-#include "source_base/parallel_reduce.h"
+#include "source_base/module_parallel/para_kmesh_world.h"
 
 Occupy::Occupy()
 {
@@ -128,6 +128,7 @@ void Occupy::decision(const std::string& name, const std::string& smearing_metho
  * @param nspin number of spin components: 1 (spin-degenerate), 2 (collinear) or 4 (non-collinear).
  * @param is the spin index now.
  * @param isk distinguish k point belong to which spin.
+ * @param kmesh k-point parallel domain for cross-pool reduction.
  */
 void Occupy::iweights(
     const int nks,
@@ -140,7 +141,8 @@ void Occupy::iweights(
     ModuleBase::matrix& wg,
     const int nspin,
     const int& is, //<- is should be -1, 0, or 1. -1 means set all spins, and 0 means spin up, 1 means spin down.
-    const std::vector<int>& isk)
+    const std::vector<int>& isk,
+    const Parallel::ParaKmeshWorld& kmesh)
 {
     assert(nspin == 1 || nspin == 2 || nspin == 4);
     assert(is >= -1 && is < 2);
@@ -186,9 +188,7 @@ void Occupy::iweights(
             }
         }
     }
-#ifdef __MPI
-    Parallel_Reduce::reduce_max(ef);
-#endif
+    kmesh.reduce_max_across_pools(ef);
     return;
 }
 
@@ -207,7 +207,7 @@ void Occupy::iweights(
  * @param wg output: weight of each band at each k point
  * @param is spin
  * @param isk array to point out each k belong to which spin
- * @param npool number of k-point/band pools used for the MPI all-pool reduction (1 in serial).
+ * @param kmesh k-point parallel domain for cross-pool reduction.
  */
 void Occupy::gweights(const int nks,
                       const std::vector<double>& wk,
@@ -221,15 +221,14 @@ void Occupy::gweights(const int nks,
                       ModuleBase::matrix& wg,
                       const int& is,
                       const std::vector<int>& isk,
-                      const int npool)
+                      const Parallel::ParaKmeshWorld& kmesh)
 {
-    assert(npool >= 1);
     // ModuleBase::TITLE("Occupy","gweights");
     //===============================
     //  Calculate the Fermi energy ef
     //===============================
     //  call efermig
-    Occupy::efermig(ekb, nband, nks, nelec, wk, smearing_sigma, ngauss, ef, is, isk, npool);
+    Occupy::efermig(ekb, nband, nks, nelec, wk, smearing_sigma, ngauss, ef, is, isk, kmesh);
     demet = 0.0;
 
     for (int ik = 0; ik < nks; ik++)
@@ -274,7 +273,7 @@ void Occupy::gweights(const int nks,
  * @param ef output: fermi level
  * @param is spin
  * @param isk array to point out each k belong to which spin
- * @param npool number of k-point/band pools used for the MPI all-pool reduction (1 in serial).
+ * @param kmesh k-point parallel domain for cross-pool reduction.
  */
 void Occupy::efermig(const ModuleBase::matrix& ekb,
                      const int nband,
@@ -286,7 +285,7 @@ void Occupy::efermig(const ModuleBase::matrix& ekb,
                      double& ef,
                      const int& is,
                      const std::vector<int>& isk,
-                     const int npool)
+                     const Parallel::ParaKmeshWorld& kmesh)
 {
     // ModuleBase::TITLE("Occupy","efermig");
     //==================================================================
@@ -319,10 +318,8 @@ void Occupy::efermig(const ModuleBase::matrix& ekb,
     eup += 2 * smearing_sigma;
     elw -= 2 * smearing_sigma;
     // find min and max across pools
-#ifdef __MPI
-    Parallel_Reduce::reduce_max(eup);
-    Parallel_Reduce::reduce_min(elw);
-#endif
+    kmesh.reduce_max_across_pools(eup);
+    kmesh.reduce_min_across_pools(elw);
     //=================
     // Bisection method
     //=================
@@ -330,8 +327,8 @@ void Occupy::efermig(const ModuleBase::matrix& ekb,
     int changetime = 0;
     while (true)
     {
-        const double sumkup = Occupy::sumkg(ekb, nband, nks, wk, smearing_sigma, ngauss, eup, is, isk, npool);
-        const double sumklw = Occupy::sumkg(ekb, nband, nks, wk, smearing_sigma, ngauss, elw, is, isk, npool);
+        const double sumkup = Occupy::sumkg(ekb, nband, nks, wk, smearing_sigma, ngauss, eup, is, isk, kmesh);
+        const double sumklw = Occupy::sumkg(ekb, nband, nks, wk, smearing_sigma, ngauss, elw, is, isk, kmesh);
 
         if (changetime > 1000)
         {
@@ -370,7 +367,7 @@ void Occupy::efermig(const ModuleBase::matrix& ekb,
         // change ef value
         //======================
         ef = (eup + elw) / 2.0;
-        const double sumkmid = sumkg(ekb, nband, nks, wk, smearing_sigma, ngauss, ef, is, isk, npool);
+        const double sumkmid = sumkg(ekb, nband, nks, wk, smearing_sigma, ngauss, ef, is, isk, kmesh);
 
         if (std::abs(sumkmid - nelec) < eps)
         {
@@ -400,7 +397,7 @@ void Occupy::efermig(const ModuleBase::matrix& ekb,
  * @param e a givern energy
  * @param is spin
  * @param isk array to point out each k belong to which spin
- * @param npool number of k-point/band pools used for the MPI all-pool reduction (1 in serial).
+ * @param kmesh k-point parallel domain for cross-pool reduction.
  * @return (double) the number of states
  */
 double Occupy::sumkg(const ModuleBase::matrix& ekb,
@@ -412,7 +409,7 @@ double Occupy::sumkg(const ModuleBase::matrix& ekb,
                      const double& e,
                      const int& is,
                      const std::vector<int>& isk,
-                     const int npool)
+                     const Parallel::ParaKmeshWorld& kmesh)
 {
     // ModuleBase::TITLE("Occupy","sumkg");
     double sum2 = 0.0;
@@ -434,9 +431,7 @@ double Occupy::sumkg(const ModuleBase::matrix& ekb,
         sum2 += wk[ik] * sum1;
     }
 
-#ifdef __MPI
-    Parallel_Reduce::reduce_double_allpool(npool, GlobalV::NPROC_IN_POOL, sum2);
-#endif
+    kmesh.reduce_across_pools(sum2);
 
     return sum2;
 }

@@ -15,6 +15,14 @@ ParaKmeshWorld::ParaKmeshWorld(int nkstot, int nspin)
     startk_global_ = 0;
 }
 
+ParaKmeshWorld::ParaKmeshWorld()
+    : ParaWorld("kmesh"), kpar_(1), my_pool_(0), rank_in_pool_(0),
+      nproc_(1), nspin_(1), nkstot_(0), nks_local_(0), startk_global_(0)
+{
+    // Intentionally empty: no k-point distribution data.
+    // Only kpar_ / comm() are valid for reduce_across_pools.
+}
+
 #ifdef __MPI
 ParaKmeshWorld::ParaKmeshWorld(const MPI_Comm& comm, int kpar, int my_pool, int nproc, int nkstot, int nspin)
     : ParaWorld("kmesh", comm), kpar_(kpar), my_pool_(my_pool),
@@ -91,6 +99,39 @@ int ParaKmeshWorld::startpro_pool(int pool) const
 int ParaKmeshWorld::max_nks_pool() const
 {
     return *std::max_element(nks_pool_.begin(), nks_pool_.end());
+}
+
+void ParaKmeshWorld::reduce_across_pools(double& value) const
+{
+    if (kpar_ == 1)
+    {
+        return;
+    }
+#ifdef __MPI
+    MPI_Allreduce(MPI_IN_PLACE, &value, 1, MPI_DOUBLE, MPI_SUM, comm());
+#endif
+}
+
+void ParaKmeshWorld::reduce_max_across_pools(double& value) const
+{
+    if (kpar_ == 1)
+    {
+        return;
+    }
+#ifdef __MPI
+    MPI_Allreduce(MPI_IN_PLACE, &value, 1, MPI_DOUBLE, MPI_MAX, comm());
+#endif
+}
+
+void ParaKmeshWorld::reduce_min_across_pools(double& value) const
+{
+    if (kpar_ == 1)
+    {
+        return;
+    }
+#ifdef __MPI
+    MPI_Allreduce(MPI_IN_PLACE, &value, 1, MPI_DOUBLE, MPI_MIN, comm());
+#endif
 }
 
 void ParaKmeshWorld::pool_collection(double& value, const double* wk, int ik) const

@@ -30,6 +30,17 @@ public:
      */
     ParaKmeshWorld(int nkstot, int nspin);
 
+    /**
+     * @brief Construct a reduce-only k-mesh domain with no k-point
+     * distribution data.
+     *
+     * kpar_/comm are set from the bridge globals so that
+     * reduce_across_pools / reduce_max/min_across_pools work correctly.
+     * The distribution arrays (nks_pool_, whichpool_, ...) are left
+     * empty; calling pool_collection / gather_kvec is invalid.
+     */
+    ParaKmeshWorld();
+
 #ifdef __MPI
     /**
      * @brief Construct a k-mesh domain on an existing communicator.
@@ -82,6 +93,36 @@ public:
 
     /// Maximum number of k-points across all pools.
     int max_nks_pool() const;
+
+    // ===== Cross-pool reductions =====
+
+    /**
+     * @brief Sum a scalar across all k-point pools.
+     *
+     * Replaces Parallel_Reduce::reduce_double_allpool. Uses the inter-pool
+     * communicator (comm()) so that same-rank processes across pools
+     * participate. Since all processes in a pool share the same value,
+     * no normalization by pool size is needed. No-op when kpar()==1.
+     *
+     * @param[in,out] value  local partial sum, overwritten with global total
+     */
+    void reduce_across_pools(double& value) const;
+
+    /**
+     * @brief Global max across all k-point pools.
+     *
+     * @param[in,out] value  local value, overwritten with global max
+     */
+    void reduce_max_across_pools(double& value) const;
+
+    /**
+     * @brief Global min across all k-point pools.
+     *
+     * @param[in,out] value  local value, overwritten with global min
+     */
+    void reduce_min_across_pools(double& value) const;
+
+    // ===== Cross-domain operations =====
 
     /**
      * @brief Collect a scalar value from the pool that owns k-point ik.

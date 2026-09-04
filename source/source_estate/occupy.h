@@ -5,6 +5,11 @@
 #include "source_base/matrix.h"
 #include "source_base/vector3.h"
 
+namespace Parallel
+{
+class ParaKmeshWorld;
+}
+
 class Occupy
 {
 
@@ -45,7 +50,8 @@ public:
                          ModuleBase::matrix& wg,
                          const int nspin,
                          const int& is,
-                         const std::vector<int>& isk);
+                         const std::vector<int>& isk,
+                         const Parallel::ParaKmeshWorld& kmesh);
 
     static void gweights(const int nks,
                          const std::vector<double>& wk,
@@ -59,7 +65,7 @@ public:
                          ModuleBase::matrix& wg,
                          const int& is,
                          const std::vector<int>& isk,
-                         const int npool);
+                         const Parallel::ParaKmeshWorld& kmesh);
 
     static void tweights(const int nks, const int nspin, const int nband,
                          const double& nelec, const int ntetra,
@@ -77,7 +83,7 @@ public:
                         double& ef,
                         const int& is,
                         const std::vector<int>& isk,
-                        const int npool);
+                        const Parallel::ParaKmeshWorld& kmesh);
 
     static double sumkg(const ModuleBase::matrix& ekb,
                         const int nband,
@@ -88,7 +94,7 @@ public:
                         const double& e,
                         const int& is,
                         const std::vector<int>& isk,
-                        const int npool);
+                        const Parallel::ParaKmeshWorld& kmesh);
 
     static double wgauss(const double& x, const int n);
 
