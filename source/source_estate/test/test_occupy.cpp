@@ -1,6 +1,7 @@
 #include <string>
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "source_estate/occupy.h"
 
 /***************************************************************
  *  unit test of class Occupy
@@ -11,9 +12,6 @@
  *   - Occupy::Occupy()
  *   - Occupy::decision()
  */
-#define private public
-#include "source_estate/occupy.h"
-#undef private
 class OccupyTest : public ::testing::Test
 {
 protected:

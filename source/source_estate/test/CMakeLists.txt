@@ -29,7 +29,7 @@ endif()
 AddTest(
   TARGET MODULE_ESTATE_elecstate_occupy
   LIBS base device
-  SOURCES elecstate_occupy_test.cpp ../occupy.cpp
+  SOURCES test_occupy.cpp ../occupy.cpp
 )
 
 AddTest(

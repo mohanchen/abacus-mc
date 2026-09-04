@@ -67,37 +67,34 @@ public:
 
     static double wsweight(const ModuleBase::Vector3<double> &r, ModuleBase::Vector3<double> *rws,const int nrws);
 
+    static void efermig(const ModuleBase::matrix& ekb,
+                        const int nbnd,
+                        const int nks,
+                        const double& nelec,
+                        const std::vector<double>& wk,
+                        const double& smearing_sigma,
+                        const int ngauss,
+                        double& ef,
+                        const int& is,
+                        const std::vector<int>& isk,
+                        const int npool);
+
+    static double sumkg(const ModuleBase::matrix& ekb,
+                        const int nband,
+                        const int nks,
+                        const std::vector<double>& wk,
+                        const double& smearing_sigma,
+                        const int ngauss,
+                        const double& e,
+                        const int& is,
+                        const std::vector<int>& isk,
+                        const int npool);
+
+    static double wgauss(const double& x, const int n);
+
+    static double w1gauss(const double& x, const int n);
+
 private:
-  static void efermig(const ModuleBase::matrix& ekb,
-                      const int nbnd,
-                      const int nks,
-                      const double& nelec,
-                      const std::vector<double>& wk,
-                      const double& smearing_sigma,
-                      const int ngauss,
-                      double& ef,
-                      const int& is,
-                      const std::vector<int>& isk,
-                      const int npool);
-
-  static double sumkg(const ModuleBase::matrix& ekb,
-                      const int nband,
-                      const int nks,
-                      const std::vector<double>& wk,
-                      const double& smearing_sigma,
-                      const int ngauss,
-                      const double& e,
-                      const int& is,
-                      const std::vector<int>& isk,
-                      const int npool);
-
-  static double wgauss(const double& x, const int n);
-
-  static double w1gauss(const double& x, const int n);
-
-  //============================
-  // Needed in tweights
-  //============================
   static void efermit(double** ekb,
                       const int nband,
                       const int nks,
