@@ -102,6 +102,9 @@ int ParaKmeshWorld::startpro_pool(int pool) const
 
 int ParaKmeshWorld::max_nks_pool() const
 {
+    // Reduce-only domains carry no distribution arrays (see the default
+    // constructor); querying them here would dereference an empty vector.
+    assert(!nks_pool_.empty());
     return *std::max_element(nks_pool_.begin(), nks_pool_.end());
 }
 

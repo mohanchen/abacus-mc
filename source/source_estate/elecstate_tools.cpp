@@ -106,8 +106,10 @@ void calculate_weights(const ModuleBase::matrix& ekb,
         const int band_offset = get_band_offset(nbands, global_nbands);
         // The kmesh domain is only built in the branches that dereference
         // klist, so that callers passing no k-list (fixed occupations) are
-        // not affected.
-        Parallel::ParaKmeshWorld kmesh = Parallel::make_kmesh_world(klist->get_nkstot(), nspin);
+        // not affected. Only the reduction is needed here, so use the
+        // reduce-only overload and skip building the distribution arrays
+        // on every SCF iteration.
+        Parallel::ParaKmeshWorld kmesh = Parallel::make_kmesh_world();
         if (PARAM.globalv.two_fermi)
         {
             Occupy::iweights(nks, klist->wk, nbands, band_offset, nelec_spin[0], ekb, eferm.ef_up, wg,
@@ -128,8 +130,8 @@ void calculate_weights(const ModuleBase::matrix& ekb,
     {
         // The kmesh domain is only built in the branches that dereference
         // klist, so that callers passing no k-list (fixed occupations) are
-        // not affected.
-        Parallel::ParaKmeshWorld kmesh = Parallel::make_kmesh_world(klist->get_nkstot(), nspin);
+        // not affected. Reduce-only overload: see the iweights branch above.
+        Parallel::ParaKmeshWorld kmesh = Parallel::make_kmesh_world();
         if (PARAM.globalv.two_fermi)
         {
             double demet_up = 0.0;
