@@ -1,9 +1,6 @@
 #include <string>
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#define private public
-#include "source_io/module_parameter/parameter.h"
-#undef private
 
 /***************************************************************
  *  unit test of class Occupy
@@ -182,21 +179,19 @@ TEST_F(OccupyTest, DecisionArbitrary)
 
 TEST_F(OccupyTest, IweightsNOSPIN)
 {
-  PARAM.input.nspin = 1;
   double ef = 0.0;
   ModuleBase::matrix wg(1, 1);
   std::vector<double> wk(1, 2.0);
   ModuleBase::matrix ekb(1, 1);
   std::vector<int> isk(1);
   ekb(0, 0) = 0.1;
-  occupy.iweights(1, wk, 1, 0, 2.0, ekb, ef, wg, 0, isk);
+  occupy.iweights(1, wk, 1, 0, 2.0, ekb, ef, wg, 1, 0, isk);
   EXPECT_DOUBLE_EQ(wg(0, 0), 2.0);
   EXPECT_DOUBLE_EQ(ef, 0.1);
 }
 
 TEST_F(OccupyTest, IweightsSPIN)
 {
-  PARAM.input.nspin = 2;
   double ef_up = 0.0;
   double ef_dw = 0.0;
   ModuleBase::matrix wg(2, 1);
@@ -207,8 +202,8 @@ TEST_F(OccupyTest, IweightsSPIN)
   isk[1] = 1;
   ekb(0, 0) = 0.1;
   ekb(1, 0) = 0.2;
-  occupy.iweights(2, wk, 1, 0, 1.0, ekb, ef_up, wg, 0, isk);
-  occupy.iweights(2, wk, 1, 0, 1.0, ekb, ef_dw, wg, 1, isk);
+  occupy.iweights(2, wk, 1, 0, 1.0, ekb, ef_up, wg, 2, 0, isk);
+  occupy.iweights(2, wk, 1, 0, 1.0, ekb, ef_dw, wg, 2, 1, isk);
   EXPECT_DOUBLE_EQ(wg(0, 0), 1.0);
   EXPECT_DOUBLE_EQ(wg(1, 0), 1.0);
   EXPECT_DOUBLE_EQ(ef_up, 0.1);
@@ -217,7 +212,6 @@ TEST_F(OccupyTest, IweightsSPIN)
 
 TEST_F(OccupyTest, IweightsWarning)
 {
-  PARAM.input.nspin = 1;
   double ef = 0.0;
   ModuleBase::matrix wg(1, 1);
   std::vector<double> wk(1, 2.0);
@@ -226,7 +220,7 @@ TEST_F(OccupyTest, IweightsWarning)
   ekb(0, 0) = 0.1;
 
   testing::internal::CaptureStdout();
-  EXPECT_EXIT(occupy.iweights(1, wk, 1, 0, 1.0, ekb, ef, wg, -1, isk);, ::testing::ExitedWithCode(1), "");
+  EXPECT_EXIT(occupy.iweights(1, wk, 1, 0, 1.0, ekb, ef, wg, 1, -1, isk);, ::testing::ExitedWithCode(1), "");
   output = testing::internal::GetCapturedStdout();
   EXPECT_THAT(output, testing::HasSubstr("It is not a semiconductor or insulator. Please do not set 'smearing_method=fixed', and try other options."));
 }
@@ -260,7 +254,7 @@ TEST_F(OccupyTest, Sumkg)
   double e = 0.0;
   int is = 0;
   std::vector<int> isk = {0, 0};
-  EXPECT_DOUBLE_EQ(occupy.sumkg(ekb, 1, 1, wk, smearing_sigma, ngauss, e, is, isk), 1.0);
+  EXPECT_DOUBLE_EQ(occupy.sumkg(ekb, 1, 1, wk, smearing_sigma, ngauss, e, is, isk, 1), 1.0);
 }
 
 TEST_F(OccupyTest, Efermig)
@@ -274,7 +268,7 @@ TEST_F(OccupyTest, Efermig)
   int is = 0;
   std::vector<int> isk = {0, 0};
   double ef = 0.0;
-  occupy.efermig(ekb, 1, 1, 1.0, wk, smearing_sigma, ngauss, ef, is, isk);
+  occupy.efermig(ekb, 1, 1, 1.0, wk, smearing_sigma, ngauss, ef, is, isk, 1);
   EXPECT_NEAR(ef, -0.5, 1e-13);
 }
 
@@ -290,10 +284,11 @@ TEST_F(OccupyTest, Gweights)
   std::vector<int> isk = {0, 0};
   double ef = 0.0;
   ModuleBase::matrix wg(1, 1);
-  wg(0, 0) = 1.0;
   double demet = 0.0;
-  occupy.gweights(1, wk, 1, 1.0, smearing_sigma, ngauss, ekb, ef, demet, wg, is, isk);
-  EXPECT_NEAR(ef, -0.5, 1e-13);
-  EXPECT_NEAR(demet, 0.0, 1e-13);
-  EXPECT_NEAR(wg(0, 0), 1.0, 1e-13);
+  // Half-filled single band: the Fermi energy stays at the band energy, the
+  // occupation is 1/2 and demet equals sigma * w1gauss(0, 0).
+  occupy.gweights(1, wk, 1, 0.5, smearing_sigma, ngauss, ekb, ef, demet, wg, is, isk, 1);
+  EXPECT_NEAR(ef, -1.0, 1e-13);
+  EXPECT_NEAR(wg(0, 0), 0.5, 1e-13);
+  EXPECT_NEAR(demet, smearing_sigma * (-0.28209479177387814), 1e-13);
 }
