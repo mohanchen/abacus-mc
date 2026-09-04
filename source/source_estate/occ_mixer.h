@@ -58,10 +58,11 @@ class OccMatMixer
     void seed_save(const OccupationMatrix& occmat);
 
     /**
-     * @brief Begin an SCF iteration: snapshot occ into save buffers.
+     * @brief Begin an SCF iteration: flatten the saved occ into uom_save_.
      *
-     * Performs OccupationMatrix::copy_to_save and flattens occ_save into
-     * uom_save_.
+     * The caller must already have snapshotted occ into occ_save via
+     * OccupationMatrix::copy_to_save; this only flattens that snapshot into
+     * uom_save_ for the mixing history.
      */
     void begin_iter(OccupationMatrix& occmat);
 

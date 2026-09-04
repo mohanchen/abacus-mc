@@ -22,7 +22,9 @@ void OccMatMixer::seed_save(const OccupationMatrix& occmat)
 
 void OccMatMixer::begin_iter(OccupationMatrix& occmat)
 {
-    occmat.copy_to_save(*this->cell_, *this->orbital_corr_);
+    // the caller has already snapshotted occ into occ_save via
+    // OccupationMatrix::copy_to_save; here we only flatten that snapshot
+    // into uom_save_ for the mixing history.
     occmat.write_save_to_flat(*this->cell_, *this->orbital_corr_,
                               *this->index_, this->uom_save_);
 }
