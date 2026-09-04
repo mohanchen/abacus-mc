@@ -45,13 +45,11 @@ class OccMatMixerTest : public ::testing::Test
         cell.ntype = 1;
         cell.nat = 2;
         atoms_storage.resize(cell.ntype);
-        iat2it_storage.resize(cell.nat);
-        iat2ia_storage.resize(cell.nat);
-        // UnitCell exposes raw pointers; back them with these vectors so no
-        // manual new/delete is needed (the vectors outlive each test).
+        // UnitCell exposes raw pointers; Statistics::~Statistics() owns and
+        // delete[]s iat2it/iat2ia, so they must come from new[] here.
         cell.atoms = atoms_storage.data();
-        cell.iat2it = iat2it_storage.data();
-        cell.iat2ia = iat2ia_storage.data();
+        cell.iat2it = new int[cell.nat];
+        cell.iat2ia = new int[cell.nat];
         cell.itia2iat.create(cell.ntype, cell.nat);
         cell.atoms[0].na = 2;
         cell.atoms[0].nwl = 2;      // max angular momentum present
@@ -83,8 +81,6 @@ class OccMatMixerTest : public ::testing::Test
 
     UnitCell cell;
     std::vector<Atom> atoms_storage;  ///< backing store for cell.atoms
-    std::vector<int> iat2it_storage;  ///< backing store for cell.iat2it
-    std::vector<int> iat2ia_storage;  ///< backing store for cell.iat2ia
     std::vector<int> orbital_corr;
     std::vector<int> flat_index;
 };
