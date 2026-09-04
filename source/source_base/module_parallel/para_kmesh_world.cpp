@@ -7,30 +7,34 @@ namespace Parallel
 {
 
 ParaKmeshWorld::ParaKmeshWorld(int nkstot, int nspin)
-    : ParaWorld("kmesh"), kpar_(1), my_pool_(0), rank_in_pool_(0),
-      nproc_(1), nspin_(nspin), nkstot_(nkstot)
+    : ParaWorld("kmesh"), nspin_(nspin), nkstot_(nkstot)
 {
     distribute_kpoints();
     nks_local_ = nkstot_;
     startk_global_ = 0;
+    nproc_ = size();
 }
 
 ParaKmeshWorld::ParaKmeshWorld()
-    : ParaWorld("kmesh"), kpar_(1), my_pool_(0), rank_in_pool_(0),
-      nproc_(1), nspin_(1), nkstot_(0), nks_local_(0), startk_global_(0)
+    : ParaWorld("kmesh"), nspin_(1)
 {
     // Intentionally empty: no k-point distribution data.
     // Only kpar_ / comm() are valid for reduce_across_pools.
+    nproc_ = size();
 }
 
 #ifdef __MPI
-ParaKmeshWorld::ParaKmeshWorld(const MPI_Comm& comm, int kpar, int my_pool, int nproc, int nkstot, int nspin)
+ParaKmeshWorld::ParaKmeshWorld(const MPI_Comm& comm, int kpar, int my_pool, int nkstot, int nspin, int bndpar)
     : ParaWorld("kmesh", comm), kpar_(kpar), my_pool_(my_pool),
-      rank_in_pool_(rank()), nproc_(nproc), nspin_(nspin), nkstot_(nkstot)
+      rank_in_pool_(rank()), nspin_(nspin), nkstot_(nkstot),
+      bndpar_(bndpar)
 {
     distribute_kpoints();
     nks_local_ = nks_pool_[my_pool_];
     startk_global_ = startk_pool_[my_pool_];
+    // comm() spans every process of every distribution pool, so the number
+    // of processes sharing one partial sum is the pool size.
+    nproc_ = size();
 }
 #endif
 
@@ -103,18 +107,22 @@ int ParaKmeshWorld::max_nks_pool() const
 
 void ParaKmeshWorld::reduce_across_pools(double& value) const
 {
-    if (kpar_ == 1)
+    if (npool() == 1)
     {
         return;
     }
 #ifdef __MPI
-    MPI_Allreduce(MPI_IN_PLACE, &value, 1, MPI_DOUBLE, MPI_SUM, comm());
+    // Every process in a pool holds the same partial sum, so divide by the
+    // pool size (nproc/npool) before the world-wide Allreduce. This matches
+    // the legacy Parallel_Reduce::reduce_double_allpool semantics.
+    const double swap = value / (nproc_ / npool());
+    MPI_Allreduce(&swap, &value, 1, MPI_DOUBLE, MPI_SUM, comm());
 #endif
 }
 
 void ParaKmeshWorld::reduce_max_across_pools(double& value) const
 {
-    if (kpar_ == 1)
+    if (npool() == 1)
     {
         return;
     }
@@ -125,7 +133,7 @@ void ParaKmeshWorld::reduce_max_across_pools(double& value) const
 
 void ParaKmeshWorld::reduce_min_across_pools(double& value) const
 {
-    if (kpar_ == 1)
+    if (npool() == 1)
     {
         return;
     }

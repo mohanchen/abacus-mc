@@ -45,14 +45,20 @@ public:
     /**
      * @brief Construct a k-mesh domain on an existing communicator.
      *
-     * @param[in] comm     k-point pool communicator (e.g. KP_WORLD)
-     * @param[in] kpar     number of pools
-     * @param[in] my_pool  pool index of this process
-     * @param[in] nproc    total number of processes (MPI_COMM_WORLD size)
+     * @param[in] comm     communicator spanning every process that holds a
+     *                     partial band/k-point sum (MPI_COMM_WORLD in the
+     *                     current bridge; must include both k-point pools and
+     *                     band groups)
+     * @param[in] kpar     number of k-point pools
+     * @param[in] my_pool  k-point pool index of this process
      * @param[in] nkstot   total number of k-points (without spin)
      * @param[in] nspin    number of spin components
+     * @param[in] bndpar   number of band-parallel groups (1 when no band
+     *                     parallelization); the reduce_* operations treat
+     *                     npool = kpar * bndpar, matching the legacy
+     *                     Parallel_Reduce::reduce_double_allpool semantics
      */
-    ParaKmeshWorld(const MPI_Comm& comm, int kpar, int my_pool, int nproc, int nkstot, int nspin);
+    ParaKmeshWorld(const MPI_Comm& comm, int kpar, int my_pool, int nkstot, int nspin, int bndpar);
 #endif
 
     /// Number of pools.
@@ -97,30 +103,40 @@ public:
     // ===== Cross-pool reductions =====
 
     /**
-     * @brief Sum a scalar across all k-point pools.
+     * @brief Sum a scalar across all k-point pools and band groups.
      *
-     * Replaces Parallel_Reduce::reduce_double_allpool. Uses the inter-pool
-     * communicator (comm()) so that same-rank processes across pools
-     * participate. Since all processes in a pool share the same value,
-     * no normalization by pool size is needed. No-op when kpar()==1.
+     * Replaces Parallel_Reduce::reduce_double_allpool. The communicator
+     * spans every process of every pool; since all nproc()/npool()
+     * processes inside a pool share the same partial sum, each value is
+     * first divided by the pool size before the MPI_Allreduce so that the
+     * result equals the sum of the per-pool partial sums. No-op when
+     * npool() == 1.
      *
      * @param[in,out] value  local partial sum, overwritten with global total
      */
     void reduce_across_pools(double& value) const;
 
     /**
-     * @brief Global max across all k-point pools.
+     * @brief Global max across all k-point pools and band groups.
+     *
+     * Replaces Parallel_Reduce::reduce_max (all of MPI_COMM_WORLD):
+     * band-parallel shards see different eigenvalue windows, so the Fermi
+     * level must be extremized across both k-point pools and band groups.
+     * No-op when npool() == 1.
      *
      * @param[in,out] value  local value, overwritten with global max
      */
     void reduce_max_across_pools(double& value) const;
 
     /**
-     * @brief Global min across all k-point pools.
+     * @brief Global min across all k-point pools and band groups.
      *
      * @param[in,out] value  local value, overwritten with global min
      */
     void reduce_min_across_pools(double& value) const;
+
+    /// Total number of distribution pools: k-point pools * band groups.
+    int npool() const { return kpar_ * bndpar_; }
 
     // ===== Cross-domain operations =====
 
@@ -169,6 +185,7 @@ private:
     int nkstot_ = 0;
     int nks_local_ = 0;
     int startk_global_ = 0;
+    int bndpar_ = 1;
 
     std::vector<int> nks_pool_;      ///< k-points per pool
     std::vector<int> startk_pool_;   ///< global start index per pool
