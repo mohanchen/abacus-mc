@@ -153,8 +153,8 @@ void ESolver_FP::after_scf(UnitCell& ucell, const int istep, const bool conv_eso
     CE.update_delta_rho(ucell, &(this->chr), &(this->sf));
 
     //! print out charge density, potential, elf, etc.
-	ModuleIO::ctrl_output_fp(ucell, this->pelec, this->pw_big, this->pw_rhod, 
-			this->chr, this->solvent, this->Pgrid, istep); 
+	ModuleIO::ctrl_output_fp(ucell, this->pelec, this->pw_big, this->pw_rhod,
+			this->chr, this->solvent, this->Pgrid, istep, PARAM.inp);
 
 }
 
