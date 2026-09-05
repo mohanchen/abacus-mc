@@ -59,9 +59,9 @@ ParaKmeshWorld make_kmesh_world(int nkstot, int nspin)
     return ParaKmeshWorld(nkstot, nspin);
 }
 
-// Temporary bridge: construct a bgroup-domain ParaBgroupWorld from the old
-// globals. Delete this file once ParaCollection is wired into driver init.
-ParaBgroupWorld make_bgroup_world()
+// Temporary bridge: construct a bdiff_ksame-domain ParaBdiffKsameWorld from
+// the old globals. Delete this file once ParaCollection is wired into driver init.
+ParaBdiffKsameWorld make_bdiff_ksame_world()
 {
 #ifdef __MPI
     int mpi_initialized = 0;
@@ -73,10 +73,10 @@ ParaBgroupWorld make_bgroup_world()
     {
         int nbndgroup = 1;
         MPI_Comm_size(BP_WORLD, &nbndgroup);
-        return ParaBgroupWorld(INT_BGROUP, BP_WORLD, nbndgroup);
+        return ParaBdiffKsameWorld(INT_BGROUP, BP_WORLD, nbndgroup);
     }
 #endif
-    return ParaBgroupWorld();
+    return ParaBdiffKsameWorld();
 }
 
 } // namespace Parallel

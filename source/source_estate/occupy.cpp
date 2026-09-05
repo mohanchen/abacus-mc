@@ -436,8 +436,8 @@ double Occupy::sumkg(const ModuleBase::matrix& ekb,
     // 1. Band dimension: BPCG shards the band range across the band
     //    groups of this k-pool, so combine the per-window partial sums
     //    first (no-op with a single band group).
-    Parallel::ParaBgroupWorld bgroup = Parallel::make_bgroup_world();
-    bgroup.reduce_across_bgroups(sum2);
+    Parallel::ParaBdiffKsameWorld bdiff = Parallel::make_bdiff_ksame_world();
+    bdiff.reduce_across_bdiff_ksame(sum2);
     // 2. k dimension: exactly one contribution per k-pool.
     kmesh.reduce_across_pools(sum2);
 

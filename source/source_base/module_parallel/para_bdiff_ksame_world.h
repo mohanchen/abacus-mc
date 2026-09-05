@@ -1,5 +1,5 @@
-#ifndef PARA_BGROUP_WORLD_H
-#define PARA_BGROUP_WORLD_H
+#ifndef PARA_BDIFF_KSAME_WORLD_H
+#define PARA_BDIFF_KSAME_WORLD_H
 
 #include "para_world.h"
 
@@ -7,34 +7,35 @@ namespace Parallel
 {
 
 /**
- * @brief bgroup parallel domain: band group communication topology.
+ * @brief bdiff_ksame parallel domain: band-group communication topology
+ * inside one k-pool.
  *
  * Self-contained replacement for INT_BGROUP + BP_WORLD +
  * GlobalV::MY_BNDGROUP/NPROC_IN_BNDGROUP/RANK_IN_BPGROUP.
  *
- * The band group domain has two communicators:
- *   - intra: INT_BGROUP (same band group, different k/pw)
- *   - inter: BP_WORLD (different band groups, same k)
+ * The domain has two communicators:
+ *   - intra: INT_BGROUP (bsame_kdiff; same band group, different k/pw)
+ *   - inter: BP_WORLD  (bdiff_ksame; different band groups, same k)
  *
  * Tests only need this header.
  */
-class ParaBgroupWorld : public ParaWorld
+class ParaBdiffKsameWorld : public ParaWorld
 {
 public:
     /**
-     * @brief Construct a serial bgroup domain (single band group).
+     * @brief Construct a serial domain (single band group).
      */
-    ParaBgroupWorld();
+    ParaBdiffKsameWorld();
 
 #ifdef __MPI
     /**
-     * @brief Construct a bgroup domain from intra and inter communicators.
+     * @brief Construct a domain from intra and inter communicators.
      *
      * @param[in] intra_comm  intra-group communicator (e.g. INT_BGROUP)
      * @param[in] inter_comm  inter-group communicator (e.g. BP_WORLD)
      * @param[in] nbndgroup   number of band groups
      */
-    ParaBgroupWorld(const MPI_Comm& intra_comm, const MPI_Comm& inter_comm, int nbndgroup);
+    ParaBdiffKsameWorld(const MPI_Comm& intra_comm, const MPI_Comm& inter_comm, int nbndgroup);
 #endif
 
     /// Band group index of this process.
@@ -50,7 +51,7 @@ public:
     int nproc_in_bndgroup() const { return size(); }
 
 #ifdef __MPI
-    /// Inter-group communicator (BP_WORLD equivalent).
+    /// Inter-group communicator (BP_WORLD / bdiff_ksame equivalent).
     MPI_Comm inter_comm() const { return inter_comm_; }
 #endif
 
@@ -60,9 +61,9 @@ public:
      * Band-parallel eigensolvers (bpcg) shard the band range across the
      * BNDPAR band groups of a k-pool: every process only accumulates the
      * partial sum over its own band window. This reduction combines those
-     * partial sums on BP_WORLD (bdiff_ksame), which links the same rank
-     * position of every band group inside one k-pool, so each band window
-     * contributes exactly once.
+     * partial sums on the bdiff_ksame (BP_WORLD) communicator, which links
+     * the same rank position of every band group inside one k-pool, so each
+     * band window contributes exactly once.
      *
      * It must run BEFORE ParaKmeshWorld::reduce_across_pools so that the
      * k-pool reduction receives one complete per-k-pool partial sum.
@@ -71,7 +72,7 @@ public:
      * @param[in,out] value  local partial sum, overwritten with the
      *                       k-pool-wide total
      */
-    void reduce_across_bgroups(double& value) const;
+    void reduce_across_bdiff_ksame(double& value) const;
 
 private:
     int my_bndgroup_ = 0;
@@ -83,4 +84,4 @@ private:
 
 } // namespace Parallel
 
-#endif // PARA_BGROUP_WORLD_H
+#endif // PARA_BDIFF_KSAME_WORLD_H

@@ -1,12 +1,12 @@
 #include "gtest/gtest.h"
 
-#include "../para_bgroup_world.h"
+#include "../para_bdiff_ksame_world.h"
 #include "../para_kmesh_world.h"
 
 // Run with: mpirun -np 4 ./MODULE_BASE_para_kmesh_world_mpi
 //
 // The sum reduction protocol has two layers:
-//   1. ParaBgroupWorld::reduce_across_bgroups  (band dimension, BPCG shards)
+//   1. ParaBdiffKsameWorld::reduce_across_bdiff_ksame (band dimension, BPCG shards)
 //   2. ParaKmeshWorld::reduce_across_pools      (k dimension, one
 //      contribution per k-pool: the first rank of each k-pool injects the
 //      partial sum, everyone else injects zero)
@@ -26,12 +26,12 @@ TEST(ParaKmeshWorldMpiTest, ReduceAcrossBandGroupsBndpar2)
     // which links the same rank position of every band group.
     MPI_Comm bp_world = MPI_COMM_NULL;
     MPI_Comm_split(MPI_COMM_WORLD, myrank % 2, myrank / 2, &bp_world);
-    Parallel::ParaBgroupWorld bgroup(MPI_COMM_WORLD, bp_world, 2);
+    Parallel::ParaBdiffKsameWorld bdiff(MPI_COMM_WORLD, bp_world, 2);
 
     // Each band group holds a partial occupation sum of 14 (28 electrons
     // split into two band windows).
     double sumk = 14.0;
-    bgroup.reduce_across_bgroups(sumk);
+    bdiff.reduce_across_bdiff_ksame(sumk);
     EXPECT_DOUBLE_EQ(sumk, 28.0);
 
     // max/min stay world-wide (idempotent) and must span the band groups
@@ -114,7 +114,7 @@ TEST(ParaKmeshWorldMpiTest, SinglePoolIsNoOp)
     ASSERT_EQ(nprocs, 4);
 
     // kpar == 1: the sum reduction must be a no-op regardless of the
-    // world size (the band dimension is handled by ParaBgroupWorld).
+    // world size (the band dimension is handled by ParaBdiffKsameWorld).
     Parallel::ParaKmeshWorld kmesh(MPI_COMM_WORLD, 1, 0, 0, 1);
     double sumk = 42.0;
     kmesh.reduce_across_pools(sumk);

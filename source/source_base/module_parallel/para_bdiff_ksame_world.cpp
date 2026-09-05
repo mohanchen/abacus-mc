@@ -1,15 +1,15 @@
-#include "para_bgroup_world.h"
+#include "para_bdiff_ksame_world.h"
 
 namespace Parallel
 {
 
-ParaBgroupWorld::ParaBgroupWorld()
+ParaBdiffKsameWorld::ParaBdiffKsameWorld()
     : ParaWorld("bdiff_ksame"), my_bndgroup_(0), nbndgroup_(1)
 {
 }
 
 #ifdef __MPI
-ParaBgroupWorld::ParaBgroupWorld(const MPI_Comm& intra_comm, const MPI_Comm& inter_comm, int nbndgroup)
+ParaBdiffKsameWorld::ParaBdiffKsameWorld(const MPI_Comm& intra_comm, const MPI_Comm& inter_comm, int nbndgroup)
     : ParaWorld("bdiff_ksame", intra_comm), inter_comm_(inter_comm), nbndgroup_(nbndgroup)
 {
     if (inter_comm != MPI_COMM_NULL)
@@ -19,7 +19,7 @@ ParaBgroupWorld::ParaBgroupWorld(const MPI_Comm& intra_comm, const MPI_Comm& int
 }
 #endif
 
-void ParaBgroupWorld::reduce_across_bgroups(double& value) const
+void ParaBdiffKsameWorld::reduce_across_bdiff_ksame(double& value) const
 {
 #ifdef __MPI
     if (inter_comm_ == MPI_COMM_NULL || nbndgroup_ <= 1)

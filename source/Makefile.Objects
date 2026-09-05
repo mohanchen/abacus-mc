@@ -797,7 +797,7 @@ OBJS_PARALLEL=parallel_common.o\
     para_pw_world.o\
     para_diag_world.o\
     para_rgrid_world.o\
-    para_bgroup_world.o\
+    para_bdiff_ksame_world.o\
     para_matrix_world.o\
     para_mpi_func.o\
     para_setup.o\

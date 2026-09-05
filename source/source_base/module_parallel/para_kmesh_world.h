@@ -19,7 +19,7 @@ namespace Parallel
  * The k-pool split (kpar) is independent of bndpar: the domain knows
  * nothing about band groups. Reductions that must span both dimensions
  * (e.g. the total electron count under BPCG) therefore combine
- * ParaBgroupWorld::reduce_across_bgroups (band dimension, run FIRST)
+ * ParaBdiffKsameWorld::reduce_across_bdiff_ksame (band dimension, run FIRST)
  * with reduce_across_pools (k dimension, run SECOND).
  *
  * In serial builds all operations degenerate to single-pool behavior.
@@ -117,7 +117,7 @@ public:
      *
      * Precondition: with band parallelism (bndpar > 1) the caller must
      * first combine the band-group partial sums (e.g.
-     * ParaBgroupWorld::reduce_across_bgroups) so that every process of a
+     * ParaBdiffKsameWorld::reduce_across_bdiff_ksame) so that every process of a
      * k-pool holds one complete per-pool partial sum.
      *
      * No-op when kpar() <= 1.

@@ -30,8 +30,8 @@ AddTest(
 )
 
 AddTest(
-  TARGET MODULE_BASE_para_bgroup_world
-  SOURCES para_bgroup_world_test.cpp ../para_bgroup_world.cpp ../para_world.cpp
+  TARGET MODULE_BASE_para_bdiff_ksame_world
+  SOURCES para_bdiff_ksame_world_test.cpp ../para_bdiff_ksame_world.cpp ../para_world.cpp
 )
 
 AddTest(
@@ -80,7 +80,7 @@ target_compile_definitions(MODULE_BASE_para_setup_mpi PRIVATE __MPI)
 # Built with add_executable (not AddTest) so that no direct-run CTest entry is
 # created; the binary is only exercised through mpirun by the .sh test below,
 # matching the multi-process requirement of these cases.
-add_executable(MODULE_BASE_para_kmesh_world_mpi test_para_kmesh_world_mpi.cpp ../para_bgroup_world.cpp ../para_kmesh_world.cpp ../para_world.cpp)
+add_executable(MODULE_BASE_para_kmesh_world_mpi test_para_kmesh_world_mpi.cpp ../para_bdiff_ksame_world.cpp ../para_kmesh_world.cpp ../para_world.cpp)
 target_link_libraries(MODULE_BASE_para_kmesh_world_mpi PRIVATE MPI::MPI_CXX GTest::gtest GTest::gtest_main abacus::linalg_libs)
 target_compile_definitions(MODULE_BASE_para_kmesh_world_mpi PRIVATE __MPI)
 

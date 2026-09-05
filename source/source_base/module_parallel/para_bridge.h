@@ -1,7 +1,7 @@
 #ifndef PARA_BRIDGE_H
 #define PARA_BRIDGE_H
 
-#include "para_bgroup_world.h"
+#include "para_bdiff_ksame_world.h"
 #include "para_kmesh_world.h"
 #include "para_world.h"
 
@@ -45,14 +45,15 @@ ParaKmeshWorld make_kmesh_world(int nkstot, int nspin);
 ParaKmeshWorld make_kmesh_world();
 
 /**
- * @brief Temporary bridge: construct a bgroup-domain ParaBgroupWorld from
- * the old globals INT_BGROUP / BP_WORLD (MPI) or as a serial domain.
+ * @brief Temporary bridge: construct a bdiff_ksame-domain
+ * ParaBdiffKsameWorld from the old globals INT_BGROUP / BP_WORLD (MPI) or
+ * as a serial domain.
  *
  * Falls back to a serial single-band-group domain when MPI is not
  * initialized or the pool layout has not been set up yet (e.g. unit
  * tests), so that no MPI call is made on an unset communicator.
  */
-ParaBgroupWorld make_bgroup_world();
+ParaBdiffKsameWorld make_bdiff_ksame_world();
 
 } // namespace Parallel
 
