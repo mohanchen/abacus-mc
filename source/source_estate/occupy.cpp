@@ -2,6 +2,7 @@
 
 #include "source_base/constants.h"
 #include "source_base/mymath.h"
+#include "source_base/module_parallel/para_bridge.h"
 #include "source_base/module_parallel/para_kmesh_world.h"
 
 Occupy::Occupy()
@@ -431,6 +432,13 @@ double Occupy::sumkg(const ModuleBase::matrix& ekb,
         sum2 += wk[ik] * sum1;
     }
 
+    // Two-step reduction, order matters:
+    // 1. Band dimension: BPCG shards the band range across the band
+    //    groups of this k-pool, so combine the per-window partial sums
+    //    first (no-op with a single band group).
+    Parallel::ParaBgroupWorld bgroup = Parallel::make_bgroup_world();
+    bgroup.reduce_across_bgroups(sum2);
+    // 2. k dimension: exactly one contribution per k-pool.
     kmesh.reduce_across_pools(sum2);
 
     return sum2;

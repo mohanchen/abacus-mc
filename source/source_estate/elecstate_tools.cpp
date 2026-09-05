@@ -74,9 +74,15 @@ void calEBand(const ModuleBase::matrix& ekb, const ModuleBase::matrix& wg, fener
     }
     f_en.eband = eband;
 
-    // Combine contributions distributed across k-point pools.
-    // Reduce-only kmesh: no k-point distribution data needed.
+    // Two-step reduction, order matters:
+    // 1. Band dimension: BPCG shards the band range across the band
+    //    groups of this k-pool, so combine the per-window partial sums
+    //    first (no-op with a single band group).
+    // 2. k dimension: exactly one contribution per k-pool.
+    // Reduce-only domains: no k-point distribution data needed.
     Parallel::ParaKmeshWorld kmesh = Parallel::make_kmesh_world();
+    Parallel::ParaBgroupWorld bgroup = Parallel::make_bgroup_world();
+    bgroup.reduce_across_bgroups(f_en.eband);
     kmesh.reduce_across_pools(f_en.eband);
     return;
 }
@@ -182,6 +188,10 @@ void calculate_weights(const ModuleBase::matrix& ekb,
                              kmesh);
         }
         // demet is accumulated independently on every k-point and band partition.
+        // Band dimension first (BPCG band shards), then one contribution
+        // per k-pool; see calEBand for the ordering rationale.
+        Parallel::ParaBgroupWorld bgroup = Parallel::make_bgroup_world();
+        bgroup.reduce_across_bgroups(f_en.demet);
         kmesh.reduce_across_pools(f_en.demet);
     }
     else if (Occupy::fixed_occupations)

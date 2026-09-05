@@ -8,24 +8,6 @@
 
 namespace Parallel
 {
-namespace
-{
-#ifdef __MPI
-// Number of band-parallel groups, derived from the pool layout to avoid a
-// dependency on the INPUT-parameter module from source_base.
-// nproc = (KPAR * bndpar) * NPROC_IN_POOL, so bndpar = NPROC / (KPAR *
-// NPROC_IN_POOL). Falls back to 1 if the globals are inconsistent.
-int bndpar_from_layout()
-{
-    const int denom = GlobalV::KPAR * GlobalV::NPROC_IN_POOL;
-    if (denom < 1 || GlobalV::NPROC % denom != 0)
-    {
-        return 1;
-    }
-    return GlobalV::NPROC / denom;
-}
-#endif
-} // namespace
 
 // Temporary bridge: construct a pw-domain ParaWorld from the old globals.
 // Delete this file once ParaCollection is wired into driver initialization.
@@ -44,16 +26,14 @@ ParaKmeshWorld make_kmesh_world()
 #ifdef __MPI
     int mpi_initialized = 0;
     MPI_Initialized(&mpi_initialized);
-    const int bndpar = bndpar_from_layout();
-    if (mpi_initialized && GlobalV::KPAR * bndpar > 1)
+    // Any distributed layout (k pools or band groups) may need the
+    // world-wide max/min reductions, so build the MPI domain whenever
+    // more than one process is running. The sum reduction no-ops for
+    // kpar <= 1 on its own.
+    if (mpi_initialized && GlobalV::NPROC > 1)
     {
-        // Occupation/energy partial sums are distributed across both k-point
-        // pools and band groups, so the reduce domain must span all of
-        // MPI_COMM_WORLD (KP_WORLD alone only links same-band ranks across
-        // k-point pools and would drop the band-parallel contributions).
         // Build from globals but skip distribute_kpoints (nkstot=0).
-        return ParaKmeshWorld(MPI_COMM_WORLD, GlobalV::KPAR, GlobalV::MY_POOL,
-                             0, 1, bndpar);
+        return ParaKmeshWorld(MPI_COMM_WORLD, GlobalV::KPAR, GlobalV::MY_POOL, 0, 1);
     }
 #endif
     return ParaKmeshWorld();
@@ -66,15 +46,14 @@ ParaKmeshWorld make_kmesh_world(int nkstot, int nspin)
 #ifdef __MPI
     // Fall back to a serial single-pool domain when MPI is not initialized
     // (e.g. unit tests linked against the MPI-compiled base library) or when
-    // there is only one distribution pool, so that no MPI call is made on
-    // an unset communicator.
+    // there is only one k-pool, so that no MPI call is made on an unset
+    // communicator.
     int mpi_initialized = 0;
     MPI_Initialized(&mpi_initialized);
-    const int bndpar = bndpar_from_layout();
-    if (mpi_initialized && GlobalV::KPAR * bndpar > 1)
+    if (mpi_initialized && GlobalV::KPAR > 1)
     {
         return ParaKmeshWorld(MPI_COMM_WORLD, GlobalV::KPAR, GlobalV::MY_POOL,
-                             nkstot, nspin, bndpar);
+                              nkstot, nspin);
     }
 #endif
     return ParaKmeshWorld(nkstot, nspin);
