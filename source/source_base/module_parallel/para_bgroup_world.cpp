@@ -19,4 +19,15 @@ ParaBgroupWorld::ParaBgroupWorld(const MPI_Comm& intra_comm, const MPI_Comm& int
 }
 #endif
 
+void ParaBgroupWorld::reduce_across_bgroups(double& value) const
+{
+#ifdef __MPI
+    if (inter_comm_ == MPI_COMM_NULL || nbndgroup_ <= 1)
+    {
+        return;
+    }
+    MPI_Allreduce(MPI_IN_PLACE, &value, 1, MPI_DOUBLE, MPI_SUM, inter_comm_);
+#endif
+}
+
 } // namespace Parallel

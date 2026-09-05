@@ -80,4 +80,24 @@ ParaKmeshWorld make_kmesh_world(int nkstot, int nspin)
     return ParaKmeshWorld(nkstot, nspin);
 }
 
+// Temporary bridge: construct a bgroup-domain ParaBgroupWorld from the old
+// globals. Delete this file once ParaCollection is wired into driver init.
+ParaBgroupWorld make_bgroup_world()
+{
+#ifdef __MPI
+    int mpi_initialized = 0;
+    MPI_Initialized(&mpi_initialized);
+    // NPROC_IN_BNDGROUP stays 0 until divide_pools has run, which also
+    // guards unit tests that link the MPI base library without a layout.
+    if (mpi_initialized && INT_BGROUP != MPI_COMM_NULL && BP_WORLD != MPI_COMM_NULL
+        && GlobalV::NPROC_IN_BNDGROUP > 1)
+    {
+        int nbndgroup = 1;
+        MPI_Comm_size(BP_WORLD, &nbndgroup);
+        return ParaBgroupWorld(INT_BGROUP, BP_WORLD, nbndgroup);
+    }
+#endif
+    return ParaBgroupWorld();
+}
+
 } // namespace Parallel

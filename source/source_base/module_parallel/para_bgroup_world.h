@@ -54,6 +54,25 @@ public:
     MPI_Comm inter_comm() const { return inter_comm_; }
 #endif
 
+    /**
+     * @brief Sum a scalar across the band groups of this k-pool.
+     *
+     * Band-parallel eigensolvers (bpcg) shard the band range across the
+     * BNDPAR band groups of a k-pool: every process only accumulates the
+     * partial sum over its own band window. This reduction combines those
+     * partial sums on BP_WORLD (bdiff_ksame), which links the same rank
+     * position of every band group inside one k-pool, so each band window
+     * contributes exactly once.
+     *
+     * It must run BEFORE ParaKmeshWorld::reduce_across_pools so that the
+     * k-pool reduction receives one complete per-k-pool partial sum.
+     * No-op when there is only a single band group.
+     *
+     * @param[in,out] value  local partial sum, overwritten with the
+     *                       k-pool-wide total
+     */
+    void reduce_across_bgroups(double& value) const;
+
 private:
     int my_bndgroup_ = 0;
     int nbndgroup_ = 1;

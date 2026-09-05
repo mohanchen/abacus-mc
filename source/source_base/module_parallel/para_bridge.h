@@ -1,6 +1,7 @@
 #ifndef PARA_BRIDGE_H
 #define PARA_BRIDGE_H
 
+#include "para_bgroup_world.h"
 #include "para_kmesh_world.h"
 #include "para_world.h"
 
@@ -42,6 +43,16 @@ ParaKmeshWorld make_kmesh_world(int nkstot, int nspin);
  * is invalid. Use the (nkstot, nspin) overload when those are needed.
  */
 ParaKmeshWorld make_kmesh_world();
+
+/**
+ * @brief Temporary bridge: construct a bgroup-domain ParaBgroupWorld from
+ * the old globals INT_BGROUP / BP_WORLD (MPI) or as a serial domain.
+ *
+ * Falls back to a serial single-band-group domain when MPI is not
+ * initialized or the pool layout has not been set up yet (e.g. unit
+ * tests), so that no MPI call is made on an unset communicator.
+ */
+ParaBgroupWorld make_bgroup_world();
 
 } // namespace Parallel
 
