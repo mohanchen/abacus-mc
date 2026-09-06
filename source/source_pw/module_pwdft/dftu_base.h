@@ -70,12 +70,7 @@ class Plus_U_Base
 
     /// interface for PW basis
     /// calculate the local occupation number matrix for PW based wave functions
-    void cal_occ_pw(const void* psi_in,
-                    const ModuleBase::matrix& wg_in,
-                    const UnitCell& cell,
-                    Charge_Mixing* p_chgmix,
-                    const int* isk,
-                    const int kpar);
+    /// (implemented as free function DFTU_BASE::cal_occ_pw in dftu_base_occ.cpp)
 
     /// get effective potential pointer for the given spin channel (PW basis)
     ///
@@ -121,6 +116,15 @@ class Plus_U_Base
     OccMatMixer& occ_mixer() { return *occ_mixer_; }
     const OccMatMixer& occ_mixer() const { return *occ_mixer_; }
     bool has_occ_mixer() const { return occ_mixer_ != nullptr; }
+
+    // --- Accessors for free-function interfaces (e.g. DFTU_BASE::cal_occ_pw) ---
+    int get_nspin() const { return nspin; }
+    const std::string& get_device() const { return device; }
+    const std::vector<double>& get_u_current_vec() const { return u_current; }
+    const std::vector<int>& get_pot_uterm_pw_index() const { return pot_uterm_pw_index; }
+    std::vector<std::complex<double>>& get_pot_uterm_pw() { return pot_uterm_pw; }
+    const std::vector<std::complex<double>>& get_pot_uterm_pw() const { return pot_uterm_pw; }
+    double& energy_ref() { return energy_u; }
 
   private:
     // --- State flags ---

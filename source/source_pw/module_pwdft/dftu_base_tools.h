@@ -7,6 +7,8 @@
 
 class UnitCell;
 class OccupationMatrix;
+class OccMatMixer;
+class Charge_Mixing;
 
 /// Free functions for DFT+U PW basis calculations.
 ///
@@ -146,6 +148,33 @@ void accumulate_occ_one_k(const void* psi_in,
                           const int nspin,
                           const std::vector<int>& l_channel,
                           OccupationMatrix& occmat);
+
+/// calculate the local occupation number matrix for PW based wave functions.
+///
+/// This is the PW-basis entry point that:
+///   1. saves and zeroes the occupation matrix
+///   2. accumulates it from psi via accumulate_occ_one_k
+///   3. reduces across k-pools via reduce_occ_mat
+///   4. applies occupation-matrix mixing when enabled
+///   5. computes the effective potential and DFT+U energy
+///
+/// All state is passed explicitly so this function can be unit-tested
+/// without constructing a Plus_U_Base object.
+void cal_occ_pw(const void* psi_in,
+                const ModuleBase::matrix& wg_in,
+                const UnitCell& cell,
+                Charge_Mixing* p_chgmix,
+                const int* isk,
+                const int kpar,
+                const int nspin,
+                const std::string& device,
+                const std::vector<int>& l_channel,
+                const std::vector<double>& u_current,
+                const std::vector<int>& pot_uterm_pw_index,
+                OccupationMatrix& occmat,
+                OccMatMixer* occ_mixer,
+                std::vector<std::complex<double>>& pot_uterm_pw,
+                double& energy_u);
 
 } // namespace DFTU_BASE
 

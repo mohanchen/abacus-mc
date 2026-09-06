@@ -12,6 +12,8 @@
 
 
 
+namespace DFTU_BASE {
+
 /// calculate occupation matrix for DFT+U (PW basis)
 ///
 /// nspin=1 (npol=1): single spin channel; occ_mat[iat][l][n][0] only;
@@ -25,52 +27,62 @@
 /// nspin=4 (npol=2): spinor calculation;
 ///   occ_mat has a single matrix of size (2*tlp1) x (2*tlp1) per atom
 ///   storing all 4 Pauli blocks contiguously.
-void Plus_U_Base::cal_occ_pw(const void* psi_in,
-            const ModuleBase::matrix& wg_in,
-            const UnitCell& cell,
-            Charge_Mixing* p_chgmix,
-            const int* isk,
-            const int kpar)
+void cal_occ_pw(const void* psi_in,
+                const ModuleBase::matrix& wg_in,
+                const UnitCell& cell,
+                Charge_Mixing* p_chgmix,
+                const int* isk,
+                const int kpar,
+                const int nspin,
+                const std::string& device,
+                const std::vector<int>& l_channel,
+                const std::vector<double>& u_current,
+                const std::vector<int>& pot_uterm_pw_index,
+                OccupationMatrix& occmat,
+                OccMatMixer* occ_mixer,
+                std::vector<std::complex<double>>& pot_uterm_pw,
+                double& energy_u)
 {
     ModuleBase::timer::start("Plus_U_Base", "cal_occ_pw");
-    this->occmat_.copy_to_save(cell, this->l_channel);
-    if(this->has_occ_mixer())
+    occmat.copy_to_save(cell, l_channel);
+    if (occ_mixer != nullptr)
     {
-        this->occ_mixer().begin_iter(this->occmat_);
+        occ_mixer->begin_iter(occmat);
     }
-    this->occmat_.zero(cell, this->l_channel);
+    occmat.zero(cell, l_channel);
 
-    if(this->device == "cpu")
+    if (device == "cpu")
     {
         DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_CPU>(
-            psi_in, wg_in, cell, isk, this->nspin, this->l_channel, this->occmat_);
+            psi_in, wg_in, cell, isk, nspin, l_channel, occmat);
     }
 #if defined(__CUDA) || defined(__ROCM)
     else
     {
         DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_GPU>(
-            psi_in, wg_in, cell, isk, this->nspin, this->l_channel, this->occmat_);
+            psi_in, wg_in, cell, isk, nspin, l_channel, occmat);
     }
 #endif
 
     // reduce occ_mat across k-pools
-    DFTU_BASE::reduce_occ_mat(cell, this->nspin, kpar,
-                              this->l_channel, this->occmat_);
+    DFTU_BASE::reduce_occ_mat(cell, nspin, kpar, l_channel, occmat);
 
     // mixing: flatten the fresh occ, mix against the saved one, write back
-    if(this->has_occ_mixer() && p_chgmix != nullptr)
+    if (occ_mixer != nullptr && p_chgmix != nullptr)
     {
-        this->occ_mixer().collect(this->occmat_);
-        p_chgmix->mix_uom(this->occ_mixer().uom(), this->occ_mixer().uom_save());
-        this->occ_mixer().write_back(this->occmat_);
+        occ_mixer->collect(occmat);
+        p_chgmix->mix_uom(occ_mixer->uom(), occ_mixer->uom_save());
+        occ_mixer->write_back(occmat);
     }
 
-    DFTU_BASE::compute_pot_uterm_and_energy(cell, this->nspin,
-        this->u_current, this->l_channel, this->pot_uterm_pw_index,
-        this->occmat_, this->pot_uterm_pw, this->energy_u);
+    DFTU_BASE::compute_pot_uterm_and_energy(cell, nspin,
+        u_current, l_channel, pot_uterm_pw_index,
+        occmat, pot_uterm_pw, energy_u);
 
     ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
 }
+
+} // namespace DFTU_BASE
 
 namespace DFTU_BASE {
 

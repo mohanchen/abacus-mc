@@ -227,6 +227,7 @@ bool Plus_U_Base::u_converged()
 }
 
 
-// cal_occ_pw() is implemented in source_pw/module_pwdft/dftu_base_occ.cpp
-// as a Plus_U_Base method. Pure per-atom kernels live in dftu_base_tools.{h,cpp}
+// cal_occ_pw() is implemented as free function DFTU_BASE::cal_occ_pw
+// in source_pw/module_pwdft/dftu_base_occ.cpp.
+// Pure per-atom kernels live in dftu_base_tools.{h,cpp}
 // as free functions in namespace DFTU_BASE.
