@@ -57,20 +57,18 @@ class Plus_U_Base
     double get_uramping() const { return uramping; }
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
     int get_cal_type() const { return cal_type; }
-    bool use_yukawa() const { return yukawa_ != nullptr; }
 
-    /// access the Yukawa screening object (non-null only when use_yukawa())
+
+    /// Yukawa screening object (non-null only when use_yukawa())
+    bool use_yukawa() const { return yukawa_ != nullptr; }
     YukawaScreening& yukawa() { return *yukawa_; }
     const YukawaScreening& yukawa() const { return *yukawa_; }
 
-
+    // +U energy term
     double get_energy() const { return energy_u; }
     void set_energy(const double &e) { energy_u = e; }
     void set_double_energy() { energy_u *= 2.0; }
 
-    /// interface for PW basis
-    /// calculate the local occupation number matrix for PW based wave functions
-    /// (implemented as free function DFTU_BASE::cal_occ_pw in dftu_base_occ.cpp)
 
     /// get effective potential pointer for the given spin channel (PW basis)
     ///
@@ -78,7 +76,7 @@ class Plus_U_Base
     /// nspin=2: isk selects spin-up (0) or spin-down (1) half of the
     ///          split layout [all_up | all_dn]
     /// nspin=4: isk is ignored, returns &pot_uterm_pw[0] (all Pauli blocks)
-    const std::complex<double>* get_pot_uterm_pw_spin(const int isk) const
+    const std::complex<double>* get_pot_uterm_pw_spin(const int nspin, const int isk) const
     {
         if (nspin == 2 && isk == 1)
         {
@@ -92,7 +90,7 @@ class Plus_U_Base
     /// nspin=1: full array size
     /// nspin=2: half of the total (one spin channel in split layout)
     /// nspin=4: full array size (all Pauli blocks are packed together)
-    int get_size_pot_uterm_pw_spin() const
+    int get_size_pot_uterm_pw_spin(const int nspin) const
     {
         return (nspin == 2) ? static_cast<int>(pot_uterm_pw.size() / 2)
                             : static_cast<int>(pot_uterm_pw.size());
@@ -118,7 +116,6 @@ class Plus_U_Base
     bool has_occ_mixer() const { return occ_mixer_ != nullptr; }
 
     // --- Accessors for free-function interfaces (e.g. DFTU_BASE::cal_occ_pw) ---
-    int get_nspin() const { return nspin; }
     const std::string& get_device() const { return device; }
     const std::vector<double>& get_u_current_vec() const { return u_current; }
     const std::vector<int>& get_pot_uterm_pw_index() const { return pot_uterm_pw_index; }
@@ -139,7 +136,6 @@ class Plus_U_Base
 
     double uramping = 0.0;
     int occ_mat_ctrl = 0;
-    int nspin = 0;
 
     // --- Occupation matrices ---
     OccupationMatrix occmat_;

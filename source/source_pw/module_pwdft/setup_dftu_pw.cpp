@@ -29,7 +29,7 @@ void iter_init_dftu_pw(const int iter,
     if (dftu.get_occ_mat_ctrl() != 2)
     {
         DFTU_BASE::cal_occ_pw(psi, wg, ucell, p_chgmix, isk, PARAM.inp.kpar,
-                              dftu.get_nspin(), dftu.get_device(),
+                              PARAM.inp.nspin, dftu.get_device(),
                               dftu.get_l_channel_vec(), dftu.get_u_current_vec(),
                               dftu.get_pot_uterm_pw_index(),
                               dftu.occmat(),

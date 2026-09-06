@@ -291,8 +291,8 @@ void OnsiteProj<OperatorPW<T, Device>>::cal_ps_dftu(
     }
 
     const int isk_val = (PARAM.inp.nspin == 2) ? this->isk[this->ik] : 0;
-    const std::complex<double>* pot_onsite_host = dftu->get_pot_uterm_pw_spin(isk_val);
-    const int pot_onsite_size = dftu->get_size_pot_uterm_pw_spin();
+    const std::complex<double>* pot_onsite_host = dftu->get_pot_uterm_pw_spin(PARAM.inp.nspin, isk_val);
+    const int pot_onsite_size = dftu->get_size_pot_uterm_pw_spin(PARAM.inp.nspin);
     syncmem_complex_h2d_op()(this->pot_onsite_device, pot_onsite_host, pot_onsite_size);
     hamilt::onsite_ps_op<Real, Device>()(
         this->ctx,

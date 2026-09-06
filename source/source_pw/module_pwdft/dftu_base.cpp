@@ -50,7 +50,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
     ModuleBase::WARNING_QUIT("Plus_U_Base::init_base", "DFT+U module is only accessible in MPI version");
 #endif
 
-    this->nspin = nspin;
     this->l_channel = l_channel;
     this->uramping = uramping;
     this->occ_mat_ctrl = occ_mat_ctrl;
