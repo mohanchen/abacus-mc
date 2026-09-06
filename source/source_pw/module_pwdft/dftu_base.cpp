@@ -150,7 +150,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
         DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);
 #endif
 
-        this->occ_mat_initialized = true;
+        this->set_occmat_ready();
         this->occmat_.copy_to_save(cell, this->l_channel);
         if (this->has_occ_mixer())
         {
@@ -169,7 +169,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 #ifdef __MPI
             DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);
 #endif
-            this->occ_mat_initialized = true;
+            this->set_occmat_ready();
         }
         else
         {

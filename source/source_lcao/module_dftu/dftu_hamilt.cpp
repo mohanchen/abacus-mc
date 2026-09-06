@@ -21,7 +21,7 @@ void pot_uterm_complex(Plus_U& dftu,
                        const int npol)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_complex");
-    if (!dftu.is_occ_mat_initialized())
+    if (!dftu.is_occmat_ready())
     {
         return;
     }
@@ -82,7 +82,7 @@ void pot_uterm_real(Plus_U& dftu,
                     const int npol)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_real");
-    if (!dftu.is_occ_mat_initialized())
+    if (!dftu.is_occmat_ready())
     {
         return;
     }

@@ -111,10 +111,10 @@ class Plus_U_Base
         return uterm_mat.size();
     }
 
-    // dftu can be calculated only after occ_mat has been initialized
-    bool is_occ_mat_initialized() const { return occ_mat_initialized; }
-    void mark_occ_mat_initialized() { occ_mat_initialized = true; }
-    void mark_occ_mat_dirty() { occ_mat_initialized = false; }
+    // dftu can be calculated only after occ_mat is ready
+    bool is_occmat_ready() const { return occmat_ready_; }
+    void set_occmat_ready() { occmat_ready_ = true; }
+    void set_occmat_stale() { occmat_ready_ = false; }
 
     /// direct access to the occupation matrix object (new write path)
     OccupationMatrix& occmat() { return occmat_; }
@@ -135,8 +135,8 @@ class Plus_U_Base
 
   private:
     // --- State flags ---
-    // dftu can be calculated only after occ_mat has been initialized
-    bool occ_mat_initialized = false;
+    // dftu can be calculated only after occ_mat is ready
+    bool occmat_ready_ = false;
 
   protected:
     // --- U values and orbital configuration (set in init_base) ---

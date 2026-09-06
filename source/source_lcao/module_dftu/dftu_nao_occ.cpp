@@ -11,7 +11,7 @@
 
 // cal_occ_mat_k / cal_occ_mat_gamma take Plus_U& dftu directly and read all
 // occupation-matrix state (occ/save arrays, lookup table, nspin/npol, and the
-// occ_mat_initialized flag) from dftu.occmat() and the Plus_U_Base accessors.
+// occmat_ready flag) from dftu.occmat() and the Plus_U_Base accessors.
 
 #ifdef __LCAO
 
@@ -263,12 +263,12 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
         } // end ia
     } // end it
 
-    if(dftu.has_occ_mixer() && dftu.is_occ_mat_initialized())
+    if(dftu.has_occ_mixer() && dftu.is_occmat_ready())
     {
         dftu.occ_mixer().mix_plain(dftu.occmat(), mixing_beta);
     }
 
-    dftu.mark_occ_mat_initialized();
+    dftu.set_occmat_ready();
     ModuleBase::timer::end("DFTU_LCAO", "cal_occ_mat_k");
     return;
 }
@@ -436,12 +436,12 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         } // it
     } // is
 
-    if(dftu.has_occ_mixer() && dftu.is_occ_mat_initialized())
+    if(dftu.has_occ_mixer() && dftu.is_occmat_ready())
     {
         dftu.occ_mixer().mix_plain(dftu.occmat(), mixing_beta);
     }
 
-    dftu.mark_occ_mat_initialized();
+    dftu.set_occmat_ready();
     ModuleBase::timer::end("DFTU_LCAO", "cal_occ_mat_gamma");
     return;
 }

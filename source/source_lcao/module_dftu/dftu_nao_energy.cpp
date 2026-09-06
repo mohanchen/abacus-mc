@@ -11,7 +11,7 @@ void DFTU_LCAO::cal_energy_correction(Plus_U& dftu, const UnitCell& ucell)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_energy_correction");
     ModuleBase::timer::start("DFTU_LCAO", "cal_energy_correction");
-    if (!dftu.is_occ_mat_initialized())
+    if (!dftu.is_occmat_ready())
     {
         ModuleBase::timer::end("DFTU_LCAO", "cal_energy_correction");
         return;
