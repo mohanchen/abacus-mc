@@ -91,7 +91,6 @@ void LCAO_domain::set_pot(
                   pv.get_global_row_size(),
                   inp.ks_solver,
                   inp.device,
-                  inp.kpar,
                   PARAM.globalv.hubbard_u,
                   PARAM.globalv.uramping,
                   inp.occ_mat_ctrl,

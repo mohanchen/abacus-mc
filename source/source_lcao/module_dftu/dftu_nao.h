@@ -47,7 +47,6 @@ class Plus_U : public Plus_U_Base
                 const int nlocal,
                 const std::string& ks_solver,
                 const std::string& device,
-                const int kpar,
                 const std::vector<double>& hubbard_u,
                 const double uramping,
                 const int occ_mat_ctrl,

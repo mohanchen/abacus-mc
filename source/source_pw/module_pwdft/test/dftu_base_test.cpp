@@ -88,7 +88,6 @@ class DFTUBaseTest : public testing::Test
                        "",                     // global_out_dir
                        "none",                 // init_chg
                        "cpu",                  // device
-                       1,                      // kpar
                        hubbard_u,
                        0.0,                    // uramping
                        0,                      // occ_mat_ctrl

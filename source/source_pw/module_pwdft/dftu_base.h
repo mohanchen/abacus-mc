@@ -36,7 +36,6 @@ class Plus_U_Base
                    const std::string& global_out_dir,
                    const std::string& init_chg,
                    const std::string& device,
-                   const int kpar,
                    const std::vector<double>& hubbard_u,
                    const double uramping,
                    const int occ_mat_ctrl,
@@ -76,7 +75,8 @@ class Plus_U_Base
                     const ModuleBase::matrix& wg_in,
                     const UnitCell& cell,
                     Charge_Mixing* p_chgmix,
-                    const int* isk);
+                    const int* isk,
+                    const int kpar);
 
     /// get effective potential pointer for the given spin channel (PW basis)
     ///
@@ -123,6 +123,11 @@ class Plus_U_Base
     const OccMatMixer& occ_mixer() const { return *occ_mixer_; }
     bool has_occ_mixer() const { return occ_mixer_ != nullptr; }
 
+  private:
+    // --- State flags ---
+    // dftu can be calculated only after occ_mat has been initialized
+    bool occ_mat_initialized = false;
+
   protected:
     // --- U values and orbital configuration (set in init_base) ---
     std::vector<double> u_current;
@@ -133,10 +138,6 @@ class Plus_U_Base
     double uramping = 0.0;
     int occ_mat_ctrl = 0;
     int nspin = 0;
-
-    // --- State flags ---
-    // dftu can be calculated only after occ_mat has been initialized
-    bool occ_mat_initialized = false;
 
     // --- Occupation matrices ---
     OccupationMatrix occmat_;
@@ -150,7 +151,6 @@ class Plus_U_Base
 
     int cal_type = 3;
     std::string device;
-    int kpar = 1;
 
     std::vector<std::complex<double>> pot_uterm_pw;
     std::vector<int> pot_uterm_pw_index;

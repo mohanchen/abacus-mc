@@ -29,7 +29,8 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
             const ModuleBase::matrix& wg_in,
             const UnitCell& cell,
             Charge_Mixing* p_chgmix,
-            const int* isk)
+            const int* isk,
+            const int kpar)
 {
     ModuleBase::timer::start("Plus_U_Base", "cal_occ_pw");
     this->occmat_.copy_to_save(cell, this->orbital_corr);
@@ -53,7 +54,7 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
 #endif
 
     // reduce occ_mat across k-pools
-    DFTU_BASE::reduce_occ_mat(cell, this->nspin, this->kpar,
+    DFTU_BASE::reduce_occ_mat(cell, this->nspin, kpar,
                               this->orbital_corr, this->occmat_);
 
     // mixing: flatten the fresh occ, mix against the saved one, write back

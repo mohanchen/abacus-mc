@@ -39,7 +39,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
                              const std::string& global_out_dir,
                              const std::string& init_chg,
                              const std::string& device,
-                             const int kpar,
                              const std::vector<double>& hubbard_u,
                              const double uramping,
                              const int occ_mat_ctrl,
@@ -64,7 +63,6 @@ void Plus_U_Base::init_base(UnitCell& cell,
                   0.0);
     }
     this->device = device;
-    this->kpar = kpar;
 
     this->energy_u = 0.0;
 
