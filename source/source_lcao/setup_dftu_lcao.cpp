@@ -40,7 +40,7 @@ void init_dftu_lcao(const int istep,
         // update current U with calculated U-J from Slater integrals
         for (int T = 0; T < ucell.ntype; T++)
         {
-            if (dftu_ptr->has_correlated_orbital(T))
+            if (dftu_ptr->has_l_channel(T))
             {
                 dftu_ptr->set_u_current(T, dftu_ptr->yukawa().get_Ueff(T));
             }

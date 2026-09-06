@@ -98,7 +98,7 @@ class DFTUTest : public ::testing::Test
             }
         }
         dftu.u_current = {U_test};
-        dftu.orbital_corr = {orbital_c_test};
+        dftu.l_channel = {orbital_c_test};
 
         PARAM.input.onsite_radius = 1.0;
     }

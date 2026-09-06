@@ -54,11 +54,11 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::initialize_HR(const Grid_Driver
         int T0=0;
         int I0=0;
         ucell->iat2iait(iat0, &I0, &T0);
-        if (!this->dftu->has_correlated_orbital(T0))
+        if (!this->dftu->has_l_channel(T0))
         {
             continue;
         }
-        const int target_L = this->dftu->get_orbital_corr(T0);
+        const int target_L = this->dftu->get_l_channel(T0);
 
         AdjacentAtomInfo adjs;
         GridD->Find_atom(*ucell, tau0, T0, I0, &adjs);
@@ -106,11 +106,11 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbi
         int T0=0;
         int I0=0;
         ucell->iat2iait(iat0, &I0, &T0);
-        if (!this->dftu->has_correlated_orbital(T0))
+        if (!this->dftu->has_l_channel(T0))
         {
             continue;
         }
-        const int target_L = this->dftu->get_orbital_corr(T0);
+        const int target_L = this->dftu->get_l_channel(T0);
         const int tlp1 = 2 * target_L + 1;
         AdjacentAtomInfo& adjs = this->adjs_all[atom_index++];
 
@@ -261,11 +261,11 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         auto tau0 = ucell->get_tau(iat0);
         int T0, I0;
         ucell->iat2iait(iat0, &I0, &T0);
-        if (!this->dftu->has_correlated_orbital(T0))
+        if (!this->dftu->has_l_channel(T0))
         {
             continue;
         }
-        const int target_L = this->dftu->get_orbital_corr(T0);
+        const int target_L = this->dftu->get_l_channel(T0);
         const int tlp1 = 2 * target_L + 1;
         AdjacentAtomInfo& adjs = this->adjs_all[atom_index++];
 

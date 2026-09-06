@@ -76,12 +76,12 @@ class DFTUBaseTest : public testing::Test
     /// Call init_base with the given Yukawa switch on a fresh d orbital
     void init_dftu(Plus_U_Base& dftu, const bool yukawa_potential)
     {
-        const std::vector<int> orbital_corr = {2};
+        const std::vector<int> l_channel = {2};
         const std::vector<double> hubbard_u = {0.0};
         dftu.init_base(ucell,
                        1,                      // npol
                        2,                      // nspin
-                       orbital_corr,
+                       l_channel,
                        yukawa_potential,
                        0.5,                    // yukawa_lambda
                        "",                     // global_readin_dir

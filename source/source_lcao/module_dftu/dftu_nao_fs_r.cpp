@@ -57,7 +57,7 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
         int T0 = 0;
         int I0 = 0;
         dftu_op->get_ucell()->iat2iait(iat0, &I0, &T0);
-        if (!dftu_op->get_dftu()->has_correlated_orbital(T0))
+        if (!dftu_op->get_dftu()->has_l_channel(T0))
         {
             continue;
         }
@@ -79,11 +79,11 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
             int T0 = 0;
             int I0 = 0;
             dftu_op->get_ucell()->iat2iait(iat0, &I0, &T0);
-            if (!dftu_op->get_dftu()->has_correlated_orbital(T0))
+            if (!dftu_op->get_dftu()->has_l_channel(T0))
             {
                 continue;
             }
-            const int target_L = dftu_op->get_dftu()->get_orbital_corr(T0);
+            const int target_L = dftu_op->get_dftu()->get_l_channel(T0);
             const int tlp1 = 2 * target_L + 1;
             AdjacentAtomInfo& adjs = dftu_op->get_adjs_all()[atom_index_all[iat0]];
 

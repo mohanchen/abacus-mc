@@ -123,7 +123,7 @@ void pw::setup_pot(const int istep,
     {
         dftu.init_base(ucell,
                   PARAM.globalv.npol,
-                  inp.nspin, inp.orbital_corr, inp.yukawa_potential,
+                  inp.nspin, inp.l_channel, inp.yukawa_potential,
                   inp.yukawa_lambda,
                   PARAM.globalv.global_readin_dir,
                   PARAM.globalv.global_out_dir,

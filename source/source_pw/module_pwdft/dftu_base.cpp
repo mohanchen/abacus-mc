@@ -32,7 +32,7 @@ Plus_U_Base::~Plus_U_Base()
 void Plus_U_Base::init_base(UnitCell& cell,
                              const int npol,
                              const int nspin,
-                             const std::vector<int>& orbital_corr,
+                             const std::vector<int>& l_channel,
                              const bool yukawa_potential,
                              const double yukawa_lambda,
                              const std::string& global_readin_dir,
@@ -51,7 +51,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 #endif
 
     this->nspin = nspin;
-    this->orbital_corr = orbital_corr;
+    this->l_channel = l_channel;
     this->uramping = uramping;
     this->occ_mat_ctrl = occ_mat_ctrl;
     this->u_target = hubbard_u;
@@ -66,7 +66,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->energy_u = 0.0;
 
-    this->occmat_.init(cell, orbital_corr, nspin, npol);
+    this->occmat_.init(cell, l_channel, nspin, npol);
 
     this->pot_uterm_pw_index.resize(cell.nat);
     int pot_index = 0;
@@ -78,7 +78,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
         {
             const int iat = cell.itia2iat(it, ia);
 
-            const int target_l = this->orbital_corr[it];
+            const int target_l = this->l_channel[it];
             if (target_l == -1)
             {
                 continue;
@@ -125,14 +125,14 @@ void Plus_U_Base::init_base(UnitCell& cell,
     if (mixing_dftu != 0)
     {
         this->occ_mixer_.reset(new OccMatMixer());
-        this->occ_mixer_->init(&cell, &this->orbital_corr,
+        this->occ_mixer_->init(&cell, &this->l_channel,
                                &this->pot_uterm_pw_index, nspin, pot_index);
     }
 
     if (yukawa_potential)
     {
         this->yukawa_.reset(new YukawaScreening());
-        this->yukawa_->init(cell, orbital_corr, yukawa_lambda);
+        this->yukawa_->init(cell, l_channel, yukawa_lambda);
     }
     else
     {
@@ -145,14 +145,14 @@ void Plus_U_Base::init_base(UnitCell& cell,
     {
         std::stringstream sst;
         sst << global_readin_dir << "dm_onsite_ini.txt";
-        DFTU_BASE::read_occup_m(cell, this->occmat_, this->orbital_corr, this->occ_mat_ctrl,
+        DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->occ_mat_ctrl,
                                 sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-        DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->orbital_corr, nspin, npol);
+        DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);
 #endif
 
         this->occ_mat_initialized = true;
-        this->occmat_.copy_to_save(cell, this->orbital_corr);
+        this->occmat_.copy_to_save(cell, this->l_channel);
         if (this->has_occ_mixer())
         {
             // seed the mixing history with the file-loaded occupation matrix
@@ -165,16 +165,16 @@ void Plus_U_Base::init_base(UnitCell& cell,
         {
             std::stringstream sst;
             sst << global_readin_dir << "dm_onsite.txt";
-            DFTU_BASE::read_occup_m(cell, this->occmat_, this->orbital_corr, this->occ_mat_ctrl,
+            DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->occ_mat_ctrl,
                                     sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
-            DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->orbital_corr, nspin, npol);
+            DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);
 #endif
             this->occ_mat_initialized = true;
         }
         else
         {
-            this->occmat_.zero(cell, this->orbital_corr);
+            this->occmat_.zero(cell, this->l_channel);
         }
     }
 

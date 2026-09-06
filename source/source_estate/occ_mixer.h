@@ -38,13 +38,13 @@ class OccMatMixer
     /**
      * @brief Allocate the flat buffers and bind the layout table.
      * @param cell          unit cell (borrowed, must outlive this object)
-     * @param orbital_corr  per-type correlated-l table (borrowed)
+     * @param l_channel  per-type correlated-l table (borrowed)
      * @param flat_index    per-atom offset table, i.e. pot_uterm_pw_index (borrowed)
      * @param nspin         spin channels (1, 2 or 4)
      * @param total_size    total flat-buffer size (== pot_uterm_pw.size())
      */
     void init(const UnitCell* cell,
-              const std::vector<int>* orbital_corr,
+              const std::vector<int>* l_channel,
               const std::vector<int>* flat_index,
               int nspin,
               int total_size);
@@ -99,7 +99,7 @@ class OccMatMixer
     std::vector<double> uom_save_; ///< previous flat occupation matrix
     const std::vector<int>* index_ = nullptr;        ///< borrowed pot_uterm_pw_index
     const UnitCell* cell_ = nullptr;                 ///< borrowed unit cell
-    const std::vector<int>* orbital_corr_ = nullptr; ///< borrowed correlated-l table
+    const std::vector<int>* l_channel_ = nullptr; ///< borrowed l_channel table
     int nspin_ = 0;
 };
 

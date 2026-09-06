@@ -33,29 +33,29 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
             const int kpar)
 {
     ModuleBase::timer::start("Plus_U_Base", "cal_occ_pw");
-    this->occmat_.copy_to_save(cell, this->orbital_corr);
+    this->occmat_.copy_to_save(cell, this->l_channel);
     if(this->has_occ_mixer())
     {
         this->occ_mixer().begin_iter(this->occmat_);
     }
-    this->occmat_.zero(cell, this->orbital_corr);
+    this->occmat_.zero(cell, this->l_channel);
 
     if(this->device == "cpu")
     {
         DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_CPU>(
-            psi_in, wg_in, cell, isk, this->nspin, this->orbital_corr, this->occmat_);
+            psi_in, wg_in, cell, isk, this->nspin, this->l_channel, this->occmat_);
     }
 #if defined(__CUDA) || defined(__ROCM)
     else
     {
         DFTU_BASE::accumulate_occ_one_k<base_device::DEVICE_GPU>(
-            psi_in, wg_in, cell, isk, this->nspin, this->orbital_corr, this->occmat_);
+            psi_in, wg_in, cell, isk, this->nspin, this->l_channel, this->occmat_);
     }
 #endif
 
     // reduce occ_mat across k-pools
     DFTU_BASE::reduce_occ_mat(cell, this->nspin, kpar,
-                              this->orbital_corr, this->occmat_);
+                              this->l_channel, this->occmat_);
 
     // mixing: flatten the fresh occ, mix against the saved one, write back
     if(this->has_occ_mixer() && p_chgmix != nullptr)
@@ -66,7 +66,7 @@ void Plus_U_Base::cal_occ_pw(const void* psi_in,
     }
 
     DFTU_BASE::compute_pot_uterm_and_energy(cell, this->nspin,
-        this->u_current, this->orbital_corr, this->pot_uterm_pw_index,
+        this->u_current, this->l_channel, this->pot_uterm_pw_index,
         this->occmat_, this->pot_uterm_pw, this->energy_u);
 
     ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
@@ -77,13 +77,13 @@ namespace DFTU_BASE {
 void reduce_occ_mat(const UnitCell& cell,
                     const int nspin,
                     const int kpar,
-                    const std::vector<int>& orbital_corr,
+                    const std::vector<int>& l_channel,
                     OccupationMatrix& occmat)
 {
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];
-        const int target_l = orbital_corr[it];
+        const int target_l = l_channel[it];
         if(target_l == -1)
         {
             continue;
@@ -117,7 +117,7 @@ void reduce_occ_mat(const UnitCell& cell,
 void compute_pot_uterm_and_energy(const UnitCell& cell,
                                   const int nspin,
                                   const std::vector<double>& u_current,
-                                  const std::vector<int>& orbital_corr,
+                                  const std::vector<int>& l_channel,
                                   const std::vector<int>& pot_uterm_pw_index,
                                   const OccupationMatrix& occmat,
                                   std::vector<std::complex<double>>& pot_uterm_pw,
@@ -130,7 +130,7 @@ void compute_pot_uterm_and_energy(const UnitCell& cell,
     for(int iat = 0; iat < cell.nat; iat++)
     {
         const int it = cell.iat2it[iat];
-        const int target_l = orbital_corr[it];
+        const int target_l = l_channel[it];
         if(target_l == -1)
         {
             continue;
@@ -185,7 +185,7 @@ void accumulate_occ_one_k(const void* psi_in,
                           const UnitCell& cell,
                           const int* isk,
                           const int nspin,
-                          const std::vector<int>& orbital_corr,
+                          const std::vector<int>& l_channel,
                           OccupationMatrix& occmat)
 {
     auto* onsite_p = projectors::OnsiteProjector<double, Device>::get_instance();
@@ -208,7 +208,7 @@ void accumulate_occ_one_k(const void* psi_in,
         {
             const int it = cell.iat2it[iat];
             const int nh = onsite_p->get_nh(iat);
-            const int target_l = orbital_corr[it];
+            const int target_l = l_channel[it];
             if(target_l == -1)
             {
                 begin_ih += nh;

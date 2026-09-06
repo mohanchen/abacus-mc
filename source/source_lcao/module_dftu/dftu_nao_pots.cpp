@@ -22,7 +22,7 @@ void DFTU_LCAO::pot_onsite_complex(const Plus_U& dftu,
 
     for (int it = 0; it < ucell.ntype; ++it)
     {
-        if (dftu.get_orbital_corr(it) == -1)
+        if (dftu.get_l_channel(it) == -1)
         {
             continue;
         }
@@ -31,7 +31,7 @@ void DFTU_LCAO::pot_onsite_complex(const Plus_U& dftu,
             const int iat = ucell.itia2iat(it, ia);
             for (int L = 0; L <= ucell.atoms[it].nwl; L++)
             {
-                if (L != dftu.get_orbital_corr(it))
+                if (L != dftu.get_l_channel(it))
                 {
                     continue;
                 }
@@ -95,7 +95,7 @@ void DFTU_LCAO::pot_onsite_real(const Plus_U& dftu,
 
     for (int it = 0; it < ucell.ntype; ++it)
     {
-        if (dftu.get_orbital_corr(it) == -1)
+        if (dftu.get_l_channel(it) == -1)
         {
             continue;
         }
@@ -104,7 +104,7 @@ void DFTU_LCAO::pot_onsite_real(const Plus_U& dftu,
             const int iat = ucell.itia2iat(it, ia);
             for (int L = 0; L <= ucell.atoms[it].nwl; L++)
             {
-                if (L != dftu.get_orbital_corr(it))
+                if (L != dftu.get_l_channel(it))
                 {
                     continue;
                 }

@@ -38,7 +38,7 @@ class Plus_U : public Plus_U_Base
                 const Parallel_Orbitals* pv,
                 const int npol,
                 const int nspin,
-                const std::vector<int>& orbital_corr,
+                const std::vector<int>& l_channel,
                 const bool yukawa_potential,
                 const double yukawa_lambda,
                 const std::string& global_readin_dir,

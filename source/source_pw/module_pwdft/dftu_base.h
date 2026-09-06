@@ -29,7 +29,7 @@ class Plus_U_Base
     void init_base(UnitCell& cell,
                    const int npol,
                    const int nspin,
-                   const std::vector<int>& orbital_corr,
+                   const std::vector<int>& l_channel,
                    const bool yukawa_potential,
                    const double yukawa_lambda,
                    const std::string& global_readin_dir,
@@ -44,16 +44,16 @@ class Plus_U_Base
     void uramping_update();
     bool u_converged();
 
-    // --- Accessors for U values and orbital configuration ---
+    // u_current
     double get_u_current(int it) const { return u_current[it]; }
+    void set_u_current(int it, double val) { u_current[it] = val; }
     int get_num_u_types() const { return static_cast<int>(u_current.size()); }
-    int get_orbital_corr(int it) const { return orbital_corr[it]; }
-    bool has_correlated_orbital(int it) const { return orbital_corr[it] != -1; }
 
-    /// read-only access to the orbital_corr vector (length ntype)
-    const std::vector<int>& get_orbital_corr_vec() const { return orbital_corr; }
+    // l_channel
+    int get_l_channel(int it) const { return l_channel[it]; }
+    bool has_l_channel(int it) const { return l_channel[it] != -1; }
+    const std::vector<int>& get_l_channel_vec() const { return l_channel; }
 
-    // --- Accessors for DFT+U configuration ---
     double get_uramping() const { return uramping; }
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
     int get_cal_type() const { return cal_type; }
@@ -63,7 +63,6 @@ class Plus_U_Base
     YukawaScreening& yukawa() { return *yukawa_; }
     const YukawaScreening& yukawa() const { return *yukawa_; }
 
-    void set_u_current(int it, double val) { u_current[it] = val; }
 
     double get_energy() const { return energy_u; }
     void set_energy(const double &e) { energy_u = e; }
@@ -132,9 +131,8 @@ class Plus_U_Base
     // --- U values and orbital configuration (set in init_base) ---
     std::vector<double> u_current;
     std::vector<double> u_target;
-    std::vector<int> orbital_corr;
+    std::vector<int> l_channel;
 
-    // --- DFT+U configuration flags ---
     double uramping = 0.0;
     int occ_mat_ctrl = 0;
     int nspin = 0;

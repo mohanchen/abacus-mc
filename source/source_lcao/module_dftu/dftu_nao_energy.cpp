@@ -30,7 +30,7 @@ void DFTU_LCAO::cal_energy_correction(Plus_U& dftu, const UnitCell& ucell)
     for (int T = 0; T < ucell.ntype; T++)
     {
         const int NL = ucell.atoms[T].nwl + 1;
-        const int LC = dftu.get_orbital_corr(T);
+        const int LC = dftu.get_l_channel(T);
         for (int I = 0; I < ucell.atoms[T].na; I++)
         {
             if (LC == -1)
@@ -39,11 +39,11 @@ void DFTU_LCAO::cal_energy_correction(Plus_U& dftu, const UnitCell& ucell)
             }
 
             const int iat = ucell.itia2iat(T, I);
-            const int L = dftu.get_orbital_corr(T);
+            const int L = dftu.get_l_channel(T);
 
             for (int l = 0; l < NL; l++)
             {
-                if (l != dftu.get_orbital_corr(T))
+                if (l != dftu.get_l_channel(T))
                 {
                     continue;
                 }

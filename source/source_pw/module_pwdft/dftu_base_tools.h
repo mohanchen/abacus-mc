@@ -110,7 +110,7 @@ void accumulate_occ_scalar(
 void reduce_occ_mat(const UnitCell& cell,
                     const int nspin,
                     const int kpar,
-                    const std::vector<int>& orbital_corr,
+                    const std::vector<int>& l_channel,
                     OccupationMatrix& occmat);
 
 /// compute effective potential pot_onsite and DFT+U energy from occ_mat.
@@ -128,7 +128,7 @@ void reduce_occ_mat(const UnitCell& cell,
 void compute_pot_uterm_and_energy(const UnitCell& cell,
                                   const int nspin,
                                   const std::vector<double>& u_current,
-                                  const std::vector<int>& orbital_corr,
+                                  const std::vector<int>& l_channel,
                                   const std::vector<int>& pot_uterm_pw_index,
                                   const OccupationMatrix& occmat,
                                   std::vector<std::complex<double>>& pot_uterm_pw,
@@ -144,7 +144,7 @@ void accumulate_occ_one_k(const void* psi_in,
                           const UnitCell& cell,
                           const int* isk,
                           const int nspin,
-                          const std::vector<int>& orbital_corr,
+                          const std::vector<int>& l_channel,
                           OccupationMatrix& occmat);
 
 } // namespace DFTU_BASE

@@ -33,11 +33,11 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
     const int nlocal = pv->get_global_row_size();
     const std::string& ks_solver = PARAM.inp.ks_solver;
     const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
-    const std::vector<int>& orbital_corr = dftu.get_orbital_corr_vec();
+    const std::vector<int>& l_channel = dftu.get_l_channel_vec();
 
     // copy occ_mat to occ_mat_save, then zero occ_mat
-    dftu.occmat().copy_to_save(ucell, orbital_corr);
-    dftu.occmat().zero(ucell, orbital_corr);
+    dftu.occmat().copy_to_save(ucell, l_channel);
+    dftu.occmat().zero(ucell, l_channel);
 
     //=================Part 1======================
     // call SCALAPACK routine to calculate the product of the S and density matrix
@@ -90,7 +90,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
         for (int it = 0; it < ucell.ntype; it++)
         {
             const int NL = ucell.atoms[it].nwl + 1;
-            const int LC = orbital_corr[it];
+            const int LC = l_channel[it];
 
             if (LC == -1)
             {
@@ -103,7 +103,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
                 for (int l = 0; l < NL; l++)
                 {
-                    if (l != orbital_corr[it])
+                    if (l != l_channel[it])
                     {
                         continue;
                     }
@@ -165,7 +165,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
     for (int it = 0; it < ucell.ntype; it++)
     {
         const int NL = ucell.atoms[it].nwl + 1;
-        const int LC = orbital_corr[it];
+        const int LC = l_channel[it];
 
         if (LC == -1)
         {
@@ -178,7 +178,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 
             for (int l = 0; l < NL; l++)
             {
-                if (l != orbital_corr[it])
+                if (l != l_channel[it])
                 {
                     continue;
                 }
@@ -288,11 +288,11 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
     const int npol = dftu.occmat().npol();
     const int nlocal = pv->get_global_row_size();
     const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
-    const std::vector<int>& orbital_corr = dftu.get_orbital_corr_vec();
+    const std::vector<int>& l_channel = dftu.get_l_channel_vec();
 
     // copy occ_mat to occ_mat_save, then zero occ_mat
-    dftu.occmat().copy_to_save(ucell, orbital_corr);
-    dftu.occmat().zero(ucell, orbital_corr);
+    dftu.occmat().copy_to_save(ucell, l_channel);
+    dftu.occmat().zero(ucell, l_channel);
 
     //=================Part 1======================
     // call PBLAS routine to calculate the product of the S and density matrix
@@ -331,7 +331,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
         for (int it = 0; it < ucell.ntype; it++)
         {
             const int NL = ucell.atoms[it].nwl + 1;
-            const int LC = orbital_corr[it];
+            const int LC = l_channel[it];
 
             if (LC == -1)
             {
@@ -343,7 +343,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 
                 for (int l = 0; l < NL; l++)
                 {
-                    if (l != orbital_corr[it])
+                    if (l != l_channel[it])
                     {
                         continue;
                     }
