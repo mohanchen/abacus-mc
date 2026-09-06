@@ -168,15 +168,15 @@ double DFTU_LCAO::get_onsite_pot(const Plus_U& dftu,
 
     double pot_onsite = 0.0;
 
-    switch (dftu.get_cal_type())
+    switch (dftu.get_form())
     {
-    case 1: // rotationally invarient formalism and FLL double counting
+    case Plus_U_Base::UForm::lich_fll: // Lichtenstein (rotationally invariant) + FLL DC
         break;
 
-    case 2: // rotationally invarient formalism and AMF double counting
+    case Plus_U_Base::UForm::lich_amf: // Lichtenstein (rotationally invariant) + AMF DC
         break;
 
-    case 3: // simplified formalism and FLL double counting
+    case Plus_U_Base::UForm::dud_fll: // Dudarev (simplified) + FLL DC
         if (new_occ_mat)
         {
             if (dftu.use_yukawa())
@@ -236,9 +236,6 @@ double DFTU_LCAO::get_onsite_pot(const Plus_U& dftu,
             }
         }
 
-        break;
-
-    case 4: // simplified formalism and AMF double counting
         break;
     }
 

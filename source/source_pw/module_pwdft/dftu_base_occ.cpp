@@ -17,7 +17,7 @@ namespace DFTU_BASE {
 /// calculate occupation matrix for DFT+U (PW basis)
 ///
 /// nspin=1 (npol=1): single spin channel; occ_mat[iat][l][n][0] only;
-///   pot_uterm_pw has one block of tlp1^2 per atom.
+///   uterm_mat has one block of tlp1^2 per atom.
 ///
 /// nspin=2 (npol=1): two spin channels stored separately:
 ///   occ_mat[iat][l][n][0] = spin-up, occ_mat[iat][l][n][1] = spin-down;
@@ -37,10 +37,10 @@ void cal_occ_pw(const void* psi_in,
                 const std::string& device,
                 const std::vector<int>& l_channel,
                 const std::vector<double>& u_current,
-                const std::vector<int>& pot_uterm_pw_index,
+                const std::vector<int>& uterm_mat_index,
                 OccupationMatrix& occmat,
                 OccMatMixer* occ_mixer,
-                std::vector<std::complex<double>>& pot_uterm_pw,
+                std::vector<std::complex<double>>& uterm_mat,
                 double& energy_u)
 {
     ModuleBase::timer::start("Plus_U_Base", "cal_occ_pw");
@@ -76,8 +76,8 @@ void cal_occ_pw(const void* psi_in,
     }
 
     DFTU_BASE::compute_pot_uterm_and_energy(cell, nspin,
-        u_current, l_channel, pot_uterm_pw_index,
-        occmat, pot_uterm_pw, energy_u);
+        u_current, l_channel, uterm_mat_index,
+        occmat, uterm_mat, energy_u);
 
     ModuleBase::timer::end("Plus_U_Base", "cal_occ_pw");
 }
@@ -130,9 +130,9 @@ void compute_pot_uterm_and_energy(const UnitCell& cell,
                                   const int nspin,
                                   const std::vector<double>& u_current,
                                   const std::vector<int>& l_channel,
-                                  const std::vector<int>& pot_uterm_pw_index,
+                                  const std::vector<int>& uterm_mat_index,
                                   const OccupationMatrix& occmat,
-                                  std::vector<std::complex<double>>& pot_uterm_pw,
+                                  std::vector<std::complex<double>>& uterm_mat,
                                   double& energy_u)
 {
     energy_u = 0.0;
@@ -151,7 +151,7 @@ void compute_pot_uterm_and_energy(const UnitCell& cell,
 
         //update effective potential
         const double u_value = u_current[it];
-        std::complex<double>* pot_onsite_iat = &(pot_uterm_pw[pot_uterm_pw_index[iat]]);
+        std::complex<double>* pot_onsite_iat = &(uterm_mat[uterm_mat_index[iat]]);
         const int m_size = 2 * target_l + 1;
 
         if(nspin == 4)
@@ -177,7 +177,7 @@ void compute_pot_uterm_and_energy(const UnitCell& cell,
             // spin-down channel for nspin=2
             if(nspin == 2)
             {
-                std::complex<double>* pot_onsite_iat1 = &(pot_uterm_pw[pot_uterm_pw.size()/2 + pot_uterm_pw_index[iat]]);
+                std::complex<double>* pot_onsite_iat1 = &(uterm_mat[uterm_mat.size()/2 + uterm_mat_index[iat]]);
                 energy_u += compute_pot_onsite_scalar(
                     pot_onsite_iat1,
                     occmat.mat(iat, target_l, 0, 1).c,

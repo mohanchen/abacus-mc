@@ -67,7 +67,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->occmat_.init(cell, l_channel, nspin, npol);
 
-    this->pot_uterm_pw_index.resize(cell.nat);
+    this->uterm_mat_index.resize(cell.nat);
     int pot_index = 0;
 
     int num_locale = 0;
@@ -88,12 +88,12 @@ void Plus_U_Base::init_base(UnitCell& cell,
             const int elem_size = tlp1 * tlp1;
             if(nspin == 4)
             {
-                this->pot_uterm_pw_index[iat] = pot_index;
+                this->uterm_mat_index[iat] = pot_index;
                 pot_index += tlp1_npol * tlp1_npol;
             }
             else
             {
-                this->pot_uterm_pw_index[iat] = pot_index;
+                this->uterm_mat_index[iat] = pot_index;
                 pot_index += elem_size;
             }
 
@@ -118,14 +118,14 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     if (nspin == 2) pot_index *= 2;
 
-    this->pot_uterm_pw.resize(pot_index, 0.0);
+    this->uterm_mat.resize(pot_index, 0.0);
 
     // construct the occupation-matrix mixer only when mixing is enabled
     if (mixing_dftu != 0)
     {
         this->occ_mixer_.reset(new OccMatMixer());
         this->occ_mixer_->init(&cell, &this->l_channel,
-                               &this->pot_uterm_pw_index, nspin, pot_index);
+                               &this->uterm_mat_index, nspin, pot_index);
     }
 
     if (yukawa_potential)

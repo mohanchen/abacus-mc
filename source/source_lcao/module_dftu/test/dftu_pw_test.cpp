@@ -285,8 +285,8 @@ TEST_F(DftuPwTest, MultiAtomSplitLayout_Nspin2)
     const int nat = 2, m_size = 5, size = m_size * m_size;
     const int P = nat * size, total = P * 2, half_size = P;
 
-    // pot_uterm_pw_index: split layout, each atom gets `size` entries
-    std::vector<int> pot_uterm_pw_index = {0, size};
+    // uterm_mat_index: split layout, each atom gets `size` entries
+    std::vector<int> uterm_mat_index = {0, size};
 
     // Simulate occ_mat values for both atoms
     std::vector<double> loc_up[2], loc_dn[2];
@@ -302,8 +302,8 @@ TEST_F(DftuPwTest, MultiAtomSplitLayout_Nspin2)
     std::vector<double> uom_array(total, 0.0);
     for (int iat = 0; iat < nat; iat++)
         for (int mm = 0; mm < size; mm++) {
-            uom_array[pot_uterm_pw_index[iat] + mm] = loc_up[iat][mm];
-            uom_array[half_size + pot_uterm_pw_index[iat] + mm] = loc_dn[iat][mm];
+            uom_array[uterm_mat_index[iat] + mm] = loc_up[iat][mm];
+            uom_array[half_size + uterm_mat_index[iat] + mm] = loc_dn[iat][mm];
         }
 
     // Verify split layout: first half = all spin-up, second half = all spin-down
@@ -314,25 +314,25 @@ TEST_F(DftuPwTest, MultiAtomSplitLayout_Nspin2)
 
     // --- Read back and verify round-trip ---
     for (int iat = 0; iat < nat; iat++)
-        EXPECT_DOUBLE_EQ(uom_array[pot_uterm_pw_index[iat]], loc_up[iat][0]);
+        EXPECT_DOUBLE_EQ(uom_array[uterm_mat_index[iat]], loc_up[iat][0]);
 
     // --- pot_onsite values in split layout ---
     const double U_val = 5.0;
     const double diag_coeff = 0.5;
-    std::vector<std::complex<double>> pot_uterm_pw(total, {0.0, 0.0});
+    std::vector<std::complex<double>> uterm_mat(total, {0.0, 0.0});
 
     // atom 0 spin-up pot_onsite
-    std::complex<double>* pot_onsite_up_0 = &pot_uterm_pw[0];
+    std::complex<double>* pot_onsite_up_0 = &uterm_mat[0];
     pot_onsite_up_0[0] = U_val * (diag_coeff - loc_up[0][0]);
     // atom 0 spin-down pot_onsite (split layout: offset by half_size)
-    std::complex<double>* pot_onsite_dn_0 = &pot_uterm_pw[half_size];
+    std::complex<double>* pot_onsite_dn_0 = &uterm_mat[half_size];
     pot_onsite_dn_0[0] = U_val * (diag_coeff - loc_dn[0][0]);
 
     EXPECT_DOUBLE_EQ(pot_onsite_up_0[0].real(), -1.5); // 5*(0.5-0.8)
     EXPECT_DOUBLE_EQ(pot_onsite_dn_0[0].real(), 1.5);  // 5*(0.5-0.2)
 
     // Verify no overlap between atoms in pot_onsite arrays
-    std::complex<double>* pot_onsite_up_1 = &pot_uterm_pw[size];
+    std::complex<double>* pot_onsite_up_1 = &uterm_mat[size];
     pot_onsite_up_1[0] = U_val * (diag_coeff - loc_up[1][0]);
     EXPECT_NE(pot_onsite_up_0[0], pot_onsite_up_1[0]);
 }

@@ -22,6 +22,15 @@ class Plus_U_Base
   friend class DFTUTest;
 
   public:
+    // DFT+U formalism & double-counting (DC) scheme.
+    // Only dud_fll is implemented; the others are placeholders (return 0).
+    enum class UForm
+    {
+        lich_fll = 1, // Lichtenstein (rotationally invariant) + FLL DC
+        lich_amf = 2, // Lichtenstein (rotationally invariant) + AMF DC
+        dud_fll  = 3, // Dudarev (simplified) + FLL DC -- default, implemented
+    };
+
     Plus_U_Base();
     ~Plus_U_Base();
 
@@ -56,7 +65,7 @@ class Plus_U_Base
 
     double get_uramping() const { return uramping; }
     int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
-    int get_cal_type() const { return cal_type; }
+    UForm get_form() const { return form; }
 
 
     /// Yukawa screening object (non-null only when use_yukawa())
@@ -70,35 +79,36 @@ class Plus_U_Base
     void set_double_energy() { energy_u *= 2.0; }
 
 
-    /// get effective potential pointer for the given spin channel (PW basis)
+    /// get the U-term coefficient matrix pointer for the given spin channel
+    /// (small (2l+1)^2 per-atom matrix, projector coefficient)
     ///
-    /// nspin=1: isk is ignored, returns &pot_uterm_pw[0]
+    /// nspin=1: isk is ignored, returns &uterm_mat[0]
     /// nspin=2: isk selects spin-up (0) or spin-down (1) half of the
     ///          split layout [all_up | all_dn]
-    /// nspin=4: isk is ignored, returns &pot_uterm_pw[0] (all Pauli blocks)
-    const std::complex<double>* get_pot_uterm_pw_spin(const int nspin, const int isk) const
+    /// nspin=4: isk is ignored, returns &uterm_mat[0] (all Pauli blocks)
+    const std::complex<double>* get_uterm_mat_spin(const int nspin, const int isk) const
     {
         if (nspin == 2 && isk == 1)
         {
-            return pot_uterm_pw.data() + pot_uterm_pw.size() / 2;
+            return uterm_mat.data() + uterm_mat.size() / 2;
         }
-        return pot_uterm_pw.data();
+        return uterm_mat.data();
     }
 
-    /// get size of effective potential for a single spin channel (PW basis)
+    /// get size of the U-term coefficient matrix for a single spin channel
     ///
     /// nspin=1: full array size
     /// nspin=2: half of the total (one spin channel in split layout)
     /// nspin=4: full array size (all Pauli blocks are packed together)
-    int get_size_pot_uterm_pw_spin(const int nspin) const
+    int get_size_uterm_mat_spin(const int nspin) const
     {
-        return (nspin == 2) ? static_cast<int>(pot_uterm_pw.size() / 2)
-                            : static_cast<int>(pot_uterm_pw.size());
+        return (nspin == 2) ? static_cast<int>(uterm_mat.size() / 2)
+                            : static_cast<int>(uterm_mat.size());
     }
 
-    int get_size_pot_uterm_pw() const
+    int get_size_uterm_mat() const
     {
-        return pot_uterm_pw.size();
+        return uterm_mat.size();
     }
 
     // dftu can be calculated only after occ_mat has been initialized
@@ -118,9 +128,9 @@ class Plus_U_Base
     // --- Accessors for free-function interfaces (e.g. DFTU_BASE::cal_occ_pw) ---
     const std::string& get_device() const { return device; }
     const std::vector<double>& get_u_current_vec() const { return u_current; }
-    const std::vector<int>& get_pot_uterm_pw_index() const { return pot_uterm_pw_index; }
-    std::vector<std::complex<double>>& get_pot_uterm_pw() { return pot_uterm_pw; }
-    const std::vector<std::complex<double>>& get_pot_uterm_pw() const { return pot_uterm_pw; }
+    const std::vector<int>& get_uterm_mat_index() const { return uterm_mat_index; }
+    std::vector<std::complex<double>>& get_uterm_mat() { return uterm_mat; }
+    const std::vector<std::complex<double>>& get_uterm_mat() const { return uterm_mat; }
     double& energy_ref() { return energy_u; }
 
   private:
@@ -147,11 +157,11 @@ class Plus_U_Base
     // --- Internal state ---
     double energy_u = 0.0;
 
-    int cal_type = 3;
+    UForm form = UForm::dud_fll;
     std::string device;
 
-    std::vector<std::complex<double>> pot_uterm_pw;
-    std::vector<int> pot_uterm_pw_index;
+    std::vector<std::complex<double>> uterm_mat;
+    std::vector<int> uterm_mat_index;
 
     // Yukawa screening object; constructed only when use_yukawa() is true.
     // Owns the screening length, Slater integrals and derived U/J.

@@ -10,8 +10,8 @@ void projectors::OnsiteProjector<T, Device>::cal_force_onsite_dftu(int ik, int n
                                                         const double* wg_ik) const
 {
     const int isk_val = this->isk_ ? this->isk_[ik] : 0;
-    const std::complex<double>* pot_onsite_ptr = dftu.get_pot_uterm_pw_spin(PARAM.inp.nspin, isk_val);
-    const int pot_onsite_size = dftu.get_size_pot_uterm_pw_spin(PARAM.inp.nspin);
+    const std::complex<double>* pot_onsite_ptr = dftu.get_uterm_mat_spin(PARAM.inp.nspin, isk_val);
+    const int pot_onsite_size = dftu.get_size_uterm_mat_spin(PARAM.inp.nspin);
     this->fs_tools->cal_force_dftu(ik, npm, force,
         dftu.get_l_channel_vec().data(), pot_onsite_ptr, pot_onsite_size, wg_ik);
 }
@@ -22,8 +22,8 @@ double projectors::OnsiteProjector<T, Device>::cal_stress_onsite_dftu(int ik, in
                                                            const double* wg_ik) const
 {
     const int isk_val = this->isk_ ? this->isk_[ik] : 0;
-    const std::complex<double>* pot_onsite_ptr = dftu.get_pot_uterm_pw_spin(PARAM.inp.nspin, isk_val);
-    const int pot_onsite_size = dftu.get_size_pot_uterm_pw_spin(PARAM.inp.nspin);
+    const std::complex<double>* pot_onsite_ptr = dftu.get_uterm_mat_spin(PARAM.inp.nspin, isk_val);
+    const int pot_onsite_size = dftu.get_size_uterm_mat_spin(PARAM.inp.nspin);
     return this->fs_tools->cal_stress_dftu(ik, npm,
         dftu.get_l_channel_vec().data(), pot_onsite_ptr, pot_onsite_size, wg_ik);
 }

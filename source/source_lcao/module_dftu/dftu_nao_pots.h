@@ -13,8 +13,8 @@ namespace DFTU_LCAO {
 /**
  * @brief one-body effective onsite potential element for a given (m0,m1) pair.
  *
- * Dispatches on cal_type; only case 3 (simplified formalism with FLL double
- * counting) is currently implemented, the other cases return 0.
+ * Dispatches on UForm; only dud_fll (Dudarev simplified formalism with FLL
+ * double counting) is currently implemented, the other forms return 0.
  *
  * @param dftu        Plus_U state providing U/J values and occupation matrices
  * @param T           atom type

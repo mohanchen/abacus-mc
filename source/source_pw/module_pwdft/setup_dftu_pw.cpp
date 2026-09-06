@@ -31,10 +31,10 @@ void iter_init_dftu_pw(const int iter,
         DFTU_BASE::cal_occ_pw(psi, wg, ucell, p_chgmix, isk, PARAM.inp.kpar,
                               PARAM.inp.nspin, dftu.get_device(),
                               dftu.get_l_channel_vec(), dftu.get_u_current_vec(),
-                              dftu.get_pot_uterm_pw_index(),
+                              dftu.get_uterm_mat_index(),
                               dftu.occmat(),
                               dftu.has_occ_mixer() ? &dftu.occ_mixer() : nullptr,
-                              dftu.get_pot_uterm_pw(), dftu.energy_ref());
+                              dftu.get_uterm_mat(), dftu.energy_ref());
     }
     DFTU_BASE::output(dftu, ucell, PARAM.inp.out_chg[0], PARAM.globalv.global_out_dir, PARAM.inp.nspin, PARAM.globalv.npol);
 }
