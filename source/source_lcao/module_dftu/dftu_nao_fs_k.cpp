@@ -15,7 +15,8 @@
 
 namespace DFTU_LCAO {
 
-void force_stress(Plus_U& dftu,
+void force_stress(Plus_U_Base& dftu,
+                  const std::vector<double>& orb_cutoff,
                   const bool cal_force,
                   const bool cal_stress,
                   const UnitCell& ucell,
@@ -143,7 +144,7 @@ void force_stress(Plus_U& dftu,
             if (cal_stress)
             {
                 cal_stress_gamma(nlocal, npol,
-                                 PARAM.inp.ks_solver, dftu.get_orb_cutoff(),
+                                 PARAM.inp.ks_solver, orb_cutoff,
                                  ucell, pv, &gd,
                                  fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, fsr.DH_r,
                                  &rho_pot_onsite[0], stress_dftu);
@@ -181,14 +182,14 @@ void force_stress(Plus_U& dftu,
             if (cal_force)
             {
                 cal_force_k(nlocal, npol,
-                            PARAM.inp.ks_solver, dftu.get_orb_cutoff(),
+                            PARAM.inp.ks_solver, orb_cutoff,
                             dftu.get_l_channel_vec(), dftu.occmat().iatlnmipol2iwt(),
                             ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], force_dftu, kv.kvec_d[ik]);
             }
             if (cal_stress)
             {
                 cal_stress_k(nlocal, npol,
-                             PARAM.inp.ks_solver, dftu.get_orb_cutoff(),
+                             PARAM.inp.ks_solver, orb_cutoff,
                              ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], stress_dftu, kv.kvec_d[ik]);
             }
         } // ik

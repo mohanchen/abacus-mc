@@ -1,10 +1,3 @@
-/// @file dftu_force.h
-/// @brief Free-function helpers for DFT+U force and stress, extracted from
-///        Plus_U. The top-level force_stress takes a Plus_U& because it needs
-///        to call Plus_U::pot_onsite_real/complex; the four inner
-///        functions are fully decoupled and take their dependencies as
-///        explicit parameters (mirroring the folding helpers in the same
-///        DFTU_LCAO namespace).
 #ifndef DFTU_FORCE_H
 #define DFTU_FORCE_H
 
@@ -22,14 +15,15 @@
 
 #ifdef __LCAO
 
-class Plus_U;
+class Plus_U_Base;
 
 namespace DFTU_LCAO {
 
 /// @brief Top-level entry: drives force/stress from DFT+U.
-/// Takes Plus_U& because it calls dftu.pot_onsite_real/complex,
-/// which are still members of Plus_U (defined in dftu_tools.cpp).
-void force_stress(Plus_U& dftu,
+/// Takes Plus_U_Base&; the per-type orbital cutoff is passed in explicitly
+/// because it is an LCAO-specific quantity (PW uses onsite_radius instead).
+void force_stress(Plus_U_Base& dftu,
+                  const std::vector<double>& orb_cutoff,
                   const bool cal_force,
                   const bool cal_stress,
                   const UnitCell& ucell,
