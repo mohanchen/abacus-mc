@@ -36,6 +36,7 @@ ESolver_KS_LCAO<TK, TR>::ESolver_KS_LCAO()
 {
     this->classname = "ESolver_KS_LCAO";
     this->basisname = "LCAO";
+    this->dftu_ = new Plus_U();
 }
 
 template <typename TK, typename TR>

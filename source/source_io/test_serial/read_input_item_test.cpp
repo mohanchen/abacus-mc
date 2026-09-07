@@ -1819,8 +1819,8 @@ TEST_F(InputTest, Item_test2)
         output = testing::internal::GetCapturedStdout();
         EXPECT_THAT(output, testing::HasSubstr("NOTICE"));
     }
-    { // l_channel
-        auto it = find_label("l_channel", readinput.input_lists);
+    { // orbital_corr
+        auto it = find_label("orbital_corr", readinput.input_lists);
         param.input.ntype = 2;
         it->second.str_values = {"1", "2"};
         param.input.l_channel = {1, 2};

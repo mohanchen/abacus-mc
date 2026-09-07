@@ -4677,7 +4677,7 @@ parameters:
     default_value: "False"
     unit: ""
     availability: basis_type==lcao
-  - name: l_channel
+  - name: orbital_corr
     category: DFT+U correction
     type: Vector of Integer (n values where n is the number of atomic types)
     description: |
