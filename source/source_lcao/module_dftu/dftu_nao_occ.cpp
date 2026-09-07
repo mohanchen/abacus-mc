@@ -9,7 +9,7 @@
 #include "source_lcao/hamilt_lcao.h"
 #endif
 
-// cal_occ_mat_k / cal_occ_mat_gamma take Plus_U& dftu directly and read all
+// cal_occ_mat_k / cal_occ_mat_gamma take Plus_U_Base& dftu directly and read all
 // occupation-matrix state (occ/save arrays, lookup table, nspin/npol, and the
 // occmat_ready flag) from dftu.occmat() and the Plus_U_Base accessors.
 
@@ -23,7 +23,7 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const double& mixing_beta,
                          hamilt::Hamilt<std::complex<double>>* p_ham,
                          const bool gamma_only_local,
-                         Plus_U& dftu)
+                         Plus_U_Base& dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_k");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_k");
@@ -279,7 +279,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              const std::vector<std::vector<double>> &dm_gamma,
                              const double& mixing_beta,
                              hamilt::Hamilt<double>* p_ham,
-                             Plus_U& dftu)
+                             Plus_U_Base& dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_gamma");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_gamma");
@@ -457,7 +457,7 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const K_Vectors& kv,
                  const double& mixing_beta,
                  hamilt::Hamilt<double>* p_ham,
-                 Plus_U& dftu,
+                 Plus_U_Base& dftu,
                  const bool gamma_only_local,
                  const int nspin)
 {
@@ -473,7 +473,7 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const K_Vectors& kv,
                  const double& mixing_beta,
                  hamilt::Hamilt<std::complex<double>>* p_ham,
-                 Plus_U& dftu,
+                 Plus_U_Base& dftu,
                  const bool gamma_only_local,
                  const int nspin)
 {
