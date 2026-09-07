@@ -7,7 +7,6 @@ class Plus_U_Base;
 class UnitCell;
 class Parallel_Orbitals;
 
-#ifdef __LCAO
 namespace DFTU_LCAO {
 
 /**
@@ -73,6 +72,5 @@ void pot_onsite_real(const Plus_U_Base& dftu,
                      const int npol);
 
 } // namespace DFTU_LCAO
-#endif
 
 #endif

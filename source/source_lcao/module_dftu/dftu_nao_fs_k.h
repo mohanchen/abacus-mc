@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-#ifdef __LCAO
 
 class Plus_U_Base;
 
@@ -97,7 +96,5 @@ void cal_stress_gamma(int nlocal,
                       ModuleBase::matrix& stress_dftu);
 
 } // namespace DFTU_LCAO
-
-#endif // __LCAO
 
 #endif // DFTU_FORCE_H

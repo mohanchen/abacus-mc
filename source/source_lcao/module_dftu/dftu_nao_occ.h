@@ -13,7 +13,6 @@
 
 class Plus_U_Base;
 
-#ifdef __LCAO
 namespace DFTU_LCAO {
 
 /// @brief Compute the occupation matrix and delegate to Plus_U member.
@@ -55,6 +54,5 @@ void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                        Plus_U_Base& dftu);
 
 } // namespace DFTU_LCAO
-#endif
 
 #endif

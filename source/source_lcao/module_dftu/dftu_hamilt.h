@@ -8,7 +8,6 @@ class Plus_U_Base;
 class Parallel_Orbitals;
 class UnitCell;
 
-#ifdef __LCAO
 namespace DFTU_LCAO {
 
 /// @brief Compute the LCAO-basis U-term effective potential matrix (complex).
@@ -54,6 +53,5 @@ void pot_uterm_HR_complex(const Plus_U_Base& dftu,
                           const int npol);
 
 } // namespace DFTU_LCAO
-#endif
 
 #endif

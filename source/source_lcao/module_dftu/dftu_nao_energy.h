@@ -4,7 +4,6 @@
 class Plus_U_Base;
 class UnitCell;
 
-#ifdef __LCAO
 namespace DFTU_LCAO {
 
 /**
@@ -20,6 +19,5 @@ namespace DFTU_LCAO {
 void cal_energy_correction(Plus_U_Base& dftu, const UnitCell& ucell);
 
 } // namespace DFTU_LCAO
-#endif
 
 #endif
