@@ -11,7 +11,7 @@
 #ifdef __LCAO
 namespace DFTU_LCAO {
 
-void pot_uterm_complex(Plus_U& dftu,
+void pot_uterm_complex(Plus_U_Base& dftu,
                        const UnitCell& ucell,
                        const Parallel_Orbitals* pv,
                        const int ik,
@@ -72,7 +72,7 @@ void pot_uterm_complex(Plus_U& dftu,
     return;
 }
 
-void pot_uterm_real(Plus_U& dftu,
+void pot_uterm_real(Plus_U_Base& dftu,
                     const UnitCell& ucell,
                     const Parallel_Orbitals* pv,
                     const int ik,
@@ -130,7 +130,7 @@ void pot_uterm_real(Plus_U& dftu,
 
 /// @brief Accumulate the DFT+U term into the real-space HR (double).
 /// Wraps pot_onsite_real plus the (pot_onsite*SR + SR*pot_onsite)/2 GEMM pair.
-void pot_uterm_HR_real(const Plus_U& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, double* SR, double* HR, const int npol)
+void pot_uterm_HR_real(const Plus_U_Base& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, double* SR, double* HR, const int npol)
 {
     const char transN = 'N', transT = 'T';
     const int one_int = 1;
@@ -163,7 +163,7 @@ void pot_uterm_HR_real(const Plus_U& dftu, const UnitCell& ucell, const Parallel
 
 /// @brief Accumulate the DFT+U term into the real-space HR (complex).
 /// Wraps pot_onsite_complex plus the (pot_onsite*SR + SR*pot_onsite)/2 GEMM pair.
-void pot_uterm_HR_complex(const Plus_U& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, std::complex<double>* SR, std::complex<double>* HR, const int npol)
+void pot_uterm_HR_complex(const Plus_U_Base& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, std::complex<double>* SR, std::complex<double>* HR, const int npol)
 {
     const char transN = 'N', transT = 'T';
     const int one_int = 1;
