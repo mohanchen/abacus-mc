@@ -5,15 +5,12 @@
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_estate/occ_matrix.h"
 #include "source_io/module_parameter/parameter.h"
-#ifdef __LCAO
 #include "source_lcao/hamilt_lcao.h"
-#endif
 
 // cal_occ_mat_k / cal_occ_mat_gamma take Plus_U_Base& dftu directly and read all
 // occupation-matrix state (occ/save arrays, lookup table, nspin/npol, and the
 // occmat_ready flag) from dftu.occmat() and the Plus_U_Base accessors.
 
-#ifdef __LCAO
 
 void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const int iter,
@@ -481,4 +478,3 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
 }
 
 } // namespace DFTU_LCAO
-#endif

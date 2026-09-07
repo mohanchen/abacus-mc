@@ -6,7 +6,6 @@
 #include "source_cell/unitcell.h"
 #include "source_io/module_parameter/parameter.h"
 
-#ifdef __LCAO
 void DFTU_LCAO::cal_energy_correction(Plus_U_Base& dftu, const UnitCell& ucell)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_energy_correction");
@@ -165,4 +164,3 @@ void DFTU_LCAO::cal_energy_correction(Plus_U_Base& dftu, const UnitCell& ucell)
     ModuleBase::timer::end("DFTU_LCAO", "cal_energy_correction");
     return;
 }
-#endif

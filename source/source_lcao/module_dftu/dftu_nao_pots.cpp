@@ -6,7 +6,6 @@
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_cell/unitcell.h"
 
-#ifdef __LCAO
 void DFTU_LCAO::pot_onsite_complex(const Plus_U_Base& dftu,
                                    const UnitCell& ucell,
                                    const Parallel_Orbitals* pv,
@@ -241,4 +240,3 @@ double DFTU_LCAO::get_onsite_pot(const Plus_U_Base& dftu,
 
     return pot_onsite;
 }
-#endif

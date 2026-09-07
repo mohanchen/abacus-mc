@@ -1,4 +1,3 @@
-#ifdef __LCAO
 #include "dftu_nao_fs_k.h"
 #include "dftu_nao_folding.h"
 #include "dftu_nao.h"
@@ -664,4 +663,3 @@ void cal_stress_gamma(const int nlocal,
 
 } // namespace DFTU_LCAO
 
-#endif

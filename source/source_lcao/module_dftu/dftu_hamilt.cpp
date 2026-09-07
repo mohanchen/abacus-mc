@@ -7,8 +7,6 @@
 #include "source_base/tool_title.h"
 #include "source_basis/module_ao/parallel_orbitals.h"
 
-
-#ifdef __LCAO
 namespace DFTU_LCAO {
 
 void pot_uterm_complex(Plus_U_Base& dftu,
@@ -195,5 +193,3 @@ void pot_uterm_HR_complex(const Plus_U_Base& dftu, const UnitCell& ucell, const 
 }
 
 } // namespace DFTU_LCAO
-
-#endif
