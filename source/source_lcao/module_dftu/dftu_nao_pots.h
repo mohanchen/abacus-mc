@@ -3,7 +3,7 @@
 
 #include <complex>
 
-class Plus_U;
+class Plus_U_Base;
 class UnitCell;
 class Parallel_Orbitals;
 
@@ -27,7 +27,7 @@ namespace DFTU_LCAO {
  * @param new_occ_mat if true use occ_mat, otherwise use occ_mat_save
  * @return            onsite potential matrix element
  */
-double get_onsite_pot(const Plus_U& dftu,
+double get_onsite_pot(const Plus_U_Base& dftu,
                       const int T,
                       const int iat,
                       const int L,
@@ -51,7 +51,7 @@ double get_onsite_pot(const Plus_U& dftu,
  * @param pot_onsite  output buffer (length pv->nloc)
  * @param npol        number of polarizations
  */
-void pot_onsite_complex(const Plus_U& dftu,
+void pot_onsite_complex(const Plus_U_Base& dftu,
                         const UnitCell& ucell,
                         const Parallel_Orbitals* pv,
                         const int spin,
@@ -64,7 +64,7 @@ void pot_onsite_complex(const Plus_U& dftu,
  *
  * Real-valued counterpart of pot_onsite_complex.
  */
-void pot_onsite_real(const Plus_U& dftu,
+void pot_onsite_real(const Plus_U_Base& dftu,
                      const UnitCell& ucell,
                      const Parallel_Orbitals* pv,
                      const int spin,

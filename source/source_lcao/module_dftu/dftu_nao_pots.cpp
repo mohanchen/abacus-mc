@@ -7,7 +7,7 @@
 #include "source_cell/unitcell.h"
 
 #ifdef __LCAO
-void DFTU_LCAO::pot_onsite_complex(const Plus_U& dftu,
+void DFTU_LCAO::pot_onsite_complex(const Plus_U_Base& dftu,
                                    const UnitCell& ucell,
                                    const Parallel_Orbitals* pv,
                                    const int spin,
@@ -80,7 +80,7 @@ void DFTU_LCAO::pot_onsite_complex(const Plus_U& dftu,
     return;
 }
 
-void DFTU_LCAO::pot_onsite_real(const Plus_U& dftu,
+void DFTU_LCAO::pot_onsite_real(const Plus_U_Base& dftu,
                                 const UnitCell& ucell,
                                 const Parallel_Orbitals* pv,
                                 const int spin,
@@ -154,7 +154,7 @@ void DFTU_LCAO::pot_onsite_real(const Plus_U& dftu,
     return;
 }
 
-double DFTU_LCAO::get_onsite_pot(const Plus_U& dftu,
+double DFTU_LCAO::get_onsite_pot(const Plus_U_Base& dftu,
                                  const int T,
                                  const int iat,
                                  const int L,
