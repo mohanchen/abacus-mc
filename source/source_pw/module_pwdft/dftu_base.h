@@ -32,7 +32,8 @@ class Plus_U_Base
     };
 
     Plus_U_Base();
-    ~Plus_U_Base();
+    // virtual so that a derived Plus_U can be deleted through a Plus_U_Base*
+    virtual ~Plus_U_Base();
 
     /// allocate relevant data structures (base part, no LCAO types)
     void init_base(UnitCell& cell,
