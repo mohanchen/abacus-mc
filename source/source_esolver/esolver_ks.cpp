@@ -246,7 +246,7 @@ void ESolver_KS::iter_finish(UnitCell& ucell, const int istep, int& iter, bool &
 #ifdef __LCAO
     if (this->inp_->dft_plus_u)
     {
-        converged_u = this->dftu.u_converged();
+        converged_u = this->dftu_->u_converged();
     }
 #endif
 

@@ -60,8 +60,9 @@ class ESolver_KS : public ESolver_FP
     //! nonlocal pseudopotentials
     pseudopot_cell_vnl ppcell;
 
-    //! DFT+U method, mohan add 2025-11-07
-    Plus_U dftu;
+    //! DFT+U method (base-class pointer; PW news Plus_U_Base, LCAO news Plus_U),
+    //! allocated in the derived-class constructor, deleted in ~ESolver_KS.
+    Plus_U_Base* dftu_ = nullptr;
 
     std::string basisname;          //! esolver_ks_lcao.cpp
     double esolver_KS_ne = 0.0;     //! number of electrons
