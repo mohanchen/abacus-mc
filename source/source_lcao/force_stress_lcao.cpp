@@ -87,7 +87,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
                                           const K_Vectors& kv,
                                           ModulePW::PW_Basis* rhopw,
                                           surchem& solvent,
-                                          Plus_U &dftu, // mohan add 2025-11-07
+                                          Plus_U_Base &dftu, // mohan add 2025-11-07
                                           Setup_DeePKS<T>& deepks,
                                           Exx_NAO<T> &exx_nao,
                                           ModuleSymmetry::Symmetry* symm,
