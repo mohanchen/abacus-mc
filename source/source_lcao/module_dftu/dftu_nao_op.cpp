@@ -18,7 +18,7 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
                                                  const Grid_Driver* GridD_in,
                                                  const TwoCenterIntegrator* intor,
                                                  const std::vector<double>& orb_cutoff,
-                                                 Plus_U* p_dftu)
+                                                 Plus_U_Base* p_dftu)
     : hamilt::OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in), intor_(intor), orb_cutoff_(orb_cutoff)
 {
     this->cal_type = calculation_type::lcao_dftu;
@@ -229,7 +229,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     // - get_dmr(0) == nullptr: DMR not available (typical in first iteration without file input)
     // - !is_occmat_ready(): occ_mat not read from file AND not yet computed from DMR
     // When both true, skip DFT+U contribution entirely (first iteration, no file input)
-    const bool dmr_null = (this->dftu->get_dmr(0) == nullptr);
+    const bool dmr_null = (static_cast<const Plus_U*>(this->dftu)->get_dmr(0) == nullptr);
     const bool occ_mat_not_init = !this->dftu->is_occmat_ready();
 
     if (dmr_null && occ_mat_not_init)
@@ -287,7 +287,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
             // TODO: UNSAFE - get_dmr(current_spin) assumes DMR has correct spin indexing.
             // For nspin=2, current_spin must be correctly toggled (0 then 1).
             // If current_spin is wrong, wrong spin channel's DMR is used.
-            const hamilt::HContainer<double>* dmR_current = this->dftu->get_dmr(this->current_spin);
+            const hamilt::HContainer<double>* dmR_current = static_cast<const Plus_U*>(this->dftu)->get_dmr(this->current_spin);
             for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
             {
                 const int T1 = adjs.ntype[ad1];
