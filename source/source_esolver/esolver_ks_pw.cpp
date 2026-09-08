@@ -33,7 +33,7 @@ ESolver_KS_PW<T, Device>::ESolver_KS_PW()
     this->classname = "ESolver_KS_PW";
     this->basisname = "PW";
     // PW basis: the DFT+U object is the base class (no LCAO orbitals).
-    this->dftu_ = new Plus_U_Base();
+    this->dftu_.reset(new Plus_U_Base());
 }
 
 template <typename T, typename Device>
@@ -67,7 +67,7 @@ void ESolver_KS_PW<T, Device>::allocate_hamilt(const UnitCell& ucell)
                                                      this->pw_wfc,
                                                      &this->kv,
                                                      &this->ppcell,
-                                                     this->dftu_,
+                                                     this->dftu_.get(),
                                                      &ucell,
                                                      &this->general_exx_info_);
 }
@@ -385,7 +385,7 @@ void ESolver_KS_PW<T, Device>::cal_force(BaseCell& basecell, ModuleBase::matrix&
                  &ucell.symm,
                  &this->sf,
                  this->solvent,
-                 this->dftu_,
+                 this->dftu_.get(),
                  &this->locpp,
                  &this->ppcell,
                  &this->kv,

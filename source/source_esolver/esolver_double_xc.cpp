@@ -148,7 +148,7 @@ void ESolver_DoubleXC<TK, TR>::before_scf(UnitCell& ucell, const int istep)
                                                              this->two_center_bundle_,
                                                              this->orb_,
                                                              this->dmat_base.dm,
-                                                             this->dftu_,
+                                                             this->dftu_.get(),
                                                              this->deepks,
                                                              istep,
                                                              this->exx_nao,
