@@ -130,7 +130,8 @@ ${OBJS_RDMFT}
 OBJS_MAIN=main.o\
     driver.o\
     driver_run.o\
-    parameter.o
+    parameter.o\
+    para_worlds_global.o
 
 OBJS_BASE=assoc_laguerre.o\
     blas_connector_base.o\
