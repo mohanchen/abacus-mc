@@ -9,19 +9,19 @@ install(DIRECTORY support DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 AddTest(
   TARGET MODULE_RELAX_socket_ipi_test
-  SOURCES socket_ipi_test.cpp ../socket_ipi.cpp
+  SOURCES test_socket_ipi.cpp ../socket_ipi.cpp
 )
 
 AddTest(
   TARGET MODULE_RELAX_socket_frame_test
-  SOURCES socket_frame_test.cpp ../socket_frame.cpp ../socket_frame_utils.cpp
+  SOURCES test_socket_frame.cpp ../socket_frame.cpp ../socket_frame_utils.cpp
 )
 
 AddTest(
   TARGET MODULE_RELAX_socket_driver_test
   LIBS MPI::MPI_CXX base device
   KEEP_FEATURE_DEFINITIONS __MPI
-  SOURCES socket_driver_test.cpp
+  SOURCES test_socket_driver.cpp
           ../socket_driver.cpp
           ../socket_utils.cpp
           ../socket_handlers.cpp
