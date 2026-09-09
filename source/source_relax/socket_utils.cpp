@@ -8,6 +8,10 @@
 #include "source_cell/unitcell.h"
 #include "source_cell/update_cell.h"
 
+#ifdef __MPI
+#include <mpi.h>
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -43,14 +47,18 @@ void throw_if_any_rank_failed(int local_failed, std::string local_message)
                                                const std::string& message)
 {
     int rank = -1;
+#ifdef __MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
     std::fprintf(stderr,
                  "ABACUS_SOCKET_MPI_FATAL stage=%s rank=%d message=%s\n",
                  stage,
                  rank,
                  message.c_str());
     std::fflush(stderr);
+#ifdef __MPI
     MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+#endif
     std::abort();
 }
 
@@ -74,7 +82,9 @@ std::string properties_extra(const ComputedFrame& frame)
 bool is_root()
 {
     int rank = kIpiRankRoot;
+#ifdef __MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
     return rank == kIpiRankRoot;
 }
 
