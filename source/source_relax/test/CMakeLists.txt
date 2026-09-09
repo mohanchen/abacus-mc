@@ -19,7 +19,8 @@ AddTest(
 
 AddTest(
   TARGET MODULE_RELAX_socket_driver_test
-  LIBS base device
+  LIBS MPI::MPI_CXX base device
+  KEEP_FEATURE_DEFINITIONS __MPI
   SOURCES socket_driver_test.cpp
           ../socket_driver.cpp
           ../socket_driver_utils.cpp

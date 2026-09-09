@@ -2,6 +2,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mpi.h"
 #include "source_cell/unitcell.h"
 #include "source_esolver/esolver.h"
 #include "source_io/module_parameter/input_parameter.h"
@@ -612,4 +613,13 @@ TEST(SocketDriverTest, InvalidNextFrameCannotReturnPreviousResults)
     });
     EXPECT_NE(0, result.exit_code);
     EXPECT_THAT(result.diagnostic, testing::HasSubstr("finite"));
+}
+
+int main(int argc, char** argv)
+{
+    MPI_Init(&argc, &argv);
+    testing::InitGoogleTest(&argc, argv);
+    const int result = RUN_ALL_TESTS();
+    MPI_Finalize();
+    return result;
 }

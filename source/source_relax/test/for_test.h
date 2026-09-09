@@ -84,6 +84,12 @@ Atom::Atom()
 Atom::~Atom()
 {
 }
+void Atom::bcast_atom()
+{
+}
+void Atom::bcast_atom2()
+{
+}
 Atom_pseudo::Atom_pseudo()
 {
 }

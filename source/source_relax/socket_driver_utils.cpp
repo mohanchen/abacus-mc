@@ -42,7 +42,6 @@ void throw_if_any_rank_failed(int local_failed, std::string local_message)
 [[noreturn]] void fail_during_collective_stage(const char* stage,
                                                const std::string& message)
 {
-#ifdef __MPI
     int rank = -1;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     std::fprintf(stderr,
@@ -53,10 +52,6 @@ void throw_if_any_rank_failed(int local_failed, std::string local_message)
     std::fflush(stderr);
     MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     std::abort();
-#else
-    (void)stage;
-    throw std::runtime_error(message);
-#endif
 }
 
 std::string properties_extra(const ComputedFrame& frame)
@@ -79,9 +74,7 @@ std::string properties_extra(const ComputedFrame& frame)
 bool is_root()
 {
     int rank = kIpiRankRoot;
-#ifdef __MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#endif
     return rank == kIpiRankRoot;
 }
 
