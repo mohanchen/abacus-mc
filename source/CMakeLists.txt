@@ -696,7 +696,6 @@ target_link_libraries(
     psi_overall_init
     psi_init
     psi
-    dftu
     deltaspin
     container
     device
@@ -712,6 +711,7 @@ if(ENABLE_LCAO)
     PRIVATE
       hamilt_lcao
       tddft
+      dftu
       orb
       gint
       hcontainer

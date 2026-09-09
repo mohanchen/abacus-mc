@@ -5,7 +5,7 @@
 #include "source_hamilt/module_xc/xc_functional.h"    // use XC_Functional
 #include "source_estate/write_elecstat_pot.h" // use write_elecstat_pot
 #include "source_io/module_elf/write_elf.h"
-#include "source_io/module_parameter/input_parameter.h"
+#include "source_io/module_parameter/input_parameter.h" // use Input_para
 
 #ifdef __LIBXC
 #include "source_io/module_chgpot/write_libxc_r.h"
@@ -15,14 +15,14 @@ namespace ModuleIO
 {
 
 void ctrl_output_fp(UnitCell& ucell,
+                    const Input_para& inp,
                     elecstate::ElecState* pelec,
                     ModulePW::PW_Basis_Big* pw_big,
                     ModulePW::PW_Basis* pw_rhod,
                     Charge& chr,
                     surchem& solvent,
                     Parallel_Grid& para_grid,
-                    const int istep,
-                    const Input_para& inp)
+                    const int istep)
 {
     ModuleBase::TITLE("ModuleIO", "ctrl_output_fp");
     ModuleBase::timer::start("ModuleIO", "ctrl_output_fp");
