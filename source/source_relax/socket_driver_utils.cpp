@@ -3,6 +3,7 @@
 #include "source_base/global_function.h"
 #include "source_base/mathzone.h"
 #include "source_base/parallel_common.h"
+#include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 #include "source_cell/unitcell.h"
 #include "source_cell/update_cell.h"
@@ -20,18 +21,14 @@ namespace SocketDriverUtils
 bool all_ranks_converged(const bool local_converged)
 {
     int converged = local_converged ? 1 : 0;
-#ifdef __MPI
-    MPI_Allreduce(MPI_IN_PLACE, &converged, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-#endif
+    Parallel_Reduce::reduce_min(converged);
     return converged != 0;
 }
 
 void throw_if_any_rank_failed(int local_failed, std::string local_message)
 {
     int any_failed = local_failed;
-#ifdef __MPI
-    MPI_Allreduce(MPI_IN_PLACE, &any_failed, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-#endif
+    Parallel_Reduce::reduce_max(any_failed);
     if (any_failed != 0)
     {
         if (local_message.empty())
@@ -81,53 +78,36 @@ std::string properties_extra(const ComputedFrame& frame)
 
 bool is_root()
 {
-#ifdef __MPI
     int rank = kIpiRankRoot;
+#ifdef __MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return rank == kIpiRankRoot;
-#else
-    return true;
 #endif
+    return rank == kIpiRankRoot;
 }
 
 void bcast_double_vector(std::vector<double>& values)
 {
-#ifdef __MPI
     if (!values.empty())
     {
         Parallel_Common::bcast_double(values.data(), static_cast<int>(values.size()));
     }
-#else
-    (void)values;
-#endif
 }
 
 void bcast_socket_int(int& value)
 {
-#ifdef __MPI
     Parallel_Common::bcast_int(value);
-#else
-    (void)value;
-#endif
 }
 
 void bcast_socket_int32(std::int32_t& value)
 {
-#ifdef __MPI
-    MPI_Bcast(&value, 1, MPI_INT32_T, kIpiRankRoot, MPI_COMM_WORLD);
-#else
-    (void)value;
-#endif
+    int tmp = static_cast<int>(value);
+    Parallel_Common::bcast_int(tmp);
+    value = static_cast<std::int32_t>(tmp);
 }
 
 void bcast_socket_chars(char* value, const int size)
 {
-#ifdef __MPI
     Parallel_Common::bcast_char(value, size);
-#else
-    (void)value;
-    (void)size;
-#endif
 }
 
 void bcast_socket_string(std::string& value)
