@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "source_base/module_parallel/para_collection.h"
 #include "source_base/module_parallel/para_setup.h"
 #include "source_base/module_parallel/para_tag.h"
 #include "source_base/tool_quit.h"

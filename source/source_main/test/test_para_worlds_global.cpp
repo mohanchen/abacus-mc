@@ -2,6 +2,7 @@
 
 #include "../para_worlds_global.h"
 
+#include "source_base/module_parallel/para_collection.h"
 #include "source_base/module_parallel/para_tag.h"
 
 using namespace Parallel;

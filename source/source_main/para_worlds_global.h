@@ -1,10 +1,13 @@
 #ifndef PARA_WORLDS_GLOBAL_H
 #define PARA_WORLDS_GLOBAL_H
 
-#include "source_base/module_parallel/para_collection.h"
-
 namespace Parallel
 {
+
+// Only references and pointers to ParaCollection appear in this header, so a
+// forward declaration keeps the include dependency minimal; consumers that
+// need the complete type include source_base/module_parallel/para_collection.h.
+class ParaCollection;
 
 /**
  * @brief Initialize the process-wide ParaCollection exactly once.
