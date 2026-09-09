@@ -23,6 +23,7 @@ AddTest(
   SOURCES socket_driver_test.cpp
           ../socket_driver.cpp
           ../socket_driver_utils.cpp
+          ../socket_driver_handlers.cpp
           ../socket_frame.cpp
           ../socket_ipi.cpp
           ../../source_cell/update_cell.cpp
