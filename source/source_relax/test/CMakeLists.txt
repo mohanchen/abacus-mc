@@ -14,7 +14,7 @@ AddTest(
 
 AddTest(
   TARGET MODULE_RELAX_socket_frame_test
-  SOURCES socket_frame_test.cpp ../socket_frame.cpp
+  SOURCES socket_frame_test.cpp ../socket_frame.cpp ../socket_frame_utils.cpp
 )
 
 AddTest(
@@ -24,6 +24,7 @@ AddTest(
           ../socket_driver.cpp
           ../socket_driver_utils.cpp
           ../socket_driver_handlers.cpp
+          ../socket_frame_utils.cpp
           ../socket_frame.cpp
           ../socket_ipi.cpp
           ../../source_cell/update_cell.cpp

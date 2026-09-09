@@ -3,6 +3,7 @@ add_library(
     OBJECT
     relax_data.cpp
     socket_ipi.cpp
+    socket_frame_utils.cpp
     socket_frame.cpp
     socket_driver_utils.cpp
     socket_driver_handlers.cpp
