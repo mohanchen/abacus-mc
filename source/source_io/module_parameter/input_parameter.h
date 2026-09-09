@@ -19,6 +19,7 @@ struct Input_para
     std::string calculation = "scf";    ///< "scf" : self consistent calculation.
                                         ///< "nscf" : non-self consistent calculation.
                                         ///< "relax" : cell relaxations
+    bool socket_driver = false;         ///< run ABACUS as an i-PI socket client
     std::string esolver_type = "ksdft"; ///< the energy solver: ksdft, sdft, ofdft, tddft, lj, dp
     /* symmetry level:
       -1, no symmetry at all;
@@ -46,7 +47,8 @@ struct Input_para
     double erf_height = 0;              ///< the height of the energy step for reciprocal vectors
     double erf_sigma = 0.1;             ///< the width of the energy step for reciprocal vectors
     int fft_mode = 0;                   ///< fftw mode 0: estimate, 1: measure, 2: patient, 3: exhaustive
-    std::string init_wfc = "atomic";    ///< "file","atomic","random"
+    std::string init_wfc = "atomic";         ///< "file", "atomic", "random", etc.
+    std::string init_wfc_file_format = "";   ///< normalized file format: "txt" or "binary"
     int pw_seed = 0;                    ///< random seed for initializing wave functions
     std::string init_chg = "atomic";    ///< "file","atomic"
     bool dm_to_rho = false;             ///< read density matrix from npz format and calculate charge density
@@ -569,7 +571,7 @@ struct Input_para
     std::string vdw_s6 = "default";                         ///< scale parameter of d2/d3_0/d3_bj
     std::string vdw_s8 = "default";                         ///< scale parameter of d3_0/d3_bj
     std::string vdw_a1 = "default";                         ///< damping parameter of d3_0/d3_bj
-    std::string vdw_a2 = "default";                         ///< damping parameter of d3_bj
+    std::string vdw_a2 = "default";                         ///< rs8 for d3_0 or a2 for d3_bj
     double vdw_d = 20.0;                                    ///< damping parameter of d2
     bool vdw_abc = false;                                   ///< third-order term?
     std::string vdw_C6_file = "default";                    ///< filename of C6
@@ -581,7 +583,7 @@ struct Input_para
     std::string vdw_cutoff_radius = "default";              ///< radius cutoff for periodic structure
     std::string vdw_radius_unit = "Bohr";                   ///< unit of radius cutoff for periodic structure
     double vdw_cutoff_width2 = 0.05;               ///< smooth cutoff width for two-body dispersion, Bohr
-    double vdw_cutoff_width3 = 0.05;               ///< smooth cutoff width for three-body dispersion, Bohr
+    double vdw_cutoff_width3 = 0.0;                ///< smooth cutoff width for three-body dispersion, Bohr
     double vdw_cn_thr = 40.0;                               ///< radius cutoff for cn
     std::string vdw_cn_thr_unit = "Bohr";                   ///< unit of cn_thr, Bohr or Angstrom
     std::string vdw_d4_xc = "default";                      ///< functional name passed to DFT-D4
