@@ -6,7 +6,6 @@
 
 namespace SocketFrameUtils
 {
-const int MATRIX_DIMENSION = 3;
 const int MAX_JACOBI_SWEEPS = 32;
 
 bool is_finite_matrix(const SocketFrame::Matrix9& values)
