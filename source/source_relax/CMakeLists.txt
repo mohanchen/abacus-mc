@@ -4,6 +4,7 @@ add_library(
     relax_data.cpp
     socket_ipi.cpp
     socket_frame.cpp
+    socket_driver_utils.cpp
     socket_driver.cpp
     cg_base.cpp
     relax_driver.cpp
