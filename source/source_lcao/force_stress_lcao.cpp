@@ -408,7 +408,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
     if (PARAM.inp.imp_sol && isforce)
     {
         fsol.create(nat, 3);
-        solvent.cal_force_sol(ucell, rhopw, locpp.vloc, fsol);
+        solvent.cal_force_sol(ucell, rhopw, locpp.vloc, PARAM.inp.nspin, fsol);
     }
 
     //! atomic forces from DFT+U (Quxin version)
@@ -468,7 +468,9 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
                                                                    &gd,
                                                                    two_center_bundle.overlap_orb_onsite.get(),
                                                                    orb.cutoffs(),
-                                                                   &dftu);
+                                                                   &dftu,
+                                                                   PARAM.inp.nspin,
+                                                                   PARAM.inp.onsite_radius);
 
             tmpu.cal_force_stress(isforce, isstress, force_u, stress_u);
         }
