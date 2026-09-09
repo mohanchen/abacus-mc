@@ -6,7 +6,7 @@
 #include <cmath>
 #include <limits>
 
-using namespace SocketFrameUtils;
+using namespace FrameUtils;
 
 namespace SocketFrame
 {

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-namespace SocketFrameUtils
+namespace FrameUtils
 {
 const int kMaxJacobiSweeps = 32;
 
@@ -153,4 +153,4 @@ double received_inverse_residual(const SocketFrame::Matrix9& cell,
     }
     return static_cast<double>(maximum);
 }
-} // namespace SocketFrameUtils
+} // namespace FrameUtils

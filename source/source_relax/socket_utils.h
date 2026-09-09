@@ -1,5 +1,5 @@
-#ifndef ABACUS_SOURCE_RELAX_SOCKET_DRIVER_UTILS_H
-#define ABACUS_SOURCE_RELAX_SOCKET_DRIVER_UTILS_H
+#ifndef ABACUS_SOURCE_RELAX_SOCKET_UTILS_H
+#define ABACUS_SOURCE_RELAX_SOCKET_UTILS_H
 
 #include "source_relax/socket_frame.h"
 #include "source_base/matrix.h"
@@ -11,7 +11,7 @@
 
 class UnitCell;
 
-namespace SocketDriverUtils
+namespace SocketUtils
 {
 constexpr double kRyToHartree = 0.5;
 constexpr int kIpiRankRoot = 0;
@@ -48,13 +48,13 @@ void throw_if_any_rank_failed(int local_failed, std::string local_message);
 std::string properties_extra(const ComputedFrame& frame);
 bool is_root();
 void bcast_double_vector(std::vector<double>& values);
-void bcast_socket_int(int& value);
-void bcast_socket_int32(std::int32_t& value);
-void bcast_socket_chars(char* value, int size);
-void bcast_socket_string(std::string& value);
-void quit_if_root_io_failed(int root_failed, std::string root_message);
+void bcast_int(int& value);
+void bcast_int32(std::int32_t& value);
+void bcast_chars(char* value, int size);
+void bcast_string(std::string& value);
+void quit_if_root_failed(int root_failed, std::string root_message);
 std::string bcast_header(std::string header);
-std::string socket_address();
+std::string address();
 std::vector<double> ipi_cell_bohr_from_unitcell(const UnitCell& ucell);
 double max_wrapped_direct_delta_from_unitcell(const UnitCell& ucell,
                                               const std::vector<double>& positions_bohr);
@@ -66,6 +66,6 @@ std::vector<double> flatten_forces_hartree_per_bohr(const ModuleBase::matrix& fo
                                                     int nat);
 SocketFrame::Matrix9 matrix9_from_stress(const ModuleBase::matrix& stress);
 std::vector<double> vector_from_matrix9(const SocketFrame::Matrix9& values);
-} // namespace SocketDriverUtils
+} // namespace SocketUtils
 
 #endif

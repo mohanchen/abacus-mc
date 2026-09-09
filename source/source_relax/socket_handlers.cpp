@@ -1,4 +1,4 @@
-#include "socket_driver_handlers.h"
+#include "socket_handlers.h"
 
 #include "source_relax/socket_frame.h"
 #include "source_base/global_function.h"
@@ -14,34 +14,34 @@
 #include <string>
 #include <vector>
 
-namespace SocketDriverHandlers
+namespace SocketHandlers
 {
-using SocketDriverUtils::ComputedFrame;
-using SocketDriverUtils::DriverState;
-using SocketDriverUtils::kInverseAbsoluteTolerance;
-using SocketDriverUtils::kInverseRelativeTolerance;
-using SocketDriverUtils::kMaxCellCondition;
-using SocketDriverUtils::kMaxInitBytes;
-using SocketDriverUtils::kRyToHartree;
-using SocketDriverUtils::kStressAbsoluteTolerance;
-using SocketDriverUtils::kStressRelativeTolerance;
-using SocketDriverUtils::all_ranks_converged;
-using SocketDriverUtils::bcast_double_vector;
-using SocketDriverUtils::bcast_header;
-using SocketDriverUtils::bcast_socket_int32;
-using SocketDriverUtils::fail_during_collective_stage;
-using SocketDriverUtils::flatten_forces_hartree_per_bohr;
-using SocketDriverUtils::ipi_cell_bohr_from_unitcell;
-using SocketDriverUtils::is_root;
-using SocketDriverUtils::matrix9_from_stress;
-using SocketDriverUtils::max_abs_delta;
-using SocketDriverUtils::max_wrapped_direct_delta_from_unitcell;
-using SocketDriverUtils::properties_extra;
-using SocketDriverUtils::quit_if_root_io_failed;
-using SocketDriverUtils::set_positions_from_ipi_bohr;
-using SocketDriverUtils::throw_if_any_rank_failed;
-using SocketDriverUtils::unchanged_cell_tolerance;
-using SocketDriverUtils::vector_from_matrix9;
+using SocketUtils::ComputedFrame;
+using SocketUtils::DriverState;
+using SocketUtils::kInverseAbsoluteTolerance;
+using SocketUtils::kInverseRelativeTolerance;
+using SocketUtils::kMaxCellCondition;
+using SocketUtils::kMaxInitBytes;
+using SocketUtils::kRyToHartree;
+using SocketUtils::kStressAbsoluteTolerance;
+using SocketUtils::kStressRelativeTolerance;
+using SocketUtils::all_ranks_converged;
+using SocketUtils::bcast_double_vector;
+using SocketUtils::bcast_header;
+using SocketUtils::bcast_int32;
+using SocketUtils::fail_during_collective_stage;
+using SocketUtils::flatten_forces_hartree_per_bohr;
+using SocketUtils::ipi_cell_bohr_from_unitcell;
+using SocketUtils::is_root;
+using SocketUtils::matrix9_from_stress;
+using SocketUtils::max_abs_delta;
+using SocketUtils::max_wrapped_direct_delta_from_unitcell;
+using SocketUtils::properties_extra;
+using SocketUtils::quit_if_root_failed;
+using SocketUtils::set_positions_from_ipi_bohr;
+using SocketUtils::throw_if_any_rank_failed;
+using SocketUtils::unchanged_cell_tolerance;
+using SocketUtils::vector_from_matrix9;
 
 std::string read_header_bcast(IpiSocket& socket, const DriverState state)
 {
@@ -68,7 +68,7 @@ std::string read_header_bcast(IpiSocket& socket, const DriverState state)
             io_message = exc.what();
         }
     }
-    quit_if_root_io_failed(io_failed, io_message);
+    quit_if_root_failed(io_failed, io_message);
     return bcast_header(header);
 }
 
@@ -99,7 +99,7 @@ void handle_status(IpiSocket& socket, const DriverState state)
             io_message = exc.what();
         }
     }
-    quit_if_root_io_failed(io_failed, io_message);
+    quit_if_root_failed(io_failed, io_message);
 }
 
 void handle_init(IpiSocket& socket,
@@ -146,9 +146,9 @@ void handle_init(IpiSocket& socket,
             }
         }
     }
-    quit_if_root_io_failed(io_failed, io_message);
-    bcast_socket_int32(rid);
-    bcast_socket_int32(nbytes);
+    quit_if_root_failed(io_failed, io_message);
+    bcast_int32(rid);
+    bcast_int32(nbytes);
     if (nbytes > 0 && is_root())
     {
         ofs_running << " ABACUS socket INIT params bytes " << nbytes << std::endl;
@@ -223,13 +223,13 @@ PosdataPayload read_posdata(IpiSocket& socket, const UnitCell& ucell)
             io_message = exc.what();
         }
     }
-    quit_if_root_io_failed(io_failed, io_message);
+    quit_if_root_failed(io_failed, io_message);
     return payload;
 }
 
 void bcast_posdata(PosdataPayload& payload)
 {
-    bcast_socket_int32(payload.nat_socket);
+    bcast_int32(payload.nat_socket);
     std::vector<double> cell_values(payload.cell.begin(), payload.cell.end());
     std::vector<double> inverse_values(payload.inv_cell.begin(), payload.inv_cell.end());
     bcast_double_vector(cell_values);
@@ -430,7 +430,7 @@ void handle_posdata(IpiSocket& socket,
 {
     if (is_root() && context.state != DriverState::Ready)
     {
-        quit_if_root_io_failed(1, "POSDATA requires READY state");
+        quit_if_root_failed(1, "POSDATA requires READY state");
     }
     PosdataPayload payload = read_posdata(socket, *context.ucell);
     bcast_posdata(payload);
@@ -495,7 +495,7 @@ void handle_getforce(IpiSocket& socket, DriverContext& context)
             io_message = exc.what();
         }
     }
-    quit_if_root_io_failed(io_failed, io_message);
+    quit_if_root_failed(io_failed, io_message);
     context.published = ComputedFrame();
     context.state = DriverState::Ready;
 }
@@ -507,4 +507,4 @@ void handle_exit(std::ofstream& ofs_running)
         ofs_running << " ABACUS socket driver received i-PI EXIT" << std::endl;
     }
 }
-} // namespace SocketDriverHandlers
+} // namespace SocketHandlers

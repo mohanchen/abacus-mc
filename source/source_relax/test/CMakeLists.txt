@@ -23,8 +23,8 @@ AddTest(
   KEEP_FEATURE_DEFINITIONS __MPI
   SOURCES socket_driver_test.cpp
           ../socket_driver.cpp
-          ../socket_driver_utils.cpp
-          ../socket_driver_handlers.cpp
+          ../socket_utils.cpp
+          ../socket_handlers.cpp
           ../socket_frame_utils.cpp
           ../socket_frame.cpp
           ../socket_ipi.cpp

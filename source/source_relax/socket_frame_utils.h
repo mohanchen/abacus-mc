@@ -3,7 +3,7 @@
 
 #include "source_relax/socket_frame.h"
 
-namespace SocketFrameUtils
+namespace FrameUtils
 {
 constexpr int kMatrixDimension = 3;
 extern const int kMaxJacobiSweeps;
@@ -18,6 +18,6 @@ long double scaled_determinant(const SocketFrame::Matrix9& values);
 double received_inverse_residual(const SocketFrame::Matrix9& cell,
                                  const SocketFrame::Matrix9& inverse,
                                  bool transpose_inverse);
-} // namespace SocketFrameUtils
+} // namespace FrameUtils
 
 #endif

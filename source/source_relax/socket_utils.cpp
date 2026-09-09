@@ -1,4 +1,4 @@
-#include "socket_driver_utils.h"
+#include "socket_utils.h"
 
 #include "source_base/global_function.h"
 #include "source_base/mathzone.h"
@@ -16,7 +16,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace SocketDriverUtils
+namespace SocketUtils
 {
 bool all_ranks_converged(const bool local_converged)
 {
@@ -86,41 +86,41 @@ void bcast_double_vector(std::vector<double>& values)
     }
 }
 
-void bcast_socket_int(int& value)
+void bcast_int(int& value)
 {
     Parallel_Common::bcast_int(value);
 }
 
-void bcast_socket_int32(std::int32_t& value)
+void bcast_int32(std::int32_t& value)
 {
     int tmp = static_cast<int>(value);
     Parallel_Common::bcast_int(tmp);
     value = static_cast<std::int32_t>(tmp);
 }
 
-void bcast_socket_chars(char* value, const int size)
+void bcast_chars(char* value, const int size)
 {
     Parallel_Common::bcast_char(value, size);
 }
 
-void bcast_socket_string(std::string& value)
+void bcast_string(std::string& value)
 {
     int size = static_cast<int>(value.size());
-    bcast_socket_int(size);
+    bcast_int(size);
     if (!is_root())
     {
         value.resize(static_cast<std::size_t>(size));
     }
     if (size > 0)
     {
-        bcast_socket_chars(&value[0], size);
+        bcast_chars(&value[0], size);
     }
 }
 
-void quit_if_root_io_failed(int root_failed, std::string root_message)
+void quit_if_root_failed(int root_failed, std::string root_message)
 {
-    bcast_socket_int(root_failed);
-    bcast_socket_string(root_message);
+    bcast_int(root_failed);
+    bcast_string(root_message);
     if (root_failed != 0)
     {
         ModuleBase::WARNING_QUIT("ABACUS socket", root_message.empty() ? "i-PI socket I/O failed" : root_message);
@@ -129,11 +129,11 @@ void quit_if_root_io_failed(int root_failed, std::string root_message)
 
 std::string bcast_header(std::string header)
 {
-    bcast_socket_string(header);
+    bcast_string(header);
     return header;
 }
 
-std::string socket_address()
+std::string address()
 {
     const char* env = std::getenv("ABACUS_SOCKET_ADDRESS");
     if (env == nullptr || std::string(env).empty())
@@ -327,4 +327,4 @@ std::vector<double> vector_from_matrix9(const SocketFrame::Matrix9& values)
 {
     return std::vector<double>(values.begin(), values.end());
 }
-} // namespace SocketDriverUtils
+} // namespace SocketUtils

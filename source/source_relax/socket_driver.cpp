@@ -1,7 +1,7 @@
 #include "socket_driver.h"
 
-#include "source_relax/socket_driver_handlers.h"
-#include "source_relax/socket_driver_utils.h"
+#include "source_relax/socket_handlers.h"
+#include "source_relax/socket_utils.h"
 #include "source_base/timer.h"
 #include "source_cell/unitcell.h"
 #include "source_esolver/esolver.h"
@@ -11,13 +11,13 @@
 #include <fstream>
 #include <string>
 
-using SocketDriverUtils::ComputedFrame;
-using SocketDriverUtils::DriverState;
-using SocketDriverUtils::ipi_cell_bohr_from_unitcell;
-using SocketDriverUtils::is_root;
-using SocketDriverUtils::quit_if_root_io_failed;
-using SocketDriverUtils::socket_address;
-using SocketDriverHandlers::DriverContext;
+using SocketUtils::ComputedFrame;
+using SocketUtils::DriverState;
+using SocketUtils::ipi_cell_bohr_from_unitcell;
+using SocketUtils::is_root;
+using SocketUtils::quit_if_root_failed;
+using SocketUtils::address;
+using SocketHandlers::DriverContext;
 
 namespace
 {
@@ -29,9 +29,9 @@ void connect_on_root(IpiSocket& socket, std::ofstream& ofs_running)
     {
         try
         {
-            const std::string address = socket_address();
-            ofs_running << " ABACUS socket driver connecting to i-PI endpoint " << address << std::endl;
-            socket.connect(address);
+            const std::string endpoint = address();
+            ofs_running << " ABACUS socket driver connecting to i-PI endpoint " << endpoint << std::endl;
+            socket.connect(endpoint);
         }
         catch (const std::exception& exc)
         {
@@ -39,7 +39,7 @@ void connect_on_root(IpiSocket& socket, std::ofstream& ofs_running)
             io_message = exc.what();
         }
     }
-    quit_if_root_io_failed(io_failed, io_message);
+    quit_if_root_failed(io_failed, io_message);
 }
 
 void log_peer_closed(std::ofstream& ofs_running)
@@ -80,7 +80,7 @@ void Socket_Driver::socket_driver(ModuleESolver::ESolver* p_esolver,
         while (true)
         {
             const std::string header
-                = SocketDriverHandlers::read_header_bcast(socket, context.state);
+                = SocketHandlers::read_header_bcast(socket, context.state);
             if (header.empty())
             {
                 log_peer_closed(ofs_running);
@@ -88,28 +88,28 @@ void Socket_Driver::socket_driver(ModuleESolver::ESolver* p_esolver,
             }
             else if (header == "STATUS")
             {
-                SocketDriverHandlers::handle_status(socket, context.state);
+                SocketHandlers::handle_status(socket, context.state);
             }
             else if (header == "INIT")
             {
-                SocketDriverHandlers::handle_init(socket, context, ofs_running);
+                SocketHandlers::handle_init(socket, context, ofs_running);
             }
             else if (header == "POSDATA")
             {
-                SocketDriverHandlers::handle_posdata(socket, context, ofs_running);
+                SocketHandlers::handle_posdata(socket, context, ofs_running);
             }
             else if (header == "GETFORCE")
             {
-                SocketDriverHandlers::handle_getforce(socket, context);
+                SocketHandlers::handle_getforce(socket, context);
             }
             else if (header == "EXIT")
             {
-                SocketDriverHandlers::handle_exit(ofs_running);
+                SocketHandlers::handle_exit(ofs_running);
                 break;
             }
             else
             {
-                quit_if_root_io_failed(is_root() ? 1 : 0,
+                quit_if_root_failed(is_root() ? 1 : 0,
                                        is_root() ? "unknown i-PI header: " + header : "");
             }
         }

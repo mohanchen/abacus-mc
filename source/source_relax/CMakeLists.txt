@@ -5,8 +5,8 @@ add_library(
     socket_ipi.cpp
     socket_frame_utils.cpp
     socket_frame.cpp
-    socket_driver_utils.cpp
-    socket_driver_handlers.cpp
+    socket_utils.cpp
+    socket_handlers.cpp
     socket_driver.cpp
     cg_base.cpp
     relax_driver.cpp
