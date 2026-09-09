@@ -3,7 +3,6 @@
 
 #include "source_base/parallel_2d.h"
 #include "source_cell/parallel_kpoints.h"
-#include "source_hamilt/matrixblock.h"
 #ifdef __MPI
 #include "mpi.h"
 #endif
