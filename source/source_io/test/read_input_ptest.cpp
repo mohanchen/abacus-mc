@@ -275,7 +275,7 @@ TEST_F(InputParaTest, ParaRead)
     EXPECT_EQ(std::stod(param.inp.vdw_cutoff_radius), 56.6918);
     EXPECT_EQ(param.inp.vdw_radius_unit, "Bohr");
     EXPECT_DOUBLE_EQ(param.inp.vdw_cutoff_width2, 0.05);
-    EXPECT_DOUBLE_EQ(param.inp.vdw_cutoff_width3, 0.05);
+    EXPECT_DOUBLE_EQ(param.inp.vdw_cutoff_width3, 0.0);
     EXPECT_DOUBLE_EQ(param.inp.vdw_cn_thr, 40.0);
     EXPECT_EQ(param.inp.vdw_cn_thr_unit, "Bohr");
     EXPECT_EQ(param.inp.vdw_C6_file, "default");
@@ -411,6 +411,7 @@ TEST_F(InputParaTest, ParaRead)
     EXPECT_EQ(param.inp.mdp.md_pmode, "iso");
     EXPECT_EQ(param.inp.mdp.md_restart, 0);
     EXPECT_EQ(param.inp.mdp.md_restartfreq, 5);
+    EXPECT_FALSE(param.inp.mdp.md_out_force);
     EXPECT_EQ(param.inp.mdp.md_seed, -1);
     EXPECT_EQ(param.inp.mdp.md_prec_level, 0);
     EXPECT_DOUBLE_EQ(param.inp.ref_cell_factor, 1.2);
