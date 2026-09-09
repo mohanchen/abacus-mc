@@ -101,7 +101,7 @@ bool compute_cell_determinant(const double scale,
 }
 
 bool compute_cell_svd(const Matrix9& scaled_cell,
-                      double singular_values[MATRIX_DIMENSION],
+                      double singular_values[kMatrixDimension],
                       Matrix9& orthogonal_columns,
                       Matrix9& right_vectors,
                       std::string& message)
@@ -112,21 +112,21 @@ bool compute_cell_svd(const Matrix9& scaled_cell,
         message = "cell singular-value iteration did not converge";
         return false;
     }
-    for (int column = 0; column < MATRIX_DIMENSION; ++column)
+    for (int column = 0; column < kMatrixDimension; ++column)
     {
         singular_values[column] = std::sqrt(column_norm_squared(orthogonal_columns, column));
     }
     return true;
 }
 
-bool compute_condition_number(const double singular_values[MATRIX_DIMENSION],
+bool compute_condition_number(const double singular_values[kMatrixDimension],
                               const double max_condition_number,
                               double& condition_number_2,
                               std::string& message)
 {
     double largest_singular = 0.0;
     double smallest_singular = std::numeric_limits<double>::infinity();
-    for (int column = 0; column < MATRIX_DIMENSION; ++column)
+    for (int column = 0; column < kMatrixDimension; ++column)
     {
         largest_singular = std::max(largest_singular, singular_values[column]);
         smallest_singular = std::min(smallest_singular, singular_values[column]);
@@ -147,25 +147,25 @@ bool compute_condition_number(const double singular_values[MATRIX_DIMENSION],
 }
 
 void compute_cell_inverse(const double scale,
-                          const double singular_values[MATRIX_DIMENSION],
+                          const double singular_values[kMatrixDimension],
                           const Matrix9& orthogonal_columns,
                           const Matrix9& right_vectors,
                           Matrix9& computed_inverse)
 {
-    for (int row = 0; row < MATRIX_DIMENSION; ++row)
+    for (int row = 0; row < kMatrixDimension; ++row)
     {
-        for (int column = 0; column < MATRIX_DIMENSION; ++column)
+        for (int column = 0; column < kMatrixDimension; ++column)
         {
             long double inverse_value = 0.0L;
-            for (int singular = 0; singular < MATRIX_DIMENSION; ++singular)
+            for (int singular = 0; singular < kMatrixDimension; ++singular)
             {
                 const long double sigma = singular_values[singular];
                 inverse_value
-                    += static_cast<long double>(right_vectors[row * MATRIX_DIMENSION + singular])
-                       * orthogonal_columns[column * MATRIX_DIMENSION + singular]
+                    += static_cast<long double>(right_vectors[row * kMatrixDimension + singular])
+                       * orthogonal_columns[column * kMatrixDimension + singular]
                        / (static_cast<long double>(scale) * sigma * sigma);
             }
-            computed_inverse[row * MATRIX_DIMENSION + column]
+            computed_inverse[row * kMatrixDimension + column]
                 = static_cast<double>(inverse_value);
         }
     }
@@ -235,7 +235,7 @@ CellValidation validate_ipi_cell(const Matrix9& cell_wire,
         return result;
     }
 
-    double singular_values[MATRIX_DIMENSION];
+    double singular_values[kMatrixDimension];
     Matrix9 orthogonal_columns;
     Matrix9 right_vectors;
     if (!compute_cell_svd(scaled_cell, singular_values, orthogonal_columns, right_vectors,
@@ -359,13 +359,13 @@ bool check_stress_symmetry(const Matrix9& stress_ry_per_bohr3,
     {
         maximum_stress = std::max(maximum_stress, std::fabs(stress_ry_per_bohr3[index]));
     }
-    for (int row = 0; row < MATRIX_DIMENSION; ++row)
+    for (int row = 0; row < kMatrixDimension; ++row)
     {
-        for (int column = row + 1; column < MATRIX_DIMENSION; ++column)
+        for (int column = row + 1; column < kMatrixDimension; ++column)
         {
             const double difference
-                = std::fabs(stress_ry_per_bohr3[row * MATRIX_DIMENSION + column]
-                            - stress_ry_per_bohr3[column * MATRIX_DIMENSION + row]);
+                = std::fabs(stress_ry_per_bohr3[row * kMatrixDimension + column]
+                            - stress_ry_per_bohr3[column * kMatrixDimension + row]);
             max_antisymmetric_component
                 = std::max(max_antisymmetric_component, difference);
         }
@@ -387,14 +387,14 @@ bool compute_symmetric_virial(const Matrix9& stress_ry_per_bohr3,
                               std::string& message)
 {
     Matrix9 virial;
-    for (int row = 0; row < MATRIX_DIMENSION; ++row)
+    for (int row = 0; row < kMatrixDimension; ++row)
     {
-        for (int column = 0; column < MATRIX_DIMENSION; ++column)
+        for (int column = 0; column < kMatrixDimension; ++column)
         {
             const long double symmetric_stress
                 = 0.5L
-                  * (static_cast<long double>(stress_ry_per_bohr3[row * MATRIX_DIMENSION + column])
-                     + stress_ry_per_bohr3[column * MATRIX_DIMENSION + row]);
+                  * (static_cast<long double>(stress_ry_per_bohr3[row * kMatrixDimension + column])
+                     + stress_ry_per_bohr3[column * kMatrixDimension + row]);
             const long double converted = 0.5L * volume_bohr3 * symmetric_stress;
             if (!std::isfinite(converted)
                 || std::fabs(converted)
@@ -403,7 +403,7 @@ bool compute_symmetric_virial(const Matrix9& stress_ry_per_bohr3,
                 message = "converted virial is not representable as finite doubles";
                 return false;
             }
-            virial[row * MATRIX_DIMENSION + column] = static_cast<double>(converted);
+            virial[row * kMatrixDimension + column] = static_cast<double>(converted);
         }
     }
     wire_virial_hartree = transpose_matrix9(virial);

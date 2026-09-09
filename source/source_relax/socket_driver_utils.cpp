@@ -82,9 +82,9 @@ std::string properties_extra(const ComputedFrame& frame)
 bool is_root()
 {
 #ifdef __MPI
-    int rank = IPI_RANK_ROOT;
+    int rank = kIpiRankRoot;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return rank == IPI_RANK_ROOT;
+    return rank == kIpiRankRoot;
 #else
     return true;
 #endif
@@ -114,7 +114,7 @@ void bcast_socket_int(int& value)
 void bcast_socket_int32(std::int32_t& value)
 {
 #ifdef __MPI
-    MPI_Bcast(&value, 1, MPI_INT32_T, IPI_RANK_ROOT, MPI_COMM_WORLD);
+    MPI_Bcast(&value, 1, MPI_INT32_T, kIpiRankRoot, MPI_COMM_WORLD);
 #else
     (void)value;
 #endif
@@ -327,7 +327,7 @@ std::vector<double> flatten_forces_hartree_per_bohr(const ModuleBase::matrix& fo
             {
                 throw std::runtime_error("force entries must be finite");
             }
-            out[static_cast<std::size_t>(3 * iat + idir)] = value * RY_TO_HARTREE;
+            out[static_cast<std::size_t>(3 * iat + idir)] = value * kRyToHartree;
         }
     }
     return out;

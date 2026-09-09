@@ -13,15 +13,15 @@ class UnitCell;
 
 namespace SocketDriverUtils
 {
-constexpr double RY_TO_HARTREE = 0.5;
-constexpr int IPI_RANK_ROOT = 0;
-constexpr double MAX_CELL_CONDITION = 1.0e12;
-constexpr double INVERSE_ABSOLUTE_TOLERANCE
+constexpr double kRyToHartree = 0.5;
+constexpr int kIpiRankRoot = 0;
+constexpr double kMaxCellCondition = 1.0e12;
+constexpr double kInverseAbsoluteTolerance
     = 64.0 * std::numeric_limits<double>::epsilon();
-constexpr double INVERSE_RELATIVE_TOLERANCE = 64.0;
-constexpr double STRESS_ABSOLUTE_TOLERANCE = 1.0e-10;
-constexpr double STRESS_RELATIVE_TOLERANCE = 1.0e-8;
-constexpr std::int32_t MAX_INIT_BYTES = static_cast<std::int32_t>(1048576);
+constexpr double kInverseRelativeTolerance = 64.0;
+constexpr double kStressAbsoluteTolerance = 1.0e-10;
+constexpr double kStressRelativeTolerance = 1.0e-8;
+constexpr std::int32_t kMaxInitBytes = static_cast<std::int32_t>(1048576);
 
 enum class DriverState
 {

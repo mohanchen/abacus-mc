@@ -26,7 +26,7 @@
 
 namespace
 {
-constexpr std::size_t IPI_HEADER_LEN = 12;
+constexpr std::size_t kIpiHeaderLen = 12;
 
 std::string errno_message(const std::string& prefix)
 {
@@ -70,7 +70,7 @@ void send_value(const int fd, const T& value)
 void send_header(const int fd, const std::string& header)
 {
     std::string padded = header;
-    padded.resize(IPI_HEADER_LEN, ' ');
+    padded.resize(kIpiHeaderLen, ' ');
     send_all(fd, padded.data(), padded.size());
 }
 
@@ -93,7 +93,7 @@ bool try_send_status(const int fd)
 
 std::string read_header_or_close(const int fd)
 {
-    char header[IPI_HEADER_LEN];
+    char header[kIpiHeaderLen];
     std::size_t done = 0;
     while (done < sizeof(header))
     {

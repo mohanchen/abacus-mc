@@ -5,8 +5,8 @@
 
 namespace SocketFrameUtils
 {
-constexpr int MATRIX_DIMENSION = 3;
-extern const int MAX_JACOBI_SWEEPS;
+constexpr int kMatrixDimension = 3;
+extern const int kMaxJacobiSweeps;
 
 bool is_finite_matrix(const SocketFrame::Matrix9& values);
 double column_norm_squared(const SocketFrame::Matrix9& values, int column);

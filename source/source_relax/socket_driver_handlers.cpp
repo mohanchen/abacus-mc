@@ -18,13 +18,13 @@ namespace SocketDriverHandlers
 {
 using SocketDriverUtils::ComputedFrame;
 using SocketDriverUtils::DriverState;
-using SocketDriverUtils::INVERSE_ABSOLUTE_TOLERANCE;
-using SocketDriverUtils::INVERSE_RELATIVE_TOLERANCE;
-using SocketDriverUtils::MAX_CELL_CONDITION;
-using SocketDriverUtils::MAX_INIT_BYTES;
-using SocketDriverUtils::RY_TO_HARTREE;
-using SocketDriverUtils::STRESS_ABSOLUTE_TOLERANCE;
-using SocketDriverUtils::STRESS_RELATIVE_TOLERANCE;
+using SocketDriverUtils::kInverseAbsoluteTolerance;
+using SocketDriverUtils::kInverseRelativeTolerance;
+using SocketDriverUtils::kMaxCellCondition;
+using SocketDriverUtils::kMaxInitBytes;
+using SocketDriverUtils::kRyToHartree;
+using SocketDriverUtils::kStressAbsoluteTolerance;
+using SocketDriverUtils::kStressRelativeTolerance;
 using SocketDriverUtils::all_ranks_converged;
 using SocketDriverUtils::bcast_double_vector;
 using SocketDriverUtils::bcast_header;
@@ -129,7 +129,7 @@ void handle_init(IpiSocket& socket,
                     io_failed = 1;
                     io_message = "negative INIT payload length from i-PI socket";
                 }
-                else if (nbytes > MAX_INIT_BYTES)
+                else if (nbytes > kMaxInitBytes)
                 {
                     io_failed = 1;
                     io_message = "INIT payload exceeds the 1 MiB socket limit";
@@ -189,9 +189,9 @@ PosdataPayload read_posdata(IpiSocket& socket, const UnitCell& ucell)
             const SocketFrame::CellValidation validation
                 = SocketFrame::validate_ipi_cell(payload.cell,
                                                  payload.inv_cell,
-                                                 MAX_CELL_CONDITION,
-                                                 INVERSE_ABSOLUTE_TOLERANCE,
-                                                 INVERSE_RELATIVE_TOLERANCE);
+                                                 kMaxCellCondition,
+                                                 kInverseAbsoluteTolerance,
+                                                 kInverseRelativeTolerance);
             if (!validation.ok)
             {
                 io_failed = 1;
@@ -257,7 +257,8 @@ void check_posdata_geometry(const DriverContext& context,
         context.reference_cell);
     if (max_cell_delta_bohr > unchanged_cell_tolerance(payload.cell))
     {
-        ModuleBase::WARNING_QUIT("ABACUS socket", "variable-cell socket updates are not supported yet.");
+        ModuleBase::WARNING_QUIT("ABACUS socket",
+                                 "variable-cell socket updates are not supported yet.");
     }
     if (!mutable_context.checked_initial_positions)
     {
@@ -268,7 +269,8 @@ void check_posdata_geometry(const DriverContext& context,
             ModuleBase::WARNING(
                 "ABACUS socket",
                 "first POSDATA positions are not PBC-equivalent to STRU atom order; "
-                "i-PI POSDATA carries no species, so the client atoms should use the same atom order as STRU.");
+                "i-PI POSDATA carries no species, so the client atoms should use the same atom order "
+                "as STRU.");
         }
     }
 }
@@ -328,7 +330,7 @@ void compute_energy_hartree(ModuleESolver::ESolver* esolver,
     {
         ModuleBase::WARNING_QUIT("ABACUS socket", "socket energy is not finite.");
     }
-    computed.energy_hartree = energy_ry * RY_TO_HARTREE;
+    computed.energy_hartree = energy_ry * kRyToHartree;
     if (is_root())
     {
         ofs_running << " ABACUS socket return energy "
@@ -399,8 +401,8 @@ void compute_stress(UnitCell& ucell,
         const SocketFrame::VirialConversion virial
             = SocketFrame::make_ipi_virial(matrix9_from_stress(stress),
                                            ucell.omega,
-                                           STRESS_ABSOLUTE_TOLERANCE,
-                                           STRESS_RELATIVE_TOLERANCE);
+                                           kStressAbsoluteTolerance,
+                                           kStressRelativeTolerance);
         if (!virial.ok)
         {
             throw std::runtime_error(virial.message);
