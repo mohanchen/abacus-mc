@@ -28,13 +28,14 @@ ParaCollection& init_global_para_worlds(int nproc, int my_rank, int nimage)
 
     auto collection = std::unique_ptr<ParaCollection>(new ParaCollection());
 
-#ifdef __MPI
+    // Argument validation is independent of the MPI build.
     if (nimage < 1 || nproc < nimage)
     {
         ModuleBase::WARNING_QUIT("init_global_para_worlds",
                                  "require 1 <= nimage <= nproc");
     }
 
+#ifdef __MPI
     int image_id = 0;
     int rank_in_esolver = 0;
     int esolver_size = 0;
