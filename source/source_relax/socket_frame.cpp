@@ -309,36 +309,51 @@ bool checked_position_count(std::int32_t nat_socket,
     return true;
 }
 
-VirialConversion make_ipi_virial(const Matrix9& stress_ry_per_bohr3,
-                                  double volume_bohr3,
-                                  double antisymmetric_absolute_tolerance,
-                                  double antisymmetric_relative_tolerance)
+namespace
+{
+VirialConversion make_failed_virial_conversion()
 {
     VirialConversion result;
     result.ok = false;
     result.message.clear();
     result.wire_virial_hartree.fill(0.0);
     result.max_antisymmetric_component = 0.0;
+    return result;
+}
 
+bool validate_virial_inputs(const Matrix9& stress_ry_per_bohr3,
+                            const double volume_bohr3,
+                            const double antisymmetric_absolute_tolerance,
+                            const double antisymmetric_relative_tolerance,
+                            std::string& message)
+{
     if (!is_finite_matrix(stress_ry_per_bohr3))
     {
-        result.message = "stress entries must be finite";
-        return result;
+        message = "stress entries must be finite";
+        return false;
     }
     if (!std::isfinite(volume_bohr3) || volume_bohr3 <= 0.0)
     {
-        result.message = "cell volume must be finite and positive";
-        return result;
+        message = "cell volume must be finite and positive";
+        return false;
     }
     if (!std::isfinite(antisymmetric_absolute_tolerance)
         || antisymmetric_absolute_tolerance < 0.0
         || !std::isfinite(antisymmetric_relative_tolerance)
         || antisymmetric_relative_tolerance < 0.0)
     {
-        result.message = "stress symmetry tolerances must be finite and nonnegative";
-        return result;
+        message = "stress symmetry tolerances must be finite and nonnegative";
+        return false;
     }
+    return true;
+}
 
+bool check_stress_symmetry(const Matrix9& stress_ry_per_bohr3,
+                           const double antisymmetric_absolute_tolerance,
+                           const double antisymmetric_relative_tolerance,
+                           double& max_antisymmetric_component,
+                           std::string& message)
+{
     double maximum_stress = 0.0;
     for (std::size_t index = 0; index < stress_ry_per_bohr3.size(); ++index)
     {
@@ -351,19 +366,26 @@ VirialConversion make_ipi_virial(const Matrix9& stress_ry_per_bohr3,
             const double difference
                 = std::fabs(stress_ry_per_bohr3[row * MATRIX_DIMENSION + column]
                             - stress_ry_per_bohr3[column * MATRIX_DIMENSION + row]);
-            result.max_antisymmetric_component
-                = std::max(result.max_antisymmetric_component, difference);
+            max_antisymmetric_component
+                = std::max(max_antisymmetric_component, difference);
         }
     }
     const double symmetry_limit
         = antisymmetric_absolute_tolerance + antisymmetric_relative_tolerance * maximum_stress;
-    if (!std::isfinite(result.max_antisymmetric_component)
-        || result.max_antisymmetric_component > symmetry_limit)
+    if (!std::isfinite(max_antisymmetric_component)
+        || max_antisymmetric_component > symmetry_limit)
     {
-        result.message = "stress tensor is not symmetric within tolerance";
-        return result;
+        message = "stress tensor is not symmetric within tolerance";
+        return false;
     }
+    return true;
+}
 
+bool compute_symmetric_virial(const Matrix9& stress_ry_per_bohr3,
+                              const double volume_bohr3,
+                              Matrix9& wire_virial_hartree,
+                              std::string& message)
+{
     Matrix9 virial;
     for (int row = 0; row < MATRIX_DIMENSION; ++row)
     {
@@ -378,13 +400,48 @@ VirialConversion make_ipi_virial(const Matrix9& stress_ry_per_bohr3,
                 || std::fabs(converted)
                        > static_cast<long double>(std::numeric_limits<double>::max()))
             {
-                result.message = "converted virial is not representable as finite doubles";
-                return result;
+                message = "converted virial is not representable as finite doubles";
+                return false;
             }
             virial[row * MATRIX_DIMENSION + column] = static_cast<double>(converted);
         }
     }
-    result.wire_virial_hartree = transpose_matrix9(virial);
+    wire_virial_hartree = transpose_matrix9(virial);
+    return true;
+}
+} // namespace
+
+VirialConversion make_ipi_virial(const Matrix9& stress_ry_per_bohr3,
+                                  double volume_bohr3,
+                                  double antisymmetric_absolute_tolerance,
+                                  double antisymmetric_relative_tolerance)
+{
+    VirialConversion result = make_failed_virial_conversion();
+
+    if (!validate_virial_inputs(stress_ry_per_bohr3,
+                                volume_bohr3,
+                                antisymmetric_absolute_tolerance,
+                                antisymmetric_relative_tolerance,
+                                result.message))
+    {
+        return result;
+    }
+    if (!check_stress_symmetry(stress_ry_per_bohr3,
+                               antisymmetric_absolute_tolerance,
+                               antisymmetric_relative_tolerance,
+                               result.max_antisymmetric_component,
+                               result.message))
+    {
+        return result;
+    }
+    if (!compute_symmetric_virial(stress_ry_per_bohr3,
+                                  volume_bohr3,
+                                  result.wire_virial_hartree,
+                                  result.message))
+    {
+        return result;
+    }
+
     result.ok = true;
     return result;
 }
