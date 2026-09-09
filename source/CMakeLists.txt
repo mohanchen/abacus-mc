@@ -551,7 +551,8 @@ add_library(
   driver
   OBJECT
   source_main/driver.cpp
-  source_main/driver_run.cpp)
+  source_main/driver_run.cpp
+  source_main/para_worlds_global.cpp)
 
 list(APPEND device_srcs
   source_pw/module_pwdft/kernels/nonlocal_op.cpp
