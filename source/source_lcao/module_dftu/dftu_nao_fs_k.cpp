@@ -155,6 +155,9 @@ void cal_force_k(const DftuFsEnv& env,
     const std::vector<double>& orb_cutoff = env.orb_cutoff();
     const int nlocal = pv.get_global_row_size();
 
+    // shared folding context: read-only params bundled for folding_matrix_k
+    DFTU_LCAO::FoldingCtx fold_ctx{npol, ks_solver, orb_cutoff, &ucell, &pv, &gd};
+
     const char transN = 'N';
     const char transC = 'C';
     const int one_int = 1;
@@ -168,8 +171,7 @@ void cal_force_k(const DftuFsEnv& env,
 
     for (int dim = 0; dim < 3; dim++)
     {
-        DFTU_LCAO::folding_matrix_k(npol, ks_solver, orb_cutoff,
-                                        ucell, gd, fsr, pv, ik, dim + 1, 0, &dSm_k[0], kvec_d);
+        DFTU_LCAO::folding_matrix_k(fold_ctx, fsr, ik, dim + 1, 0, &dSm_k[0], kvec_d);
 
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
@@ -241,6 +243,9 @@ void cal_stress_k(const DftuFsEnv& env,
     const std::vector<double>& orb_cutoff = env.orb_cutoff();
     const int nlocal = pv.get_global_row_size();
 
+    // shared folding context: read-only params bundled for folding_matrix_k
+    DFTU_LCAO::FoldingCtx fold_ctx{npol, ks_solver, orb_cutoff, &ucell, &pv, &gd};
+
     const char transN = 'N';
     const int one_int = 1;
     const std::complex<double> minus_half(-0.5, 0.0);
@@ -254,8 +259,7 @@ void cal_stress_k(const DftuFsEnv& env,
     {
         for (int dim2 = dim1; dim2 < 3; dim2++)
         {
-            DFTU_LCAO::folding_matrix_k(npol, ks_solver, orb_cutoff,
-                                            ucell, gd, fsr, pv, ik, dim1 + 4, dim2, &dSR_k[0], kvec_d);
+            DFTU_LCAO::folding_matrix_k(fold_ctx, fsr, ik, dim1 + 4, dim2, &dSR_k[0], kvec_d);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transN,
@@ -384,6 +388,9 @@ void cal_stress_gamma(const DftuFsEnv& env,
     double* dsloc_z = fsr.DSloc_z;
     double* dh_r = fsr.DH_r;
 
+    // shared folding context: read-only params bundled for fold_dSR_gamma
+    DFTU_LCAO::FoldingCtx fold_ctx{npol, ks_solver, orb_cutoff, &ucell, &pv, &gd};
+
     const char transN = 'N';
     const double zero = 0.0;
     const double minus_half = -0.5;
@@ -395,8 +402,7 @@ void cal_stress_gamma(const DftuFsEnv& env,
     {
         for (int dim2 = dim1; dim2 < 3; dim2++)
         {
-            DFTU_LCAO::fold_dSR_gamma(npol, ks_solver, orb_cutoff,
-                                         ucell, pv, &gd, dsloc_x, dsloc_y, dsloc_z, dh_r, dim1, dim2, &dSR_gamma[0]);
+            DFTU_LCAO::fold_dSR_gamma(fold_ctx, dsloc_x, dsloc_y, dsloc_z, dh_r, dim1, dim2, &dSR_gamma[0]);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transN,
