@@ -9,6 +9,8 @@
 
 // Include the free function implementations for force/stress in real space
 #include "dftu_nao_fs_r.h"
+// Include the free function templates for the HR/occ atom-pair kernels
+#include "dftu_nao_ijr.h"
 
 template <typename TK, typename TR>
 hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
@@ -201,7 +203,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbi
  * Case 1: Occ_mat NOT ready (!is_occmat_ready)
  *   - First electronic iteration: calculates occupation matrix from density matrix (DMR)
  *     * Uses get_dmr(current_spin) to get real-space density matrix
- *     * Accumulates contributions from all atom pairs via cal_occ()
+ *     * Accumulates contributions from all atom pairs via DFTU_LCAO::cal_occ_ijr()
  *     * Performs MPI reduction to sum occ across processes
  *     * Stores result via set_occ_mat_flat() for use in pot_onsite calculation
  *     * For nspin=1: occ is scaled by 0.5 (since only one spin channel computed)
@@ -233,7 +235,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbi
  *     - set_occmat_stale() always called (current_spin check always true)
  *     - No current_spin toggling (all spins handled simultaneously)
  * 
- * @warning THREAD SAFETY: cal_HR_IJR() updates shared HR matrix entries.
+ * @warning THREAD SAFETY: DFTU_LCAO::cal_hr_ijr() updates shared HR matrix entries.
  *          Different iat0 may contribute to same HR(iat1, iat2, R), requiring
  *          critical section protection for multithreaded correctness.
  *          TODO: Consider refactoring to atom_row_list pattern (see nonlocal.cpp)
@@ -352,7 +354,14 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::compute_occ_from_dmr(
                 = dmR_current->find_matrix(iat1, iat2, R_vector[0], R_vector[1], R_vector[2]);
             if (tmp != nullptr)
             {
-                this->cal_occ(iat1, iat2, pv, nlm1, nlm2, tmp->get_pointer(), occ);
+                DFTU_LCAO::cal_occ_ijr(iat1,
+                                       iat2,
+                                       ucell->get_npol(),
+                                       *pv,
+                                       nlm1,
+                                       nlm2,
+                                       tmp->get_pointer(),
+                                       occ);
             }
         }
     }
@@ -419,7 +428,14 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::accumulate_HR_for_iat0(
 #pragma omp critical(dftu_hr_update)
 #endif
                 {
-                    this->cal_HR_IJR(iat1, iat2, pv, nlm1, nlm2, pot_onsite, tmp->get_pointer());
+                    DFTU_LCAO::cal_hr_ijr<TR>(iat1,
+                                              iat2,
+                                              ucell->get_npol(),
+                                              *pv,
+                                              nlm1,
+                                              nlm2,
+                                              pot_onsite,
+                                              tmp->get_pointer());
                 }
             }
         }

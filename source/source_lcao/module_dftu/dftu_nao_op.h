@@ -120,21 +120,10 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
      */
     void cal_nlm_all(const Parallel_Orbitals* pv);
 
-    /**
-     * @brief calculate the occ_mm' = \sum_R DMR*<phi_0|alpha^I_m'><alpha^I_m'|phi_R> matrix for each atom to add U
-     */
-    void cal_occ(const int& iat1,
-                 const int& iat2,
-                 const Parallel_Orbitals* pv,
-                 const std::unordered_map<int, std::vector<double>>& nlm1_all,
-                 const std::unordered_map<int, std::vector<double>>& nlm2_all,
-                 const double* data_pointer,
-                 std::vector<double>& occupations);
-
     /// @brief BRANCH 1 of contributeHR: compute occ from DMR for one
     ///        Hubbard atom (iat0). Walks (ad1, ad2) neighbor pairs, calls
-    ///        cal_occ, MPI-reduces, scales for nspin=1, and stores via
-    ///        set_flat.
+    ///        DFTU_LCAO::cal_occ_ijr, MPI-reduces, scales for nspin=1, and
+    ///        stores via set_flat.
     void compute_occ_from_dmr(int iat0,
                               int target_L,
                               const AdjacentAtomInfo& adjs,
@@ -158,17 +147,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                                 const AdjacentAtomInfo& adjs,
                                 const Parallel_Orbitals* pv,
                                 const std::vector<TR>& pot_onsite);
-
-    /**
-     * @brief calculate the HR local matrix of <I,J,R> atom pair
-     */
-    void cal_HR_IJR(const int& iat1,
-                    const int& iat2,
-                    const Parallel_Orbitals* pv,
-                    const std::unordered_map<int, std::vector<double>>& nlm1_all,
-                    const std::unordered_map<int, std::vector<double>>& nlm2_all,
-                    const std::vector<TR>& pot_onsite_in,
-                    TR* data_pointer);
 
     /**
      * @brief calculate the atomic Force of <I,J,R> atom pair
