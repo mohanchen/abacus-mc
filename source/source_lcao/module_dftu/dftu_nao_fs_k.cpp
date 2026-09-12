@@ -13,25 +13,25 @@
 
 namespace DFTU_LCAO {
 
-void force_stress(Plus_U_Base& dftu,
-                  const std::vector<double>& orb_cutoff,
-                  const std::string& ks_solver,
+void force_stress(const DftuFsEnv& env,
                   const bool cal_force,
                   const bool cal_stress,
-                  const UnitCell& ucell,
-                  const Grid_Driver& gd,
                   std::vector<std::vector<double>>* dmk_d,
                   std::vector<std::vector<std::complex<double>>>* dmk_c,
-                  const Parallel_Orbitals& pv,
-                  ForceStressArrays& fsr,
                   ModuleBase::matrix& force_dftu,
                   ModuleBase::matrix& stress_dftu,
                   const K_Vectors& kv,
-                  const int npol,
                   const bool gamma_only_local)
 {
     ModuleBase::TITLE("DFTU_LCAO", "force_stress");
     ModuleBase::timer::start("DFTU_LCAO", "force_stress");
+
+    Plus_U_Base& dftu = env.dftu();
+    const UnitCell& ucell = env.ucell();
+    const Parallel_Orbitals& pv = env.pv();
+    ForceStressArrays& fsr = env.fsr();
+    const int npol = env.npol();
+    const std::string& ks_solver = env.ks_solver();
 
     // Defensive null check: the legacy dft_plus_u==2 force/stress path
     // requires fsr.DSloc_x/y/z (gamma_only) or fsr.DSloc_Rx/Ry/Rz (multik)
@@ -130,19 +130,12 @@ void force_stress(Plus_U_Base& dftu,
 
             if (cal_force)
             {
-                cal_force_gamma(nlocal, npol,
-                                dftu.get_l_channel_vec(), dftu.occmat().iatlnmipol2iwt(),
-                                ucell, &rho_pot_onsite[0], pv,
-                                fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, force_dftu);
+                cal_force_gamma(env, &rho_pot_onsite[0], force_dftu);
             }
 
             if (cal_stress)
             {
-                cal_stress_gamma(nlocal, npol,
-                                 ks_solver, orb_cutoff,
-                                 ucell, pv, &gd,
-                                 fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, fsr.DH_r,
-                                 &rho_pot_onsite[0], stress_dftu);
+                cal_stress_gamma(env, &rho_pot_onsite[0], stress_dftu);
             }
         } // ik
     }
@@ -174,16 +167,11 @@ void force_stress(Plus_U_Base& dftu,
 
             if (cal_force)
             {
-                cal_force_k(nlocal, npol,
-                            ks_solver, orb_cutoff,
-                            dftu.get_l_channel_vec(), dftu.occmat().iatlnmipol2iwt(),
-                            ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], force_dftu, kv.kvec_d[ik]);
+                cal_force_k(env, ik, kv.kvec_d[ik], &rho_pot_onsite[0], force_dftu);
             }
             if (cal_stress)
             {
-                cal_stress_k(nlocal, npol,
-                             ks_solver, orb_cutoff,
-                             ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], stress_dftu, kv.kvec_d[ik]);
+                cal_stress_k(env, ik, kv.kvec_d[ik], &rho_pot_onsite[0], stress_dftu);
             }
         } // ik
     }
@@ -217,23 +205,25 @@ void force_stress(Plus_U_Base& dftu,
     ModuleBase::timer::end("DFTU_LCAO", "force_stress");
 }
 
-void cal_force_k(const int nlocal,
-                 const int npol,
-                 const std::string& ks_solver,
-                 const std::vector<double>& orb_cutoff,
-                 const std::vector<int>& l_channel,
-                 const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                 const UnitCell& ucell,
-                 const Grid_Driver& gd,
-                 ForceStressArrays& fsr,
-                 const Parallel_Orbitals& pv,
+void cal_force_k(const DftuFsEnv& env,
                  const int ik,
+                 const ModuleBase::Vector3<double>& kvec_d,
                  const std::complex<double>* rho_pot_onsite,
-                 ModuleBase::matrix& force_dftu,
-                 const ModuleBase::Vector3<double>& kvec_d)
+                 ModuleBase::matrix& force_dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_force_k");
     ModuleBase::timer::start("DFTU_LCAO", "cal_force_k");
+
+    const Parallel_Orbitals& pv = env.pv();
+    const UnitCell& ucell = env.ucell();
+    const Grid_Driver& gd = env.gd();
+    ForceStressArrays& fsr = env.fsr();
+    const int npol = env.npol();
+    const std::string& ks_solver = env.ks_solver();
+    const std::vector<double>& orb_cutoff = env.orb_cutoff();
+    const std::vector<int>& l_channel = env.dftu().get_l_channel_vec();
+    const auto& iatlnmipol2iwt = env.dftu().occmat().iatlnmipol2iwt();
+    const int nlocal = pv.get_global_row_size();
 
     const char transN = 'N';
     const char transC = 'C';
@@ -241,7 +231,7 @@ void cal_force_k(const int nlocal,
     const std::complex<double> zero(0.0, 0.0);
     const std::complex<double> one(1.0, 0.0);
 
-    assert(nlocal>0);
+    assert(nlocal > 0);
 
     std::vector<std::complex<double>> dm_pot_onsite_dSm(pv.nloc);
     std::vector<std::complex<double>> dSm_k(pv.nloc);
@@ -313,22 +303,22 @@ void cal_force_k(const int nlocal,
 
         for (int it = 0; it < ucell.ntype; it++)
         {
-            const int NL = ucell.atoms[it].nwl + 1;
-            const int LC = l_channel[it];
+            const int nl = ucell.atoms[it].nwl + 1;
+            const int lc = l_channel[it];
 
-            if (LC == -1)
+            if (lc == -1)
                 continue;
             for (int ia = 0; ia < ucell.atoms[it].na; ia++)
             {
                 const int iat = ucell.itia2iat(it, ia);
 
-                for (int l = 0; l < NL; l++)
+                for (int l = 0; l < nl; l++)
                 {
                     if (l != l_channel[it])
                         continue;
-                    const int N = ucell.atoms[it].l_nchi[l];
+                    const int nchi = ucell.atoms[it].l_nchi[l];
 
-                    for (int n = 0; n < N; n++)
+                    for (int n = 0; n < nchi; n++)
                     {
                         if (n != 0)
                             continue;
@@ -354,21 +344,23 @@ void cal_force_k(const int nlocal,
     ModuleBase::timer::end("DFTU_LCAO", "cal_force_k");
 }
 
-void cal_stress_k(const int nlocal,
-                  const int npol,
-                  const std::string& ks_solver,
-                  const std::vector<double>& orb_cutoff,
-                  const UnitCell& ucell,
-                  const Grid_Driver& gd,
-                  ForceStressArrays& fsr,
-                  const Parallel_Orbitals& pv,
+void cal_stress_k(const DftuFsEnv& env,
                   const int ik,
+                  const ModuleBase::Vector3<double>& kvec_d,
                   const std::complex<double>* rho_pot_onsite,
-                  ModuleBase::matrix& stress_dftu,
-                  const ModuleBase::Vector3<double>& kvec_d)
+                  ModuleBase::matrix& stress_dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_stress_k");
     ModuleBase::timer::start("DFTU_LCAO", "cal_stress_k");
+
+    const Parallel_Orbitals& pv = env.pv();
+    const UnitCell& ucell = env.ucell();
+    const Grid_Driver& gd = env.gd();
+    ForceStressArrays& fsr = env.fsr();
+    const int npol = env.npol();
+    const std::string& ks_solver = env.ks_solver();
+    const std::vector<double>& orb_cutoff = env.orb_cutoff();
+    const int nlocal = pv.get_global_row_size();
 
     const char transN = 'N';
     const int one_int = 1;
@@ -426,27 +418,28 @@ void cal_stress_k(const int nlocal,
     ModuleBase::timer::end("DFTU_LCAO", "cal_stress_k");
 }
 
-void cal_force_gamma(const int nlocal,
-                     const int npol,
-                     const std::vector<int>& l_channel,
-                     const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt,
-                     const UnitCell& ucell,
+void cal_force_gamma(const DftuFsEnv& env,
                      const double* rho_pot_onsite,
-                     const Parallel_Orbitals& pv,
-                     double* dsloc_x,
-                     double* dsloc_y,
-                     double* dsloc_z,
                      ModuleBase::matrix& force_dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_force_gamma");
     ModuleBase::timer::start("DFTU_LCAO", "cal_force_gamma");
+
+    const Parallel_Orbitals& pv = env.pv();
+    const UnitCell& ucell = env.ucell();
+    const int npol = env.npol();
+    const std::vector<int>& l_channel = env.dftu().get_l_channel_vec();
+    const auto& iatlnmipol2iwt = env.dftu().occmat().iatlnmipol2iwt();
+    const int nlocal = pv.get_global_row_size();
+    double* dsloc_x = env.fsr().DSloc_x;
+    double* dsloc_y = env.fsr().DSloc_y;
+    double* dsloc_z = env.fsr().DSloc_z;
+
     const char transN = 'N';
     const char transT = 'T';
-    const int one_int = 1;
     const double one = 1.0;
     const double zero = 0.0;
-    const double minus_one = -1.0;
-    assert(nlocal>0);
+    assert(nlocal > 0);
 
     std::vector<double> dm_pot_onsite_dSm(pv.nloc);
 
@@ -528,23 +521,23 @@ void cal_force_gamma(const int nlocal,
 
         for (int it = 0; it < ucell.ntype; it++)
         {
-            const int NL = ucell.atoms[it].nwl + 1;
-            const int LC = l_channel[it];
+            const int nl = ucell.atoms[it].nwl + 1;
+            const int lc = l_channel[it];
 
-            if (LC == -1)
+            if (lc == -1)
                 continue;
             for (int ia = 0; ia < ucell.atoms[it].na; ia++)
             {
                 const int iat = ucell.itia2iat(it, ia);
 
-                for (int l = 0; l < NL; l++)
+                for (int l = 0; l < nl; l++)
                 {
                     if (l != l_channel[it])
                         continue;
 
-                    const int N = ucell.atoms[it].l_nchi[l];
+                    const int nchi = ucell.atoms[it].l_nchi[l];
 
-                    for (int n = 0; n < N; n++)
+                    for (int n = 0; n < nchi; n++)
                     {
                         if (n != 0)
                             continue;
@@ -572,28 +565,29 @@ void cal_force_gamma(const int nlocal,
     ModuleBase::timer::end("DFTU_LCAO", "cal_force_gamma");
 }
 
-void cal_stress_gamma(const int nlocal,
-                      const int npol,
-                      const std::string& ks_solver,
-                      const std::vector<double>& orb_cutoff,
-                      const UnitCell& ucell,
-                      const Parallel_Orbitals& pv,
-                      const Grid_Driver* gd,
-                      double* dsloc_x,
-                      double* dsloc_y,
-                      double* dsloc_z,
-                      double* dh_r,
+void cal_stress_gamma(const DftuFsEnv& env,
                       const double* rho_pot_onsite,
                       ModuleBase::matrix& stress_dftu)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_stress_gamma");
     ModuleBase::timer::start("DFTU_LCAO", "cal_stress_gamma");
 
+    const Parallel_Orbitals& pv = env.pv();
+    const UnitCell& ucell = env.ucell();
+    const Grid_Driver& gd = env.gd();
+    ForceStressArrays& fsr = env.fsr();
+    const int npol = env.npol();
+    const std::string& ks_solver = env.ks_solver();
+    const std::vector<double>& orb_cutoff = env.orb_cutoff();
+    const int nlocal = pv.get_global_row_size();
+    double* dsloc_x = fsr.DSloc_x;
+    double* dsloc_y = fsr.DSloc_y;
+    double* dsloc_z = fsr.DSloc_z;
+    double* dh_r = fsr.DH_r;
+
     const char transN = 'N';
-    const int one_int = 1;
     const double zero = 0.0;
     const double minus_half = -0.5;
-    const double one = 1.0;
 
     std::vector<double> dSR_gamma(pv.nloc);
     std::vector<double> dm_pot_onsite_sover(pv.nloc);
@@ -603,7 +597,7 @@ void cal_stress_gamma(const int nlocal,
         for (int dim2 = dim1; dim2 < 3; dim2++)
         {
             DFTU_LCAO::fold_dSR_gamma(npol, ks_solver, orb_cutoff,
-                                         ucell, pv, gd, dsloc_x, dsloc_y, dsloc_z, dh_r, dim1, dim2, &dSR_gamma[0]);
+                                         ucell, pv, &gd, dsloc_x, dsloc_y, dsloc_z, dh_r, dim1, dim2, &dSR_gamma[0]);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transN,
@@ -647,4 +641,3 @@ void cal_stress_gamma(const int nlocal,
 }
 
 } // namespace DFTU_LCAO
-
