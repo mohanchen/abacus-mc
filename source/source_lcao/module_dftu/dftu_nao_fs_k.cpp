@@ -107,7 +107,6 @@ void force_stress(Plus_U_Base& dftu,
     {
         const char transN = 'N';
         const char transT = 'T';
-        const int one_int = 1;
         const double alpha = 1.0;
         const double beta = 0.0;
 
@@ -115,22 +114,19 @@ void force_stress(Plus_U_Base& dftu,
 
         for (int ik = 0; ik < kv.get_nks(); ik++)
         {
-
             const int spin = kv.isk[ik];
 
-            double* pot_onsite = new double[pv.nloc];
+            std::vector<double> pot_onsite(pv.nloc, 0.0);
 
-            DFTU_LCAO::pot_onsite_real(dftu, ucell, &pv, spin, false, pot_onsite, npol);
+            DFTU_LCAO::pot_onsite_real(dftu, ucell, &pv, spin, false, pot_onsite.data(), npol);
 
 #ifdef __MPI
             ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
                     alpha, (*dmk_d)[spin].data(), 1, 1,
-                    pv.desc, pot_onsite, 1, 1,
+                    pv.desc, pot_onsite.data(), 1, 1,
                     pv.desc, beta, &rho_pot_onsite[0],
                     1, 1, pv.desc);
 #endif
-
-            delete[] pot_onsite;
 
             if (cal_force)
             {
@@ -164,19 +160,17 @@ void force_stress(Plus_U_Base& dftu,
         {
             const int spin = kv.isk[ik];
 
-            std::complex<double>* pot_onsite = new std::complex<double>[pv.nloc];
+            std::vector<std::complex<double>> pot_onsite(pv.nloc, std::complex<double>(0.0, 0.0));
 
-            DFTU_LCAO::pot_onsite_complex(dftu, ucell, &pv, spin, false, pot_onsite, npol);
+            DFTU_LCAO::pot_onsite_complex(dftu, ucell, &pv, spin, false, pot_onsite.data(), npol);
 
 
 #ifdef __MPI
             ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
                     alpha, (*dmk_c)[ik].data(), one_int, one_int,
-                    pv.desc, pot_onsite, one_int, one_int, pv.desc, beta,
+                    pv.desc, pot_onsite.data(), one_int, one_int, pv.desc, beta,
                     &rho_pot_onsite[0], one_int, one_int, pv.desc);
 #endif
-
-            delete[] pot_onsite;
 
             if (cal_force)
             {
@@ -221,8 +215,6 @@ void force_stress(Plus_U_Base& dftu,
         }
     }
     ModuleBase::timer::end("DFTU_LCAO", "force_stress");
-
-    return;
 }
 
 void cal_force_k(const int nlocal,
@@ -360,8 +352,6 @@ void cal_force_k(const int nlocal,
         }                 // it
     }                     // end dim
     ModuleBase::timer::end("DFTU_LCAO", "cal_force_k");
-
-    return;
 }
 
 void cal_stress_k(const int nlocal,
@@ -434,8 +424,6 @@ void cal_stress_k(const int nlocal,
         } // end dim2
     }     // end dim1
     ModuleBase::timer::end("DFTU_LCAO", "cal_stress_k");
-
-    return;
 }
 
 void cal_force_gamma(const int nlocal,
@@ -582,8 +570,6 @@ void cal_force_gamma(const int nlocal,
 
     } // end dim
     ModuleBase::timer::end("DFTU_LCAO", "cal_force_gamma");
-
-    return;
 }
 
 void cal_stress_gamma(const int nlocal,
@@ -658,7 +644,6 @@ void cal_stress_gamma(const int nlocal,
         } // end dim2
     }     // end dim1
     ModuleBase::timer::end("DFTU_LCAO", "cal_stress_gamma");
-    return;
 }
 
 } // namespace DFTU_LCAO

@@ -1,5 +1,5 @@
-#ifndef DFTU_FORCE_H
-#define DFTU_FORCE_H
+#ifndef DFTU_NAO_FS_K_H
+#define DFTU_NAO_FS_K_H
 
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_base/matrix.h"
@@ -97,4 +97,4 @@ void cal_stress_gamma(int nlocal,
 
 } // namespace DFTU_LCAO
 
-#endif // DFTU_FORCE_H
+#endif // DFTU_NAO_FS_K_H
