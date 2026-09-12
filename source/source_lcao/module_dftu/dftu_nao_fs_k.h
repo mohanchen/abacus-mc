@@ -6,7 +6,6 @@
 #include "source_cell/klist.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_cell/unitcell.h"
-#include "source_lcao/force_stress_arrays.h"
 
 #include <cassert>
 #include <complex>
@@ -14,6 +13,7 @@
 #include <vector>
 
 
+class ForceStressArrays;
 class Plus_U_Base;
 
 namespace DFTU_LCAO {

@@ -2,6 +2,7 @@
 #include "dftu_nao_folding.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "dftu_nao_pots.h"
+#include "source_lcao/force_stress_arrays.h"
 #include "source_base/global_function.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/parallel_reduce.h"
