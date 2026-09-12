@@ -70,6 +70,20 @@ void accumulate_diag_stress(const Parallel_Orbitals& pv,
     }
 }
 
+/// @brief Whether atom type it carries a usable correlated channel.
+///
+/// Mirrors the silent skips of the original nest: no channel configured
+/// (l_channel == -1), channel l beyond the atom's angular-momentum range,
+/// or no n = 0 projector for that channel.
+bool has_valid_correlated_channel(const UnitCell& ucell,
+                                  const std::vector<int>& l_channel,
+                                  const int it)
+{
+    const int lc = l_channel[it];
+    return lc != -1 && lc < ucell.atoms[it].nwl + 1
+           && ucell.atoms[it].l_nchi[lc] >= 1;
+}
+
 /// @brief Add the onsite (correlated-orbital) diagonal contribution to one force component.
 ///
 /// For each type with a correlated channel, visits every atom and every
@@ -94,15 +108,11 @@ void accumulate_onsite_force(Plus_U_Base& dftu,
     const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
     for (int it = 0; it < ucell.ntype; it++)
     {
+        if (!has_valid_correlated_channel(ucell, l_channel, it))
+        {
+            continue;
+        }
         const int lc = l_channel[it];
-        if (lc == -1 || lc >= ucell.atoms[it].nwl + 1)
-        {
-            continue;
-        }
-        if (ucell.atoms[it].l_nchi[lc] < 1)
-        {
-            continue;
-        }
         for (int ia = 0; ia < ucell.atoms[it].na; ia++)
         {
             const int iat = ucell.itia2iat(it, ia);
@@ -419,11 +429,46 @@ void cal_stress_gamma(const DftuFsEnv& env,
 namespace
 {
 
+/// @brief Abort if the caller left required folded-matrix buffers unallocated.
+///
+/// Force needs the three derivative-overlap arrays; stress additionally
+/// needs the derivative-Hamiltonian array. The gamma and multik paths use
+/// different buffer sets but identical logic.
+void check_folded_arrays(const ForceStressArrays& fsr,
+                         const bool cal_force,
+                         const bool cal_stress,
+                         const bool gamma_only_local)
+{
+    const double* ds0 = gamma_only_local ? fsr.DSloc_x : fsr.DSloc_Rx;
+    const double* ds1 = gamma_only_local ? fsr.DSloc_y : fsr.DSloc_Ry;
+    const double* ds2 = gamma_only_local ? fsr.DSloc_z : fsr.DSloc_Rz;
+    const bool missing_ds = ds0 == nullptr || ds1 == nullptr || ds2 == nullptr;
+
+    if (cal_force && missing_ds)
+    {
+        const char* message = gamma_only_local
+            ? "fsr.DSloc_x/y/z are nullptr in gamma_only path; the caller must allocate and fill them. "
+              "See notes in source/source_lcao/force_stress_lcao.cpp."
+            : "fsr.DSloc_Rx/Ry/Rz are nullptr in multik path; the caller must allocate and fill them. "
+              "See notes in source/source_lcao/force_stress_lcao.cpp.";
+        ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress", message);
+    }
+    if (cal_stress && (missing_ds || fsr.DH_r == nullptr))
+    {
+        const char* message = gamma_only_local
+            ? "fsr.DSloc_x/y/z or fsr.DH_r is nullptr in gamma_only path; "
+              "the caller must allocate and fill them. "
+              "See notes in source/source_lcao/force_stress_lcao.cpp."
+            : "fsr.DSloc_Rx/Ry/Rz or fsr.DH_r is nullptr in multik path; "
+              "the caller must allocate and fill them. "
+              "See notes in source/source_lcao/force_stress_lcao.cpp.";
+        ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress", message);
+    }
+}
+
 /// @brief Validate caller-provided folded matrices and the ks_solver layout.
 ///
-/// The legacy dft_plus_u==2 path requires the DSloc/DSloc_R force matrices
-/// and the DH stress matrix to be allocated and filled by the caller. Fail
-/// early with a clear message instead of letting pdgemm_ dereference a
+/// Fail early with a clear message instead of letting pdgemm_ dereference a
 /// nullptr. The folded buffers are column-major local ScaLAPACK blocks, so
 /// only column-major ks_solvers are accepted.
 void validate_fs_inputs(const DftuFsEnv& env,
@@ -431,43 +476,7 @@ void validate_fs_inputs(const DftuFsEnv& env,
                         const bool cal_stress,
                         const bool gamma_only_local)
 {
-    const ForceStressArrays& fsr = env.fsr();
-    if (gamma_only_local)
-    {
-        const bool missing_dsloc = fsr.DSloc_x == nullptr || fsr.DSloc_y == nullptr
-                                   || fsr.DSloc_z == nullptr;
-        if (cal_force && missing_dsloc)
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_x/y/z are nullptr in gamma_only path; the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-        if (cal_stress && (missing_dsloc || fsr.DH_r == nullptr))
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_x/y/z or fsr.DH_r is nullptr in gamma_only path; "
-                "the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-    }
-    else
-    {
-        const bool missing_dsloc_r = fsr.DSloc_Rx == nullptr || fsr.DSloc_Ry == nullptr
-                                     || fsr.DSloc_Rz == nullptr;
-        if (cal_force && missing_dsloc_r)
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_Rx/Ry/Rz are nullptr in multik path; the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-        if (cal_stress && (missing_dsloc_r || fsr.DH_r == nullptr))
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_Rx/Ry/Rz or fsr.DH_r is nullptr in multik path; "
-                "the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-    }
+    check_folded_arrays(env.fsr(), cal_force, cal_stress, gamma_only_local);
 
     if ((cal_force || cal_stress)
         && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(env.ks_solver()))
