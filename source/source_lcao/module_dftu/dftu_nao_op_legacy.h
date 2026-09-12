@@ -7,15 +7,10 @@
 namespace hamilt
 {
 
-#ifndef __OPDFTUTEMPLATE
-#define __OPDFTUTEMPLATE
-
 template <class T>
 class OperatorDFTU : public T
 {
 };
-
-#endif
 
 template <typename TK, typename TR>
 class OperatorDFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
