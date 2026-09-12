@@ -43,23 +43,31 @@ void throw_if_any_rank_failed(int local_failed, std::string local_message)
     }
 }
 
+/// @brief Terminate the socket run after a failure inside a collective stage.
+///
+/// Under MPI the failure may deadlock other ranks waiting in a collective,
+/// so print a diagnostic and abort the whole job. In serial builds there is
+/// no collective: the exception propagates to Socket_Driver::socket_driver,
+/// which reports a clean WARNING_QUIT into the log. Do not replace the
+/// serial throw with abort(); serial builds are user-facing.
 [[noreturn]] void fail_during_collective_stage(const char* stage,
                                                const std::string& message)
 {
-    int rank = -1;
 #ifdef __MPI
+    int rank = -1;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#endif
     std::fprintf(stderr,
                  "ABACUS_SOCKET_MPI_FATAL stage=%s rank=%d message=%s\n",
                  stage,
                  rank,
                  message.c_str());
     std::fflush(stderr);
-#ifdef __MPI
     MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-#endif
     std::abort();
+#else
+    (void)stage;
+    throw std::runtime_error(message);
+#endif
 }
 
 std::string properties_extra(const ComputedFrame& frame)
