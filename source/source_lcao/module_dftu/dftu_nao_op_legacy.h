@@ -40,8 +40,6 @@ class OperatorDFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
 
     const UnitCell* ucell = nullptr;
 
-    bool HR_fixed_done = false;
-
     const std::vector<int>& isk;
 
     const int npol;
