@@ -57,6 +57,15 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
                                   int n,
                                   int spin);
 
+/// @brief MPI Allreduce each (iat, l, n=0) channel of occmat across all ranks
+///        and symmetrize it (Hermitian average) per the nspin convention:
+///        nspin=1 mirrors spin-0 into spin-1; nspin=2 symmetrizes each spin;
+///        nspin=4 symmetrizes the single Pauli block. Reads nspin and npol
+///        from occmat so callers do not thread them through.
+void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
+                                 const UnitCell& ucell,
+                                 const std::vector<int>& l_channel);
+
 // calculate the local occupation number matrix (k-point version)
 void cal_occ_mat_k(const Parallel_Orbitals* pv,
                    const UnitCell& ucell,

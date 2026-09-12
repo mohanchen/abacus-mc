@@ -25,7 +25,6 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_k");
 
     const int nspin = dftu.occmat().nspin();
-    const int npol = dftu.occmat().npol();
     const int nlocal = pv->get_global_row_size();
     const std::string& ks_solver = PARAM.inp.ks_solver;
     const std::vector<int>& l_channel = dftu.get_l_channel_vec();
@@ -121,106 +120,8 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
         } // end it
     } // ik
 
-    for (int it = 0; it < ucell.ntype; it++)
-    {
-        const int NL = ucell.atoms[it].nwl + 1;
-        const int LC = l_channel[it];
-
-        if (LC == -1)
-        {
-            continue;
-        }
-
-        for (int ia = 0; ia < ucell.atoms[it].na; ia++)
-        {
-            const int iat = ucell.itia2iat(it, ia);
-
-            for (int l = 0; l < NL; l++)
-            {
-                if (l != l_channel[it])
-                {
-                    continue;
-                }
-
-                const int N = ucell.atoms[it].l_nchi[l];
-
-                for (int n = 0; n < N; n++)
-                {
-                    // if(!Yukawa && n!=0) continue;
-                    if (n != 0)
-                    {
-                        continue;
-                    }
-                    // set the local occupation mumber matrix of spin up and down zeros
-
-#ifdef __MPI
-                    if (nspin == 1 || nspin == 4)
-                    {
-                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
-                        ModuleBase::matrix temp(occ0);
-                        MPI_Allreduce(&temp(0, 0),
-                                      &occ0(0, 0),
-                                      (2 * l + 1) * npol * (2 * l + 1) * npol,
-                                      MPI_DOUBLE,
-                                      MPI_SUM,
-                                      MPI_COMM_WORLD);
-                    }
-                    else if (nspin == 2)
-                    {
-                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
-                        ModuleBase::matrix temp0(occ0);
-                        MPI_Allreduce(&temp0(0, 0),
-                                      &occ0(0, 0),
-                                      (2 * l + 1) * (2 * l + 1),
-                                      MPI_DOUBLE,
-                                      MPI_SUM,
-                                      MPI_COMM_WORLD);
-
-                        ModuleBase::matrix& occ1 = dftu.occmat().mat(iat, l, n, 1);
-                        ModuleBase::matrix temp1(occ1);
-                        MPI_Allreduce(&temp1(0, 0),
-                                      &occ1(0, 0),
-                                      (2 * l + 1) * (2 * l + 1),
-                                      MPI_DOUBLE,
-                                      MPI_SUM,
-                                      MPI_COMM_WORLD);
-                    }
-#endif
-
-                    switch (nspin)
-                    {
-                    case 1:
-                    {
-                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
-                        occ0 += transpose(occ0);
-                        occ0 *= 0.5;
-                        dftu.occmat().mat(iat, l, n, 1) += occ0;
-                        break;
-                    }
-
-                    case 2:
-                        for (int is = 0; is < nspin; is++)
-                        {
-                            ModuleBase::matrix& occ_is = dftu.occmat().mat(iat, l, n, is);
-                            occ_is += transpose(occ_is);
-                        }
-                        break;
-
-                    case 4:
-                    {
-                        ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
-                        occ0 += transpose(occ0);
-                        break;
-                    }
-
-                    default:
-                        std::cout << "Not supported NSPIN parameter" << std::endl;
-                        exit(0);
-                    }
-                } // end n
-            } // end l
-        } // end ia
-    } // end it
+    // MPI Allreduce + symmetrize per (iat, l, n=0) channel across all ranks
+    reduce_and_symmetrize_occ_k(dftu.occmat(), ucell, l_channel);
 
     if(dftu.has_occ_mixer() && dftu.is_occmat_ready())
     {
@@ -474,6 +375,119 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
             } // m1
         } // ipol0
     } // m0
+}
+
+/// @brief MPI Allreduce each (iat, l, n=0) channel of occmat across all ranks
+///        and symmetrize it (Hermitian average) per the nspin convention:
+///        nspin=1 mirrors spin-0 into spin-1; nspin=2 symmetrizes each spin;
+///        nspin=4 symmetrizes the single Pauli block. Reads nspin and npol
+///        from occmat so callers do not thread them through.
+void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
+                                 const UnitCell& ucell,
+                                 const std::vector<int>& l_channel)
+{
+    const int nspin = occmat.nspin();
+    const int npol = occmat.npol();
+    for (int it = 0; it < ucell.ntype; it++)
+    {
+        const int NL = ucell.atoms[it].nwl + 1;
+        const int LC = l_channel[it];
+
+        if (LC == -1)
+        {
+            continue;
+        }
+
+        for (int ia = 0; ia < ucell.atoms[it].na; ia++)
+        {
+            const int iat = ucell.itia2iat(it, ia);
+
+            for (int l = 0; l < NL; l++)
+            {
+                if (l != l_channel[it])
+                {
+                    continue;
+                }
+
+                const int N = ucell.atoms[it].l_nchi[l];
+
+                for (int n = 0; n < N; n++)
+                {
+                    // if(!Yukawa && n!=0) continue;
+                    if (n != 0)
+                    {
+                        continue;
+                    }
+                    // set the local occupation mumber matrix of spin up and down zeros
+
+#ifdef __MPI
+                    if (nspin == 1 || nspin == 4)
+                    {
+                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
+                        ModuleBase::matrix temp(occ0);
+                        MPI_Allreduce(&temp(0, 0),
+                                      &occ0(0, 0),
+                                      (2 * l + 1) * npol * (2 * l + 1) * npol,
+                                      MPI_DOUBLE,
+                                      MPI_SUM,
+                                      MPI_COMM_WORLD);
+                    }
+                    else if (nspin == 2)
+                    {
+                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
+                        ModuleBase::matrix temp0(occ0);
+                        MPI_Allreduce(&temp0(0, 0),
+                                      &occ0(0, 0),
+                                      (2 * l + 1) * (2 * l + 1),
+                                      MPI_DOUBLE,
+                                      MPI_SUM,
+                                      MPI_COMM_WORLD);
+
+                        ModuleBase::matrix& occ1 = occmat.mat(iat, l, n, 1);
+                        ModuleBase::matrix temp1(occ1);
+                        MPI_Allreduce(&temp1(0, 0),
+                                      &occ1(0, 0),
+                                      (2 * l + 1) * (2 * l + 1),
+                                      MPI_DOUBLE,
+                                      MPI_SUM,
+                                      MPI_COMM_WORLD);
+                    }
+#endif
+
+                    switch (nspin)
+                    {
+                    case 1:
+                    {
+                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
+                        occ0 += transpose(occ0);
+                        occ0 *= 0.5;
+                        occmat.mat(iat, l, n, 1) += occ0;
+                        break;
+                    }
+
+                    case 2:
+                        for (int is = 0; is < nspin; is++)
+                        {
+                            ModuleBase::matrix& occ_is = occmat.mat(iat, l, n, is);
+                            occ_is += transpose(occ_is);
+                        }
+                        break;
+
+                    case 4:
+                    {
+                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
+                        occ0 += transpose(occ0);
+                        break;
+                    }
+
+                    default:
+                        std::cout << "Not supported NSPIN parameter" << std::endl;
+                        exit(0);
+                    }
+                } // end n
+            } // end l
+        } // end ia
+    } // end it
 }
 
 //! dftu occupation matrix for gamma only using dm(double)
