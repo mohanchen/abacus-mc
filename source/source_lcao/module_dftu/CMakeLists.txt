@@ -10,6 +10,7 @@ if(ENABLE_LCAO)
         dftu_nao_energy.cpp
         dftu_hamilt.cpp
         dftu_nao_op.cpp
+        dftu_nao_op_kernel.cpp
         dftu_nao_fs_r.cpp
         dftu_nao_for_r.cpp
         dftu_nao_str_r.cpp

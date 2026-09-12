@@ -131,6 +131,34 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                  const double* data_pointer,
                  std::vector<double>& occupations);
 
+    /// @brief BRANCH 1 of contributeHR: compute occ from DMR for one
+    ///        Hubbard atom (iat0). Walks (ad1, ad2) neighbor pairs, calls
+    ///        cal_occ, MPI-reduces, scales for nspin=1, and stores via
+    ///        set_flat.
+    void compute_occ_from_dmr(int iat0,
+                              int target_L,
+                              const AdjacentAtomInfo& adjs,
+                              const Parallel_Orbitals* pv,
+                              std::vector<double>& occ);
+
+    /// @brief BRANCH 2 of contributeHR: load pre-read occ_mat from file
+    ///        into occ for one Hubbard atom (iat0). Dispatches on nspin
+    ///        (nspin=4 uses stacked Pauli blocks; nspin=1/2 uses per-spin
+    ///        get).
+    void load_occ_from_file(int iat0,
+                            int target_L,
+                            std::vector<double>& occ);
+
+    /// @brief Step 5 of contributeHR: accumulate HR contributions from
+    ///        all (ad1, ad2) neighbor pairs for one Hubbard atom (iat0)
+    ///        using the precomputed pot_onsite. Protected by an OpenMP
+    ///        critical section because different iat0 may write the same
+    ///        HR(iat1, iat2, R) entry.
+    void accumulate_HR_for_iat0(int iat0,
+                                const AdjacentAtomInfo& adjs,
+                                const Parallel_Orbitals* pv,
+                                const std::vector<TR>& pot_onsite);
+
     /**
      * @brief calculate the HR local matrix of <I,J,R> atom pair
      */
