@@ -13,7 +13,8 @@ void init_dftu_lcao(int dft_plus_u,
                     void* dftu,
                     const UnitCell& ucell,
                     double** rho,
-                    const int nrxx)
+                    const int nrxx,
+                    const LCAO_Orbitals* orb)
 {
     if (!dft_plus_u)
     {
@@ -25,7 +26,7 @@ void init_dftu_lcao(int dft_plus_u,
     /// Calculate U and J if Yukawa potential is used
     if (dftu_ptr->use_yukawa())
     {
-        dftu_ptr->yukawa().cal_slater_UJ(ucell, rho, nrxx, PARAM.inp.nspin, dftu_ptr->get_ptr_orb());
+        dftu_ptr->yukawa().cal_slater_UJ(ucell, rho, nrxx, PARAM.inp.nspin, orb);
         // update current U with calculated U-J from Slater integrals
         for (int it = 0; it < ucell.ntype; it++)
         {

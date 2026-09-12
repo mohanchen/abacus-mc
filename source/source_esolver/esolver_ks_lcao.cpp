@@ -394,7 +394,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(UnitCell& ucell, const int istep, const 
     }
 #endif
 
-    init_dftu_lcao(this->inp_->dft_plus_u, this->dftu_.get(), ucell, this->chr.rho, this->pw_rho->nrxx);
+    init_dftu_lcao(this->inp_->dft_plus_u, this->dftu_.get(), ucell, this->chr.rho, this->pw_rho->nrxx, &this->orb_);
 
 #ifdef __MLALGO
     // the density matrixes of DeePKS have been updated in each iter

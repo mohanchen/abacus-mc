@@ -84,7 +84,7 @@ void LCAO_domain::set_pot(
     if (inp.dft_plus_u)
     {
         // set_pot receives the base-class reference; the LCAO-specific init
-        // (with LCAO_Orbitals) lives on the derived Plus_U, so cast here.
+        // lives on the derived Plus_U, so cast here.
         static_cast<Plus_U&>(dftu).init(ucell, &pv,
                   PARAM.globalv.npol,
                   inp.nspin, inp.l_channel, inp.yukawa_potential, inp.yukawa_lambda,
@@ -97,8 +97,7 @@ void LCAO_domain::set_pot(
                   PARAM.globalv.hubbard_u,
                   PARAM.globalv.uramping,
                   inp.occ_mat_ctrl,
-                  inp.mixing_dftu,
-                  &orb);
+                  inp.mixing_dftu);
     }
 
     //! 4) init exact exchange calculations

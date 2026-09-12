@@ -4,7 +4,6 @@
 #include "source_base/tool_title.h"
 #include "source_base/timer.h"
 #include "source_basis/module_ao/parallel_orbitals.h"
-#include "source_basis/module_ao/orb_read.h"
 
 #include <complex>
 #include <vector>
@@ -32,16 +31,9 @@ void Plus_U::init(UnitCell& cell,
                 const double uramping,
                 const int occ_mat_ctrl,
                 const int mixing_dftu
-                , const LCAO_Orbitals* orb
                 )
 {
     ModuleBase::TITLE("Plus_U", "init");
-
-    ptr_orb_ = orb;
-    if(ptr_orb_ != nullptr)
-    {
-        orb_cutoff_ = orb->cutoffs();
-    }
 
     if (pv != nullptr)
     {

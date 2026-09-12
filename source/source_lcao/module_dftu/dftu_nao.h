@@ -10,7 +10,6 @@
 
 class UnitCell;
 class Parallel_Orbitals;
-class LCAO_Orbitals;
 
 
 class Plus_U : public Plus_U_Base
@@ -38,18 +37,7 @@ class Plus_U : public Plus_U_Base
                 const double uramping,
                 const int occ_mat_ctrl,
                 const int mixing_dftu
-                , const LCAO_Orbitals* orb = nullptr
                 );
-
-  private:
-
-    const LCAO_Orbitals* ptr_orb_ = nullptr;
-    std::vector<double> orb_cutoff_;
-
-  public:
-    /// read-only accessors for state needed by DFTU_LCAO free functions
-    const std::vector<double>& get_orb_cutoff() const { return orb_cutoff_; }
-    const LCAO_Orbitals* get_ptr_orb() const { return ptr_orb_; }
 };
 
 #endif

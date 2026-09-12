@@ -6,6 +6,8 @@
 #include "source_cell/unitcell.h"
 #include "source_cell/klist.h"
 
+class LCAO_Orbitals;
+
 namespace ModuleESolver
 {
 
@@ -22,12 +24,16 @@ namespace ModuleESolver
  * @param ucell Unit cell
  * @param rho Charge density
  * @param nrxx Number of real space grid points
+ * @param orb Numerical atomic orbitals; used for Slater integrals when the
+ *           Yukawa potential is enabled. May be nullptr when no LCAO orbital
+ *           data is available (e.g. PW-only DFT+U paths).
  */
 void init_dftu_lcao(int dft_plus_u,
                     void* dftu,
                     const UnitCell& ucell,
                     double** rho,
-                    const int nrxx);
+                    const int nrxx,
+                    const LCAO_Orbitals* orb);
 
 /**
  * @brief Finish DFT+U calculation for LCAO method in iter_finish
