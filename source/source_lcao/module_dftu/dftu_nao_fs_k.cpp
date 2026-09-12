@@ -13,6 +13,118 @@
 
 namespace DFTU_LCAO {
 
+namespace
+{
+
+/// @brief Add the real part of diagonal local-block entries to one force component.
+///
+/// Sums dm(ir, ic) over local block pairs whose global orbital indices
+/// coincide, attributing each entry to the atom owning the orbital along
+/// Cartesian component dim.
+template <typename T>
+void accumulate_diag_force(const Parallel_Orbitals& pv,
+                           const UnitCell& ucell,
+                           const T* dm,
+                           const int dim,
+                           ModuleBase::matrix& force_dftu)
+{
+    assert(dm != nullptr);
+    assert(dim >= 0 && dim < 3);
+    for (int ir = 0; ir < pv.nrow; ir++)
+    {
+        const int iwt1 = pv.local2global_row(ir);
+        const int iat1 = ucell.iwt2iat[iwt1];
+        for (int ic = 0; ic < pv.ncol; ic++)
+        {
+            if (pv.local2global_col(ic) == iwt1)
+            {
+                force_dftu(iat1, dim) += std::real(dm[ic * pv.nrow + ir]);
+            }
+        }
+    }
+}
+
+/// @brief Add the real part of diagonal local-block entries to one stress pair.
+template <typename T>
+void accumulate_diag_stress(const Parallel_Orbitals& pv,
+                            const T* dm,
+                            const int dim1,
+                            const int dim2,
+                            const double factor,
+                            ModuleBase::matrix& stress_dftu)
+{
+    assert(dm != nullptr);
+    assert(dim1 >= 0 && dim1 < 3);
+    assert(dim2 >= 0 && dim2 < 3);
+    for (int ir = 0; ir < pv.nrow; ir++)
+    {
+        const int iwt1 = pv.local2global_row(ir);
+        for (int ic = 0; ic < pv.ncol; ic++)
+        {
+            if (pv.local2global_col(ic) == iwt1)
+            {
+                stress_dftu(dim1, dim2) += factor * std::real(dm[ic * pv.nrow + ir]);
+            }
+        }
+    }
+}
+
+/// @brief Add the onsite (correlated-orbital) diagonal contribution to one force component.
+///
+/// For each type with a correlated channel, visits every atom and every
+/// (m, spinor) orbital of the channel at the n = 0 projector. Equivalent
+/// to the original it/ia/l/n/m/ipol nest, in which the l loop only ever
+/// ran for l == l_channel and the n loop only for n == 0; the explicit
+/// range guards preserve the silent skip when the channel is out of
+/// range or the atom type has no n = 0 projector.
+template <typename T>
+void accumulate_onsite_force(Plus_U_Base& dftu,
+                             const Parallel_Orbitals& pv,
+                             const UnitCell& ucell,
+                             const int npol,
+                             const T* dm,
+                             const int dim,
+                             ModuleBase::matrix& force_dftu)
+{
+    assert(dm != nullptr);
+    assert(dim >= 0 && dim < 3);
+    assert(npol == 1 || npol == 2);
+    const std::vector<int>& l_channel = dftu.get_l_channel_vec();
+    const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
+    for (int it = 0; it < ucell.ntype; it++)
+    {
+        const int lc = l_channel[it];
+        if (lc == -1 || lc >= ucell.atoms[it].nwl + 1)
+        {
+            continue;
+        }
+        if (ucell.atoms[it].l_nchi[lc] < 1)
+        {
+            continue;
+        }
+        for (int ia = 0; ia < ucell.atoms[it].na; ia++)
+        {
+            const int iat = ucell.itia2iat(it, ia);
+            for (int m = 0; m < 2 * lc + 1; m++)
+            {
+                for (int ipol = 0; ipol < npol; ipol++)
+                {
+                    const int iwt = iatlnmipol2iwt[iat][lc][0][m][ipol];
+                    const int mu = pv.global2local_row(iwt);
+                    const int nu = pv.global2local_col(iwt);
+                    if (mu < 0 || nu < 0)
+                    {
+                        continue;
+                    }
+                    force_dftu(iat, dim) += std::real(dm[nu * pv.nrow + mu]);
+                }
+            }
+        }
+    }
+}
+
+} // namespace
+
 void force_stress(const DftuFsEnv& env,
                   const bool cal_force,
                   const bool cal_stress,
@@ -221,8 +333,6 @@ void cal_force_k(const DftuFsEnv& env,
     const int npol = env.npol();
     const std::string& ks_solver = env.ks_solver();
     const std::vector<double>& orb_cutoff = env.orb_cutoff();
-    const std::vector<int>& l_channel = env.dftu().get_l_channel_vec();
-    const auto& iatlnmipol2iwt = env.dftu().occmat().iatlnmipol2iwt();
     const int nlocal = pv.get_global_row_size();
 
     const char transN = 'N';
@@ -263,21 +373,7 @@ void cal_force_k(const DftuFsEnv& env,
                 pv.desc);
 #endif
 
-        for (int ir = 0; ir < pv.nrow; ir++)
-        {
-            const int iwt1 = pv.local2global_row(ir);
-            const int iat1 = ucell.iwt2iat[iwt1];
-
-            for (int ic = 0; ic < pv.ncol; ic++)
-            {
-                const int iwt2 = pv.local2global_col(ic);
-                const int irc = ic * pv.nrow + ir;
-
-                if (iwt1 == iwt2)
-                    force_dftu(iat1, dim) += dm_pot_onsite_dSm[irc].real();
-
-            } // end ic
-        }     // end ir
+        accumulate_diag_force(pv, ucell, dm_pot_onsite_dSm.data(), dim, force_dftu);
 
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
@@ -301,45 +397,8 @@ void cal_force_k(const DftuFsEnv& env,
                 pv.desc);
 #endif
 
-        for (int it = 0; it < ucell.ntype; it++)
-        {
-            const int nl = ucell.atoms[it].nwl + 1;
-            const int lc = l_channel[it];
-
-            if (lc == -1)
-                continue;
-            for (int ia = 0; ia < ucell.atoms[it].na; ia++)
-            {
-                const int iat = ucell.itia2iat(it, ia);
-
-                for (int l = 0; l < nl; l++)
-                {
-                    if (l != l_channel[it])
-                        continue;
-                    const int nchi = ucell.atoms[it].l_nchi[l];
-
-                    for (int n = 0; n < nchi; n++)
-                    {
-                        if (n != 0)
-                            continue;
-
-                        for (int m = 0; m < 2 * l + 1; m++)
-                        {
-                            for (int ipol = 0; ipol < npol; ipol++)
-                            {
-                                const int iwt = iatlnmipol2iwt[iat][l][n][m][ipol];
-                                const int mu = pv.global2local_row(iwt);
-                                const int nu = pv.global2local_col(iwt);
-                                if (mu < 0 || nu < 0)
-                                    continue;
-
-                                force_dftu(iat, dim) += dm_pot_onsite_dSm[nu * pv.nrow + mu].real();
-                            }
-                        } //
-                    }     // n
-                }         // l
-            }             // ia
-        }                 // it
+        accumulate_onsite_force(env.dftu(), pv, ucell, npol,
+                                dm_pot_onsite_dSm.data(), dim, force_dftu);
     }                     // end dim
     ModuleBase::timer::end("DFTU_LCAO", "cal_force_k");
 }
@@ -400,18 +459,7 @@ void cal_stress_k(const DftuFsEnv& env,
                     pv.desc);
 #endif
 
-            for (int ir = 0; ir < pv.nrow; ir++)
-            {
-                const int iwt1 = pv.local2global_row(ir);
-                for (int ic = 0; ic < pv.ncol; ic++)
-                {
-                    const int iwt2 = pv.local2global_col(ic);
-                    const int irc = ic * pv.nrow + ir;
-
-                    if (iwt1 == iwt2)
-                        stress_dftu(dim1, dim2) += 2.0 * dm_pot_onsite_sover[irc].real();
-                } // end ic
-            }     // end ir
+            accumulate_diag_stress(pv, dm_pot_onsite_sover.data(), dim1, dim2, 2.0, stress_dftu);
 
         } // end dim2
     }     // end dim1
@@ -428,12 +476,8 @@ void cal_force_gamma(const DftuFsEnv& env,
     const Parallel_Orbitals& pv = env.pv();
     const UnitCell& ucell = env.ucell();
     const int npol = env.npol();
-    const std::vector<int>& l_channel = env.dftu().get_l_channel_vec();
-    const auto& iatlnmipol2iwt = env.dftu().occmat().iatlnmipol2iwt();
     const int nlocal = pv.get_global_row_size();
-    double* dsloc_x = env.fsr().DSloc_x;
-    double* dsloc_y = env.fsr().DSloc_y;
-    double* dsloc_z = env.fsr().DSloc_z;
+    double* const dsloc[3] = {env.fsr().DSloc_x, env.fsr().DSloc_y, env.fsr().DSloc_z};
 
     const char transN = 'N';
     const char transT = 'T';
@@ -445,19 +489,7 @@ void cal_force_gamma(const DftuFsEnv& env,
 
     for (int dim = 0; dim < 3; dim++)
     {
-        double* tmp_ptr = nullptr;
-        if (dim == 0)
-        {
-            tmp_ptr = dsloc_x;
-        }
-        else if (dim == 1)
-        {
-            tmp_ptr = dsloc_y;
-        }
-        else if (dim == 2)
-        {
-            tmp_ptr = dsloc_z;
-        }
+        double* tmp_ptr = dsloc[dim];
 
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
@@ -481,21 +513,7 @@ void cal_force_gamma(const DftuFsEnv& env,
                 pv.desc);
 #endif
 
-        for (int ir = 0; ir < pv.nrow; ir++)
-        {
-            const int iwt1 = pv.local2global_row(ir);
-            const int iat1 = ucell.iwt2iat[iwt1];
-
-            for (int ic = 0; ic < pv.ncol; ic++)
-            {
-                const int iwt2 = pv.local2global_col(ic);
-                const int irc = ic * pv.nrow + ir;
-
-                if (iwt1 == iwt2)
-                    force_dftu(iat1, dim) += dm_pot_onsite_dSm[irc];
-
-            } // end ic
-        }     // end ir
+        accumulate_diag_force(pv, ucell, dm_pot_onsite_dSm.data(), dim, force_dftu);
 
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
@@ -519,47 +537,8 @@ void cal_force_gamma(const DftuFsEnv& env,
                 pv.desc);
 #endif
 
-        for (int it = 0; it < ucell.ntype; it++)
-        {
-            const int nl = ucell.atoms[it].nwl + 1;
-            const int lc = l_channel[it];
-
-            if (lc == -1)
-                continue;
-            for (int ia = 0; ia < ucell.atoms[it].na; ia++)
-            {
-                const int iat = ucell.itia2iat(it, ia);
-
-                for (int l = 0; l < nl; l++)
-                {
-                    if (l != l_channel[it])
-                        continue;
-
-                    const int nchi = ucell.atoms[it].l_nchi[l];
-
-                    for (int n = 0; n < nchi; n++)
-                    {
-                        if (n != 0)
-                            continue;
-
-                        // Calculate the local occupation number matrix
-                        for (int m = 0; m < 2 * l + 1; m++)
-                        {
-                            for (int ipol = 0; ipol < npol; ipol++)
-                            {
-                                const int iwt = iatlnmipol2iwt[iat][l][n][m][ipol];
-                                const int mu = pv.global2local_row(iwt);
-                                const int nu = pv.global2local_col(iwt);
-                                if (mu < 0 || nu < 0)
-                                    continue;
-
-                                force_dftu(iat, dim) += dm_pot_onsite_dSm[nu * pv.nrow + mu];
-                            }
-                        } //
-                    }     // n
-                }         // l
-            }             // ia
-        }                 // it
+        accumulate_onsite_force(env.dftu(), pv, ucell, npol,
+                                dm_pot_onsite_dSm.data(), dim, force_dftu);
 
     } // end dim
     ModuleBase::timer::end("DFTU_LCAO", "cal_force_gamma");
@@ -621,19 +600,7 @@ void cal_stress_gamma(const DftuFsEnv& env,
                     pv.desc);
 #endif
 
-            for (int ir = 0; ir < pv.nrow; ir++)
-            {
-                const int iwt1 = pv.local2global_row(ir);
-
-                for (int ic = 0; ic < pv.ncol; ic++)
-                {
-                    const int iwt2 = pv.local2global_col(ic);
-                    const int irc = ic * pv.nrow + ir;
-
-                    if (iwt1 == iwt2)
-                        stress_dftu(dim1, dim2) += 2.0 * dm_pot_onsite_sover[irc];
-                } // end ic
-            }     // end ir
+            accumulate_diag_stress(pv, dm_pot_onsite_sover.data(), dim1, dim2, 2.0, stress_dftu);
 
         } // end dim2
     }     // end dim1
