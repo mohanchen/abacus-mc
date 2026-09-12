@@ -29,16 +29,6 @@
 #include <unordered_map>
 #include <vector>
 
-namespace hamilt
-{
-// Forward declarations to avoid circular dependency with dftu_lcao_op.h
-template <typename TK, typename TR>
-class OperatorLCAO;
-
-template <typename T>
-class DFTU;
-} // namespace hamilt
-
 namespace DFTU_LCAO
 {
 
@@ -67,7 +57,9 @@ namespace DFTU_LCAO
  * @param nlm2_all    [in] pre-computed <phi|chi> and derivatives for atom J2
  * @param pot_onsite  [in] flattened V_U matrix: [m1*m_size + m2 + is*m_size2]
  * @param dmR_pointer [in] pointer to DMR matrix blocks for each spin
- * @param nspin       [in] number of spin channels (1, 2, or 4)
+ * @param nspin       [in] number of spin channels (1, 2, or 4); the spinor
+ *                     polarization count is derived as npol = 2 for nspin=4
+ *                     (non-collinear) and npol = 1 otherwise
  * @param force1      [out] force accumulator for atom J1 (3 components)
  * @param force2      [out] force accumulator for atom J2 (3 components)
  *
@@ -75,9 +67,7 @@ namespace DFTU_LCAO
  *       for spin degeneracy. For nspin=2, spin-up and spin-down are summed explicitly.
  *       For nspin=4 (non-collinear), the spinor structure is handled via npol=2 indexing.
  */
-template <typename TK, typename TR>
-void cal_for_IJR_nao_r(const hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
-                     const int& iat1,
+void cal_for_IJR_nao_r(const int& iat1,
                      const int& iat2,
                      const Parallel_Orbitals* pv,
                      const std::unordered_map<int, std::vector<double>>& nlm1_all,

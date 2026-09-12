@@ -193,7 +193,7 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
                         // calculate force
                         if (cal_force)
                         {
-                            cal_for_IJR_nao_r(dftu_op, iat1, iat2, pv,
+                            cal_for_IJR_nao_r(iat1, iat2, pv,
                                             nlm_tot[ad1], nlm_tot[ad2],
                                             pot_onsite, tmp.data(), dftu_op->get_nspin(),
                                             force_tmp1, force_tmp2);
@@ -202,7 +202,7 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
                         // calculate stress
                         if (cal_stress)
                         {
-                            cal_str_IJR_nao_r(dftu_op, iat1, iat2, pv,
+                            cal_str_IJR_nao_r(iat1, iat2, pv,
                                              nlm_tot[ad1], nlm_tot[ad2],
                                              pot_onsite, tmp.data(), dftu_op->get_nspin(),
                                              dis1, dis2, stress_local.data());
