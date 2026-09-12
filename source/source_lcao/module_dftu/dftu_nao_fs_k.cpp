@@ -6,6 +6,7 @@
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
+#include "source_base/vector3.h"
 
 #include <complex>
 #include <string>
@@ -124,198 +125,6 @@ void accumulate_onsite_force(Plus_U_Base& dftu,
 }
 
 } // namespace
-
-void force_stress(const DftuFsEnv& env,
-                  const bool cal_force,
-                  const bool cal_stress,
-                  std::vector<std::vector<double>>* dmk_d,
-                  std::vector<std::vector<std::complex<double>>>* dmk_c,
-                  ModuleBase::matrix& force_dftu,
-                  ModuleBase::matrix& stress_dftu,
-                  const K_Vectors& kv,
-                  const bool gamma_only_local)
-{
-    ModuleBase::TITLE("DFTU_LCAO", "force_stress");
-    ModuleBase::timer::start("DFTU_LCAO", "force_stress");
-
-    Plus_U_Base& dftu = env.dftu();
-    const UnitCell& ucell = env.ucell();
-    const Parallel_Orbitals& pv = env.pv();
-    ForceStressArrays& fsr = env.fsr();
-    const int npol = env.npol();
-    const std::string& ks_solver = env.ks_solver();
-
-    // Defensive null check: the legacy dft_plus_u==2 force/stress path
-    // requires fsr.DSloc_x/y/z (gamma_only) or fsr.DSloc_Rx/Ry/Rz (multik)
-    // and fsr.DH_r to be allocated and filled by the caller. If the caller
-    // forgot to allocate them (as in force_stress_lcao.cpp where the local
-    // fsr_dftu is created without allocation), we fail early with a clear
-    // message instead of letting pdgemm_ dereference nullptr and crash.
-    // See force_stress_lcao.cpp for the historical background.
-    if (gamma_only_local)
-    {
-        if (cal_force
-            && (fsr.DSloc_x == nullptr || fsr.DSloc_y == nullptr || fsr.DSloc_z == nullptr))
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_x/y/z are nullptr in gamma_only path; the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-        if (cal_stress
-            && (fsr.DSloc_x == nullptr || fsr.DSloc_y == nullptr || fsr.DSloc_z == nullptr
-                || fsr.DH_r == nullptr))
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_x/y/z or fsr.DH_r is nullptr in gamma_only path; "
-                "the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-    }
-    else
-    {
-        if (cal_force
-            && (fsr.DSloc_Rx == nullptr || fsr.DSloc_Ry == nullptr || fsr.DSloc_Rz == nullptr))
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_Rx/Ry/Rz are nullptr in multik path; the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-        if (cal_stress
-            && (fsr.DSloc_Rx == nullptr || fsr.DSloc_Ry == nullptr || fsr.DSloc_Rz == nullptr
-                || fsr.DH_r == nullptr))
-        {
-            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-                "fsr.DSloc_Rx/Ry/Rz or fsr.DH_r is nullptr in multik path; "
-                "the caller must allocate and fill them. "
-                "See notes in source/source_lcao/force_stress_lcao.cpp.");
-        }
-    }
-
-    // Layout invariant: the folded dSR/mat buffers are consumed by ScaLAPACK
-    // GEMM through pv.desc (local column-major storage) and read back with
-    // explicit ic * pv.nrow + ir indices. All ks_solvers accepted by INPUT
-    // validation are column-major today; abort loudly instead of silently
-    // producing wrong forces/stresses if that assumption ever changes.
-    if ((cal_force || cal_stress)
-        && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(ks_solver))
-    {
-        ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
-            "non column-major ks_solver is not supported for DFT+U force/stress; "
-            "the folded matrix layout assumption would be violated");
-    }
-
-    const int nlocal = pv.get_global_row_size();
-
-    if (cal_force)
-    {
-        force_dftu.zero_out();
-    }
-    if (cal_stress)
-    {
-        stress_dftu.zero_out();
-    }
-
-    if (gamma_only_local)
-    {
-        const char transN = 'N';
-        const char transT = 'T';
-        const double alpha = 1.0;
-        const double beta = 0.0;
-
-        std::vector<double> rho_pot_onsite(pv.nloc);
-
-        for (int ik = 0; ik < kv.get_nks(); ik++)
-        {
-            const int spin = kv.isk[ik];
-
-            std::vector<double> pot_onsite(pv.nloc, 0.0);
-
-            DFTU_LCAO::pot_onsite_real(dftu, ucell, &pv, spin, false, pot_onsite.data(), npol);
-
-#ifdef __MPI
-            ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
-                    alpha, (*dmk_d)[spin].data(), 1, 1,
-                    pv.desc, pot_onsite.data(), 1, 1,
-                    pv.desc, beta, &rho_pot_onsite[0],
-                    1, 1, pv.desc);
-#endif
-
-            if (cal_force)
-            {
-                cal_force_gamma(env, &rho_pot_onsite[0], force_dftu);
-            }
-
-            if (cal_stress)
-            {
-                cal_stress_gamma(env, &rho_pot_onsite[0], stress_dftu);
-            }
-        } // ik
-    }
-    else
-    {
-        const char transN = 'N';
-        const char transT = 'T';
-        const int one_int = 1;
-        const std::complex<double> alpha(1.0, 0.0);
-        const std::complex<double> beta(0.0, 0.0);
-
-        std::vector<std::complex<double>> rho_pot_onsite(pv.nloc);
-
-        for (int ik = 0; ik < kv.get_nks(); ik++)
-        {
-            const int spin = kv.isk[ik];
-
-            std::vector<std::complex<double>> pot_onsite(pv.nloc, std::complex<double>(0.0, 0.0));
-
-            DFTU_LCAO::pot_onsite_complex(dftu, ucell, &pv, spin, false, pot_onsite.data(), npol);
-
-
-#ifdef __MPI
-            ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
-                    alpha, (*dmk_c)[ik].data(), one_int, one_int,
-                    pv.desc, pot_onsite.data(), one_int, one_int, pv.desc, beta,
-                    &rho_pot_onsite[0], one_int, one_int, pv.desc);
-#endif
-
-            if (cal_force)
-            {
-                cal_force_k(env, ik, kv.kvec_d[ik], &rho_pot_onsite[0], force_dftu);
-            }
-            if (cal_stress)
-            {
-                cal_stress_k(env, ik, kv.kvec_d[ik], &rho_pot_onsite[0], stress_dftu);
-            }
-        } // ik
-    }
-
-    if (cal_force)
-    {
-        Parallel_Reduce::reduce_pool(force_dftu.c, force_dftu.nr * force_dftu.nc);
-    }
-
-    if (cal_stress)
-    {
-        Parallel_Reduce::reduce_pool(stress_dftu.c, stress_dftu.nr * stress_dftu.nc);
-
-        for (int i = 0; i < 3; i++)
-        {
-            for (int j = 0; j < 3; j++)
-            {
-                if (i > j)
-                    stress_dftu(i, j) = stress_dftu(j, i);
-            }
-        }
-
-        for (int i = 0; i < 3; i++)
-        {
-            for (int j = 0; j < 3; j++)
-            {
-                stress_dftu(i, j) *= ucell.lat0 / ucell.omega;
-            }
-        }
-    }
-    ModuleBase::timer::end("DFTU_LCAO", "force_stress");
-}
 
 void cal_force_k(const DftuFsEnv& env,
                  const int ik,
@@ -605,6 +414,238 @@ void cal_stress_gamma(const DftuFsEnv& env,
         } // end dim2
     }     // end dim1
     ModuleBase::timer::end("DFTU_LCAO", "cal_stress_gamma");
+}
+
+namespace
+{
+
+/// @brief Validate caller-provided folded matrices and the ks_solver layout.
+///
+/// The legacy dft_plus_u==2 path requires the DSloc/DSloc_R force matrices
+/// and the DH stress matrix to be allocated and filled by the caller. Fail
+/// early with a clear message instead of letting pdgemm_ dereference a
+/// nullptr. The folded buffers are column-major local ScaLAPACK blocks, so
+/// only column-major ks_solvers are accepted.
+void validate_fs_inputs(const DftuFsEnv& env,
+                        const bool cal_force,
+                        const bool cal_stress,
+                        const bool gamma_only_local)
+{
+    const ForceStressArrays& fsr = env.fsr();
+    if (gamma_only_local)
+    {
+        const bool missing_dsloc = fsr.DSloc_x == nullptr || fsr.DSloc_y == nullptr
+                                   || fsr.DSloc_z == nullptr;
+        if (cal_force && missing_dsloc)
+        {
+            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
+                "fsr.DSloc_x/y/z are nullptr in gamma_only path; the caller must allocate and fill them. "
+                "See notes in source/source_lcao/force_stress_lcao.cpp.");
+        }
+        if (cal_stress && (missing_dsloc || fsr.DH_r == nullptr))
+        {
+            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
+                "fsr.DSloc_x/y/z or fsr.DH_r is nullptr in gamma_only path; "
+                "the caller must allocate and fill them. "
+                "See notes in source/source_lcao/force_stress_lcao.cpp.");
+        }
+    }
+    else
+    {
+        const bool missing_dsloc_r = fsr.DSloc_Rx == nullptr || fsr.DSloc_Ry == nullptr
+                                     || fsr.DSloc_Rz == nullptr;
+        if (cal_force && missing_dsloc_r)
+        {
+            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
+                "fsr.DSloc_Rx/Ry/Rz are nullptr in multik path; the caller must allocate and fill them. "
+                "See notes in source/source_lcao/force_stress_lcao.cpp.");
+        }
+        if (cal_stress && (missing_dsloc_r || fsr.DH_r == nullptr))
+        {
+            ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
+                "fsr.DSloc_Rx/Ry/Rz or fsr.DH_r is nullptr in multik path; "
+                "the caller must allocate and fill them. "
+                "See notes in source/source_lcao/force_stress_lcao.cpp.");
+        }
+    }
+
+    if ((cal_force || cal_stress)
+        && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(env.ks_solver()))
+    {
+        ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
+            "non column-major ks_solver is not supported for DFT+U force/stress; "
+            "the folded matrix layout assumption would be violated");
+    }
+}
+
+/// @brief Build rho * V_onsite and accumulate gamma-point force/stress over k points.
+void run_gamma_loop(const DftuFsEnv& env,
+                    const bool cal_force,
+                    const bool cal_stress,
+                    const std::vector<std::vector<double>>* dmk_d,
+                    const K_Vectors& kv,
+                    ModuleBase::matrix& force_dftu,
+                    ModuleBase::matrix& stress_dftu)
+{
+    assert(dmk_d != nullptr);
+    Plus_U_Base& dftu = env.dftu();
+    const UnitCell& ucell = env.ucell();
+    const Parallel_Orbitals& pv = env.pv();
+    const int npol = env.npol();
+    const int nlocal = pv.get_global_row_size();
+
+    const char transN = 'N';
+    const char transT = 'T';
+    const double alpha = 1.0;
+    const double beta = 0.0;
+
+    std::vector<double> rho_pot_onsite(pv.nloc);
+
+    for (int ik = 0; ik < kv.get_nks(); ik++)
+    {
+        const int spin = kv.isk[ik];
+        std::vector<double> pot_onsite(pv.nloc, 0.0);
+
+        pot_onsite_real(dftu, ucell, &pv, spin, false, pot_onsite.data(), npol);
+
+#ifdef __MPI
+        ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
+                alpha, (*dmk_d)[spin].data(), 1, 1,
+                pv.desc, pot_onsite.data(), 1, 1,
+                pv.desc, beta, rho_pot_onsite.data(),
+                1, 1, pv.desc);
+#endif
+
+        if (cal_force)
+        {
+            cal_force_gamma(env, rho_pot_onsite.data(), force_dftu);
+        }
+        if (cal_stress)
+        {
+            cal_stress_gamma(env, rho_pot_onsite.data(), stress_dftu);
+        }
+    } // ik
+}
+
+/// @brief Build rho * V_onsite and accumulate multik force/stress over k points.
+void run_k_loop(const DftuFsEnv& env,
+                const bool cal_force,
+                const bool cal_stress,
+                const std::vector<std::vector<std::complex<double>>>* dmk_c,
+                const K_Vectors& kv,
+                ModuleBase::matrix& force_dftu,
+                ModuleBase::matrix& stress_dftu)
+{
+    assert(dmk_c != nullptr);
+    Plus_U_Base& dftu = env.dftu();
+    const UnitCell& ucell = env.ucell();
+    const Parallel_Orbitals& pv = env.pv();
+    const int npol = env.npol();
+    const int nlocal = pv.get_global_row_size();
+
+    const char transN = 'N';
+    const char transT = 'T';
+    const int one_int = 1;
+    const std::complex<double> alpha(1.0, 0.0);
+    const std::complex<double> beta(0.0, 0.0);
+
+    std::vector<std::complex<double>> rho_pot_onsite(pv.nloc);
+
+    for (int ik = 0; ik < kv.get_nks(); ik++)
+    {
+        const int spin = kv.isk[ik];
+        std::vector<std::complex<double>> pot_onsite(pv.nloc, std::complex<double>(0.0, 0.0));
+
+        pot_onsite_complex(dftu, ucell, &pv, spin, false, pot_onsite.data(), npol);
+
+#ifdef __MPI
+        ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
+                alpha, (*dmk_c)[ik].data(), one_int, one_int,
+                pv.desc, pot_onsite.data(), one_int, one_int, pv.desc, beta,
+                rho_pot_onsite.data(), one_int, one_int, pv.desc);
+#endif
+
+        if (cal_force)
+        {
+            cal_force_k(env, ik, kv.kvec_d[ik], rho_pot_onsite.data(), force_dftu);
+        }
+        if (cal_stress)
+        {
+            cal_stress_k(env, ik, kv.kvec_d[ik], rho_pot_onsite.data(), stress_dftu);
+        }
+    } // ik
+}
+
+/// @brief MPI-reduce the stress, mirror the upper triangle and apply cell scaling.
+void finalize_stress(const UnitCell& ucell, ModuleBase::matrix& stress_dftu)
+{
+    Parallel_Reduce::reduce_pool(stress_dftu.c, stress_dftu.nr * stress_dftu.nc);
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            if (i > j)
+            {
+                stress_dftu(i, j) = stress_dftu(j, i);
+            }
+        }
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            stress_dftu(i, j) *= ucell.lat0 / ucell.omega;
+        }
+    }
+}
+
+} // namespace
+
+void force_stress(const DftuFsEnv& env,
+                  const bool cal_force,
+                  const bool cal_stress,
+                  std::vector<std::vector<double>>* dmk_d,
+                  std::vector<std::vector<std::complex<double>>>* dmk_c,
+                  ModuleBase::matrix& force_dftu,
+                  ModuleBase::matrix& stress_dftu,
+                  const K_Vectors& kv,
+                  const bool gamma_only_local)
+{
+    ModuleBase::TITLE("DFTU_LCAO", "force_stress");
+    ModuleBase::timer::start("DFTU_LCAO", "force_stress");
+
+    validate_fs_inputs(env, cal_force, cal_stress, gamma_only_local);
+
+    if (cal_force)
+    {
+        force_dftu.zero_out();
+    }
+    if (cal_stress)
+    {
+        stress_dftu.zero_out();
+    }
+
+    if (gamma_only_local)
+    {
+        run_gamma_loop(env, cal_force, cal_stress, dmk_d, kv, force_dftu, stress_dftu);
+    }
+    else
+    {
+        run_k_loop(env, cal_force, cal_stress, dmk_c, kv, force_dftu, stress_dftu);
+    }
+
+    if (cal_force)
+    {
+        Parallel_Reduce::reduce_pool(force_dftu.c, force_dftu.nr * force_dftu.nc);
+    }
+    if (cal_stress)
+    {
+        finalize_stress(env.ucell(), stress_dftu);
+    }
+
+    ModuleBase::timer::end("DFTU_LCAO", "force_stress");
 }
 
 } // namespace DFTU_LCAO

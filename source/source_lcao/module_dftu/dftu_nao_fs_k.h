@@ -3,7 +3,6 @@
 
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_base/matrix.h"
-#include "source_base/vector3.h"
 #include "source_cell/klist.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_cell/unitcell.h"
@@ -113,30 +112,6 @@ void force_stress(const DftuFsEnv& env,
                   ModuleBase::matrix& stress_dftu,
                   const K_Vectors& kv,
                   const bool gamma_only_local);
-
-/// @brief Force contribution at a k-point (multik path).
-void cal_force_k(const DftuFsEnv& env,
-                 const int ik,
-                 const ModuleBase::Vector3<double>& kvec_d,
-                 const std::complex<double>* rho_pot_onsite,
-                 ModuleBase::matrix& force_dftu);
-
-/// @brief Stress contribution at a k-point (multik path).
-void cal_stress_k(const DftuFsEnv& env,
-                  const int ik,
-                  const ModuleBase::Vector3<double>& kvec_d,
-                  const std::complex<double>* rho_pot_onsite,
-                  ModuleBase::matrix& stress_dftu);
-
-/// @brief Force contribution at gamma point.
-void cal_force_gamma(const DftuFsEnv& env,
-                     const double* rho_pot_onsite,
-                     ModuleBase::matrix& force_dftu);
-
-/// @brief Stress contribution at gamma point.
-void cal_stress_gamma(const DftuFsEnv& env,
-                      const double* rho_pot_onsite,
-                      ModuleBase::matrix& stress_dftu);
 
 } // namespace DFTU_LCAO
 
