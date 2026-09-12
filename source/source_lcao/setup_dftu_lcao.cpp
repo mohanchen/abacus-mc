@@ -39,8 +39,7 @@ void init_dftu_lcao(int dft_plus_u,
 }
 
 template <typename TK>
-void finish_dftu_lcao(const int iter,
-                       const bool conv_esolver,
+void finish_dftu_lcao(const bool conv_esolver,
                        int dft_plus_u,
                        bool out_chg,
                        void* dftu,
@@ -68,7 +67,7 @@ void finish_dftu_lcao(const int iter,
     {
         if (dftu_ptr->get_occ_mat_ctrl() != 2)
         {
-            DFTU_LCAO::cal_occ_mat(hamilt_lcao_ptr->getHR()->get_paraV(), iter, ucell, dm_vec, kv, mixing_beta,
+            DFTU_LCAO::cal_occ_mat(hamilt_lcao_ptr->getHR()->get_paraV(), ucell, dm_vec, kv, mixing_beta,
                                    static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr,
                                    gamma_only_local, nspin);
         }
@@ -84,8 +83,7 @@ void finish_dftu_lcao(const int iter,
 }
 
 /// Template instantiation
-template void finish_dftu_lcao<double>(const int iter,
-                                        const bool conv_esolver,
+template void finish_dftu_lcao<double>(const bool conv_esolver,
                                         int dft_plus_u,
                                         bool out_chg,
                                         void* dftu,
@@ -99,8 +97,7 @@ template void finish_dftu_lcao<double>(const int iter,
                                         int npol,
                                         const bool gamma_only_local);
 
-template void finish_dftu_lcao<std::complex<double>>(const int iter,
-                                                      const bool conv_esolver,
+template void finish_dftu_lcao<std::complex<double>>(const bool conv_esolver,
                                                       int dft_plus_u,
                                                       bool out_chg,
                                                       void* dftu,

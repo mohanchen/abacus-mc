@@ -12,6 +12,7 @@
 #include <vector>
 
 class Plus_U_Base;
+class OccupationMatrix;
 
 namespace DFTU_LCAO {
 
@@ -23,7 +24,6 @@ namespace DFTU_LCAO {
 ///        Parallel_Orbitals used to build the Hamiltonian and density matrix.
 template <typename T>
 void cal_occ_mat(const Parallel_Orbitals* pv,
-                 const int iter,
                  const UnitCell& ucell,
                  const std::vector<std::vector<T>>& dm,
                  const K_Vectors& kv,
@@ -33,9 +33,32 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const bool gamma_only_local,
                  const int nspin);
 
+/// @brief Accumulate one (iat, l, n, spin) channel of the occupation matrix
+///        from the complex S*DM product srho for the multi-k case. Reads npol
+///        and the iatlnmipol2iwt lookup directly from occmat so callers do
+///        not need to thread those scalars through.
+void accumulate_occ_channel_k(OccupationMatrix& occmat,
+                              const Parallel_Orbitals& pv,
+                              const std::complex<double>* srho,
+                              int iat,
+                              int l,
+                              int n,
+                              int spin);
+
+/// @brief Accumulate one (iat, l, n, spin) channel of the occupation matrix
+///        from the real S*DM product srho for the gamma-only case. Reads npol
+///        and the iatlnmipol2iwt lookup directly from occmat so callers do
+///        not need to thread those scalars through.
+void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
+                                  const Parallel_Orbitals& pv,
+                                  const double* srho,
+                                  int iat,
+                                  int l,
+                                  int n,
+                                  int spin);
+
 // calculate the local occupation number matrix (k-point version)
 void cal_occ_mat_k(const Parallel_Orbitals* pv,
-                   const int iter,
                    const UnitCell& ucell,
                    const std::vector<std::vector<std::complex<double>>>& dm_k,
                    const K_Vectors& kv,
@@ -46,7 +69,6 @@ void cal_occ_mat_k(const Parallel_Orbitals* pv,
 
 // calculate the local occupation number matrix (gamma-point version)
 void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
-                       const int iter,
                        const UnitCell& ucell,
                        const std::vector<std::vector<double>>& dm_gamma,
                        const double& mixing_beta,

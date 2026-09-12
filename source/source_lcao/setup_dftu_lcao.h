@@ -41,7 +41,6 @@ void init_dftu_lcao(int dft_plus_u,
  * This function handles the DFT+U finalization during the SCF iteration.
  * It calculates the occupation matrix and energy correction if needed.
  *
- * @param iter Current SCF iteration
  * @param conv_esolver Whether ESolver has converged
  * @param dft_plus_u DFT+U mode (0=disabled, 1=old, 2=new)
  * @param out_chg Whether to output dm_onsite.txt
@@ -57,8 +56,7 @@ void init_dftu_lcao(int dft_plus_u,
  * @param gamma_only_local Whether only the Gamma point is used for LCAO
  */
 template <typename TK>
-void finish_dftu_lcao(const int iter,
-                       const bool conv_esolver,
+void finish_dftu_lcao(const bool conv_esolver,
                        int dft_plus_u,
                        bool out_chg,
                        void* dftu,
