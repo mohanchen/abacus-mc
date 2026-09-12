@@ -1,5 +1,5 @@
 #include "setup_dftu_lcao.h"
-#include "source_lcao/module_dftu/dftu_nao.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 #include "source_lcao/module_dftu/dftu_nao_occ.h"
 #include "source_lcao/module_dftu/dftu_nao_energy.h"
 #include "source_pw/module_pwdft/dftu_base_io.h" // mohan add 2025-11-08
@@ -21,7 +21,7 @@ void init_dftu_lcao(int dft_plus_u,
         return;
     }
 
-    auto* dftu_ptr = static_cast<Plus_U*>(dftu);
+    auto* dftu_ptr = static_cast<Plus_U_Base*>(dftu);
 
     /// Calculate U and J if Yukawa potential is used
     if (dftu_ptr->use_yukawa())
@@ -59,7 +59,7 @@ void finish_dftu_lcao(const int iter,
         return;
     }
 
-    auto* dftu_ptr = static_cast<Plus_U*>(dftu);
+    auto* dftu_ptr = static_cast<Plus_U_Base*>(dftu);
     auto* hamilt_lcao_ptr = static_cast<hamilt::HamiltLCAO<TK, double>*>(hamilt_lcao);
 
     /// old DFT+U method calculates energy correction in esolver,

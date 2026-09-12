@@ -1,6 +1,6 @@
 #include "dftu_nao_fs_k.h"
 #include "dftu_nao_folding.h"
-#include "dftu_nao.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 #include "dftu_nao_pots.h"
 #include "source_base/global_function.h"
 #include "source_base/module_external/scalapack_connector.h"

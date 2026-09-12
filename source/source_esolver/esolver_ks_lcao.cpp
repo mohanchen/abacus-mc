@@ -5,7 +5,7 @@
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 #include "source_lcao/module_deltaspin/deltaspin_lcao.h"
 #include "source_lcao/setup_dftu_lcao.h"
-#include "source_lcao/module_dftu/dftu_nao.h" // Plus_U (LCAO DFT+U derived class)
+#include "source_pw/module_pwdft/dftu_base.h" // Plus_U_Base (PW and LCAO share it)
 #include "source_hamilt/hs_matrix_k.h"
 #include "source_estate/module_charge/symm_rho.h"
 #include "source_lcao/lcao_domain.h" // need DeePKS_init
@@ -36,7 +36,7 @@ ESolver_KS_LCAO<TK, TR>::ESolver_KS_LCAO()
 {
     this->classname = "ESolver_KS_LCAO";
     this->basisname = "LCAO";
-    this->dftu_.reset(new Plus_U());
+    this->dftu_.reset(new Plus_U_Base());
 }
 
 template <typename TK, typename TR>

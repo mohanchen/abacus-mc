@@ -1,9 +1,8 @@
-# All sources in this module are LCAO-specific (the Plus_U derived class and
-# the DFTU_LCAO operators). The PW DFT+U implementation lives in
-# source_pw/module_pwdft/dftu_base.* and is compiled unconditionally there.
+# All sources in this module are LCAO-specific (the DFTU_LCAO operators).
+# The Plus_U_Base class lives in source_pw/module_pwdft/dftu_base.* and is
+# compiled unconditionally there.
 if(ENABLE_LCAO)
   list(APPEND objects
-        dftu_nao.cpp
         dftu_nao_fs_k.cpp
         dftu_nao_folding.cpp
         dftu_nao_pots.cpp

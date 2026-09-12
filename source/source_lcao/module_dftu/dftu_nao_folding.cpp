@@ -1,5 +1,5 @@
 #include "dftu_nao_folding.h"
-#include "dftu_nao.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 #include "source_base/timer.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_lcao/hamilt_lcao.h"

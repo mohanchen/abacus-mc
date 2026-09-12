@@ -3,13 +3,10 @@
 
 // mock of DFTU
 #include "../dftu_nao_op.h"
-#include "source_lcao/module_dftu/dftu_nao.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 #include "source_estate/module_dm/density_matrix.h"
 
-Plus_U::Plus_U(){};
-Plus_U::~Plus_U(){};
-
-Plus_U dftu;
+Plus_U_Base dftu;
 // Static member definitions are in dftu_base.cpp (Plus_U_Base::)
 
 //---------------------------------------

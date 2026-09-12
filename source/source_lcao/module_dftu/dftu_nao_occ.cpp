@@ -1,5 +1,5 @@
 #include "dftu_nao_occ.h"
-#include "dftu_nao.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 #include "dftu_nao_folding.h"
 #include "source_base/timer.h"
 #include "source_base/module_external/scalapack_connector.h"
