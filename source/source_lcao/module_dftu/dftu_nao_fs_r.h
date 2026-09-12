@@ -38,13 +38,16 @@
 
 namespace hamilt
 {
-
 // Forward declarations to avoid circular dependency with dftu_lcao_op.h
 template <typename TK, typename TR>
 class OperatorLCAO;
 
 template <typename T>
 class DFTU;
+} // namespace hamilt
+
+namespace DFTU_LCAO
+{
 
 /**
  * @brief Calculate DFT+U force and stress in real space (unified for gamma-only and multik)
@@ -68,12 +71,12 @@ class DFTU;
  *          If get_dmr(0) returns nullptr, the function aborts with WARNING_QUIT.
  */
 template <typename TK, typename TR>
-void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
+void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
                         const bool cal_force,
                         const bool cal_stress,
                         ModuleBase::matrix& force,
                         ModuleBase::matrix& stress);
 
-} // namespace hamilt
+} // namespace DFTU_LCAO
 
 #endif // DFTU_NAO_FS_R_H

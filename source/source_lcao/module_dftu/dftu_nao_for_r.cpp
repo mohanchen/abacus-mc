@@ -7,11 +7,11 @@
 #include "dftu_nao_op.h"
 #include "source_base/timer.h"
 
-namespace hamilt
+namespace DFTU_LCAO
 {
 
 template <typename TK, typename TR>
-void cal_for_IJR_nao_r(const DFTU<OperatorLCAO<TK, TR>>* dftu_op,
+void cal_for_IJR_nao_r(const hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
                      const int& iat1,
                      const int& iat2,
                      const Parallel_Orbitals* pv,
@@ -91,7 +91,7 @@ void cal_for_IJR_nao_r(const DFTU<OperatorLCAO<TK, TR>>* dftu_op,
 
 // explicit template instantiation
 template void cal_for_IJR_nao_r<double, double>(
-    const DFTU<OperatorLCAO<double, double>>* dftu_op,
+    const hamilt::DFTU<hamilt::OperatorLCAO<double, double>>* dftu_op,
     const int& iat1, const int& iat2,
     const Parallel_Orbitals* pv,
     const std::unordered_map<int, std::vector<double>>& nlm1_all,
@@ -102,7 +102,7 @@ template void cal_for_IJR_nao_r<double, double>(
     double* force1, double* force2);
 
 template void cal_for_IJR_nao_r<std::complex<double>, double>(
-    const DFTU<OperatorLCAO<std::complex<double>, double>>* dftu_op,
+    const hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, double>>* dftu_op,
     const int& iat1, const int& iat2,
     const Parallel_Orbitals* pv,
     const std::unordered_map<int, std::vector<double>>& nlm1_all,
@@ -113,7 +113,7 @@ template void cal_for_IJR_nao_r<std::complex<double>, double>(
     double* force1, double* force2);
 
 template void cal_for_IJR_nao_r<std::complex<double>, std::complex<double>>(
-    const DFTU<OperatorLCAO<std::complex<double>, std::complex<double>>>* dftu_op,
+    const hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>>* dftu_op,
     const int& iat1, const int& iat2,
     const Parallel_Orbitals* pv,
     const std::unordered_map<int, std::vector<double>>& nlm1_all,
@@ -123,4 +123,4 @@ template void cal_for_IJR_nao_r<std::complex<double>, std::complex<double>>(
     const int nspin,
     double* force1, double* force2);
 
-} // namespace hamilt
+} // namespace DFTU_LCAO

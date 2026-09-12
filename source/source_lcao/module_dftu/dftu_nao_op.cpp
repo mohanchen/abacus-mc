@@ -711,7 +711,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_force_stress(const bool cal
                                                                   ModuleBase::matrix& force,
                                                                   ModuleBase::matrix& stress)
 {
-    cal_fs_nao_r(this, cal_force, cal_stress, force, stress);
+    DFTU_LCAO::cal_fs_nao_r(this, cal_force, cal_stress, force, stress);
 }
 
 template class hamilt::DFTU<hamilt::OperatorLCAO<double, double>>;

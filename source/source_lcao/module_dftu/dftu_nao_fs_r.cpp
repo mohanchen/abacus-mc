@@ -10,11 +10,11 @@
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 
-namespace hamilt
+namespace DFTU_LCAO
 {
 
 template <typename TK, typename TR>
-void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
+void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
                         const bool cal_force,
                         const bool cal_stress,
                         ModuleBase::matrix& force,
@@ -266,18 +266,18 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
 
 // explicit template instantiation
 template void cal_fs_nao_r<double, double>(
-    DFTU<OperatorLCAO<double, double>>* dftu_op,
+    hamilt::DFTU<hamilt::OperatorLCAO<double, double>>* dftu_op,
     const bool cal_force, const bool cal_stress,
     ModuleBase::matrix& force, ModuleBase::matrix& stress);
 
 template void cal_fs_nao_r<std::complex<double>, double>(
-    DFTU<OperatorLCAO<std::complex<double>, double>>* dftu_op,
+    hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, double>>* dftu_op,
     const bool cal_force, const bool cal_stress,
     ModuleBase::matrix& force, ModuleBase::matrix& stress);
 
 template void cal_fs_nao_r<std::complex<double>, std::complex<double>>(
-    DFTU<OperatorLCAO<std::complex<double>, std::complex<double>>>* dftu_op,
+    hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>>* dftu_op,
     const bool cal_force, const bool cal_stress,
     ModuleBase::matrix& force, ModuleBase::matrix& stress);
 
-} // namespace hamilt
+} // namespace DFTU_LCAO

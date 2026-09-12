@@ -30,13 +30,16 @@
 
 namespace hamilt
 {
-
 // Forward declarations to avoid circular dependency with dftu_lcao_op.h
 template <typename TK, typename TR>
 class OperatorLCAO;
 
 template <typename T>
 class DFTU;
+} // namespace hamilt
+
+namespace DFTU_LCAO
+{
 
 /**
  * @brief Compute DFT+U stress contribution from a single atom pair (I,J,R) in real space
@@ -69,7 +72,7 @@ class DFTU;
  * @param stress      [out] stress accumulator (6 components in Voigt notation)
  */
 template <typename TK, typename TR>
-void cal_str_IJR_nao_r(const DFTU<OperatorLCAO<TK, TR>>* dftu_op,
+void cal_str_IJR_nao_r(const hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
                       const int& iat1,
                       const int& iat2,
                       const Parallel_Orbitals* pv,
@@ -82,6 +85,6 @@ void cal_str_IJR_nao_r(const DFTU<OperatorLCAO<TK, TR>>* dftu_op,
                       const ModuleBase::Vector3<double>& dis2,
                       double* stress);
 
-} // namespace hamilt
+} // namespace DFTU_LCAO
 
 #endif // DFTU_NAO_STR_R_H
