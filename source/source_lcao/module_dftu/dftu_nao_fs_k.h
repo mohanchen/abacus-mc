@@ -23,6 +23,7 @@ namespace DFTU_LCAO {
 /// because it is an LCAO-specific quantity (PW uses onsite_radius instead).
 void force_stress(Plus_U_Base& dftu,
                   const std::vector<double>& orb_cutoff,
+                  const std::string& ks_solver,
                   const bool cal_force,
                   const bool cal_stress,
                   const UnitCell& ucell,

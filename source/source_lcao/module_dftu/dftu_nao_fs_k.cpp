@@ -5,7 +5,6 @@
 #include "source_base/global_function.h"
 #include "source_base/module_external/scalapack_connector.h"
 #include "source_base/parallel_reduce.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_base/timer.h"
 
 #include <complex>
@@ -16,6 +15,7 @@ namespace DFTU_LCAO {
 
 void force_stress(Plus_U_Base& dftu,
                   const std::vector<double>& orb_cutoff,
+                  const std::string& ks_solver,
                   const bool cal_force,
                   const bool cal_stress,
                   const UnitCell& ucell,
@@ -85,7 +85,7 @@ void force_stress(Plus_U_Base& dftu,
     // validation are column-major today; abort loudly instead of silently
     // producing wrong forces/stresses if that assumption ever changes.
     if ((cal_force || cal_stress)
-        && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(PARAM.inp.ks_solver))
+        && !ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(ks_solver))
     {
         ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress",
             "non column-major ks_solver is not supported for DFT+U force/stress; "
@@ -139,7 +139,7 @@ void force_stress(Plus_U_Base& dftu,
             if (cal_stress)
             {
                 cal_stress_gamma(nlocal, npol,
-                                 PARAM.inp.ks_solver, orb_cutoff,
+                                 ks_solver, orb_cutoff,
                                  ucell, pv, &gd,
                                  fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z, fsr.DH_r,
                                  &rho_pot_onsite[0], stress_dftu);
@@ -175,14 +175,14 @@ void force_stress(Plus_U_Base& dftu,
             if (cal_force)
             {
                 cal_force_k(nlocal, npol,
-                            PARAM.inp.ks_solver, orb_cutoff,
+                            ks_solver, orb_cutoff,
                             dftu.get_l_channel_vec(), dftu.occmat().iatlnmipol2iwt(),
                             ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], force_dftu, kv.kvec_d[ik]);
             }
             if (cal_stress)
             {
                 cal_stress_k(nlocal, npol,
-                             PARAM.inp.ks_solver, orb_cutoff,
+                             ks_solver, orb_cutoff,
                              ucell, gd, fsr, pv, ik, &rho_pot_onsite[0], stress_dftu, kv.kvec_d[ik]);
             }
         } // ik
