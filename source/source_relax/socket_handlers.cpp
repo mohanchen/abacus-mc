@@ -172,55 +172,67 @@ struct PosdataPayload
 
 // Root rank reads and validates the POSDATA frame; the results are then
 // broadcast to all ranks. Calls WARNING_QUIT on protocol/validation failure.
-PosdataPayload read_posdata(IpiSocket& socket, const UnitCell& ucell)
+// The READY-state check must stay inside this function so that every rank
+// passes through the single quit_if_root_failed collective sequence below;
+// a root-only early quit outside would deadlock if any collective were
+// added ahead of it.
+PosdataPayload read_posdata(IpiSocket& socket, const UnitCell& ucell, const DriverState state)
 {
     PosdataPayload payload;
     int io_failed = 0;
     std::string io_message;
     if (is_root())
     {
-        try
+        if (state != DriverState::Ready)
         {
-            const std::vector<double> cell_values = socket.read_doubles(9);
-            const std::vector<double> inverse_values = socket.read_doubles(9);
-            std::copy(cell_values.begin(), cell_values.end(), payload.cell.begin());
-            std::copy(inverse_values.begin(), inverse_values.end(), payload.inv_cell.begin());
-            payload.nat_socket = socket.read_int32();
-            const SocketFrame::CellValidation validation
-                = SocketFrame::validate_ipi_cell(payload.cell,
-                                                 payload.inv_cell,
-                                                 kMaxCellCondition,
-                                                 kInverseAbsoluteTolerance,
-                                                 kInverseRelativeTolerance);
-            if (!validation.ok)
+            io_failed = 1;
+            io_message = "POSDATA requires READY state";
+        }
+        else
+        {
+            try
             {
-                io_failed = 1;
-                io_message = "invalid POSDATA cell: " + validation.message;
-            }
-            std::size_t coordinate_count = 0;
-            if (io_failed == 0
-                && !SocketFrame::checked_position_count(payload.nat_socket,
-                                                        ucell.nat,
-                                                        coordinate_count,
-                                                        io_message))
-            {
-                io_failed = 1;
-            }
-            if (io_failed == 0)
-            {
-                payload.positions = socket.read_doubles(coordinate_count);
-                if (!SocketFrame::validate_positions(payload.positions,
-                                                     coordinate_count,
-                                                     io_message))
+                const std::vector<double> cell_values = socket.read_doubles(9);
+                const std::vector<double> inverse_values = socket.read_doubles(9);
+                std::copy(cell_values.begin(), cell_values.end(), payload.cell.begin());
+                std::copy(inverse_values.begin(), inverse_values.end(), payload.inv_cell.begin());
+                payload.nat_socket = socket.read_int32();
+                const SocketFrame::CellValidation validation
+                    = SocketFrame::validate_ipi_cell(payload.cell,
+                                                     payload.inv_cell,
+                                                     kMaxCellCondition,
+                                                     kInverseAbsoluteTolerance,
+                                                     kInverseRelativeTolerance);
+                if (!validation.ok)
+                {
+                    io_failed = 1;
+                    io_message = "invalid POSDATA cell: " + validation.message;
+                }
+                std::size_t coordinate_count = 0;
+                if (io_failed == 0
+                    && !SocketFrame::checked_position_count(payload.nat_socket,
+                                                            ucell.nat,
+                                                            coordinate_count,
+                                                            io_message))
                 {
                     io_failed = 1;
                 }
+                if (io_failed == 0)
+                {
+                    payload.positions = socket.read_doubles(coordinate_count);
+                    if (!SocketFrame::validate_positions(payload.positions,
+                                                         coordinate_count,
+                                                         io_message))
+                    {
+                        io_failed = 1;
+                    }
+                }
             }
-        }
-        catch (const std::exception& exc)
-        {
-            io_failed = 1;
-            io_message = exc.what();
+            catch (const std::exception& exc)
+            {
+                io_failed = 1;
+                io_message = exc.what();
+            }
         }
     }
     quit_if_root_failed(io_failed, io_message);
@@ -428,11 +440,7 @@ void handle_posdata(IpiSocket& socket,
                     DriverContext& context,
                     std::ofstream& ofs_running)
 {
-    if (is_root() && context.state != DriverState::Ready)
-    {
-        quit_if_root_failed(1, "POSDATA requires READY state");
-    }
-    PosdataPayload payload = read_posdata(socket, *context.ucell);
+    PosdataPayload payload = read_posdata(socket, *context.ucell, context.state);
     bcast_posdata(payload);
     check_posdata_geometry(context, payload, context);
     run_esolver_for_positions(*context.ucell, context.esolver, payload.positions, context.istep);
