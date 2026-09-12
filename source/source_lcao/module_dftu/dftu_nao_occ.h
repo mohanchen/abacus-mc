@@ -66,6 +66,29 @@ void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
                                  const UnitCell& ucell,
                                  const std::vector<int>& l_channel);
 
+/// @brief Walk the (it, ia, l, n=0) atom mesh for one k-point and accumulate
+///        each qualifying channel of occmat from the complex S*DM product
+///        srho. Reads npol and the iatlnmipol2iwt lookup from occmat so
+///        callers do not thread them through.
+void accumulate_occ_k_for_ik(OccupationMatrix& occmat,
+                             const UnitCell& ucell,
+                             const Parallel_Orbitals& pv,
+                             const std::complex<double>* srho,
+                             int spin,
+                             const std::vector<int>& l_channel);
+
+/// @brief Process one (it, ia, l, n=0, spin) block of the gamma-only
+///        occupation matrix: accumulate from the real S*DM product srho,
+///        MPI-Allreduce across ranks, then symmetrize per the nspin
+///        convention. Reads nspin and npol from occmat so callers do not
+///        thread them through.
+void process_occ_channel_gamma(OccupationMatrix& occmat,
+                               const UnitCell& ucell,
+                               const Parallel_Orbitals& pv,
+                               const double* srho,
+                               int spin,
+                               const std::vector<int>& l_channel);
+
 // calculate the local occupation number matrix (k-point version)
 void cal_occ_mat_k(const Parallel_Orbitals* pv,
                    const UnitCell& ucell,

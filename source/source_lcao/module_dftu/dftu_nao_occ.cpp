@@ -81,43 +81,8 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
 #endif
 
         const int spin = kv.isk[ik];
-        for (int it = 0; it < ucell.ntype; it++)
-        {
-            const int NL = ucell.atoms[it].nwl + 1;
-            const int LC = l_channel[it];
-
-            if (LC == -1)
-            {
-                continue;
-            }
-
-            for (int ia = 0; ia < ucell.atoms[it].na; ia++)
-            {
-                const int iat = ucell.itia2iat(it, ia);
-
-                for (int l = 0; l < NL; l++)
-                {
-                    if (l != l_channel[it])
-                    {
-                        continue;
-                    }
-
-                    const int N = ucell.atoms[it].l_nchi[l];
-
-                    for (int n = 0; n < N; n++)
-                    {
-                        // if(!Yukawa && n!=0) continue;
-                        if (n != 0)
-                        {
-                            continue;
-                        }
-
-                        // Calculate the local occupation number matrix
-                        accumulate_occ_channel_k(dftu.occmat(), *pv, srho.data(), iat, l, n, spin);
-                    } // end n
-                } // end l
-            } // end ia
-        } // end it
+        // Walk (it, ia, l, n=0) and accumulate each qualifying channel
+        accumulate_occ_k_for_ik(dftu.occmat(), ucell, *pv, srho.data(), spin, l_channel);
     } // ik
 
     // MPI Allreduce + symmetrize per (iat, l, n=0) channel across all ranks
@@ -144,7 +109,6 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_gamma");
 
     const int nspin = dftu.occmat().nspin();
-    const int npol = dftu.occmat().npol();
     const int nlocal = pv->get_global_row_size();
     const std::vector<int>& l_channel = dftu.get_l_channel_vec();
 
@@ -186,75 +150,8 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
             &pv->desc[0]);
 #endif
 
-        for (int it = 0; it < ucell.ntype; it++)
-        {
-            const int NL = ucell.atoms[it].nwl + 1;
-            const int LC = l_channel[it];
-
-            if (LC == -1)
-            {
-                continue;
-            }
-            for (int ia = 0; ia < ucell.atoms[it].na; ia++)
-            {
-                const int iat = ucell.itia2iat(it, ia);
-
-                for (int l = 0; l < NL; l++)
-                {
-                    if (l != l_channel[it])
-                    {
-                        continue;
-                    }
-
-                    const int N = ucell.atoms[it].l_nchi[l];
-
-                    for (int n = 0; n < N; n++)
-                    {
-                        if (n != 0)
-                        {
-                            continue;
-                        }
-
-                        // Calculate the local occupation number matrix
-                        accumulate_occ_channel_gamma(dftu.occmat(), *pv, srho.data(), iat, l, n, is);
-                        ModuleBase::matrix& occ_is = dftu.occmat().mat(iat, l, n, is);
-
-                        ModuleBase::matrix temp(occ_is);
-
-#ifdef __MPI
-                        MPI_Allreduce(&temp(0, 0),
-                                      &occ_is(0, 0),
-                                      (2 * l + 1) * npol * (2 * l + 1) * npol,
-                                      MPI_DOUBLE,
-                                      MPI_SUM,
-                                      MPI_COMM_WORLD);
-#endif
-
-                        // for the case spin independent calculation
-                        switch (nspin)
-                        {
-                        case 1:
-                        {
-                            ModuleBase::matrix& occ0 = dftu.occmat().mat(iat, l, n, 0);
-                            occ0 += transpose(occ0);
-                            occ0 *= 0.5;
-                            dftu.occmat().mat(iat, l, n, 1) += occ0;
-                            break;
-                        }
-
-                        case 2:
-                            occ_is += transpose(occ_is);
-                            break;
-
-                        default:
-                            std::cout << "Not supported NSPIN parameter" << std::endl;
-                            exit(0);
-                        }
-
-                    } // end for(n)
-                } // L
-            } // ia
-        } // it
+        // Per (it, ia, l, n=0, spin) block: accumulate + Allreduce + symmetrize
+        process_occ_channel_gamma(dftu.occmat(), ucell, *pv, srho.data(), is, l_channel);
     } // is
 
     if(dftu.has_occ_mixer() && dftu.is_occmat_ready())
@@ -488,6 +385,141 @@ void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
             } // end l
         } // end ia
     } // end it
+}
+
+/// @brief Walk the (it, ia, l, n=0) atom mesh for one k-point and accumulate
+///        each qualifying channel of occmat from the complex S*DM product
+///        srho. Reads npol and the iatlnmipol2iwt lookup from occmat so
+///        callers do not thread them through.
+void accumulate_occ_k_for_ik(OccupationMatrix& occmat,
+                             const UnitCell& ucell,
+                             const Parallel_Orbitals& pv,
+                             const std::complex<double>* srho,
+                             int spin,
+                             const std::vector<int>& l_channel)
+{
+    for (int it = 0; it < ucell.ntype; it++)
+    {
+        const int NL = ucell.atoms[it].nwl + 1;
+        const int LC = l_channel[it];
+
+        if (LC == -1)
+        {
+            continue;
+        }
+
+        for (int ia = 0; ia < ucell.atoms[it].na; ia++)
+        {
+            const int iat = ucell.itia2iat(it, ia);
+
+            for (int l = 0; l < NL; l++)
+            {
+                if (l != l_channel[it])
+                {
+                    continue;
+                }
+
+                const int N = ucell.atoms[it].l_nchi[l];
+
+                for (int n = 0; n < N; n++)
+                {
+                    // if(!Yukawa && n!=0) continue;
+                    if (n != 0)
+                    {
+                        continue;
+                    }
+
+                    // Calculate the local occupation number matrix
+                    accumulate_occ_channel_k(occmat, pv, srho, iat, l, n, spin);
+                } // end n
+            } // end l
+        } // end ia
+    } // end it
+}
+
+/// @brief Process one (it, ia, l, n=0, spin) block of the gamma-only
+///        occupation matrix: accumulate from the real S*DM product srho,
+///        MPI-Allreduce across ranks, then symmetrize per the nspin
+///        convention. Reads nspin and npol from occmat so callers do not
+///        thread them through.
+void process_occ_channel_gamma(OccupationMatrix& occmat,
+                               const UnitCell& ucell,
+                               const Parallel_Orbitals& pv,
+                               const double* srho,
+                               int spin,
+                               const std::vector<int>& l_channel)
+{
+    const int nspin = occmat.nspin();
+    const int npol = occmat.npol();
+    for (int it = 0; it < ucell.ntype; it++)
+    {
+        const int NL = ucell.atoms[it].nwl + 1;
+        const int LC = l_channel[it];
+
+        if (LC == -1)
+        {
+            continue;
+        }
+        for (int ia = 0; ia < ucell.atoms[it].na; ia++)
+        {
+            const int iat = ucell.itia2iat(it, ia);
+
+            for (int l = 0; l < NL; l++)
+            {
+                if (l != l_channel[it])
+                {
+                    continue;
+                }
+
+                const int N = ucell.atoms[it].l_nchi[l];
+
+                for (int n = 0; n < N; n++)
+                {
+                    if (n != 0)
+                    {
+                        continue;
+                    }
+
+                    // Calculate the local occupation number matrix
+                    accumulate_occ_channel_gamma(occmat, pv, srho, iat, l, n, spin);
+                    ModuleBase::matrix& occ_is = occmat.mat(iat, l, n, spin);
+
+                    ModuleBase::matrix temp(occ_is);
+
+#ifdef __MPI
+                    MPI_Allreduce(&temp(0, 0),
+                                  &occ_is(0, 0),
+                                  (2 * l + 1) * npol * (2 * l + 1) * npol,
+                                  MPI_DOUBLE,
+                                  MPI_SUM,
+                                  MPI_COMM_WORLD);
+#endif
+
+                    // for the case spin independent calculation
+                    switch (nspin)
+                    {
+                    case 1:
+                    {
+                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
+                        occ0 += transpose(occ0);
+                        occ0 *= 0.5;
+                        occmat.mat(iat, l, n, 1) += occ0;
+                        break;
+                    }
+
+                    case 2:
+                        occ_is += transpose(occ_is);
+                        break;
+
+                    default:
+                        std::cout << "Not supported NSPIN parameter" << std::endl;
+                        exit(0);
+                    }
+
+                } // end for(n)
+            } // L
+        } // ia
+    } // it
 }
 
 //! dftu occupation matrix for gamma only using dm(double)
