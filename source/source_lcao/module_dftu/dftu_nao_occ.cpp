@@ -3,8 +3,8 @@
 #include "dftu_nao_folding.h"
 #include "source_base/timer.h"
 #include "source_base/module_external/scalapack_connector.h"
+#include "source_base/parallel_reduce.h"
 #include "source_estate/occ_matrix.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_lcao/hamilt_lcao.h"
 
 // cal_occ_mat_k / cal_occ_mat_gamma take Plus_U_Base& dftu directly and read all
@@ -19,14 +19,18 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          const double& mixing_beta,
                          hamilt::Hamilt<std::complex<double>>* p_ham,
                          const bool gamma_only_local,
-                         Plus_U_Base& dftu)
+                         Plus_U_Base& dftu,
+                         const std::string& ks_solver)
 {
+    if (pv == nullptr || p_ham == nullptr)
+    {
+        return;
+    }
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_k");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_k");
 
     const int nspin = dftu.occmat().nspin();
     const int nlocal = pv->get_global_row_size();
-    const std::string& ks_solver = PARAM.inp.ks_solver;
     const std::vector<int>& l_channel = dftu.get_l_channel_vec();
 
     // copy occ_mat to occ_mat_save, then zero occ_mat
@@ -105,6 +109,10 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              hamilt::Hamilt<double>* p_ham,
                              Plus_U_Base& dftu)
 {
+    if (pv == nullptr || p_ham == nullptr)
+    {
+        return;
+    }
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_gamma");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_gamma");
 
@@ -317,39 +325,25 @@ void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
                     }
                     // set the local occupation mumber matrix of spin up and down zeros
 
-#ifdef __MPI
                     if (nspin == 1 || nspin == 4)
                     {
                         ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
-                        ModuleBase::matrix temp(occ0);
-                        MPI_Allreduce(&temp(0, 0),
-                                      &occ0(0, 0),
-                                      (2 * l + 1) * npol * (2 * l + 1) * npol,
-                                      MPI_DOUBLE,
-                                      MPI_SUM,
-                                      MPI_COMM_WORLD);
+                        // MPI Allreduce across ranks (in-place)
+                        Parallel_Reduce::reduce_all(&occ0(0, 0),
+                                                    (2 * l + 1) * npol * (2 * l + 1) * npol);
                     }
                     else if (nspin == 2)
                     {
                         ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
-                        ModuleBase::matrix temp0(occ0);
-                        MPI_Allreduce(&temp0(0, 0),
-                                      &occ0(0, 0),
-                                      (2 * l + 1) * (2 * l + 1),
-                                      MPI_DOUBLE,
-                                      MPI_SUM,
-                                      MPI_COMM_WORLD);
+                        // MPI Allreduce across ranks (in-place)
+                        Parallel_Reduce::reduce_all(&occ0(0, 0),
+                                                    (2 * l + 1) * (2 * l + 1));
 
                         ModuleBase::matrix& occ1 = occmat.mat(iat, l, n, 1);
-                        ModuleBase::matrix temp1(occ1);
-                        MPI_Allreduce(&temp1(0, 0),
-                                      &occ1(0, 0),
-                                      (2 * l + 1) * (2 * l + 1),
-                                      MPI_DOUBLE,
-                                      MPI_SUM,
-                                      MPI_COMM_WORLD);
+                        // MPI Allreduce across ranks (in-place)
+                        Parallel_Reduce::reduce_all(&occ1(0, 0),
+                                                    (2 * l + 1) * (2 * l + 1));
                     }
-#endif
 
                     switch (nspin)
                     {
@@ -484,16 +478,9 @@ void process_occ_channel_gamma(OccupationMatrix& occmat,
                     accumulate_occ_channel_gamma(occmat, pv, srho, iat, l, n, spin);
                     ModuleBase::matrix& occ_is = occmat.mat(iat, l, n, spin);
 
-                    ModuleBase::matrix temp(occ_is);
-
-#ifdef __MPI
-                    MPI_Allreduce(&temp(0, 0),
-                                  &occ_is(0, 0),
-                                  (2 * l + 1) * npol * (2 * l + 1) * npol,
-                                  MPI_DOUBLE,
-                                  MPI_SUM,
-                                  MPI_COMM_WORLD);
-#endif
+                    // MPI Allreduce across ranks (in-place)
+                    Parallel_Reduce::reduce_all(&occ_is(0, 0),
+                                                (2 * l + 1) * npol * (2 * l + 1) * npol);
 
                     // for the case spin independent calculation
                     switch (nspin)
@@ -532,7 +519,8 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  hamilt::Hamilt<double>* p_ham,
                  Plus_U_Base& dftu,
                  const bool gamma_only_local,
-                 const int nspin)
+                 const int nspin,
+                 const std::string& ks_solver)
 {
     DFTU_LCAO::cal_occ_mat_gamma(pv, ucell, dm, mixing_beta, p_ham, dftu);
 }
@@ -547,9 +535,10 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  hamilt::Hamilt<std::complex<double>>* p_ham,
                  Plus_U_Base& dftu,
                  const bool gamma_only_local,
-                 const int nspin)
+                 const int nspin,
+                 const std::string& ks_solver)
 {
-    DFTU_LCAO::cal_occ_mat_k(pv, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, dftu);
+    DFTU_LCAO::cal_occ_mat_k(pv, ucell, dm, kv, mixing_beta, p_ham, gamma_only_local, dftu, ks_solver);
 }
 
 } // namespace DFTU_LCAO

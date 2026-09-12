@@ -22,6 +22,8 @@ namespace DFTU_LCAO {
 /// @param pv parallel-orbitals descriptor that owns BLACS context and
 ///        global<->local index maps; sourced by the caller from the same
 ///        Parallel_Orbitals used to build the Hamiltonian and density matrix.
+/// @param ks_solver KS solver name (e.g. "scalapack"); forwarded to the
+///        multi-k path for folding-matrix selection.
 template <typename T>
 void cal_occ_mat(const Parallel_Orbitals* pv,
                  const UnitCell& ucell,
@@ -31,7 +33,8 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  hamilt::Hamilt<T>* p_ham,
                  Plus_U_Base& dftu,
                  const bool gamma_only_local,
-                 const int nspin);
+                 const int nspin,
+                 const std::string& ks_solver);
 
 /// @brief Accumulate one (iat, l, n, spin) channel of the occupation matrix
 ///        from the complex S*DM product srho for the multi-k case. Reads npol
@@ -97,7 +100,8 @@ void cal_occ_mat_k(const Parallel_Orbitals* pv,
                    const double& mixing_beta,
                    hamilt::Hamilt<std::complex<double>>* p_ham,
                    const bool gamma_only_local,
-                   Plus_U_Base& dftu);
+                   Plus_U_Base& dftu,
+                   const std::string& ks_solver);
 
 // calculate the local occupation number matrix (gamma-point version)
 void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
