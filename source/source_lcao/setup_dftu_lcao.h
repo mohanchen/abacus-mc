@@ -13,26 +13,21 @@ namespace ModuleESolver
  * @brief Initialize DFT+U for LCAO method in iter_init
  *
  * This function handles the DFT+U initialization during the SCF iteration.
- * It sets the density matrix and calculates Slater integrals if needed.
+ * It calculates Slater integrals if the Yukawa potential is used. The DMR
+ * needed by DFT+U is read directly from the solver-owned DensityMatrix via
+ * the DFTU Hamiltonian operator, so it is not passed in here.
  *
- * @param istep Current ionic step
- * @param iter Current SCF iteration
  * @param dft_plus_u DFT+U mode (0=disabled, 1=old, 2=new)
  * @param dftu DFT+U object
- * @param dm Density matrix
  * @param ucell Unit cell
  * @param rho Charge density
  * @param nrxx Number of real space grid points
  */
-template <typename TK>
-void init_dftu_lcao(const int istep,
-                     const int iter,
-                     int dft_plus_u,
-                     void* dftu,
-                     void* dm,
-                     const UnitCell& ucell,
-                     double** rho,
-                     const int nrxx);
+void init_dftu_lcao(int dft_plus_u,
+                    void* dftu,
+                    const UnitCell& ucell,
+                    double** rho,
+                    const int nrxx);
 
 /**
  * @brief Finish DFT+U calculation for LCAO method in iter_finish

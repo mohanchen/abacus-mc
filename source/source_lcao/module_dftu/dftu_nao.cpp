@@ -5,7 +5,6 @@
 #include "source_base/timer.h"
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_basis/module_ao/orb_read.h"
-#include "source_estate/module_dm/density_matrix.h"
 
 #include <complex>
 #include <vector>
@@ -77,32 +76,4 @@ void Plus_U::init(UnitCell& cell,
 
 // uramping_update() and u_converged() are now implemented in
 // dftu_base.cpp as Plus_U_Base methods (inherited by Plus_U).
-
-void Plus_U::set_dmr(const elecstate::DensityMatrix<std::complex<double>, double>* dmr)
-{
-    this->dm_in_dftu_cd = dmr;
-    return;
-}
-
-void Plus_U::set_dmr(const elecstate::DensityMatrix<double, double>* dmr)
-{
-    this->dm_in_dftu_d = dmr;
-    return;
-}
-
-const hamilt::HContainer<double>* Plus_U::get_dmr(int ispin) const
-{
-    if (this->dm_in_dftu_d != nullptr)
-    {
-        return this->dm_in_dftu_d->get_DMR_pointer(ispin + 1);
-    }
-    else if (this->dm_in_dftu_cd != nullptr)
-    {
-        return this->dm_in_dftu_cd->get_DMR_pointer(ispin + 1);
-    }
-    else
-    {
-        return nullptr;
-    }
-}
 

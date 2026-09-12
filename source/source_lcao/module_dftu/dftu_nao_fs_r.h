@@ -58,13 +58,13 @@ class DFTU;
  *       and two-center integrals <phi|chi> computed by TwoCenterIntegrator. It is
  *       independent of k-point sampling because DMR already contains the BZ integration.
  *
- * @param dftu_op     [in] pointer to the DFTU operator object (for accessing ucell, dftu, intor_)
+ * @param dftu_op     [in] pointer to the DFTU operator object (for accessing ucell, dftu, intor_ and DMR)
  * @param cal_force   [in] whether to compute force
  * @param cal_stress  [in] whether to compute stress
  * @param force       [out] force matrix (nat, 3), accumulated
  * @param stress      [out] stress matrix (3, 3), accumulated
  *
- * @warning The density matrix must be set via Plus_U::set_dmr() before calling this.
+ * @warning DMR is read through the solver-owned DensityMatrix held by the DFTU operator.
  *          If get_dmr(0) returns nullptr, the function aborts with WARNING_QUIT.
  */
 template <typename TK, typename TR>

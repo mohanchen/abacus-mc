@@ -21,19 +21,18 @@ void cal_fs_nao_r(DFTU<OperatorLCAO<TK, TR>>* dftu_op,
                         ModuleBase::matrix& stress)
 {
     ModuleBase::TITLE("DFTU", "cal_fs_nao_r");
-    const Plus_U* dftu = static_cast<const Plus_U*>(dftu_op->get_dftu());
-    if (dftu->get_dmr(0) == nullptr)
+    if (dftu_op->get_dmr(0) == nullptr)
     {
         ModuleBase::WARNING_QUIT("DFTU", "dmr is not set");
     }
 
     // try to get the density matrix, if the density matrix is empty, skip the calculation and return
     std::vector<const hamilt::HContainer<double>*> dmR_tmp(dftu_op->get_nspin(), nullptr);
-    dmR_tmp[0] = dftu->get_dmr(0);
+    dmR_tmp[0] = dftu_op->get_dmr(0);
 
     if (dftu_op->get_nspin() == 2)
     {
-        dmR_tmp[1] = dftu->get_dmr(1);
+        dmR_tmp[1] = dftu_op->get_dmr(1);
     }
     if (dmR_tmp[0]->size_atom_pairs() == 0)
     {

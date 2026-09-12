@@ -10,6 +10,12 @@
 
 #include <unordered_map>
 
+namespace elecstate
+{
+template <typename TK, typename TR>
+class DensityMatrix;
+} // namespace elecstate
+
 namespace hamilt
 {
 
@@ -47,7 +53,8 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                                const std::vector<double>& orb_cutoff,
                                Plus_U_Base* p_dftu,
                                const int nspin_in,
-                               const double onsite_radius);
+                               const double onsite_radius,
+                               const elecstate::DensityMatrix<TK, double>* dm_in);
     ~DFTU<OperatorLCAO<TK, TR>>();
 
     /**
@@ -55,6 +62,13 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
      * <phi_{\mu, 0}|beta_p1>D_{p1, p2}<beta_p2|phi_{\nu, R}>
      */
     virtual void contributeHR() override;
+
+    /**
+     * @brief get the real-space density matrix of target spin from the solver-owned DensityMatrix
+     * @param ispin spin index (0 based): 0 for nspin=1/4, 0/1 for nspin=2
+     * @return read-only DMR pointer, or nullptr when DMR has not been calculated yet
+     */
+    const hamilt::HContainer<double>* get_dmr(int ispin) const;
 
     /// calculate force and stress for DFT+U
     void cal_force_stress(const bool cal_force,
@@ -80,6 +94,9 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     const UnitCell* ucell = nullptr;
 
     Plus_U_Base* dftu = nullptr;
+
+    /// @brief solver-owned density matrix providing DMR; lifetime covers each ionic step
+    const elecstate::DensityMatrix<TK, double>* dm_ = nullptr;
 
     hamilt::HContainer<TR>* HR = nullptr;
 

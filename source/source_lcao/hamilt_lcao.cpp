@@ -243,7 +243,8 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                       orb.cutoffs(),
                                                       p_dftu,
                                                       PARAM.inp.nspin,
-                                                      PARAM.inp.onsite_radius);
+                                                      PARAM.inp.onsite_radius,
+                                                      DM_in);
             }
             this->getOperator()->add(plus_u);
         }
@@ -403,7 +404,8 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                       orb.cutoffs(),
                                                       p_dftu,
                                                       PARAM.inp.nspin,
-                                                      PARAM.inp.onsite_radius);
+                                                      PARAM.inp.onsite_radius,
+                                                      DM_in);
             }
             this->getOperator()->add(plus_u);
         }

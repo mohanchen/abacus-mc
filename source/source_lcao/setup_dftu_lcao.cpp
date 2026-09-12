@@ -4,35 +4,24 @@
 #include "source_lcao/module_dftu/dftu_nao_energy.h"
 #include "source_pw/module_pwdft/dftu_base_io.h" // mohan add 2025-11-08
 #include "source_io/module_parameter/parameter.h"
-#include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/hamilt_lcao.h"
 
 namespace ModuleESolver
 {
 
-template <typename TK>
-void init_dftu_lcao(const int istep,
-                     const int iter,
-                     int dft_plus_u,
-                     void* dftu,
-                     void* dm,
-                     const UnitCell& ucell,
-                     double** rho,
-                     const int nrxx)
+void init_dftu_lcao(int dft_plus_u,
+                    void* dftu,
+                    const UnitCell& ucell,
+                    double** rho,
+                    const int nrxx)
 {
     if (!dft_plus_u)
     {
         return;
     }
-    
+
     auto* dftu_ptr = static_cast<Plus_U*>(dftu);
-    auto* dm_ptr = static_cast<elecstate::DensityMatrix<TK, double>*>(dm);
-    
-    if (istep != 0 || iter != 1)
-    {
-        dftu_ptr->set_dmr(dm_ptr);
-    }
-    
+
     /// Calculate U and J if Yukawa potential is used
     if (dftu_ptr->use_yukawa())
     {
@@ -94,24 +83,6 @@ void finish_dftu_lcao(const int iter,
 }
 
 /// Template instantiation
-template void init_dftu_lcao<double>(const int istep,
-                                      const int iter,
-                                      int dft_plus_u,
-                                      void* dftu,
-                                      void* dm,
-                                      const UnitCell& ucell,
-                                      double** rho,
-                                      const int nrxx);
-
-template void init_dftu_lcao<std::complex<double>>(const int istep,
-                                                    const int iter,
-                                                    int dft_plus_u,
-                                                    void* dftu,
-                                                    void* dm,
-                                                    const UnitCell& ucell,
-                                                    double** rho,
-                                                    const int nrxx);
-
 template void finish_dftu_lcao<double>(const int iter,
                                         const bool conv_esolver,
                                         int dft_plus_u,

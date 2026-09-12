@@ -3,6 +3,7 @@
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
+#include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/module_operator_lcao/operator_lcao.h"
 #include "source_base/parallel_reduce.h"
 
@@ -19,14 +20,17 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
                                                  const std::vector<double>& orb_cutoff,
                                                  Plus_U_Base* p_dftu,
                                                  const int nspin_in,
-                                                 const double onsite_radius)
+                                                 const double onsite_radius,
+                                                 const elecstate::DensityMatrix<TK, double>* dm_in)
     : hamilt::OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in), intor_(intor), orb_cutoff_(orb_cutoff)
 {
     this->cal_type = calculation_type::lcao_dftu;
     this->ucell = &ucell_in;
     this->dftu = p_dftu;
+    this->dm_ = dm_in;
 
     assert(this->ucell != nullptr);
+    assert(this->dm_ != nullptr);
 
     // initialize HR to allocate sparse Nonlocal matrix memory
     this->initialize_HR(GridD_in, onsite_radius);
@@ -38,6 +42,19 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
 template <typename TK, typename TR>
 hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::~DFTU()
 {
+}
+
+// get the read-only real-space density matrix of target spin from the solver-owned DensityMatrix
+template <typename TK, typename TR>
+const hamilt::HContainer<double>* hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::get_dmr(int ispin) const
+{
+    assert(ispin >= 0);
+    // a not-yet-calculated DMR means the first SCF iteration before the first diagonalization
+    if (this->dm_ == nullptr || !this->dm_->is_dmr_ready())
+    {
+        return nullptr;
+    }
+    return this->dm_->get_DMR_pointer(ispin + 1);
 }
 
 // initialize_HR()
@@ -230,7 +247,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     // - get_dmr(0) == nullptr: DMR not available (typical in first iteration without file input)
     // - !is_occmat_ready(): occ_mat not read from file AND not yet computed from DMR
     // When both true, skip DFT+U contribution entirely (first iteration, no file input)
-    const bool dmr_null = (static_cast<const Plus_U*>(this->dftu)->get_dmr(0) == nullptr);
+    const bool dmr_null = (this->get_dmr(0) == nullptr);
     const bool occ_mat_not_init = !this->dftu->is_occmat_ready();
 
     if (dmr_null && occ_mat_not_init)
@@ -288,7 +305,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
             // TODO: UNSAFE - get_dmr(current_spin) assumes DMR has correct spin indexing.
             // For nspin=2, current_spin must be correctly toggled (0 then 1).
             // If current_spin is wrong, wrong spin channel's DMR is used.
-            const hamilt::HContainer<double>* dmR_current = static_cast<const Plus_U*>(this->dftu)->get_dmr(this->current_spin);
+            const hamilt::HContainer<double>* dmR_current = this->get_dmr(this->current_spin);
             for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
             {
                 const int T1 = adjs.ntype[ad1];

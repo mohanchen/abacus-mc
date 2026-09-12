@@ -470,7 +470,8 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
                                                                    orb.cutoffs(),
                                                                    &dftu,
                                                                    PARAM.inp.nspin,
-                                                                   PARAM.inp.onsite_radius);
+                                                                   PARAM.inp.onsite_radius,
+                                                                   dmat.dm);
 
             tmpu.cal_force_stress(isforce, isstress, force_u, stress_u);
         }
