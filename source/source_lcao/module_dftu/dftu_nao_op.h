@@ -84,13 +84,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     /// @brief the number of spin components, 1 for no-spin, 2 for collinear spin case and 4 for non-collinear spin case
     int nspin = 0;
 
-    /// @brief accumulate the HR contributions of one Hubbard atom (iat0)
-    ///        from the precomputed pot_onsite
-    void accumulate_HR_for_iat0(int iat0,
-                                const AdjacentAtomInfo& adjs,
-                                const Parallel_Orbitals* pv,
-                                const std::vector<TR>& pot_onsite);
-
     std::vector<AdjacentAtomInfo> adjs_all;
     /// @brief cached <phi|alpha^I> overlap values; empty until first contributeHR() call
     DFTU_LCAO::NlmTot nlm_tot;

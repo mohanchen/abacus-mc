@@ -198,6 +198,69 @@ inline void cal_occ_ijr(const int iat1,
 }
 
 /**
+ * @brief accumulate the real-space HR contributions of one Hubbard atom
+ *        (iat0) from the precomputed pot_onsite:
+ *        HR(I,J,R) += <phi_I|chi_m> pot_onsite(m,m') <chi_m'|phi_{J,R}>
+ *
+ * @tparam TR           real-space Hamiltonian scalar type: double for
+ *                      NSPIN=1,2 and std::complex<double> for NSPIN=4
+ * @param ucell       [in] unit cell (atom index maps, npol)
+ * @param hR          [in,out] real-space Hamiltonian container; matching
+ *                      atom-pair blocks are updated in place
+ * @param nlm_tot     [in] <phi|alpha^I> overlap table for all atoms
+ * @param iat0        [in] global atom index of the Hubbard atom
+ * @param adjs        [in] adjacent atom info of the Hubbard atom
+ * @param pv          [in] parallel-orbitals descriptor providing local index maps
+ * @param pot_onsite  [in] onsite potential matrix packed in npol*npol spin blocks
+ */
+template <typename TR>
+void accumulate_hr_for_iat0(const UnitCell& ucell,
+                            hamilt::HContainer<TR>* hR,
+                            const NlmTot& nlm_tot,
+                            const int iat0,
+                            const AdjacentAtomInfo& adjs,
+                            const Parallel_Orbitals& pv,
+                            const std::vector<TR>& pot_onsite)
+{
+    for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
+    {
+        const int T1 = adjs.ntype[ad1];
+        const int I1 = adjs.natom[ad1];
+        const int iat1 = ucell.itia2iat(T1, I1);
+        const ModuleBase::Vector3<int>& R_index1 = adjs.box[ad1];
+        const std::unordered_map<int, std::vector<double>>& nlm1 = nlm_tot[iat0][ad1];
+        for (int ad2 = 0; ad2 < adjs.adj_num + 1; ++ad2)
+        {
+            const int T2 = adjs.ntype[ad2];
+            const int I2 = adjs.natom[ad2];
+            const int iat2 = ucell.itia2iat(T2, I2);
+            const std::unordered_map<int, std::vector<double>>& nlm2 = nlm_tot[iat0][ad2];
+            const ModuleBase::Vector3<int>& R_index2 = adjs.box[ad2];
+            ModuleBase::Vector3<int> R_vector(R_index2[0] - R_index1[0],
+                                              R_index2[1] - R_index1[1],
+                                              R_index2[2] - R_index1[2]);
+            hamilt::BaseMatrix<TR>* tmp = hR->find_matrix(iat1, iat2, R_vector[0], R_vector[1], R_vector[2]);
+            if (tmp != nullptr)
+            {
+#ifdef _OPENMP
+#pragma omp critical(dftu_hr_update)
+#endif
+                {
+                    cal_hr_ijr<TR>(iat1,
+                                   iat2,
+                                   ucell.get_npol(),
+                                   pv,
+                                   nlm1,
+                                   nlm2,
+                                   pot_onsite,
+                                   tmp->get_pointer());
+                }
+            }
+        }
+    }
+}
+
+/**
  * @brief compute the occupation matrix of one Hubbard atom (iat0) from the
  *        real-space density matrix:
  *        occ(m,m') = sum_R DMR(I,J,R) * <phi_0|chi_m(I)> * <chi_m'(J)|phi_R>

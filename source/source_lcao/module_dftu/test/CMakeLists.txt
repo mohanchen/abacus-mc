@@ -33,4 +33,18 @@ AddTest(
   ../../module_operator_lcao/test/tmp_mocks.cpp
   ../../../source_hamilt/operator.cpp
 )
+
+AddTest(
+  TARGET dftu_nao_ijr_test
+  LIBS parameter psi base device container
+  SOURCES test_dftu_nao_ijr.cpp
+  ../../../source_hamilt/module_hcontainer/func_folding.cpp
+  ../../../source_hamilt/module_hcontainer/base_matrix.cpp
+  ../../../source_hamilt/module_hcontainer/hcontainer.cpp
+  ../../../source_hamilt/module_hcontainer/atom_pair.cpp
+  ../../../source_basis/module_ao/parallel_orbitals.cpp
+  ../../../source_basis/module_ao/orb_atomic_lm.cpp
+  ../../module_operator_lcao/test/tmp_mocks.cpp
+  ../../../source_hamilt/operator.cpp
+)
 endif()

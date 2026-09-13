@@ -186,7 +186,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         DFTU_LCAO::transfer_pot_onsite(pot_onsite_tmp, pot_onsite);
 
         // accumulate HR contributions from neighbor pairs
-        this->accumulate_HR_for_iat0(iat0, adjs, pv, pot_onsite);
+        DFTU_LCAO::accumulate_hr_for_iat0<TR>(*this->ucell, this->hR, this->nlm_tot, iat0, adjs, *pv, pot_onsite);
     }
 
     // post-processing: energy doubling for nspin=1
@@ -206,52 +206,6 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     }
 
     ModuleBase::timer::end("DFTU", "contributeHR");
-}
-
-// accumulate_HR_for_iat0: Step 5 of contributeHR
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::accumulate_HR_for_iat0(
-    int iat0,
-    const AdjacentAtomInfo& adjs,
-    const Parallel_Orbitals* pv,
-    const std::vector<TR>& pot_onsite)
-{
-    for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
-    {
-        const int T1 = adjs.ntype[ad1];
-        const int I1 = adjs.natom[ad1];
-        const int iat1 = ucell->itia2iat(T1, I1);
-        const ModuleBase::Vector3<int>& R_index1 = adjs.box[ad1];
-        const std::unordered_map<int, std::vector<double>>& nlm1 = nlm_tot[iat0][ad1];
-        for (int ad2 = 0; ad2 < adjs.adj_num + 1; ++ad2)
-        {
-            const int T2 = adjs.ntype[ad2];
-            const int I2 = adjs.natom[ad2];
-            const int iat2 = ucell->itia2iat(T2, I2);
-            const std::unordered_map<int, std::vector<double>>& nlm2 = nlm_tot[iat0][ad2];
-            const ModuleBase::Vector3<int>& R_index2 = adjs.box[ad2];
-            ModuleBase::Vector3<int> R_vector(R_index2[0] - R_index1[0],
-                                              R_index2[1] - R_index1[1],
-                                              R_index2[2] - R_index1[2]);
-            hamilt::BaseMatrix<TR>* tmp = this->hR->find_matrix(iat1, iat2, R_vector[0], R_vector[1], R_vector[2]);
-            if (tmp != nullptr)
-            {
-#ifdef _OPENMP
-#pragma omp critical(dftu_hr_update)
-#endif
-                {
-                    DFTU_LCAO::cal_hr_ijr<TR>(iat1,
-                                              iat2,
-                                              ucell->get_npol(),
-                                              *pv,
-                                              nlm1,
-                                              nlm2,
-                                              pot_onsite,
-                                              tmp->get_pointer());
-                }
-            }
-        }
-    }
 }
 
 template class hamilt::DFTU<hamilt::OperatorLCAO<double, double>>;
