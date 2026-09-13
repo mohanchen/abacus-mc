@@ -41,6 +41,10 @@ rules. Read the complete governance document before making or reviewing changes:
       `rhog_io.cpp` shall be `test_rhog_io.cpp`. This naming keeps the
       file-to-test relationship discoverable and consistent across the
       repository. Historical tests are not required to be renamed.
+  12. Place `ModuleBase::timer::start`/`end` at the beginning and end of a
+      function, not around isolated statements inside the function body. Use
+      the enclosing function name (or constructor name) as the timer label so
+      the timer scopes the whole unit of work.
 - Use LF line endings for text files. Only `.bat` and `.cmd` files may use CRLF.
 - Keep source file additions deterministic: update the relevant `CMakeLists.txt`
   or explain why the file is generated or included indirectly.

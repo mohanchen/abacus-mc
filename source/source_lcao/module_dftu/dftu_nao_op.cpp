@@ -29,6 +29,7 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
                                                  const elecstate::DensityMatrix<TK, double>* dm_in)
     : hamilt::OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in), intor_(intor), orb_cutoff_(orb_cutoff)
 {
+    ModuleBase::timer::start("DFTU", "DFTU");
     this->cal_type = calculation_type::lcao_dftu;
     this->ucell = &ucell_in;
     this->dftu = p_dftu;
@@ -40,12 +41,11 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
     // build the adjacent-atom lists for all Hubbard atoms. The size of HR
     // will not change in DFTU, because the DFT+U correction only touches
     // atom pairs already covered by the Nonlocal operator.
-    ModuleBase::timer::start("DFTU", "build_adjacent_atoms");
     this->adjs_all = DFTU_LCAO::build_adjacent_atoms(this->ucell, this->dftu, GridD_in, this->orb_cutoff_, onsite_radius);
-    ModuleBase::timer::end("DFTU", "build_adjacent_atoms");
 
     // set nspin
     this->nspin = nspin_in;
+    ModuleBase::timer::end("DFTU", "DFTU");
 }
 
 // get the read-only real-space density matrix of target spin from the solver-owned DensityMatrix
