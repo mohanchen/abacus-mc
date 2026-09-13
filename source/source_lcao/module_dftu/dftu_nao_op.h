@@ -77,8 +77,11 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     /// @brief the number of spin components, 1 for no-spin, 2 for collinear spin case and 4 for non-collinear spin case
     int nspin = 0;
 
+    /// @brief adjacent-atom lists for all Hubbard atoms; structure snapshot
+    /// computed once in the constructor (operator is rebuilt every ionic step)
     std::vector<AdjacentAtomInfo> adjs_all;
-    /// @brief cached <phi|alpha^I> overlap values; empty until first contributeHR() call
+    /// @brief cached <phi|alpha^I> overlap values; structure snapshot computed
+    /// once in the constructor, reused across SCF iterations of one ionic step
     DFTU_LCAO::NlmTot nlm_tot;
 };
 

@@ -27,24 +27,28 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
                                                  const int nspin_in,
                                                  const double onsite_radius,
                                                  const elecstate::DensityMatrix<TK, double>* dm_in)
-    : hamilt::OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in), intor_(intor), orb_cutoff_(orb_cutoff)
+    : hamilt::OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in),
+      ucell(&ucell_in),
+      dftu(p_dftu),
+      dm_(dm_in),
+      intor_(intor),
+      orb_cutoff_(orb_cutoff),
+      nspin(nspin_in)
 {
     ModuleBase::timer::start("DFTU", "DFTU");
     this->cal_type = calculation_type::lcao_dftu;
-    this->ucell = &ucell_in;
-    this->dftu = p_dftu;
-    this->dm_ = dm_in;
 
     assert(this->ucell != nullptr);
     assert(this->dm_ != nullptr);
 
-    // build the adjacent-atom lists for all Hubbard atoms. The size of HR
-    // will not change in DFTU, because the DFT+U correction only touches
-    // atom pairs already covered by the Nonlocal operator.
+    // structure snapshot: both members depend only on the atomic structure
+    // and are computed once here; the operator is rebuilt every ionic step.
+    // Kept in the constructor body (not the initializer list) so failures
+    // inside these calls are easy to debug.
     this->adjs_all = DFTU_LCAO::build_adjacent_atoms(this->ucell, this->dftu, GridD_in, this->orb_cutoff_, onsite_radius);
+    const Parallel_Orbitals* pv = this->hR->get_atom_pair(0).get_paraV();
+    this->nlm_tot = DFTU_LCAO::cal_nlm_all(*this->ucell, *this->dftu, *this->intor_, this->adjs_all, *pv);
 
-    // set nspin
-    this->nspin = nspin_in;
     ModuleBase::timer::end("DFTU", "DFTU");
 }
 
@@ -118,12 +122,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     ModuleBase::timer::start("DFTU", "contributeHR");
 
     const Parallel_Orbitals* pv = this->hR->get_atom_pair(0).get_paraV();
-    if (this->nlm_tot.empty())
-    {
-        // lazily precompute the <phi|alpha^I> overlap table; it only depends
-        // on the structure and is reused across SCF iterations
-        this->nlm_tot = DFTU_LCAO::cal_nlm_all(*this->ucell, *this->dftu, *this->intor_, this->adjs_all, *pv);
-    }
+    // nlm_tot is precomputed in the constructor (structure snapshot)
 
     // loop over all Hubbard-projector center atoms (iat0)
     int atom_index = 0;
