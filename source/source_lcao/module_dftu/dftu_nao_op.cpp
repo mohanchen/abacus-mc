@@ -301,7 +301,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         }
         else
         {
-            this->load_occ_from_file(iat0, target_L, occ);
+            DFTU_LCAO::load_occ_from_file(*this->dftu, iat0, target_L, this->nspin, this->current_spin, occ);
         }
 
         // compute Hubbard potential and energy
@@ -312,7 +312,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         this->dftu->set_energy(u_energy);
 
         std::vector<TR> pot_onsite(occ.size());
-        this->transfer_pot_onsite(pot_onsite_tmp, pot_onsite);
+        DFTU_LCAO::transfer_pot_onsite(pot_onsite_tmp, pot_onsite);
 
         // accumulate HR contributions from neighbor pairs
         this->accumulate_HR_for_iat0(iat0, adjs, pv, pot_onsite);
@@ -387,27 +387,6 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::compute_occ_from_dmr(
         for (auto& v : occ) { v *= 0.5; }
     }
     this->dftu->occmat().set_flat(iat0, target_L, this->current_spin, occ);
-}
-
-// load_occ_from_file: BRANCH 2 of contributeHR
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::load_occ_from_file(
-    int iat0,
-    int target_L,
-    std::vector<double>& occ)
-{
-    if (this->nspin == 4)
-    {
-        this->dftu->occmat().get_flat(iat0, target_L, occ);
-    }
-    else
-    {
-        for (int i = 0; i < static_cast<int>(occ.size()); i++)
-        {
-            occ[i] = this->dftu->occmat().get(iat0, target_L, 0, this->current_spin,
-                                              i / (2 * target_L + 1), i % (2 * target_L + 1));
-        }
-    }
 }
 
 // accumulate_HR_for_iat0: Step 5 of contributeHR

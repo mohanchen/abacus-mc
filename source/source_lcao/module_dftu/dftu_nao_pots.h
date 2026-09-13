@@ -1,6 +1,7 @@
 #ifndef DFTU_LCAO_POTS_H
 #define DFTU_LCAO_POTS_H
 
+#include <cmath>
 #include <complex>
 #include <vector>
 
@@ -25,6 +26,51 @@ namespace DFTU_LCAO {
  */
 void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value,
                     double* pot_onsite, double& eu);
+
+/**
+ * @brief transfer pot_onsite format from Pauli matrix storage to the target
+ *        matrix-element type used by the Hamiltonian.
+ *
+ * Generic overload performs an identity copy. The complex specialization
+ * converts Pauli blocks to spinor blocks for the non-collinear case.
+ *
+ * @param pot_onsite_tmp input onsite potential in Pauli-block storage
+ * @param pot_onsite     output onsite potential in target storage
+ */
+template <typename TR>
+void transfer_pot_onsite(const std::vector<double>& pot_onsite_tmp,
+                         std::vector<TR>& pot_onsite)
+{
+    pot_onsite.resize(pot_onsite_tmp.size());
+    for (int i = 0; i < static_cast<int>(pot_onsite_tmp.size()); i++)
+    {
+        pot_onsite[i] = static_cast<TR>(pot_onsite_tmp[i]);
+    }
+}
+
+template <>
+inline void transfer_pot_onsite<std::complex<double>>(const std::vector<double>& pot_onsite_tmp,
+                                                      std::vector<std::complex<double>>& pot_onsite)
+{
+    const int m_size = int(sqrt(pot_onsite_tmp.size()) / 2);
+    const int m_size2 = m_size * m_size;
+    pot_onsite.resize(pot_onsite_tmp.size());
+    for (int m1 = 0; m1 < m_size; m1++)
+    {
+        for (int m2 = 0; m2 < m_size; m2++)
+        {
+            int index[4];
+            index[0] = m1 * m_size + m2;
+            index[1] = m1 * m_size + m2 + m_size2;
+            index[2] = m2 * m_size + m1 + m_size2 * 2;
+            index[3] = m2 * m_size + m1 + m_size2 * 3;
+            pot_onsite[index[0]] = 0.5 * (pot_onsite_tmp[index[0]] + pot_onsite_tmp[index[3]]);
+            pot_onsite[index[3]] = 0.5 * (pot_onsite_tmp[index[0]] - pot_onsite_tmp[index[3]]);
+            pot_onsite[index[1]] = 0.5 * (pot_onsite_tmp[index[1]] - std::complex<double>(0.0, 1.0) * pot_onsite_tmp[index[2]]);
+            pot_onsite[index[2]] = 0.5 * (pot_onsite_tmp[index[1]] + std::complex<double>(0.0, 1.0) * pot_onsite_tmp[index[2]]);
+        }
+    }
+}
 
 /**
  * @brief one-body effective onsite potential element for a given (m0,m1) pair.

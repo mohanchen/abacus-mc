@@ -2,6 +2,7 @@
 #define DFTU_LCAO_IJR_H
 
 #include "source_basis/module_ao/parallel_orbitals.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 
 #include <cassert>
 #include <cmath>
@@ -11,6 +12,38 @@
 
 namespace DFTU_LCAO
 {
+
+/**
+ * @brief load the flattened occupation matrix of one Hubbard atom from
+ *        pre-read occ_mat data.
+ *
+ * @param dftu         Plus_U state providing the stored occupation matrix
+ * @param iat0         global atom index of the Hubbard atom
+ * @param target_L     angular momentum channel of the correlated shell
+ * @param nspin        number of spin components
+ * @param current_spin active spin channel for nspin=2
+ * @param occ          output flattened occupation matrix
+ */
+inline void load_occ_from_file(const Plus_U_Base& dftu,
+                               const int iat0,
+                               const int target_L,
+                               const int nspin,
+                               const int current_spin,
+                               std::vector<double>& occ)
+{
+    if (nspin == 4)
+    {
+        dftu.occmat().get_flat(iat0, target_L, occ);
+    }
+    else
+    {
+        for (int i = 0; i < static_cast<int>(occ.size()); i++)
+        {
+            occ[i] = dftu.occmat().get(iat0, target_L, 0, current_spin,
+                                       i / (2 * target_L + 1), i % (2 * target_L + 1));
+        }
+    }
+}
 
 /**
  * @brief accumulate one real-space HR atom-pair block for DFT+U:

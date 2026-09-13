@@ -68,51 +68,6 @@ void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const doub
 
 } // namespace DFTU_LCAO
 
-// transfer_pot_onsite (generic: identity copy)
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::transfer_pot_onsite(std::vector<double>& pot_onsite_tmp, std::vector<TR>& pot_onsite)
-{
-#ifdef __DEBUG
-    assert(pot_onsite.size() == pot_onsite_tmp.size());
-#endif
-    for (int i = 0; i < pot_onsite_tmp.size(); i++)
-    {
-        pot_onsite[i] = pot_onsite_tmp[i];
-    }
-}
-
-// transfer_pot_onsite (noncollinear specialization: Pauli-to-spinor)
-template <>
-void hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>>::transfer_pot_onsite(
-    std::vector<double>& pot_onsite_tmp,
-    std::vector<std::complex<double>>& pot_onsite)
-{
-#ifdef __DEBUG
-    assert(pot_onsite.size() == pot_onsite_tmp.size());
-#endif
-
-    // Pauli-to-spinor conversion for DFT+U potential:
-    // V = V_0*I + V_x*sigma_x + V_y*sigma_y + V_z*sigma_z
-    const int m_size = int(sqrt(pot_onsite.size()) / 2);
-    const int m_size2 = m_size * m_size;
-    pot_onsite.resize(pot_onsite_tmp.size());
-    for (int m1 = 0; m1 < m_size; m1++)
-    {
-        for (int m2 = 0; m2 < m_size; m2++)
-        {
-            int index[4];
-            index[0] = m1 * m_size + m2;
-            index[1] = m1 * m_size + m2 + m_size2;
-            index[2] = m2 * m_size + m1 + m_size2 * 2;
-            index[3] = m2 * m_size + m1 + m_size2 * 3;
-            pot_onsite[index[0]] = 0.5 * (pot_onsite_tmp[index[0]] + pot_onsite_tmp[index[3]]);
-            pot_onsite[index[3]] = 0.5 * (pot_onsite_tmp[index[0]] - pot_onsite_tmp[index[3]]);
-            pot_onsite[index[1]] = 0.5 * (pot_onsite_tmp[index[1]] - std::complex<double>(0.0, 1.0) * pot_onsite_tmp[index[2]]);
-            pot_onsite[index[2]] = 0.5 * (pot_onsite_tmp[index[1]] + std::complex<double>(0.0, 1.0) * pot_onsite_tmp[index[2]]);
-        }
-    }
-}
-
 // explicit template instantiation (matches dftu_nao_op.cpp)
 template class hamilt::DFTU<hamilt::OperatorLCAO<double, double>>;
 template class hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, double>>;

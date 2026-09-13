@@ -75,9 +75,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     int get_nspin() const { return nspin; }
     const std::vector<AdjacentAtomInfo>& get_adjs_all() const { return adjs_all; }
 
-    /// transfer pot_onsite format from pauli matrix to normal for non-collinear spin case
-    void transfer_pot_onsite(std::vector<double>& pot_onsite_tmp, std::vector<TR>& pot_onsite);
-
     /// @brief build the adjacent-atom lists for all Hubbard atoms (static helper)
     static std::vector<AdjacentAtomInfo> build_adjacent_atoms(const UnitCell* ucell,
                                                               Plus_U_Base* dftu,
@@ -121,12 +118,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                               const AdjacentAtomInfo& adjs,
                               const Parallel_Orbitals* pv,
                               std::vector<double>& occ);
-
-    /// @brief load the occupation matrix of one Hubbard atom (iat0) from a
-    ///        pre-read occ_mat file
-    void load_occ_from_file(int iat0,
-                            int target_L,
-                            std::vector<double>& occ);
 
     /// @brief accumulate the HR contributions of one Hubbard atom (iat0)
     ///        from the precomputed pot_onsite
