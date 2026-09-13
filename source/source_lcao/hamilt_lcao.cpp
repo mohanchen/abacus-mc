@@ -36,7 +36,10 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
     this->kv = &kv_in;
 
-    // initialize the overlap matrix
+    // initialize the overlap matrix;
+    // hR is also allocated so the Overlap node never receives a null hR_in
+    // (hsk stays null: this vacuum path has no k-space matrix and never calls init())
+    this->hR.reset(new HContainer<TR>(paraV));
     this->sR.reset(new HContainer<TR>(paraV));
 
     this->getOperator() = new Overlap<OperatorLCAO<TK, TR>>(this->hsk.get(),
