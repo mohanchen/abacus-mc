@@ -153,11 +153,6 @@ void cal_energy_correction(Plus_U_Base& dftu,
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_energy_correction");
     ModuleBase::timer::start("DFTU_LCAO", "cal_energy_correction");
-    if (!dftu.is_occmat_ready())
-    {
-        ModuleBase::timer::end("DFTU_LCAO", "cal_energy_correction");
-        return;
-    }
 
     double energy_u = 0.0;
     double energy_dc = 0.0;

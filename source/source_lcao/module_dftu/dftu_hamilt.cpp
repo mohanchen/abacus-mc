@@ -18,11 +18,6 @@ void pot_uterm_complex(Plus_U_Base& dftu,
                        const std::complex<double>* sk)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_complex");
-    if (!dftu.is_occmat_ready())
-    {
-        return;
-    }
-
     ModuleBase::timer::start("DFTU_LCAO", "pot_uterm_complex");
 
     int spin = isk[ik];
@@ -78,10 +73,6 @@ void pot_uterm_real(Plus_U_Base& dftu,
                     const double* sk)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_real");
-    if (!dftu.is_occmat_ready())
-    {
-        return;
-    }
     ModuleBase::timer::start("DFTU_LCAO", "pot_uterm_real");
 
     int spin = isk[ik];
