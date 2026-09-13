@@ -27,12 +27,11 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
     }
 
     // try to get the density matrix, if the density matrix is empty, skip the calculation and return
-    std::vector<const hamilt::HContainer<double>*> dmR_tmp(dftu_op->get_nspin(), nullptr);
-    dmR_tmp[0] = dftu_op->get_dmr(0);
-
-    if (dftu_op->get_nspin() == 2)
+    const int nspin = dftu_op->get_nspin();
+    std::vector<const hamilt::HContainer<double>*> dmR_tmp(nspin, nullptr);
+    for (int is = 0; is < nspin; ++is)
     {
-        dmR_tmp[1] = dftu_op->get_dmr(1);
+        dmR_tmp[is] = dftu_op->get_dmr(is);
     }
     if (dmR_tmp[0]->size_atom_pairs() == 0)
     {
@@ -44,7 +43,11 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
 
     const Parallel_Orbitals* pv = dmR_tmp[0]->get_paraV();
     const int npol = dftu_op->get_ucell()->get_npol();
-    std::vector<double> stress_tmp(6, 0);
+    std::vector<double> stress_tmp;
+    if (cal_stress)
+    {
+        stress_tmp.resize(6, 0.0);
+    }
     if (cal_force)
     {
         force.zero_out();
@@ -69,20 +72,28 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
     // loop over all on-site atoms
 #pragma omp parallel
     {
-        std::vector<double> stress_local(6, 0);
-        ModuleBase::matrix force_local(force.nr, force.nc);
+        std::vector<double> stress_local;
+        if (cal_stress)
+        {
+            stress_local.resize(6, 0.0);
+        }
+        ModuleBase::matrix force_local;
+        if (cal_force)
+        {
+            force_local.create(force.nr, force.nc);
+        }
 #pragma omp for schedule(dynamic)
         for (int iat0 = 0; iat0 < dftu_op->get_ucell()->nat; iat0++)
         {
             // skip the atoms without plus-U
+            if (atom_index_all[iat0] < 0)
+            {
+                continue;
+            }
             auto tau0 = dftu_op->get_ucell()->get_tau(iat0);
             int T0 = 0;
             int I0 = 0;
             dftu_op->get_ucell()->iat2iait(iat0, &I0, &T0);
-            if (!dftu_op->get_dftu()->has_l_channel(T0))
-            {
-                continue;
-            }
             const int target_L = dftu_op->get_dftu()->get_l_channel(T0);
             const int tlp1 = 2 * target_L + 1;
             AdjacentAtomInfo& adjs = dftu_op->get_adjs_all()[atom_index_all[iat0]];
