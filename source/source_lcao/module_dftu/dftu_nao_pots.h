@@ -2,12 +2,29 @@
 #define DFTU_LCAO_POTS_H
 
 #include <complex>
+#include <vector>
 
 class Plus_U_Base;
 class UnitCell;
 class Parallel_Orbitals;
 
 namespace DFTU_LCAO {
+
+/**
+ * @brief On-site potential and Hubbard energy for one correlated shell:
+ *   pot_onsite(m,m') = U_eff * (0.5 * delta_{m,m'} - occ(m,m'))
+ *   EU = (U_eff / 2) * sum_{m,m'} occ(m,m') * (delta_{m,m'} - occ(m',m))
+ *
+ * Non-template core extracted from DFTU<OperatorLCAO<TK,TR>>::cal_pot_onsite.
+ *
+ * @param occ         flattened occupation matrix, size m_size*m_size*spin_fold
+ * @param m_size      number of magnetic quantum states (2*l+1)
+ * @param u_value     effective U parameter
+ * @param pot_onsite  output potential, same size as occ
+ * @param eu          output Hubbard energy contribution
+ */
+void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value,
+                    double* pot_onsite, double& eu);
 
 /**
  * @brief one-body effective onsite potential element for a given (m0,m1) pair.

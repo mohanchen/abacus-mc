@@ -37,6 +37,13 @@
 
 #include "source_base/matrix.h"
 
+#include <vector>
+
+class UnitCell;
+class Plus_U_Base;
+class TwoCenterIntegrator;
+struct AdjacentAtomInfo;
+
 namespace hamilt
 {
 // Forward declarations to avoid circular dependency with dftu_lcao_op.h
@@ -45,10 +52,42 @@ class OperatorLCAO;
 
 template <typename T>
 class DFTU;
+
+template <typename T>
+class HContainer;
 } // namespace hamilt
 
 namespace DFTU_LCAO
 {
+
+/**
+ * @brief Non-template core of DFT+U force/stress in real space.
+ *
+ * All types are concrete and independent of the operator's k-point type (TK)
+ * and real-space type (TR). The template wrapper cal_fs_nao_r only validates
+ * the density matrix and forwards arguments here.
+ *
+ * @param ucell       [in] unit cell
+ * @param dftu        [in] DFT+U base object (occupation matrix, U values)
+ * @param intor       [in] two-center integrator for <phi|chi> and gradients
+ * @param nspin       [in] number of spin channels (1, 2, or 4)
+ * @param adjs_all    [in] adjacent atom info for all atoms with plus-U
+ * @param dmR         [in] density matrices in real space, size nspin
+ * @param cal_force   [in] whether to compute force
+ * @param cal_stress  [in] whether to compute stress
+ * @param force       [out] force matrix (nat, 3), accumulated
+ * @param stress      [out] stress matrix (3, 3), accumulated
+ */
+void cal_fs_nao_r_impl(const UnitCell* ucell,
+                       Plus_U_Base* dftu,
+                       const TwoCenterIntegrator* intor,
+                       int nspin,
+                       std::vector<AdjacentAtomInfo>& adjs_all,
+                       const std::vector<const hamilt::HContainer<double>*>& dmR,
+                       bool cal_force,
+                       bool cal_stress,
+                       ModuleBase::matrix& force,
+                       ModuleBase::matrix& stress);
 
 /**
  * @brief Calculate DFT+U force and stress in real space (unified for gamma-only and multik)
