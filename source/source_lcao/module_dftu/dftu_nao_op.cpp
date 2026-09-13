@@ -10,14 +10,9 @@
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_base/parallel_reduce.h"
 
-// Include the free function for building the Hubbard-atom adjacent lists
 #include "dftu_nao_adj.h"
-
-// Include the free function implementations for force/stress in real space
 #include "dftu_nao_fs_r.h"
-// Include the free function templates for the HR/occ atom-pair kernels
 #include "dftu_nao_ijr.h"
-// Include the free function for the onsite potential
 #include "dftu_nao_pots.h"
 
 template <typename TK, typename TR>

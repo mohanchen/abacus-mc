@@ -20,7 +20,8 @@ void DFTU_LCAO::cal_pot_onsite(const Plus_U_Base& dftu,
     ModuleBase::GlobalFunc::ZEROS(pot_onsite, pv->nloc);
 
     const int npol = dftu.occmat().npol();
-    const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
+    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
+        = dftu.occmat().iatlnmipol2iwt();
 
     for (int it = 0; it < ucell.ntype; ++it)
     {

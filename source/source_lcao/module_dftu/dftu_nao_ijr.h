@@ -75,8 +75,8 @@ void cal_hr_ijr(const int iat1,
     assert(iat2 >= 0);
     assert(npol > 0);
     assert(data_pointer != nullptr);
-    auto row_indexes = pv.get_indexes_row(iat1);
-    auto col_indexes = pv.get_indexes_col(iat2);
+    std::vector<int> row_indexes = pv.get_indexes_row(iat1);
+    std::vector<int> col_indexes = pv.get_indexes_col(iat2);
     const int m_size = int(sqrt(pot_onsite.size()) / npol);
     // step_trace = 0 for NSPIN=1,2; ={0, 1, local_col, local_col+1} for NSPIN=4
     std::vector<int> step_trace(npol * npol, 0);
@@ -144,8 +144,8 @@ inline void cal_occ_ijr(const int iat1,
     assert(iat2 >= 0);
     assert(npol > 0);
     assert(dm_pointer != nullptr);
-    auto row_indexes = pv.get_indexes_row(iat1);
-    auto col_indexes = pv.get_indexes_col(iat2);
+    std::vector<int> row_indexes = pv.get_indexes_row(iat1);
+    std::vector<int> col_indexes = pv.get_indexes_col(iat2);
     const int m_size = int(sqrt(occ.size()) / npol);
     const int m_size2 = m_size * m_size;
 #ifdef __DEBUG

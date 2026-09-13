@@ -187,7 +187,8 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
                               int spin)
 {
     const int npol = occmat.npol();
-    const auto& iatlnmipol2iwt = occmat.iatlnmipol2iwt();
+    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
+        = occmat.iatlnmipol2iwt();
     ModuleBase::matrix& occ = occmat.mat(iat, l, n, spin);
     const int two_l_plus_one = 2 * l + 1;
     for (int m0 = 0; m0 < two_l_plus_one; m0++)
@@ -242,7 +243,8 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
                                   int spin)
 {
     const int npol = occmat.npol();
-    const auto& iatlnmipol2iwt = occmat.iatlnmipol2iwt();
+    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
+        = occmat.iatlnmipol2iwt();
     ModuleBase::matrix& occ_is = occmat.mat(iat, l, n, spin);
     const int two_l_plus_one = 2 * l + 1;
     for (int m0 = 0; m0 < two_l_plus_one; m0++)

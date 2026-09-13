@@ -32,8 +32,8 @@ void cal_str_IJR_nao_r(const int& iat1,
     // ---------------------------------------------
     // calculate the Nonlocal matrix for each pair of orbitals
     // ---------------------------------------------
-    auto row_indexes = pv->get_indexes_row(iat1);
-    auto col_indexes = pv->get_indexes_col(iat2);
+    std::vector<int> row_indexes = pv->get_indexes_row(iat1);
+    std::vector<int> col_indexes = pv->get_indexes_col(iat2);
     const int m_size = int(sqrt(pot_onsite_in.size() / nspin));
     const int m_size2 = m_size * m_size;
 

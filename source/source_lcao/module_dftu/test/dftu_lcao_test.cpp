@@ -184,8 +184,8 @@ TEST_F(DFTUTest, constructHRd2d)
         hamilt::AtomPair<double>& tmp = HR->get_atom_pair(iap);
         int iat1 = tmp.get_atom_i();
         int iat2 = tmp.get_atom_j();
-        auto indexes1 = paraV->get_indexes_row(iat1);
-        auto indexes2 = paraV->get_indexes_col(iat2);
+        std::vector<int> indexes1 = paraV->get_indexes_row(iat1);
+        std::vector<int> indexes2 = paraV->get_indexes_col(iat2);
         int nwt = indexes1.size() * indexes2.size();
         for (int i = 0; i < nwt; ++i)
         {
@@ -256,8 +256,8 @@ TEST_F(DFTUTest, constructHRd2cd)
         hamilt::AtomPair<double>& tmp = HR->get_atom_pair(iap);
         int iat1 = tmp.get_atom_i();
         int iat2 = tmp.get_atom_j();
-        auto indexes1 = paraV->get_indexes_row(iat1);
-        auto indexes2 = paraV->get_indexes_col(iat2);
+        std::vector<int> indexes1 = paraV->get_indexes_row(iat1);
+        std::vector<int> indexes2 = paraV->get_indexes_col(iat2);
         int nwt = indexes1.size() * indexes2.size();
         for (int i = 0; i < nwt; ++i)
         {
