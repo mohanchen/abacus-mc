@@ -258,51 +258,30 @@ void cal_fs_nao_r_impl(const UnitCell* ucell,
     ModuleBase::timer::end("DFTU", "cal_fs_nao_r");
 }
 
-template <typename TK, typename TR>
-void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
-                        const bool cal_force,
-                        const bool cal_stress,
-                        ModuleBase::matrix& force,
-                        ModuleBase::matrix& stress)
+void cal_fs_nao_r(const UnitCell* ucell,
+                  Plus_U_Base* dftu,
+                  const TwoCenterIntegrator* intor,
+                  int nspin,
+                  const std::vector<AdjacentAtomInfo>& adjs_all,
+                  const std::vector<const hamilt::HContainer<double>*>& dmR,
+                  bool cal_force,
+                  bool cal_stress,
+                  ModuleBase::matrix& force,
+                  ModuleBase::matrix& stress)
 {
     ModuleBase::TITLE("DFTU", "cal_fs_nao_r");
 
-    // try to get the density matrix, if the density matrix is empty, skip the calculation and return
-    const int nspin = dftu_op->get_nspin();
-    std::vector<const hamilt::HContainer<double>*> dmR_tmp(nspin, nullptr);
-    for (int is = 0; is < nspin; ++is)
+    if (dmR[0] == nullptr)
     {
-        dmR_tmp[is] = dftu_op->get_dmr(is);
-        if (dmR_tmp[is] == nullptr)
-        {
-            ModuleBase::WARNING_QUIT("DFTU", "dmr is not set");
-        }
+        ModuleBase::WARNING_QUIT("DFTU", "dmr is not set");
     }
-    if (dmR_tmp[0]->size_atom_pairs() == 0)
+    if (dmR[0]->size_atom_pairs() == 0)
     {
         return;
     }
 
-    cal_fs_nao_r_impl(dftu_op->get_ucell(), dftu_op->get_dftu(),
-                      dftu_op->get_intor(), nspin,
-                      dftu_op->get_adjs_all(), dmR_tmp,
+    cal_fs_nao_r_impl(ucell, dftu, intor, nspin, adjs_all, dmR,
                       cal_force, cal_stress, force, stress);
 }
-
-// explicit template instantiation
-template void cal_fs_nao_r<double, double>(
-    hamilt::DFTU<hamilt::OperatorLCAO<double, double>>* dftu_op,
-    const bool cal_force, const bool cal_stress,
-    ModuleBase::matrix& force, ModuleBase::matrix& stress);
-
-template void cal_fs_nao_r<std::complex<double>, double>(
-    hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, double>>* dftu_op,
-    const bool cal_force, const bool cal_stress,
-    ModuleBase::matrix& force, ModuleBase::matrix& stress);
-
-template void cal_fs_nao_r<std::complex<double>, std::complex<double>>(
-    hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>>* dftu_op,
-    const bool cal_force, const bool cal_stress,
-    ModuleBase::matrix& force, ModuleBase::matrix& stress);
 
 } // namespace DFTU_LCAO

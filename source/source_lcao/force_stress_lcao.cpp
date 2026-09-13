@@ -22,6 +22,7 @@
 #include "source_lcao/module_deepks/deepks_force.h"
 #endif
 #include "source_lcao/module_dftu/dftu_nao_op.h"
+#include "source_lcao/module_dftu/dftu_nao_fs_r.h"
 #include "source_lcao/module_operator_lcao/dspin_lcao.h"
 #include "source_lcao/module_operator_lcao/nonlocal.h"
 #include "source_lcao/module_operator_lcao/ekinetic.h"
@@ -465,19 +466,22 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         }
         else
         {
-            hamilt::DFTU<hamilt::OperatorLCAO<T, double>> tmpu(nullptr, // HK and SK are not used for force&stress
-                                                                   kv.kvec_d,
-                                                                   nullptr, // HR are not used for force&stress
-                                                                   ucell,
-                                                                   &gd,
-                                                                   two_center_bundle.overlap_orb_onsite.get(),
-                                                                   orb.cutoffs(),
-                                                                   &dftu,
-                                                                   PARAM.inp.nspin,
-                                                                   PARAM.inp.onsite_radius,
-                                                                   dmat.dm);
+            // Build DFT+U force/stress inputs directly without constructing a
+            // full DFTU operator (hsk/hR are irrelevant for this path).
+            auto adjs_all = hamilt::DFTU<hamilt::OperatorLCAO<T, double>>::build_adjacent_atoms(
+                &ucell, &dftu, &gd, orb.cutoffs(), PARAM.inp.onsite_radius);
 
-            tmpu.cal_force_stress(isforce, isstress, force_u, stress_u);
+            std::vector<const hamilt::HContainer<double>*> dmR_tmp(PARAM.inp.nspin, nullptr);
+            for (int is = 0; is < PARAM.inp.nspin; ++is)
+            {
+                dmR_tmp[is] = dmat.dm->get_DMR_pointer(is + 1);
+            }
+
+            DFTU_LCAO::cal_fs_nao_r(&ucell, &dftu,
+                                    two_center_bundle.overlap_orb_onsite.get(),
+                                    PARAM.inp.nspin,
+                                    adjs_all, dmR_tmp,
+                                    isforce, isstress, force_u, stress_u);
         }
     }
 

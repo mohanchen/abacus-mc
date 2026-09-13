@@ -90,25 +90,31 @@ void cal_fs_nao_r_impl(const UnitCell* ucell,
                        ModuleBase::matrix& stress);
 
 /**
- * @brief Calculate DFT+U force and stress in real space (unified for gamma-only and multik)
+ * @brief Calculate DFT+U force and stress in real space from explicit
+ *        environment arguments (non-template overload).
  *
- * Loops over all on-site atoms with correlated orbitals, computes the two-center
- * integrals <phi|chi> via TwoCenterIntegrator, and accumulates force/stress
- * contributions from all atom pairs (I,J,R) using OpenMP parallelization.
+ * This overload does not require a DFTU operator object; it is intended for
+ * callers that only need force/stress and already hold the required data.
  *
- * @param dftu_op     [in] pointer to the DFTU operator object (for accessing ucell, dftu, intor_ and DMR)
+ * @param ucell       [in] unit cell
+ * @param dftu        [in] DFT+U base object (occupation matrix, U values)
+ * @param intor       [in] two-center integrator for <phi|chi> and gradients
+ * @param nspin       [in] number of spin channels (1, 2, or 4)
+ * @param adjs_all    [in] adjacent atom info for all atoms with plus-U
+ * @param dmR         [in] density matrices in real space, size nspin
  * @param cal_force   [in] whether to compute force
  * @param cal_stress  [in] whether to compute stress
  * @param force       [out] force matrix (nat, 3), accumulated
  * @param stress      [out] stress matrix (3, 3), accumulated
- *
- * @warning DMR is read through the solver-owned DensityMatrix held by the DFTU operator.
- *          If get_dmr(0) returns nullptr, the function aborts with WARNING_QUIT.
  */
-template <typename TK, typename TR>
-void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
-                  const bool cal_force,
-                  const bool cal_stress,
+void cal_fs_nao_r(const UnitCell* ucell,
+                  Plus_U_Base* dftu,
+                  const TwoCenterIntegrator* intor,
+                  int nspin,
+                  const std::vector<AdjacentAtomInfo>& adjs_all,
+                  const std::vector<const hamilt::HContainer<double>*>& dmR,
+                  bool cal_force,
+                  bool cal_stress,
                   ModuleBase::matrix& force,
                   ModuleBase::matrix& stress);
 

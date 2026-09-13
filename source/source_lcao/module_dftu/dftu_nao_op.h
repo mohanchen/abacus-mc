@@ -9,6 +9,7 @@
 #include "source_hamilt/module_hcontainer/hcontainer.h"
 
 #include <unordered_map>
+#include <vector>
 
 namespace elecstate
 {
@@ -67,12 +68,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
      */
     const hamilt::HContainer<double>* get_dmr(int ispin) const;
 
-    /// calculate force and stress for DFT+U
-    void cal_force_stress(const bool cal_force,
-                          const bool cal_stress,
-                          ModuleBase::matrix& force,
-                          ModuleBase::matrix& stress);
-
     // Getters for free functions in dftu_nao_fs_r/dftu_nao_for_r/dftu_nao_str_r
     const UnitCell* get_ucell() const { return ucell; }
     Plus_U_Base* get_dftu() const { return dftu; }
@@ -82,6 +77,13 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
 
     /// transfer pot_onsite format from pauli matrix to normal for non-collinear spin case
     void transfer_pot_onsite(std::vector<double>& pot_onsite_tmp, std::vector<TR>& pot_onsite);
+
+    /// @brief build the adjacent-atom lists for all Hubbard atoms (static helper)
+    static std::vector<AdjacentAtomInfo> build_adjacent_atoms(const UnitCell* ucell,
+                                                              Plus_U_Base* dftu,
+                                                              const Grid_Driver* gridD,
+                                                              const std::vector<double>& orb_cutoff,
+                                                              const double onsite_radius);
 
   private:
     const UnitCell* ucell = nullptr;

@@ -68,22 +68,35 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::initialize_HR(const Grid_Driver
     ModuleBase::TITLE("DFTU", "initialize_HR");
     ModuleBase::timer::start("DFTU", "initialize_HR");
 
-    this->adjs_all.clear();
-    this->adjs_all.reserve(this->ucell->nat);
+    this->adjs_all = build_adjacent_atoms(this->ucell, this->dftu, GridD, this->orb_cutoff_, onsite_radius);
+
+    ModuleBase::timer::end("DFTU", "initialize_HR");
+}
+
+template <typename TK, typename TR>
+std::vector<AdjacentAtomInfo> hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::build_adjacent_atoms(
+    const UnitCell* ucell,
+    Plus_U_Base* dftu,
+    const Grid_Driver* gridD,
+    const std::vector<double>& orb_cutoff,
+    const double onsite_radius)
+{
+    std::vector<AdjacentAtomInfo> adjs_all;
+    adjs_all.reserve(ucell->nat);
     for (int iat0 = 0; iat0 < ucell->nat; iat0++)
     {
         auto tau0 = ucell->get_tau(iat0);
-        int T0=0;
-        int I0=0;
+        int T0 = 0;
+        int I0 = 0;
         ucell->iat2iait(iat0, &I0, &T0);
-        if (!this->dftu->has_l_channel(T0))
+        if (!dftu->has_l_channel(T0))
         {
             continue;
         }
-        const int target_L = this->dftu->get_l_channel(T0);
+        const int target_L = dftu->get_l_channel(T0);
 
         AdjacentAtomInfo adjs;
-        GridD->Find_atom(*ucell, tau0, T0, I0, &adjs);
+        gridD->Find_atom(*ucell, tau0, T0, I0, &adjs);
         std::vector<bool> is_adj(adjs.adj_num + 1, false);
         for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
         {
@@ -96,17 +109,16 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::initialize_HR(const Grid_Driver
             // Note: the distance of atoms should less than the cutoff radius,
             // When equal, the theoretical value of matrix element is zero,
             // but the calculated value is not zero due to the numerical error, which would lead to result changes.
-            if (this->ucell->cal_dtau(iat0, iat1, R_index1).norm() * this->ucell->lat0
-                < orb_cutoff_[T1] + onsite_radius)
+            if (ucell->cal_dtau(iat0, iat1, R_index1).norm() * ucell->lat0
+                < orb_cutoff[T1] + onsite_radius)
             {
                 is_adj[ad1] = true;
             }
         }
         filter_adjs(is_adj, adjs);
-        this->adjs_all.push_back(adjs);
+        adjs_all.push_back(adjs);
     }
-
-    ModuleBase::timer::end("DFTU", "initialize_HR");
+    return adjs_all;
 }
 
 template <typename TK, typename TR>
@@ -442,17 +454,6 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::accumulate_HR_for_iat0(
             }
         }
     }
-}
-
-// cal_force_stress(): thin wrapper calling the real-space free function implementation
-// See dftu_nao_fs_r.cpp for the actual implementation and mathematical formulas
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_force_stress(const bool cal_force,
-                                                                  const bool cal_stress,
-                                                                  ModuleBase::matrix& force,
-                                                                  ModuleBase::matrix& stress)
-{
-    DFTU_LCAO::cal_fs_nao_r(this, cal_force, cal_stress, force, stress);
 }
 
 template class hamilt::DFTU<hamilt::OperatorLCAO<double, double>>;
