@@ -37,10 +37,10 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
     this->kv = &kv_in;
 
     // initialize the overlap matrix
-    this->sR = new HContainer<TR>(paraV);
+    this->sR.reset(new HContainer<TR>(paraV));
 
     this->getOperator() = new Overlap<OperatorLCAO<TK, TR>>(this->hsk.get(),
-                                                               this->kv->kvec_d, this->hR, this->sR,
+                                                               this->kv->kvec_d, this->hR.get(), this->sR.get(),
                                                                &ucell, orb_cutoff, &grid_d,
                                                                &intor_overlap_orb);
 }
@@ -72,8 +72,8 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
     this->vl_in_h = inp.vl_in_h;
 
     // Real space Hamiltonian is inited with template TR
-    this->hR = new HContainer<TR>(paraV);
-    this->sR = new HContainer<TR>(paraV);
+    this->hR.reset(new HContainer<TR>(paraV));
+    this->sR.reset(new HContainer<TR>(paraV));
     this->hsk.reset(new HS_Matrix_K<TK>(paraV));
 
     // Effective potential term (\sum_r <psi(r)|Veff(r)|psi(r)>) is registered without template
@@ -96,14 +96,14 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
     {
         bundle = build_gamma_ops<TK, TR>(ucell, grid_d, paraV, pot_in, two_center_bundle,
                                          orb, DM_in, p_dftu, deepks, inp, pot_register_in,
-                                         this->kv, this->hsk.get(), this->hR, this->sR);
+                                         this->kv, this->hsk.get(), this->hR.get(), this->sR.get());
     }
     // multi-k-points case to initialize HamiltLCAO, ops will be used
     else if (std::is_same<TK, std::complex<double>>::value)
     {
         bundle = build_multik_ops<TK, TR>(ucell, grid_d, paraV, pot_in, two_center_bundle,
                                           orb, DM_in, p_dftu, deepks, inp, pot_register_in,
-                                          this->kv, this->hsk.get(), this->hR, this->sR);
+                                          this->kv, this->hsk.get(), this->hR.get(), this->sR.get());
     }
     this->getOperator() = bundle.ops;
 #ifdef __MLALGO
@@ -120,7 +120,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
         // factory selects complex H(R) when EXX is active, so the operator
         // chain folds the complete Hamiltonian with one common TD phase.
         Operator<TK>* exx = new OperatorEXX<OperatorLCAO<TK, TR>>(this->hsk.get(),
-                                                                  this->hR, ucell, *this->kv,
+                                                                  this->hR.get(), ucell, *this->kv,
                                                                   exx_nao.exd.get(), exx_nao.exc.get(),
                                                                   exx_info, Add_Hexx_Type::R, istep,
                                                                   load_exx_flag);
@@ -153,7 +153,7 @@ std::vector<HContainer<TR>*> HamiltLCAO<TK, TR>::getHR_vector()
     }
     else
     {
-        return {this->hR};
+        return {this->hR.get()};
     }
 }
 
