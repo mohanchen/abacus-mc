@@ -35,6 +35,7 @@
 #include "module_operator_lcao/ekinetic.h"
 #include "module_operator_lcao/meta_lcao.h"
 #include "module_operator_lcao/nonlocal.h"
+#include "module_operator_lcao/operator_lcao.h"
 #include "module_dftu/dftu_nao_op_legacy.h"
 #include "module_operator_lcao/op_exx_lcao.h"
 #include "module_operator_lcao/overlap.h"
@@ -391,11 +392,21 @@ std::vector<HContainer<TR>*> HamiltLCAO<TK, TR>::getHR_vector()
     }
 }
 
+template <typename TK, typename TR>
+OperatorLCAO<TK, TR>* HamiltLCAO<TK, TR>::getOperatorLCAO()
+{
+    if (this->ops_lcao_ == nullptr)
+    {
+        this->ops_lcao_ = dynamic_cast<OperatorLCAO<TK, TR>*>(this->ops);
+    }
+    return this->ops_lcao_;
+}
+
 // case for multi-k-points
 template <typename TK, typename TR>
 void HamiltLCAO<TK, TR>::matrix(MatrixBlock<TK>& hk_in, MatrixBlock<TK>& sk_in)
 {
-    auto op = dynamic_cast<OperatorLCAO<TK, TR>*>(this->getOperator());
+    OperatorLCAO<TK, TR>* const op = this->getOperatorLCAO();
     assert(op != nullptr);
     op->matrixHk(hk_in, sk_in);
 }
@@ -417,11 +428,11 @@ void HamiltLCAO<TK, TR>::updateHk(const int ik)
             if (this->refresh_times > 0)
             {
                 this->refresh_times--;
-                dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(this->ops)->set_hr_done(false);
+                this->getOperatorLCAO()->set_hr_done(false);
             }
         }
         this->current_spin = this->kv->isk[ik];
-        dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(this->ops)->set_current_spin(this->kv->isk[ik]);
+        this->getOperatorLCAO()->set_current_spin(this->kv->isk[ik]);
     }
     this->getOperator()->init(ik);
     ModuleBase::timer::end("HamiltLCAO", "updateHk");
@@ -433,7 +444,7 @@ void HamiltLCAO<TK, TR>::refresh(bool yes)
     ModuleBase::TITLE("HamiltLCAO", "refresh");
     if(yes)
     {
-        dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(this->ops)->set_hr_done(false);
+        this->getOperatorLCAO()->set_hr_done(false);
         if (this->nspin == 2)
         {
             this->refresh_times = 1;
@@ -447,7 +458,7 @@ void HamiltLCAO<TK, TR>::refresh(bool yes)
         }
     }
     else {
-        dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(this->ops)->set_hr_done(true);
+        this->getOperatorLCAO()->set_hr_done(true);
         this->refresh_times = 0;
         if (this->nspin == 2)
         {

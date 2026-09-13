@@ -38,6 +38,10 @@ struct Input_para;
 namespace hamilt
 {
 
+// OperatorLCAO forward declaration, full definition in
+// module_operator_lcao/operator_lcao.h (moved to .cpp)
+template <typename TK, typename TR> class OperatorLCAO;
+
 // template first for type of k space H matrix elements
 // template second for type of temporary matrix, 
 // gamma_only fix-gamma-matrix + S-gamma, 
@@ -208,6 +212,13 @@ class HamiltLCAO : public Hamilt<TK>
     bool vl_in_h = true;
 
     const int istep = 0;
+
+    //! cached downcast of this->ops to OperatorLCAO, filled on first use
+    //! to avoid repeating dynamic_cast in updateHk/refresh
+    OperatorLCAO<TK, TR>* ops_lcao_ = nullptr;
+
+    /// get this->ops downcast to OperatorLCAO<TK, TR>*, cached in ops_lcao_
+    OperatorLCAO<TK, TR>* getOperatorLCAO();
 };
 
 } // namespace hamilt
