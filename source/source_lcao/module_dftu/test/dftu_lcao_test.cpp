@@ -3,6 +3,8 @@
 
 // mock of DFTU
 #include "../dftu_nao_op.h"
+#include "source_basis/module_nao/two_center_integrator.h"
+#include "source_cell/unitcell.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_estate/module_dm/density_matrix.h"
 

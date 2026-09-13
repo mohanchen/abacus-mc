@@ -8,6 +8,7 @@
 #include "dftu_nao_str_r.h"
 #include "dftu_nao_op.h"
 #include "dftu_nao_pots.h"
+#include "source_basis/module_nao/two_center_integrator.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"

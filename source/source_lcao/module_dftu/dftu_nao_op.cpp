@@ -2,9 +2,12 @@
 
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
+#include "source_basis/module_nao/two_center_integrator.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
+#include "source_cell/unitcell.h"
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_lcao/module_operator_lcao/operator_lcao.h"
+#include "source_pw/module_pwdft/dftu_base.h"
 #include "source_base/parallel_reduce.h"
 
 // Include the free function for building the Hubbard-atom adjacent lists
