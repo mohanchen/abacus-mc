@@ -471,8 +471,13 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
             auto adjs_all = hamilt::DFTU<hamilt::OperatorLCAO<T, double>>::build_adjacent_atoms(
                 &ucell, &dftu, &gd, orb.cutoffs(), PARAM.inp.onsite_radius);
 
-            std::vector<const hamilt::HContainer<double>*> dmR_tmp(PARAM.inp.nspin, nullptr);
-            for (int is = 0; is < PARAM.inp.nspin; ++is)
+            // The DensityMatrix holds nspin_dm = (nspin==2 ? 2 : 1) real-space DMR
+            // channels: nspin=4 (non-collinear) packs all four Pauli components
+            // into a single complex DMR, so only one channel exists (cf. setup_dm.cpp
+            // and the is0 = nspin==2 ? is : 0 indexing in cal_for/str_IJR_nao_r).
+            const int nspin_dm = (PARAM.inp.nspin == 2) ? 2 : 1;
+            std::vector<const hamilt::HContainer<double>*> dmR_tmp(nspin_dm, nullptr);
+            for (int is = 0; is < nspin_dm; ++is)
             {
                 dmR_tmp[is] = dmat.dm->get_DMR_pointer(is + 1);
             }
