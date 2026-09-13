@@ -4,6 +4,8 @@
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_lcao/hamilt_lcao.h"
 
+#include <algorithm>
+
 namespace DFTU_LCAO {
 
 bool is_adjacent_pair(const std::vector<double>& orb_cutoff,
@@ -70,7 +72,7 @@ void fold_dSR_gamma(const FoldingCtx& ctx,
     const Parallel_Orbitals& pv = *ctx.pv;
     const Grid_Driver* gd = ctx.gd;
 
-    ModuleBase::GlobalFunc::ZEROS(dSR_gamma, pv.nloc);
+    std::fill(dSR_gamma, dSR_gamma + pv.nloc, 0.0);
 
     double* dS_ptr = nullptr;
     if (dim1 == 0)
@@ -160,7 +162,7 @@ void folding_matrix_k(const FoldingCtx& ctx,
     const Parallel_Orbitals& pv = *ctx.pv;
     const Grid_Driver& gd = *ctx.gd;
 
-    ModuleBase::GlobalFunc::ZEROS(mat_k, pv.nloc);
+    std::fill(mat_k, mat_k + pv.nloc, std::complex<double>(0.0, 0.0));
 
     double* mat_ptr = nullptr;
     if (dim1 == 1 || dim1 == 4)
