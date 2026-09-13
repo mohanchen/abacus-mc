@@ -18,6 +18,56 @@
 // The real-space atom-pair kernels cal_hr_ijr<TR>() and cal_occ_ijr() live
 // in dftu_nao_ijr.h as free functions of namespace DFTU_LCAO.
 
+namespace DFTU_LCAO
+{
+
+/// On-site potential and Hubbard energy for one correlated shell:
+///   pot_onsite(m,m') = U_eff * (0.5 * delta_{m,m'} - occ(m,m'))
+///   EU = (U_eff / 2) * sum_{m,m'} occ(m,m') * (delta_{m,m'} - occ(m',m))
+void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value,
+                    double* pot_onsite, double& eu)
+{
+    int spin_fold = occ.size() / m_size / m_size;
+    if (spin_fold < 4) {
+        for (int is = 0; is < spin_fold; ++is)
+        {
+            int start = is * m_size * m_size;
+            for (int m1 = 0; m1 < m_size; m1++)
+            {
+                for (int m2 = 0; m2 < m_size; m2++)
+                {
+                    pot_onsite[start + m1 * m_size + m2] = u_value * (0.5 * (m1 == m2) - occ[start + m2 * m_size + m1]);
+                    eu += u_value * 0.5 * occ[start + m2 * m_size + m1] * occ[start + m1 * m_size + m2];
+                }
+            }
+        }
+    } else
+    {
+        for (int m1 = 0; m1 < m_size; m1++)
+        {
+            for (int m2 = 0; m2 < m_size; m2++)
+            {
+                pot_onsite[m1 * m_size + m2] = u_value * (1.0 * (m1 == m2) - occ[m2 * m_size + m1]);
+                eu += u_value * 0.25 * occ[m2 * m_size + m1] * occ[m1 * m_size + m2];
+            }
+        }
+        for (int is = 1; is < spin_fold; ++is)
+        {
+            int start = is * m_size * m_size;
+            for (int m1 = 0; m1 < m_size; m1++)
+            {
+                for (int m2 = 0; m2 < m_size; m2++)
+                {
+                    pot_onsite[start + m1 * m_size + m2] = u_value * (0 - occ[start + m2 * m_size + m1]);
+                    eu += u_value * 0.25 * occ[start + m2 * m_size + m1] * occ[start + m1 * m_size + m2];
+                }
+            }
+        }
+    }
+}
+
+} // namespace DFTU_LCAO
+
 // transfer_pot_onsite (generic: identity copy)
 template <typename TK, typename TR>
 void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::transfer_pot_onsite(std::vector<double>& pot_onsite_tmp, std::vector<TR>& pot_onsite)
@@ -64,6 +114,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, std::complex<double
 }
 
 // cal_pot_onsite: pot = U * (1/2*delta - occ), energy = U * 1/2 * occ * occ
+// Thin wrapper delegating to the free function in namespace DFTU_LCAO.
 template <typename TK, typename TR>
 void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_pot_onsite(const std::vector<double>& occ,
                                                             const int m_size,
@@ -71,43 +122,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_pot_onsite(const std::vecto
                                                             double* pot_onsite,
                                                             double& eu)
 {
-    int spin_fold = occ.size() / m_size / m_size;
-    if (spin_fold < 4) {
-        for (int is = 0; is < spin_fold; ++is)
-        {
-            int start = is * m_size * m_size;
-            for (int m1 = 0; m1 < m_size; m1++)
-            {
-                for (int m2 = 0; m2 < m_size; m2++)
-                {
-                    pot_onsite[start + m1 * m_size + m2] = u_value * (0.5 * (m1 == m2) - occ[start + m2 * m_size + m1]);
-                    eu += u_value * 0.5 * occ[start + m2 * m_size + m1] * occ[start + m1 * m_size + m2];
-                }
-            }
-        }
-    } else
-    {
-        for (int m1 = 0; m1 < m_size; m1++)
-        {
-            for (int m2 = 0; m2 < m_size; m2++)
-            {
-                pot_onsite[m1 * m_size + m2] = u_value * (1.0 * (m1 == m2) - occ[m2 * m_size + m1]);
-                eu += u_value * 0.25 * occ[m2 * m_size + m1] * occ[m1 * m_size + m2];
-            }
-        }
-        for (int is = 1; is < spin_fold; ++is)
-        {
-            int start = is * m_size * m_size;
-            for (int m1 = 0; m1 < m_size; m1++)
-            {
-                for (int m2 = 0; m2 < m_size; m2++)
-                {
-                    pot_onsite[start + m1 * m_size + m2] = u_value * (0 - occ[start + m2 * m_size + m1]);
-                    eu += u_value * 0.25 * occ[start + m2 * m_size + m1] * occ[start + m1 * m_size + m2];
-                }
-            }
-        }
-    }
+    DFTU_LCAO::cal_pot_onsite(occ, m_size, u_value, pot_onsite, eu);
 }
 
 // explicit template instantiation (matches dftu_nao_op.cpp)
