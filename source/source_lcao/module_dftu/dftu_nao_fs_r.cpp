@@ -136,17 +136,15 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
 
                     // select the elements of nlm with target_L
                     std::vector<double> nlm_target(tlp1 * 4);
-                    for (int iw = 0; iw < dftu_op->get_ucell()->atoms[T0].nw; iw++)
+                    const Atom* atom0 = &dftu_op->get_ucell()->atoms[T0];
+                    for (int iw = 0; iw < atom0->nw; iw++)
                     {
-                        const int L0 = dftu_op->get_ucell()->atoms[T0].iw2l[iw];
-                        if (L0 == target_L)
+                        if (atom0->iw2l[iw] == target_L)
                         {
-                            for (int m = 0; m < tlp1; m++) //-l, -l+1, ..., l-1, l
+                            for (int n = 0; n < 4; n++) // value, deri_x, deri_y, deri_z
                             {
-                                for (int n = 0; n < 4; n++) // value, deri_x, deri_y, deri_z
-                                {
-                                    nlm_target[m + n * tlp1] = nlm[n][iw + m];
-                                }
+                                std::copy(nlm[n].begin() + iw, nlm[n].begin() + iw + tlp1,
+                                          nlm_target.begin() + n * tlp1);
                             }
                             break;
                         }
