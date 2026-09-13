@@ -10,14 +10,14 @@ class UnitCell;
 
 namespace DFTU_LCAO {
 
-/// DFT+U effective potential in the LCAO basis. With V = pot_onsite (the
+/// DFT+U effective potential in the LCAO basis, with V = pot_onsite (the
 /// on-site Hubbard correction potential in the full basis) and S the overlap
-/// matrix, the symmetrized U-term potential is
+/// matrix. Two usage patterns exist below:
 ///
+/// k-space potential: returns the symmetrized U-term potential
 ///   pot_uterm = (V*S + (V*S)^T) / 2
 ///
-/// and its contribution to the real-space Hamiltonian is accumulated as
-///
+/// real-space Hamiltonian: accumulates the U-term into HR directly
 ///   HR += (V*SR + SR*V) / 2
 
 /// @brief Compute the LCAO-basis U-term effective potential matrix (complex).
