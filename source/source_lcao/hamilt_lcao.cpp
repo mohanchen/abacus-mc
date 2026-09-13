@@ -1,13 +1,22 @@
 #include "source_lcao/hamilt_lcao.h"
 
+// infrastructure used in the constructor and update paths
 #include "source_base/memory_recorder.h"
 #include "source_base/timer.h"
+
+// DFT+U base and setup helpers
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_lcao/setup_exx.h"
 #include "source_lcao/setup_deepks.h"
+
+// electronic state: density matrix, potential, tddft switch
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_estate/module_pot/potential_new.h"
-#include "source_io/module_parameter/parameter.h"
+#include "source_estate/module_pot/h_tddft_pw.h"
+
+// spin-constrain instance
+#include "source_lcao/module_deltaspin/spin_constrain.h"
+#include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 
 #include <vector>
 
@@ -21,28 +30,19 @@
 #include "module_operator_lcao/op_exx_lcao.h"
 #endif
 
-#ifdef __ELPA
-#include "source_hsolver/diago_elpa.h"
-#endif
-
-#include "source_estate/module_pot/h_tddft_pw.h"
-#include "source_hamilt/module_xc/xc_functional.h"
-#include "source_lcao/module_deltaspin/spin_constrain.h"
-#include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
-#include "source_hsolver/hsolver_lcao.h"
-#include "module_dftu/dftu_nao_op.h"
-#include "module_operator_lcao/dspin_lcao.h"
-#include "module_operator_lcao/ekinetic.h"
-#include "module_operator_lcao/meta_lcao.h"
-#include "module_operator_lcao/nonlocal.h"
+// operator nodes, in construction-chain order:
+// overlap -> kinetic -> nonlocal -> veff -> dftu -> tddft
 #include "module_operator_lcao/operator_lcao.h"
-#include "module_dftu/dftu_nao_op_legacy.h"
-#include "module_operator_lcao/op_exx_lcao.h"
 #include "module_operator_lcao/overlap.h"
+#include "module_operator_lcao/ekinetic.h"
+#include "module_operator_lcao/nonlocal.h"
+#include "module_operator_lcao/veff_lcao.h"
+#include "module_dftu/dftu_nao_op.h"
+#include "module_dftu/dftu_nao_op_legacy.h"
+#include "module_operator_lcao/dspin_lcao.h"
 #include "module_operator_lcao/td_ekinetic_lcao.h"
 #include "module_operator_lcao/td_nonlocal_lcao.h"
 #include "module_operator_lcao/td_pot_hybrid.h"
-#include "module_operator_lcao/veff_lcao.h"
 
 
 namespace hamilt
