@@ -750,7 +750,6 @@ OBJS_LCAO=evolve_elec.o\
       spar_exx.o\
       spar_hsr.o\
       spar_st.o\
-      spar_u.o\
       lcao_set.o\
       lcao_set_fs.o\
       lcao_set_st.o\
