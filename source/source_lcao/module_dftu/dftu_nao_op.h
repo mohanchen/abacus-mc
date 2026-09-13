@@ -19,9 +19,6 @@ class DensityMatrix;
 namespace hamilt
 {
 
-#ifndef __DFTUTEMPLATE
-#define __DFTUTEMPLATE
-
 /// The DFTU class template inherits from class T
 /// it is used to calculate the non-local pseudopotential of wavefunction basis
 /// Template parameters:
@@ -30,8 +27,6 @@ template <class T>
 class DFTU : public T
 {
 };
-
-#endif
 
 /// DFTU class template specialization for OperatorLCAO<TK, TR> base class.
 /// Adds the DFT+U on-site correction to the real-space Hamiltonian, which is
