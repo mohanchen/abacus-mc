@@ -398,6 +398,7 @@ OBJS_DFPT=dfpt_hamilt_shift.o\
     dfpt_stern.o
 
 OBJS_HAMILT_LCAO=hamilt_lcao.o\
+    hamilt_lcao_factory.o\
     operator_lcao.o\
     ekinetic.o\
     ekinetic_fs.o\
