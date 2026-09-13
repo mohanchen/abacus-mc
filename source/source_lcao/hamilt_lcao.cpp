@@ -1,34 +1,22 @@
 #include "source_lcao/hamilt_lcao.h"
-
 #include "source_lcao/hamilt_lcao_factory.h"
-
-// infrastructure used in the constructor and update paths
 #include "source_base/memory_recorder.h"
 #include "source_base/timer.h"
-
-// DFT+U base and setup helpers
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_lcao/setup_exx.h"
 #include "source_lcao/setup_deepks.h"
-
-// electronic state: density matrix, potential
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_estate/module_pot/potential_new.h"
-
 #include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
-
 #include <vector>
-
 #ifdef __MLALGO
 #include "source_lcao/module_deepks/lcao_deepks.h"
 #endif
-
 #ifdef __EXX
 #include "source_lcao/module_ri/exx_lri_interface.h"
 #include "module_operator_lcao/op_exx_lcao.h"
 #endif
 
-// operator nodes used directly here (vacuum constructor + EXX)
 #include "module_operator_lcao/operator_lcao.h"
 #include "module_operator_lcao/overlap.h"
 
@@ -51,7 +39,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
     // initialize the overlap matrix
     this->sR = new HContainer<TR>(paraV);
 
-    this->getOperator() = new Overlap<OperatorLCAO<TK, TR>>(this->hsk,
+    this->getOperator() = new Overlap<OperatorLCAO<TK, TR>>(this->hsk.get(),
                                                                this->kv->kvec_d, this->hR, this->sR,
                                                                &ucell, orb_cutoff, &grid_d,
                                                                &intor_overlap_orb);
@@ -86,7 +74,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
     // Real space Hamiltonian is inited with template TR
     this->hR = new HContainer<TR>(paraV);
     this->sR = new HContainer<TR>(paraV);
-    this->hsk = new HS_Matrix_K<TK>(paraV);
+    this->hsk.reset(new HS_Matrix_K<TK>(paraV));
 
     // Effective potential term (\sum_r <psi(r)|Veff(r)|psi(r)>) is registered without template
     std::vector<std::string> pot_register_in;
@@ -108,14 +96,14 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
     {
         bundle = build_gamma_ops<TK, TR>(ucell, grid_d, paraV, pot_in, two_center_bundle,
                                          orb, DM_in, p_dftu, deepks, inp, pot_register_in,
-                                         this->kv, this->hsk, this->hR, this->sR);
+                                         this->kv, this->hsk.get(), this->hR, this->sR);
     }
     // multi-k-points case to initialize HamiltLCAO, ops will be used
     else if (std::is_same<TK, std::complex<double>>::value)
     {
         bundle = build_multik_ops<TK, TR>(ucell, grid_d, paraV, pot_in, two_center_bundle,
                                           orb, DM_in, p_dftu, deepks, inp, pot_register_in,
-                                          this->kv, this->hsk, this->hR, this->sR);
+                                          this->kv, this->hsk.get(), this->hR, this->sR);
     }
     this->getOperator() = bundle.ops;
 #ifdef __MLALGO
@@ -131,7 +119,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
         // Keep exact exchange in H(R) for every workflow. For RT-TDDFT the
         // factory selects complex H(R) when EXX is active, so the operator
         // chain folds the complete Hamiltonian with one common TD phase.
-        Operator<TK>* exx = new OperatorEXX<OperatorLCAO<TK, TR>>(this->hsk,
+        Operator<TK>* exx = new OperatorEXX<OperatorLCAO<TK, TR>>(this->hsk.get(),
                                                                   this->hR, ucell, *this->kv,
                                                                   exx_nao.exd.get(), exx_nao.exc.get(),
                                                                   exx_info, Add_Hexx_Type::R, istep,
@@ -262,7 +250,7 @@ void HamiltLCAO<TK, TR>::updateSk(
     ModuleBase::TITLE("HamiltLCAO", "updateSk");
     ModuleBase::timer::start("HamiltLCAO", "updateSk");
 
-    ModuleBase::GlobalFunc::ZEROS(this->getSk(), this->get_size_hsk());
+    ModuleBase::GlobalFunc::ZEROS(this->getSk(), this->hsk->get_size());
 
     if (hk_type == 1) // collumn-major matrix for SK
     {

@@ -90,7 +90,6 @@ class HamiltLCAO : public Hamilt<TK>
         delete this->ops;
         delete this->hR;
         delete this->sR;
-        delete this->hsk;
     }
 
     /// get pointer of Operator<TK> ops
@@ -106,11 +105,6 @@ class HamiltLCAO : public Hamilt<TK>
     TK* getSk() const
     {
         return this->hsk->get_sk();
-    }
-
-    int get_size_hsk() const
-    {
-        return this->hsk->get_size();
     }
 
     /// get HR pointer of *this->hR, which is a HContainer<TR> and contains H(R)
@@ -184,7 +178,7 @@ class HamiltLCAO : public Hamilt<TK>
 #endif
 
     //! Hamiltonian and overlap matrices for a specific k point
-    HS_Matrix_K<TK>* hsk = nullptr;
+    std::unique_ptr<HS_Matrix_K<TK>> hsk;
 
     // special case for NSPIN=2 , data of HR should be separated into two parts
     // save them in this->hRS2;
