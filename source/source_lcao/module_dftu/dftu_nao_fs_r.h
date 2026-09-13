@@ -1,12 +1,13 @@
 /// @file dftu_nao_fs_r.h
-/// @brief DFT+U force and stress unified entry in real space (r-space)
+/// @brief Unified entry for DFT+U force and stress in real space (r-space)
 ///
-/// This file provides the unified entry for DFT+U force/stress using the
-/// real-space density matrix (DMR). It is independent of k-point sampling
-/// because DMR already contains the Brillouin-zone integration.
+/// Loops over atom pairs (I,J,R) and dispatches to the per-pair kernels
+/// cal_for_IJR_nao_r / cal_str_IJR_nao_r. Independent of k-point sampling
+/// because the real-space density matrix (DMR) already contains the
+/// Brillouin-zone integration.
 ///
-/// Naming convention: _r suffix denotes real-space implementation,
-/// corresponding to _k suffix for k-space (legacy) implementation.
+/// Naming convention: _r suffix denotes the real-space implementation,
+/// corresponding to _k for the k-space (legacy) one.
 ///
 /// The DFT+U force on atom J is derived from the Hubbard correction energy:
 ///
@@ -52,14 +53,9 @@ namespace DFTU_LCAO
 /**
  * @brief Calculate DFT+U force and stress in real space (unified for gamma-only and multik)
  *
- * This is the unified entry for DFT+U force/stress calculation. It loops over all
- * on-site atoms with correlated orbitals, computes the two-center integrals <phi|chi>
- * via TwoCenterIntegrator, and accumulates force/stress contributions from all
- * atom pairs (I,J,R) using OpenMP parallelization.
- *
- * @note This implementation uses the real-space density matrix DMR (HContainer<double>)
- *       and two-center integrals <phi|chi> computed by TwoCenterIntegrator. It is
- *       independent of k-point sampling because DMR already contains the BZ integration.
+ * Loops over all on-site atoms with correlated orbitals, computes the two-center
+ * integrals <phi|chi> via TwoCenterIntegrator, and accumulates force/stress
+ * contributions from all atom pairs (I,J,R) using OpenMP parallelization.
  *
  * @param dftu_op     [in] pointer to the DFTU operator object (for accessing ucell, dftu, intor_ and DMR)
  * @param cal_force   [in] whether to compute force
@@ -72,10 +68,10 @@ namespace DFTU_LCAO
  */
 template <typename TK, typename TR>
 void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
-                        const bool cal_force,
-                        const bool cal_stress,
-                        ModuleBase::matrix& force,
-                        ModuleBase::matrix& stress);
+                  const bool cal_force,
+                  const bool cal_stress,
+                  ModuleBase::matrix& force,
+                  ModuleBase::matrix& stress);
 
 } // namespace DFTU_LCAO
 

@@ -1,22 +1,9 @@
 /// @file dftu_nao_str_r.h
-/// @brief DFT+U stress calculation in real space (r-space)
+/// @brief DFT+U stress contribution from a single atom pair (I,J,R) in real space
 ///
-/// This file provides the real-space implementation of DFT+U stress contribution
-/// from a single atom pair (I,J,R). It is independent of k-point sampling because
-/// the real-space density matrix (DMR) already contains the Brillouin-zone integration.
-///
-/// Naming convention: _r suffix denotes real-space implementation,
-/// corresponding to _k suffix for k-space (legacy) implementation.
-///
-/// The stress formula for atom pair (I,J,R) is:
-///
-///   sigma_{alpha,beta} += -(1/Omega) * sum_{m,m'} V_U_{mm'}(I) * DMR_{mu,nu}(J1,J2,R) * [
-///       d<phi_{mu,0}|chi_m(I)>/d tau_{J1,alpha} * <chi_m'(I)|phi_{nu,R}> * R_{J1,beta}
-///     + <phi_{mu,0}|chi_m(I)> * d<chi_m'(I)|phi_{nu,R}>/d tau_{J2,alpha} * R_{J2,beta}
-///   ]
-///
-/// where R_{J1} and R_{J2} are the position vectors of atoms J1 and J2 relative to
-/// the on-site atom I, and Omega is the unit cell volume.
+/// Per-pair kernel invoked by the unified entry cal_fs_nao_r (dftu_nao_fs_r.h).
+/// Naming convention: _r suffix denotes the real-space implementation,
+/// corresponding to _k for the k-space (legacy) one.
 
 #ifndef DFTU_NAO_STR_R_H
 #define DFTU_NAO_STR_R_H

@@ -1,24 +1,9 @@
 /// @file dftu_nao_for_r.h
-/// @brief DFT+U force calculation in real space (r-space)
+/// @brief DFT+U force contribution from a single atom pair (I,J,R) in real space
 ///
-/// This file provides the real-space implementation of DFT+U force contribution
-/// from a single atom pair (I,J,R). It is independent of k-point sampling because
-/// the real-space density matrix (DMR) already contains the Brillouin-zone integration.
-///
-/// Naming convention: _r suffix denotes real-space implementation,
-/// corresponding to _k suffix for k-space (legacy) implementation.
-///
-/// The force formula for atom pair (I,J,R) is:
-///
-///   F_{J1} += sum_{m,m'} V_U_{mm'}(I) * <phi_{mu,0}|chi_m(I)>
-///             * d<chi_m'(I)|phi_{nu,R}>/d tau_{J1} * DMR_{mu,nu}(J1,J2,R)
-///
-///   F_{J2} -= sum_{m,m'} V_U_{mm'}(I) * d<phi_{mu,0}|chi_m(I)>/d tau_{J2}
-///             * <chi_m'(I)|phi_{nu,R}> * DMR_{mu,nu}(J1,J2,R)
-///
-/// where V_U_{mm'}(I) = U_eff * (delta_{mm'}/2 - n_{m'm}(I)) is the on-site
-/// Hubbard potential, and the two-center integrals <phi|chi> are pre-computed
-/// by TwoCenterIntegrator::snap().
+/// Per-pair kernel invoked by the unified entry cal_fs_nao_r (dftu_nao_fs_r.h).
+/// Naming convention: _r suffix denotes the real-space implementation,
+/// corresponding to _k for the k-space (legacy) one.
 
 #ifndef DFTU_NAO_FOR_R_H
 #define DFTU_NAO_FOR_R_H
