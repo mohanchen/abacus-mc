@@ -47,10 +47,6 @@ class HamiltLCAO : public Hamilt<TK>
 {
   public:
 
-
-    using TAC = std::pair<int, std::array<int, 3>>;
-
-
     /**
      * @brief Constructor of Hamiltonian for LCAO base
      * HR and SR will be allocated with Operators
