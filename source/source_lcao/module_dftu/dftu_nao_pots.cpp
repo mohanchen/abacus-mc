@@ -8,6 +8,51 @@
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_cell/unitcell.h"
 
+/// On-site potential and Hubbard energy for one correlated shell:
+///   pot_onsite(m,m') = U_eff * (0.5 * delta_{m,m'} - occ(m,m'))
+///   EU = (U_eff / 2) * sum_{m,m'} occ(m,m') * (delta_{m,m'} - occ(m',m))
+void DFTU_LCAO::cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value,
+                               double* pot_onsite, double& eu)
+{
+    int spin_fold = occ.size() / m_size / m_size;
+    if (spin_fold < 4) {
+        for (int is = 0; is < spin_fold; ++is)
+        {
+            int start = is * m_size * m_size;
+            for (int m1 = 0; m1 < m_size; m1++)
+            {
+                for (int m2 = 0; m2 < m_size; m2++)
+                {
+                    pot_onsite[start + m1 * m_size + m2] = u_value * (0.5 * (m1 == m2) - occ[start + m2 * m_size + m1]);
+                    eu += u_value * 0.5 * occ[start + m2 * m_size + m1] * occ[start + m1 * m_size + m2];
+                }
+            }
+        }
+    } else
+    {
+        for (int m1 = 0; m1 < m_size; m1++)
+        {
+            for (int m2 = 0; m2 < m_size; m2++)
+            {
+                pot_onsite[m1 * m_size + m2] = u_value * (1.0 * (m1 == m2) - occ[m2 * m_size + m1]);
+                eu += u_value * 0.25 * occ[m2 * m_size + m1] * occ[m1 * m_size + m2];
+            }
+        }
+        for (int is = 1; is < spin_fold; ++is)
+        {
+            int start = is * m_size * m_size;
+            for (int m1 = 0; m1 < m_size; m1++)
+            {
+                for (int m2 = 0; m2 < m_size; m2++)
+                {
+                    pot_onsite[start + m1 * m_size + m2] = u_value * (0 - occ[start + m2 * m_size + m1]);
+                    eu += u_value * 0.25 * occ[start + m2 * m_size + m1] * occ[start + m1 * m_size + m2];
+                }
+            }
+        }
+    }
+}
+
 template <typename T>
 void DFTU_LCAO::cal_pot_onsite(const Plus_U_Base& dftu,
                            const UnitCell& ucell,

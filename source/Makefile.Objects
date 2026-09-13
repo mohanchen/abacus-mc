@@ -926,7 +926,6 @@ OBJS_DFTU=dftu_nao_fs_k.o\
       dftu_nao_pots.o\
       dftu_nao_energy.o\
       dftu_nao_op_legacy.o\
-      dftu_nao_op_kernel.o\
       dftu_nao_adj.o\
       dftu_nao_occ.o
 
