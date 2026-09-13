@@ -7,6 +7,7 @@
 #include "source_lcao/module_operator_lcao/operator_lcao.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_hamilt/module_hcontainer/hcontainer.h"
+#include "source_lcao/module_dftu/dftu_nao_adj.h"
 
 #include <unordered_map>
 #include <vector>
@@ -83,12 +84,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     /// @brief the number of spin components, 1 for no-spin, 2 for collinear spin case and 4 for non-collinear spin case
     int nspin = 0;
 
-    /**
-     * @brief calculate the <phi|alpha^I> overlap values and save them in this->nlm_tot
-     * it will be reused in the calculation of calculate_HR()
-     */
-    void cal_nlm_all(const Parallel_Orbitals* pv);
-
     /// @brief occupation matrix of one Hubbard atom (iat0) from the DMR:
     ///        occ(m,m') = sum_R DMR(I,J,R) * <phi_0|chi_m(I)> * <chi_m'(J)|phi_R>
     void compute_occ_from_dmr(int iat0,
@@ -105,10 +100,8 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                                 const std::vector<TR>& pot_onsite);
 
     std::vector<AdjacentAtomInfo> adjs_all;
-    /// @brief if the nlm_tot is calculated
-    bool precal_nlm_done = false;
-    /// @brief the overlap values for all [atoms][nerghbors][orb_index(iw) in NAOs][m of target_l in Projectors]
-    std::vector<std::vector<std::unordered_map<int, std::vector<double>>>> nlm_tot;
+    /// @brief cached <phi|alpha^I> overlap values; empty until first contributeHR() call
+    DFTU_LCAO::NlmTot nlm_tot;
 };
 
 } // namespace hamilt

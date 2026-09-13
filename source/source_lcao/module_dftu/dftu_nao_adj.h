@@ -2,18 +2,25 @@
 #define DFTU_NAO_ADJ_H
 
 /// @file dftu_nao_adj.h
-/// @brief Build the adjacent-atom lists for all Hubbard atoms, shared by the
-///        DFTU LCAO operator and the real-space force/stress path.
+/// @brief Structure-dependent precomputation for the DFT+U LCAO operator:
+///        Hubbard-atom adjacent lists and the <phi|chi_m> overlap table.
 
+#include <unordered_map>
 #include <vector>
 
 class UnitCell;
 class Plus_U_Base;
 class Grid_Driver;
 class AdjacentAtomInfo;
+class Parallel_Orbitals;
+class TwoCenterIntegrator;
 
 namespace DFTU_LCAO
 {
+
+/// The <phi|alpha^I> overlap values for all
+/// [atoms][neighbors][orb_index(iw) in NAOs][m of target_l in Projectors]
+using NlmTot = std::vector<std::vector<std::unordered_map<int, std::vector<double>>>>;
 
 /**
  * @brief build the adjacent-atom lists for all Hubbard atoms.
@@ -34,6 +41,25 @@ std::vector<AdjacentAtomInfo> build_adjacent_atoms(const UnitCell* ucell,
                                                    const Grid_Driver* gridD,
                                                    const std::vector<double>& orb_cutoff,
                                                    const double onsite_radius);
+
+/**
+ * @brief calculate the <phi|alpha^I> overlap values for all Hubbard atoms.
+ *
+ * The result is indexed by global atom index (empty entries for non-Hubbard
+ * atoms) and reused in the HR/occupation accumulation.
+ *
+ * @param ucell    [in] unit cell
+ * @param dftu     [in] DFT+U base object (per-type U channels)
+ * @param intor    [in] two-center integrator for <phi|chi_m>
+ * @param adjs_all [in] adjacent atom info for all Hubbard atoms
+ * @param pv       [in] parallel-orbitals descriptor providing local index maps
+ * @return the overlap table, one outer entry per atom (ucell->nat entries)
+ */
+NlmTot cal_nlm_all(const UnitCell& ucell,
+                   const Plus_U_Base& dftu,
+                   const TwoCenterIntegrator& intor,
+                   const std::vector<AdjacentAtomInfo>& adjs_all,
+                   const Parallel_Orbitals& pv);
 
 } // namespace DFTU_LCAO
 

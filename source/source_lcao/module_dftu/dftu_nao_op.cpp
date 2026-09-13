@@ -63,90 +63,6 @@ const hamilt::HContainer<double>* hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::ge
     return this->dm_->get_DMR_pointer(ispin + 1);
 }
 
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_nlm_all(const Parallel_Orbitals* pv)
-{
-    ModuleBase::TITLE("DFTU", "cal_nlm_all");
-    if (this->precal_nlm_done) 
-    {
-        return;
-    }
-
-    ModuleBase::timer::start("DFTU", "cal_nlm_all");
-    nlm_tot.resize(this->ucell->nat);
-    const int npol = this->ucell->get_npol();
-    int atom_index = 0;
-    for (int iat0 = 0; iat0 < ucell->nat; iat0++)
-    {
-        auto tau0 = ucell->get_tau(iat0);
-        int T0=0;
-        int I0=0;
-        ucell->iat2iait(iat0, &I0, &T0);
-        if (!this->dftu->has_l_channel(T0))
-        {
-            continue;
-        }
-        const int target_L = this->dftu->get_l_channel(T0);
-        const int tlp1 = 2 * target_L + 1;
-        AdjacentAtomInfo& adjs = this->adjs_all[atom_index++];
-
-        // calculate and save the table of two-center integrals
-        nlm_tot[iat0].resize(adjs.adj_num + 1);
-
-        for (int ad = 0; ad < adjs.adj_num + 1; ++ad)
-        {
-            const int T1 = adjs.ntype[ad];
-            const int I1 = adjs.natom[ad];
-            const int iat1 = ucell->itia2iat(T1, I1);
-            const ModuleBase::Vector3<double>& tau1 = adjs.adjacent_tau[ad];
-            const Atom* atom1 = &ucell->atoms[T1];
-
-            auto all_indexes = pv->get_indexes_row(iat1);
-            auto col_indexes = pv->get_indexes_col(iat1);
-            // insert col_indexes into all_indexes to get universal set with no repeat elements
-            all_indexes.insert(all_indexes.end(), col_indexes.begin(), col_indexes.end());
-            std::sort(all_indexes.begin(), all_indexes.end());
-            all_indexes.erase(std::unique(all_indexes.begin(), all_indexes.end()), all_indexes.end());
-            for (int iw1l = 0; iw1l < all_indexes.size(); iw1l += npol)
-            {
-                const int iw1 = all_indexes[iw1l] / npol;
-                // only first zeta orbitals in target L of atom iat0 are needed
-                std::vector<double> nlm_target(tlp1);
-                const int L1 = atom1->iw2l[iw1];
-                const int N1 = atom1->iw2n[iw1];
-                const int m1 = atom1->iw2m[iw1];
-                std::vector<std::vector<double>> nlm;
-                // nlm is a vector of vectors, but size of outer vector is only 1 here
-                // If we are calculating force, we need also to store the gradient
-                // and size of outer vector is then 4
-                // inner loop : all projectors (L0,M0)
-
-                // convert m (0,1,...2l) to M (-l, -l+1, ..., l-1, l)
-                const int M1 = (m1 % 2 == 0) ? -m1 / 2 : (m1 + 1) / 2;
-
-                ModuleBase::Vector3<double> dtau = tau0 - tau1;
-                intor_->snap(T1, L1, N1, M1, T0, dtau * this->ucell->lat0, false /*cal_deri*/, nlm);
-                // select the elements of nlm with target_L
-                for (int iw = 0; iw < this->ucell->atoms[T0].nw; iw++)
-                {
-                    const int L0 = this->ucell->atoms[T0].iw2l[iw];
-                    if (L0 == target_L)
-                    {
-                        for (int m = 0; m < 2 * L0 + 1; m++)
-                        {
-                            nlm_target[m] = nlm[0][iw + m];
-                        }
-                        break;
-                    }
-                }
-                nlm_tot[iat0][ad].insert({all_indexes[iw1l], nlm_target});
-            }
-        }
-    }
-    this->precal_nlm_done = true;
-    ModuleBase::timer::end("DFTU", "cal_nlm_all");
-}
-
 // contributeHR()
 /**
  * @brief Contribute DFT+U Hamiltonian to real-space HR matrix
@@ -216,7 +132,12 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     ModuleBase::timer::start("DFTU", "contributeHR");
 
     const Parallel_Orbitals* pv = this->hR->get_atom_pair(0).get_paraV();
-    this->cal_nlm_all(pv);
+    if (this->nlm_tot.empty())
+    {
+        // lazily precompute the <phi|alpha^I> overlap table; it only depends
+        // on the structure and is reused across SCF iterations
+        this->nlm_tot = DFTU_LCAO::cal_nlm_all(*this->ucell, *this->dftu, *this->intor_, this->adjs_all, *pv);
+    }
 
     // loop over all Hubbard-projector center atoms (iat0)
     int atom_index = 0;
