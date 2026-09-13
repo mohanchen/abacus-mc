@@ -9,18 +9,16 @@
 
 namespace DFTU_LCAO {
 
-void pot_uterm_complex(Plus_U_Base& dftu,
-                       const UnitCell& ucell,
-                       const Parallel_Orbitals* pv,
-                       const int ik,
-                       std::complex<double>* pot_uterm,
-                       const std::vector<int>& isk,
-                       const std::complex<double>* sk)
+template <typename T>
+void cal_pot_uterm(Plus_U_Base& dftu,
+                   const UnitCell& ucell,
+                   const Parallel_Orbitals* pv,
+                   const int spin,
+                   T* pot_uterm,
+                   const T* sk)
 {
-    ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_complex");
-    ModuleBase::timer::start("DFTU_LCAO", "pot_uterm_complex");
-
-    int spin = isk[ik];
+    ModuleBase::TITLE("DFTU_LCAO", "cal_pot_uterm");
+    ModuleBase::timer::start("DFTU_LCAO", "cal_pot_uterm");
 
     const int nlocal = pv->get_global_row_size();
     ModuleBase::GlobalFunc::ZEROS(pot_uterm, pv->nloc);
@@ -30,12 +28,12 @@ void pot_uterm_complex(Plus_U_Base& dftu,
     //=============================================================
     const char transN = 'N', transT = 'T';
     const int one_int = 1;
-    const std::complex<double> one(1.0, 0.0);
-    const std::complex<double> half = 0.5;
-    const std::complex<double> zero = 0.0;
+    const T half = static_cast<T>(0.5);
+    const T one = static_cast<T>(1.0);
+    const T zero = static_cast<T>(0.0);
 
-    std::vector<std::complex<double>> pot_onsite(pv->nloc);
-    DFTU_LCAO::pot_onsite_complex(dftu, ucell, pv, spin, true, &pot_onsite[0]);
+    std::vector<T> pot_onsite(pv->nloc);
+    DFTU_LCAO::cal_pot_onsite(dftu, ucell, pv, spin, true, &pot_onsite[0]);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,
@@ -60,59 +58,22 @@ void pot_uterm_complex(Plus_U_Base& dftu,
             pot_uterm, one_int, one_int, pv->desc);
 #endif
 
-    ModuleBase::timer::end("DFTU_LCAO", "pot_uterm_complex");
+    ModuleBase::timer::end("DFTU_LCAO", "cal_pot_uterm");
     return;
 }
 
-void pot_uterm_real(Plus_U_Base& dftu,
-                    const UnitCell& ucell,
-                    const Parallel_Orbitals* pv,
-                    const int ik,
-                    double* pot_uterm,
-                    const std::vector<int>& isk,
-                    const double* sk)
-{
-    ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_real");
-    ModuleBase::timer::start("DFTU_LCAO", "pot_uterm_real");
-
-    int spin = isk[ik];
-
-    const int nlocal = pv->get_global_row_size();
-    ModuleBase::GlobalFunc::ZEROS(pot_uterm, pv->nloc);
-
-    //=============================================================
-    //   PART2: call pblas to calculate effective potential matrix
-    //=============================================================
-    const char transN = 'N', transT = 'T';
-    int one_int = 1;
-    double alpha = 1.0, beta = 0.0, half = 0.5, one = 1.0;
-
-    std::vector<double> pot_onsite(pv->nloc);
-    DFTU_LCAO::pot_onsite_real(dftu, ucell, pv, spin, true, &pot_onsite[0]);
-
-#ifdef __MPI
-    ScalapackConnector::gemm(transN, transN,
-            nlocal, nlocal, nlocal,
-            half,
-            ModuleBase::GlobalFunc::VECTOR_TO_PTR(pot_onsite), 1, 1, pv->desc,
-            sk, 1, 1, pv->desc,
-            beta,
-            pot_uterm, 1, 1, pv->desc);
-#endif
-
-    for (int irc = 0; irc < pv->nloc; irc++)
-        pot_onsite[irc] = pot_uterm[irc];
-
-#ifdef __MPI
-    pdtran_(&nlocal, &nlocal,
-            &one,
-            &pot_onsite[0], &one_int, &one_int, const_cast<int*>(pv->desc),
-            &one,
-            pot_uterm, &one_int, &one_int, const_cast<int*>(pv->desc));
-#endif
-
-    ModuleBase::timer::end("DFTU_LCAO", "pot_uterm_real");
-    return;
-}
+// Explicit instantiation
+template void cal_pot_uterm<double>(Plus_U_Base& dftu,
+                                    const UnitCell& ucell,
+                                    const Parallel_Orbitals* pv,
+                                    const int spin,
+                                    double* pot_uterm,
+                                    const double* sk);
+template void cal_pot_uterm<std::complex<double>>(Plus_U_Base& dftu,
+                                                  const UnitCell& ucell,
+                                                  const Parallel_Orbitals* pv,
+                                                  const int spin,
+                                                  std::complex<double>* pot_uterm,
+                                                  const std::complex<double>* sk);
 
 } // namespace DFTU_LCAO

@@ -37,7 +37,7 @@ double get_onsite_pot(const Plus_U_Base& dftu,
                       const bool new_occ_mat);
 
 /**
- * @brief onsite effective potential matrix (complex) in the local orbital basis.
+ * @brief Calculate onsite effective potential matrix in the local orbital basis.
  *
  * Fills pot_onsite (length pv->nloc) with the onsite potential elements
  * projected onto the local orbital indices.
@@ -49,24 +49,27 @@ double get_onsite_pot(const Plus_U_Base& dftu,
  * @param new_occ_mat if true use occ_mat, otherwise use occ_mat_save
  * @param pot_onsite  output buffer (length pv->nloc)
  */
-void pot_onsite_complex(const Plus_U_Base& dftu,
-                        const UnitCell& ucell,
-                        const Parallel_Orbitals* pv,
-                        const int spin,
-                        const bool new_occ_mat,
-                        std::complex<double>* pot_onsite);
+template <typename T>
+void cal_pot_onsite(const Plus_U_Base& dftu,
+                    const UnitCell& ucell,
+                    const Parallel_Orbitals* pv,
+                    const int spin,
+                    const bool new_occ_mat,
+                    T* pot_onsite);
 
-/**
- * @brief onsite effective potential matrix (real) in the local orbital basis.
- *
- * Real-valued counterpart of pot_onsite_complex.
- */
-void pot_onsite_real(const Plus_U_Base& dftu,
-                     const UnitCell& ucell,
-                     const Parallel_Orbitals* pv,
-                     const int spin,
-                     const bool new_occ_mat,
-                     double* pot_onsite);
+// Explicit instantiations
+extern template void cal_pot_onsite<double>(const Plus_U_Base& dftu,
+                                            const UnitCell& ucell,
+                                            const Parallel_Orbitals* pv,
+                                            const int spin,
+                                            const bool new_occ_mat,
+                                            double* pot_onsite);
+extern template void cal_pot_onsite<std::complex<double>>(const Plus_U_Base& dftu,
+                                                          const UnitCell& ucell,
+                                                          const Parallel_Orbitals* pv,
+                                                          const int spin,
+                                                          const bool new_occ_mat,
+                                                          std::complex<double>* pot_onsite);
 
 } // namespace DFTU_LCAO
 

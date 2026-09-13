@@ -522,7 +522,7 @@ void run_gamma_loop(const DftuFsEnv& env,
         const int spin = kv.isk[ik];
         std::vector<double> pot_onsite(pv.nloc, 0.0);
 
-        pot_onsite_real(dftu, ucell, &pv, spin, false, pot_onsite.data());
+        cal_pot_onsite(dftu, ucell, &pv, spin, false, pot_onsite.data());
 
 #ifdef __MPI
         ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,
@@ -572,7 +572,7 @@ void run_k_loop(const DftuFsEnv& env,
         const int spin = kv.isk[ik];
         std::vector<std::complex<double>> pot_onsite(pv.nloc, std::complex<double>(0.0, 0.0));
 
-        pot_onsite_complex(dftu, ucell, &pv, spin, false, pot_onsite.data());
+        cal_pot_onsite(dftu, ucell, &pv, spin, false, pot_onsite.data());
 
 #ifdef __MPI
         ScalapackConnector::gemm(transT, transN, nlocal, nlocal, nlocal,

@@ -15,23 +15,36 @@ namespace DFTU_LCAO {
 /// matrix. Returns the symmetrized k-space U-term potential:
 ///   pot_uterm = (V*S + (V*S)^T) / 2
 
-/// @brief Compute the LCAO-basis U-term effective potential matrix (complex).
-void pot_uterm_complex(Plus_U_Base& dftu,
-                       const UnitCell& ucell,
-                       const Parallel_Orbitals* pv,
-                       const int ik,
-                       std::complex<double>* pot_uterm,
-                       const std::vector<int>& isk,
-                       const std::complex<double>* sk);
+/// @brief Compute the LCAO-basis U-term effective potential matrix.
+///
+/// @tparam T           matrix element type (double or std::complex<double>)
+/// @param dftu         Plus_U state
+/// @param ucell        unit cell
+/// @param pv           parallel orbitals descriptor
+/// @param spin         spin channel (isk[ik] from caller)
+/// @param pot_uterm    output buffer (length pv->nloc)
+/// @param sk           overlap matrix in k-space (length pv->nloc)
+template <typename T>
+void cal_pot_uterm(Plus_U_Base& dftu,
+                   const UnitCell& ucell,
+                   const Parallel_Orbitals* pv,
+                   const int spin,
+                   T* pot_uterm,
+                   const T* sk);
 
-/// @brief Compute the LCAO-basis U-term effective potential matrix (real).
-void pot_uterm_real(Plus_U_Base& dftu,
-                    const UnitCell& ucell,
-                    const Parallel_Orbitals* pv,
-                    const int ik,
-                    double* pot_uterm,
-                    const std::vector<int>& isk,
-                    const double* sk);
+// Explicit instantiations
+extern template void cal_pot_uterm<double>(Plus_U_Base& dftu,
+                                           const UnitCell& ucell,
+                                           const Parallel_Orbitals* pv,
+                                           const int spin,
+                                           double* pot_uterm,
+                                           const double* sk);
+extern template void cal_pot_uterm<std::complex<double>>(Plus_U_Base& dftu,
+                                                         const UnitCell& ucell,
+                                                         const Parallel_Orbitals* pv,
+                                                         const int spin,
+                                                         std::complex<double>* pot_uterm,
+                                                         const std::complex<double>* sk);
 
 } // namespace DFTU_LCAO
 
