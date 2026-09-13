@@ -80,6 +80,9 @@ by per-rule severity within each group:
     - tab indentation: -1 per line (cap 5)
     - `using namespace std;`: -1 per occurrence (cap 5)
     - `goto` keyword: -2 per occurrence (cap 5)
+    - `auto` keyword: -1 per occurrence (cap 10). Counted after
+      comments and string literals are stripped; `auto_ptr` does not
+      match. Prefer explicit types for readability.
     - line longer than 120 chars: -1 per line (cap 5)
     - Chinese characters in comments/code: -1 per line (cap 5)
     - preprocessor directive not at column 0 (indented #if/#include/...):
@@ -157,6 +160,7 @@ WEIGHTS = {
     "post_cpp11_feature": 40,
     "post_cpp11_per_feature": 8,
     "goto_keyword": 2,
+    "auto_keyword": 1,
     "static_member_variable": 1,
     "indented_preprocessor": 1,
     "comment_above_guard": 1,
@@ -180,6 +184,7 @@ CAPS = {
     "high_cyclomatic_complexity": 30,
     "post_cpp11_per_feature": 5,
     "goto_keyword": 5,
+    "auto_keyword": 10,
     "static_member_variable": 10,
     "indented_preprocessor": 5,
     "comment_above_guard": 3,
@@ -235,6 +240,9 @@ _OWNED_NEW_SHAPES = [
 ]
 OWNED_NEW_RE = re.compile("|".join(f"(?:{p})" for p in _OWNED_NEW_SHAPES))
 GOTO_RE = re.compile(r"\bgoto\b")
+# `auto` type deduction keyword. `\bauto\b` does not match `auto_ptr`
+# (`_` is a word character, so there is no boundary before it).
+AUTO_RE = re.compile(r"\bauto\b")
 
 # Preprocessor directive that does not start at column 0 (leading spaces/tabs
 # before the '#'). Matched against raw lines; string literals virtually never
@@ -1670,6 +1678,9 @@ def analyze_file(path: Path) -> FileReport:
     hpp_include_count = sum(1 for l in lines if HPP_INCLUDE_RE.match(l))
     friend_count = len(FRIEND_RE.findall(stripped_content))
     goto_count = len(GOTO_RE.findall(stripped_content))
+    # `auto` keyword: counted on comment-and-string-stripped content so
+    # occurrences inside comments or string literals do not deduct points.
+    auto_count = len(AUTO_RE.findall(stripped_for_upper))
 
     # default parameter: scan the full stripped content so multi-line
     # declarations (parameter list spanning multiple lines) are detected;
@@ -1726,6 +1737,7 @@ def analyze_file(path: Path) -> FileReport:
     append_capped("unpaired_new_delete", unpaired_new)
     append_capped("raw_new_keyword", raw_new_count)
     append_capped("goto_keyword", goto_count)
+    append_capped("auto_keyword", auto_count)
 
     # --- documentation style rules -------------------------------------
     # indented preprocessor directive (raw lines, `#` not at column 0)

@@ -84,14 +84,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     /// @brief the number of spin components, 1 for no-spin, 2 for collinear spin case and 4 for non-collinear spin case
     int nspin = 0;
 
-    /// @brief occupation matrix of one Hubbard atom (iat0) from the DMR:
-    ///        occ(m,m') = sum_R DMR(I,J,R) * <phi_0|chi_m(I)> * <chi_m'(J)|phi_R>
-    void compute_occ_from_dmr(int iat0,
-                              int target_L,
-                              const AdjacentAtomInfo& adjs,
-                              const Parallel_Orbitals* pv,
-                              std::vector<double>& occ);
-
     /// @brief accumulate the HR contributions of one Hubbard atom (iat0)
     ///        from the precomputed pot_onsite
     void accumulate_HR_for_iat0(int iat0,

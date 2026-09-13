@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "dftu_nao_ijr.h" // DFTU_LCAO::NlmTot
+
 class UnitCell;
 class Plus_U_Base;
 class Grid_Driver;
@@ -17,10 +19,6 @@ class TwoCenterIntegrator;
 
 namespace DFTU_LCAO
 {
-
-/// The <phi|alpha^I> overlap values for all
-/// [atoms][neighbors][orb_index(iw) in NAOs][m of target_l in Projectors]
-using NlmTot = std::vector<std::vector<std::unordered_map<int, std::vector<double>>>>;
 
 /**
  * @brief build the adjacent-atom lists for all Hubbard atoms.

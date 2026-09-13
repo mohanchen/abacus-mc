@@ -1,7 +1,11 @@
 #ifndef DFTU_LCAO_IJR_H
 #define DFTU_LCAO_IJR_H
 
+#include "source_base/parallel_reduce.h"
 #include "source_basis/module_ao/parallel_orbitals.h"
+#include "source_cell/module_neighbor/sltk_grid_driver.h" // AdjacentAtomInfo (complete type needed)
+#include "source_cell/unitcell.h"
+#include "source_hamilt/module_hcontainer/hcontainer.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 
 #include <cassert>
@@ -12,6 +16,10 @@
 
 namespace DFTU_LCAO
 {
+
+/// The <phi|alpha^I> overlap values for all
+/// [atoms][neighbors][orb_index(iw) in NAOs][m of target_l in Projectors]
+using NlmTot = std::vector<std::vector<std::unordered_map<int, std::vector<double>>>>;
 
 /**
  * @brief load the flattened occupation matrix of one Hubbard atom from
@@ -187,6 +195,76 @@ inline void cal_occ_ijr(const int iat1,
         }
         dm_pointer += (npol - 1) * col_indexes.size();
     }
+}
+
+/**
+ * @brief compute the occupation matrix of one Hubbard atom (iat0) from the
+ *        real-space density matrix:
+ *        occ(m,m') = sum_R DMR(I,J,R) * <phi_0|chi_m(I)> * <chi_m'(J)|phi_R>
+ *        then MPI-Allreduce it and store it into the Plus_U occupation matrix.
+ *
+ * @param ucell         [in] unit cell (atom index maps, npol)
+ * @param dftu          [in,out] Plus_U state receiving the occupation matrix
+ * @param iat0          [in] global atom index of the Hubbard atom
+ * @param target_L      [in] angular momentum channel of the correlated shell
+ * @param current_spin  [in] active spin channel (0 for nspin=1/4)
+ * @param nspin         [in] number of spin components
+ * @param adjs          [in] adjacent atom info of the Hubbard atom
+ * @param pv            [in] parallel-orbitals descriptor providing local index maps
+ * @param nlm_tot       [in] <phi|alpha^I> overlap table for all atoms
+ * @param dmR_current   [in] real-space density matrix of the active spin
+ * @param occ           [out] flattened occupation matrix; overwritten
+ */
+inline void compute_occ_from_dmr(const UnitCell& ucell,
+                                 Plus_U_Base& dftu,
+                                 const int iat0,
+                                 const int target_L,
+                                 const int current_spin,
+                                 const int nspin,
+                                 const AdjacentAtomInfo& adjs,
+                                 const Parallel_Orbitals& pv,
+                                 const NlmTot& nlm_tot,
+                                 const hamilt::HContainer<double>& dmR_current,
+                                 std::vector<double>& occ)
+{
+    for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
+    {
+        const int T1 = adjs.ntype[ad1];
+        const int I1 = adjs.natom[ad1];
+        const int iat1 = ucell.itia2iat(T1, I1);
+        const ModuleBase::Vector3<int>& R_index1 = adjs.box[ad1];
+        const std::unordered_map<int, std::vector<double>>& nlm1 = nlm_tot[iat0][ad1];
+        for (int ad2 = 0; ad2 < adjs.adj_num + 1; ++ad2)
+        {
+            const int T2 = adjs.ntype[ad2];
+            const int I2 = adjs.natom[ad2];
+            const int iat2 = ucell.itia2iat(T2, I2);
+            const std::unordered_map<int, std::vector<double>>& nlm2 = nlm_tot[iat0][ad2];
+            const ModuleBase::Vector3<int>& R_index2 = adjs.box[ad2];
+            ModuleBase::Vector3<int> R_vector(R_index2[0] - R_index1[0],
+                                              R_index2[1] - R_index1[1],
+                                              R_index2[2] - R_index1[2]);
+            const hamilt::BaseMatrix<double>* tmp
+                = dmR_current.find_matrix(iat1, iat2, R_vector[0], R_vector[1], R_vector[2]);
+            if (tmp != nullptr)
+            {
+                cal_occ_ijr(iat1,
+                            iat2,
+                            ucell.get_npol(),
+                            pv,
+                            nlm1,
+                            nlm2,
+                            tmp->get_pointer(),
+                            occ);
+            }
+        }
+    }
+    Parallel_Reduce::reduce_all(occ.data(), occ.size());
+    if (nspin == 1)
+    {
+        for (double& v : occ) { v *= 0.5; }
+    }
+    dftu.occmat().set_flat(iat0, target_L, current_spin, occ);
 }
 
 } // namespace DFTU_LCAO

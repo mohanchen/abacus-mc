@@ -158,7 +158,17 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         // compute or load occupation matrix
         if (!this->dftu->is_occmat_ready())
         {
-            this->compute_occ_from_dmr(iat0, target_L, adjs, pv, occ);
+            DFTU_LCAO::compute_occ_from_dmr(*this->ucell,
+                                            *this->dftu,
+                                            iat0,
+                                            target_L,
+                                            this->current_spin,
+                                            this->nspin,
+                                            adjs,
+                                            *pv,
+                                            this->nlm_tot,
+                                            *this->get_dmr(this->current_spin),
+                                            occ);
         }
         else
         {
@@ -196,56 +206,6 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     }
 
     ModuleBase::timer::end("DFTU", "contributeHR");
-}
-
-// compute_occ_from_dmr: BRANCH 1 of contributeHR
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::compute_occ_from_dmr(
-    int iat0,
-    int target_L,
-    const AdjacentAtomInfo& adjs,
-    const Parallel_Orbitals* pv,
-    std::vector<double>& occ)
-{
-    const hamilt::HContainer<double>* dmR_current = this->get_dmr(this->current_spin);
-    for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
-    {
-        const int T1 = adjs.ntype[ad1];
-        const int I1 = adjs.natom[ad1];
-        const int iat1 = ucell->itia2iat(T1, I1);
-        const ModuleBase::Vector3<int>& R_index1 = adjs.box[ad1];
-        const std::unordered_map<int, std::vector<double>>& nlm1 = nlm_tot[iat0][ad1];
-        for (int ad2 = 0; ad2 < adjs.adj_num + 1; ++ad2)
-        {
-            const int T2 = adjs.ntype[ad2];
-            const int I2 = adjs.natom[ad2];
-            const int iat2 = ucell->itia2iat(T2, I2);
-            const std::unordered_map<int, std::vector<double>>& nlm2 = nlm_tot[iat0][ad2];
-            const ModuleBase::Vector3<int>& R_index2 = adjs.box[ad2];
-            ModuleBase::Vector3<int> R_vector(R_index2[0] - R_index1[0],
-                                              R_index2[1] - R_index1[1],
-                                              R_index2[2] - R_index1[2]);
-            const hamilt::BaseMatrix<double>* tmp
-                = dmR_current->find_matrix(iat1, iat2, R_vector[0], R_vector[1], R_vector[2]);
-            if (tmp != nullptr)
-            {
-                DFTU_LCAO::cal_occ_ijr(iat1,
-                                       iat2,
-                                       ucell->get_npol(),
-                                       *pv,
-                                       nlm1,
-                                       nlm2,
-                                       tmp->get_pointer(),
-                                       occ);
-            }
-        }
-    }
-    Parallel_Reduce::reduce_all(occ.data(), occ.size());
-    if (this->nspin == 1)
-    {
-        for (double& v : occ) { v *= 0.5; }
-    }
-    this->dftu->occmat().set_flat(iat0, target_L, this->current_spin, occ);
 }
 
 // accumulate_HR_for_iat0: Step 5 of contributeHR
