@@ -15,8 +15,7 @@ void pot_uterm_complex(Plus_U_Base& dftu,
                        const int ik,
                        std::complex<double>* pot_uterm,
                        const std::vector<int>& isk,
-                       const std::complex<double>* sk,
-                       const int npol)
+                       const std::complex<double>* sk)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_complex");
     if (!dftu.is_occmat_ready())
@@ -41,7 +40,7 @@ void pot_uterm_complex(Plus_U_Base& dftu,
     const std::complex<double> zero = 0.0;
 
     std::vector<std::complex<double>> pot_onsite(pv->nloc);
-    DFTU_LCAO::pot_onsite_complex(dftu, ucell, pv, spin, true, &pot_onsite[0], npol);
+    DFTU_LCAO::pot_onsite_complex(dftu, ucell, pv, spin, true, &pot_onsite[0]);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,
@@ -76,8 +75,7 @@ void pot_uterm_real(Plus_U_Base& dftu,
                     const int ik,
                     double* pot_uterm,
                     const std::vector<int>& isk,
-                    const double* sk,
-                    const int npol)
+                    const double* sk)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_uterm_real");
     if (!dftu.is_occmat_ready())
@@ -99,7 +97,7 @@ void pot_uterm_real(Plus_U_Base& dftu,
     double alpha = 1.0, beta = 0.0, half = 0.5, one = 1.0;
 
     std::vector<double> pot_onsite(pv->nloc);
-    DFTU_LCAO::pot_onsite_real(dftu, ucell, pv, spin, true, &pot_onsite[0], npol);
+    DFTU_LCAO::pot_onsite_real(dftu, ucell, pv, spin, true, &pot_onsite[0]);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,
@@ -128,7 +126,7 @@ void pot_uterm_real(Plus_U_Base& dftu,
 
 /// @brief Accumulate the DFT+U term into the real-space HR (double).
 /// Wraps pot_onsite_real plus the (pot_onsite*SR + SR*pot_onsite)/2 GEMM pair.
-void pot_uterm_HR_real(const Plus_U_Base& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, double* SR, double* HR, const int npol)
+void pot_uterm_HR_real(const Plus_U_Base& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, double* SR, double* HR)
 {
     const char transN = 'N', transT = 'T';
     const int one_int = 1;
@@ -136,7 +134,7 @@ void pot_uterm_HR_real(const Plus_U_Base& dftu, const UnitCell& ucell, const Par
     const int nlocal = pv->get_global_row_size();
 
     std::vector<double> pot_onsite(pv->nloc);
-    pot_onsite_real(dftu, ucell, pv, ispin, true, &pot_onsite[0], npol);
+    pot_onsite_real(dftu, ucell, pv, ispin, true, &pot_onsite[0]);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,
@@ -161,7 +159,7 @@ void pot_uterm_HR_real(const Plus_U_Base& dftu, const UnitCell& ucell, const Par
 
 /// @brief Accumulate the DFT+U term into the real-space HR (complex).
 /// Wraps pot_onsite_complex plus the (pot_onsite*SR + SR*pot_onsite)/2 GEMM pair.
-void pot_uterm_HR_complex(const Plus_U_Base& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, std::complex<double>* SR, std::complex<double>* HR, const int npol)
+void pot_uterm_HR_complex(const Plus_U_Base& dftu, const UnitCell& ucell, const Parallel_Orbitals* pv, const int ispin, std::complex<double>* SR, std::complex<double>* HR)
 {
     const char transN = 'N', transT = 'T';
     const int one_int = 1;
@@ -169,7 +167,7 @@ void pot_uterm_HR_complex(const Plus_U_Base& dftu, const UnitCell& ucell, const 
     const int nlocal = pv->get_global_row_size();
 
     std::vector<std::complex<double>> pot_onsite(pv->nloc);
-    pot_onsite_complex(dftu, ucell, pv, ispin, true, &pot_onsite[0], npol);
+    pot_onsite_complex(dftu, ucell, pv, ispin, true, &pot_onsite[0]);
 
 #ifdef __MPI
     ScalapackConnector::gemm(transN, transN,

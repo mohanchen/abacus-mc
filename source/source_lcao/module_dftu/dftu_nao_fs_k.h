@@ -35,18 +35,15 @@ class DftuFsEnv
               const Parallel_Orbitals& pv,
               ForceStressArrays& fsr,
               const std::vector<double>& orb_cutoff,
-              const std::string& ks_solver,
-              const int npol)
+              const std::string& ks_solver)
         : dftu_(&dftu),
           ucell_(&ucell),
           gd_(&gd),
           pv_(&pv),
           fsr_(&fsr),
           orb_cutoff_(&orb_cutoff),
-          ks_solver_(ks_solver),
-          npol_(npol)
+          ks_solver_(ks_solver)
     {
-        assert(npol_ == 1 || npol_ == 2);
     }
 
     /// @brief DFT+U state; the onsite-potential builders take it non-const.
@@ -88,7 +85,7 @@ class DftuFsEnv
 
     int npol() const
     {
-        return npol_;
+        return ucell_->get_npol();
     }
 
   private:
@@ -99,7 +96,6 @@ class DftuFsEnv
     ForceStressArrays* fsr_;
     const std::vector<double>* orb_cutoff_;
     std::string ks_solver_;
-    int npol_;
 };
 
 /// @brief Top-level entry: drives force/stress from DFT+U.

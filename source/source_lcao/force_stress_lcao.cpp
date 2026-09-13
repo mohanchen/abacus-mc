@@ -458,8 +458,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
             std::vector<std::vector<std::complex<double>>>* dmk_c = nullptr;
             assign_dmk_ptr<T>(dmat.dm, dmk_d, dmk_c, PARAM.globalv.gamma_only_local);
             DFTU_LCAO::DftuFsEnv dftu_fs_env(dftu, ucell, gd, pv, fsr_dftu,
-                                             orb.cutoffs(), PARAM.inp.ks_solver,
-                                             PARAM.globalv.npol);
+                                             orb.cutoffs(), PARAM.inp.ks_solver);
             DFTU_LCAO::force_stress(dftu_fs_env, isforce, isstress,
                                     dmk_d, dmk_c, force_u, stress_u, kv,
                                     PARAM.globalv.gamma_only_local);

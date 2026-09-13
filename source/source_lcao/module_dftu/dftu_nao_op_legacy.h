@@ -21,9 +21,8 @@ class OperatorDFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                                   hamilt::HContainer<TR>* hR_in,
                                   const UnitCell& ucell_in,
                                   Plus_U_Base* dftu_in,
-                                  const std::vector<int>& isk_in,
-                                  const int npol_in)
-        : isk(isk_in), npol(npol_in), OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in)
+                                  const std::vector<int>& isk_in)
+        : isk(isk_in), OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in)
     {
         this->cal_type = calculation_type::lcao_dftu;
         this->dftu = dftu_in;
@@ -41,8 +40,6 @@ class OperatorDFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     const UnitCell* ucell = nullptr;
 
     const std::vector<int>& isk;
-
-    const int npol;
 };
 } // namespace hamilt
 #endif

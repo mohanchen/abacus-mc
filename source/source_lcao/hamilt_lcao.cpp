@@ -229,8 +229,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 																  this->hR,
 																  ucell,
 																  p_dftu,
-                                                              this->kv->isk,
-                                                              PARAM.globalv.npol);
+                                                              this->kv->isk);
             }
             else
             {
@@ -390,8 +389,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 																  this->hR,
 																  ucell,
 																  p_dftu,
-                                                              this->kv->isk,
-                                                              PARAM.globalv.npol);
+                                                              this->kv->isk);
             }
             else
             {

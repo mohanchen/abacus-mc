@@ -78,7 +78,7 @@ void sparse_format::cal_HR_dftu(
                 }
             }
 
-            DFTU_LCAO::pot_uterm_HR_real(dftu, ucell, &pv, current_spin, SR_tmp, HR_tmp, PARAM.globalv.npol);
+            DFTU_LCAO::pot_uterm_HR_real(dftu, ucell, &pv, current_spin, SR_tmp, HR_tmp);
 
             for (int i = 0; i < PARAM.globalv.nlocal; ++i)
             {
@@ -198,7 +198,7 @@ void sparse_format::cal_HR_dftu_soc(
                 }
             }
 
-            DFTU_LCAO::pot_uterm_HR_complex(dftu, ucell, &pv, current_spin, SR_soc_tmp, HR_soc_tmp, PARAM.globalv.npol);
+            DFTU_LCAO::pot_uterm_HR_complex(dftu, ucell, &pv, current_spin, SR_soc_tmp, HR_soc_tmp);
 
             for (int i = 0; i < PARAM.globalv.nlocal; ++i)
             {

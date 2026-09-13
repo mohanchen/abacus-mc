@@ -16,13 +16,10 @@ namespace DFTU_LCAO {
  * @param ucell unit cell
  * @param nspin number of spin channels (1, 2, or 4); sourced by the caller
  *        from the input parameter to avoid a PARAM read here
- * @param npol Pauli-component count (1 for collinear, 2 for noncollinear);
- *        sourced by the caller from ucell.get_npol()
  */
 void cal_energy_correction(Plus_U_Base& dftu,
                            const UnitCell& ucell,
-                           int nspin,
-                           int npol);
+                           int nspin);
 
 /**
  * @brief Accumulate the DFT+U energy term (U_eff / 2) * (n - n^2) for one
@@ -44,8 +41,7 @@ double calc_energy_u_noncollinear(const Plus_U_Base& dftu,
                                  int T,
                                  int iat,
                                  int l,
-                                 int n,
-                                 int npol);
+                                 int n);
 
 /**
  * @brief Accumulate the double-counting correction energy_dc for one
@@ -58,8 +54,7 @@ double calc_energy_dc_block(const Plus_U_Base& dftu,
                             int iat,
                             int l,
                             int n,
-                            int nspin,
-                            int npol);
+                            int nspin);
 
 } // namespace DFTU_LCAO
 

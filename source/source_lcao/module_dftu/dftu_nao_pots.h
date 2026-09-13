@@ -48,15 +48,13 @@ double get_onsite_pot(const Plus_U_Base& dftu,
  * @param spin        spin channel
  * @param new_occ_mat if true use occ_mat, otherwise use occ_mat_save
  * @param pot_onsite  output buffer (length pv->nloc)
- * @param npol        number of polarizations
  */
 void pot_onsite_complex(const Plus_U_Base& dftu,
                         const UnitCell& ucell,
                         const Parallel_Orbitals* pv,
                         const int spin,
                         const bool new_occ_mat,
-                        std::complex<double>* pot_onsite,
-                        const int npol);
+                        std::complex<double>* pot_onsite);
 
 /**
  * @brief onsite effective potential matrix (real) in the local orbital basis.
@@ -68,8 +66,7 @@ void pot_onsite_real(const Plus_U_Base& dftu,
                      const Parallel_Orbitals* pv,
                      const int spin,
                      const bool new_occ_mat,
-                     double* pot_onsite,
-                     const int npol);
+                     double* pot_onsite);
 
 } // namespace DFTU_LCAO
 

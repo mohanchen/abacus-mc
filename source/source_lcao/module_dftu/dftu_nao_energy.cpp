@@ -56,8 +56,7 @@ double calc_energy_u_noncollinear(const Plus_U_Base& dftu,
                                   int T,
                                   int iat,
                                   int l,
-                                  int n,
-                                  int npol)
+                                  int n)
 {
     double energy_u_local = 0.0;
     const int m_tot = 2 * l + 1;
@@ -66,14 +65,14 @@ double calc_energy_u_noncollinear(const Plus_U_Base& dftu,
 
     for (int m0 = 0; m0 < m_tot; m0++)
     {
-        for (int ipol0 = 0; ipol0 < npol; ipol0++)
+        for (int ipol0 = 0; ipol0 < 2; ipol0++)
         {
             const int m0_all = m0 + m_tot * ipol0;
             nm_trace += dftu.occmat().get(iat, l, n, 0, m0_all, m0_all);
 
             for (int m1 = 0; m1 < m_tot; m1++)
             {
-                for (int ipol1 = 0; ipol1 < npol; ipol1++)
+                for (int ipol1 = 0; ipol1 < 2; ipol1++)
                 {
                     const int m1_all = m1 + m_tot * ipol1;
                     nm2_trace += dftu.occmat().get(iat, l, n, 0, m0_all, m1_all)
@@ -105,11 +104,11 @@ double calc_energy_dc_block(const Plus_U_Base& dftu,
                             int iat,
                             int l,
                             int n,
-                            int nspin,
-                            int npol)
+                            int nspin)
 {
     double energy_dc_local = 0.0;
     const int m_tot = 2 * l + 1;
+    const int npol = nspin == 4 ? 2 : 1;
     for (int m1 = 0; m1 < m_tot; m1++)
     {
         for (int ipol1 = 0; ipol1 < npol; ipol1++)
@@ -150,8 +149,7 @@ double calc_energy_dc_block(const Plus_U_Base& dftu,
  */
 void cal_energy_correction(Plus_U_Base& dftu,
                            const UnitCell& ucell,
-                           int nspin,
-                           int npol)
+                           int nspin)
 {
     ModuleBase::TITLE("DFTU_LCAO", "cal_energy_correction");
     ModuleBase::timer::start("DFTU_LCAO", "cal_energy_correction");
@@ -198,11 +196,11 @@ void cal_energy_correction(Plus_U_Base& dftu,
                     }
                     else if (nspin == 4)
                     {
-                        energy_u += calc_energy_u_noncollinear(dftu, T, iat, l, n, npol);
+                        energy_u += calc_energy_u_noncollinear(dftu, T, iat, l, n);
                     }
 
                     // part 2: double-counting correction
-                    energy_dc += calc_energy_dc_block(dftu, T, iat, l, n, nspin, npol);
+                    energy_dc += calc_energy_dc_block(dftu, T, iat, l, n, nspin);
                 } // end n
             }     // end L
         }         // end I

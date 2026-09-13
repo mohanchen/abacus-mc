@@ -11,12 +11,12 @@ void DFTU_LCAO::pot_onsite_complex(const Plus_U_Base& dftu,
                                    const Parallel_Orbitals* pv,
                                    const int spin,
                                    const bool new_occ_mat,
-                                   std::complex<double>* pot_onsite,
-                                   const int npol)
+                                   std::complex<double>* pot_onsite)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_onsite_complex");
     ModuleBase::GlobalFunc::ZEROS(pot_onsite, pv->nloc);
 
+    const int npol = dftu.occmat().npol();
     const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
 
     for (int it = 0; it < ucell.ntype; ++it)
@@ -84,12 +84,12 @@ void DFTU_LCAO::pot_onsite_real(const Plus_U_Base& dftu,
                                 const Parallel_Orbitals* pv,
                                 const int spin,
                                 const bool new_occ_mat,
-                                double* pot_onsite,
-                                const int npol)
+                                double* pot_onsite)
 {
     ModuleBase::TITLE("DFTU_LCAO", "pot_onsite_real");
     ModuleBase::GlobalFunc::ZEROS(pot_onsite, pv->nloc);
 
+    const int npol = dftu.occmat().npol();
     const auto& iatlnmipol2iwt = dftu.occmat().iatlnmipol2iwt();
 
     for (int it = 0; it < ucell.ntype; ++it)
