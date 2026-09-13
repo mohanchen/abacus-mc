@@ -227,38 +227,14 @@ void HamiltLCAO<TK, TR>::init_gamma_operators(const UnitCell& ucell,
 #ifdef __MLALGO
     if (inp.deepks_scf)
     {
-        Operator<TK>* deepks_op = new DeePKS<OperatorLCAO<TK, TR>>(this->hsk,
-                                                                   this->kv->kvec_d, this->hR, // no explicit call yet
-                                                                   &ucell, &grid_d,
-                                                                   two_center_bundle.overlap_orb_alpha.get(),
-                                                                   &orb, this->kv->get_nks(),
-                                                                   DM_in, &deepks.ld);
-        this->getOperator()->add(deepks_op);
-        this->V_delta_R = dynamic_cast<DeePKS<OperatorLCAO<TK, TR>>*>(deepks_op)->get_V_delta_R();
+        this->add_deepks_op(ucell, grid_d, two_center_bundle, orb, DM_in, deepks);
     }
 #endif
 
     // end node should be OperatorDFTU
     if (inp.dft_plus_u)
     {
-        Operator<TK>* plus_u = nullptr;
-        if (inp.dft_plus_u == 2)
-        {
-            plus_u = new OperatorDFTU<OperatorLCAO<TK, TR>>(this->hsk,
-                                                            this->kv->kvec_d, this->hR,
-                                                            ucell, p_dftu,
-                                                            this->kv->isk);
-        }
-        else
-        {
-            plus_u = new DFTU<OperatorLCAO<TK, TR>>(this->hsk,
-                                                    this->kv->kvec_d, this->hR,
-                                                    ucell, &grid_d,
-                                                    two_center_bundle.overlap_orb_onsite.get(),
-                                                    orb.cutoffs(), p_dftu,
-                                                    inp.nspin, inp.onsite_radius, DM_in);
-        }
-        this->getOperator()->add(plus_u);
+        this->add_dftu_op(ucell, grid_d, two_center_bundle, orb, DM_in, p_dftu, inp);
     }
 }
 
@@ -344,14 +320,7 @@ void HamiltLCAO<TK, TR>::init_multik_operators(const UnitCell& ucell,
 #ifdef __MLALGO
     if (inp.deepks_scf)
     {
-        Operator<TK>* deepks_op = new DeePKS<OperatorLCAO<TK, TR>>(this->hsk,
-                                                                   this->kv->kvec_d, this->hR,
-                                                                   &ucell, &grid_d,
-                                                                   two_center_bundle.overlap_orb_alpha.get(),
-                                                                   &orb, this->kv->get_nks(),
-                                                                   DM_in, &deepks.ld);
-        this->getOperator()->add(deepks_op);
-        this->V_delta_R = dynamic_cast<DeePKS<OperatorLCAO<TK, TR>>*>(deepks_op)->get_V_delta_R();
+        this->add_deepks_op(ucell, grid_d, two_center_bundle, orb, DM_in, deepks);
     }
 #endif
     // TDDFT_velocity_gauge
@@ -382,24 +351,7 @@ void HamiltLCAO<TK, TR>::init_multik_operators(const UnitCell& ucell,
     }
     if (inp.dft_plus_u)
     {
-        Operator<TK>* plus_u = nullptr;
-        if (inp.dft_plus_u == 2)
-        {
-            plus_u = new OperatorDFTU<OperatorLCAO<TK, TR>>(this->hsk,
-                                                            this->kv->kvec_d, this->hR,
-                                                            ucell, p_dftu,
-                                                            this->kv->isk);
-        }
-        else
-        {
-            plus_u = new DFTU<OperatorLCAO<TK, TR>>(this->hsk,
-                                                    this->kv->kvec_d, this->hR,
-                                                    ucell, &grid_d,
-                                                    two_center_bundle.overlap_orb_onsite.get(),
-                                                    orb.cutoffs(), p_dftu,
-                                                    inp.nspin, inp.onsite_radius, DM_in);
-        }
-        this->getOperator()->add(plus_u);
+        this->add_dftu_op(ucell, grid_d, two_center_bundle, orb, DM_in, p_dftu, inp);
     }
     if (inp.sc_mag_switch)
     {
@@ -413,6 +365,57 @@ void HamiltLCAO<TK, TR>::init_multik_operators(const UnitCell& ucell,
         sc.set_operator(sc_lambda);
     }
 }
+
+// append the DFT+U operator node shared by gamma and multi-k chains
+template <typename TK, typename TR>
+void HamiltLCAO<TK, TR>::add_dftu_op(const UnitCell& ucell,
+                                     const Grid_Driver& grid_d,
+                                     const TwoCenterBundle& two_center_bundle,
+                                     const LCAO_Orbitals& orb,
+                                     elecstate::DensityMatrix<TK, double>* DM_in,
+                                     Plus_U_Base* p_dftu,
+                                     const Input_para& inp)
+{
+    Operator<TK>* plus_u = nullptr;
+    if (inp.dft_plus_u == 2)
+    {
+        plus_u = new OperatorDFTU<OperatorLCAO<TK, TR>>(this->hsk,
+                                                        this->kv->kvec_d, this->hR,
+                                                        ucell, p_dftu,
+                                                        this->kv->isk);
+    }
+    else
+    {
+        plus_u = new DFTU<OperatorLCAO<TK, TR>>(this->hsk,
+                                                this->kv->kvec_d, this->hR,
+                                                ucell, &grid_d,
+                                                two_center_bundle.overlap_orb_onsite.get(),
+                                                orb.cutoffs(), p_dftu,
+                                                inp.nspin, inp.onsite_radius, DM_in);
+    }
+    this->getOperator()->add(plus_u);
+}
+
+#ifdef __MLALGO
+// append the DeePKS operator node shared by gamma and multi-k chains
+template <typename TK, typename TR>
+void HamiltLCAO<TK, TR>::add_deepks_op(const UnitCell& ucell,
+                                       const Grid_Driver& grid_d,
+                                       const TwoCenterBundle& two_center_bundle,
+                                       const LCAO_Orbitals& orb,
+                                       elecstate::DensityMatrix<TK, double>* DM_in,
+                                       Setup_DeePKS<TK>& deepks)
+{
+    Operator<TK>* deepks_op = new DeePKS<OperatorLCAO<TK, TR>>(this->hsk,
+                                                               this->kv->kvec_d, this->hR,
+                                                               &ucell, &grid_d,
+                                                               two_center_bundle.overlap_orb_alpha.get(),
+                                                               &orb, this->kv->get_nks(),
+                                                               DM_in, &deepks.ld);
+    this->getOperator()->add(deepks_op);
+    this->V_delta_R = dynamic_cast<DeePKS<OperatorLCAO<TK, TR>>*>(deepks_op)->get_V_delta_R();
+}
+#endif
 
 template <typename TK, typename TR>
 std::vector<HContainer<TR>*> HamiltLCAO<TK, TR>::getHR_vector()

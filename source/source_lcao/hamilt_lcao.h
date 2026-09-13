@@ -245,6 +245,25 @@ class HamiltLCAO : public Hamilt<TK>
                                Setup_DeePKS<TK>& deepks,
                                const Input_para& inp,
                                const std::vector<std::string>& pot_register_in);
+
+    /// append the DFT+U operator node shared by gamma and multi-k chains
+    void add_dftu_op(const UnitCell& ucell,
+                     const Grid_Driver& grid_d,
+                     const TwoCenterBundle& two_center_bundle,
+                     const LCAO_Orbitals& orb,
+                     elecstate::DensityMatrix<TK, double>* DM_in,
+                     Plus_U_Base* p_dftu,
+                     const Input_para& inp);
+
+#ifdef __MLALGO
+    /// append the DeePKS operator node shared by gamma and multi-k chains
+    void add_deepks_op(const UnitCell& ucell,
+                       const Grid_Driver& grid_d,
+                       const TwoCenterBundle& two_center_bundle,
+                       const LCAO_Orbitals& orb,
+                       elecstate::DensityMatrix<TK, double>* DM_in,
+                       Setup_DeePKS<TK>& deepks);
+#endif
 };
 
 } // namespace hamilt
