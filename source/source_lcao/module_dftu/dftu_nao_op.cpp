@@ -245,12 +245,10 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::compute_occ_from_dmr(
             }
         }
     }
-#ifdef __MPI
     Parallel_Reduce::reduce_all(occ.data(), occ.size());
-#endif
     if (this->nspin == 1)
     {
-        for (auto& v : occ) { v *= 0.5; }
+        for (double& v : occ) { v *= 0.5; }
     }
     this->dftu->occmat().set_flat(iat0, target_L, this->current_spin, occ);
 }

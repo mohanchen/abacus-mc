@@ -23,7 +23,7 @@ std::vector<AdjacentAtomInfo> build_adjacent_atoms(const UnitCell* ucell,
     adjs_all.reserve(ucell->nat);
     for (int iat0 = 0; iat0 < ucell->nat; iat0++)
     {
-        auto tau0 = ucell->get_tau(iat0);
+        const ModuleBase::Vector3<double> tau0 = ucell->get_tau(iat0);
         int T0 = 0;
         int I0 = 0;
         ucell->iat2iait(iat0, &I0, &T0);
@@ -71,7 +71,7 @@ NlmTot cal_nlm_all(const UnitCell& ucell,
     int atom_index = 0;
     for (int iat0 = 0; iat0 < ucell.nat; iat0++)
     {
-        auto tau0 = ucell.get_tau(iat0);
+        const ModuleBase::Vector3<double> tau0 = ucell.get_tau(iat0);
         int T0 = 0;
         int I0 = 0;
         ucell.iat2iait(iat0, &I0, &T0);
@@ -94,8 +94,8 @@ NlmTot cal_nlm_all(const UnitCell& ucell,
             const ModuleBase::Vector3<double>& tau1 = adjs.adjacent_tau[ad];
             const Atom* atom1 = &ucell.atoms[T1];
 
-            auto all_indexes = pv.get_indexes_row(iat1);
-            auto col_indexes = pv.get_indexes_col(iat1);
+            std::vector<int> all_indexes = pv.get_indexes_row(iat1);
+            std::vector<int> col_indexes = pv.get_indexes_col(iat1);
             // insert col_indexes into all_indexes to get universal set with no repeat elements
             all_indexes.insert(all_indexes.end(), col_indexes.begin(), col_indexes.end());
             std::sort(all_indexes.begin(), all_indexes.end());
