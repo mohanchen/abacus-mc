@@ -1,11 +1,12 @@
-/// @file dftu_folding.h
+#ifndef DFTU_NAO_FOLDING_H
+#define DFTU_NAO_FOLDING_H
+
+/// @file dftu_nao_folding.h
 /// @brief Free-function helpers for folding S/dS matrices, extracted from
 ///        Plus_U. Each function takes the data it needs (orb_cutoff,
 ///        ks_solver, npol, gamma_only_local, nspin) as direct parameters;
 ///        no Plus_U reference is required, so the helpers are fully decoupled
 ///        from the class and unit-testable.
-#ifndef DFTU_FOLDING_H
-#define DFTU_FOLDING_H
 
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
@@ -90,4 +91,4 @@ void folding_matrix_k_new(const std::string& ks_solver,
 
 } // namespace DFTU_LCAO
 
-#endif // DFTU_FOLDING_H
+#endif // DFTU_NAO_FOLDING_H

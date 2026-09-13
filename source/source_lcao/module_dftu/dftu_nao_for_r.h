@@ -1,12 +1,12 @@
+#ifndef DFTU_NAO_FOR_R_H
+#define DFTU_NAO_FOR_R_H
+
 /// @file dftu_nao_for_r.h
 /// @brief DFT+U force contribution from a single atom pair (I,J,R) in real space
 ///
 /// Per-pair kernel invoked by the unified entry cal_fs_nao_r (dftu_nao_fs_r.h).
 /// Naming convention: _r suffix denotes the real-space implementation,
 /// corresponding to _k for the k-space (legacy) one.
-
-#ifndef DFTU_NAO_FOR_R_H
-#define DFTU_NAO_FOR_R_H
 
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_hamilt/module_hcontainer/hcontainer.h"

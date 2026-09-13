@@ -1,3 +1,6 @@
+#ifndef DFTU_NAO_FS_R_H
+#define DFTU_NAO_FS_R_H
+
 /// @file dftu_nao_fs_r.h
 /// @brief Unified entry for DFT+U force and stress in real space (r-space)
 ///
@@ -31,9 +34,6 @@
 ///               + <phi_{mu,0}|chi_m(I)> * d<chi_m'(I)|phi_{nu,R}>/d epsilon_{alpha,beta} * R_beta
 ///             )
 ///           ]
-
-#ifndef DFTU_NAO_FS_R_H
-#define DFTU_NAO_FS_R_H
 
 #include "source_base/matrix.h"
 
