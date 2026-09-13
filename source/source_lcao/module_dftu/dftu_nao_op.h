@@ -68,13 +68,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
      */
     const hamilt::HContainer<double>* get_dmr(int ispin) const;
 
-    /// @brief build the adjacent-atom lists for all Hubbard atoms (static helper)
-    static std::vector<AdjacentAtomInfo> build_adjacent_atoms(const UnitCell* ucell,
-                                                              Plus_U_Base* dftu,
-                                                              const Grid_Driver* gridD,
-                                                              const std::vector<double>& orb_cutoff,
-                                                              const double onsite_radius);
-
   private:
     const UnitCell* ucell = nullptr;
 

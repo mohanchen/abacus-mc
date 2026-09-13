@@ -21,7 +21,7 @@
 #include "source_lcao/module_deepks/lcao_deepks_io.h" // mohan add 2024-07-22
 #include "source_lcao/module_deepks/deepks_force.h"
 #endif
-#include "source_lcao/module_dftu/dftu_nao_op.h"
+#include "source_lcao/module_dftu/dftu_nao_adj.h"
 #include "source_lcao/module_dftu/dftu_nao_fs_r.h"
 #include "source_lcao/module_operator_lcao/dspin_lcao.h"
 #include "source_lcao/module_operator_lcao/nonlocal.h"
@@ -468,7 +468,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         {
             // Build DFT+U force/stress inputs directly without constructing a
             // full DFTU operator (hsk/hR are irrelevant for this path).
-            auto adjs_all = hamilt::DFTU<hamilt::OperatorLCAO<T, double>>::build_adjacent_atoms(
+            auto adjs_all = DFTU_LCAO::build_adjacent_atoms(
                 &ucell, &dftu, &gd, orb.cutoffs(), PARAM.inp.onsite_radius);
 
             // The DensityMatrix holds nspin_dm = (nspin==2 ? 2 : 1) real-space DMR

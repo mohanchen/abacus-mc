@@ -7,6 +7,9 @@
 #include "source_lcao/module_operator_lcao/operator_lcao.h"
 #include "source_base/parallel_reduce.h"
 
+// Include the free function for building the Hubbard-atom adjacent lists
+#include "dftu_nao_adj.h"
+
 // Include the free function implementations for force/stress in real space
 #include "dftu_nao_fs_r.h"
 // Include the free function templates for the HR/occ atom-pair kernels
@@ -40,7 +43,7 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
     // will not change in DFTU, because the DFT+U correction only touches
     // atom pairs already covered by the Nonlocal operator.
     ModuleBase::timer::start("DFTU", "build_adjacent_atoms");
-    this->adjs_all = build_adjacent_atoms(this->ucell, this->dftu, GridD_in, this->orb_cutoff_, onsite_radius);
+    this->adjs_all = DFTU_LCAO::build_adjacent_atoms(this->ucell, this->dftu, GridD_in, this->orb_cutoff_, onsite_radius);
     ModuleBase::timer::end("DFTU", "build_adjacent_atoms");
 
     // set nspin
@@ -58,54 +61,6 @@ const hamilt::HContainer<double>* hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::ge
         return nullptr;
     }
     return this->dm_->get_DMR_pointer(ispin + 1);
-}
-
-template <typename TK, typename TR>
-std::vector<AdjacentAtomInfo> hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::build_adjacent_atoms(
-    const UnitCell* ucell,
-    Plus_U_Base* dftu,
-    const Grid_Driver* gridD,
-    const std::vector<double>& orb_cutoff,
-    const double onsite_radius)
-{
-    std::vector<AdjacentAtomInfo> adjs_all;
-    adjs_all.reserve(ucell->nat);
-    for (int iat0 = 0; iat0 < ucell->nat; iat0++)
-    {
-        auto tau0 = ucell->get_tau(iat0);
-        int T0 = 0;
-        int I0 = 0;
-        ucell->iat2iait(iat0, &I0, &T0);
-        if (!dftu->has_l_channel(T0))
-        {
-            continue;
-        }
-        const int target_L = dftu->get_l_channel(T0);
-
-        AdjacentAtomInfo adjs;
-        gridD->Find_atom(*ucell, tau0, T0, I0, &adjs);
-        std::vector<bool> is_adj(adjs.adj_num + 1, false);
-        for (int ad1 = 0; ad1 < adjs.adj_num + 1; ++ad1)
-        {
-            const int T1 = adjs.ntype[ad1];
-            const int I1 = adjs.natom[ad1];
-            const int iat1 = ucell->itia2iat(T1, I1);
-            const ModuleBase::Vector3<double>& tau1 = adjs.adjacent_tau[ad1];
-            const ModuleBase::Vector3<int>& R_index1 = adjs.box[ad1];
-            // choose the real adjacent atoms
-            // Note: the distance of atoms should less than the cutoff radius,
-            // When equal, the theoretical value of matrix element is zero,
-            // but the calculated value is not zero due to the numerical error, which would lead to result changes.
-            if (ucell->cal_dtau(iat0, iat1, R_index1).norm() * ucell->lat0
-                < orb_cutoff[T1] + onsite_radius)
-            {
-                is_adj[ad1] = true;
-            }
-        }
-        filter_adjs(is_adj, adjs);
-        adjs_all.push_back(adjs);
-    }
-    return adjs_all;
 }
 
 template <typename TK, typename TR>

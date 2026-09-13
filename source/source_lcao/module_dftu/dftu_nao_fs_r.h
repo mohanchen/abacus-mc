@@ -42,7 +42,7 @@
 class UnitCell;
 class Plus_U_Base;
 class TwoCenterIntegrator;
-struct AdjacentAtomInfo;
+class AdjacentAtomInfo;
 
 namespace hamilt
 {
