@@ -67,9 +67,13 @@ void finish_dftu_lcao(const bool conv_esolver,
     {
         if (dftu_ptr->get_occ_mat_ctrl() != 2)
         {
-            DFTU_LCAO::cal_occ_mat(hamilt_lcao_ptr->getHR()->get_paraV(), ucell, dm_vec, kv, mixing_beta,
-                                   static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr,
-                                   gamma_only_local, nspin, PARAM.inp.ks_solver);
+            const Parallel_Orbitals* pv = hamilt_lcao_ptr->getHR()->get_paraV();
+            if (pv != nullptr && hamilt_lcao_ptr != nullptr)
+            {
+                DFTU_LCAO::cal_occ_mat(pv, ucell, dm_vec, kv, mixing_beta,
+                                       static_cast<hamilt::Hamilt<TK>*>(hamilt_lcao_ptr), *dftu_ptr,
+                                       gamma_only_local, nspin, PARAM.inp.ks_solver);
+            }
         }
         if (dftu_ptr->is_occmat_ready())
         {

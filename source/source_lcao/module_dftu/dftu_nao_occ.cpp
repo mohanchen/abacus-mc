@@ -22,10 +22,6 @@ void DFTU_LCAO::cal_occ_mat_k(const Parallel_Orbitals* pv,
                          Plus_U_Base& dftu,
                          const std::string& ks_solver)
 {
-    if (pv == nullptr || p_ham == nullptr)
-    {
-        return;
-    }
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_k");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_k");
 
@@ -109,10 +105,6 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                              hamilt::Hamilt<double>* p_ham,
                              Plus_U_Base& dftu)
 {
-    if (pv == nullptr || p_ham == nullptr)
-    {
-        return;
-    }
     ModuleBase::TITLE("DFTU_LCAO", "cal_occ_mat_gamma");
     ModuleBase::timer::start("DFTU_LCAO", "cal_occ_mat_gamma");
 
