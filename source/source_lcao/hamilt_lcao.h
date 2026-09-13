@@ -162,7 +162,7 @@ class HamiltLCAO : public Hamilt<TK>
      * @param hk_type 0: SK is row-major, 1: SK is collumn-major
      * @return void
      */
-    void updateSk(const int ik, const int hk_type = 0);
+    void updateSk(const int ik, const int hk_type);
 
     // core function: return H(k) and S(k) matrixs for direct solving eigenvalues.
     // not used in PW base
