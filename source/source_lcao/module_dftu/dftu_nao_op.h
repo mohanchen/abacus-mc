@@ -62,13 +62,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
      */
     void contributeHR() override;
 
-    /**
-     * @brief get the real-space density matrix of target spin from the solver-owned DensityMatrix
-     * @param ispin spin index (0 based): 0 for nspin=1/4, 0/1 for nspin=2
-     * @return read-only DMR pointer, or nullptr when DMR has not been calculated yet
-     */
-    const hamilt::HContainer<double>* get_dmr(int ispin) const;
-
   private:
     const UnitCell* ucell = nullptr;
 

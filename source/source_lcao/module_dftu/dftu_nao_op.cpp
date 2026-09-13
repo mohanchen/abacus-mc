@@ -48,19 +48,6 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
     ModuleBase::timer::end("DFTU", "DFTU");
 }
 
-// get the read-only real-space density matrix of target spin from the solver-owned DensityMatrix
-template <typename TK, typename TR>
-const hamilt::HContainer<double>* hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::get_dmr(int ispin) const
-{
-    assert(ispin >= 0);
-    // a not-yet-calculated DMR means the first SCF iteration before the first diagonalization
-    if (this->dm_ == nullptr || !this->dm_->is_dmr_ready())
-    {
-        return nullptr;
-    }
-    return this->dm_->get_DMR_pointer(ispin + 1);
-}
-
 // contributeHR()
 /**
  * @brief Contribute DFT+U Hamiltonian to real-space HR matrix
@@ -72,7 +59,7 @@ const hamilt::HContainer<double>* hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::ge
  * 
  * Case 1: Occ_mat NOT ready (!is_occmat_ready)
  *   - First electronic iteration: calculates occupation matrix from density matrix (DMR)
- *     * Uses get_dmr(current_spin) to get real-space density matrix
+ *     * Fetches the real-space DMR via dm_->get_DMR_pointer()
  *     * Accumulates contributions from all atom pairs via DFTU_LCAO::cal_occ_ijr()
  *     * Performs MPI reduction to sum occ across processes
  *     * Stores result via set_occ_mat_flat() for use in pot_onsite calculation
@@ -115,8 +102,9 @@ template <typename TK, typename TR>
 void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
 {
     ModuleBase::TITLE("DFTU", "contributeHR");
-    // Early exit: DMR not available AND occ_mat not yet initialized
-    const bool dmr_null = (this->get_dmr(0) == nullptr);
+    // Early exit: DMR not available (first SCF iteration before the first
+    // diagonalization) AND occ_mat not yet initialized
+    const bool dmr_null = (this->dm_ == nullptr || !this->dm_->is_dmr_ready());
     const bool occ_mat_not_init = !this->dftu->is_occmat_ready();
 
     if (dmr_null && occ_mat_not_init)
@@ -158,6 +146,9 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         // compute or load occupation matrix
         if (!this->dftu->is_occmat_ready())
         {
+            // DMR is guaranteed ready here: otherwise the early exit above
+            // would have returned. DMR index is 1-based, hence +1.
+            const hamilt::HContainer<double>* dmr = this->dm_->get_DMR_pointer(this->current_spin + 1);
             DFTU_LCAO::compute_occ_from_dmr(*this->ucell,
                                             *this->dftu,
                                             iat0,
@@ -167,7 +158,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
                                             adjs,
                                             *pv,
                                             this->nlm_tot,
-                                            *this->get_dmr(this->current_spin),
+                                            *dmr,
                                             occ);
         }
         else
