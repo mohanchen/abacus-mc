@@ -1,5 +1,5 @@
 #include "dftu_nao_op_legacy.h"
-#include "dftu_hamilt.h"
+#include "dftu_nao_pots.h"
 #include "source_base/timer.h"
 #include "source_base/tool_title.h"
 
