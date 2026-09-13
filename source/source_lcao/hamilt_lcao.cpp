@@ -1,6 +1,5 @@
 #include "source_lcao/hamilt_lcao.h"
 
-#include "source_base/global_variable.h"
 #include "source_base/memory_recorder.h"
 #include "source_base/timer.h"
 #include "source_pw/module_pwdft/dftu_base.h"
@@ -83,11 +82,17 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                const int istep,
                                Exx_NAO<TK> &exx_nao,
                                const Exx_Info& exx_info,
-                               const Input_para& inp)
+                               const Input_para& inp,
+                               const bool load_exx_flag)
 {
     this->classname = "HamiltLCAO";
 
     this->kv = &kv_in;
+
+    // snapshot INPUT flags used later by getHR_vector/updateHk/refresh,
+    // so those methods do not read global PARAM
+    this->nspin = inp.nspin;
+    this->vl_in_h = inp.vl_in_h;
 
     // Real space Hamiltonian is inited with template TR
     this->hR = new HContainer<TR>(paraV);
@@ -350,15 +355,14 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                                   this->hR, ucell, *this->kv,
                                                                   exx_nao.exd.get(), exx_nao.exc.get(),
                                                                   exx_info, Add_Hexx_Type::R, istep,
-                                                                  !GlobalC::restart.info_load.restart_exx
-                                                                      && GlobalC::restart.info_load.load_H);
+                                                                  load_exx_flag);
         this->getOperator()->add(exx);
     }
 #endif
 
     // if NSPIN==2, HR should be separated into two parts, save HR into this->hRS2
     int memory_fold = 1;
-    if (inp.nspin == 2)
+    if (this->nspin == 2)
     {
         this->hRS2.resize(this->hR->get_nnr() * 2);
         this->hR->allocate(this->hRS2.data(), 0);
@@ -374,7 +378,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 template <typename TK, typename TR>
 std::vector<HContainer<TR>*> HamiltLCAO<TK, TR>::getHR_vector()
 {
-    if (PARAM.inp.nspin == 2)
+    if (this->nspin == 2)
     {
         const int nnr = this->hRS2.size() / 2;
         this->hr_spin_up_.reset(new HContainer<TR>(*this->hR, this->hRS2.data()));
@@ -403,10 +407,10 @@ void HamiltLCAO<TK, TR>::updateHk(const int ik)
     ModuleBase::timer::start("HamiltLCAO", "updateHk");
 
     // update global spin index
-    if (PARAM.inp.nspin == 2)
+    if (this->nspin == 2)
     {
         // if Veff is added and current_spin is changed, refresh HR
-        if (PARAM.inp.vl_in_h && this->kv->isk[ik] != this->current_spin)
+        if (this->vl_in_h && this->kv->isk[ik] != this->current_spin)
         {
             // change data pointer of HR
             this->hR->allocate(this->hRS2.data() + this->hRS2.size() / 2 * this->kv->isk[ik], 0);
@@ -430,7 +434,7 @@ void HamiltLCAO<TK, TR>::refresh(bool yes)
     if(yes)
     {
         dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(this->ops)->set_hr_done(false);
-        if (PARAM.inp.nspin == 2)
+        if (this->nspin == 2)
         {
             this->refresh_times = 1;
             this->current_spin = 0;
@@ -445,7 +449,7 @@ void HamiltLCAO<TK, TR>::refresh(bool yes)
     else {
         dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(this->ops)->set_hr_done(true);
         this->refresh_times = 0;
-        if (PARAM.inp.nspin == 2)
+        if (this->nspin == 2)
         {
             // HR has been loaded from file into both halves of hRS2.
             // Reset to spin-up; updateHk will switch pointers as needed.

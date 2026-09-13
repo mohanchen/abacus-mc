@@ -68,7 +68,8 @@ class HamiltLCAO : public Hamilt<TK>
                const int istep,
                Exx_NAO<TK> &exx_nao,
                const Exx_Info& exx_info,
-               const Input_para& inp);
+               const Input_para& inp,
+               const bool load_exx_flag);
 
     /**
      * @brief Constructor of vacuum Operators, only HR and SR will be initialed as empty HContainer
@@ -199,6 +200,12 @@ class HamiltLCAO : public Hamilt<TK>
     //! 0: Hamiltonian for spin up, 
     //! 1: Hamiltonian for spin down
     int current_spin = 0;
+
+    //! snapshot of inp.nspin taken at construction; avoids PARAM dependency
+    int nspin = 1;
+
+    //! snapshot of inp.vl_in_h taken at construction; avoids PARAM dependency
+    bool vl_in_h = true;
 
     const int istep = 0;
 };

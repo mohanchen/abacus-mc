@@ -11,6 +11,7 @@
 #include "source_io/module_chgpot/get_pchg_lcao.h"
 #include "source_io/module_hs/write_hs_r.h"
 #include "source_io/module_parameter/parameter.h"
+#include "source_io/module_restart/restart.h" // GlobalC::restart for load_exx_flag
 #include "source_io/module_wf/get_wf_lcao.h"
 #include "source_lcao/hamilt_lcao.h"
 #include "source_lcao/lcao_domain.h"
@@ -143,7 +144,9 @@ void ESolver_KS_LCAO<TK, TR>::others(BaseCell& basecell, const int istep)
                                                         istep,
                                                         this->exx_nao,
                                                         this->exx_info_,
-                                                        *this->inp_);
+                                                        *this->inp_,
+                                                        !GlobalC::restart.info_load.restart_exx
+                                                            && GlobalC::restart.info_load.load_H);
     }
 
     // for each ionic step, the overlap <phi|alpha> must be rebuilt

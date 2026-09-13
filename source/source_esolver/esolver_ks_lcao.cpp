@@ -20,6 +20,7 @@
 #include "source_lcao/module_rdmft/rdmft.h"
 #include "source_estate/module_charge/chgmixing.h" // use charge mixing, mohan add 20251006
 #include "source_estate/module_dm/init_dm.h" // init dm from electronic wave functions
+#include "source_io/module_restart/restart.h" // GlobalC::restart for load_exx_flag
 #include "source_io/module_ctrl/ctrl_runner_lcao.h" // use ctrl_runner_lcao() 
 #include "source_io/module_ctrl/ctrl_iter_lcao.h" // use ctrl_iter_lcao() 
 #include "source_io/module_ctrl/ctrl_scf_lcao.h" // use ctrl_scf_lcao()
@@ -163,7 +164,8 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     {
         this->p_hamilt = new hamilt::HamiltLCAO<TK, TR>(
             ucell, this->gd, &this->pv, this->pelec->pot, this->kv,
-            two_center_bundle_, orb_, this->dmat.dm, this->dftu_.get(), this->deepks, istep, exx_nao, this->exx_info_, *this->inp_);
+            two_center_bundle_, orb_, this->dmat.dm, this->dftu_.get(), this->deepks, istep, exx_nao, this->exx_info_, *this->inp_,
+            !GlobalC::restart.info_load.restart_exx && GlobalC::restart.info_load.load_H);
     }
 
     // 9) for each ionic step, the overlap <phi|alpha> must be rebuilt
