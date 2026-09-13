@@ -36,16 +36,15 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
     assert(this->ucell != nullptr);
     assert(this->dm_ != nullptr);
 
-    // build the adjacent-atom lists for all Hubbard atoms
-    this->initialize_HR(GridD_in, onsite_radius);
+    // build the adjacent-atom lists for all Hubbard atoms. The size of HR
+    // will not change in DFTU, because the DFT+U correction only touches
+    // atom pairs already covered by the Nonlocal operator.
+    ModuleBase::timer::start("DFTU", "build_adjacent_atoms");
+    this->adjs_all = build_adjacent_atoms(this->ucell, this->dftu, GridD_in, this->orb_cutoff_, onsite_radius);
+    ModuleBase::timer::end("DFTU", "build_adjacent_atoms");
+
     // set nspin
     this->nspin = nspin_in;
-}
-
-// destructor
-template <typename TK, typename TR>
-hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::~DFTU()
-{
 }
 
 // get the read-only real-space density matrix of target spin from the solver-owned DensityMatrix
@@ -59,18 +58,6 @@ const hamilt::HContainer<double>* hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::ge
         return nullptr;
     }
     return this->dm_->get_DMR_pointer(ispin + 1);
-}
-
-// initialize_HR()
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::initialize_HR(const Grid_Driver* GridD, const double onsite_radius)
-{
-    ModuleBase::TITLE("DFTU", "initialize_HR");
-    ModuleBase::timer::start("DFTU", "initialize_HR");
-
-    this->adjs_all = build_adjacent_atoms(this->ucell, this->dftu, GridD, this->orb_cutoff_, onsite_radius);
-
-    ModuleBase::timer::end("DFTU", "initialize_HR");
 }
 
 template <typename TK, typename TR>

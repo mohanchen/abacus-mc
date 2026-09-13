@@ -42,24 +42,24 @@ template <typename TK, typename TR>
 class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
 {
   public:
-    DFTU<OperatorLCAO<TK, TR>>(HS_Matrix_K<TK>* hsk_in,
-                               const std::vector<ModuleBase::Vector3<double>>& kvec_d_in,
-                               hamilt::HContainer<TR>* hR_in,
-                               const UnitCell& ucell_in,
-                               const Grid_Driver* gridD_in,
-                               const TwoCenterIntegrator* intor,
-                               const std::vector<double>& orb_cutoff,
-                               Plus_U_Base* p_dftu,
-                               const int nspin_in,
-                               const double onsite_radius,
-                               const elecstate::DensityMatrix<TK, double>* dm_in);
-    ~DFTU<OperatorLCAO<TK, TR>>();
+    DFTU(HS_Matrix_K<TK>* hsk_in,
+         const std::vector<ModuleBase::Vector3<double>>& kvec_d_in,
+         hamilt::HContainer<TR>* hR_in,
+         const UnitCell& ucell_in,
+         const Grid_Driver* gridD_in,
+         const TwoCenterIntegrator* intor,
+         const std::vector<double>& orb_cutoff,
+         Plus_U_Base* p_dftu,
+         const int nspin_in,
+         const double onsite_radius,
+         const elecstate::DensityMatrix<TK, double>* dm_in);
+    ~DFTU() = default;
 
     /**
      * @brief contributeHR() calculates the HR matrix
      * <phi_{\mu, 0}|chi_m> pot_onsite(m,m') <chi_m'|phi_{\nu, R}>
      */
-    virtual void contributeHR() override;
+    void contributeHR() override;
 
     /**
      * @brief get the real-space density matrix of target spin from the solver-owned DensityMatrix
@@ -89,14 +89,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
 
     /// @brief the number of spin components, 1 for no-spin, 2 for collinear spin case and 4 for non-collinear spin case
     int nspin = 0;
-
-    /**
-     * @brief build the adjacent-atom lists for all Hubbard atoms and save
-     *        them into this->adjs_all. The size of HR will not change in
-     *        DFTU, because the DFT+U correction only touches atom pairs
-     *        already covered by the Nonlocal operator.
-     */
-    void initialize_HR(const Grid_Driver* gridD_in, const double onsite_radius);
 
     /**
      * @brief calculate the <phi|alpha^I> overlap values and save them in this->nlm_tot
