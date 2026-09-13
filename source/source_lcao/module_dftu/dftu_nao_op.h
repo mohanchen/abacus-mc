@@ -78,12 +78,7 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     Plus_U_Base* get_dftu() const { return dftu; }
     const TwoCenterIntegrator* get_intor() const { return intor_; }
     int get_nspin() const { return nspin; }
-    std::vector<AdjacentAtomInfo>& get_adjs_all() { return adjs_all; }
-
-    /// On-site potential and Hubbard energy for one correlated shell:
-    ///   pot_onsite(m,m') = U_eff * (0.5 * delta_{m,m'} - occ(m,m'))
-    ///   EU = (U_eff / 2) * sum_{m,m'} occ(m,m') * (delta_{m,m'} - occ(m',m))
-    void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value, double* pot_onsite, double& eu);
+    const std::vector<AdjacentAtomInfo>& get_adjs_all() const { return adjs_all; }
 
     /// transfer pot_onsite format from pauli matrix to normal for non-collinear spin case
     void transfer_pot_onsite(std::vector<double>& pot_onsite_tmp, std::vector<TR>& pot_onsite);
@@ -96,8 +91,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     /// @brief solver-owned density matrix providing DMR; lifetime covers each ionic step
     const elecstate::DensityMatrix<TK, double>* dm_ = nullptr;
 
-    hamilt::HContainer<TR>* HR = nullptr;
-
     const TwoCenterIntegrator* intor_ = nullptr;
 
     std::vector<double> orb_cutoff_;
@@ -106,9 +99,10 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     int nspin = 0;
 
     /**
-     * @brief search the nearest neighbor atoms and save them into this->adjs_all
-     * the size of HR will not change in DFTU,
-     * because I don't want to expand HR larger than Nonlocal operator caused by DFTU
+     * @brief build the adjacent-atom lists for all Hubbard atoms and save
+     *        them into this->adjs_all. The size of HR will not change in
+     *        DFTU, because the DFT+U correction only touches atom pairs
+     *        already covered by the Nonlocal operator.
      */
     void initialize_HR(const Grid_Driver* gridD_in, const double onsite_radius);
 
@@ -138,34 +132,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
                                 const AdjacentAtomInfo& adjs,
                                 const Parallel_Orbitals* pv,
                                 const std::vector<TR>& pot_onsite);
-
-    /**
-     * @brief calculate the atomic Force of <I,J,R> atom pair
-     */
-    void cal_force_IJR(const int& iat1,
-                       const int& iat2,
-                       const Parallel_Orbitals* pv,
-                       const std::unordered_map<int, std::vector<double>>& nlm1_all,
-                       const std::unordered_map<int, std::vector<double>>& nlm2_all,
-                       const std::vector<double>& pot_onsite_in,
-                       const hamilt::BaseMatrix<double>** dmR_pointer,
-                       const int nspin,
-                       double* force1,
-                       double* force2);
-    /**
-     * @brief calculate the Stress of <I,J,R> atom pair
-     */
-    void cal_stress_IJR(const int& iat1,
-                        const int& iat2,
-                        const Parallel_Orbitals* pv,
-                        const std::unordered_map<int, std::vector<double>>& nlm1_all,
-                        const std::unordered_map<int, std::vector<double>>& nlm2_all,
-                        const std::vector<double>& pot_onsite_in,
-                        const hamilt::BaseMatrix<double>** dmR_pointer,
-                        const int nspin,
-                        const ModuleBase::Vector3<double>& dis1,
-                        const ModuleBase::Vector3<double>& dis2,
-                        double* stress);
 
     std::vector<AdjacentAtomInfo> adjs_all;
     /// @brief if the nlm_tot is calculated

@@ -11,6 +11,8 @@
 #include "dftu_nao_fs_r.h"
 // Include the free function templates for the HR/occ atom-pair kernels
 #include "dftu_nao_ijr.h"
+// Include the free function for the onsite potential
+#include "dftu_nao_pots.h"
 
 template <typename TK, typename TR>
 hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
@@ -34,7 +36,7 @@ hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::DFTU(HS_Matrix_K<TK>* hsk_in,
     assert(this->ucell != nullptr);
     assert(this->dm_ != nullptr);
 
-    // initialize HR to allocate sparse Nonlocal matrix memory
+    // build the adjacent-atom lists for all Hubbard atoms
     this->initialize_HR(GridD_in, onsite_radius);
     // set nspin
     this->nspin = nspin_in;
@@ -294,7 +296,7 @@ void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         const double u_value = this->dftu->get_u_current(T0);
         std::vector<double> pot_onsite_tmp(occ.size());
         double u_energy = this->dftu->get_energy();
-        this->cal_pot_onsite(occ, tlp1, u_value, pot_onsite_tmp.data(), u_energy);
+        DFTU_LCAO::cal_pot_onsite(occ, tlp1, u_value, pot_onsite_tmp.data(), u_energy);
         this->dftu->set_energy(u_energy);
 
         std::vector<TR> pot_onsite(occ.size());

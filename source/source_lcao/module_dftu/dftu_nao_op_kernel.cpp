@@ -113,18 +113,6 @@ void hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, std::complex<double
     }
 }
 
-// cal_pot_onsite: pot = U * (1/2*delta - occ), energy = U * 1/2 * occ * occ
-// Thin wrapper delegating to the free function in namespace DFTU_LCAO.
-template <typename TK, typename TR>
-void hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>::cal_pot_onsite(const std::vector<double>& occ,
-                                                            const int m_size,
-                                                            const double u_value,
-                                                            double* pot_onsite,
-                                                            double& eu)
-{
-    DFTU_LCAO::cal_pot_onsite(occ, m_size, u_value, pot_onsite, eu);
-}
-
 // explicit template instantiation (matches dftu_nao_op.cpp)
 template class hamilt::DFTU<hamilt::OperatorLCAO<double, double>>;
 template class hamilt::DFTU<hamilt::OperatorLCAO<std::complex<double>, double>>;

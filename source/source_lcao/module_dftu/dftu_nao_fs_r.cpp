@@ -22,7 +22,7 @@ void cal_fs_nao_r_impl(const UnitCell* ucell,
                        Plus_U_Base* dftu,
                        const TwoCenterIntegrator* intor,
                        int nspin,
-                       std::vector<AdjacentAtomInfo>& adjs_all,
+                       const std::vector<AdjacentAtomInfo>& adjs_all,
                        const std::vector<const hamilt::HContainer<double>*>& dmR,
                        bool cal_force,
                        bool cal_stress,
@@ -86,7 +86,7 @@ void cal_fs_nao_r_impl(const UnitCell* ucell,
             ucell->iat2iait(iat0, &I0, &T0);
             const int target_L = dftu->get_l_channel(T0);
             const int tlp1 = 2 * target_L + 1;
-            AdjacentAtomInfo& adjs = adjs_all[atom_index_all[iat0]];
+            const AdjacentAtomInfo& adjs = adjs_all[atom_index_all[iat0]];
 
             std::vector<std::unordered_map<int, std::vector<double>>> nlm_tot;
             nlm_tot.resize(adjs.adj_num + 1);
@@ -168,14 +168,14 @@ void cal_fs_nao_r_impl(const UnitCell* ucell,
                 const int iat1 = ucell->itia2iat(T1, I1);
                 double* force_tmp1 = (cal_force) ? &force_local(iat1, 0) : nullptr;
                 double* force_tmp2 = (cal_force) ? &force_local(iat0, 0) : nullptr;
-                ModuleBase::Vector3<int>& R_index1 = adjs.box[ad1];
+                const ModuleBase::Vector3<int>& R_index1 = adjs.box[ad1];
                 ModuleBase::Vector3<double> dis1 = adjs.adjacent_tau[ad1] - tau0;
                 for (int ad2 = 0; ad2 < adjs.adj_num + 1; ++ad2)
                 {
                     const int T2 = adjs.ntype[ad2];
                     const int I2 = adjs.natom[ad2];
                     const int iat2 = ucell->itia2iat(T2, I2);
-                    ModuleBase::Vector3<int>& R_index2 = adjs.box[ad2];
+                    const ModuleBase::Vector3<int>& R_index2 = adjs.box[ad2];
                     ModuleBase::Vector3<double> dis2 = adjs.adjacent_tau[ad2] - tau0;
                     ModuleBase::Vector3<int> R_vector(R_index2[0] - R_index1[0],
                                                       R_index2[1] - R_index1[1],
