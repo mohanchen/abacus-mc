@@ -68,13 +68,6 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
      */
     const hamilt::HContainer<double>* get_dmr(int ispin) const;
 
-    // Getters for free functions in dftu_nao_fs_r/dftu_nao_for_r/dftu_nao_str_r
-    const UnitCell* get_ucell() const { return ucell; }
-    Plus_U_Base* get_dftu() const { return dftu; }
-    const TwoCenterIntegrator* get_intor() const { return intor_; }
-    int get_nspin() const { return nspin; }
-    const std::vector<AdjacentAtomInfo>& get_adjs_all() const { return adjs_all; }
-
     /// @brief build the adjacent-atom lists for all Hubbard atoms (static helper)
     static std::vector<AdjacentAtomInfo> build_adjacent_atoms(const UnitCell* ucell,
                                                               Plus_U_Base* dftu,
