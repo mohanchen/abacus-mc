@@ -1,5 +1,6 @@
 #include "source_lcao/hamilt_lcao_factory.h"
 
+#include "source_base/global_function.h"
 #include "source_estate/module_pot/h_tddft_pw.h"
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 
@@ -48,8 +49,19 @@ void add_dftu_op(Operator<TK>*& ops,
                  HContainer<TR>* hR)
 {
     Operator<TK>* plus_u = nullptr;
-    if (inp.dft_plus_u == 2)
+    if (inp.dft_plus_u == 1)
     {
+        // radius-adjustable localized projections (with onsite_radius)
+        plus_u = new DFTU<OperatorLCAO<TK, TR>>(hsk,
+                                                kv->kvec_d, hR,
+                                                ucell, &grid_d,
+                                                two_center_bundle.overlap_orb_onsite.get(),
+                                                orb.cutoffs(), p_dftu,
+                                                inp.nspin, inp.onsite_radius, DM_in);
+    }
+    else if (inp.dft_plus_u == 2)
+    {
+        // first-zeta NAO projections (old method, kept for testing)
         plus_u = new OperatorDFTU<OperatorLCAO<TK, TR>>(hsk,
                                                         kv->kvec_d, hR,
                                                         ucell, p_dftu,
@@ -57,12 +69,10 @@ void add_dftu_op(Operator<TK>*& ops,
     }
     else
     {
-        plus_u = new DFTU<OperatorLCAO<TK, TR>>(hsk,
-                                                kv->kvec_d, hR,
-                                                ucell, &grid_d,
-                                                two_center_bundle.overlap_orb_onsite.get(),
-                                                orb.cutoffs(), p_dftu,
-                                                inp.nspin, inp.onsite_radius, DM_in);
+        // add_dftu_op is only reachable when dft_plus_u != 0; any other
+        // value is an unsupported DFT+U method and must abort here
+        ModuleBase::WARNING_QUIT("add_dftu_op",
+                                 "unsupported dft_plus_u value: only 1 (radius-adjustable) or 2 (first-zeta NAO) are allowed");
     }
     ops->add(plus_u);
 }
