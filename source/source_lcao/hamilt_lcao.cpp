@@ -86,7 +86,8 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 							   Setup_DeePKS<TK> &deepks,
 							   const int istep,
 							   Exx_NAO<TK> &exx_nao,
-							   const Exx_Info& exx_info)
+							   const Exx_Info& exx_info,
+							   const Input_para& inp)
 {
     this->classname = "HamiltLCAO";
 
@@ -99,34 +100,34 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
     // Effective potential term (\sum_r <psi(r)|Veff(r)|psi(r)>) is registered without template
     std::vector<std::string> pot_register_in;
-    if (PARAM.inp.vl_in_h)
+    if (inp.vl_in_h)
     {
-        if (PARAM.inp.vion_in_h)
+        if (inp.vion_in_h)
         {
             pot_register_in.push_back("local");
         }
-        if (PARAM.inp.vh_in_h)
+        if (inp.vh_in_h)
         {
             pot_register_in.push_back("hartree");
         }
         pot_register_in.push_back("xc");
-        if (PARAM.inp.imp_sol)
+        if (inp.imp_sol)
         {
             pot_register_in.push_back("surchem");
         }
-        if (PARAM.inp.efield_flag)
+        if (inp.efield_flag)
         {
             pot_register_in.push_back("efield");
         }
-        if (PARAM.inp.gate_flag)
+        if (inp.gate_flag)
         {
             pot_register_in.push_back("gatefield");
         }
-        if (PARAM.inp.esolver_type == "tddft")
+        if (inp.esolver_type == "tddft")
         {
             pot_register_in.push_back("tddft");
         }
-        if (PARAM.inp.ml_exx) // sunliang
+        if (inp.ml_exx) // sunliang
         {
             pot_register_in.push_back("ml_exx");
         }
@@ -152,7 +153,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                                    two_center_bundle.overlap_orb.get());
 
         // kinetic term (<psi|T|psi>)
-        if (PARAM.inp.t_in_h)
+        if (inp.t_in_h)
         {
             Operator<TK>* ekinetic = new EKinetic<OperatorLCAO<TK, TR>>(this->hsk,
                                                                            this->kv->kvec_d,
@@ -166,7 +167,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
         // nonlocal term (<psi|beta>D<beta|psi>)
         // in general case, target HR is this->hR, while target HK is this->hsk->get_hk()
-        if (PARAM.inp.vnl_in_h)
+        if (inp.vnl_in_h)
         {
             Operator<TK>* nonlocal = new Nonlocal<OperatorLCAO<TK, TR>>(this->hsk,
                                                                            this->kv->kvec_d,
@@ -180,7 +181,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
         // Effective potential term (\sum_r <psi(r)|Veff(r)|psi(r)>)
         // in general case, target HR is Gint::hRGint, while target HK is this->hsk->get_hk()
-        if (PARAM.inp.vl_in_h)
+        if (inp.vl_in_h)
         {
             // only Potential is not empty, Veff and Meta are available
             if (pot_register_in.size() > 0)
@@ -195,13 +196,13 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                                     &ucell,
                                                                     orb.cutoffs(),
                                                                     &grid_d,
-                                                                    PARAM.inp.nspin);
+                                                                    inp.nspin);
                 this->getOperator()->add(veff);
             }
         }
 
 #ifdef __MLALGO
-        if (PARAM.inp.deepks_scf)
+        if (inp.deepks_scf)
         {
             Operator<TK>* deepks_op = new DeePKS<OperatorLCAO<TK, TR>>(this->hsk,
                                                                     this->kv->kvec_d,
@@ -219,16 +220,16 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 #endif
 
         // end node should be OperatorDFTU
-        if (PARAM.inp.dft_plus_u)
+        if (inp.dft_plus_u)
         {
             Operator<TK>* plus_u = nullptr;
-            if (PARAM.inp.dft_plus_u == 2)
+            if (inp.dft_plus_u == 2)
             {
                 plus_u = new OperatorDFTU<OperatorLCAO<TK, TR>>(this->hsk,
                                                               this->kv->kvec_d,
-																  this->hR,
-																  ucell,
-																  p_dftu,
+															  this->hR,
+															  ucell,
+															  p_dftu,
                                                               this->kv->isk);
             }
             else
@@ -241,8 +242,8 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                       two_center_bundle.overlap_orb_onsite.get(),
                                                       orb.cutoffs(),
                                                       p_dftu,
-                                                      PARAM.inp.nspin,
-                                                      PARAM.inp.onsite_radius,
+                                                      inp.nspin,
+                                                      inp.onsite_radius,
                                                       DM_in);
             }
             this->getOperator()->add(plus_u);
@@ -254,7 +255,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
         // Effective potential term (\sum_r <psi(r)|Veff(r)|psi(r)>)
         // Meta potential term (\sum_r <psi(r)|tau(r)|psi(r)>)
         // in general case, target HR is Gint::pvpR_reduced, while target HK is this->hsk->get_hk()
-        if (PARAM.inp.vl_in_h)
+        if (inp.vl_in_h)
         {
             // only Potential is not empty, Veff and Meta are available
             if (pot_register_in.size() > 0)
@@ -269,7 +270,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                                      &ucell,
                                                                      orb.cutoffs(),
                                                                      &grid_d,
-                                                                     PARAM.inp.nspin);
+                                                                     inp.nspin);
             }
         }
 
@@ -294,7 +295,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
         // kinetic term (<psi|T|psi>),
         // in general case, target HR is this->hR, while target HK is this->hsk->get_hk()
-        if (PARAM.inp.t_in_h)
+        if (inp.t_in_h)
         {
             Operator<TK>* ekinetic = new EKinetic<OperatorLCAO<TK, TR>>(this->hsk,
                                                                            this->kv->kvec_d,
@@ -308,7 +309,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
         // nonlocal term (<psi|beta>D<beta|psi>)
         // in general case, target HR is this->hR, while target HK is this->hsk->get_hk()
-        if (PARAM.inp.vnl_in_h)
+        if (inp.vnl_in_h)
         {
             Operator<TK>* nonlocal = new Nonlocal<OperatorLCAO<TK, TR>>(this->hsk,
                                                                            this->kv->kvec_d,
@@ -319,7 +320,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                                            two_center_bundle.overlap_orb_beta.get());
             // TDDFT velocity gauge will calculate full non-local potential including the original one and the
             // correction on its own. So the original non-local potential term should be skipped
-            if (PARAM.inp.esolver_type != "tddft" || elecstate::H_TDDFT_pw::stype != 1)
+            if (inp.esolver_type != "tddft" || elecstate::H_TDDFT_pw::stype != 1)
             {
                 this->getOperator()->add(nonlocal);
             }
@@ -330,7 +331,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
         }
 
 #ifdef __MLALGO
-        if (PARAM.inp.deepks_scf)
+        if (inp.deepks_scf)
         {
             Operator<TK>* deepks_op = new DeePKS<OperatorLCAO<TK, TR>>(this->hsk,
                                                                     this->kv->kvec_d,
@@ -347,7 +348,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
         }
 #endif
         // TDDFT_velocity_gauge
-        if (PARAM.inp.esolver_type == "tddft" && PARAM.inp.td_stype == 1)
+        if (inp.esolver_type == "tddft" && inp.td_stype == 1)
         {
             Operator<TK>* td_ekinetic = new TDEkinetic<OperatorLCAO<TK, TR>>(this->hsk,
                                                                              this->hR,
@@ -366,7 +367,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                                              &grid_d);
             this->getOperator()->add(td_nonlocal);
         }
-        if (PARAM.inp.esolver_type == "tddft" && PARAM.inp.td_stype == 2)
+        if (inp.esolver_type == "tddft" && inp.td_stype == 2)
         {
             Operator<TK>* td_pot_hybrid = new TD_pot_hybrid<OperatorLCAO<TK, TR>>(this->hsk,
                                                                            this->kv,
@@ -379,16 +380,16 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                                            two_center_bundle.kinetic_orb.get());
             this->getOperator()->add(td_pot_hybrid);
         }
-        if (PARAM.inp.dft_plus_u)
+        if (inp.dft_plus_u)
         {
             Operator<TK>* plus_u = nullptr;
-            if (PARAM.inp.dft_plus_u == 2)
+            if (inp.dft_plus_u == 2)
             {
                 plus_u = new OperatorDFTU<OperatorLCAO<TK, TR>>(this->hsk,
                                                               this->kv->kvec_d,
-																  this->hR,
-																  ucell,
-																  p_dftu,
+															  this->hR,
+															  ucell,
+															  p_dftu,
                                                               this->kv->isk);
             }
             else
@@ -401,13 +402,13 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
                                                       two_center_bundle.overlap_orb_onsite.get(),
                                                       orb.cutoffs(),
                                                       p_dftu,
-                                                      PARAM.inp.nspin,
-                                                      PARAM.inp.onsite_radius,
+                                                      inp.nspin,
+                                                      inp.onsite_radius,
                                                       DM_in);
             }
             this->getOperator()->add(plus_u);
         }
-        if (PARAM.inp.sc_mag_switch)
+        if (inp.sc_mag_switch)
         {
             Operator<TK>* sc_lambda = new DeltaSpin<OperatorLCAO<TK, TR>>(this->hsk,
                                                                           this->kv->kvec_d,
@@ -448,7 +449,7 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
     // if NSPIN==2, HR should be separated into two parts, save HR into this->hRS2
     int memory_fold = 1;
-    if (PARAM.inp.nspin == 2)
+    if (inp.nspin == 2)
     {
         this->hRS2.resize(this->hR->get_nnr() * 2);
         this->hR->allocate(this->hRS2.data(), 0);
