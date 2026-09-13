@@ -229,9 +229,7 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
 
     if (cal_force)
     {
-#ifdef __MPI
         Parallel_Reduce::reduce_all(force.c, force.nr * force.nc);
-#endif
         if (dftu_op->get_nspin() != 4)
         {
             for (int i = 0; i < force.nr * force.nc; i++)
@@ -244,10 +242,7 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
     // stress renormalization
     if (cal_stress)
     {
-#ifdef __MPI
-        // sum up the occupation matrix
         Parallel_Reduce::reduce_all(stress_tmp.data(), 6);
-#endif
         const double weight = dftu_op->get_ucell()->lat0 / dftu_op->get_ucell()->omega;
         for (int i = 0; i < 6; i++)
         {
