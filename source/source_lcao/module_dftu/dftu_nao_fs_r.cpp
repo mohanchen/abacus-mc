@@ -21,10 +21,6 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
                         ModuleBase::matrix& stress)
 {
     ModuleBase::TITLE("DFTU", "cal_fs_nao_r");
-    if (dftu_op->get_dmr(0) == nullptr)
-    {
-        ModuleBase::WARNING_QUIT("DFTU", "dmr is not set");
-    }
 
     // try to get the density matrix, if the density matrix is empty, skip the calculation and return
     const int nspin = dftu_op->get_nspin();
@@ -32,6 +28,10 @@ void cal_fs_nao_r(hamilt::DFTU<hamilt::OperatorLCAO<TK, TR>>* dftu_op,
     for (int is = 0; is < nspin; ++is)
     {
         dmR_tmp[is] = dftu_op->get_dmr(is);
+        if (dmR_tmp[is] == nullptr)
+        {
+            ModuleBase::WARNING_QUIT("DFTU", "dmr is not set");
+        }
     }
     if (dmR_tmp[0]->size_atom_pairs() == 0)
     {
