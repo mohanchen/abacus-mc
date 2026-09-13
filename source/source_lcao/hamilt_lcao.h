@@ -219,6 +219,32 @@ class HamiltLCAO : public Hamilt<TK>
 
     /// get this->ops downcast to OperatorLCAO<TK, TR>*, cached in ops_lcao_
     OperatorLCAO<TK, TR>* getOperatorLCAO();
+
+    /// build the operator chain for the gamma-only case (TK == double)
+    void init_gamma_operators(const UnitCell& ucell,
+                              const Grid_Driver& grid_d,
+                              const Parallel_Orbitals* paraV,
+                              elecstate::Potential* pot_in,
+                              const TwoCenterBundle& two_center_bundle,
+                              const LCAO_Orbitals& orb,
+                              elecstate::DensityMatrix<TK, double>* DM_in,
+                              Plus_U_Base* p_dftu,
+                              Setup_DeePKS<TK>& deepks,
+                              const Input_para& inp,
+                              const std::vector<std::string>& pot_register_in);
+
+    /// build the operator chain for the multi-k case (TK == complex<double>)
+    void init_multik_operators(const UnitCell& ucell,
+                               const Grid_Driver& grid_d,
+                               const Parallel_Orbitals* paraV,
+                               elecstate::Potential* pot_in,
+                               const TwoCenterBundle& two_center_bundle,
+                               const LCAO_Orbitals& orb,
+                               elecstate::DensityMatrix<TK, double>* DM_in,
+                               Plus_U_Base* p_dftu,
+                               Setup_DeePKS<TK>& deepks,
+                               const Input_para& inp,
+                               const std::vector<std::string>& pot_register_in);
 };
 
 } // namespace hamilt
