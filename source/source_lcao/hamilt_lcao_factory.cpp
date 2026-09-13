@@ -52,7 +52,7 @@ void add_dftu_op(Operator<TK>*& ops,
     if (inp.dft_plus_u == 1)
     {
         // radius-adjustable localized projections (with onsite_radius)
-        plus_u = new DFTU<OperatorLCAO<TK, TR>>(hsk,
+        plus_u = new DFTU_onsite<OperatorLCAO<TK, TR>>(hsk,
                                                 kv->kvec_d, hR,
                                                 ucell, &grid_d,
                                                 two_center_bundle.overlap_orb_onsite.get(),
@@ -62,7 +62,7 @@ void add_dftu_op(Operator<TK>*& ops,
     else if (inp.dft_plus_u == 2)
     {
         // first-zeta NAO projections (old method, kept for testing)
-        plus_u = new OperatorDFTU<OperatorLCAO<TK, TR>>(hsk,
+        plus_u = new DFTU_firstzeta<OperatorLCAO<TK, TR>>(hsk,
                                                         kv->kvec_d, hR,
                                                         ucell, p_dftu,
                                                         kv->isk);
@@ -187,7 +187,7 @@ LcaoOpsBundle<TK, TR> build_gamma_ops(const UnitCell& ucell,
     }
 #endif
 
-    // end node should be OperatorDFTU
+    // end node should be DFTU_firstzeta
     if (inp.dft_plus_u)
     {
         add_dftu_op<TK, TR>(ops, ucell, grid_d, two_center_bundle, orb, DM_in,
