@@ -33,10 +33,12 @@ class DFTU : public T
 
 #endif
 
-/// DFTU class template specialization for OperatorLCAO<TK> base class
-/// It is used to calculate the non-local pseudopotential matrix in real space and fold it to k-space
-/// HR = <psi_{mu, 0}|beta_p1>D_{p1, p2}<beta_p2|psi_{nu, R}>
-/// HK = <psi_{mu, k}|beta_p1>D_{p1, p2}<beta_p2|psi_{nu, k}> = \sum_{R} e^{ikR} HR
+/// DFTU class template specialization for OperatorLCAO<TK, TR> base class.
+/// Adds the DFT+U on-site correction to the real-space Hamiltonian, which is
+/// then folded to k-space by the OperatorLCAO machinery:
+///   HR(mu,nu;I,J,R) = <phi_{mu,I,0}|chi_m> pot_onsite(m,m') <chi_m'|phi_{nu,J,R}>
+///   HK = sum_R e^{ikR} HR
+/// where chi_m are the Hubbard projectors of the correlated shell.
 /// Template parameters:
 /// - TK: data type of k-space Hamiltonian
 /// - TR: data type of real space Hamiltonian
@@ -58,8 +60,8 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     ~DFTU<OperatorLCAO<TK, TR>>();
 
     /**
-     * @brief contributeHR() is used to calculate the HR matrix
-     * <phi_{\mu, 0}|beta_p1>D_{p1, p2}<beta_p2|phi_{\nu, R}>
+     * @brief contributeHR() calculates the HR matrix
+     * <phi_{\mu, 0}|chi_m> pot_onsite(m,m') <chi_m'|phi_{\nu, R}>
      */
     virtual void contributeHR() override;
 
@@ -83,8 +85,9 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
     int get_nspin() const { return nspin; }
     std::vector<AdjacentAtomInfo>& get_adjs_all() { return adjs_all; }
 
-    /// pot_onsite_{m, m'} = sum_{m,m'} (1/2*delta_{m, m'} - occ_{m, m'}) * U
-    /// EU = sum_{m,m'} 1/2 * U * occ_{m, m'} * occ_{m', m}
+    /// On-site potential and Hubbard energy for one correlated shell:
+    ///   pot_onsite(m,m') = U_eff * (0.5 * delta_{m,m'} - occ(m,m'))
+    ///   EU = (U_eff / 2) * sum_{m,m'} occ(m,m') * (delta_{m,m'} - occ(m',m))
     void cal_pot_onsite(const std::vector<double>& occ, const int m_size, const double u_value, double* pot_onsite, double& eu);
 
     /// transfer pot_onsite format from pauli matrix to normal for non-collinear spin case
@@ -120,29 +123,22 @@ class DFTU<OperatorLCAO<TK, TR>> : public OperatorLCAO<TK, TR>
      */
     void cal_nlm_all(const Parallel_Orbitals* pv);
 
-    /// @brief BRANCH 1 of contributeHR: compute occ from DMR for one
-    ///        Hubbard atom (iat0). Walks (ad1, ad2) neighbor pairs, calls
-    ///        DFTU_LCAO::cal_occ_ijr, MPI-reduces, scales for nspin=1, and
-    ///        stores via set_flat.
+    /// @brief occupation matrix of one Hubbard atom (iat0) from the DMR:
+    ///        occ(m,m') = sum_R DMR(I,J,R) * <phi_0|chi_m(I)> * <chi_m'(J)|phi_R>
     void compute_occ_from_dmr(int iat0,
                               int target_L,
                               const AdjacentAtomInfo& adjs,
                               const Parallel_Orbitals* pv,
                               std::vector<double>& occ);
 
-    /// @brief BRANCH 2 of contributeHR: load pre-read occ_mat from file
-    ///        into occ for one Hubbard atom (iat0). Dispatches on nspin
-    ///        (nspin=4 uses stacked Pauli blocks; nspin=1/2 uses per-spin
-    ///        get).
+    /// @brief load the occupation matrix of one Hubbard atom (iat0) from a
+    ///        pre-read occ_mat file
     void load_occ_from_file(int iat0,
                             int target_L,
                             std::vector<double>& occ);
 
-    /// @brief Step 5 of contributeHR: accumulate HR contributions from
-    ///        all (ad1, ad2) neighbor pairs for one Hubbard atom (iat0)
-    ///        using the precomputed pot_onsite. Protected by an OpenMP
-    ///        critical section because different iat0 may write the same
-    ///        HR(iat1, iat2, R) entry.
+    /// @brief accumulate the HR contributions of one Hubbard atom (iat0)
+    ///        from the precomputed pot_onsite
     void accumulate_HR_for_iat0(int iat0,
                                 const AdjacentAtomInfo& adjs,
                                 const Parallel_Orbitals* pv,

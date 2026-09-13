@@ -7,10 +7,10 @@ class UnitCell;
 namespace DFTU_LCAO {
 
 /**
- * @brief DFT+U energy correction with the double-counting term subtracted.
- *
- * Computes energy_u from occ_mat and the onsite potential, then writes the
- * result back to dftu via set_energy.
+ * @brief DFT+U energy correction with the double-counting term subtracted:
+ *        E = E_U - E_dc, with
+ *          E_U  = (U_eff / 2) * sum_{m,m'} occ(m,m') * (delta_{m,m'} - occ(m',m))
+ *          E_dc = sum_{m,m'} onsite_pot(m,m') * occ(m',m)
  *
  * @param dftu  Plus_U_Base state (mutable: set_energy is called at the end)
  * @param ucell unit cell
@@ -25,7 +25,7 @@ void cal_energy_correction(Plus_U_Base& dftu,
                            int npol);
 
 /**
- * @brief Accumulate the DFT+U energy term (0.5 * U * (n - n^2)) for one
+ * @brief Accumulate the DFT+U energy term (U_eff / 2) * (n - n^2) for one
  *        (T, iat, l, n=0) channel in the collinear case (nspin=1 or 2).
  *        Returns the per-atom contribution to energy_u.
  */
@@ -49,9 +49,9 @@ double calc_energy_u_noncollinear(const Plus_U_Base& dftu,
 
 /**
  * @brief Accumulate the double-counting correction energy_dc for one
- *        (T, iat, l, n=0) channel by summing onsite_pot * occ over the
- *        (m1, ipol1, m2, ipol2) grid. Dispatches on nspin to choose the
- *        spin loop count. Returns the per-atom contribution to energy_dc.
+ *        (T, iat, l, n=0) channel:
+ *        E_dc = sum_{m1,ipol1,m2,ipol2} onsite_pot(m1,ipol1;m2,ipol2) * occ(m2,ipol2;m1,ipol1)
+ *        Returns the per-atom contribution to energy_dc.
  */
 double calc_energy_dc_block(const Plus_U_Base& dftu,
                             int T,

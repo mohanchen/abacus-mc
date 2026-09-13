@@ -16,9 +16,9 @@ class OccupationMatrix;
 
 namespace DFTU_LCAO {
 
-/// @brief Compute the occupation matrix and delegate to Plus_U member.
-/// Dispatches to DFTU_LCAO::cal_occ_mat_gamma (gamma-only, double) or
-/// DFTU_LCAO::cal_occ_mat_k (multi-k, std::complex<double>) via template.
+/// @brief Compute the occupation matrix
+///        occ(m,m') = sum_R DMR(I,J,R) * <phi_0|chi_m(I)> * <chi_m'(J)|phi_R>
+///        and delegate to the Plus_U member.
 /// @param pv parallel-orbitals descriptor that owns BLACS context and
 ///        global<->local index maps; sourced by the caller from the same
 ///        Parallel_Orbitals used to build the Hamiltonian and density matrix.
@@ -37,9 +37,7 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const std::string& ks_solver);
 
 /// @brief Accumulate one (iat, l, n, spin) channel of the occupation matrix
-///        from the complex S*DM product srho for the multi-k case. Reads npol
-///        and the iatlnmipol2iwt lookup directly from occmat so callers do
-///        not need to thread those scalars through.
+///        from the complex S*DM product srho for the multi-k case.
 void accumulate_occ_channel_k(OccupationMatrix& occmat,
                               const Parallel_Orbitals& pv,
                               const std::complex<double>* srho,
@@ -49,9 +47,7 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
                               int spin);
 
 /// @brief Accumulate one (iat, l, n, spin) channel of the occupation matrix
-///        from the real S*DM product srho for the gamma-only case. Reads npol
-///        and the iatlnmipol2iwt lookup directly from occmat so callers do
-///        not need to thread those scalars through.
+///        from the real S*DM product srho for the gamma-only case.
 void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
                                   const Parallel_Orbitals& pv,
                                   const double* srho,
@@ -63,16 +59,14 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
 /// @brief MPI Allreduce each (iat, l, n=0) channel of occmat across all ranks
 ///        and symmetrize it (Hermitian average) per the nspin convention:
 ///        nspin=1 mirrors spin-0 into spin-1; nspin=2 symmetrizes each spin;
-///        nspin=4 symmetrizes the single Pauli block. Reads nspin and npol
-///        from occmat so callers do not thread them through.
+///        nspin=4 symmetrizes the single Pauli block.
 void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
                                  const UnitCell& ucell,
                                  const std::vector<int>& l_channel);
 
 /// @brief Walk the (it, ia, l, n=0) atom mesh for one k-point and accumulate
 ///        each qualifying channel of occmat from the complex S*DM product
-///        srho. Reads npol and the iatlnmipol2iwt lookup from occmat so
-///        callers do not thread them through.
+///        srho.
 void accumulate_occ_k_for_ik(OccupationMatrix& occmat,
                              const UnitCell& ucell,
                              const Parallel_Orbitals& pv,
@@ -83,8 +77,7 @@ void accumulate_occ_k_for_ik(OccupationMatrix& occmat,
 /// @brief Process one (it, ia, l, n=0, spin) block of the gamma-only
 ///        occupation matrix: accumulate from the real S*DM product srho,
 ///        MPI-Allreduce across ranks, then symmetrize per the nspin
-///        convention. Reads nspin and npol from occmat so callers do not
-///        thread them through.
+///        convention.
 void process_occ_channel_gamma(OccupationMatrix& occmat,
                                const UnitCell& ucell,
                                const Parallel_Orbitals& pv,

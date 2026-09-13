@@ -10,8 +10,17 @@ class UnitCell;
 
 namespace DFTU_LCAO {
 
+/// DFT+U effective potential in the LCAO basis. With V = pot_onsite (the
+/// on-site Hubbard correction potential in the full basis) and S the overlap
+/// matrix, the symmetrized U-term potential is
+///
+///   pot_uterm = (V*S + (V*S)^T) / 2
+///
+/// and its contribution to the real-space Hamiltonian is accumulated as
+///
+///   HR += (V*SR + SR*V) / 2
+
 /// @brief Compute the LCAO-basis U-term effective potential matrix (complex).
-/// Calls DFTU_LCAO::pot_onsite_complex plus the S-projection GEMM.
 void pot_uterm_complex(Plus_U_Base& dftu,
                        const UnitCell& ucell,
                        const Parallel_Orbitals* pv,
@@ -22,7 +31,6 @@ void pot_uterm_complex(Plus_U_Base& dftu,
                        const int npol);
 
 /// @brief Compute the LCAO-basis U-term effective potential matrix (real).
-/// Calls DFTU_LCAO::pot_onsite_real plus the S-projection GEMM.
 void pot_uterm_real(Plus_U_Base& dftu,
                     const UnitCell& ucell,
                     const Parallel_Orbitals* pv,
@@ -33,7 +41,6 @@ void pot_uterm_real(Plus_U_Base& dftu,
                     const int npol);
 
 /// @brief Accumulate the DFT+U term into the real-space HR (double).
-/// Wraps pot_onsite_real plus the (pot_onsite*SR + SR*pot_onsite)/2 GEMM pair.
 void pot_uterm_HR_real(const Plus_U_Base& dftu,
                        const UnitCell& ucell,
                        const Parallel_Orbitals* pv,
@@ -43,7 +50,6 @@ void pot_uterm_HR_real(const Plus_U_Base& dftu,
                        const int npol);
 
 /// @brief Accumulate the DFT+U term into the real-space HR (complex).
-/// Wraps pot_onsite_complex plus the (pot_onsite*SR + SR*pot_onsite)/2 GEMM pair.
 void pot_uterm_HR_complex(const Plus_U_Base& dftu,
                           const UnitCell& ucell,
                           const Parallel_Orbitals* pv,
