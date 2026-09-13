@@ -156,8 +156,6 @@ HamiltLCAO<TK, TR>::HamiltLCAO(const UnitCell& ucell,
 
     ModuleBase::Memory::record("HamiltLCAO::hR", this->hR->get_memory_size() * memory_fold);
     ModuleBase::Memory::record("HamiltLCAO::sR", this->sR->get_memory_size());
-
-    return;
 }
 
 // build the operator chain for the gamma-only case (TK == double)
@@ -299,22 +297,15 @@ void HamiltLCAO<TK, TR>::init_multik_operators(const UnitCell& ucell,
 
     // nonlocal term (<psi|beta>D<beta|psi>)
     // in general case, target HR is this->hR, while target HK is this->hsk->get_hk()
-    if (inp.vnl_in_h)
+    // TDDFT velocity gauge will calculate full non-local potential including the original one and the
+    // correction on its own, so the original non-local potential term should be skipped then
+    if (inp.vnl_in_h && (inp.esolver_type != "tddft" || elecstate::H_TDDFT_pw::stype != 1))
     {
         Operator<TK>* nonlocal = new Nonlocal<OperatorLCAO<TK, TR>>(this->hsk,
                                                                     this->kv->kvec_d, this->hR,
                                                                     &ucell, orb.cutoffs(), &grid_d,
                                                                     two_center_bundle.overlap_orb_beta.get());
-        // TDDFT velocity gauge will calculate full non-local potential including the original one and the
-        // correction on its own. So the original non-local potential term should be skipped
-        if (inp.esolver_type != "tddft" || elecstate::H_TDDFT_pw::stype != 1)
-        {
-            this->getOperator()->add(nonlocal);
-        }
-        else
-        {
-            delete nonlocal;
-        }
+        this->getOperator()->add(nonlocal);
     }
 
 #ifdef __MLALGO

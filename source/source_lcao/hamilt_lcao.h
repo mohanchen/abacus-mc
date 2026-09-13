@@ -1,5 +1,5 @@
-#ifndef HAMILT_LCAO_H 
-#define HAMILT_LCAO_H 
+#ifndef HAMILT_LCAO_H
+#define HAMILT_LCAO_H
 
 #include "source_basis/module_nao/two_center_bundle.h"
 #include "source_cell/klist.h"
@@ -87,10 +87,7 @@ class HamiltLCAO : public Hamilt<TK>
 
     ~HamiltLCAO()
     {
-        if (this->ops != nullptr)
-        {
-            delete this->ops;
-        }
+        delete this->ops;
         delete this->hR;
         delete this->sR;
         delete this->hsk;
@@ -156,7 +153,7 @@ class HamiltLCAO : public Hamilt<TK>
     void refresh(bool yes) override;
 
     // for target K point, update consequence of hPsi() and matrix()
-    virtual void updateHk(const int ik) override;
+    void updateHk(const int ik) override;
 
     /**
      * @brief special for LCAO, update SK only
@@ -210,8 +207,6 @@ class HamiltLCAO : public Hamilt<TK>
 
     //! snapshot of inp.vl_in_h taken at construction; avoids PARAM dependency
     bool vl_in_h = true;
-
-    const int istep = 0;
 
     //! cached downcast of this->ops to OperatorLCAO, filled on first use
     //! to avoid repeating dynamic_cast in updateHk/refresh
