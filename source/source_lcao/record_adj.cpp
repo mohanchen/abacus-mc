@@ -1,5 +1,4 @@
 #include "record_adj.h"
-#include "source_base/global_function.h"
 #include "source_base/timer.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 
@@ -8,31 +7,15 @@ Record_adj::Record_adj()
 }
 Record_adj::~Record_adj()
 {
-    if (info_modified)
-    {
-        this->delete_grid();
-    }
 }
 
 void Record_adj::delete_grid()
 {
-    for (int i = 0; i < na_proc; i++)
-    {
-        // how many 'numerical orbital' adjacents
-        // for each atom in this process.
-        for (int j = 0; j < na_each[i]; j++)
-        {
-            delete[] info[i][j];
-        }
-        delete[] info[i];
-    }
-    delete[] info;
-    delete[] na_each;
-    if (iat2ca)
-    {
-        delete[] iat2ca;
-    }
-    info_modified = false;
+    info.clear();
+    info_offset.clear();
+    na_each.clear();
+    iat2ca.clear();
+    na_proc = 0;
 }
 
 //--------------------------------------------
@@ -117,7 +100,6 @@ void Record_adj::for_2d(const UnitCell& ucell,
     this->fill_info(ucell, grid_d, orb_cutoff);
 
     ModuleBase::timer::end("Record_adj", "for_2d");
-    info_modified = true;
 }
 
 //--------------------------------------------
@@ -135,8 +117,7 @@ void Record_adj::count_adjacent(const UnitCell& ucell,
     this->na_proc = ucell.nat;
 
     // number of adjacents for each atom.
-    this->na_each = new int[na_proc];
-    ModuleBase::GlobalFunc::ZEROS(na_each, na_proc);
+    this->na_each.assign(na_proc, 0);
     int iat = 0;
 
     for (int T1 = 0; T1 < ucell.ntype; ++T1)
@@ -203,23 +184,17 @@ void Record_adj::count_adjacent(const UnitCell& ucell,
 //--------------------------------------------
 void Record_adj::allocate_info()
 {
-    this->info = new int**[na_proc];
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
+    // lay out all adjacent records flat: the records of
+    // atom iat start at info_offset[iat].
+    info_offset.resize(na_proc);
+    int total = 0;
     for (int i = 0; i < na_proc; i++)
     {
-        if (na_each[i] > 0)
-        {
-            info[i] = new int*[na_each[i]];
-            for (int j = 0; j < na_each[i]; j++)
-            {
-                // (Rx, Ry, Rz, T, I)
-                info[i][j] = new int[5];
-                ModuleBase::GlobalFunc::ZEROS(info[i][j], 5);
-            }
-        }
+        info_offset[i] = total;
+        total += na_each[i];
     }
+    // each record holds (Rx, Ry, Rz, T, I), zero-initialized
+    info.resize(total);
 }
 
 //--------------------------------------------
@@ -256,11 +231,12 @@ void Record_adj::fill_info(const UnitCell& ucell,
                 continue;
             }
 
-            info[iat][cb][0] = adjs.box[ad].x;
-            info[iat][cb][1] = adjs.box[ad].y;
-            info[iat][cb][2] = adjs.box[ad].z;
-            info[iat][cb][3] = T2;
-            info[iat][cb][4] = I2;
+            std::array<int, 5>& rec = info[info_offset[iat] + cb];
+            rec[0] = adjs.box[ad].x;
+            rec[1] = adjs.box[ad].y;
+            rec[2] = adjs.box[ad].z;
+            rec[3] = T2;
+            rec[4] = I2;
             ++cb;
         } // end ad
     } // end iat

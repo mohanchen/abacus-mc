@@ -5,14 +5,14 @@
 #include "source_cell/unitcell.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 
+#include <array>
+#include <vector>
+
 //---------------------------------------------------
 // FUNCTION: record the adjacent atoms for each atom
 //---------------------------------------------------
 class Record_adj
 {
-  private:
-    bool info_modified = false;
-
   public:
     Record_adj();
     ~Record_adj();
@@ -51,7 +51,7 @@ class Record_adj
 
   public:
     int na_proc=0;
-    int* na_each=nullptr;
+    std::vector<int> na_each;
 
     //--------------------------------------------
     // record sparse atom index in for_grid();
@@ -66,12 +66,24 @@ class Record_adj
     // 1. iat2ca[iat] > 0 ? na_each[iat2ca[iat]] : 0
     // 2. iat2ca[iat] > 0 ? info[iat2ca[iat]] : nullptr
     //--------------------------------------------
-    int* iat2ca=nullptr;
+    std::vector<int> iat2ca;
 
     //------------------------------------------------
-    // info will identify each atom in each unitcell.
+    // info identifies each adjacent atom in each
+    // unitcell. All adjacent records are stored flat:
+    // the records of atom iat occupy
+    // info[info_offset[iat], info_offset[iat]+na_each[iat]).
+    // Each record holds (Rx, Ry, Rz, T, I).
     //------------------------------------------------
-    int*** info=nullptr;
+    std::vector<std::array<int, 5>> info;
+    std::vector<int> info_offset;
+
+    // Access the (Rx, Ry, Rz, T, I) record of the cb-th
+    // adjacent atom of atom iat.
+    const std::array<int, 5>& get_info(const int iat, const int cb) const
+    {
+        return info[info_offset[iat] + cb];
+    }
 };
 
 #endif
