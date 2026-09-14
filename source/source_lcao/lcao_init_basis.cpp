@@ -60,7 +60,7 @@ void init_basis_lcao(Parallel_Orbitals& pv,
                                PARAM.inp.basis_type, PARAM.inp.out_element_info,
                                PARAM.inp.lspinorb, PARAM.inp.nspin);
         ucell.infoNL.reset(lcao_nl);
-        two_center_bundle.build_beta(ucell.ntype, lcao_nl->get_nonlocal().Beta);
+        two_center_bundle.build_beta(ucell.ntype, lcao_nl->get_nonlocal().Beta.data());
     }
 
 #ifdef __FFT_TWO_CENTER

@@ -85,7 +85,7 @@ void ModuleESolver::ESolver_LR<T, TR>::setup_2center_table(TwoCenterBundle& two_
                                this->inp_->basis_type, this->inp_->out_element_info,
                                this->inp_->lspinorb, this->inp_->nspin);
         ucell.infoNL.reset(lcao_nl);
-        two_center_bundle.build_beta(ucell.ntype, lcao_nl->get_nonlocal().Beta);
+        two_center_bundle.build_beta(ucell.ntype, lcao_nl->get_nonlocal().Beta.data());
     }
 }
 

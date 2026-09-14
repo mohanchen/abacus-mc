@@ -5,23 +5,18 @@
 
 #ifdef __LCAO
 #include "source_pw/module_pwdft/soc.h"
+#include "../source_base/complexmatrix.h"
 // mohan add 2013-08-02
 // In order to get rid of the read in file .NONLOCAL.
 
 InfoNonlocal::InfoNonlocal()
 {
-    this->Beta = new Numerical_Nonlocal[1];
-    this->nproj = nullptr;
+    this->Beta.resize(1);
     this->nprojmax = 0;
     this->rcutmax_Beta = 0.0;
 }
-InfoNonlocal::~InfoNonlocal()
-{
-    delete[] Beta;
-    delete[] nproj;
-}
+InfoNonlocal::~InfoNonlocal() = default;
 
-#include "../source_base/complexmatrix.h"
 void InfoNonlocal::Set_NonLocal(const int& it,
                                 Atom* atom,
                                 int& n_projectors,
@@ -44,7 +39,7 @@ void InfoNonlocal::Set_NonLocal(const int& it,
     const int nh = atom->ncpp.nh; // zhengdy-soc
 
     // set the nonlocal projector objects
-    Numerical_Nonlocal_Lm* tmpBeta_lm = new Numerical_Nonlocal_Lm[n_projectors];
+    std::vector<Numerical_Nonlocal_Lm> tmpBeta_lm(n_projectors);
 
     ModuleBase::ComplexMatrix coefficient_D_nc_in(nh * 2, nh * 2); // zhengdy-soc
 
@@ -125,8 +120,7 @@ void InfoNonlocal::Set_NonLocal(const int& it,
             ++cut_mesh;
         }
 
-        double* beta_r = new double[cut_mesh];
-        ModuleBase::GlobalFunc::ZEROS(beta_r, cut_mesh);
+        std::vector<double> beta_r(cut_mesh, 0.0);
         for (int ir = 0; ir < cut_mesh; ++ir)
         {
             beta_r[ir] = atom->ncpp.betar(p1, ir);
@@ -138,16 +132,15 @@ void InfoNonlocal::Set_NonLocal(const int& it,
                                    cut_mesh, // number of radial mesh
                                    atom->ncpp.rab.data(),
                                    atom->ncpp.r.data(), // radial mesh value (a.u.)
-                                   beta_r,
+                                   beta_r.data(),
                                    kmesh,
                                    dk,
                                    dr_uniform); // delta k mesh in reciprocal space
 
-        if (out_element_info) {
+        if (out_element_info)
+        {
             tmpBeta_lm[p1].plot(GlobalV::MY_RANK);
         }
-
-        delete[] beta_r;
     }
 
     assert(ip1 == nh);
@@ -157,12 +150,10 @@ void InfoNonlocal::Set_NonLocal(const int& it,
                                  atom->ncpp.pp_type,
                                  atom->ncpp.lmax,
                                  n_projectors,
-                                 tmpBeta_lm); // zhengdy-soc 2018-09-10
+                                 tmpBeta_lm.data()); // zhengdy-soc 2018-09-10
 
     // mohan add 2021-05-07
     atom->ncpp.set_d_so(coefficient_D_nc_in, n_projectors, nh, atom->ncpp.has_so, lspinorb, nspin);
-
-    delete[] tmpBeta_lm;
 
     log << " SET NONLOCAL PSEUDOPOTENTIAL PROJECTORS FOR ELEMENT " << atom->label << std::endl;
     return;
@@ -223,7 +214,7 @@ void InfoNonlocal::Read_NonLocal(const int& it,
                                          "Only available for NC nonlocal pseudopotential");
             }
             ModuleBase::GlobalFunc::READ_VALUE(ifs, nlmax);
-            //			std::cout << " " << label << " " << ps_type << " " << nlmax << std::endl;
+            // std::cout << " " << label << " " << ps_type << " " << nlmax << std::endl;
             assert(nlmax >= -1);
             ModuleBase::GlobalFunc::SCAN_END(ifs, "</HEADER>");
         }
@@ -304,9 +295,8 @@ void InfoNonlocal::Read_NonLocal(const int& it,
     Parallel_Common::bcast_int(n_projectors); // mohan add 2010-12-20
 #endif
 
-    Numerical_Nonlocal_Lm* tmpBeta_lm = new Numerical_Nonlocal_Lm[n_projectors];
-    int* LfromBeta = new int[n_projectors];
-    ModuleBase::GlobalFunc::ZEROS(LfromBeta, n_projectors);
+    std::vector<Numerical_Nonlocal_Lm> tmpBeta_lm(n_projectors);
+    std::vector<int> LfromBeta(n_projectors, 0);
 
     for (int p1 = 0; p1 < n_projectors; p1++)
     {
@@ -345,12 +335,9 @@ void InfoNonlocal::Read_NonLocal(const int& it,
         Parallel_Common::bcast_int(LfromBeta[p1]);
 #endif
 
-        double* radial_ps = new double[meshr_ps];
-        double* rab_ps = new double[meshr_ps];
-        double* beta_r = new double[meshr_ps];
-        ModuleBase::GlobalFunc::ZEROS(radial_ps, meshr_ps);
-        ModuleBase::GlobalFunc::ZEROS(rab_ps, meshr_ps);
-        ModuleBase::GlobalFunc::ZEROS(beta_r, meshr_ps);
+        std::vector<double> radial_ps(meshr_ps, 0.0);
+        std::vector<double> rab_ps(meshr_ps, 0.0);
+        std::vector<double> beta_r(meshr_ps, 0.0);
 
         if (my_rank == 0)
         {
@@ -363,9 +350,9 @@ void InfoNonlocal::Read_NonLocal(const int& it,
         }
 
 #ifdef __MPI
-        Parallel_Common::bcast_double(radial_ps, meshr_ps);
-        Parallel_Common::bcast_double(beta_r, meshr_ps);
-        Parallel_Common::bcast_double(rab_ps, meshr_ps);
+        Parallel_Common::bcast_double(radial_ps.data(), meshr_ps);
+        Parallel_Common::bcast_double(beta_r.data(), meshr_ps);
+        Parallel_Common::bcast_double(rab_ps.data(), meshr_ps);
 #endif
 
 
@@ -373,21 +360,17 @@ void InfoNonlocal::Read_NonLocal(const int& it,
                                    it,            // type
                                    LfromBeta[p1], // angular momentum L
                                    meshr_ps,      // number of radial mesh
-                                   rab_ps,
-                                   radial_ps, // radial mesh value(a.u.)
-                                   beta_r,
+                                   rab_ps.data(),
+                                   radial_ps.data(), // radial mesh value(a.u.)
+                                   beta_r.data(),
                                    kmesh,
                                    dk,
                                    dr_uniform); // delta k mesh in reciprocal space
 
-		if (PARAM.inp.out_element_info) 
-		{
-			tmpBeta_lm[p1].plot(my_rank);
-		}
-
-        delete[] radial_ps;
-        delete[] rab_ps;
-        delete[] beta_r;
+        if (PARAM.inp.out_element_info)
+        {
+            tmpBeta_lm[p1].plot(my_rank);
+        }
 
         if (my_rank == 0)
         {
@@ -395,12 +378,9 @@ void InfoNonlocal::Read_NonLocal(const int& it,
         }
     } // end projectors.
 
-    this->Beta[it].set_type_info(it, label, ps_type, nlmax, n_projectors, tmpBeta_lm);
+    this->Beta[it].set_type_info(it, label, ps_type, nlmax, n_projectors, tmpBeta_lm.data());
 
     ifs.close();
-
-    delete[] LfromBeta;
-    delete[] tmpBeta_lm;
 
     return;
 }
@@ -421,12 +401,8 @@ void InfoNonlocal::setupNonlocal(const int& ntype, Atom* atoms, std::ofstream& l
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if (basis_type == "lcao" || basis_type == "lcao_in_pw")
     {
-        delete[] this->Beta;
-        this->Beta = new Numerical_Nonlocal[ntype];
-
-        delete[] this->nproj;
-        this->nproj = new int[ntype];
-        ModuleBase::GlobalFunc::ZEROS(this->nproj, ntype);
+        this->Beta.resize(ntype);
+        this->nproj.assign(ntype, 0);
 
         this->nprojmax = 0;
 
