@@ -338,7 +338,7 @@ class SnapPsibetaHalfTddftTest : public ::testing::Test
         std::ofstream log("snap_psibeta_half_tddft_nonlocal.log");
         lcao_nl->get_nonlocal().Set_NonLocal(0,
                                             &atom,
-                                            lcao_nl->get_nonlocal().get_nproj(0),
+                                            lcao_nl->get_nonlocal().get_nproj_ref(0),
                                             orb.get_kmesh(),
                                             orb.get_dk(),
                                             orb.get_dr_uniform(),
@@ -423,7 +423,7 @@ class SnapPsibetaNonuniformHalfTddftTest : public ::testing::Test
         std::ofstream log("snap_psibeta_half_tddft_al_nonlocal.log");
         lcao_nl->get_nonlocal().Set_NonLocal(0,
                                             &atom,
-                                            lcao_nl->get_nonlocal().get_nproj(0),
+                                            lcao_nl->get_nonlocal().get_nproj_ref(0),
                                             orb.get_kmesh(),
                                             orb.get_dk(),
                                             orb.get_dr_uniform(),

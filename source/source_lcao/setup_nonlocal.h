@@ -34,6 +34,7 @@ public:
     const std::vector<int>& get_nproj() const { return nproj; }
     std::vector<int>& get_nproj() { return nproj; }
     int get_nproj(const int& it) const { return nproj[it]; }
+    int& get_nproj_ref(const int& it) { return nproj[it]; }
     void assign_nproj(const int& ntype, const int& value) { nproj.assign(ntype, value); }
 
     const int& get_nprojmax() const { return nprojmax; }
