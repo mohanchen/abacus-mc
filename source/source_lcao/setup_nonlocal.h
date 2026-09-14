@@ -16,12 +16,31 @@ public:
     ~InfoNonlocal();
 
     /// NON-LOCAL part for LCAO
+private:
     std::vector<Numerical_Nonlocal> Beta; ///< nonlocal projectors (one per atom type)
     std::vector<int> nproj;               ///< number of projectors per atom type, mohan add 2010-12-19
     int nprojmax;                         ///< max number of projectors among all types, mohan add 2010-03-07
     double rcutmax_Beta;                  ///< max cutoff radius among all projectors, caoyu add 2021-05-24
 
+public:
+
+    const std::vector<Numerical_Nonlocal>& get_Beta() const { return Beta; }
+    std::vector<Numerical_Nonlocal>& get_Beta() { return Beta; }
+    const Numerical_Nonlocal& get_Beta(const int& it) const { return Beta[it]; }
+    const Numerical_Nonlocal* get_Beta_data() const { return Beta.data(); }
+    Numerical_Nonlocal* get_Beta_data() { return Beta.data(); }
+    void resize_Beta(const int& ntype) { Beta.resize(ntype); }
+
+    const std::vector<int>& get_nproj() const { return nproj; }
+    std::vector<int>& get_nproj() { return nproj; }
+    int get_nproj(const int& it) const { return nproj[it]; }
+    void assign_nproj(const int& ntype, const int& value) { nproj.assign(ntype, value); }
+
+    const int& get_nprojmax() const { return nprojmax; }
+    void set_nprojmax(const int& value) { nprojmax = value; }
+
     const double& get_rcutmax_Beta(void) const { return rcutmax_Beta; }
+    void set_rcutmax_Beta(const double& value) { rcutmax_Beta = value; }
 
     /// in order to get rid of the .NONLOCAL file.
     void Set_NonLocal(
