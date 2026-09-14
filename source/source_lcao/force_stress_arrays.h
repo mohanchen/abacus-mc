@@ -55,20 +55,6 @@ class ForceStressArrays
     std::vector<double> stvnl23;
     std::vector<double> stvnl33;
 
-    std::vector<double> DSloc_11;
-    std::vector<double> DSloc_12;
-    std::vector<double> DSloc_13;
-    std::vector<double> DSloc_22;
-    std::vector<double> DSloc_23;
-    std::vector<double> DSloc_33;
-
-    std::vector<double> DHloc_fixed_11;
-    std::vector<double> DHloc_fixed_12;
-    std::vector<double> DHloc_fixed_13;
-    std::vector<double> DHloc_fixed_22;
-    std::vector<double> DHloc_fixed_23;
-    std::vector<double> DHloc_fixed_33;
-
 };
 
 #endif

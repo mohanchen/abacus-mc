@@ -70,30 +70,6 @@ void single_derivative(ForceStressArrays& fsr,
                                fsr.DHloc_fixed_x.data(),
                                fsr.DHloc_fixed_y.data(),
                                fsr.DHloc_fixed_z.data());
-
-        if (cal_stress)
-        {
-            LCAO_domain::set_stress(pv,
-                                    iw1_all,
-                                    iw2_all,
-                                    olm[0],
-                                    olm[1],
-                                    olm[2],
-                                    dtype,
-                                    dtau,
-                                    fsr.DSloc_11.data(),
-                                    fsr.DSloc_12.data(),
-                                    fsr.DSloc_13.data(),
-                                    fsr.DSloc_22.data(),
-                                    fsr.DSloc_23.data(),
-                                    fsr.DSloc_33.data(),
-                                    fsr.DHloc_fixed_11.data(),
-                                    fsr.DHloc_fixed_12.data(),
-                                    fsr.DHloc_fixed_13.data(),
-                                    fsr.DHloc_fixed_22.data(),
-                                    fsr.DHloc_fixed_23.data(),
-                                    fsr.DHloc_fixed_33.data());
-        } // end stress
     }     // end gamma_only
     else  // condition 7, multiple k-points algorithm
     {
