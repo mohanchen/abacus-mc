@@ -38,9 +38,9 @@ class ForceStressArrays
     // dT + part of dVNL
     // used in kpoint algorithm.
     //-----------------------------------------
-    double* DHloc_fixedR_x = nullptr;
-    double* DHloc_fixedR_y = nullptr;
-    double* DHloc_fixedR_z = nullptr;
+    std::vector<double> DHloc_fixedR_x;
+    std::vector<double> DHloc_fixedR_y;
+    std::vector<double> DHloc_fixedR_z;
 
     //----------------------------------------
     // r_mu - r_nu

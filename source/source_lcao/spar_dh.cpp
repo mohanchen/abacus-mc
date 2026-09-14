@@ -19,12 +19,9 @@ sparse_format::set_R_range(HS_Arrays.all_R_coor, grid);
 const int nnr = PARAM.globalv.gamma_only_local ? pv.nloc : pv.nnr;
 
 ForceStressArrays fsr_dh;
-fsr_dh.DHloc_fixedR_x = new double[nnr];
-fsr_dh.DHloc_fixedR_y = new double[nnr];
-fsr_dh.DHloc_fixedR_z = new double[nnr];
-ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_x, nnr);
-ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_y, nnr);
-ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_z, nnr);
+fsr_dh.DHloc_fixedR_x.resize(nnr, 0.0);
+fsr_dh.DHloc_fixedR_y.resize(nnr, 0.0);
+fsr_dh.DHloc_fixedR_z.resize(nnr, 0.0);
 // cal dS=<phi|dphi> in LCAO
 const bool cal_deri = true;
 const bool cal_stress = false;
@@ -41,9 +38,6 @@ LCAO_domain::build_ST_new(fsr_dh,
        false); // delete unused parameter lm.Hloc_fixedR
 
 sparse_format::cal_dSTN_R(ucell,pv, HS_Arrays, fsr_dh, grid, orb.cutoffs(), 0, sparse_thr);
-delete[] fsr_dh.DHloc_fixedR_x;
-delete[] fsr_dh.DHloc_fixedR_y;
-delete[] fsr_dh.DHloc_fixedR_z;
 return;
 }
 void sparse_format::cal_dH(const UnitCell& ucell,
@@ -64,13 +58,9 @@ void sparse_format::cal_dH(const UnitCell& ucell,
 
     ForceStressArrays fsr_dh;
 
-    fsr_dh.DHloc_fixedR_x = new double[nnr];
-    fsr_dh.DHloc_fixedR_y = new double[nnr];
-    fsr_dh.DHloc_fixedR_z = new double[nnr];
-
-    ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_x, nnr);
-    ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_y, nnr);
-    ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_z, nnr);
+    fsr_dh.DHloc_fixedR_x.resize(nnr, 0.0);
+    fsr_dh.DHloc_fixedR_y.resize(nnr, 0.0);
+    fsr_dh.DHloc_fixedR_z.resize(nnr, 0.0);
     // cal dT=<phi|kin|dphi> in LCAO
     // cal T + VNL(P1) in LCAO basis
     const bool cal_deri = true;
@@ -97,10 +87,6 @@ void sparse_format::cal_dH(const UnitCell& ucell,
                                        &grid);
 
     sparse_format::cal_dSTN_R(ucell,pv, HS_Arrays, fsr_dh, grid, orb.cutoffs(), current_spin, sparse_thr);
-
-    delete[] fsr_dh.DHloc_fixedR_x;
-    delete[] fsr_dh.DHloc_fixedR_y;
-    delete[] fsr_dh.DHloc_fixedR_z;
 
     if(PARAM.inp.nspin==2)
     {

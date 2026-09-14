@@ -92,19 +92,9 @@ void Force_LCAO<std::complex<double>>::allocate(const UnitCell& ucell,
     //-----------------------------------------
     // (2) allocate for <phi | T + Vnl | dphi>
     //-----------------------------------------
-    fsr.DHloc_fixedR_x = new double[nnr];
-    fsr.DHloc_fixedR_y = new double[nnr];
-    fsr.DHloc_fixedR_z = new double[nnr];
-
-    const auto init_DHloc_fixedR_xyz = [this, nnr, &fsr](int num_threads, int thread_id) {
-        int beg = 0;
-        int len = 0;
-        ModuleBase::BLOCK_TASK_DIST_1D(num_threads, thread_id, nnr, 1024, beg, len);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixedR_x + beg, len);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixedR_y + beg, len);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixedR_z + beg, len);
-    };
-    ModuleBase::OMP_PARALLEL(init_DHloc_fixedR_xyz);
+    fsr.DHloc_fixedR_x.resize(nnr, 0.0);
+    fsr.DHloc_fixedR_y.resize(nnr, 0.0);
+    fsr.DHloc_fixedR_z.resize(nnr, 0.0);
     ModuleBase::Memory::record("Force::dTVNL", sizeof(double) * nnr * 3);
 
     // calculate dT=<phi|kin|dphi> in LCAO
@@ -130,9 +120,7 @@ void Force_LCAO<std::complex<double>>::finish_ftable(ForceStressArrays& fsr)
     delete[] fsr.DSloc_Rx;
     delete[] fsr.DSloc_Ry;
     delete[] fsr.DSloc_Rz;
-    delete[] fsr.DHloc_fixedR_x;
-    delete[] fsr.DHloc_fixedR_y;
-    delete[] fsr.DHloc_fixedR_z;
+    // DHloc_fixedR_* are vectors, self-managing
 
     if (PARAM.inp.cal_stress)
     {
@@ -189,7 +177,7 @@ void Force_LCAO<std::complex<double>>::ftable(const bool isforce,
         this->cal_edm(pelec, *psi, *dm, *kv, pv, PARAM.inp.nspin, PARAM.inp.nbands, ucell, *ra),
         ucell, pv, dSx, fsr.DH_r.data(), isforce, isstress, ra, -1.0, 1.0);
 
-    const double* dHx[3] = {fsr.DHloc_fixedR_x, fsr.DHloc_fixedR_y, fsr.DHloc_fixedR_z};                    // T+Vnl
+    const double* dHx[3] = {fsr.DHloc_fixedR_x.data(), fsr.DHloc_fixedR_y.data(), fsr.DHloc_fixedR_z.data()}; // T+Vnl
     const double* dHxy[6] = {fsr.stvnl11.data(), fsr.stvnl12.data(), fsr.stvnl13.data(),
                               fsr.stvnl22.data(), fsr.stvnl23.data(), fsr.stvnl33.data()}; // T
 
