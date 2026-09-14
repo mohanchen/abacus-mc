@@ -269,13 +269,25 @@ LcaoOpsBundle<TK, TR> build_multik_ops(const UnitCell& ucell,
     // in general case, target HR is hR, while target HK is hsk->get_hk()
     // TDDFT velocity gauge will calculate full non-local potential including the original one and the
     // correction on its own, so the original non-local potential term should be skipped then
-    if (inp.vnl_in_h && (inp.esolver_type != "tddft" || elecstate::H_TDDFT_pw::stype != 1))
+    if (inp.vnl_in_h)
     {
         Operator<TK>* nonlocal = new Nonlocal<OperatorLCAO<TK, TR>>(hsk,
                                                                     kv->kvec_d, hR,
                                                                     &ucell, orb.cutoffs(), &grid_d,
                                                                     two_center_bundle.overlap_orb_beta.get());
-        ops->add(nonlocal);
+        // Nonlocal::initialize_HR inserts atom pairs into hR (using a cutoff
+        // that includes the nonlocal pseudopotential radius). TDEkinetic and
+        // TDNonlocal both build hR_tmp by iterating over hR's pairs, so the
+        // Nonlocal constructor must run even when the operator itself is not
+        // added to the chain (TDDFT velocity gauge case).
+        if (inp.esolver_type != "tddft" || elecstate::H_TDDFT_pw::stype != 1)
+        {
+            ops->add(nonlocal);
+        }
+        else
+        {
+            delete nonlocal;
+        }
     }
 
 #ifdef __MLALGO
