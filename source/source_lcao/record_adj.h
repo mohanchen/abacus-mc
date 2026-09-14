@@ -25,6 +25,7 @@ class Record_adj
                 const Grid_Driver& grid_d,
                 Parallel_Orbitals& pv,
                 bool gamma_only,
+                const int npol,
                 const std::vector<double>& orb_cutoff);
 
 
@@ -37,6 +38,7 @@ class Record_adj
                         const Grid_Driver& grid_d,
                         Parallel_Orbitals& pv,
                         bool gamma_only,
+                        const int npol,
                         const std::vector<double>& orb_cutoff);
 
     // allocate info[na_proc][na_each[i]][5]

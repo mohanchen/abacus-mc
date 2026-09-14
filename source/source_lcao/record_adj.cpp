@@ -1,7 +1,7 @@
 #include "record_adj.h"
+#include "source_base/global_function.h"
 #include "source_base/timer.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
-#include "source_io/module_parameter/parameter.h"
 
 Record_adj::Record_adj()
 {
@@ -95,6 +95,7 @@ void Record_adj::for_2d(const UnitCell& ucell,
                         const Grid_Driver& grid_d,
                         Parallel_Orbitals& pv,
                         bool gamma_only,
+                        const int npol,
                         const std::vector<double>& orb_cutoff)
 {
     ModuleBase::TITLE("Record_adj", "for_2d");
@@ -109,13 +110,7 @@ void Record_adj::for_2d(const UnitCell& ucell,
         pv.nnr = 0;
     }
 
-    this->count_adjacent(ucell, grid_d, pv, gamma_only, orb_cutoff);
-
-    // xiaohui add "OUT_LEVEL", 2015-09-16
-    if (PARAM.inp.out_level != "m" && !gamma_only)
-    {
-        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "ParaV.nnr", pv.nnr);
-    }
+    this->count_adjacent(ucell, grid_d, pv, gamma_only, npol, orb_cutoff);
 
     this->allocate_info();
 
@@ -134,6 +129,7 @@ void Record_adj::count_adjacent(const UnitCell& ucell,
                                 const Grid_Driver& grid_d,
                                 Parallel_Orbitals& pv,
                                 bool gamma_only,
+                                const int npol,
                                 const std::vector<double>& orb_cutoff)
 {
     this->na_proc = ucell.nat;
@@ -172,7 +168,7 @@ void Record_adj::count_adjacent(const UnitCell& ucell,
                 ++na_each[iat];
                 if (!gamma_only)
                 {
-                    for (int ii = 0; ii < atom1->nw * PARAM.globalv.npol; ++ii)
+                    for (int ii = 0; ii < atom1->nw * npol; ++ii)
                     {
                         // the index of orbitals in this processor
                         const int iw1_all = start1 + ii;
@@ -182,7 +178,7 @@ void Record_adj::count_adjacent(const UnitCell& ucell,
                             continue;
                         }
 
-                        for (int jj = 0; jj < ucell.atoms[T2].nw * PARAM.globalv.npol; ++jj)
+                        for (int jj = 0; jj < ucell.atoms[T2].nw * npol; ++jj)
                         {
                             const int iw2_all = start2 + jj;
                             const int nu = pv.global2local_col(iw2_all);
