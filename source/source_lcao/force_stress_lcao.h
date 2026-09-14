@@ -87,31 +87,6 @@ class Force_Stress_LCAO
                         const pseudopot_cell_vl& locpp,
                         const Structure_Factor& sf);
 
-    void integral_part(const bool isGammaOnly,
-                       const bool isforce,
-                       const bool isstress,
-                       const UnitCell& ucell,
-                       const Grid_Driver& gd,
-                       ForceStressArrays& fsr, // mohan add 2024-06-15
-					   const elecstate::ElecState* pelec,
-					   const elecstate::DensityMatrix<T, double>* dm, // mohan add 2025-11-04
-					   const psi::Psi<T>* psi,
-                       ModuleBase::matrix& foverlap,
-                       ModuleBase::matrix& ftvnl_dphi,
-                       ModuleBase::matrix& fvnl_dbeta,
-                       ModuleBase::matrix& fvl_dphi,
-                       ModuleBase::matrix& soverlap,
-                       ModuleBase::matrix& stvnl_dphi,
-                       ModuleBase::matrix& svnl_dbeta,
-                       ModuleBase::matrix& svl_dphi,
-                       ModuleBase::matrix& fvnl_dalpha,
-                       ModuleBase::matrix& svnl_dalpha,
-                       Setup_DeePKS<T>& deepks,
-                       const TwoCenterBundle& two_center_bundle,
-                       const LCAO_Orbitals& orb,
-                       const Parallel_Orbitals& pv,
-                       const K_Vectors& kv);
-
     void calStressPwPart(UnitCell& ucell,
                          ModuleBase::matrix& sigmadvl,
                          ModuleBase::matrix& sigmahar,
