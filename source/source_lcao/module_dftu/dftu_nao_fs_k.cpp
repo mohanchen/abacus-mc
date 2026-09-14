@@ -387,7 +387,7 @@ void cal_stress_gamma(const DftuFsEnv& env,
     double* dsloc_x = fsr.DSloc_x;
     double* dsloc_y = fsr.DSloc_y;
     double* dsloc_z = fsr.DSloc_z;
-    double* dh_r = fsr.DH_r;
+    double* dh_r = fsr.DH_r.data();
 
     // shared folding context: read-only params bundled for fold_dSR_gamma
     DFTU_LCAO::FoldingCtx fold_ctx{npol, ks_solver, orb_cutoff, &ucell, &pv, &gd};
@@ -461,13 +461,13 @@ void check_folded_arrays(const ForceStressArrays& fsr,
               "See notes in source/source_lcao/force_stress_lcao.cpp.";
         ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress", message);
     }
-    if (cal_stress && (missing_ds || fsr.DH_r == nullptr))
+    if (cal_stress && (missing_ds || fsr.DH_r.empty()))
     {
         const char* message = gamma_only_local
-            ? "fsr.DSloc_x/y/z or fsr.DH_r is nullptr in gamma_only path; "
+            ? "fsr.DSloc_x/y/z or fsr.DH_r is empty in gamma_only path; "
               "the caller must allocate and fill them. "
               "See notes in source/source_lcao/force_stress_lcao.cpp."
-            : "fsr.DSloc_Rx/Ry/Rz or fsr.DH_r is nullptr in multik path; "
+            : "fsr.DSloc_Rx/Ry/Rz or fsr.DH_r is empty in multik path; "
               "the caller must allocate and fill them. "
               "See notes in source/source_lcao/force_stress_lcao.cpp.";
         ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress", message);

@@ -81,18 +81,18 @@ void single_derivative(ForceStressArrays& fsr,
                                     olm[2],
                                     dtype,
                                     dtau,
-                                    fsr.DSloc_11,
-                                    fsr.DSloc_12,
-                                    fsr.DSloc_13,
-                                    fsr.DSloc_22,
-                                    fsr.DSloc_23,
-                                    fsr.DSloc_33,
-                                    fsr.DHloc_fixed_11,
-                                    fsr.DHloc_fixed_12,
-                                    fsr.DHloc_fixed_13,
-                                    fsr.DHloc_fixed_22,
-                                    fsr.DHloc_fixed_23,
-                                    fsr.DHloc_fixed_33);
+                                    fsr.DSloc_11.data(),
+                                    fsr.DSloc_12.data(),
+                                    fsr.DSloc_13.data(),
+                                    fsr.DSloc_22.data(),
+                                    fsr.DSloc_23.data(),
+                                    fsr.DSloc_33.data(),
+                                    fsr.DHloc_fixed_11.data(),
+                                    fsr.DHloc_fixed_12.data(),
+                                    fsr.DHloc_fixed_13.data(),
+                                    fsr.DHloc_fixed_22.data(),
+                                    fsr.DHloc_fixed_23.data(),
+                                    fsr.DHloc_fixed_33.data());
         } // end stress
     }     // end gamma_only
     else  // condition 7, multiple k-points algorithm
@@ -100,27 +100,47 @@ void single_derivative(ForceStressArrays& fsr,
         // condition 8, S or T
         if (dtype == 'S')
         {
+            // write DSloc_R* only when allocated (skipped in cal_dS where only DHloc_fixedR_* is used)
+            const bool write_dsloc_r = (fsr.DSloc_Rx != nullptr);
             // condition 9, nspin
             if (nspin == 1 || nspin == 2)
             {
-                fsr.DSloc_Rx[nnr] = olm[0];
-                fsr.DSloc_Ry[nnr] = olm[1];
-                fsr.DSloc_Rz[nnr] = olm[2];
+                if (write_dsloc_r)
+                {
+                    fsr.DSloc_Rx[nnr] = olm[0];
+                    fsr.DSloc_Ry[nnr] = olm[1];
+                    fsr.DSloc_Rz[nnr] = olm[2];
+                }
+                fsr.DHloc_fixedR_x[nnr] = olm[0];
+                fsr.DHloc_fixedR_y[nnr] = olm[1];
+                fsr.DHloc_fixedR_z[nnr] = olm[2];
             }
             else if (nspin == 4)
             {
                 int is = (jj - jj0 * npol) + (kk - kk0 * npol) * 2;
                 if (is == 0) // is==3 is not needed in force calculation
                 {
-                    fsr.DSloc_Rx[nnr] = olm[0];
-                    fsr.DSloc_Ry[nnr] = olm[1];
-                    fsr.DSloc_Rz[nnr] = olm[2];
+                    if (write_dsloc_r)
+                    {
+                        fsr.DSloc_Rx[nnr] = olm[0];
+                        fsr.DSloc_Ry[nnr] = olm[1];
+                        fsr.DSloc_Rz[nnr] = olm[2];
+                    }
+                    fsr.DHloc_fixedR_x[nnr] = olm[0];
+                    fsr.DHloc_fixedR_y[nnr] = olm[1];
+                    fsr.DHloc_fixedR_z[nnr] = olm[2];
                 }
                 else
                 {
-                    fsr.DSloc_Rx[nnr] = 0.0;
-                    fsr.DSloc_Ry[nnr] = 0.0;
-                    fsr.DSloc_Rz[nnr] = 0.0;
+                    if (write_dsloc_r)
+                    {
+                        fsr.DSloc_Rx[nnr] = 0.0;
+                        fsr.DSloc_Ry[nnr] = 0.0;
+                        fsr.DSloc_Rz[nnr] = 0.0;
+                    }
+                    fsr.DHloc_fixedR_x[nnr] = 0.0;
+                    fsr.DHloc_fixedR_y[nnr] = 0.0;
+                    fsr.DHloc_fixedR_z[nnr] = 0.0;
                 }
             }
             else

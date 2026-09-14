@@ -62,25 +62,13 @@ void Force_LCAO<std::complex<double>>::allocate(const UnitCell& ucell,
 
     if (PARAM.inp.cal_stress)
     {
-        fsr.DH_r = new double[3 * nnr];
-        fsr.stvnl11 = new double[nnr];
-        fsr.stvnl12 = new double[nnr];
-        fsr.stvnl13 = new double[nnr];
-        fsr.stvnl22 = new double[nnr];
-        fsr.stvnl23 = new double[nnr];
-        fsr.stvnl33 = new double[nnr];
-        const auto init_DH_r_stvnl = [this, nnr, &fsr](int num_threads, int thread_id) {
-            int beg, len;
-            ModuleBase::BLOCK_TASK_DIST_1D(num_threads, thread_id, nnr, 1024, beg, len);
-            ModuleBase::GlobalFunc::ZEROS(fsr.DH_r + 3 * beg, 3 * len);
-            ModuleBase::GlobalFunc::ZEROS(fsr.stvnl11 + beg, len);
-            ModuleBase::GlobalFunc::ZEROS(fsr.stvnl12 + beg, len);
-            ModuleBase::GlobalFunc::ZEROS(fsr.stvnl13 + beg, len);
-            ModuleBase::GlobalFunc::ZEROS(fsr.stvnl22 + beg, len);
-            ModuleBase::GlobalFunc::ZEROS(fsr.stvnl23 + beg, len);
-            ModuleBase::GlobalFunc::ZEROS(fsr.stvnl33 + beg, len);
-        };
-        ModuleBase::OMP_PARALLEL(init_DH_r_stvnl);
+        fsr.DH_r.resize(3 * nnr, 0.0);
+        fsr.stvnl11.resize(nnr, 0.0);
+        fsr.stvnl12.resize(nnr, 0.0);
+        fsr.stvnl13.resize(nnr, 0.0);
+        fsr.stvnl22.resize(nnr, 0.0);
+        fsr.stvnl23.resize(nnr, 0.0);
+        fsr.stvnl33.resize(nnr, 0.0);
 
         ModuleBase::Memory::record("Stress::dHr", sizeof(double) * nnr * 3);
         ModuleBase::Memory::record("Stress::dSR", sizeof(double) * nnr * 6);
@@ -148,13 +136,7 @@ void Force_LCAO<std::complex<double>>::finish_ftable(ForceStressArrays& fsr)
 
     if (PARAM.inp.cal_stress)
     {
-        delete[] fsr.DH_r;
-        delete[] fsr.stvnl11;
-        delete[] fsr.stvnl12;
-        delete[] fsr.stvnl13;
-        delete[] fsr.stvnl22;
-        delete[] fsr.stvnl23;
-        delete[] fsr.stvnl33;
+        // vectors are self-managing, nothing to delete
     }
     return;
 }
@@ -205,10 +187,11 @@ void Force_LCAO<std::complex<double>>::ftable(const bool isforce,
     PulayForceStress::cal_pulay_fs(
         foverlap, soverlap,
         this->cal_edm(pelec, *psi, *dm, *kv, pv, PARAM.inp.nspin, PARAM.inp.nbands, ucell, *ra),
-        ucell, pv, dSx, fsr.DH_r, isforce, isstress, ra, -1.0, 1.0);
+        ucell, pv, dSx, fsr.DH_r.data(), isforce, isstress, ra, -1.0, 1.0);
 
     const double* dHx[3] = {fsr.DHloc_fixedR_x, fsr.DHloc_fixedR_y, fsr.DHloc_fixedR_z};                    // T+Vnl
-    const double* dHxy[6] = {fsr.stvnl11, fsr.stvnl12, fsr.stvnl13, fsr.stvnl22, fsr.stvnl23, fsr.stvnl33}; // T
+    const double* dHxy[6] = {fsr.stvnl11.data(), fsr.stvnl12.data(), fsr.stvnl13.data(),
+                              fsr.stvnl22.data(), fsr.stvnl23.data(), fsr.stvnl33.data()}; // T
 
     // tvnl_dphi
     PulayForceStress::cal_pulay_fs(ftvnl_dphi, stvnl_dphi, *dm, ucell, pv, dHx, dHxy, isforce, isstress, ra, 1.0, -1.0);

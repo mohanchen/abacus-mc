@@ -25,10 +25,6 @@ fsr_dh.DHloc_fixedR_z = new double[nnr];
 ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_x, nnr);
 ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_y, nnr);
 ModuleBase::GlobalFunc::ZEROS(fsr_dh.DHloc_fixedR_z, nnr);
-// the pointers of dS is different from dH, use the dh pointers to reuse the print functions
-fsr_dh.DSloc_Rx = fsr_dh.DHloc_fixedR_x;
-fsr_dh.DSloc_Ry = fsr_dh.DHloc_fixedR_y;
-fsr_dh.DSloc_Rz = fsr_dh.DHloc_fixedR_z;
 // cal dS=<phi|dphi> in LCAO
 const bool cal_deri = true;
 const bool cal_stress = false;

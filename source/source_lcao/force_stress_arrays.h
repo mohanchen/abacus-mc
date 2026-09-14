@@ -1,5 +1,7 @@
-#ifndef FORCESTRESS_ARRAYS_H 
+#ifndef FORCESTRESS_ARRAYS_H
 #define FORCESTRESS_ARRAYS_H
+
+#include <vector>
 
 class ForceStressArrays
 {
@@ -44,28 +46,28 @@ class ForceStressArrays
     // r_mu - r_nu
     //----------------------------------------
 
-    double* DH_r = nullptr;//zhengdy added 2017-07
+    std::vector<double> DH_r;//zhengdy added 2017-07
 
-    double* stvnl11 = nullptr;
-    double* stvnl12 = nullptr;
-    double* stvnl13 = nullptr;
-    double* stvnl22 = nullptr;
-    double* stvnl23 = nullptr;
-    double* stvnl33 = nullptr;
+    std::vector<double> stvnl11;
+    std::vector<double> stvnl12;
+    std::vector<double> stvnl13;
+    std::vector<double> stvnl22;
+    std::vector<double> stvnl23;
+    std::vector<double> stvnl33;
 
-    double* DSloc_11 = nullptr;
-    double* DSloc_12 = nullptr;
-    double* DSloc_13 = nullptr;
-    double* DSloc_22 = nullptr;
-    double* DSloc_23 = nullptr;
-    double* DSloc_33 = nullptr;
+    std::vector<double> DSloc_11;
+    std::vector<double> DSloc_12;
+    std::vector<double> DSloc_13;
+    std::vector<double> DSloc_22;
+    std::vector<double> DSloc_23;
+    std::vector<double> DSloc_33;
 
-    double* DHloc_fixed_11 = nullptr;
-    double* DHloc_fixed_12 = nullptr;
-    double* DHloc_fixed_13 = nullptr;
-    double* DHloc_fixed_22 = nullptr;
-    double* DHloc_fixed_23 = nullptr;
-    double* DHloc_fixed_33 = nullptr;
+    std::vector<double> DHloc_fixed_11;
+    std::vector<double> DHloc_fixed_12;
+    std::vector<double> DHloc_fixed_13;
+    std::vector<double> DHloc_fixed_22;
+    std::vector<double> DHloc_fixed_23;
+    std::vector<double> DHloc_fixed_33;
 
 };
 

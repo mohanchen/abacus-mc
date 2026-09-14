@@ -47,30 +47,18 @@ void Force_LCAO<double>::allocate(const UnitCell& ucell,
     // allocate stress part in gamma_only-line, added by zhengdy-stress
     if (PARAM.inp.cal_stress)
     {
-        fsr.DSloc_11 = new double[pv.nloc];
-        fsr.DSloc_12 = new double[pv.nloc];
-        fsr.DSloc_13 = new double[pv.nloc];
-        fsr.DSloc_22 = new double[pv.nloc];
-        fsr.DSloc_23 = new double[pv.nloc];
-        fsr.DSloc_33 = new double[pv.nloc];
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_11, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_12, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_13, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_22, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_23, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_33, pv.nloc);
-        fsr.DHloc_fixed_11 = new double[pv.nloc];
-        fsr.DHloc_fixed_12 = new double[pv.nloc];
-        fsr.DHloc_fixed_13 = new double[pv.nloc];
-        fsr.DHloc_fixed_22 = new double[pv.nloc];
-        fsr.DHloc_fixed_23 = new double[pv.nloc];
-        fsr.DHloc_fixed_33 = new double[pv.nloc];
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_11, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_12, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_13, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_22, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_23, pv.nloc);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_33, pv.nloc);
+        fsr.DSloc_11.resize(pv.nloc, 0.0);
+        fsr.DSloc_12.resize(pv.nloc, 0.0);
+        fsr.DSloc_13.resize(pv.nloc, 0.0);
+        fsr.DSloc_22.resize(pv.nloc, 0.0);
+        fsr.DSloc_23.resize(pv.nloc, 0.0);
+        fsr.DSloc_33.resize(pv.nloc, 0.0);
+        fsr.DHloc_fixed_11.resize(pv.nloc, 0.0);
+        fsr.DHloc_fixed_12.resize(pv.nloc, 0.0);
+        fsr.DHloc_fixed_13.resize(pv.nloc, 0.0);
+        fsr.DHloc_fixed_22.resize(pv.nloc, 0.0);
+        fsr.DHloc_fixed_23.resize(pv.nloc, 0.0);
+        fsr.DHloc_fixed_33.resize(pv.nloc, 0.0);
         ModuleBase::Memory::record("Stress::dSH_GO", sizeof(double) * pv.nloc * 12);
     }
     // calculate dS in LCAO basis
@@ -125,18 +113,7 @@ void Force_LCAO<double>::finish_ftable(ForceStressArrays& fsr)
 
     if (PARAM.inp.cal_stress) // added by zhengdy-stress
     {
-        delete[] fsr.DSloc_11;
-        delete[] fsr.DSloc_12;
-        delete[] fsr.DSloc_13;
-        delete[] fsr.DSloc_22;
-        delete[] fsr.DSloc_23;
-        delete[] fsr.DSloc_33;
-        delete[] fsr.DHloc_fixed_11;
-        delete[] fsr.DHloc_fixed_12;
-        delete[] fsr.DHloc_fixed_13;
-        delete[] fsr.DHloc_fixed_22;
-        delete[] fsr.DHloc_fixed_23;
-        delete[] fsr.DHloc_fixed_33;
+        // vectors are self-managing, nothing to delete
     }
     return;
 }
@@ -178,7 +155,8 @@ void Force_LCAO<double>::ftable(const bool isforce,
     this->allocate(ucell, gd, pv, fsr, two_center_bundle, orb);
 
     const double* dSx[3] = {fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z};
-    const double* dSxy[6] = {fsr.DSloc_11, fsr.DSloc_12, fsr.DSloc_13, fsr.DSloc_22, fsr.DSloc_23, fsr.DSloc_33};
+    const double* dSxy[6] = {fsr.DSloc_11.data(), fsr.DSloc_12.data(), fsr.DSloc_13.data(),
+                              fsr.DSloc_22.data(), fsr.DSloc_23.data(), fsr.DSloc_33.data()};
     // calculate the force related to 'energy density matrix'.
     PulayForceStress::cal_pulay_fs(
         foverlap,
@@ -192,12 +170,12 @@ void Force_LCAO<double>::ftable(const bool isforce,
         isstress);
 
     const double* dHx[3] = {fsr.DHloc_fixed_x, fsr.DHloc_fixed_y, fsr.DHloc_fixed_z};
-    const double* dHxy[6] = {fsr.DHloc_fixed_11,
-                             fsr.DHloc_fixed_12,
-                             fsr.DHloc_fixed_13,
-                             fsr.DHloc_fixed_22,
-                             fsr.DHloc_fixed_23,
-                             fsr.DHloc_fixed_33};
+    const double* dHxy[6] = {fsr.DHloc_fixed_11.data(),
+                             fsr.DHloc_fixed_12.data(),
+                             fsr.DHloc_fixed_13.data(),
+                             fsr.DHloc_fixed_22.data(),
+                             fsr.DHloc_fixed_23.data(),
+                             fsr.DHloc_fixed_33.data()};
     // tvnl_dphi
     PulayForceStress::cal_pulay_fs(ftvnl_dphi, stvnl_dphi, *dm, ucell, pv, dHx, dHxy, isforce, isstress);
 
