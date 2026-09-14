@@ -153,7 +153,7 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     // If k point is used here, allocate HlocR after atom_arrange.
     this->RA.for_2d(ucell, this->gd, this->pv, PARAM.globalv.gamma_only_local, PARAM.globalv.npol, orb_.cutoffs());
     // xiaohui add "OUT_LEVEL", 2015-09-16
-    if (PARAM.inp.out_level != "m" && !PARAM.globalv.gamma_only_local)
+    if (this->inp_->out_level != "m" && !PARAM.globalv.gamma_only_local)
     {
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "ParaV.nnr", this->pv.nnr);
     }
