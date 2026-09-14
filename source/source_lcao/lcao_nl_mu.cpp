@@ -486,12 +486,12 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
                                                                        nlm[1],
                                                                        nlm[2],
                                                                        'N',
-                                                                       fsr.DSloc_x,
-                                                                       fsr.DSloc_y,
-                                                                       fsr.DSloc_z,
-                                                                       fsr.DHloc_fixed_x,
-                                                                       fsr.DHloc_fixed_y,
-                                                                       fsr.DHloc_fixed_z);
+                                                                       fsr.DSloc_x.data(),
+                                                                       fsr.DSloc_y.data(),
+                                                                       fsr.DSloc_z.data(),
+                                                                       fsr.DHloc_fixed_x.data(),
+                                                                       fsr.DHloc_fixed_y.data(),
+                                                                       fsr.DHloc_fixed_z.data());
                                             }
                                             else
                                             {

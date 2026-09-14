@@ -37,12 +37,9 @@ void Force_LCAO<double>::allocate(const UnitCell& ucell,
     // pv.nloc: number of H elements in this proc.
 
     assert(pv.nloc > 0);
-    fsr.DSloc_x = new double[pv.nloc];
-    fsr.DSloc_y = new double[pv.nloc];
-    fsr.DSloc_z = new double[pv.nloc];
-    ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_x, pv.nloc);
-    ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_y, pv.nloc);
-    ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_z, pv.nloc);
+    fsr.DSloc_x.resize(pv.nloc, 0.0);
+    fsr.DSloc_y.resize(pv.nloc, 0.0);
+    fsr.DSloc_z.resize(pv.nloc, 0.0);
     ModuleBase::Memory::record("Force::dS_GO", sizeof(double) * pv.nloc * 3);
     // allocate stress part in gamma_only-line, added by zhengdy-stress
     if (PARAM.inp.cal_stress)
@@ -76,13 +73,10 @@ void Force_LCAO<double>::allocate(const UnitCell& ucell,
     // calculate dT in LCAP
     // allocation dt
     // liaochen add on 2010/7/12
-    fsr.DHloc_fixed_x = new double[pv.nloc];
-    fsr.DHloc_fixed_y = new double[pv.nloc];
-    fsr.DHloc_fixed_z = new double[pv.nloc];
+    fsr.DHloc_fixed_x.resize(pv.nloc, 0.0);
+    fsr.DHloc_fixed_y.resize(pv.nloc, 0.0);
+    fsr.DHloc_fixed_z.resize(pv.nloc, 0.0);
     ModuleBase::Memory::record("Force::dTVNL", sizeof(double) * pv.nloc * 3);
-    ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_x, pv.nloc);
-    ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_y, pv.nloc);
-    ModuleBase::GlobalFunc::ZEROS(fsr.DHloc_fixed_z, pv.nloc);
 
     // calculate dT
     // calculate T + VNL(P1) in LCAO basis
@@ -104,17 +98,7 @@ void Force_LCAO<double>::allocate(const UnitCell& ucell,
 template <>
 void Force_LCAO<double>::finish_ftable(ForceStressArrays& fsr)
 {
-    delete[] fsr.DSloc_x;
-    delete[] fsr.DSloc_y;
-    delete[] fsr.DSloc_z;
-    delete[] fsr.DHloc_fixed_x;
-    delete[] fsr.DHloc_fixed_y;
-    delete[] fsr.DHloc_fixed_z;
-
-    if (PARAM.inp.cal_stress) // added by zhengdy-stress
-    {
-        // vectors are self-managing, nothing to delete
-    }
+    // vectors are self-managing, nothing to delete
     return;
 }
 
@@ -154,7 +138,7 @@ void Force_LCAO<double>::ftable(const bool isforce,
     // allocate DHloc_fixed_x, DHloc_fixed_y, DHloc_fixed_z
     this->allocate(ucell, gd, pv, fsr, two_center_bundle, orb);
 
-    const double* dSx[3] = {fsr.DSloc_x, fsr.DSloc_y, fsr.DSloc_z};
+    const double* dSx[3] = {fsr.DSloc_x.data(), fsr.DSloc_y.data(), fsr.DSloc_z.data()};
     const double* dSxy[6] = {fsr.DSloc_11.data(), fsr.DSloc_12.data(), fsr.DSloc_13.data(),
                               fsr.DSloc_22.data(), fsr.DSloc_23.data(), fsr.DSloc_33.data()};
     // calculate the force related to 'energy density matrix'.
@@ -169,7 +153,7 @@ void Force_LCAO<double>::ftable(const bool isforce,
         isforce,
         isstress);
 
-    const double* dHx[3] = {fsr.DHloc_fixed_x, fsr.DHloc_fixed_y, fsr.DHloc_fixed_z};
+    const double* dHx[3] = {fsr.DHloc_fixed_x.data(), fsr.DHloc_fixed_y.data(), fsr.DHloc_fixed_z.data()};
     const double* dHxy[6] = {fsr.DHloc_fixed_11.data(),
                              fsr.DHloc_fixed_12.data(),
                              fsr.DHloc_fixed_13.data(),

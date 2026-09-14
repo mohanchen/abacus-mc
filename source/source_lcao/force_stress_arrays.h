@@ -14,9 +14,9 @@ class ForceStressArrays
     // force in LCAO
     // used in gamma only algorithm.
     //-----------------------------------------
-    double* DSloc_x = nullptr;
-    double* DSloc_y = nullptr;
-    double* DSloc_z = nullptr;
+    std::vector<double> DSloc_x;
+    std::vector<double> DSloc_y;
+    std::vector<double> DSloc_z;
 
     //-----------------------------------------
     // force in LCAO
@@ -30,9 +30,9 @@ class ForceStressArrays
     // dT + part of dVNL
     // used in gamma only algorithm.
     //-----------------------------------------
-    double* DHloc_fixed_x = nullptr;
-    double* DHloc_fixed_y = nullptr;
-    double* DHloc_fixed_z = nullptr;
+    std::vector<double> DHloc_fixed_x;
+    std::vector<double> DHloc_fixed_y;
+    std::vector<double> DHloc_fixed_z;
 
     //-----------------------------------------
     // dT + part of dVNL
