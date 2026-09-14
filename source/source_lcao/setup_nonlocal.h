@@ -56,19 +56,6 @@ public:
         const int& nspin,
         const int& my_rank);
 
-    /// read in the NONLOCAL projector from file.
-    void Read_NonLocal(
-        const int& it,
-        Atom* atom,
-        int& n_projectors,
-        const int& my_rank,
-        const int& kmesh,
-        const double& dk,
-        const double& dr_uniform,
-        const std::string& nonlocalFile,
-        const bool& out_element_info,
-        std::ofstream& log);
-
     /// workflow to setup nonlocal part for LCAO
     void setupNonlocal(
         const int& ntype,
@@ -94,34 +81,6 @@ private:
         const int& p1,
         std::vector<double>& beta_r,
         int& cut_mesh);
-
-    /// read <HEADER> section from NONLOCAL file
-    void read_header(
-        std::ifstream& ifs,
-        const int& my_rank,
-        std::string& label,
-        std::string& ps_type,
-        int& nlmax);
-
-    /// read <DIJ> section from NONLOCAL file
-    void read_dij(
-        std::ifstream& ifs,
-        const int& my_rank,
-        const int& nlmax,
-        int& n_projectors,
-        std::ofstream& log);
-
-    /// read one <PP_BETA> projector from NONLOCAL file
-    void read_projector(
-        std::ifstream& ifs,
-        const int& my_rank,
-        const int& p1,
-        const int& nlmax,
-        int& meshr_ps,
-        int& lfrombeta,
-        std::vector<double>& radial_ps,
-        std::vector<double>& rab_ps,
-        std::vector<double>& beta_r);
 };
 
 #endif
