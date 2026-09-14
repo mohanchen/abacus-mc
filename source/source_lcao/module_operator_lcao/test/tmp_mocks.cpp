@@ -202,7 +202,6 @@ Numerical_Nonlocal::~Numerical_Nonlocal() {}
 
 #include "../../setup_nonlocal.h"
 InfoNonlocal::InfoNonlocal() {
-    this->Beta.resize(1);
     this->nprojmax = 0;
     this->rcutmax_Beta = 0.0;
 }

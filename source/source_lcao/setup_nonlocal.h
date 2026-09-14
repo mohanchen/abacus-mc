@@ -29,7 +29,9 @@ public:
     const Numerical_Nonlocal& get_Beta(const int& it) const { return Beta[it]; }
     const Numerical_Nonlocal* get_Beta_data() const { return Beta.data(); }
     Numerical_Nonlocal* get_Beta_data() { return Beta.data(); }
-    void resize_Beta(const int& ntype) { Beta.resize(ntype); }
+    // Replaces the whole vector without copying or moving any element,
+    // since Numerical_Nonlocal is non-copyable (see orb_nonlocal.h).
+    void resize_Beta(const int& ntype) { Beta = std::vector<Numerical_Nonlocal>(ntype); }
 
     const std::vector<int>& get_nproj() const { return nproj; }
     std::vector<int>& get_nproj() { return nproj; }

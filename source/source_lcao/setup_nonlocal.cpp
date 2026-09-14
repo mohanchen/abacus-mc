@@ -10,7 +10,6 @@
 
 InfoNonlocal::InfoNonlocal()
 {
-    this->Beta.resize(1);
     this->nprojmax = 0;
     this->rcutmax_Beta = 0.0;
 }
@@ -190,7 +189,10 @@ void InfoNonlocal::setupNonlocal(const int& ntype, Atom* atoms, std::ofstream& l
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if (basis_type == "lcao" || basis_type == "lcao_in_pw")
     {
-        this->Beta.resize(ntype);
+        // Replace the whole vector in one shot: elements are constructed in
+        // place and the move assignment only swaps the buffer, so no
+        // Numerical_Nonlocal object is ever copied or moved.
+        this->Beta = std::vector<Numerical_Nonlocal>(ntype);
         this->nproj.assign(ntype, 0);
 
         this->nprojmax = 0;
