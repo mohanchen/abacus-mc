@@ -1,6 +1,8 @@
 #ifndef INFONONLOCAL_H
 #define INFONONLOCAL_H
 
+#include <fstream>
+#include <string>
 #include <vector>
 
 #include "../source_cell/atom_spec.h"
@@ -59,6 +61,48 @@ public:
         const bool& lspinorb,
         const int& nspin,
         const int& my_rank);
+
+private:
+    /// build SOC coefficient matrix for nonlocal projectors
+    void build_soc_coefficients(
+        const Atom* atom,
+        const int& n_projectors,
+        ModuleBase::ComplexMatrix& coefficient_D_nc_in);
+
+    /// build radial projector beta_r on truncated mesh
+    void build_beta_r(
+        const Atom* atom,
+        const int& p1,
+        std::vector<double>& beta_r,
+        int& cut_mesh);
+
+    /// read <HEADER> section from NONLOCAL file
+    void read_header(
+        std::ifstream& ifs,
+        const int& my_rank,
+        std::string& label,
+        std::string& ps_type,
+        int& nlmax);
+
+    /// read <DIJ> section from NONLOCAL file
+    void read_dij(
+        std::ifstream& ifs,
+        const int& my_rank,
+        const int& nlmax,
+        int& n_projectors,
+        std::ofstream& log);
+
+    /// read one <PP_BETA> projector from NONLOCAL file
+    void read_projector(
+        std::ifstream& ifs,
+        const int& my_rank,
+        const int& p1,
+        const int& nlmax,
+        int& meshr_ps,
+        int& lfrombeta,
+        std::vector<double>& radial_ps,
+        std::vector<double>& rab_ps,
+        std::vector<double>& beta_r);
 };
 
 #endif

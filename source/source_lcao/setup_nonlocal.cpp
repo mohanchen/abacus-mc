@@ -16,38 +16,18 @@ InfoNonlocal::InfoNonlocal()
 }
 InfoNonlocal::~InfoNonlocal() = default;
 
-void InfoNonlocal::Set_NonLocal(const int& it,
-                                Atom* atom,
-                                int& n_projectors,
-                                const int& kmesh,
-                                const double& dk,
-                                const double& dr_uniform,
-                                std::ofstream& log,
-                                const bool& out_element_info,
-                                const bool& lspinorb,
-                                const int& nspin,
-                                const int& my_rank)
+void InfoNonlocal::build_soc_coefficients(const Atom* atom,
+                                          const int& n_projectors,
+                                          ModuleBase::ComplexMatrix& coefficient_D_nc_in)
 {
-    ModuleBase::TITLE("InfoNonlocal", "Set_NonLocal");
-
-    // set a pointer
-    // Atom* atom = &ucell.atoms[it];
-
-    // get the number of non-local projectors
-    n_projectors = atom->ncpp.nbeta;
-
-    const int nh = atom->ncpp.nh; // zhengdy-soc
-
-    // set the nonlocal projector objects
-    std::vector<Numerical_Nonlocal_Lm> tmpBeta_lm(n_projectors);
-
-    ModuleBase::ComplexMatrix coefficient_D_nc_in(nh * 2, nh * 2); // zhengdy-soc
+    const int nh = atom->ncpp.nh;
 
     int lmaxkb = -1;
     for (int ibeta = 0; ibeta < atom->ncpp.nbeta; ibeta++)
     {
         lmaxkb = std::max(lmaxkb, atom->ncpp.lll[ibeta]);
     }
+
     Soc soc;
     if (atom->ncpp.has_so)
     {
@@ -56,10 +36,8 @@ void InfoNonlocal::Set_NonLocal(const int& it,
     }
 
     int ip1 = 0;
-    for (int p1 = 0; p1 < n_projectors; p1++) // nbeta
+    for (int p1 = 0; p1 < n_projectors; p1++)
     {
-        const int lnow = atom->ncpp.lll[p1];
-
         const int l1 = atom->ncpp.lll[p1];
         const double j1 = atom->ncpp.jjj[p1];
         for (int m1 = 0; m1 < 2 * l1 + 1; m1++)
@@ -104,27 +82,201 @@ void InfoNonlocal::Set_NonLocal(const int& it,
             assert(ip2 == nh);
             ip1++;
         } // end m1
+    }
+}
 
-        // only keep the nonzero part.
-        int cut_mesh = atom->ncpp.mesh;
-        for (int ir = atom->ncpp.mesh - 1; ir >= 0; --ir)
+void InfoNonlocal::build_beta_r(const Atom* atom,
+                                const int& p1,
+                                std::vector<double>& beta_r,
+                                int& cut_mesh)
+{
+    cut_mesh = atom->ncpp.mesh;
+    for (int ir = atom->ncpp.mesh - 1; ir >= 0; --ir)
+    {
+        if (std::abs(atom->ncpp.betar(p1, ir)) > 1.0e-10)
         {
-            if (std::abs(atom->ncpp.betar(p1, ir)) > 1.0e-10)
+            cut_mesh = ir;
+            break;
+        }
+    }
+    if (cut_mesh % 2 == 0)
+    {
+        ++cut_mesh;
+    }
+
+    beta_r.resize(cut_mesh, 0.0);
+    for (int ir = 0; ir < cut_mesh; ++ir)
+    {
+        beta_r[ir] = atom->ncpp.betar(p1, ir);
+    }
+}
+
+void InfoNonlocal::read_header(std::ifstream& ifs,
+                               const int& my_rank,
+                               std::string& label,
+                               std::string& ps_type,
+                               int& nlmax)
+{
+    if (my_rank == 0)
+    {
+        if (ModuleBase::GlobalFunc::SCAN_BEGIN(ifs, "<HEADER>"))
+        {
+            ModuleBase::GlobalFunc::READ_VALUE(ifs, label);
+            ModuleBase::GlobalFunc::READ_VALUE(ifs, ps_type);
+            if (ps_type != "NC")
             {
-                cut_mesh = ir;
-                break;
+                ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal",
+                                         "Only available for NC nonlocal pseudopotential");
+            }
+            ModuleBase::GlobalFunc::READ_VALUE(ifs, nlmax);
+            assert(nlmax >= -1);
+            ModuleBase::GlobalFunc::SCAN_END(ifs, "</HEADER>");
+        }
+    }
+
+#ifdef __MPI
+    Parallel_Common::bcast_string(label);
+    Parallel_Common::bcast_string(ps_type);
+    Parallel_Common::bcast_int(nlmax);
+#endif
+}
+
+void InfoNonlocal::read_dij(std::ifstream& ifs,
+                            const int& my_rank,
+                            const int& nlmax,
+                            int& n_projectors,
+                            std::ofstream& log)
+{
+    if (my_rank == 0)
+    {
+        if (ModuleBase::GlobalFunc::SCAN_BEGIN(ifs, "<DIJ>"))
+        {
+            ModuleBase::GlobalFunc::READ_VALUE(ifs, n_projectors);
+            ModuleBase::GlobalFunc::OUT(log, "n_projectors", n_projectors);
+
+            for (int p1 = 0; p1 < n_projectors; p1++)
+            {
+                for (int p2 = 0; p2 < n_projectors; p2++)
+                {
+                    int L1_read, L2_read;
+                    ifs >> L1_read >> L2_read;
+                    assert(L1_read <= nlmax);
+                    assert(L2_read <= nlmax);
+                    double dion_read;
+                    ifs >> dion_read;
+                }
+            }
+            ModuleBase::GlobalFunc::SCAN_END(ifs, "</DIJ>");
+        }
+    }
+
+#ifdef __MPI
+    Parallel_Common::bcast_int(n_projectors);
+#endif
+}
+
+void InfoNonlocal::read_projector(std::ifstream& ifs,
+                                  const int& my_rank,
+                                  const int& p1,
+                                  const int& nlmax,
+                                  int& meshr_ps,
+                                  int& lfrombeta,
+                                  std::vector<double>& radial_ps,
+                                  std::vector<double>& rab_ps,
+                                  std::vector<double>& beta_r)
+{
+    meshr_ps = 0;
+    if (my_rank == 0)
+    {
+        if (ModuleBase::GlobalFunc::SCAN_BEGIN(ifs, "<PP_BETA>", false))
+        {
+            int iproj = 0;
+            ModuleBase::GlobalFunc::READ_VALUE(ifs, iproj);
+            if (iproj != p1)
+            {
+                std::cout << " iproj=" << iproj << " p1=" << p1 << std::endl;
+                ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal", "Check non-local projector index.");
+            }
+
+            ModuleBase::GlobalFunc::READ_VALUE(ifs, lfrombeta);
+            assert(lfrombeta >= 0);
+            assert(lfrombeta <= nlmax);
+
+            ModuleBase::GlobalFunc::READ_VALUE(ifs, meshr_ps);
+            if (meshr_ps % 2 == 0)
+            {
+                std::cout << " meshr_ps = " << meshr_ps << std::endl;
+                ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal", "meshr_ps must be odd!");
             }
         }
-        if (cut_mesh % 2 == 0)
+        else
         {
-            ++cut_mesh;
+            ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal", "<PP_BETA> doesn't match!");
         }
+    }
 
-        std::vector<double> beta_r(cut_mesh, 0.0);
-        for (int ir = 0; ir < cut_mesh; ++ir)
+#ifdef __MPI
+    Parallel_Common::bcast_int(meshr_ps);
+    Parallel_Common::bcast_int(lfrombeta);
+#endif
+
+    radial_ps.assign(meshr_ps, 0.0);
+    rab_ps.assign(meshr_ps, 0.0);
+    beta_r.assign(meshr_ps, 0.0);
+
+    if (my_rank == 0)
+    {
+        for (int ir = 0; ir < meshr_ps; ir++)
         {
-            beta_r[ir] = atom->ncpp.betar(p1, ir);
+            ifs >> radial_ps[ir];
+            ifs >> beta_r[ir];
+            ifs >> rab_ps[ir];
         }
+    }
+
+#ifdef __MPI
+    Parallel_Common::bcast_double(radial_ps.data(), meshr_ps);
+    Parallel_Common::bcast_double(beta_r.data(), meshr_ps);
+    Parallel_Common::bcast_double(rab_ps.data(), meshr_ps);
+#endif
+
+    if (my_rank == 0)
+    {
+        ModuleBase::GlobalFunc::SCAN_END(ifs, "</PP_BETA>");
+    }
+}
+
+void InfoNonlocal::Set_NonLocal(const int& it,
+                                Atom* atom,
+                                int& n_projectors,
+                                const int& kmesh,
+                                const double& dk,
+                                const double& dr_uniform,
+                                std::ofstream& log,
+                                const bool& out_element_info,
+                                const bool& lspinorb,
+                                const int& nspin,
+                                const int& my_rank)
+{
+    ModuleBase::TITLE("InfoNonlocal", "Set_NonLocal");
+
+    // get the number of non-local projectors
+    n_projectors = atom->ncpp.nbeta;
+    const int nh = atom->ncpp.nh; // zhengdy-soc
+
+    // set the nonlocal projector objects
+    std::vector<Numerical_Nonlocal_Lm> tmpBeta_lm(n_projectors);
+    ModuleBase::ComplexMatrix coefficient_D_nc_in(nh * 2, nh * 2); // zhengdy-soc
+
+    build_soc_coefficients(atom, n_projectors, coefficient_D_nc_in);
+
+    for (int p1 = 0; p1 < n_projectors; p1++)
+    {
+        const int lnow = atom->ncpp.lll[p1];
+
+        int cut_mesh = 0;
+        std::vector<double> beta_r;
+        build_beta_r(atom, p1, beta_r, cut_mesh);
 
         tmpBeta_lm[p1].set_NL_proj(atom->label,
                                    it,       // type
@@ -143,8 +295,6 @@ void InfoNonlocal::Set_NonLocal(const int& it,
         }
     }
 
-    assert(ip1 == nh);
-
     this->Beta[it].set_type_info(it,
                                  atom->label,
                                  atom->ncpp.pp_type,
@@ -156,7 +306,6 @@ void InfoNonlocal::Set_NonLocal(const int& it,
     atom->ncpp.set_d_so(coefficient_D_nc_in, n_projectors, nh, atom->ncpp.has_so, lspinorb, nspin);
 
     log << " SET NONLOCAL PSEUDOPOTENTIAL PROJECTORS FOR ELEMENT " << atom->label << std::endl;
-    return;
 }
 
 void InfoNonlocal::Read_NonLocal(const int& it,
@@ -174,8 +323,7 @@ void InfoNonlocal::Read_NonLocal(const int& it,
 
     std::ifstream ifs;
 
-    // mohan add 2010-09-08.
-    // check if the non-local pseudopotential file exist.
+    // check if the non-local pseudopotential file exist
     bool open = false;
     if (my_rank == 0)
     {
@@ -193,40 +341,12 @@ void InfoNonlocal::Read_NonLocal(const int& it,
         std::cout << " Non-local File : " << nonlocalFile << std::endl;
         ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal", "Can not find the NONLOCAL file.");
     }
-    else
-    {
-//        GlobalV::ofs_running << " Open nonlocal pseudopotential file: " << nonlocalFile << std::endl;
-    }
 
     std::string label;
     std::string ps_type;
-
-    // maximal lmax allowed in this calculation
     int nlmax = 0;
 
-    if (my_rank == 0)
-    {
-        if (ModuleBase::GlobalFunc::SCAN_BEGIN(ifs, "<HEADER>"))
-        {
-            ModuleBase::GlobalFunc::READ_VALUE(ifs, label);
-            ModuleBase::GlobalFunc::READ_VALUE(ifs, ps_type);
-            if (ps_type != "NC")
-            {
-                ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal",
-                                         "Only available for NC nonlocal pseudopotential");
-            }
-            ModuleBase::GlobalFunc::READ_VALUE(ifs, nlmax);
-            // std::cout << " " << label << " " << ps_type << " " << nlmax << std::endl;
-            assert(nlmax >= -1);
-            ModuleBase::GlobalFunc::SCAN_END(ifs, "</HEADER>");
-        }
-    }
-
-#ifdef __MPI
-    Parallel_Common::bcast_string(label);
-    Parallel_Common::bcast_string(ps_type);
-    Parallel_Common::bcast_int(nlmax);
-#endif
+    read_header(ifs, my_rank, label, ps_type, nlmax);
 
     // mohan add 2012-06-09
     if (nlmax != -1)
@@ -256,46 +376,7 @@ void InfoNonlocal::Read_NonLocal(const int& it,
     ModuleBase::GlobalFunc::OUT(log, "label", label);
     ModuleBase::GlobalFunc::OUT(log, "nlmax", nlmax);
 
-    //-------------------------------------------
-    // if each L has projectors more than once,
-    // this needed to be modified.
-    //-------------------------------------------
-    int nproj_allowed = nlmax + 1;
-    ModuleBase::matrix coefficient_D_in(nproj_allowed, nproj_allowed);
-    ModuleBase::ComplexMatrix coefficient_D_nc_in(nproj_allowed * 2, nproj_allowed * 2);
-
-    if (my_rank == 0)
-    {
-        if (ModuleBase::GlobalFunc::SCAN_BEGIN(ifs, "<DIJ>"))
-        {
-            //--------------------------------------
-            // this parameter is very important!!!
-            //--------------------------------------
-            ModuleBase::GlobalFunc::READ_VALUE(ifs, n_projectors);
-            ModuleBase::GlobalFunc::OUT(log, "n_projectors", n_projectors);
-
-            for (int p1 = 0; p1 < n_projectors; p1++)
-            {
-                for (int p2 = 0; p2 < n_projectors; p2++)
-                {
-                    int L1_read, L2_read;
-
-                    ifs >> L1_read >> L2_read;
-
-                    assert(L1_read <= nlmax);
-                    assert(L2_read <= nlmax);
-
-                    ifs >> coefficient_D_in(L1_read, L2_read);
-
-                }
-            }
-            ModuleBase::GlobalFunc::SCAN_END(ifs, "</DIJ>");
-        }
-    }
-
-#ifdef __MPI
-    Parallel_Common::bcast_int(n_projectors); // mohan add 2010-12-20
-#endif
+    read_dij(ifs, my_rank, nlmax, n_projectors, log);
 
     std::vector<Numerical_Nonlocal_Lm> tmpBeta_lm(n_projectors);
     std::vector<int> LfromBeta(n_projectors, 0);
@@ -303,60 +384,13 @@ void InfoNonlocal::Read_NonLocal(const int& it,
     for (int p1 = 0; p1 < n_projectors; p1++)
     {
         int meshr_ps = 0;
-        if (my_rank == 0)
-        {
-            if (ModuleBase::GlobalFunc::SCAN_BEGIN(ifs, "<PP_BETA>", false))
-            {
-                int iproj = 0;
-                ModuleBase::GlobalFunc::READ_VALUE(ifs, iproj);
-                if (iproj != p1)
-                {
-                    std::cout << " iproj=" << iproj << " p1=" << p1 << std::endl;
-                    ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal", "Check non-local projector index.");
-                }
+        int lfrombeta = 0;
+        std::vector<double> radial_ps;
+        std::vector<double> rab_ps;
+        std::vector<double> beta_r;
 
-                ModuleBase::GlobalFunc::READ_VALUE(ifs, LfromBeta[p1]);
-                assert(LfromBeta[p1] >= 0);
-                assert(LfromBeta[p1] <= nlmax);
-
-                ModuleBase::GlobalFunc::READ_VALUE(ifs, meshr_ps);
-                if (meshr_ps % 2 == 0)
-                {
-                    std::cout << " meshr_ps = " << meshr_ps << std::endl;
-                    ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal", "meshr_ps must be odd!");
-                }
-            }
-            else
-            {
-                ModuleBase::WARNING_QUIT("InfoNonlocal::Read_NonLocal", "<PP_BETA> doesn't match!");
-            }
-        } // end my_rank==0
-
-#ifdef __MPI
-        Parallel_Common::bcast_int(meshr_ps);
-        Parallel_Common::bcast_int(LfromBeta[p1]);
-#endif
-
-        std::vector<double> radial_ps(meshr_ps, 0.0);
-        std::vector<double> rab_ps(meshr_ps, 0.0);
-        std::vector<double> beta_r(meshr_ps, 0.0);
-
-        if (my_rank == 0)
-        {
-            for (int ir = 0; ir < meshr_ps; ir++)
-            {
-                ifs >> radial_ps[ir];
-                ifs >> beta_r[ir];
-                ifs >> rab_ps[ir];
-            }
-        }
-
-#ifdef __MPI
-        Parallel_Common::bcast_double(radial_ps.data(), meshr_ps);
-        Parallel_Common::bcast_double(beta_r.data(), meshr_ps);
-        Parallel_Common::bcast_double(rab_ps.data(), meshr_ps);
-#endif
-
+        read_projector(ifs, my_rank, p1, nlmax, meshr_ps, lfrombeta, radial_ps, rab_ps, beta_r);
+        LfromBeta[p1] = lfrombeta;
 
         tmpBeta_lm[p1].set_NL_proj(label,
                                    it,            // type
@@ -373,18 +407,11 @@ void InfoNonlocal::Read_NonLocal(const int& it,
         {
             tmpBeta_lm[p1].plot(my_rank);
         }
-
-        if (my_rank == 0)
-        {
-            ModuleBase::GlobalFunc::SCAN_END(ifs, "</PP_BETA>");
-        }
-    } // end projectors.
+    }
 
     this->Beta[it].set_type_info(it, label, ps_type, nlmax, n_projectors, tmpBeta_lm.data());
 
     ifs.close();
-
-    return;
 }
 
 void InfoNonlocal::setupNonlocal(const int& ntype, Atom* atoms, std::ofstream& log, LCAO_Orbitals& orb,
