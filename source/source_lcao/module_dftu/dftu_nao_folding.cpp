@@ -167,15 +167,15 @@ void folding_matrix_k(const FoldingCtx& ctx,
     double* mat_ptr = nullptr;
     if (dim1 == 1 || dim1 == 4)
     {
-        mat_ptr = fsr.DSloc_Rx;
+        mat_ptr = fsr.DSloc_Rx.data();
     }
     else if (dim1 == 2 || dim1 == 5)
     {
-        mat_ptr = fsr.DSloc_Ry;
+        mat_ptr = fsr.DSloc_Ry.data();
     }
     else if (dim1 == 3 || dim1 == 6)
     {
-        mat_ptr = fsr.DSloc_Rz;
+        mat_ptr = fsr.DSloc_Rz.data();
     }
 
     int nnr = 0;

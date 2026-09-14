@@ -101,7 +101,7 @@ void single_derivative(ForceStressArrays& fsr,
         if (dtype == 'S')
         {
             // write DSloc_R* only when allocated (skipped in cal_dS where only DHloc_fixedR_* is used)
-            const bool write_dsloc_r = (fsr.DSloc_Rx != nullptr);
+            const bool write_dsloc_r = !fsr.DSloc_Rx.empty();
             // condition 9, nspin
             if (nspin == 1 || nspin == 2)
             {

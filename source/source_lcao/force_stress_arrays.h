@@ -22,9 +22,9 @@ class ForceStressArrays
     // force in LCAO
     // used in k-points algorithm.
     //-----------------------------------------
-    double* DSloc_Rx = nullptr;
-    double* DSloc_Ry = nullptr;
-    double* DSloc_Rz = nullptr;
+    std::vector<double> DSloc_Rx;
+    std::vector<double> DSloc_Ry;
+    std::vector<double> DSloc_Rz;
 
     //-----------------------------------------
     // dT + part of dVNL

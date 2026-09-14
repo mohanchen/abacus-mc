@@ -449,14 +449,14 @@ void check_folded_arrays(const ForceStressArrays& fsr,
 {
     const bool missing_ds = gamma_only_local
         ? (fsr.DSloc_x.empty() || fsr.DSloc_y.empty() || fsr.DSloc_z.empty())
-        : (fsr.DSloc_Rx == nullptr || fsr.DSloc_Ry == nullptr || fsr.DSloc_Rz == nullptr);
+        : (fsr.DSloc_Rx.empty() || fsr.DSloc_Ry.empty() || fsr.DSloc_Rz.empty());
 
     if (cal_force && missing_ds)
     {
         const char* message = gamma_only_local
             ? "fsr.DSloc_x/y/z are empty in gamma_only path; the caller must allocate and fill them. "
               "See notes in source/source_lcao/force_stress_lcao.cpp."
-            : "fsr.DSloc_Rx/Ry/Rz are nullptr in multik path; the caller must allocate and fill them. "
+            : "fsr.DSloc_Rx/Ry/Rz are empty in multik path; the caller must allocate and fill them. "
               "See notes in source/source_lcao/force_stress_lcao.cpp.";
         ModuleBase::WARNING_QUIT("DFTU_LCAO::force_stress", message);
     }

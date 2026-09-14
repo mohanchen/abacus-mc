@@ -44,20 +44,9 @@ void Force_LCAO<std::complex<double>>::allocate(const UnitCell& ucell,
     //--------------------------------
     // (1) allocate for dSx dSy & dSz
     //--------------------------------
-    fsr.DSloc_Rx = new double[nnr];
-    fsr.DSloc_Ry = new double[nnr];
-    fsr.DSloc_Rz = new double[nnr];
-
-    const auto init_DSloc_Rxyz = [this, nnr, &fsr](int num_threads, int thread_id) {
-        int beg = 0;
-        int len = 0;
-        ModuleBase::BLOCK_TASK_DIST_1D(num_threads, thread_id, nnr, 1024, beg, len);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_Rx + beg, len);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_Ry + beg, len);
-        ModuleBase::GlobalFunc::ZEROS(fsr.DSloc_Rz + beg, len);
-    };
-
-    ModuleBase::OMP_PARALLEL(init_DSloc_Rxyz);
+    fsr.DSloc_Rx.resize(nnr, 0.0);
+    fsr.DSloc_Ry.resize(nnr, 0.0);
+    fsr.DSloc_Rz.resize(nnr, 0.0);
     ModuleBase::Memory::record("Force::dS_K", sizeof(double) * nnr * 3);
 
     if (PARAM.inp.cal_stress)
@@ -117,15 +106,7 @@ void Force_LCAO<std::complex<double>>::allocate(const UnitCell& ucell,
 template <>
 void Force_LCAO<std::complex<double>>::finish_ftable(ForceStressArrays& fsr)
 {
-    delete[] fsr.DSloc_Rx;
-    delete[] fsr.DSloc_Ry;
-    delete[] fsr.DSloc_Rz;
-    // DHloc_fixedR_* are vectors, self-managing
-
-    if (PARAM.inp.cal_stress)
-    {
-        // vectors are self-managing, nothing to delete
-    }
+    // all members are vectors, self-managing
     return;
 }
 
@@ -168,7 +149,7 @@ void Force_LCAO<std::complex<double>>::ftable(const bool isforce,
                    kv->get_nks(),
                    kv->kvec_d);
 
-    const double* dSx[3] = {fsr.DSloc_Rx, fsr.DSloc_Ry, fsr.DSloc_Rz};
+    const double* dSx[3] = {fsr.DSloc_Rx.data(), fsr.DSloc_Ry.data(), fsr.DSloc_Rz.data()};
 
     // calculate the energy density matrix
     // and the force related to overlap matrix and energy density matrix.
