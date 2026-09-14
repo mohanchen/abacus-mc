@@ -745,8 +745,6 @@ OBJS_LCAO=evolve_elec.o\
       boundary_fix.o\
       upsi.o\
       force_stress_lcao.o\
-      force_lcao_gamma.o\
-      force_lcao_k.o\
       stress_tools.o\
       edm.o\
       pulay_fs_center2.o\
