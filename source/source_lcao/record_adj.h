@@ -30,6 +30,24 @@ class Record_adj
 
     void delete_grid();
 
+  private:
+    // (1) count adjacent atoms for each atom and,
+    // for multi-k, accumulate nlocdim / nlocstart / nnr of pv.
+    void count_adjacent(const UnitCell& ucell,
+                        const Grid_Driver& grid_d,
+                        Parallel_Orbitals& pv,
+                        bool gamma_only,
+                        const std::vector<double>& orb_cutoff);
+
+    // allocate info[na_proc][na_each[i]][5]
+    void allocate_info();
+
+    // fill info with (Rx, Ry, Rz, T, I) of each adjacent atom.
+    void fill_info(const UnitCell& ucell,
+                   const Grid_Driver& grid_d,
+                   const std::vector<double>& orb_cutoff);
+
+  public:
     int na_proc=0;
     int* na_each=nullptr;
 
@@ -52,8 +70,6 @@ class Record_adj
     // info will identify each atom in each unitcell.
     //------------------------------------------------
     int*** info=nullptr;
-
-  private:
 };
 
 #endif
