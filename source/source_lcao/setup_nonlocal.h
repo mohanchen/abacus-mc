@@ -32,7 +32,8 @@ public:
         std::ofstream& log,
         const bool& out_element_info,
         const bool& lspinorb,
-        const int& nspin);
+        const int& nspin,
+        const int& my_rank);
 
     /// read in the NONLOCAL projector from file.
     void Read_NonLocal(
@@ -43,7 +44,9 @@ public:
         const int& kmesh,
         const double& dk,
         const double& dr_uniform,
-        const std::string& nonlocalFile);
+        const std::string& nonlocalFile,
+        const bool& out_element_info,
+        std::ofstream& log);
 
     /// workflow to setup nonlocal part for LCAO
     void setupNonlocal(
@@ -54,7 +57,8 @@ public:
         const std::string& basis_type,
         const bool& out_element_info,
         const bool& lspinorb,
-        const int& nspin);
+        const int& nspin,
+        const int& my_rank);
 };
 
 #endif

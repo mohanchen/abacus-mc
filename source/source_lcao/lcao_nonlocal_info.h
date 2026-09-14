@@ -162,8 +162,9 @@ public:
         const std::string& basis_type,
         const bool& out_element_info,
         const bool& lspinorb,
-        const int& nspin) {
-        nonlocal.setupNonlocal(ntype_in, atoms_in, log, orb, basis_type, out_element_info, lspinorb, nspin);
+        const int& nspin,
+        const int& my_rank) {
+        nonlocal.setupNonlocal(ntype_in, atoms_in, log, orb, basis_type, out_element_info, lspinorb, nspin, my_rank);
     }
 
     /**

@@ -1,7 +1,6 @@
 #include "setup_nonlocal.h"
 
 #include "source_base/parallel_common.h"
-#include "source_io/module_parameter/parameter.h"
 
 #ifdef __LCAO
 #include "source_pw/module_pwdft/soc.h"
@@ -26,7 +25,8 @@ void InfoNonlocal::Set_NonLocal(const int& it,
                                 std::ofstream& log,
                                 const bool& out_element_info,
                                 const bool& lspinorb,
-                                const int& nspin)
+                                const int& nspin,
+                                const int& my_rank)
 {
     ModuleBase::TITLE("InfoNonlocal", "Set_NonLocal");
 
@@ -139,7 +139,7 @@ void InfoNonlocal::Set_NonLocal(const int& it,
 
         if (out_element_info)
         {
-            tmpBeta_lm[p1].plot(GlobalV::MY_RANK);
+            tmpBeta_lm[p1].plot(my_rank);
         }
     }
 
@@ -166,7 +166,9 @@ void InfoNonlocal::Read_NonLocal(const int& it,
                                  const int& kmesh,
                                  const double& dk,
                                  const double& dr_uniform,
-                                 const std::string& nonlocalFile)
+                                 const std::string& nonlocalFile,
+                                 const bool& out_element_info,
+                                 std::ofstream& log)
 {
     ModuleBase::TITLE("InfoNonlocal", "Read_NonLocal");
 
@@ -251,8 +253,8 @@ void InfoNonlocal::Read_NonLocal(const int& it,
         }
     }
 
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "label", label);
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "nlmax", nlmax);
+    ModuleBase::GlobalFunc::OUT(log, "label", label);
+    ModuleBase::GlobalFunc::OUT(log, "nlmax", nlmax);
 
     //-------------------------------------------
     // if each L has projectors more than once,
@@ -270,7 +272,7 @@ void InfoNonlocal::Read_NonLocal(const int& it,
             // this parameter is very important!!!
             //--------------------------------------
             ModuleBase::GlobalFunc::READ_VALUE(ifs, n_projectors);
-            ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "n_projectors", n_projectors);
+            ModuleBase::GlobalFunc::OUT(log, "n_projectors", n_projectors);
 
             for (int p1 = 0; p1 < n_projectors; p1++)
             {
@@ -367,7 +369,7 @@ void InfoNonlocal::Read_NonLocal(const int& it,
                                    dk,
                                    dr_uniform); // delta k mesh in reciprocal space
 
-        if (PARAM.inp.out_element_info)
+        if (out_element_info)
         {
             tmpBeta_lm[p1].plot(my_rank);
         }
@@ -389,7 +391,8 @@ void InfoNonlocal::setupNonlocal(const int& ntype, Atom* atoms, std::ofstream& l
                                  const std::string& basis_type,
                                  const bool& out_element_info,
                                  const bool& lspinorb,
-                                 const int& nspin)
+                                 const int& nspin,
+                                 const int& my_rank)
 {
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     //~~~~~~~~~~~~~~~~~~~~~~   2    ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -418,16 +421,18 @@ void InfoNonlocal::setupNonlocal(const int& ntype, Atom* atoms, std::ofstream& l
                 this->Read_NonLocal(it,
                                     atom,
                                     this->nproj[it],
-                                    GlobalV::MY_RANK,
+                                    my_rank,
                                     orb.get_kmesh(),
                                     orb.get_dk(),
                                     orb.get_dr_uniform(),
-                                    orb.orbital_file[it]);
+                                    orb.orbital_file[it],
+                                    out_element_info,
+                                    log);
             }
             else
             {
                 this->Set_NonLocal(it, atom, this->nproj[it], orb.get_kmesh(), orb.get_dk(), orb.get_dr_uniform(), log,
-                                   out_element_info, lspinorb, nspin);
+                                   out_element_info, lspinorb, nspin, my_rank);
             }
             this->nprojmax = std::max(this->nprojmax, this->nproj[it]);
             // caoyu add 2021-05-24 to reconstruct atom_arrange::set_sr_NL

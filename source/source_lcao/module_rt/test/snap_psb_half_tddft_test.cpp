@@ -345,7 +345,8 @@ class SnapPsibetaHalfTddftTest : public ::testing::Test
                                             log,
                                             false,
                                             false,
-                                            1);
+                                            1,
+                                            0);
 
         ASSERT_EQ(lcao_nl->get_nonlocal().nproj[0], 6);
         lcao_nl->get_nonlocal().nprojmax = lcao_nl->get_nonlocal().nproj[0];
@@ -429,7 +430,8 @@ class SnapPsibetaNonuniformHalfTddftTest : public ::testing::Test
                                             log,
                                             false,
                                             false,
-                                            1);
+                                            1,
+                                            0);
         ASSERT_EQ(lcao_nl->get_nonlocal().nproj[0], 4);
         lcao_nl->get_nonlocal().nprojmax = lcao_nl->get_nonlocal().nproj[0];
         lcao_nl->get_nonlocal().rcutmax_Beta = lcao_nl->get_nonlocal().Beta[0].get_rcut_max();
