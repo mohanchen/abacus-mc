@@ -27,6 +27,50 @@ struct VdwResult;
 
 class TwoCenterBundle;
 
+// Force/stress component matrices assembled by getForceStress. Grouping them
+// into a struct lets the assembly/print helpers take one reference instead of
+// ~19 individual matrix arguments. Members are default-constructed and only
+// created (allocated) when the corresponding term is active.
+struct LCAOForceParts
+{
+    ModuleBase::matrix foverlap;
+    ModuleBase::matrix ftvnl_dphi;
+    ModuleBase::matrix fvnl_dbeta;
+    ModuleBase::matrix fvl_dphi;
+    ModuleBase::matrix fvl_dvl;
+    ModuleBase::matrix fewalds;
+    ModuleBase::matrix fcc;
+    ModuleBase::matrix fscc;
+    ModuleBase::matrix fvnl_dalpha; // deepks
+    ModuleBase::matrix fpothybrid;
+    ModuleBase::matrix force_u;
+    ModuleBase::matrix force_dspin;
+    ModuleBase::matrix force_exx;
+    ModuleBase::matrix force_vdw;
+    ModuleBase::matrix fefield;
+    ModuleBase::matrix fefield_tddft;
+    ModuleBase::matrix fgate;
+    ModuleBase::matrix fsol;
+};
+
+struct LCAOStressParts
+{
+    ModuleBase::matrix soverlap;
+    ModuleBase::matrix stvnl_dphi;
+    ModuleBase::matrix svnl_dbeta;
+    ModuleBase::matrix svl_dphi;
+    ModuleBase::matrix sigmadvl;
+    ModuleBase::matrix sigmahar;
+    ModuleBase::matrix sigmaewa;
+    ModuleBase::matrix sigmacc;
+    ModuleBase::matrix sigmaxc;
+    ModuleBase::matrix svnl_dalpha; // deepks
+    ModuleBase::matrix stress_u;
+    ModuleBase::matrix stress_dspin;
+    ModuleBase::matrix stress_exx;
+    ModuleBase::matrix stress_vdw;
+};
+
 
 template <typename T>
 class Force_Stress_LCAO
@@ -75,6 +119,28 @@ class Force_Stress_LCAO
     Stress_Func<double> sc_pw;
 
     void forceSymmetry(const UnitCell& ucell, ModuleBase::matrix& fcs, ModuleSymmetry::Symmetry* symm);
+
+    // Sum the computed force parts into fcs, apply symmetry and the net-force
+    // (drift) correction, then print the per-term and total forces.
+    void assemble_and_print_force(const UnitCell& ucell,
+                                  const bool istestf,
+                                  const vdw::VdwResult* vdw_result,
+                                  const Exx_Info& exx_info,
+                                  ModuleSymmetry::Symmetry* symm,
+                                  Setup_DeePKS<T>& deepks,
+                                  const LCAOForceParts& parts,
+                                  ModuleBase::matrix& fcs);
+
+    // Sum the computed stress parts into scs, symmetrize, subtract the external
+    // pressure and print the per-term and total stresses.
+    void assemble_and_print_stress(const UnitCell& ucell,
+                                   const bool istests,
+                                   const vdw::VdwResult* vdw_result,
+                                   const Exx_Info& exx_info,
+                                   ModuleSymmetry::Symmetry* symm,
+                                   Setup_DeePKS<T>& deepks,
+                                   const LCAOStressParts& parts,
+                                   ModuleBase::matrix& scs);
 
     void calForcePwPart(UnitCell& ucell,
                         ModuleBase::matrix& fvl_dvl,
