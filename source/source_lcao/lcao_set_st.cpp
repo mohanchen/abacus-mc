@@ -18,6 +18,9 @@ static void set_deriv_s(ForceStressArrays& fsr,
 {
     // write DSloc_R* only when allocated (skipped in cal_dS where only DHloc_fixedR_* is used)
     const bool write_dsloc_r = !fsr.DSloc_Rx.empty();
+    // DHloc_fixedR_* and DH_r must be pre-allocated by the caller for the derivative path
+    const bool write_dhloc = !fsr.DHloc_fixedR_x.empty();
+    const bool write_dhr = cal_stress && !fsr.DH_r.empty();
     // condition 9, nspin
     if (nspin == 1 || nspin == 2)
     {
@@ -27,9 +30,12 @@ static void set_deriv_s(ForceStressArrays& fsr,
             fsr.DSloc_Ry[nnr] = olm[1];
             fsr.DSloc_Rz[nnr] = olm[2];
         }
-        fsr.DHloc_fixedR_x[nnr] = olm[0];
-        fsr.DHloc_fixedR_y[nnr] = olm[1];
-        fsr.DHloc_fixedR_z[nnr] = olm[2];
+        if (write_dhloc)
+        {
+            fsr.DHloc_fixedR_x[nnr] = olm[0];
+            fsr.DHloc_fixedR_y[nnr] = olm[1];
+            fsr.DHloc_fixedR_z[nnr] = olm[2];
+        }
     }
     else if (nspin == 4)
     {
@@ -42,16 +48,19 @@ static void set_deriv_s(ForceStressArrays& fsr,
             fsr.DSloc_Ry[nnr] = v1;
             fsr.DSloc_Rz[nnr] = v2;
         }
-        fsr.DHloc_fixedR_x[nnr] = v0;
-        fsr.DHloc_fixedR_y[nnr] = v1;
-        fsr.DHloc_fixedR_z[nnr] = v2;
+        if (write_dhloc)
+        {
+            fsr.DHloc_fixedR_x[nnr] = v0;
+            fsr.DHloc_fixedR_y[nnr] = v1;
+            fsr.DHloc_fixedR_z[nnr] = v2;
+        }
     }
     else
     {
         ModuleBase::WARNING_QUIT("LCAO_domain::set_deriv_s", "nspin must be 1, 2 or 4");
     } // end condition 9, nspin
 
-    if (cal_stress)
+    if (write_dhr)
     {
         fsr.DH_r[nnr * 3] = dtau.x;
         fsr.DH_r[nnr * 3 + 1] = dtau.y;
@@ -70,13 +79,19 @@ static void set_deriv_t(ForceStressArrays& fsr,
                         const ModuleBase::Vector3<double>& dtau,
                         const bool cal_stress)
 {
+    // DHloc_fixedR_* and stress arrays must be pre-allocated by the caller for the derivative path
+    const bool write_dhloc = !fsr.DHloc_fixedR_x.empty();
+    const bool write_stress = cal_stress && !fsr.stvnl11.empty();
     // condition 9, nspin
     if (nspin == 1 || nspin == 2)
     {
-        fsr.DHloc_fixedR_x[nnr] = olm[0];
-        fsr.DHloc_fixedR_y[nnr] = olm[1];
-        fsr.DHloc_fixedR_z[nnr] = olm[2];
-        if (cal_stress)
+        if (write_dhloc)
+        {
+            fsr.DHloc_fixedR_x[nnr] = olm[0];
+            fsr.DHloc_fixedR_y[nnr] = olm[1];
+            fsr.DHloc_fixedR_z[nnr] = olm[2];
+        }
+        if (write_stress)
         {
             fsr.stvnl11[nnr] = olm[0] * dtau.x;
             fsr.stvnl12[nnr] = olm[0] * dtau.y;
@@ -91,10 +106,13 @@ static void set_deriv_t(ForceStressArrays& fsr,
         // condition 10, details of nspin 4
         if (is == 0) // is==3 is not needed in force calculation
         {
-            fsr.DHloc_fixedR_x[nnr] = olm[0];
-            fsr.DHloc_fixedR_y[nnr] = olm[1];
-            fsr.DHloc_fixedR_z[nnr] = olm[2];
-            if (cal_stress)
+            if (write_dhloc)
+            {
+                fsr.DHloc_fixedR_x[nnr] = olm[0];
+                fsr.DHloc_fixedR_y[nnr] = olm[1];
+                fsr.DHloc_fixedR_z[nnr] = olm[2];
+            }
+            if (write_stress)
             {
                 fsr.stvnl11[nnr] = olm[0] * dtau.x;
                 fsr.stvnl12[nnr] = olm[0] * dtau.y;
@@ -106,10 +124,13 @@ static void set_deriv_t(ForceStressArrays& fsr,
         }
         else if (is == 1 || is == 2 || is == 3)
         {
-            fsr.DHloc_fixedR_x[nnr] = 0.0;
-            fsr.DHloc_fixedR_y[nnr] = 0.0;
-            fsr.DHloc_fixedR_z[nnr] = 0.0;
-            if (cal_stress)
+            if (write_dhloc)
+            {
+                fsr.DHloc_fixedR_x[nnr] = 0.0;
+                fsr.DHloc_fixedR_y[nnr] = 0.0;
+                fsr.DHloc_fixedR_z[nnr] = 0.0;
+            }
+            if (write_stress)
             {
                 fsr.stvnl11[nnr] = 0.0;
                 fsr.stvnl12[nnr] = 0.0;
@@ -324,6 +345,21 @@ void build_ST_new(ForceStressArrays& fsr,
     const int nspin = PARAM.inp.nspin;
     const int npol = PARAM.globalv.npol;
     const bool gamma_only_local = PARAM.globalv.gamma_only_local;
+
+    // derivative path must provide the target buffers
+    if (calc_deri && !gamma_only_local)
+    {
+        if (fsr.DHloc_fixedR_x.empty() || fsr.DHloc_fixedR_y.empty() || fsr.DHloc_fixedR_z.empty())
+        {
+            ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new",
+                "DHloc_fixedR_x/y/z must be allocated when calc_deri=true in multi-k mode");
+        }
+        if (cal_stress && fsr.DH_r.empty())
+        {
+            ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new",
+                "DH_r must be allocated when calc_deri=true and cal_stress=true in multi-k mode");
+        }
+    }
 
     // read-only environment shared by every element of this build
     const ST_env env{orb, two_center_bundle, pv, ucell, nspin, npol, cal_stress, gamma_only_local};
