@@ -5,50 +5,46 @@
 namespace LCAO_domain
 {
 
-void single_derivative(ForceStressArrays& fsr,
-                       const LCAO_Orbitals& orb,
-                       const TwoCenterBundle& two_center_bundle,
-                       const Parallel_Orbitals& pv,
-                       const UnitCell& ucell,
-                       const int nspin,
-                       const bool cal_stress,
-                       const int iw1_all,
-                       const int iw2_all,
-                       const int m1,
-                       const int m2,
-                       const char& dtype,
-                       const int T1,
-                       const int L1,
-                       const int N1,
-                       const int T2,
-                       const int L2,
-                       const int N2,
-                       const ModuleBase::Vector3<double>& dtau,
-                       const ModuleBase::Vector3<double>& tau1,
-                       const ModuleBase::Vector3<double>& tau2,
-                       const int npol,
-                       const int jj,
-                       const int jj0,
-                       const int kk,
-                       const int kk0,
+void single_derivative(const ST_env& env,
+                       const ST_elem& e,
+                       ForceStressArrays& fsr,
                        int& nnr,
                        int& total_nnr,
                        double* olm // output value
 )
 {
 
-    const bool gamma_only_local = PARAM.globalv.gamma_only_local;
+    const bool gamma_only_local = env.gamma_only_local;
+    const int nspin = env.nspin;
+    const int npol = env.npol;
+    const bool cal_stress = env.cal_stress;
+    const int iw1_all = e.iw1_all;
+    const int iw2_all = e.iw2_all;
+    const char dtype = e.dtype;
+    const int m1 = e.m1;
+    const int m2 = e.m2;
+    const int t1 = e.t1;
+    const int l1 = e.l1;
+    const int n1 = e.n1;
+    const int t2 = e.t2;
+    const int l2 = e.l2;
+    const int n2 = e.n2;
+    const ModuleBase::Vector3<double>& dtau = e.dtau;
+    const int jj = e.jj;
+    const int jj0 = e.jj0;
+    const int kk = e.kk;
+    const int kk0 = e.kk0;
 
-    // convert m (0,1,...2l) to M (-l, -l+1, ..., l-1, l)
-    const int M1 = (m1 % 2 == 0) ? -m1 / 2 : (m1 + 1) / 2;
-    const int M2 = (m2 % 2 == 0) ? -m2 / 2 : (m2 + 1) / 2;
+    // convert m (0,1,...2l) to mm (-l, -l+1, ..., l-1, l)
+    const int mm1 = (m1 % 2 == 0) ? -m1 / 2 : (m1 + 1) / 2;
+    const int mm2 = (m2 % 2 == 0) ? -m2 / 2 : (m2 + 1) / 2;
     switch (dtype)
     {
     case 'S':
-        two_center_bundle.overlap_orb->calculate(T1, L1, N1, M1, T2, L2, N2, M2, dtau * ucell.lat0, nullptr, olm);
+        env.two_center_bundle.overlap_orb->calculate(t1, l1, n1, mm1, t2, l2, n2, mm2, dtau * env.ucell.lat0, nullptr, olm);
         break;
     case 'T':
-        two_center_bundle.kinetic_orb->calculate(T1, L1, N1, M1, T2, L2, N2, M2, dtau * ucell.lat0, nullptr, olm);
+        env.two_center_bundle.kinetic_orb->calculate(t1, l1, n1, mm1, t2, l2, n2, mm2, dtau * env.ucell.lat0, nullptr, olm);
         break;
     default: // not supposed to happen
         ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "dtype must be S or T");
@@ -57,7 +53,7 @@ void single_derivative(ForceStressArrays& fsr,
     // condition 7: gamma only or multiple k
     if (gamma_only_local)
     {
-        LCAO_domain::set_force(pv,
+        LCAO_domain::set_force(env.pv,
                                iw1_all,
                                iw2_all,
                                olm[0],
@@ -198,50 +194,40 @@ void single_derivative(ForceStressArrays& fsr,
     } // end condition 7, gamma or multiple k
 }
 
-void single_overlap(const LCAO_Orbitals& orb,
-                    const TwoCenterBundle& two_center_bundle,
-                    const Parallel_Orbitals& pv,
-                    const UnitCell& ucell,
-                    const int nspin,
-                    const bool cal_stress,
-                    const int iw1_all,
-                    const int iw2_all,
-                    const int m1,
-                    const int m2,
-                    const char& dtype,
-                    const int T1,
-                    const int L1,
-                    const int N1,
-                    const int T2,
-                    const int L2,
-                    const int N2,
-                    const ModuleBase::Vector3<double>& dtau,
-                    const ModuleBase::Vector3<double>& tau1,
-                    const ModuleBase::Vector3<double>& tau2,
-                    const int npol,
-                    const int jj,
-                    const int jj0,
-                    const int kk,
-                    const int kk0,
+void single_overlap(const ST_env& env,
+                    const ST_elem& e,
                     int& nnr,       // output value
                     int& total_nnr, // output value
                     double* olm,    // output value
                     double* HSloc   // output value
 )
 {
-    const bool gamma_only_local = PARAM.globalv.gamma_only_local;
+    const bool gamma_only_local = env.gamma_only_local;
+    const int nspin = env.nspin;
+    const int iw1_all = e.iw1_all;
+    const int iw2_all = e.iw2_all;
+    const char dtype = e.dtype;
+    const int m1 = e.m1;
+    const int m2 = e.m2;
+    const int t1 = e.t1;
+    const int l1 = e.l1;
+    const int n1 = e.n1;
+    const int t2 = e.t2;
+    const int l2 = e.l2;
+    const int n2 = e.n2;
+    const ModuleBase::Vector3<double>& dtau = e.dtau;
 
-    // convert m (0,1,...2l) to M (-l, -l+1, ..., l-1, l)
-    const int M1 = (m1 % 2 == 0) ? -m1 / 2 : (m1 + 1) / 2;
-    const int M2 = (m2 % 2 == 0) ? -m2 / 2 : (m2 + 1) / 2;
+    // convert m (0,1,...2l) to mm (-l, -l+1, ..., l-1, l)
+    const int mm1 = (m1 % 2 == 0) ? -m1 / 2 : (m1 + 1) / 2;
+    const int mm2 = (m2 % 2 == 0) ? -m2 / 2 : (m2 + 1) / 2;
 
     switch (dtype)
     {
     case 'S':
-        two_center_bundle.overlap_orb->calculate(T1, L1, N1, M1, T2, L2, N2, M2, dtau * ucell.lat0, olm);
+        env.two_center_bundle.overlap_orb->calculate(t1, l1, n1, mm1, t2, l2, n2, mm2, dtau * env.ucell.lat0, olm);
         break;
     case 'T':
-        two_center_bundle.kinetic_orb->calculate(T1, L1, N1, M1, T2, L2, N2, M2, dtau * ucell.lat0, olm);
+        env.two_center_bundle.kinetic_orb->calculate(t1, l1, n1, mm1, t2, l2, n2, mm2, dtau * env.ucell.lat0, olm);
         break;
     default: // not supposed to happen
         ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "dtype must be S or T");
@@ -267,7 +253,7 @@ void single_overlap(const LCAO_Orbitals& orb,
         // according to global2local_row and global2local_col
         // the last paramete: 1 for Sloc, 2 for Hloc
         // and 3 for Hloc_fixed.
-        LCAO_domain::set_mat2d(iw1_all, iw2_all, olm[0], pv, HSloc);
+        LCAO_domain::set_mat2d(iw1_all, iw2_all, olm[0], env.pv, HSloc);
     }
     else // condition 7, multiple k-points algorithm
     {
@@ -324,6 +310,9 @@ void build_ST_new(ForceStressArrays& fsr,
     const int npol = PARAM.globalv.npol;
     const bool gamma_only_local = PARAM.globalv.gamma_only_local;
 
+    // read-only environment shared by every element of this build
+    const ST_env env{orb, two_center_bundle, pv, ucell, nspin, npol, cal_stress, gamma_only_local};
+
     int total_nnr = 0;
 #ifdef _OPENMP
 #pragma omp parallel reduction(+ : total_nnr)
@@ -342,15 +331,15 @@ void build_ST_new(ForceStressArrays& fsr,
 #endif
         for (int iat1 = 0; iat1 < ucell.nat; iat1++) // loop 1, iat1
         {
-            const int T1 = ucell.iat2it[iat1];
-            const Atom* atom1 = &ucell.atoms[T1];
-            const int I1 = ucell.iat2ia[iat1];
+            const int t1 = ucell.iat2it[iat1];
+            const Atom* atom1 = &ucell.atoms[t1];
+            const int i1 = ucell.iat2ia[iat1];
 
-            tau1 = atom1->tau[I1];
+            tau1 = atom1->tau[i1];
 
             // GridD->Find_atom(tau1);
             AdjacentAtomInfo adjs;
-            GridD->Find_atom(ucell, tau1, T1, I1, &adjs);
+            GridD->Find_atom(ucell, tau1, t1, i1, &adjs);
             // Record_adj.for_2d() may not called in some case
             int nnr = 0;
             if (!pv.nlocstart.empty())
@@ -362,42 +351,42 @@ void build_ST_new(ForceStressArrays& fsr,
             {
                 for (int k = 0; k < 3; k++)
                 {
-                    tau1[k] = tau1[k] - atom1->vel[I1][k] * PARAM.mdp.md_dt / ModuleBase::AU_to_FS / ucell.lat0;
+                    tau1[k] = tau1[k] - atom1->vel[i1][k] * PARAM.mdp.md_dt / ModuleBase::AU_to_FS / ucell.lat0;
                 }
             }
 
             // loop 2, ad
             for (int ad = 0; ad < adjs.adj_num + 1; ++ad)
             {
-                const int T2 = adjs.ntype[ad];
-                const int I2 = adjs.natom[ad];
-                Atom* atom2 = &ucell.atoms[T2];
+                const int t2 = adjs.ntype[ad];
+                const int i2 = adjs.natom[ad];
+                Atom* atom2 = &ucell.atoms[t2];
                 tau2 = adjs.adjacent_tau[ad];
                 dtau = tau2 - tau1;
                 double distance = dtau.norm() * ucell.lat0;
-                double rcut = orb.Phi[T1].getRcut() + orb.Phi[T2].getRcut();
+                double rcut = orb.Phi[t1].getRcut() + orb.Phi[t2].getRcut();
 
                 // condition 3, distance
                 if (distance < rcut)
                 {
-                    int iw1_all = ucell.itiaiw2iwt(T1, I1, 0); // iw1_all = combined index (it, ia, iw)
+                    int iw1_all = ucell.itiaiw2iwt(t1, i1, 0); // iw1_all = combined index (it, ia, iw)
 
                     // loop 4, jj
                     for (int jj = 0; jj < atom1->nw * npol; ++jj)
                     {
                         const int jj0 = jj / npol;
-                        const int L1 = atom1->iw2l[jj0];
-                        const int N1 = atom1->iw2n[jj0];
+                        const int l1 = atom1->iw2l[jj0];
+                        const int n1 = atom1->iw2n[jj0];
                         const int m1 = atom1->iw2m[jj0];
 
-                        int iw2_all = ucell.itiaiw2iwt(T2, I2, 0); // zhengdy-soc
+                        int iw2_all = ucell.itiaiw2iwt(t2, i2, 0); // zhengdy-soc
 
                         // loop 5, kk
                         for (int kk = 0; kk < atom2->nw * npol; ++kk)
                         {
                             const int kk0 = kk / npol;
-                            const int L2 = atom2->iw2l[kk0];
-                            const int N2 = atom2->iw2n[kk0];
+                            const int l2 = atom2->iw2l[kk0];
+                            const int n2 = atom2->iw2n[kk0];
                             const int m2 = atom2->iw2m[kk0];
 
                             // mohan add 2010-06-29
@@ -417,70 +406,31 @@ void build_ST_new(ForceStressArrays& fsr,
                             olm[1] = 0.0;
                             olm[2] = 0.0;
 
-                            // condition 6, not calculate the derivative
-                            if (!calc_deri)
-                            {
-                                single_overlap(orb,
-                                               two_center_bundle,
-                                               pv,
-                                               ucell,
-                                               nspin,
-                                               cal_stress,
+                            const ST_elem elem{dtype,
                                                iw1_all,
                                                iw2_all,
                                                m1,
                                                m2,
-                                               dtype,
-                                               T1,
-                                               L1,
-                                               N1,
-                                               T2,
-                                               L2,
-                                               N2,
+                                               t1,
+                                               l1,
+                                               n1,
+                                               t2,
+                                               l2,
+                                               n2,
                                                dtau,
-                                               tau1,
-                                               tau2,
-                                               npol,
                                                jj,
                                                jj0,
                                                kk,
-                                               kk0,
-                                               nnr,
-                                               total_nnr,
-                                               olm,
-                                               HSloc);
+                                               kk0};
+
+                            // condition 6, not calculate the derivative
+                            if (!calc_deri)
+                            {
+                                single_overlap(env, elem, nnr, total_nnr, olm, HSloc);
                             }
                             else // condition 6, calculate the derivative
                             {
-                                single_derivative(fsr,
-                                                  orb,
-                                                  two_center_bundle,
-                                                  pv,
-                                                  ucell,
-                                                  nspin,
-                                                  cal_stress,
-                                                  iw1_all,
-                                                  iw2_all,
-                                                  m1,
-                                                  m2,
-                                                  dtype,
-                                                  T1,
-                                                  L1,
-                                                  N1,
-                                                  T2,
-                                                  L2,
-                                                  N2,
-                                                  dtau,
-                                                  tau1,
-                                                  tau2,
-                                                  npol,
-                                                  jj,
-                                                  jj0,
-                                                  kk,
-                                                  kk0,
-                                                  nnr,
-                                                  total_nnr,
-                                                  olm);
+                                single_derivative(env, elem, fsr, nnr, total_nnr, olm);
                             } // end condition 6, calc_deri
                             ++iw2_all;
                         } // end loop 5, kk
@@ -489,20 +439,20 @@ void build_ST_new(ForceStressArrays& fsr,
                 }     // condition 3, distance
                 else if (distance >= rcut && (!gamma_only_local))
                 {
-                    int start1 = ucell.itiaiw2iwt(T1, I1, 0);
-                    int start2 = ucell.itiaiw2iwt(T2, I2, 0);
+                    int start1 = ucell.itiaiw2iwt(t1, i1, 0);
+                    int start2 = ucell.itiaiw2iwt(t2, i2, 0);
 
                     bool is_adj = false;
                     for (int ad0 = 0; ad0 < adjs.adj_num + 1; ++ad0)
                     {
-                        const int T0 = adjs.ntype[ad0];
+                        const int t0 = adjs.ntype[ad0];
                         tau0 = adjs.adjacent_tau[ad0];
                         dtau1 = tau0 - tau1;
                         double distance1 = dtau1.norm() * ucell.lat0;
-                        double rcut1 = orb.Phi[T1].getRcut() + ucell.infoNL->get_rcut_max(T0);
+                        double rcut1 = orb.Phi[t1].getRcut() + ucell.infoNL->get_rcut_max(t0);
                         dtau2 = tau0 - tau2;
                         double distance2 = dtau2.norm() * ucell.lat0;
-                        double rcut2 = orb.Phi[T2].getRcut() + ucell.infoNL->get_rcut_max(T0);
+                        double rcut2 = orb.Phi[t2].getRcut() + ucell.infoNL->get_rcut_max(t0);
                         if (distance1 < rcut1 && distance2 < rcut2)
                         {
                             is_adj = true;

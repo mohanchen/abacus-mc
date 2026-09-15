@@ -50,33 +50,57 @@ void set_force(const Parallel_Orbitals& pv,
                double* dhloc_fixed_z);
 
 /**
+ * @brief read-only environment for building S/T matrix elements.
+ *
+ * Everything here is fixed for the duration of one build_ST_new call:
+ * the basis, the parallel layout, the unit cell and the spin/polarization
+ * configuration. Passed by const reference into single_overlap /
+ * single_derivative so those functions no longer read global INPUT state.
+ */
+struct ST_env
+{
+    const LCAO_Orbitals& orb;
+    const TwoCenterBundle& two_center_bundle;
+    const Parallel_Orbitals& pv;
+    const UnitCell& ucell;
+    const int nspin;
+    const int npol;
+    const bool cal_stress;
+    const bool gamma_only_local;
+};
+
+/**
+ * @brief one S/T matrix element <phi_1 | O | phi_2>.
+ *
+ * All inputs that vary per matrix element inside the build_ST_new loops:
+ * the operator type, the global orbital indices, the angular quantum
+ * numbers of both centres and their displacement.
+ */
+struct ST_elem
+{
+    const char dtype;
+    const int iw1_all;
+    const int iw2_all;
+    const int m1;
+    const int m2;
+    const int t1;
+    const int l1;
+    const int n1;
+    const int t2;
+    const int l2;
+    const int n2;
+    const ModuleBase::Vector3<double> dtau;
+    const int jj;
+    const int jj0;
+    const int kk;
+    const int kk0;
+};
+
+/**
  * @brief set each element without derivatives
  */
-void single_overlap(const LCAO_Orbitals& orb,
-                    const TwoCenterBundle& two_center_bundle,
-                    const Parallel_Orbitals& pv,
-                    const UnitCell& ucell,
-                    const int nspin,
-                    const bool cal_stress,
-                    const int iw1_all,
-                    const int iw2_all,
-                    const int m1,
-                    const int m2,
-                    const char& dtype,
-                    const int T1,
-                    const int L1,
-                    const int N1,
-                    const int T2,
-                    const int L2,
-                    const int N2,
-                    const ModuleBase::Vector3<double>& dtau,
-                    const ModuleBase::Vector3<double>& tau1,
-                    const ModuleBase::Vector3<double>& tau2,
-                    const int npol,
-                    const int jj,
-                    const int jj0,
-                    const int kk,
-                    const int kk0,
+void single_overlap(const ST_env& env,
+                    const ST_elem& e,
                     int& nnr,       // output value
                     int& total_nnr, // output value
                     double* olm,    // output value
@@ -85,32 +109,9 @@ void single_overlap(const LCAO_Orbitals& orb,
 /**
  * @brief set each element of T matrices
  */
-void single_derivative(ForceStressArrays& fsr,
-                       const LCAO_Orbitals& orb,
-                       const TwoCenterBundle& two_center_bundle,
-                       const Parallel_Orbitals& pv,
-                       const UnitCell& ucell,
-                       const int nspin,
-                       const bool cal_stress,
-                       const int iw1_all,
-                       const int iw2_all,
-                       const int m1,
-                       const int m2,
-                       const char& dtype,
-                       const int T1,
-                       const int L1,
-                       const int N1,
-                       const int T2,
-                       const int L2,
-                       const int N2,
-                       const ModuleBase::Vector3<double>& dtau,
-                       const ModuleBase::Vector3<double>& tau1,
-                       const ModuleBase::Vector3<double>& tau2,
-                       const int npol,
-                       const int jj,
-                       const int jj0,
-                       const int kk,
-                       const int kk0,
+void single_derivative(const ST_env& env,
+                       const ST_elem& e,
+                       ForceStressArrays& fsr,
                        int& nnr,       // output value
                        int& total_nnr, // output value
                        double* olm);   // output value
