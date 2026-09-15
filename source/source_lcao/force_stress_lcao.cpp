@@ -185,7 +185,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
                                 isforce, isstress, parts, sparts);
 
     // DFT+U force/stress
-    this->cal_dftu_fs(ucell, gd, pv, orb, kv, dmat, dftu, isforce, isstress, parts, sparts);
+    this->cal_dftu_fs(ucell, gd, pv, orb, kv, dmat, two_center_bundle, dftu, isforce, isstress, parts, sparts);
 
 
     // NOTE: finish_ftable is no longer needed as we don't use ForceStressArrays for overlap/kinetic
@@ -218,7 +218,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
 // Operator-based force/stress terms: kinetic, overlap, nonlocal,
 // rt-TDDFT hybrid gauge, local-potential Pulay term, and DeltaSpin.
 template <typename T>
-void Force_Stress_LCAO<T>::cal_operator_fs(const UnitCell& ucell,
+void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
                                              const Grid_Driver& gd,
                                              Parallel_Orbitals& pv,
                                              const elecstate::ElecState* pelec,
@@ -567,6 +567,7 @@ void Force_Stress_LCAO<T>::cal_dftu_fs(UnitCell& ucell,
                                          const LCAO_Orbitals& orb,
                                          const K_Vectors& kv,
                                          LCAO_domain::Setup_DM<T>& dmat,
+                                         const TwoCenterBundle& two_center_bundle,
                                          Plus_U_Base& dftu,
                                          const bool isforce,
                                          const bool isstress,

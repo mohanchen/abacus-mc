@@ -120,7 +120,7 @@ class Force_Stress_LCAO
 
     // Operator-based force/stress terms: kinetic, overlap, nonlocal,
     // rt-TDDFT hybrid gauge, local-potential Pulay term, and DeltaSpin.
-    void cal_operator_fs(const UnitCell& ucell,
+    void cal_operator_fs(UnitCell& ucell,
                          const Grid_Driver& gd,
                          Parallel_Orbitals& pv,
                          const elecstate::ElecState* pelec,
@@ -175,6 +175,7 @@ class Force_Stress_LCAO
                      const LCAO_Orbitals& orb,
                      const K_Vectors& kv,
                      LCAO_domain::Setup_DM<T>& dmat,
+                     const TwoCenterBundle& two_center_bundle,
                      Plus_U_Base& dftu,
                      const bool isforce,
                      const bool isstress,
