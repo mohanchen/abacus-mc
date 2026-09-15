@@ -1,5 +1,7 @@
 #include "force_stress_lcao.h"
 
+#include "force_stress_pw.h"
+
 #include "source_basis/module_nao/two_center_bundle.h"
 #include "source_base/parallel_reduce.h"
 #include "source_pw/module_pwdft/dftu_base.h" //Quxin add for DFT+U on 20201029
@@ -134,8 +136,9 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         parts.fpothybrid.create(nat, 3); // pulay force for hybrid gauge rt-tddft
 
         // calculate basic terms in Force, same method with PW base
-        this->calForcePwPart(ucell, parts.fvl_dvl, parts.fewalds, parts.fcc, parts.fscc, pelec->f_en.etxc,
-              pelec->vnew, pelec->vnew_exist, pelec->charge, rhopw, locpp, sf);
+        this->calForcePwPart(ucell, parts.fvl_dvl, parts.fewalds, parts.fcc, parts.fscc,
+                             pelec->f_en.etxc, pelec->vnew, pelec->vnew_exist, pelec->charge, rhopw,
+                             locpp, sf);
     }
 
     // total stress : ModuleBase::matrix scs
@@ -157,8 +160,9 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         sparts.svnl_dalpha.create(3, 3);
 
         // calculate basic terms in Stress, similar method with PW base
-        this->calStressPwPart(ucell, sparts.sigmadvl, sparts.sigmahar, sparts.sigmaewa, sparts.sigmacc,
-          sparts.sigmaxc, pelec->f_en.etxc, pelec->charge, rhopw, locpp, sf);
+        LCAO_domain::cal_stress_pw(this->sc_pw, ucell, sparts.sigmadvl, sparts.sigmahar, sparts.sigmaewa,
+                                   sparts.sigmacc, sparts.sigmaxc, pelec->f_en.etxc, pelec->charge,
+                                   rhopw, locpp, sf);
     }
     // Calculate operator-based force/stress terms (kinetic, overlap,
     // nonlocal, rt-TDDFT hybrid gauge, local Pulay term and DeltaSpin).
@@ -651,6 +655,8 @@ void Force_Stress_LCAO<T>::cal_dftu_fs(UnitCell& ucell,
     }
 }
 
+#include "source_base/mathzone.h"
+
 // local pseudopotential, ewald, core correction, scc terms in force
 template <typename T>
 void Force_Stress_LCAO<T>::calForcePwPart(UnitCell& ucell,
@@ -668,7 +674,7 @@ void Force_Stress_LCAO<T>::calForcePwPart(UnitCell& ucell,
 {
     ModuleBase::TITLE("Force_Stress_LCAO", "calForcePwPart");
 #ifdef __CUDA
-    if(PARAM.inp.device == "gpu")
+    if (PARAM.inp.device == "gpu")
     {
         Forces<double, base_device::DEVICE_GPU> f_pw(nat);
         f_pw.cal_force_loc(ucell, fvl_dvl, rhopw, locpp.vloc, chr);
@@ -689,46 +695,6 @@ void Force_Stress_LCAO<T>::calForcePwPart(UnitCell& ucell,
     return;
 }
 
-// vlocal, hartree, ewald, core correction, exchange-correlation terms in stress
-template <typename T>
-void Force_Stress_LCAO<T>::calStressPwPart(UnitCell& ucell,
-                                           ModuleBase::matrix& sigmadvl,
-                                           ModuleBase::matrix& sigmahar,
-                                           ModuleBase::matrix& sigmaewa,
-                                           ModuleBase::matrix& sigmacc,
-                                           ModuleBase::matrix& sigmaxc,
-                                           const double& etxc,
-                                           const Charge* const chr,
-                                           ModulePW::PW_Basis* rhopw,
-                                           const pseudopot_cell_vl& locpp,
-                                           const Structure_Factor& sf)
-{
-    ModuleBase::TITLE("Force_Stress_LCAO", "calStressPwPart");
-
-    // local pseudopotential stress:
-    sc_pw.stress_loc(ucell, sigmadvl, rhopw, locpp.vloc, &sf, 0, chr);
-
-    // hartree term
-    sc_pw.stress_har(ucell, sigmahar, rhopw, 0, chr);
-
-    // ewald stress: use plane wave only.
-    sc_pw.stress_ewa(ucell, sigmaewa, rhopw, 0); // remain problem
-
-    // stress due to core correlation.
-    sc_pw.stress_cc(sigmacc, rhopw, ucell, &sf, 0, locpp.numeric, chr);
-
-    // stress due to self-consistent charge.
-    for (int i = 0; i < 3; i++)
-    {
-        sigmaxc(i, i) = -etxc / ucell.omega;
-    }
-    // Exchange-correlation for PBE
-    sc_pw.stress_gga(ucell, sigmaxc, rhopw, chr);
-
-    return;
-}
-
-#include "source_base/mathzone.h"
 template <typename T>
 void Force_Stress_LCAO<T>::assemble_and_print_force(const UnitCell& ucell,
                                                    const bool istestf,
@@ -814,7 +780,7 @@ void Force_Stress_LCAO<T>::assemble_and_print_force(const UnitCell& ucell,
     // pengfei 2016-12-20
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
     {
-        this->forceSymmetry(ucell, fcs, symm);
+        LCAO_domain::symmetrize_force(ucell, fcs, symm);
     }
 
     // The net force should be evaluated AFTER the symmetrization.
@@ -1090,35 +1056,6 @@ void Force_Stress_LCAO<T>::assemble_and_print_stress(const UnitCell& ucell,
     {
         scs(i, i) -= external_stress[i] / unit_transform;
     }
-}
-
-// do symmetry for total force
-template <typename T>
-void Force_Stress_LCAO<T>::forceSymmetry(const UnitCell& ucell, ModuleBase::matrix& fcs, ModuleSymmetry::Symmetry* symm)
-{
-    double d1, d2, d3;
-    for (int iat = 0; iat < ucell.nat; iat++)
-    {
-        ModuleBase::Mathzone::Cartesian_to_Direct(fcs(iat, 0), fcs(iat, 1), fcs(iat, 2),
-          ucell.a1.x, ucell.a1.y, ucell.a1.z, ucell.a2.x, ucell.a2.y, ucell.a2.z,
-          ucell.a3.x, ucell.a3.y, ucell.a3.z, d1, d2, d3);
-
-        fcs(iat, 0) = d1;
-        fcs(iat, 1) = d2;
-        fcs(iat, 2) = d3;
-    }
-    symm->symmetrize_vec3_nat(fcs.c);
-    for (int iat = 0; iat < ucell.nat; iat++)
-    {
-        ModuleBase::Mathzone::Direct_to_Cartesian(fcs(iat, 0), fcs(iat, 1), fcs(iat, 2),
-          ucell.a1.x, ucell.a1.y, ucell.a1.z, ucell.a2.x, ucell.a2.y, ucell.a2.z,
-          ucell.a3.x, ucell.a3.y, ucell.a3.z, d1, d2, d3);
-
-        fcs(iat, 0) = d1;
-        fcs(iat, 1) = d2;
-        fcs(iat, 2) = d3;
-    }
-    return;
 }
 
 template class Force_Stress_LCAO<double>;

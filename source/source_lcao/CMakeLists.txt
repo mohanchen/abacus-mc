@@ -36,6 +36,7 @@ if(ENABLE_LCAO)
         setup_dftu_lcao.cpp
         pulay_fs_center2.cpp
         force_stress_lcao.cpp
+        force_stress_pw.cpp
         stress_tools.cpp
         edm.cpp
         spar_dh.cpp

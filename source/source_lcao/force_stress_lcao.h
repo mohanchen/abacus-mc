@@ -182,8 +182,6 @@ class Force_Stress_LCAO
                      LCAOForceParts& parts,
                      LCAOStressParts& sparts);
 
-    void forceSymmetry(const UnitCell& ucell, ModuleBase::matrix& fcs, ModuleSymmetry::Symmetry* symm);
-
     // Sum the computed force parts into fcs, apply symmetry and the net-force
     // (drift) correction, then print the per-term and total forces.
     void assemble_and_print_force(const UnitCell& ucell,
@@ -206,6 +204,9 @@ class Force_Stress_LCAO
                                    const LCAOStressParts& parts,
                                    ModuleBase::matrix& scs);
 
+    // Local pseudopotential, Ewald, core-correction and self-consistent-field
+    // force contributions, computed with the plane-wave Forces driver. Kept as
+    // a member because it needs friend access to Forces::cal_force_*.
     void calForcePwPart(UnitCell& ucell,
                         ModuleBase::matrix& fvl_dvl,
                         ModuleBase::matrix& fewalds,
@@ -218,18 +219,6 @@ class Force_Stress_LCAO
                         ModulePW::PW_Basis* rhopw,
                         const pseudopot_cell_vl& locpp,
                         const Structure_Factor& sf);
-
-    void calStressPwPart(UnitCell& ucell,
-                         ModuleBase::matrix& sigmadvl,
-                         ModuleBase::matrix& sigmahar,
-                         ModuleBase::matrix& sigmaewa,
-                         ModuleBase::matrix& sigmacc,
-                         ModuleBase::matrix& sigmaxc,
-                         const double& etxc,
-                         const Charge* const chr,
-                         ModulePW::PW_Basis* rhopw,
-                         const pseudopot_cell_vl& locpp,
-                         const Structure_Factor& sf);
 
     static double force_invalid_threshold_ev;
 };
