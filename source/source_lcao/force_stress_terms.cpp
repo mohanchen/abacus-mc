@@ -222,7 +222,7 @@ void cal_dftu_fs(UnitCell& ucell,
             ForceStressArrays fsr_dftu;
             std::vector<std::vector<double>>* dmk_d = nullptr;
             std::vector<std::vector<std::complex<double>>>* dmk_c = nullptr;
-            assign_dmk_ptr<T>(dmat.dm, dmk_d, dmk_c, PARAM.globalv.gamma_only_local);
+            assign_dmk_ptr<T>(dmat.dm, dmk_d, dmk_c);
             DFTU_LCAO::DftuFsEnv dftu_fs_env(dftu, ucell, gd, pv, fsr_dftu,
                                              orb.cutoffs(), PARAM.inp.ks_solver);
             DFTU_LCAO::force_stress(dftu_fs_env, isforce, isstress,

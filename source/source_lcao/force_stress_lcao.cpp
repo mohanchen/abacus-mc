@@ -20,7 +20,6 @@
 #include "source_estate/module_pot/gatefield.h"        // liuyu add 2022-09-13
 #include "source_hamilt/module_surchem/surchem.h" //sunml add 2022-08-10
 #include "source_hamilt/module_vdw/vdw.h"
-#include "source_io/module_parameter/parameter.h"
 #ifdef __MLALGO
 #include "source_lcao/module_deepks/lcao_deepks.h"    //caoyu add for deepks 2021-06-03
 #include "source_lcao/module_deepks/lcao_deepks_io.h" // mohan add 2024-07-22
@@ -42,8 +41,7 @@ template <>
 void assign_dmk_ptr<double>(
     elecstate::DensityMatrix<double,double>* dm,
     std::vector<std::vector<double>>*& dmk_d,
-    std::vector<std::vector<std::complex<double>>>*& dmk_c,
-    bool gamma_only_local
+    std::vector<std::vector<std::complex<double>>>*& dmk_c
 ) {
     std::vector<std::vector<double>>& dmk_tmp = dm->get_DMK_vector();
     dmk_d = &dmk_tmp;
@@ -54,8 +52,7 @@ template <>
 void assign_dmk_ptr<std::complex<double>>(
     elecstate::DensityMatrix<std::complex<double>,double>* dm,
     std::vector<std::vector<double>>*& dmk_d,
-    std::vector<std::vector<std::complex<double>>>*& dmk_c,
-    bool gamma_only_local
+    std::vector<std::vector<std::complex<double>>>*& dmk_c
 ) {
     std::vector<std::vector<std::complex<double>>>& dmk_tmp = dm->get_DMK_vector();
     dmk_c = &dmk_tmp;
@@ -311,7 +308,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
     else if (PARAM.inp.nspin == 4)
     {
 
-        // Calculate kinetic force/stress (uses DM)
+        // Kinetic force/stress from the complex DMR (nspin=4)
         if (PARAM.inp.t_in_h)
         {
             hamilt::EKinetic<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_ekinetic(
@@ -321,7 +318,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
                                           sparts.stvnl_dphi);
         }
 
-        // Calculate overlap force/stress (uses EDM)
+        // Overlap force/stress from the complex EDM (nspin=4)
         hamilt::Overlap<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_overlap(
             nullptr, kv.kvec_d, nullptr, nullptr, &ucell, orb.cutoffs(), &gd,
             two_center_bundle.overlap_orb.get());
@@ -334,16 +331,16 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         tmp_dmr.insert_ijrs(&ijrs);
         tmp_dmr.allocate();
         dmat.dm->cal_DMR_full(&tmp_dmr);
-        // Calculate nonlocal force/stress (uses DM)
+        // Nonlocal force/stress from the temporary complex DMR
         hamilt::Nonlocal<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_nonlocal(
             nullptr, kv.kvec_d, nullptr, &ucell, orb.cutoffs(), &gd,
             two_center_bundle.overlap_orb_beta.get());
         tmp_nonlocal.cal_force_stress(isforce, isstress, &tmp_dmr, parts.fvnl_dbeta, sparts.svnl_dbeta);
 
-        // Calculate local potential force/stress (vl_dphi)
+        // Local-potential (vl_dphi) Pulay term via grid integration
         flk.ParaV = dmat.dm->get_paraV_pointer();
         PulayForceStress::cal_pulay_fs(parts.fvl_dphi, sparts.svl_dphi, *dmat.dm, ucell, pelec->pot,
-                                       isforce, isstress, false /*reset dm to gint*/);
+                                       isforce, isstress, false);
     }
 
     // atomic force and stress for DeltaSpin

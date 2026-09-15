@@ -164,8 +164,7 @@ template <typename T>
 void assign_dmk_ptr(
     elecstate::DensityMatrix<T,double>* dm,
     std::vector<std::vector<double>>*& dmk_d,
-    std::vector<std::vector<std::complex<double>>>*& dmk_c,
-    bool gamma_only_local
+    std::vector<std::vector<std::complex<double>>>*& dmk_c
 );
 
 #endif
