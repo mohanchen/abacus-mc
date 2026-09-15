@@ -45,7 +45,7 @@ void assign_dmk_ptr<double>(
     std::vector<std::vector<std::complex<double>>>*& dmk_c,
     bool gamma_only_local
 ) {
-    auto& dmk_tmp = dm->get_DMK_vector();
+    std::vector<std::vector<double>>& dmk_tmp = dm->get_DMK_vector();
     dmk_d = &dmk_tmp;
     dmk_c = nullptr;
 }
@@ -57,7 +57,7 @@ void assign_dmk_ptr<std::complex<double>>(
     std::vector<std::vector<std::complex<double>>>*& dmk_c,
     bool gamma_only_local
 ) {
-    auto& dmk_tmp = dm->get_DMK_vector();
+    std::vector<std::vector<std::complex<double>>>& dmk_tmp = dm->get_DMK_vector();
     dmk_c = &dmk_tmp;
     dmk_d = nullptr;
 }
@@ -317,7 +317,8 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
             hamilt::EKinetic<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_ekinetic(
                 nullptr, kv.kvec_d, nullptr, &ucell, orb.cutoffs(), &gd,
                 two_center_bundle.kinetic_orb.get());
-            tmp_ekinetic.cal_force_stress(isforce, isstress, dmat.dm->get_DMR_pointer(1), parts.ftvnl_dphi, sparts.stvnl_dphi);
+            tmp_ekinetic.cal_force_stress(isforce, isstress, dmat.dm->get_DMR_pointer(1), parts.ftvnl_dphi,
+                                          sparts.stvnl_dphi);
         }
 
         // Calculate overlap force/stress (uses EDM)
