@@ -136,27 +136,6 @@ class Force_Stress_LCAO
                          LCAOForceParts& parts,
                          LCAOStressParts& sparts);
 
-    // Sum the computed force parts into fcs, apply symmetry and the net-force
-    // (drift) correction, then print the per-term and total forces.
-    void assemble_and_print_force(const UnitCell& ucell,
-                                  const bool istestf,
-                                  const vdw::VdwResult* vdw_result,
-                                  const Exx_Info& exx_info,
-                                  ModuleSymmetry::Symmetry* symm,
-                                  Setup_DeePKS<T>& deepks,
-                                  const LCAOForceParts& parts,
-                                  ModuleBase::matrix& fcs);
-
-    // Sum the computed stress parts into scs, symmetrize, subtract the external
-    // pressure and print the per-term and total stresses.
-    void assemble_and_print_stress(const UnitCell& ucell,
-                                   const bool istests,
-                                   const vdw::VdwResult* vdw_result,
-                                   const Exx_Info& exx_info,
-                                   ModuleSymmetry::Symmetry* symm,
-                                   Setup_DeePKS<T>& deepks,
-                                   const LCAOStressParts& parts,
-                                   ModuleBase::matrix& scs);
 
     // Local pseudopotential, Ewald, core-correction and self-consistent-field
     // force contributions, computed with the plane-wave Forces driver. Kept as
