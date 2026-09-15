@@ -9,6 +9,22 @@ typedef std::tuple<int, int, int, int> key_tuple;
 
 #include "record_adj.h" //mohan add 2012-07-06
 
+// Per-neighbour context for Step 2 of build_Nonlocal_mu_new: everything that
+// is fixed once the projector atom (T0, slot iat) and the two basis centres
+// are known, before the (j, k) orbital loop runs. key1/key2 address the two
+// <psi|beta> blocks inside nlm_tot / nlm_tot1.
+struct NL_pair
+{
+    const Atom* atom1;
+    const Atom* atom2;
+    const int start1;
+    const int start2;
+    const int t0;
+    const int iat;
+    const key_tuple key1;
+    const key_tuple key2;
+};
+
 // <psi1|beta><beta|psi2> contribution of one matrix element to the nonlocal
 // energy (no derivatives). Defined statically here so the compiler can inline
 // it at the hot inner-loop call site of build_Nonlocal_mu_new.
@@ -249,9 +265,10 @@ static void build_psi_beta(
                 const int iw1_all = start1 + iw1;
                 const int iw1_local = pv.global2local_row(iw1_all);
                 const int iw2_local = pv.global2local_col(iw1_all);
-                if (iw1_local < 0 && iw2_local < 0) {
+                if (iw1_local < 0 && iw2_local < 0)
+                {
                     continue;
-}
+                }
                 const int iw1_0 = iw1 / npol;
                 std::vector<std::vector<double>> nlm;
                 // nlm is a vector of vectors, but size of outer vector is only 1 here
@@ -295,6 +312,83 @@ static void build_psi_beta(
             }
         } // end ad
     }
+}
+
+// Step 2 inner block: run the (j, k) orbital loop for one projector atom and
+// accumulate every <psi1|beta><beta|psi2> matrix element into NLloc (energy)
+// or fsr (force). Returns the number of elements written, i.e. the nnr_inner
+// increment for this neighbour.
+static int accum_nlm_block(
+    const NL_env& env,
+    const NL_pair& pair,
+    const int nnr,
+    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<double>>>>& nlm_tot,
+    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<std::vector<double>>>>>& nlm_tot1,
+    double* NLloc,
+    ForceStressArrays& fsr)
+{
+    const Parallel_Orbitals& pv = env.pv;
+    const int npol = env.npol;
+    const int nspin = env.nspin;
+    const bool calc_deri = env.calc_deri;
+
+    int nnr_inner = 0;
+    for (int j = 0; j < pair.atom1->nw * npol; j++)
+    {
+        const int j0 = j / npol; // added by zhengdy-soc
+        const int iw1_all = pair.start1 + j;
+        const int mu = pv.global2local_row(iw1_all);
+        if (mu < 0)
+        {
+            continue;
+        }
+
+        // fix a serious bug: atom2[T2] -> atom2
+        // mohan 2010-12-20
+        for (int k = 0; k < pair.atom2->nw * npol; k++)
+        {
+            const int k0 = k / npol;
+            const int iw2_all = pair.start2 + k;
+            const int nu = pv.global2local_col(iw2_all);
+            if (nu < 0)
+            {
+                continue;
+            }
+
+            const NL_elem elem{iw1_all, iw2_all, pair.t0, nnr + nnr_inner};
+            if (!calc_deri)
+            {
+                accum_nlm_energy(env, elem, nlm_tot[pair.iat][pair.key1], nlm_tot[pair.iat][pair.key2], NLloc);
+            }     // calc_deri
+            else  // calculate the derivative
+            {
+                if (nspin == 4)
+                {
+                    const int is0 = (j - j0 * npol) + (k - k0 * npol) * 2;
+                    accum_nlm_force_soc(env,
+                                        elem,
+                                        nlm_tot1[pair.iat][pair.key1],
+                                        nlm_tot1[pair.iat][pair.key2],
+                                        is0,
+                                        fsr);
+                }
+                else if (nspin == 1 || nspin == 2)
+                {
+                    accum_nlm_force(env,
+                                    elem,
+                                    nlm_tot1[pair.iat][pair.key1],
+                                    nlm_tot1[pair.iat][pair.key2],
+                                    fsr);
+                }
+                else
+                {
+                    ModuleBase::WARNING_QUIT("LCAO_domain::build_Nonlocal_mu_new", "nspin must be 1, 2 or 4");
+                }
+            } //! calc_deri
+            nnr_inner++;
+        } // k
+    }     // j
+    return nnr_inner;
 }
 
 void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
@@ -410,9 +504,11 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
                     // this rcut is in order to make nnr consistent
                     // with other matrix.
                     rcut = pow(orb.Phi[T1].getRcut() + orb.Phi[T2].getRcut(), 2);
-                    if (distance < rcut) {
+                    if (distance < rcut)
+                    {
                         is_adj = true;
-                    } else if (distance >= rcut)
+                    }
+                    else if (distance >= rcut)
                     {
                         for (int ad0 = 0; ad0 < adjs.adj_num + 1; ++ad0)
                         {
@@ -474,66 +570,8 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
                             key_tuple key1(iat1, -rx0, -ry0, -rz0);
                             key_tuple key2(iat2, rx2 - rx0, ry2 - ry0, rz2 - rz0);
 
-                            int nnr_inner = 0;
-
-                            for (int j = 0; j < atom1->nw * npol; j++)
-                            {
-                                const int j0 = j / npol; // added by zhengdy-soc
-                                const int iw1_all = start1 + j;
-                                const int mu = pv.global2local_row(iw1_all);
-                                if (mu < 0) {
-                                    continue;
-}
-
-                                // fix a serious bug: atom2[T2] -> atom2
-                                // mohan 2010-12-20
-                                for (int k = 0; k < atom2->nw * npol; k++)
-                                {
-                                    const int k0 = k / npol;
-                                    const int iw2_all = start2 + k;
-                                    const int nu = pv.global2local_col(iw2_all);
-                                    if (nu < 0) {
-                                        continue;
-}
-
-                                    const NL_elem elem{iw1_all, iw2_all, T0, nnr + nnr_inner};
-                                    if (!calc_deri)
-                                    {
-                                        accum_nlm_energy(env,
-                                                         elem,
-                                                         nlm_tot[iat][key1],
-                                                         nlm_tot[iat][key2],
-                                                         NLloc);
-                                    }     // calc_deri
-                                    else  // calculate the derivative
-                                    {
-                                        if (nspin == 4)
-                                        {
-                                            const int is0 = (j - j0 * npol) + (k - k0 * npol) * 2;
-                                            accum_nlm_force_soc(env,
-                                                                elem,
-                                                                nlm_tot1[iat][key1],
-                                                                nlm_tot1[iat][key2],
-                                                                is0,
-                                                                fsr);
-                                        }
-                                        else if (nspin == 1 || nspin == 2)
-                                        {
-                                            accum_nlm_force(env,
-                                                            elem,
-                                                            nlm_tot1[iat][key1],
-                                                            nlm_tot1[iat][key2],
-                                                            fsr);
-                                        }
-                                        else
-                                        {
-                                            ModuleBase::WARNING_QUIT("LCAO_domain::build_Nonlocal_mu_new",
-                                                                     "nspin must be 1, 2 or 4");
-                                        }
-                                    } //! calc_deri
-                                    nnr_inner++;
-                                } // k
-                            }     // j
+                            const NL_pair pair{atom1, atom2, start1, start2, T0, iat, key1, key2};
+                            accum_nlm_block(env, pair, nnr, nlm_tot, nlm_tot1, NLloc, fsr);
                         }         // ad0
 
                         // outer circle : accumulate nnr
