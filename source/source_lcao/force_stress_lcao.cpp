@@ -95,6 +95,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
                                           Exx_NAO<T> &exx_nao,
                                           ModuleSymmetry::Symmetry* symm,
                                           const Exx_Info& exx_info,
+                                          const FSCalcConfig& cfg,
                                           const int td_stype,
                                           hamilt::Hamilt<T>* p_hamilt)
 {
@@ -137,7 +138,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         // calculate basic terms in Force, same method with PW base
         this->calForcePwPart(ucell, parts.fvl_dvl, parts.fewalds, parts.fcc, parts.fscc,
                              pelec->f_en.etxc, pelec->vnew, pelec->vnew_exist, pelec->charge, rhopw,
-                             locpp, sf);
+                             locpp, sf, cfg.device);
     }
 
     // total stress : ModuleBase::matrix scs
@@ -166,7 +167,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
     // Calculate operator-based force/stress terms (kinetic, overlap,
     // nonlocal, rt-TDDFT hybrid gauge, local Pulay term and DeltaSpin).
     this->cal_operator_fs(ucell, gd, pv, pelec, dmat, psi, two_center_bundle,
-                          orb, kv, isforce, isstress, td_stype, p_hamilt, parts, sparts);
+                          orb, kv, isforce, isstress, cfg, td_stype, p_hamilt, parts, sparts);
 
     // MPI reduction for forces
     if (isforce)
@@ -233,6 +234,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
                                              const K_Vectors& kv,
                                              const bool isforce,
                                              const bool isstress,
+                                             const FSCalcConfig& cfg,
                                              const int td_stype,
                                              hamilt::Hamilt<T>* p_hamilt,
                                              LCAOForceParts& parts,
@@ -243,14 +245,14 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
     // Step 1: Calculate Energy Density Matrix (EDM) for overlap force
     // EDM = Σ_k w_k * ε_k * |ψ_k><ψ_k|
     elecstate::DensityMatrix<T, double> edm = flk.cal_edm(pelec, *psi, *dmat.dm, kv, pv,
-                                                           PARAM.inp.nspin, PARAM.inp.nbands, ucell, *this->RA);
+                                                           cfg.nspin, cfg.nbands, ucell, *this->RA);
 
     // Step 2: Handle different spin cases
-    if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 2)
+    if (cfg.nspin == 1 || cfg.nspin == 2)
     {
         // For nspin=1 or nspin=2, use double precision
         // Switch to spin channel 1 for DMR access
-        if (PARAM.inp.nspin == 2)
+        if (cfg.nspin == 2)
         {
             dmat.dm->switch_dmr(1);
             edm.switch_dmr(1);
@@ -260,7 +262,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         const hamilt::HContainer<double>* edmR = edm.get_DMR_pointer(1);
 
         // Calculate kinetic force/stress (uses DM)
-        if (PARAM.inp.t_in_h)
+        if (cfg.t_in_h)
         {
             hamilt::EKinetic<hamilt::OperatorLCAO<T, double>> tmp_ekinetic(
                 nullptr, kv.kvec_d, nullptr, &ucell, orb.cutoffs(), &gd,
@@ -293,7 +295,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         }
 
         // Switch back to spin channel 0
-        if (PARAM.inp.nspin == 2)
+        if (cfg.nspin == 2)
         {
             dmat.dm->switch_dmr(0);
             edm.switch_dmr(0);
@@ -305,11 +307,11 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         PulayForceStress::cal_pulay_fs(parts.fvl_dphi, sparts.svl_dphi, *dmat.dm, ucell, pelec->pot,
                                        isforce, isstress, false /*reset dm to gint*/);
     }
-    else if (PARAM.inp.nspin == 4)
+    else if (cfg.nspin == 4)
     {
 
         // Kinetic force/stress from the complex DMR (nspin=4)
-        if (PARAM.inp.t_in_h)
+        if (cfg.t_in_h)
         {
             hamilt::EKinetic<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_ekinetic(
                 nullptr, kv.kvec_d, nullptr, &ucell, orb.cutoffs(), &gd,
@@ -344,7 +346,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
     }
 
     // atomic force and stress for DeltaSpin
-    if (PARAM.inp.sc_mag_switch)
+    if (cfg.sc_mag_switch)
     {
         if (isforce)
         {
@@ -363,13 +365,13 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
                                                                      two_center_bundle.overlap_orb_onsite.get(),
                                                                      orb.cutoffs());
 
-        if (PARAM.inp.nspin == 2)
+        if (cfg.nspin == 2)
         {
             dmat.dm->switch_dmr(2);
         }
         const hamilt::HContainer<double>* dmr = dmat.dm->get_DMR_pointer(1);
         tmp_dspin.cal_force_stress(isforce, isstress, dmr, parts.force_dspin, sparts.stress_dspin);
-        if (PARAM.inp.nspin == 2)
+        if (cfg.nspin == 2)
         {
             dmat.dm->switch_dmr(0);
         }
@@ -392,11 +394,12 @@ void Force_Stress_LCAO<T>::calForcePwPart(UnitCell& ucell,
                                           const Charge* const chr,
                                           ModulePW::PW_Basis* rhopw,
                                           const pseudopot_cell_vl& locpp,
-                                          const Structure_Factor& sf)
+                                          const Structure_Factor& sf,
+                                          const std::string& device)
 {
     ModuleBase::TITLE("Force_Stress_LCAO", "calForcePwPart");
 #ifdef __CUDA
-    if (PARAM.inp.device == "gpu")
+    if (device == "gpu")
     {
         Forces<double, base_device::DEVICE_GPU> f_pw(nat);
         f_pw.cal_force_loc(ucell, fvl_dvl, rhopw, locpp.vloc, chr);

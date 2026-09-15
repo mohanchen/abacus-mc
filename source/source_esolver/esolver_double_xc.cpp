@@ -421,7 +421,9 @@ void ESolver_DoubleXC<TK, TR>::cal_force(BaseCell& basecell, ModuleBase::matrix&
                        this->deepks,
                        this->exx_nao,
                        &ucell.symm,
-                       this->exx_info_);
+                       this->exx_info_,
+                       FSCalcConfig{this->inp_->nspin, this->inp_->nbands, this->inp_->t_in_h,
+                                    this->inp_->sc_mag_switch, this->inp_->device});
 
     // restore to original xc
     XC_Functional::set_xc_type(ucell.atoms[0].ncpp.xc_func);

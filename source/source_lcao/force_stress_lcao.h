@@ -1,6 +1,8 @@
 #ifndef FORCE_STRESS_LCAO_H
 #define FORCE_STRESS_LCAO_H
 
+#include <string>
+
 #include "force_lcao.h"
 #include "source_base/global_function.h"
 #include "source_base/matrix.h"
@@ -26,6 +28,18 @@ struct VdwResult;
 }
 
 class TwoCenterBundle;
+
+// INPUT scalars that steer the force/stress kernels. Bundling them into one
+// aggregate keeps getForceStress and its helpers from each re-reading the
+// global PARAM object, and collapses five arguments into a single reference.
+struct FSCalcConfig
+{
+    int nspin;
+    int nbands;
+    bool t_in_h;
+    bool sc_mag_switch;
+    std::string device;
+};
 
 // Force/stress component matrices assembled by getForceStress. Grouping them
 // into a struct lets the assembly/print helpers take one reference instead of
@@ -109,6 +123,7 @@ class Force_Stress_LCAO
                         Exx_NAO<T> &exx_nao,
                         ModuleSymmetry::Symmetry* symm,
                         const Exx_Info& exx_info,
+                        const FSCalcConfig& cfg,
                         const int td_stype = 0,
                         hamilt::Hamilt<T>* p_hamilt = nullptr);
 
@@ -131,6 +146,7 @@ class Force_Stress_LCAO
                          const K_Vectors& kv,
                          const bool isforce,
                          const bool isstress,
+                         const FSCalcConfig& cfg,
                          const int td_stype,
                          hamilt::Hamilt<T>* p_hamilt,
                          LCAOForceParts& parts,
@@ -151,7 +167,8 @@ class Force_Stress_LCAO
                         const Charge* const chr,
                         ModulePW::PW_Basis* rhopw,
                         const pseudopot_cell_vl& locpp,
-                        const Structure_Factor& sf);
+                        const Structure_Factor& sf,
+                        const std::string& device);
 
     static double force_invalid_threshold_ev;
 };

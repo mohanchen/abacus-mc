@@ -271,7 +271,10 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(BaseCell& basecell, ModuleBase::matrix& 
                        two_center_bundle_, orb_, force, this->scs,
                        this->locpp, this->sf, this->kv,
                        this->pw_rho, this->solvent, *this->dftu_, this->deepks,
-                       this->exx_nao, &ucell.symm, this->exx_info_, this->inp_->td_stype,
+                       this->exx_nao, &ucell.symm, this->exx_info_,
+                       FSCalcConfig{this->inp_->nspin, this->inp_->nbands, this->inp_->t_in_h,
+                                    this->inp_->sc_mag_switch, this->inp_->device},
+                       this->inp_->td_stype,
                        static_cast<hamilt::Hamilt<TK>*>(this->p_hamilt));
 
     // delete RA after cal_force
