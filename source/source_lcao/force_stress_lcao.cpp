@@ -204,7 +204,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
     //--------------------------------
     if (isforce)
     {
-        LCAO_domain::assemble_print_force(ucell, istestf, vdw_result, exx_info, symm, deepks, parts,
+        LCAO_domain::assemble_print_force(ucell, istestf, vdw_result, exx_info, symm, deepks.dpks_out_type, parts,
                                           force_invalid_threshold_ev, fcs);
     } // end of force calculation
     //---------------------------------
@@ -212,7 +212,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
     //---------------------------------
     if (isstress)
     {
-        LCAO_domain::assemble_print_stress(ucell, istests, vdw_result, exx_info, symm, deepks, sparts, scs);
+        LCAO_domain::assemble_print_stress(ucell, istests, vdw_result, exx_info, symm, deepks.dpks_out_type, sparts, scs);
     } // end of stress calculation
 
     ModuleBase::timer::end("Force_Stress_LCAO", "getForceStress");

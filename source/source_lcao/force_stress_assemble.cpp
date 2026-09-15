@@ -11,6 +11,7 @@
 #include "source_hamilt/module_vdw/vdw.h"
 #include "source_io/module_output/output_log.h"
 #include "source_io/module_parameter/parameter.h"
+#include "source_lcao/setup_deepks.h" // DeePKS_domain::write_forces/write_stress
 #ifdef __MLALGO
 #include "source_lcao/module_deepks/lcao_deepks.h"
 #include "source_lcao/module_deepks/lcao_deepks_io.h"
@@ -229,13 +230,12 @@ void print_force_invalid_table(const UnitCell& ucell,
 }
 } // namespace
 
-template <typename T>
 void assemble_print_force(const UnitCell& ucell,
                           const bool istestf,
                           const vdw::VdwResult* vdw_result,
                           const Exx_Info& exx_info,
                           ModuleSymmetry::Symmetry* symm,
-                          Setup_DeePKS<T>& deepks,
+                          const std::string& dpks_out_type,
                           const LCAOForceParts& parts,
                           const double force_threshold,
                           ModuleBase::matrix& fcs)
@@ -285,7 +285,7 @@ void assemble_print_force(const UnitCell& ucell,
     }
 
     // compute forces using the DeePKS model
-    deepks.write_forces(fcs, parts.fvnl_dalpha, PARAM.inp);
+    DeePKS_domain::write_forces(fcs, parts.fvnl_dalpha, dpks_out_type, PARAM.inp);
 
     if (istestf)
     {
@@ -305,13 +305,12 @@ void assemble_print_force(const UnitCell& ucell,
     }
 }
 
-template <typename T>
 void assemble_print_stress(const UnitCell& ucell,
                            const bool istests,
                            const vdw::VdwResult* vdw_result,
                            const Exx_Info& exx_info,
                            ModuleSymmetry::Symmetry* symm,
-                           Setup_DeePKS<T>& deepks,
+                           const std::string& dpks_out_type,
                            const LCAOStressParts& sparts,
                            ModuleBase::matrix& scs)
 {
@@ -327,7 +326,7 @@ void assemble_print_stress(const UnitCell& ucell,
         symm->symmetrize_mat3(scs, ucell.lat);
     } // end symmetry
 
-    deepks.write_stress(scs, sparts.svnl_dalpha, ucell.omega, PARAM.inp);
+    DeePKS_domain::write_stress(scs, sparts.svnl_dalpha, ucell.omega, dpks_out_type, PARAM.inp);
 
     // print Rydberg stress or not
     bool ry = false;
@@ -400,22 +399,5 @@ void assemble_print_stress(const UnitCell& ucell,
         scs(i, i) -= external_stress[i] / unit_transform;
     }
 }
-
-// Explicit instantiation for the two electronic types used by ABACUS.
-template void assemble_print_force<double>(const UnitCell&, const bool, const vdw::VdwResult*, const Exx_Info&,
-                                           ModuleSymmetry::Symmetry*, Setup_DeePKS<double>&, const LCAOForceParts&,
-                                           const double, ModuleBase::matrix&);
-template void assemble_print_force<std::complex<double>>(const UnitCell&, const bool, const vdw::VdwResult*,
-                                                         const Exx_Info&, ModuleSymmetry::Symmetry*,
-                                                         Setup_DeePKS<std::complex<double>>&, const LCAOForceParts&,
-                                                         const double, ModuleBase::matrix&);
-
-template void assemble_print_stress<double>(const UnitCell&, const bool, const vdw::VdwResult*, const Exx_Info&,
-                                            ModuleSymmetry::Symmetry*, Setup_DeePKS<double>&, const LCAOStressParts&,
-                                            ModuleBase::matrix&);
-template void assemble_print_stress<std::complex<double>>(const UnitCell&, const bool, const vdw::VdwResult*,
-                                                          const Exx_Info&, ModuleSymmetry::Symmetry*,
-                                                          Setup_DeePKS<std::complex<double>>&, const LCAOStressParts&,
-                                                          ModuleBase::matrix&);
 
 } // namespace LCAO_domain
