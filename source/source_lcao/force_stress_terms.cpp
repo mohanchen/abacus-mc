@@ -20,6 +20,83 @@
 namespace LCAO_domain
 {
 
+namespace
+{
+// Copy the cached vdW force / stress into the parts containers.
+void copy_vdw_terms(const vdw::VdwResult* vdw_result,
+                    const UnitCell& ucell,
+                    const bool isforce,
+                    const bool isstress,
+                    LCAOForceParts& parts,
+                    LCAOStressParts& sparts)
+{
+    if (vdw_result == nullptr)
+    {
+        return;
+    }
+    if (isforce)
+    {
+        if (!vdw_result->has_force || vdw_result->force.size() != static_cast<std::size_t>(ucell.nat))
+        {
+            ModuleBase::WARNING_QUIT("Force_Stress_LCAO::getForceStress",
+                                     "The cached vdW force is unavailable or has an invalid size.");
+        }
+        parts.force_vdw.create(ucell.nat, 3);
+        for (int iat = 0; iat < ucell.nat; ++iat)
+        {
+            parts.force_vdw(iat, 0) = vdw_result->force[iat].x;
+            parts.force_vdw(iat, 1) = vdw_result->force[iat].y;
+            parts.force_vdw(iat, 2) = vdw_result->force[iat].z;
+        }
+    }
+    if (isstress)
+    {
+        if (!vdw_result->has_stress)
+        {
+            ModuleBase::WARNING_QUIT("Force_Stress_LCAO::getForceStress",
+                                     "The cached vdW stress is unavailable.");
+        }
+        sparts.stress_vdw = vdw_result->stress.to_matrix();
+    }
+}
+
+// Compute the external-field force terms (E-field, rt-TDDFT, gate, solvation).
+void cal_external_field_forces(UnitCell& ucell,
+                               surchem& solvent,
+                               ModulePW::PW_Basis* rhopw,
+                               const pseudopot_cell_vl& locpp,
+                               LCAOForceParts& parts)
+{
+    //! forces from E-field
+    if (PARAM.inp.efield_flag)
+    {
+        parts.fefield.create(ucell.nat, 3);
+        elecstate::Efield::compute_force(ucell, parts.fefield);
+    }
+
+    //! atomic forces from E-field of rt-TDDFT
+    if (PARAM.inp.esolver_type == "tddft")
+    {
+        parts.fefield_tddft.create(ucell.nat, 3);
+        elecstate::H_TDDFT_pw::compute_force(ucell, parts.fefield_tddft);
+    }
+
+    //! atomic forces from gate field
+    if (PARAM.inp.gate_flag)
+    {
+        parts.fgate.create(ucell.nat, 3);
+        elecstate::Gatefield::compute_force(ucell, parts.fgate);
+    }
+
+    //! atomic forces from implicit solvation model
+    if (PARAM.inp.imp_sol)
+    {
+        parts.fsol.create(ucell.nat, 3);
+        solvent.cal_force_sol(ucell, rhopw, locpp.vloc, PARAM.inp.nspin, parts.fsol);
+    }
+}
+} // namespace
+
 void cal_vdw_fields_fs(const vdw::VdwResult* vdw_result,
                        UnitCell& ucell,
                        surchem& solvent,
@@ -33,60 +110,12 @@ void cal_vdw_fields_fs(const vdw::VdwResult* vdw_result,
     //! forces and stress from vdw
     //  Peize Lin add 2014-04-04, update 2021-03-09
     //  jiyy add 2019-05-18, update 2021-05-02
-    if (vdw_result != nullptr)
-    {
-        if (isforce)
-        {
-            if (!vdw_result->has_force || vdw_result->force.size() != static_cast<std::size_t>(ucell.nat))
-            {
-                ModuleBase::WARNING_QUIT("Force_Stress_LCAO::getForceStress",
-                                         "The cached vdW force is unavailable or has an invalid size.");
-            }
-            parts.force_vdw.create(ucell.nat, 3);
-            for (int iat = 0; iat < ucell.nat; ++iat)
-            {
-                parts.force_vdw(iat, 0) = vdw_result->force[iat].x;
-                parts.force_vdw(iat, 1) = vdw_result->force[iat].y;
-                parts.force_vdw(iat, 2) = vdw_result->force[iat].z;
-            }
-        }
-        if (isstress)
-        {
-            if (!vdw_result->has_stress)
-            {
-                ModuleBase::WARNING_QUIT("Force_Stress_LCAO::getForceStress",
-                                         "The cached vdW stress is unavailable.");
-            }
-            sparts.stress_vdw = vdw_result->stress.to_matrix();
-        }
-    }
+    copy_vdw_terms(vdw_result, ucell, isforce, isstress, parts, sparts);
 
-    //! forces from E-field
-    if (PARAM.inp.efield_flag && isforce)
+    //! external-field forces
+    if (isforce)
     {
-        parts.fefield.create(ucell.nat, 3);
-        elecstate::Efield::compute_force(ucell, parts.fefield);
-    }
-
-    //! atomic forces from E-field of rt-TDDFT
-    if (PARAM.inp.esolver_type == "tddft" && isforce)
-    {
-        parts.fefield_tddft.create(ucell.nat, 3);
-        elecstate::H_TDDFT_pw::compute_force(ucell, parts.fefield_tddft);
-    }
-
-    //! atomic forces from gate field
-    if (PARAM.inp.gate_flag && isforce)
-    {
-        parts.fgate.create(ucell.nat, 3);
-        elecstate::Gatefield::compute_force(ucell, parts.fgate);
-    }
-
-    //! atomic forces from implicit solvation model
-    if (PARAM.inp.imp_sol && isforce)
-    {
-        parts.fsol.create(ucell.nat, 3);
-        solvent.cal_force_sol(ucell, rhopw, locpp.vloc, PARAM.inp.nspin, parts.fsol);
+        cal_external_field_forces(ucell, solvent, rhopw, locpp, parts);
     }
 }
 
@@ -204,7 +233,7 @@ void cal_dftu_fs(UnitCell& ucell,
         {
             // Build DFT+U force/stress inputs directly without constructing a
             // full DFTU operator (hsk/hR are irrelevant for this path).
-            auto adjs_all = DFTU_LCAO::build_adjacent_atoms(
+            std::vector<AdjacentAtomInfo> adjs_all = DFTU_LCAO::build_adjacent_atoms(
                 &ucell, &dftu, &gd, orb.cutoffs(), PARAM.inp.onsite_radius);
 
             // The DensityMatrix holds nspin_dm = (nspin==2 ? 2 : 1) real-space DMR
@@ -307,13 +336,15 @@ template void cal_dftu_fs<double>(UnitCell&, const Grid_Driver&, Parallel_Orbita
 template void cal_dftu_fs<std::complex<double>>(UnitCell&, const Grid_Driver&, Parallel_Orbitals&,
                                                 const LCAO_Orbitals&, const K_Vectors&,
                                                 LCAO_domain::Setup_DM<std::complex<double>>&, const TwoCenterBundle&,
-                                                Plus_U_Base&, const bool, const bool, LCAOForceParts&, LCAOStressParts&);
+                                                Plus_U_Base&, const bool, const bool, LCAOForceParts&,
+                                                LCAOStressParts&);
 
 template void cal_deepks_fs<double>(const UnitCell&, const Grid_Driver&, Parallel_Orbitals&, const LCAO_Orbitals&,
                                     const K_Vectors&, const bool, const bool, Setup_DeePKS<double>&, LCAOForceParts&,
                                     LCAOStressParts&);
 template void cal_deepks_fs<std::complex<double>>(const UnitCell&, const Grid_Driver&, Parallel_Orbitals&,
                                                   const LCAO_Orbitals&, const K_Vectors&, const bool, const bool,
-                                                  Setup_DeePKS<std::complex<double>>&, LCAOForceParts&, LCAOStressParts&);
+                                                  Setup_DeePKS<std::complex<double>>&, LCAOForceParts&,
+                                                  LCAOStressParts&);
 
 } // namespace LCAO_domain
