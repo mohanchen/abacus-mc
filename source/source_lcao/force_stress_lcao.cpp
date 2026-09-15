@@ -1,7 +1,6 @@
 #include "force_stress_lcao.h"
 
 #include "force_stress_assemble.h"
-#include "force_stress_pw.h"
 #include "force_stress_terms.h"
 
 #include "source_basis/module_nao/two_center_bundle.h"
@@ -160,9 +159,9 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         sparts.svnl_dalpha.create(3, 3);
 
         // calculate basic terms in Stress, similar method with PW base
-        LCAO_domain::cal_stress_pw(this->sc_pw, ucell, sparts.sigmadvl, sparts.sigmahar, sparts.sigmaewa,
-                                   sparts.sigmacc, sparts.sigmaxc, pelec->f_en.etxc, pelec->charge,
-                                   rhopw, locpp, sf);
+        this->sc_pw.stress_pw_terms(ucell, sparts.sigmadvl, sparts.sigmahar, sparts.sigmaewa,
+                                    sparts.sigmacc, sparts.sigmaxc, pelec->f_en.etxc, pelec->charge,
+                                    rhopw, locpp, sf);
     }
     // Calculate operator-based force/stress terms (kinetic, overlap,
     // nonlocal, rt-TDDFT hybrid gauge, local Pulay term and DeltaSpin).

@@ -748,7 +748,6 @@ OBJS_LCAO=evolve_elec.o\
       upsi.o\
       force_stress_lcao.o\
       force_stress_assemble.o\
-      force_stress_pw.o\
       force_stress_terms.o\
       stress_tools.o\
       edm.o\

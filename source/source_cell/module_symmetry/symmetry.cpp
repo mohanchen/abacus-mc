@@ -116,6 +116,41 @@ void Symmetry::symmetrize_vec3_nat(double* v)const   // pengfei 2016-12-20
     return;
 }
 
+void symmetrize_force_cartesian(Symmetry* symm, const int nat, ModuleBase::matrix& force)
+{
+    ModuleBase::TITLE("Symmetry", "symmetrize_force_cartesian");
+    if (symm == nullptr || nat <= 0 || force.nr < nat || force.nc < 3)
+    {
+        ModuleBase::WARNING_QUIT("symmetrize_force_cartesian",
+                                 "symm must be non-null and force must have at least nat x 3 elements");
+    }
+    double d1;
+    double d2;
+    double d3;
+    for (int iat = 0; iat < nat; iat++)
+    {
+        ModuleBase::Mathzone::Cartesian_to_Direct(force(iat, 0), force(iat, 1), force(iat, 2),
+          symm->a1.x, symm->a1.y, symm->a1.z, symm->a2.x, symm->a2.y, symm->a2.z,
+          symm->a3.x, symm->a3.y, symm->a3.z, d1, d2, d3);
+
+        force(iat, 0) = d1;
+        force(iat, 1) = d2;
+        force(iat, 2) = d3;
+    }
+    symm->symmetrize_vec3_nat(force.c);
+    for (int iat = 0; iat < nat; iat++)
+    {
+        ModuleBase::Mathzone::Direct_to_Cartesian(force(iat, 0), force(iat, 1), force(iat, 2),
+          symm->a1.x, symm->a1.y, symm->a1.z, symm->a2.x, symm->a2.y, symm->a2.z,
+          symm->a3.x, symm->a3.y, symm->a3.z, d1, d2, d3);
+
+        force(iat, 0) = d1;
+        force(iat, 1) = d2;
+        force(iat, 2) = d3;
+    }
+    return;
+}
+
 void Symmetry::symmetrize_mat3(ModuleBase::matrix& sigma, const Lattice& lat)const   //zhengdy added 2017
 {
     ModuleBase::matrix A = lat.latvec.to_matrix();

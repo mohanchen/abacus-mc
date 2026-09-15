@@ -11,7 +11,6 @@
 #include "source_hamilt/module_vdw/vdw.h"
 #include "source_io/module_output/output_log.h"
 #include "source_io/module_parameter/parameter.h"
-#include "force_stress_pw.h"
 #ifdef __MLALGO
 #include "source_lcao/module_deepks/lcao_deepks.h"
 #include "source_lcao/module_deepks/lcao_deepks_io.h"
@@ -262,7 +261,7 @@ void assemble_print_force(const UnitCell& ucell,
     // pengfei 2016-12-20
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
     {
-        symmetrize_force(ucell, fcs, symm);
+        ModuleSymmetry::symmetrize_force_cartesian(symm, nat, fcs);
     }
 
     // The net force should be evaluated AFTER the symmetrization.
@@ -270,23 +269,19 @@ void assemble_print_force(const UnitCell& ucell,
     // quantities and only become physical after the symmetrization, forceSymmetry(). 
     // Force symmetrization is linear, so it commutes with the removal of a
     // uniform shift: the resulting fcs is identical to the previous ordering.
+    // Net force is evaluated after symmetrization and before the uniform shift.
     for (int i = 0; i < 3; i++)
     {
         double sum = 0.0;
-
         for (int iat = 0; iat < nat; iat++)
         {
-            // sum total force for correction
             sum += fcs(iat, i);
         }
-        net_force[i]=sum;
-        if (!(PARAM.inp.gate_flag || PARAM.inp.efield_flag))
-        {
-            for (int iat = 0; iat < nat; ++iat)
-            {
-                fcs(iat, i) -= sum / nat;
-            }
-        }
+        net_force[i] = sum;
+    }
+    if (!(PARAM.inp.gate_flag || PARAM.inp.efield_flag))
+    {
+        ModuleBase::remove_net_force(nat, fcs);
     }
 
     // compute forces using the DeePKS model
