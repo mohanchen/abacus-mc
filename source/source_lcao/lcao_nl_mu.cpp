@@ -183,51 +183,24 @@ static void accum_nlm_force(const NL_env& env,
     }
 }
 
-void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
-                           ForceStressArrays& fsr,
-                           double* NLloc,
-                           const bool& calc_deri,
-                           const UnitCell& ucell,
-                           const LCAO_Orbitals& orb,
-                           const TwoCenterIntegrator& intor_orb_beta,
-                           const Grid_Driver* GridD)
+// Step 1 of build_Nonlocal_mu_new: generate <psi|beta> (and, when derivatives
+// are requested, <d psi|beta>) for every atom and its adjacent atoms. Fills
+// nlm_tot (energy) or nlm_tot1 (force); only one of the two is populated,
+// selected by env.calc_deri. The iat loop is OpenMP-parallel; each thread owns
+// its own iat slot of the output containers.
+static void build_psi_beta(
+    const NL_env& env,
+    const LCAO_Orbitals& orb,
+    const TwoCenterIntegrator& intor_orb_beta,
+    const Grid_Driver* GridD,
+    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<double>>>>& nlm_tot,
+    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<std::vector<double>>>>>& nlm_tot1)
 {
-    ModuleBase::TITLE("LCAO_domain", "vnl_mu_new");
-    ModuleBase::timer::start("LCAO_domain", "vnl_mu_new");
+    const UnitCell& ucell = env.ucell;
+    const Parallel_Orbitals& pv = env.pv;
+    const int npol = env.npol;
+    const bool calc_deri = env.calc_deri;
 
-    const int nspin = PARAM.inp.nspin;
-    const int npol = PARAM.globalv.npol;
-    const bool gamma_only_local = PARAM.globalv.gamma_only_local;
-
-    const NL_env env{pv, ucell, nspin, npol, gamma_only_local, calc_deri};
-
-    // < phi1 | beta > < beta | phi2 >
-    // phi1 is within the unitcell.
-    // while beta is in the supercell.
-    // while phi2 is in the supercell.
-
-    // Step 1 : generate <psi|beta>
-
-    // This is the data structure for storing <psi|beta>
-    // It is a 4 layer data structure
-    // The outmost layer is std::vector with size being number of atoms in unit cell
-    // The second layer is a map, the key being a combination of 4 number (iat, dRx, dRy, dRz)
-    // which identifies a unique adjacent atom of the first atom
-    // The third layer is an unordered map, with key being the index of atomic basis |psi>
-    // The inner layer is a vector, each element representing a projector |beta>
-    // It then either stores the number <psi|beta> (nlm_tot)
-    // or a vector of 4, storing additionally <d/dx_i psi|beta> (nlm_tot1) x_i=x,y,z
-    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<double>>>> nlm_tot;
-    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<std::vector<double>>>>> nlm_tot1;
-
-    if (!calc_deri)
-    {
-        nlm_tot.resize(ucell.nat);
-    }
-    else
-    {
-        nlm_tot1.resize(ucell.nat);
-    }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -271,14 +244,6 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
             std::unordered_map<int, std::vector<double>> nlm_cur;
             std::unordered_map<int, std::vector<std::vector<double>>> nlm_cur1;
 
-            if (!calc_deri)
-            {
-                nlm_cur.clear();
-            }
-            else
-            {
-                nlm_cur1.clear();
-            }
             for (int iw1 = 0; iw1 < nw1_tot; ++iw1)
             {
                 const int iw1_all = start1 + iw1;
@@ -330,6 +295,55 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
             }
         } // end ad
     }
+}
+
+void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
+                           ForceStressArrays& fsr,
+                           double* NLloc,
+                           const bool& calc_deri,
+                           const UnitCell& ucell,
+                           const LCAO_Orbitals& orb,
+                           const TwoCenterIntegrator& intor_orb_beta,
+                           const Grid_Driver* GridD)
+{
+    ModuleBase::TITLE("LCAO_domain", "vnl_mu_new");
+    ModuleBase::timer::start("LCAO_domain", "vnl_mu_new");
+
+    const int nspin = PARAM.inp.nspin;
+    const int npol = PARAM.globalv.npol;
+    const bool gamma_only_local = PARAM.globalv.gamma_only_local;
+
+    const NL_env env{pv, ucell, nspin, npol, gamma_only_local, calc_deri};
+
+    // < phi1 | beta > < beta | phi2 >
+    // phi1 is within the unitcell.
+    // while beta is in the supercell.
+    // while phi2 is in the supercell.
+
+    // Step 1 : generate <psi|beta>
+
+    // This is the data structure for storing <psi|beta>
+    // It is a 4 layer data structure
+    // The outmost layer is std::vector with size being number of atoms in unit cell
+    // The second layer is a map, the key being a combination of 4 number (iat, dRx, dRy, dRz)
+    // which identifies a unique adjacent atom of the first atom
+    // The third layer is an unordered map, with key being the index of atomic basis |psi>
+    // The inner layer is a vector, each element representing a projector |beta>
+    // It then either stores the number <psi|beta> (nlm_tot)
+    // or a vector of 4, storing additionally <d/dx_i psi|beta> (nlm_tot1) x_i=x,y,z
+    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<double>>>> nlm_tot;
+    std::vector<std::map<key_tuple, std::unordered_map<int, std::vector<std::vector<double>>>>> nlm_tot1;
+
+    if (!calc_deri)
+    {
+        nlm_tot.resize(ucell.nat);
+    }
+    else
+    {
+        nlm_tot1.resize(ucell.nat);
+    }
+
+    build_psi_beta(env, orb, intor_orb_beta, GridD, nlm_tot, nlm_tot1);
 
     //=======================================================
     // Step2:
