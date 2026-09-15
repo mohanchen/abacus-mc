@@ -9,6 +9,180 @@ typedef std::tuple<int, int, int, int> key_tuple;
 
 #include "record_adj.h" //mohan add 2012-07-06
 
+// <psi1|beta><beta|psi2> contribution of one matrix element to the nonlocal
+// energy (no derivatives). Defined statically here so the compiler can inline
+// it at the hot inner-loop call site of build_Nonlocal_mu_new.
+static void accum_nlm_energy(const NL_env& env,
+                             const NL_elem& e,
+                             const std::unordered_map<int, std::vector<double>>& nlm_cur1,
+                             const std::unordered_map<int, std::vector<double>>& nlm_cur2,
+                             double* NLloc)
+{
+    const std::unordered_map<int, std::vector<double>>::const_iterator it1 = nlm_cur1.find(e.iw1_all);
+    const std::unordered_map<int, std::vector<double>>::const_iterator it2 = nlm_cur2.find(e.iw2_all);
+    if (it1 == nlm_cur1.end() || it2 == nlm_cur2.end())
+    {
+        return;
+    }
+    const std::vector<double>& nlm_1 = it1->second;
+    const std::vector<double>& nlm_2 = it2->second;
+    double nlm_tmp = 0.0;
+    const double* tmp_d = nullptr;
+    for (int no = 0; no < env.ucell.atoms[e.t0].ncpp.non_zero_count_soc[0]; no++)
+    {
+        const int p1 = env.ucell.atoms[e.t0].ncpp.index1_soc[0][no];
+        const int p2 = env.ucell.atoms[e.t0].ncpp.index2_soc[0][no];
+        env.ucell.atoms[e.t0].ncpp.get_d(0, p1, p2, tmp_d);
+        nlm_tmp += nlm_2[p2] * nlm_1[p1] * (*tmp_d);
+    }
+
+    if (nlm_tmp != 0.0)
+    {
+        if (env.gamma_only_local)
+        {
+            // mohan add 2010-12-20
+            LCAO_domain::set_mat2d(e.iw1_all, e.iw2_all, nlm_tmp, env.pv, NLloc); // N stands for nonlocal.
+        }
+        else
+        {
+            NLloc[e.nnr] += nlm_tmp;
+        }
+    }
+}
+
+// force contribution of one matrix element for nspin==4 (SOC): the four
+// spin blocks is0 fold the d_so matrices into DHloc_fixedR_{x,y,z}.
+static void accum_nlm_force_soc(const NL_env& env,
+                                const NL_elem& e,
+                                const std::unordered_map<int, std::vector<std::vector<double>>>& nlm_cur1,
+                                const std::unordered_map<int, std::vector<std::vector<double>>>& nlm_cur2,
+                                const int is0,
+                                ForceStressArrays& fsr)
+{
+    const std::unordered_map<int, std::vector<std::vector<double>>>::const_iterator it2 = nlm_cur2.find(e.iw2_all);
+    const std::unordered_map<int, std::vector<std::vector<double>>>::const_iterator it1 = nlm_cur1.find(e.iw1_all);
+    if (it2 == nlm_cur2.end() || it1 == nlm_cur1.end())
+    {
+        return;
+    }
+    const std::vector<double>& nlm_1 = it2->second[0];
+    std::vector<std::vector<double>> nlm_2;
+    nlm_2.resize(3);
+    for (int i = 0; i < 3; i++)
+    {
+        nlm_2[i] = it1->second[i + 1];
+    }
+    for (int no = 0; no < env.ucell.atoms[e.t0].ncpp.non_zero_count_soc[is0]; no++)
+    {
+        const int p1 = env.ucell.atoms[e.t0].ncpp.index1_soc[is0][no];
+        const int p2 = env.ucell.atoms[e.t0].ncpp.index2_soc[is0][no];
+        double coef = 0.0;
+        if (is0 == 0)
+        {
+            coef = (env.ucell.atoms[e.t0].ncpp.d_so(0, p2, p1).real()
+                    + env.ucell.atoms[e.t0].ncpp.d_so(3, p2, p1).real())
+                   * 0.5;
+        }
+        else if (is0 == 1)
+        {
+            coef = (env.ucell.atoms[e.t0].ncpp.d_so(1, p2, p1).real()
+                    + env.ucell.atoms[e.t0].ncpp.d_so(2, p2, p1).real())
+                   * 0.5;
+        }
+        else if (is0 == 2)
+        {
+            coef = (-env.ucell.atoms[e.t0].ncpp.d_so(1, p2, p1).imag()
+                    + env.ucell.atoms[e.t0].ncpp.d_so(2, p2, p1).imag())
+                   * 0.5;
+        }
+        else if (is0 == 3)
+        {
+            coef = (env.ucell.atoms[e.t0].ncpp.d_so(0, p2, p1).real()
+                    - env.ucell.atoms[e.t0].ncpp.d_so(3, p2, p1).real())
+                   * 0.5;
+        }
+        fsr.DHloc_fixedR_x[e.nnr] += nlm_2[0][p1] * nlm_1[p2] * coef;
+        fsr.DHloc_fixedR_y[e.nnr] += nlm_2[1][p1] * nlm_1[p2] * coef;
+        fsr.DHloc_fixedR_z[e.nnr] += nlm_2[2][p1] * nlm_1[p2] * coef;
+    }
+}
+
+// force contribution of one matrix element for nspin==1/2. gamma_only writes
+// the cartesian force arrays, the multi-k branch accumulates DHloc_fixedR.
+static void accum_nlm_force(const NL_env& env,
+                            const NL_elem& e,
+                            const std::unordered_map<int, std::vector<std::vector<double>>>& nlm_cur1,
+                            const std::unordered_map<int, std::vector<std::vector<double>>>& nlm_cur2,
+                            ForceStressArrays& fsr)
+{
+    double nlm[3] = {0, 0, 0};
+    const std::unordered_map<int, std::vector<std::vector<double>>>::const_iterator it1 = nlm_cur1.find(e.iw1_all);
+    const std::unordered_map<int, std::vector<std::vector<double>>>::const_iterator it2 = nlm_cur2.find(e.iw2_all);
+    if (it1 == nlm_cur1.end() || it2 == nlm_cur2.end())
+    {
+        return;
+    }
+    const std::vector<double>* nlm_1 = nullptr;
+    std::vector<std::vector<double>> nlm_2;
+    nlm_2.resize(3);
+    if (env.gamma_only_local)
+    {
+        nlm_1 = &it1->second[0];
+        for (int i = 0; i < 3; i++)
+        {
+            nlm_2[i] = it2->second[i + 1];
+        }
+    }
+    else
+    {
+        // mohan change the order on 2011-06-17
+        // origin: < psi1 | beta > < beta | dpsi2/dtau >
+        // now: < psi1/dtau | beta > < beta | psi2 >
+        nlm_1 = &it2->second[0];
+        for (int i = 0; i < 3; i++)
+        {
+            nlm_2[i] = it1->second[i + 1];
+        }
+    }
+
+    assert(nlm_1->size() == nlm_2[0].size());
+
+    const double* tmp_d = nullptr;
+    for (int no = 0; no < env.ucell.atoms[e.t0].ncpp.non_zero_count_soc[0]; no++)
+    {
+        const int p1 = env.ucell.atoms[e.t0].ncpp.index1_soc[0][no];
+        const int p2 = env.ucell.atoms[e.t0].ncpp.index2_soc[0][no];
+        env.ucell.atoms[e.t0].ncpp.get_d(0, p1, p2, tmp_d);
+        for (int ir = 0; ir < 3; ir++)
+        {
+            nlm[ir] += nlm_2[ir][p2] * (*nlm_1)[p1] * (*tmp_d);
+        }
+    }
+
+    if (env.gamma_only_local)
+    {
+        LCAO_domain::set_force(env.pv,
+                               e.iw1_all,
+                               e.iw2_all,
+                               nlm[0],
+                               nlm[1],
+                               nlm[2],
+                               'N',
+                               fsr.DSloc_x.data(),
+                               fsr.DSloc_y.data(),
+                               fsr.DSloc_z.data(),
+                               fsr.DHloc_fixed_x.data(),
+                               fsr.DHloc_fixed_y.data(),
+                               fsr.DHloc_fixed_z.data());
+    }
+    else
+    {
+        fsr.DHloc_fixedR_x[e.nnr] += nlm[0];
+        fsr.DHloc_fixedR_y[e.nnr] += nlm[1];
+        fsr.DHloc_fixedR_z[e.nnr] += nlm[2];
+    }
+}
+
 void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
                            ForceStressArrays& fsr,
                            double* NLloc,
@@ -24,6 +198,8 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
     const int nspin = PARAM.inp.nspin;
     const int npol = PARAM.globalv.npol;
     const bool gamma_only_local = PARAM.globalv.gamma_only_local;
+
+    const NL_env env{pv, ucell, nspin, npol, gamma_only_local, calc_deri};
 
     // < phi1 | beta > < beta | phi2 >
     // phi1 is within the unitcell.
@@ -284,22 +460,6 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
                             key_tuple key1(iat1, -rx0, -ry0, -rz0);
                             key_tuple key2(iat2, rx2 - rx0, ry2 - ry0, rz2 - rz0);
 
-                            std::unordered_map<int, std::vector<double>>* nlm_cur1_e; // left hand side, for energy
-                            std::unordered_map<int, std::vector<std::vector<double>>>* nlm_cur1_f; // lhs, for force
-                            std::unordered_map<int, std::vector<double>>* nlm_cur2_e;              // rhs, for energy
-                            std::unordered_map<int, std::vector<std::vector<double>>>* nlm_cur2_f; // rhs, for force
-
-                            if (!calc_deri)
-                            {
-                                nlm_cur1_e = &nlm_tot[iat][key1];
-                                nlm_cur2_e = &nlm_tot[iat][key2];
-                            }
-                            else
-                            {
-                                nlm_cur1_f = &nlm_tot1[iat][key1];
-                                nlm_cur2_f = &nlm_tot1[iat][key2];
-                            }
-
                             int nnr_inner = 0;
 
                             for (int j = 0; j < atom1->nw * npol; j++)
@@ -322,211 +482,34 @@ void build_Nonlocal_mu_new(const Parallel_Orbitals& pv,
                                         continue;
 }
 
+                                    const NL_elem elem{iw1_all, iw2_all, T0, nnr + nnr_inner};
                                     if (!calc_deri)
                                     {
-                                        std::vector<double> nlm_1 = (*nlm_cur1_e)[iw1_all];
-                                        std::vector<double> nlm_2 = (*nlm_cur2_e)[iw2_all];
-                                        if (nspin == 2 || nspin == 1)
-                                        {
-                                            double nlm_tmp = 0.0;
-                                            const double* tmp_d = nullptr;
-                                            for (int no = 0; no < ucell.atoms[T0].ncpp.non_zero_count_soc[0]; no++)
-                                            {
-                                                const int p1 = ucell.atoms[T0].ncpp.index1_soc[0][no];
-                                                const int p2 = ucell.atoms[T0].ncpp.index2_soc[0][no];
-                                                ucell.atoms[T0].ncpp.get_d(0, p1, p2, tmp_d);
-                                                nlm_tmp += nlm_2[p2] * nlm_1[p1] * (*tmp_d);
-                                            }
-
-                                            if (gamma_only_local)
-                                            {
-                                                // mohan add 2010-12-20
-                                                if (nlm_tmp != 0.0)
-                                                {
-                                                    LCAO_domain::set_mat2d(iw1_all,
-                                                                   iw2_all,
-                                                                   nlm_tmp,
-                                                                   pv,
-                                                                   NLloc); // N stands for nonlocal.
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (nlm_tmp != 0.0)
-                                                {
-                                                    NLloc[nnr + nnr_inner] += nlm_tmp;
-                                                }
-                                            }
-                                        } // end nspin
+                                        accum_nlm_energy(env,
+                                                         elem,
+                                                         nlm_tot[iat][key1],
+                                                         nlm_tot[iat][key2],
+                                                         NLloc);
                                     }     // calc_deri
                                     else  // calculate the derivative
                                     {
                                         if (nspin == 4)
                                         {
-                                            std::vector<double> nlm_1 = (*nlm_cur2_f)[iw2_all][0];
-                                            std::vector<std::vector<double>> nlm_2;
-                                            nlm_2.resize(3);
-                                            for (int i = 0; i < 3; i++)
-                                            {
-                                                nlm_2[i] = (*nlm_cur1_f)[iw1_all][i + 1];
-                                            }
-                                            std::complex<double> nlm[4][3] = {ModuleBase::ZERO};
-                                            int is0 = (j - j0 * npol) + (k - k0 * npol) * 2;
-                                            for (int no = 0; no < ucell.atoms[T0].ncpp.non_zero_count_soc[is0]; no++)
-                                            {
-                                                const int p1 = ucell.atoms[T0].ncpp.index1_soc[is0][no];
-                                                const int p2 = ucell.atoms[T0].ncpp.index2_soc[is0][no];
-                                                if (is0 == 0)
-                                                {
-                                                    fsr.DHloc_fixedR_x[nnr + nnr_inner]
-                                                        += nlm_2[0][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(0, p2, p1).real()
-                                                              + ucell.atoms[T0].ncpp.d_so(3, p2, p1).real())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_y[nnr + nnr_inner]
-                                                        += nlm_2[1][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(0, p2, p1).real()
-                                                              + ucell.atoms[T0].ncpp.d_so(3, p2, p1).real())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_z[nnr + nnr_inner]
-                                                        += nlm_2[2][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(0, p2, p1).real()
-                                                              + ucell.atoms[T0].ncpp.d_so(3, p2, p1).real())
-                                                           * 0.5;
-                                                }
-                                                else if (is0 == 1)
-                                                {
-                                                    fsr.DHloc_fixedR_x[nnr + nnr_inner]
-                                                        += nlm_2[0][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(1, p2, p1).real()
-                                                              + ucell.atoms[T0].ncpp.d_so(2, p2, p1).real())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_y[nnr + nnr_inner]
-                                                        += nlm_2[1][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(1, p2, p1).real()
-                                                              + ucell.atoms[T0].ncpp.d_so(2, p2, p1).real())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_z[nnr + nnr_inner]
-                                                        += nlm_2[2][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(1, p2, p1).real()
-                                                              + ucell.atoms[T0].ncpp.d_so(2, p2, p1).real())
-                                                           * 0.5;
-                                                }
-                                                else if (is0 == 2)
-                                                {
-                                                    fsr.DHloc_fixedR_x[nnr + nnr_inner]
-                                                        += nlm_2[0][p1] * nlm_1[p2]
-                                                           * (-ucell.atoms[T0].ncpp.d_so(1, p2, p1).imag()
-                                                              + ucell.atoms[T0].ncpp.d_so(2, p2, p1).imag())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_y[nnr + nnr_inner]
-                                                        += nlm_2[1][p1] * nlm_1[p2]
-                                                           * (-ucell.atoms[T0].ncpp.d_so(1, p2, p1).imag()
-                                                              + ucell.atoms[T0].ncpp.d_so(2, p2, p1).imag())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_z[nnr + nnr_inner]
-                                                        += nlm_2[2][p1] * nlm_1[p2]
-                                                           * (-ucell.atoms[T0].ncpp.d_so(1, p2, p1).imag()
-                                                              + ucell.atoms[T0].ncpp.d_so(2, p2, p1).imag())
-                                                           * 0.5;
-                                                }
-                                                else if (is0 == 3)
-                                                {
-                                                    fsr.DHloc_fixedR_x[nnr + nnr_inner]
-                                                        += nlm_2[0][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(0, p2, p1).real()
-                                                              - ucell.atoms[T0].ncpp.d_so(3, p2, p1).real())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_y[nnr + nnr_inner]
-                                                        += nlm_2[1][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(0, p2, p1).real()
-                                                              - ucell.atoms[T0].ncpp.d_so(3, p2, p1).real())
-                                                           * 0.5;
-                                                    fsr.DHloc_fixedR_z[nnr + nnr_inner]
-                                                        += nlm_2[2][p1] * nlm_1[p2]
-                                                           * (ucell.atoms[T0].ncpp.d_so(0, p2, p1).real()
-                                                              - ucell.atoms[T0].ncpp.d_so(3, p2, p1).real())
-                                                           * 0.5;
-                                                }
-                                            }
+                                            const int is0 = (j - j0 * npol) + (k - k0 * npol) * 2;
+                                            accum_nlm_force_soc(env,
+                                                                elem,
+                                                                nlm_tot1[iat][key1],
+                                                                nlm_tot1[iat][key2],
+                                                                is0,
+                                                                fsr);
                                         }
                                         else if (nspin == 1 || nspin == 2)
                                         {
-                                            if (gamma_only_local)
-                                            {
-                                                double nlm[3] = {0, 0, 0};
-
-                                                // sum all projectors for one atom.
-                                                std::vector<double> nlm_1 = (*nlm_cur1_f)[iw1_all][0];
-                                                std::vector<std::vector<double>> nlm_2;
-                                                nlm_2.resize(3);
-                                                for (int i = 0; i < 3; i++)
-                                                {
-                                                    nlm_2[i] = (*nlm_cur2_f)[iw2_all][i + 1];
-                                                }
-
-                                                assert(nlm_1.size() == nlm_2[0].size());
-
-                                                const double* tmp_d = nullptr;
-                                                for (int no = 0; no < ucell.atoms[T0].ncpp.non_zero_count_soc[0]; no++)
-                                                {
-                                                    const int p1 = ucell.atoms[T0].ncpp.index1_soc[0][no];
-                                                    const int p2 = ucell.atoms[T0].ncpp.index2_soc[0][no];
-                                                    ucell.atoms[T0].ncpp.get_d(0, p1, p2, tmp_d);
-                                                    for (int ir = 0; ir < 3; ir++)
-                                                    {
-                                                        nlm[ir] += nlm_2[ir][p2] * nlm_1[p1] * (*tmp_d);
-                                                    }
-                                                }
-
-                                                LCAO_domain::set_force(pv,
-                                                                       iw1_all,
-                                                                       iw2_all,
-                                                                       nlm[0],
-                                                                       nlm[1],
-                                                                       nlm[2],
-                                                                       'N',
-                                                                       fsr.DSloc_x.data(),
-                                                                       fsr.DSloc_y.data(),
-                                                                       fsr.DSloc_z.data(),
-                                                                       fsr.DHloc_fixed_x.data(),
-                                                                       fsr.DHloc_fixed_y.data(),
-                                                                       fsr.DHloc_fixed_z.data());
-                                            }
-                                            else
-                                            {
-                                                // mohan change the order on 2011-06-17
-                                                // origin: < psi1 | beta > < beta | dpsi2/dtau >
-                                                // now: < psi1/dtau | beta > < beta | psi2 >
-                                                double nlm[3] = {0, 0, 0};
-
-                                                // sum all projectors for one atom.
-                                                std::vector<double> nlm_1 = (*nlm_cur2_f)[iw2_all][0];
-                                                std::vector<std::vector<double>> nlm_2;
-                                                nlm_2.resize(3);
-                                                for (int i = 0; i < 3; i++)
-                                                {
-                                                    nlm_2[i] = (*nlm_cur1_f)[iw1_all][i + 1];
-                                                }
-
-                                                assert(nlm_1.size() == nlm_2[0].size());
-
-                                                const double* tmp_d = nullptr;
-                                                for (int no = 0; no < ucell.atoms[T0].ncpp.non_zero_count_soc[0]; no++)
-                                                {
-                                                    const int p1 = ucell.atoms[T0].ncpp.index1_soc[0][no];
-                                                    const int p2 = ucell.atoms[T0].ncpp.index2_soc[0][no];
-                                                    ucell.atoms[T0].ncpp.get_d(0, p1, p2, tmp_d);
-                                                    for (int ir = 0; ir < 3; ir++)
-                                                    {
-                                                        nlm[ir] += nlm_2[ir][p2] * nlm_1[p1] * (*tmp_d);
-                                                    }
-                                                }
-
-                                                fsr.DHloc_fixedR_x[nnr + nnr_inner] += nlm[0];
-                                                fsr.DHloc_fixedR_y[nnr + nnr_inner] += nlm[1];
-                                                fsr.DHloc_fixedR_z[nnr + nnr_inner] += nlm[2];
-                                            }
+                                            accum_nlm_force(env,
+                                                            elem,
+                                                            nlm_tot1[iat][key1],
+                                                            nlm_tot1[iat][key2],
+                                                            fsr);
                                         }
                                         else
                                         {
