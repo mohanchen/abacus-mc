@@ -136,52 +136,6 @@ class Force_Stress_LCAO
                          LCAOForceParts& parts,
                          LCAOStressParts& sparts);
 
-    // DeePKS correction force/stress (only active under __MLALGO).
-    void cal_deepks_fs(const UnitCell& ucell,
-                       const Grid_Driver& gd,
-                       const LCAO_Orbitals& orb,
-                       const K_Vectors& kv,
-                       const bool isforce,
-                       const bool isstress,
-                       Setup_DeePKS<T>& deepks,
-                       LCAOForceParts& parts,
-                       LCAOStressParts& sparts);
-
-    // EXX force/stress (only active under __EXX).
-    void cal_exx_fs(const UnitCell& ucell,
-                    const bool isforce,
-                    const bool isstress,
-                    const Exx_Info& exx_info,
-                    Exx_NAO<T>& exx_nao,
-                    LCAOForceParts& parts,
-                    LCAOStressParts& sparts);
-
-    // vdW force/stress and external-field forces: E-field, rt-TDDFT E-field,
-    // gate field and the implicit solvation model.
-    void cal_vdw_and_fields_fs(const vdw::VdwResult* vdw_result,
-                               UnitCell& ucell,
-                               surchem& solvent,
-                               ModulePW::PW_Basis* rhopw,
-                               const pseudopot_cell_vl& locpp,
-                               const bool isforce,
-                               const bool isstress,
-                               LCAOForceParts& parts,
-                               LCAOStressParts& sparts);
-
-    // DFT+U force/stress.
-    void cal_dftu_fs(UnitCell& ucell,
-                     const Grid_Driver& gd,
-                     Parallel_Orbitals& pv,
-                     const LCAO_Orbitals& orb,
-                     const K_Vectors& kv,
-                     LCAO_domain::Setup_DM<T>& dmat,
-                     const TwoCenterBundle& two_center_bundle,
-                     Plus_U_Base& dftu,
-                     const bool isforce,
-                     const bool isstress,
-                     LCAOForceParts& parts,
-                     LCAOStressParts& sparts);
-
     // Sum the computed force parts into fcs, apply symmetry and the net-force
     // (drift) correction, then print the per-term and total forces.
     void assemble_and_print_force(const UnitCell& ucell,
