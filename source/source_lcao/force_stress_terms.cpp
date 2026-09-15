@@ -3,6 +3,7 @@
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
+#include "source_basis/module_nao/two_center_bundle.h"
 #include "source_estate/module_pot/efield.h"
 #include "source_estate/module_pot/gatefield.h"
 #include "source_estate/module_pot/h_tddft_pw.h"
