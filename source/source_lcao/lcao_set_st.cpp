@@ -5,12 +5,137 @@
 namespace LCAO_domain
 {
 
-void single_derivative(const ST_env& env,
-                       const ST_elem& e,
-                       ForceStressArrays& fsr,
-                       int& nnr,
-                       int& total_nnr,
-                       double* olm // output value
+// write the dS/dH-fixed contributions of one S-matrix element at slot nnr.
+// defined statically here so the compiler can inline it at the hot inner-loop
+// call site of single_deriv.
+static void set_deriv_s(ForceStressArrays& fsr,
+                        const int nspin,
+                        const int is,
+                        const int nnr,
+                        const double* olm,
+                        const ModuleBase::Vector3<double>& dtau,
+                        const bool cal_stress)
+{
+    // write DSloc_R* only when allocated (skipped in cal_dS where only DHloc_fixedR_* is used)
+    const bool write_dsloc_r = !fsr.DSloc_Rx.empty();
+    // condition 9, nspin
+    if (nspin == 1 || nspin == 2)
+    {
+        if (write_dsloc_r)
+        {
+            fsr.DSloc_Rx[nnr] = olm[0];
+            fsr.DSloc_Ry[nnr] = olm[1];
+            fsr.DSloc_Rz[nnr] = olm[2];
+        }
+        fsr.DHloc_fixedR_x[nnr] = olm[0];
+        fsr.DHloc_fixedR_y[nnr] = olm[1];
+        fsr.DHloc_fixedR_z[nnr] = olm[2];
+    }
+    else if (nspin == 4)
+    {
+        const double v0 = (is == 0) ? olm[0] : 0.0; // is==3 is not needed in force calculation
+        const double v1 = (is == 0) ? olm[1] : 0.0;
+        const double v2 = (is == 0) ? olm[2] : 0.0;
+        if (write_dsloc_r)
+        {
+            fsr.DSloc_Rx[nnr] = v0;
+            fsr.DSloc_Ry[nnr] = v1;
+            fsr.DSloc_Rz[nnr] = v2;
+        }
+        fsr.DHloc_fixedR_x[nnr] = v0;
+        fsr.DHloc_fixedR_y[nnr] = v1;
+        fsr.DHloc_fixedR_z[nnr] = v2;
+    }
+    else
+    {
+        ModuleBase::WARNING_QUIT("LCAO_domain::set_deriv_s", "nspin must be 1, 2 or 4");
+    } // end condition 9, nspin
+
+    if (cal_stress)
+    {
+        fsr.DH_r[nnr * 3] = dtau.x;
+        fsr.DH_r[nnr * 3 + 1] = dtau.y;
+        fsr.DH_r[nnr * 3 + 2] = dtau.z;
+    }
+}
+
+// write the dH-fixed and stress contributions of one T-matrix element at slot nnr.
+// kept in this translation unit so the compiler can inline it at the hot
+// inner-loop call site of single_deriv.
+static void set_deriv_t(ForceStressArrays& fsr,
+                        const int nspin,
+                        const int is,
+                        const int nnr,
+                        const double* olm,
+                        const ModuleBase::Vector3<double>& dtau,
+                        const bool cal_stress)
+{
+    // condition 9, nspin
+    if (nspin == 1 || nspin == 2)
+    {
+        fsr.DHloc_fixedR_x[nnr] = olm[0];
+        fsr.DHloc_fixedR_y[nnr] = olm[1];
+        fsr.DHloc_fixedR_z[nnr] = olm[2];
+        if (cal_stress)
+        {
+            fsr.stvnl11[nnr] = olm[0] * dtau.x;
+            fsr.stvnl12[nnr] = olm[0] * dtau.y;
+            fsr.stvnl13[nnr] = olm[0] * dtau.z;
+            fsr.stvnl22[nnr] = olm[1] * dtau.y;
+            fsr.stvnl23[nnr] = olm[1] * dtau.z;
+            fsr.stvnl33[nnr] = olm[2] * dtau.z;
+        }
+    }
+    else if (nspin == 4)
+    {
+        // condition 10, details of nspin 4
+        if (is == 0) // is==3 is not needed in force calculation
+        {
+            fsr.DHloc_fixedR_x[nnr] = olm[0];
+            fsr.DHloc_fixedR_y[nnr] = olm[1];
+            fsr.DHloc_fixedR_z[nnr] = olm[2];
+            if (cal_stress)
+            {
+                fsr.stvnl11[nnr] = olm[0] * dtau.x;
+                fsr.stvnl12[nnr] = olm[0] * dtau.y;
+                fsr.stvnl13[nnr] = olm[0] * dtau.z;
+                fsr.stvnl22[nnr] = olm[1] * dtau.y;
+                fsr.stvnl23[nnr] = olm[1] * dtau.z;
+                fsr.stvnl33[nnr] = olm[2] * dtau.z;
+            }
+        }
+        else if (is == 1 || is == 2 || is == 3)
+        {
+            fsr.DHloc_fixedR_x[nnr] = 0.0;
+            fsr.DHloc_fixedR_y[nnr] = 0.0;
+            fsr.DHloc_fixedR_z[nnr] = 0.0;
+            if (cal_stress)
+            {
+                fsr.stvnl11[nnr] = 0.0;
+                fsr.stvnl12[nnr] = 0.0;
+                fsr.stvnl13[nnr] = 0.0;
+                fsr.stvnl22[nnr] = 0.0;
+                fsr.stvnl23[nnr] = 0.0;
+                fsr.stvnl33[nnr] = 0.0;
+            }
+        }
+        else
+        {
+            ModuleBase::WARNING_QUIT("LCAO_domain::set_deriv_t", "is must be 0, 1, 2, 3");
+        } // end condition 10, details of spin 4
+    }
+    else
+    {
+        ModuleBase::WARNING_QUIT("LCAO_domain::set_deriv_t", "nspin must be 1, 2 or 4");
+    } // end condition 9, nspin
+}
+
+void single_deriv(const ST_env& env,
+                  const ST_elem& e,
+                  ForceStressArrays& fsr,
+                  int& nnr,
+                  int& total_nnr,
+                  double* olm // output value
 )
 {
 
@@ -47,7 +172,7 @@ void single_derivative(const ST_env& env,
         env.two_center_bundle.kinetic_orb->calculate(t1, l1, n1, mm1, t2, l2, n2, mm2, dtau * env.ucell.lat0, nullptr, olm);
         break;
     default: // not supposed to happen
-        ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "dtype must be S or T");
+        ModuleBase::WARNING_QUIT("LCAO_domain::single_deriv", "dtype must be S or T");
     }
 
     // condition 7: gamma only or multiple k
@@ -69,125 +194,15 @@ void single_derivative(const ST_env& env,
     }     // end gamma_only
     else  // condition 7, multiple k-points algorithm
     {
+        const int is = (jj - jj0 * npol) + (kk - kk0 * npol) * 2;
         // condition 8, S or T
         if (dtype == 'S')
         {
-            // write DSloc_R* only when allocated (skipped in cal_dS where only DHloc_fixedR_* is used)
-            const bool write_dsloc_r = !fsr.DSloc_Rx.empty();
-            // condition 9, nspin
-            if (nspin == 1 || nspin == 2)
-            {
-                if (write_dsloc_r)
-                {
-                    fsr.DSloc_Rx[nnr] = olm[0];
-                    fsr.DSloc_Ry[nnr] = olm[1];
-                    fsr.DSloc_Rz[nnr] = olm[2];
-                }
-                fsr.DHloc_fixedR_x[nnr] = olm[0];
-                fsr.DHloc_fixedR_y[nnr] = olm[1];
-                fsr.DHloc_fixedR_z[nnr] = olm[2];
-            }
-            else if (nspin == 4)
-            {
-                int is = (jj - jj0 * npol) + (kk - kk0 * npol) * 2;
-                if (is == 0) // is==3 is not needed in force calculation
-                {
-                    if (write_dsloc_r)
-                    {
-                        fsr.DSloc_Rx[nnr] = olm[0];
-                        fsr.DSloc_Ry[nnr] = olm[1];
-                        fsr.DSloc_Rz[nnr] = olm[2];
-                    }
-                    fsr.DHloc_fixedR_x[nnr] = olm[0];
-                    fsr.DHloc_fixedR_y[nnr] = olm[1];
-                    fsr.DHloc_fixedR_z[nnr] = olm[2];
-                }
-                else
-                {
-                    if (write_dsloc_r)
-                    {
-                        fsr.DSloc_Rx[nnr] = 0.0;
-                        fsr.DSloc_Ry[nnr] = 0.0;
-                        fsr.DSloc_Rz[nnr] = 0.0;
-                    }
-                    fsr.DHloc_fixedR_x[nnr] = 0.0;
-                    fsr.DHloc_fixedR_y[nnr] = 0.0;
-                    fsr.DHloc_fixedR_z[nnr] = 0.0;
-                }
-            }
-            else
-            {
-                ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "nspin must be 1, 2 or 4");
-            } // end condition 9, nspin
-
-            if (cal_stress)
-            {
-                fsr.DH_r[nnr * 3] = dtau.x;
-                fsr.DH_r[nnr * 3 + 1] = dtau.y;
-                fsr.DH_r[nnr * 3 + 2] = dtau.z;
-            }
+            set_deriv_s(fsr, nspin, is, nnr, olm, dtau, cal_stress);
         }
-        else if (dtype == 'T') // condition 8, S or T
+        else if (dtype == 'T')
         {
-            // condtion 9, nspin
-            if (nspin == 1 || nspin == 2)
-            {
-                fsr.DHloc_fixedR_x[nnr] = olm[0];
-                fsr.DHloc_fixedR_y[nnr] = olm[1];
-                fsr.DHloc_fixedR_z[nnr] = olm[2];
-                if (cal_stress)
-                {
-                    fsr.stvnl11[nnr] = olm[0] * dtau.x;
-                    fsr.stvnl12[nnr] = olm[0] * dtau.y;
-                    fsr.stvnl13[nnr] = olm[0] * dtau.z;
-                    fsr.stvnl22[nnr] = olm[1] * dtau.y;
-                    fsr.stvnl23[nnr] = olm[1] * dtau.z;
-                    fsr.stvnl33[nnr] = olm[2] * dtau.z;
-                }
-            }
-            else if (nspin == 4) // condition 9
-            {
-                const int is = (jj - jj0 * npol) + (kk - kk0 * npol) * 2;
-                // condition 10, details of nspin 4
-                if (is == 0) // is==3 is not needed in force calculation
-                {
-                    fsr.DHloc_fixedR_x[nnr] = olm[0];
-                    fsr.DHloc_fixedR_y[nnr] = olm[1];
-                    fsr.DHloc_fixedR_z[nnr] = olm[2];
-                    if (cal_stress)
-                    {
-                        fsr.stvnl11[nnr] = olm[0] * dtau.x;
-                        fsr.stvnl12[nnr] = olm[0] * dtau.y;
-                        fsr.stvnl13[nnr] = olm[0] * dtau.z;
-                        fsr.stvnl22[nnr] = olm[1] * dtau.y;
-                        fsr.stvnl23[nnr] = olm[1] * dtau.z;
-                        fsr.stvnl33[nnr] = olm[2] * dtau.z;
-                    }
-                }
-                else if (is == 1 || is == 2 || is == 3)
-                {
-                    fsr.DHloc_fixedR_x[nnr] = 0.0;
-                    fsr.DHloc_fixedR_y[nnr] = 0.0;
-                    fsr.DHloc_fixedR_z[nnr] = 0.0;
-                    if (cal_stress)
-                    {
-                        fsr.stvnl11[nnr] = 0.0;
-                        fsr.stvnl12[nnr] = 0.0;
-                        fsr.stvnl13[nnr] = 0.0;
-                        fsr.stvnl22[nnr] = 0.0;
-                        fsr.stvnl23[nnr] = 0.0;
-                        fsr.stvnl33[nnr] = 0.0;
-                    }
-                }
-                else
-                {
-                    ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "is must be 0, 1, 2, 3");
-                } // end condition 10, details of spin 4
-            }
-            else
-            {
-                ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "nspin must be 1, 2 or 4");
-            } // end condition 9, nspin
+            set_deriv_t(fsr, nspin, is, nnr, olm, dtau, cal_stress);
         }     // end condition 8, S or T
         ++total_nnr;
         ++nnr;
@@ -230,7 +245,7 @@ void single_overlap(const ST_env& env,
         env.two_center_bundle.kinetic_orb->calculate(t1, l1, n1, mm1, t2, l2, n2, mm2, dtau * env.ucell.lat0, olm);
         break;
     default: // not supposed to happen
-        ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "dtype must be S or T");
+        ModuleBase::WARNING_QUIT("LCAO_domain::single_overlap", "dtype must be S or T");
     }
 
     // When NSPIN == 4 , only diagonal term is calculated for T or S Operators
@@ -267,7 +282,7 @@ void single_overlap(const ST_env& env,
             }
             else
             {
-                ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "nspin must be 1, 2 or 4");
+                ModuleBase::WARNING_QUIT("LCAO_domain::single_overlap", "nspin must be 1, 2 or 4");
             }
         }
         else if (dtype == 'T') // condition 8, S or T
@@ -282,7 +297,7 @@ void single_overlap(const ST_env& env,
             }
             else
             {
-                ModuleBase::WARNING_QUIT("LCAO_domain::build_ST_new", "nspin must be 1, 2 or 4");
+                ModuleBase::WARNING_QUIT("LCAO_domain::single_overlap", "nspin must be 1, 2 or 4");
             }
         } // end condition 8, S or T
         ++total_nnr;
@@ -430,7 +445,7 @@ void build_ST_new(ForceStressArrays& fsr,
                             }
                             else // condition 6, calculate the derivative
                             {
-                                single_derivative(env, elem, fsr, nnr, total_nnr, olm);
+                                single_deriv(env, elem, fsr, nnr, total_nnr, olm);
                             } // end condition 6, calc_deri
                             ++iw2_all;
                         } // end loop 5, kk

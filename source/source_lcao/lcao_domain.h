@@ -55,7 +55,7 @@ void set_force(const Parallel_Orbitals& pv,
  * Everything here is fixed for the duration of one build_ST_new call:
  * the basis, the parallel layout, the unit cell and the spin/polarization
  * configuration. Passed by const reference into single_overlap /
- * single_derivative so those functions no longer read global INPUT state.
+ * single_deriv so those functions no longer read global INPUT state.
  */
 struct ST_env
 {
@@ -109,12 +109,12 @@ void single_overlap(const ST_env& env,
 /**
  * @brief set each element of T matrices
  */
-void single_derivative(const ST_env& env,
-                       const ST_elem& e,
-                       ForceStressArrays& fsr,
-                       int& nnr,       // output value
-                       int& total_nnr, // output value
-                       double* olm);   // output value
+void single_deriv(const ST_env& env,
+                  const ST_elem& e,
+                  ForceStressArrays& fsr,
+                  int& nnr,       // output value
+                  int& total_nnr, // output value
+                  double* olm);   // output value
 
 /**
  * @brief set the elements of S and T matrices
