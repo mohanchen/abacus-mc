@@ -160,6 +160,80 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         this->calStressPwPart(ucell, sparts.sigmadvl, sparts.sigmahar, sparts.sigmaewa, sparts.sigmacc,
           sparts.sigmaxc, pelec->f_en.etxc, pelec->charge, rhopw, locpp, sf);
     }
+    // Calculate operator-based force/stress terms (kinetic, overlap,
+    // nonlocal, rt-TDDFT hybrid gauge, local Pulay term and DeltaSpin).
+    this->cal_operator_fs(ucell, gd, pv, pelec, dmat, psi, two_center_bundle,
+                          orb, kv, isforce, isstress, td_stype, p_hamilt, parts, sparts);
+
+    // MPI reduction for forces
+    if (isforce)
+    {
+        Parallel_Reduce::reduce_pool(parts.fvl_dphi.c, parts.fvl_dphi.nr * parts.fvl_dphi.nc);
+    }
+
+    // MPI reduction for stresses
+    if (isstress)
+    {
+        Parallel_Reduce::reduce_pool(sparts.svl_dphi.c, sparts.svl_dphi.nr * sparts.svl_dphi.nc);
+    }
+
+    // Handle DeePKS forces if enabled
+    this->cal_deepks_fs(ucell, gd, orb, kv, isforce, isstress, deepks, parts, sparts);
+
+    // vdW force/stress and external-field forces
+    this->cal_vdw_and_fields_fs(vdw_result, ucell, solvent, rhopw, locpp,
+                                isforce, isstress, parts, sparts);
+
+    // DFT+U force/stress
+    this->cal_dftu_fs(ucell, gd, pv, orb, kv, dmat, dftu, isforce, isstress, parts, sparts);
+
+
+    // NOTE: finish_ftable is no longer needed as we don't use ForceStressArrays for overlap/kinetic
+    // if (!PARAM.globalv.gamma_only_local)
+    // {
+    //     this->flk.finish_ftable(fsr);
+    // }
+
+    // EXX force/stress
+    this->cal_exx_fs(ucell, isforce, isstress, exx_info, exx_nao, parts, sparts);
+    //--------------------------------
+    // begin calculate and output force
+    //--------------------------------
+    if (isforce)
+    {
+        this->assemble_and_print_force(ucell, istestf, vdw_result, exx_info, symm, deepks, parts, fcs);
+    } // end of force calculation
+    //---------------------------------
+    // begin calculate and output stress
+    //---------------------------------
+    if (isstress)
+    {
+        this->assemble_and_print_stress(ucell, istests, vdw_result, exx_info, symm, deepks, sparts, scs);
+    } // end of stress calculation
+
+    ModuleBase::timer::end("Force_Stress_LCAO", "getForceStress");
+    return;
+}
+
+// Operator-based force/stress terms: kinetic, overlap, nonlocal,
+// rt-TDDFT hybrid gauge, local-potential Pulay term, and DeltaSpin.
+template <typename T>
+void Force_Stress_LCAO<T>::cal_operator_fs(const UnitCell& ucell,
+                                             const Grid_Driver& gd,
+                                             Parallel_Orbitals& pv,
+                                             const elecstate::ElecState* pelec,
+                                             LCAO_domain::Setup_DM<T>& dmat,
+                                             const psi::Psi<T>* psi,
+                                             const TwoCenterBundle& two_center_bundle,
+                                             const LCAO_Orbitals& orb,
+                                             const K_Vectors& kv,
+                                             const bool isforce,
+                                             const bool isstress,
+                                             const int td_stype,
+                                             hamilt::Hamilt<T>* p_hamilt,
+                                             LCAOForceParts& parts,
+                                             LCAOStressParts& sparts)
+{
 
     // Calculate forces and stresses using new operator-based methods
     // Step 1: Calculate Energy Density Matrix (EDM) for overlap force
@@ -264,18 +338,51 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
                                        isforce, isstress, false /*reset dm to gint*/);
     }
 
-    // MPI reduction for forces
-    if (isforce)
+    // atomic force and stress for DeltaSpin
+    if (PARAM.inp.sc_mag_switch)
     {
-        Parallel_Reduce::reduce_pool(parts.fvl_dphi.c, parts.fvl_dphi.nr * parts.fvl_dphi.nc);
-    }
+        if (isforce)
+        {
+            parts.force_dspin.create(ucell.nat, 3);
+        }
+        if (isstress)
+        {
+            sparts.stress_dspin.create(3, 3);
+        }
 
-    // MPI reduction for stresses
-    if (isstress)
-    {
-        Parallel_Reduce::reduce_pool(sparts.svl_dphi.c, sparts.svl_dphi.nr * sparts.svl_dphi.nc);
-    }
+        hamilt::DeltaSpin<hamilt::OperatorLCAO<T, double>> tmp_dspin(nullptr,
+                                                                     kv.kvec_d,
+                                                                     nullptr,
+                                                                     ucell,
+                                                                     &gd,
+                                                                     two_center_bundle.overlap_orb_onsite.get(),
+                                                                     orb.cutoffs());
 
+        if (PARAM.inp.nspin == 2)
+        {
+            dmat.dm->switch_dmr(2);
+        }
+        const hamilt::HContainer<double>* dmr = dmat.dm->get_DMR_pointer(1);
+        tmp_dspin.cal_force_stress(isforce, isstress, dmr, parts.force_dspin, sparts.stress_dspin);
+        if (PARAM.inp.nspin == 2)
+        {
+            dmat.dm->switch_dmr(0);
+        }
+    }
+}
+
+// DeePKS correction force/stress (only active under __MLALGO).
+template <typename T>
+void Force_Stress_LCAO<T>::cal_deepks_fs(const UnitCell& ucell,
+                                           const Grid_Driver& gd,
+                                           const LCAO_Orbitals& orb,
+                                           const K_Vectors& kv,
+                                           const bool isforce,
+                                           const bool isstress,
+                                           Setup_DeePKS<T>& deepks,
+                                           LCAOForceParts& parts,
+                                           LCAOStressParts& sparts)
+{
     // Handle DeePKS forces if enabled
 #ifdef __MLALGO
     if (PARAM.inp.deepks_scf)
@@ -330,7 +437,68 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
         }
     }
 #endif
+}
 
+// EXX force/stress (only active under __EXX).
+template <typename T>
+void Force_Stress_LCAO<T>::cal_exx_fs(const UnitCell& ucell,
+                                        const bool isforce,
+                                        const bool isstress,
+                                        const Exx_Info& exx_info,
+                                        Exx_NAO<T>& exx_nao,
+                                        LCAOForceParts& parts,
+                                        LCAOStressParts& sparts)
+{
+#ifdef __EXX
+    bool cal_exx = exx_info.info_global.cal_exx;
+    bool real_number = exx_info.info_ri.real_number;
+    double hybrid_alpha = exx_info.info_global.hybrid_alpha;
+
+    if (cal_exx)
+    {
+        if (isforce)
+        {
+            if (real_number)
+            {
+                exx_nao.exd->cal_exx_force(ucell.nat);
+                parts.force_exx = hybrid_alpha * exx_nao.exd->get_force();
+            }
+            else
+            {
+                exx_nao.exc->cal_exx_force(ucell.nat);
+                parts.force_exx = hybrid_alpha * exx_nao.exc->get_force();
+            }
+        }
+        if (isstress)
+        {
+            if (real_number)
+            {
+                exx_nao.exd->cal_exx_stress(ucell.omega, ucell.lat0);
+                sparts.stress_exx = hybrid_alpha * exx_nao.exd->get_stress();
+            }
+            else
+            {
+                exx_nao.exc->cal_exx_stress(ucell.omega, ucell.lat0);
+                sparts.stress_exx = hybrid_alpha * exx_nao.exc->get_stress();
+            }
+        }
+    }
+#endif
+}
+
+// vdW force/stress and external-field forces: E-field, rt-TDDFT E-field,
+// gate field and the implicit solvation model.
+template <typename T>
+void Force_Stress_LCAO<T>::cal_vdw_and_fields_fs(const vdw::VdwResult* vdw_result,
+                                                   UnitCell& ucell,
+                                                   surchem& solvent,
+                                                   ModulePW::PW_Basis* rhopw,
+                                                   const pseudopot_cell_vl& locpp,
+                                                   const bool isforce,
+                                                   const bool isstress,
+                                                   LCAOForceParts& parts,
+                                                   LCAOStressParts& sparts)
+{
     //! forces and stress from vdw
     //  Peize Lin add 2014-04-04, update 2021-03-09
     //  jiyy add 2019-05-18, update 2021-05-02
@@ -338,12 +506,12 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
     {
         if (isforce)
         {
-            if (!vdw_result->has_force || vdw_result->force.size() != static_cast<std::size_t>(nat))
+            if (!vdw_result->has_force || vdw_result->force.size() != static_cast<std::size_t>(ucell.nat))
             {
                 ModuleBase::WARNING_QUIT("Force_Stress_LCAO::getForceStress",
                                          "The cached vdW force is unavailable or has an invalid size.");
             }
-            parts.force_vdw.create(nat, 3);
+            parts.force_vdw.create(ucell.nat, 3);
             for (int iat = 0; iat < nat; ++iat)
             {
                 parts.force_vdw(iat, 0) = vdw_result->force[iat].x;
@@ -365,38 +533,53 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
     //! forces from E-field
     if (PARAM.inp.efield_flag && isforce)
     {
-        parts.fefield.create(nat, 3);
+        parts.fefield.create(ucell.nat, 3);
         elecstate::Efield::compute_force(ucell, parts.fefield);
     }
 
     //! atomic forces from E-field of rt-TDDFT
     if (PARAM.inp.esolver_type == "tddft" && isforce)
     {
-        parts.fefield_tddft.create(nat, 3);
+        parts.fefield_tddft.create(ucell.nat, 3);
         elecstate::H_TDDFT_pw::compute_force(ucell, parts.fefield_tddft);
     }
 
     //! atomic forces from gate field
     if (PARAM.inp.gate_flag && isforce)
     {
-        parts.fgate.create(nat, 3);
+        parts.fgate.create(ucell.nat, 3);
         elecstate::Gatefield::compute_force(ucell, parts.fgate);
     }
 
     //! atomic forces from implicit solvation model
     if (PARAM.inp.imp_sol && isforce)
     {
-        parts.fsol.create(nat, 3);
+        parts.fsol.create(ucell.nat, 3);
         solvent.cal_force_sol(ucell, rhopw, locpp.vloc, PARAM.inp.nspin, parts.fsol);
     }
+}
 
+// DFT+U force/stress.
+template <typename T>
+void Force_Stress_LCAO<T>::cal_dftu_fs(UnitCell& ucell,
+                                         const Grid_Driver& gd,
+                                         Parallel_Orbitals& pv,
+                                         const LCAO_Orbitals& orb,
+                                         const K_Vectors& kv,
+                                         LCAO_domain::Setup_DM<T>& dmat,
+                                         Plus_U_Base& dftu,
+                                         const bool isforce,
+                                         const bool isstress,
+                                         LCAOForceParts& parts,
+                                         LCAOStressParts& sparts)
+{
     //! atomic forces from DFT+U (Quxin version)
 
     if (PARAM.inp.dft_plus_u) // Quxin add for DFT+U on 20201029
     {
         if (isforce)
         {
-            parts.force_u.create(nat, 3);
+            parts.force_u.create(ucell.nat, 3);
         }
         if (isstress)
         {
@@ -465,97 +648,6 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
                                     isforce, isstress, parts.force_u, sparts.stress_u);
         }
     }
-
-    // atomic force and stress for DeltaSpin
-    if (PARAM.inp.sc_mag_switch)
-    {
-        if (isforce)
-        {
-            parts.force_dspin.create(nat, 3);
-        }
-        if (isstress)
-        {
-            sparts.stress_dspin.create(3, 3);
-        }
-
-        hamilt::DeltaSpin<hamilt::OperatorLCAO<T, double>> tmp_dspin(nullptr,
-                                                                     kv.kvec_d,
-                                                                     nullptr,
-                                                                     ucell,
-                                                                     &gd,
-                                                                     two_center_bundle.overlap_orb_onsite.get(),
-                                                                     orb.cutoffs());
-
-        if (PARAM.inp.nspin == 2)
-        {
-            dmat.dm->switch_dmr(2);
-        }
-        const hamilt::HContainer<double>* dmr = dmat.dm->get_DMR_pointer(1);
-        tmp_dspin.cal_force_stress(isforce, isstress, dmr, parts.force_dspin, sparts.stress_dspin);
-        if (PARAM.inp.nspin == 2)
-        {
-            dmat.dm->switch_dmr(0);
-        }
-    }
-
-    // NOTE: finish_ftable is no longer needed as we don't use ForceStressArrays for overlap/kinetic
-    // if (!PARAM.globalv.gamma_only_local)
-    // {
-    //     this->flk.finish_ftable(fsr);
-    // }
-
-#ifdef __EXX
-    bool cal_exx = exx_info.info_global.cal_exx;
-    bool real_number = exx_info.info_ri.real_number;
-    double hybrid_alpha = exx_info.info_global.hybrid_alpha;
-
-    if (cal_exx)
-    {
-        if (isforce)
-        {
-            if (real_number)
-            {
-                exx_nao.exd->cal_exx_force(ucell.nat);
-                parts.force_exx = hybrid_alpha * exx_nao.exd->get_force();
-            }
-            else
-            {
-                exx_nao.exc->cal_exx_force(ucell.nat);
-                parts.force_exx = hybrid_alpha * exx_nao.exc->get_force();
-            }
-        }
-        if (isstress)
-        {
-            if (real_number)
-            {
-                exx_nao.exd->cal_exx_stress(ucell.omega, ucell.lat0);
-                sparts.stress_exx = hybrid_alpha * exx_nao.exd->get_stress();
-            }
-            else
-            {
-                exx_nao.exc->cal_exx_stress(ucell.omega, ucell.lat0);
-                sparts.stress_exx = hybrid_alpha * exx_nao.exc->get_stress();
-            }
-        }
-    }
-#endif
-    //--------------------------------
-    // begin calculate and output force
-    //--------------------------------
-    if (isforce)
-    {
-        this->assemble_and_print_force(ucell, istestf, vdw_result, exx_info, symm, deepks, parts, fcs);
-    } // end of force calculation
-    //---------------------------------
-    // begin calculate and output stress
-    //---------------------------------
-    if (isstress)
-    {
-        this->assemble_and_print_stress(ucell, istests, vdw_result, exx_info, symm, deepks, sparts, scs);
-    } // end of stress calculation
-
-    ModuleBase::timer::end("Force_Stress_LCAO", "getForceStress");
-    return;
 }
 
 // local pseudopotential, ewald, core correction, scc terms in force
