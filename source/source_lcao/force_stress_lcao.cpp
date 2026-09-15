@@ -1,5 +1,6 @@
 #include "force_stress_lcao.h"
 
+#include "source_basis/module_nao/two_center_bundle.h"
 #include "source_base/parallel_reduce.h"
 #include "source_pw/module_pwdft/dftu_base.h" //Quxin add for DFT+U on 20201029
 #include "source_lcao/module_dftu/dftu_nao_fs_k.h"

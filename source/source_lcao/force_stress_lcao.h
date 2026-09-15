@@ -25,6 +25,8 @@ namespace vdw
 struct VdwResult;
 }
 
+class TwoCenterBundle;
+
 
 template <typename T>
 class Force_Stress_LCAO
