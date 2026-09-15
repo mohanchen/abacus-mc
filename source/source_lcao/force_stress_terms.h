@@ -66,7 +66,7 @@ void cal_dftu_fs(UnitCell& ucell,
                  LCAOStressParts& sparts);
 
 // DeePKS correction force/stress (only active under __MLALGO). The parallel
-// orbitals are passed explicitly instead of going through Force_LCAO::ParaV.
+// orbitals are passed explicitly instead of going through CalEDM::ParaV.
 template <typename T>
 void cal_deepks_fs(const UnitCell& ucell,
                    const Grid_Driver& gd,

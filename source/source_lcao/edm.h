@@ -1,5 +1,5 @@
-#ifndef LCAO_FORCE_H
-#define LCAO_FORCE_H
+#ifndef LCAO_EDM_H
+#define LCAO_EDM_H
 
 #include "source_base/global_function.h"
 #include "source_estate/elecstate.h"
@@ -11,13 +11,13 @@ template <typename T>
 class Force_Stress_LCAO;
 
 template <typename T>
-class Force_LCAO
+class CalEDM
 {
   public:
     friend class Force_Stress_LCAO<T>;
 
-    Force_LCAO(){};
-    ~Force_LCAO(){};
+    CalEDM(){};
+    ~CalEDM(){};
 
   private:
     const Parallel_Orbitals* ParaV = nullptr;

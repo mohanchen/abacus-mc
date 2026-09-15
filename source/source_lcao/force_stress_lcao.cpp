@@ -194,7 +194,7 @@ void Force_Stress_LCAO<T>::getForceStress(UnitCell& ucell,
     // NOTE: finish_ftable is no longer needed as we don't use ForceStressArrays for overlap/kinetic
     // if (!PARAM.globalv.gamma_only_local)
     // {
-    //     this->flk.finish_ftable(fsr);
+    //     this->edm_cal.finish_ftable(fsr);
     // }
 
     // EXX force/stress
@@ -243,7 +243,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
     // Calculate forces and stresses using new operator-based methods
     // Step 1: Calculate Energy Density Matrix (EDM) for overlap force
     // EDM = Σ_k w_k * ε_k * |ψ_k><ψ_k|
-    elecstate::DensityMatrix<T, double> edm = flk.cal_edm(pelec, *psi, *dmat.dm, kv, pv,
+    elecstate::DensityMatrix<T, double> edm = edm_cal.cal_edm(pelec, *psi, *dmat.dm, kv, pv,
                                                            cfg.nspin, cfg.nbands, ucell, *this->RA);
 
     // Step 2: Handle different spin cases
@@ -302,7 +302,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
 
         // Calculate local potential force/stress (vl_dphi)
         // This uses grid integration, not operator-based method
-        flk.ParaV = dmat.dm->get_paraV_pointer();
+        edm_cal.ParaV = dmat.dm->get_paraV_pointer();
         PulayForceStress::cal_pulay_fs(parts.fvl_dphi, sparts.svl_dphi, *dmat.dm, ucell, pelec->pot,
                                        isforce, isstress, false /*reset dm to gint*/);
     }
@@ -339,7 +339,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         tmp_nonlocal.cal_force_stress(isforce, isstress, &tmp_dmr, parts.fvnl_dbeta, sparts.svnl_dbeta);
 
         // Local-potential (vl_dphi) Pulay term via grid integration
-        flk.ParaV = dmat.dm->get_paraV_pointer();
+        edm_cal.ParaV = dmat.dm->get_paraV_pointer();
         PulayForceStress::cal_pulay_fs(parts.fvl_dphi, sparts.svl_dphi, *dmat.dm, ucell, pelec->pot,
                                        isforce, isstress, false);
     }
