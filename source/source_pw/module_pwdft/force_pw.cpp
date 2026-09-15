@@ -195,7 +195,7 @@ void Forces<FPTYPE, Device>::cal_force(UnitCell& ucell,
 
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
     {
-        ModuleSymmetry::symmetrize_force_cartesian(p_symm, this->nat, force);
+        ModuleSymmetry::symmetrize_force_cartesian(p_symm, this->nat, ucell.a1, ucell.a2, ucell.a3, force);
     }
 
     GlobalV::ofs_running << std::setiosflags(std::ios::fixed) << std::setprecision(6) << std::endl;

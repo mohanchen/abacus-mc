@@ -261,7 +261,7 @@ void assemble_print_force(const UnitCell& ucell,
     // pengfei 2016-12-20
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
     {
-        ModuleSymmetry::symmetrize_force_cartesian(symm, nat, fcs);
+        ModuleSymmetry::symmetrize_force_cartesian(symm, nat, ucell.a1, ucell.a2, ucell.a3, fcs);
     }
 
     // The net force should be evaluated AFTER the symmetrization.

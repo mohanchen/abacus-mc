@@ -116,7 +116,12 @@ void Symmetry::symmetrize_vec3_nat(double* v)const   // pengfei 2016-12-20
     return;
 }
 
-void symmetrize_force_cartesian(Symmetry* symm, const int nat, ModuleBase::matrix& force)
+void symmetrize_force_cartesian(Symmetry* symm,
+                                const int nat,
+                                const ModuleBase::Vector3<double>& a1,
+                                const ModuleBase::Vector3<double>& a2,
+                                const ModuleBase::Vector3<double>& a3,
+                                ModuleBase::matrix& force)
 {
     ModuleBase::TITLE("Symmetry", "symmetrize_force_cartesian");
     if (symm == nullptr || nat <= 0 || force.nr < nat || force.nc < 3)
@@ -130,8 +135,8 @@ void symmetrize_force_cartesian(Symmetry* symm, const int nat, ModuleBase::matri
     for (int iat = 0; iat < nat; iat++)
     {
         ModuleBase::Mathzone::Cartesian_to_Direct(force(iat, 0), force(iat, 1), force(iat, 2),
-          symm->a1.x, symm->a1.y, symm->a1.z, symm->a2.x, symm->a2.y, symm->a2.z,
-          symm->a3.x, symm->a3.y, symm->a3.z, d1, d2, d3);
+          a1.x, a1.y, a1.z, a2.x, a2.y, a2.z,
+          a3.x, a3.y, a3.z, d1, d2, d3);
 
         force(iat, 0) = d1;
         force(iat, 1) = d2;
@@ -141,8 +146,8 @@ void symmetrize_force_cartesian(Symmetry* symm, const int nat, ModuleBase::matri
     for (int iat = 0; iat < nat; iat++)
     {
         ModuleBase::Mathzone::Direct_to_Cartesian(force(iat, 0), force(iat, 1), force(iat, 2),
-          symm->a1.x, symm->a1.y, symm->a1.z, symm->a2.x, symm->a2.y, symm->a2.z,
-          symm->a3.x, symm->a3.y, symm->a3.z, d1, d2, d3);
+          a1.x, a1.y, a1.z, a2.x, a2.y, a2.z,
+          a3.x, a3.y, a3.z, d1, d2, d3);
 
         force(iat, 0) = d1;
         force(iat, 1) = d2;
