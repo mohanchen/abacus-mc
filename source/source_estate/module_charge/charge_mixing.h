@@ -7,9 +7,10 @@
 #include <functional>
 
 /// Configuration for charge mixing, aggregating the INPUT mixing parameters
-/// together with the runtime globals (nspin, scf_thr_type, double_grid) that
-/// the mixing logic needs, so that Charge_Mixing does not read PARAM/GlobalV
-/// directly. Callers fill this from the parsed input once per run.
+/// together with the runtime globals (nspin, scf_thr_type, double_grid,
+/// gamma_only_pw, domag, domag_z) that the mixing logic needs, so that
+/// Charge_Mixing does not read PARAM/GlobalV directly. Callers fill this
+/// from the parsed input once per run.
 struct MixingConfig
 {
     std::string mixing_mode = "broyden"; ///< mixing mode: "plain", "broyden", "pulay"
@@ -25,6 +26,9 @@ struct MixingConfig
     int nspin = 1;                       ///< number of spins
     int scf_thr_type = 1;                ///< 1: reciprocal, 2: real space threshold
     bool double_grid = false;            ///< whether double grid is used
+    bool gamma_only_pw = false;          ///< whether gamma-only plane wave is used
+    bool domag = false;                  ///< whether magnetism (non-collinear) is considered
+    bool domag_z = false;                ///< whether only the z-component magnetism is considered
 };
 
 class Charge_Mixing

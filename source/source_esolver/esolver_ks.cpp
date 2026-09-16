@@ -79,6 +79,9 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     mix_cfg.nspin = inp.nspin;
     mix_cfg.scf_thr_type = inp.scf_thr_type;
     mix_cfg.double_grid = PARAM.globalv.double_grid;
+    mix_cfg.gamma_only_pw = PARAM.globalv.gamma_only_pw;
+    mix_cfg.domag = PARAM.globalv.domag;
+    mix_cfg.domag_z = PARAM.globalv.domag_z;
     p_chgmix->set_mixing(mix_cfg, ucell.omega, ucell.tpiba);
     p_chgmix->init_mixing();
 

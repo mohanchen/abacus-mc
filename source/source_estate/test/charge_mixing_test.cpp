@@ -122,7 +122,23 @@ class ChargeMixingTest : public ::testing::Test
         cfg.nspin = PARAM.input.nspin;
         cfg.scf_thr_type = PARAM.input.scf_thr_type;
         cfg.double_grid = PARAM.globalv.double_grid;
+        cfg.gamma_only_pw = PARAM.globalv.gamma_only_pw;
+        cfg.domag = PARAM.globalv.domag;
+        cfg.domag_z = PARAM.globalv.domag_z;
         return cfg;
+    }
+
+    // Re-sync the runtime globals (nspin/scf_thr_type/gamma_only_pw/domag/domag_z)
+    // into an already-configured Charge_Mixing. Tests mutate PARAM.sys/PARAM.input
+    // after set_mixing to steer the residual/inner-product branches; the object
+    // now reads them from cfg_, so the test must push the new values in.
+    void sync_cfg(Charge_Mixing& cm)
+    {
+        cm.cfg_.nspin = PARAM.input.nspin;
+        cm.cfg_.scf_thr_type = PARAM.input.scf_thr_type;
+        cm.cfg_.gamma_only_pw = PARAM.sys.gamma_only_pw;
+        cm.cfg_.domag = PARAM.sys.domag;
+        cm.cfg_.domag_z = PARAM.sys.domag_z;
     }
 };
 
@@ -195,14 +211,17 @@ TEST_F(ChargeMixingTest, InitMixingTest)
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     
     PARAM.input.scf_thr_type= 1;
+    sync_cfg(CMtest);
     CMtest.init_mixing();
     EXPECT_EQ(CMtest.rho_mdata.length, pw_basis.npw);
     
     PARAM.input.scf_thr_type= 2;
+    sync_cfg(CMtest);
     CMtest.init_mixing();
     EXPECT_EQ(CMtest.rho_mdata.length, pw_basis.nrxx);
 
     PARAM.input.nspin = 4;
+    sync_cfg(CMtest);
     CMtest.init_mixing();
     EXPECT_EQ(CMtest.rho_mdata.length, 4 * pw_basis.nrxx);
 
@@ -228,6 +247,7 @@ TEST_F(ChargeMixingTest, InnerDotRealTest)
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     CMtest.set_rhopw(&pw_basis, &pw_basis);
     PARAM.input.nspin = 4;
+    sync_cfg(CMtest);
 
     // a simple sum for inner product
     std::vector<double> drho1(pw_basis.nrxx * PARAM.input.nspin);
@@ -264,6 +284,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipSimpleTest)
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     CMtest.set_rhopw(&pw_basis, &pw_basis);
     PARAM.input.nspin = 2;
+    sync_cfg(CMtest);
 
     // a simple sum for inner product
     std::vector<std::complex<double>> drhog1(pw_basis.npw * PARAM.input.nspin);
@@ -300,6 +321,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
     ucell.omega = 2.0;
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     PARAM.input.nspin = 1;
+    sync_cfg(CMtest);
     std::vector<std::complex<double>> drhog1(pw_basis.npw);
     std::vector<std::complex<double>> drhog2(pw_basis.npw);
     for (int i = 0; i < pw_basis.nrxx; ++i)
@@ -315,6 +337,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
 
     // RECIPROCAL NSPIN=2
     PARAM.input.nspin = 2;
+    sync_cfg(CMtest);
     drhog1.resize(pw_basis.npw * PARAM.input.nspin);
     drhog2.resize(pw_basis.npw * PARAM.input.nspin);
     std::vector<std::complex<double>> drhog1_mag(pw_basis.npw * PARAM.input.nspin);
@@ -333,14 +356,17 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
         drhog2_mag[i+pw_basis.npw] = drhog2[i] - drhog2[i+pw_basis.npw];
     }
     PARAM.sys.gamma_only_pw= false;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_hartree(drhog1_mag.data(), drhog2_mag.data());
     EXPECT_NEAR(inner, 236763.82650318215, 1e-8);
     PARAM.sys.gamma_only_pw= true;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_hartree(drhog1_mag.data(), drhog2_mag.data());
     EXPECT_NEAR(inner, 236763.82650318215 * 2, 1e-8);
 
     // RECIPROCAL NSPIN=4 without mixing_angle
     PARAM.input.nspin = 4;
+    sync_cfg(CMtest);
     drhog1.resize(pw_basis.npw * PARAM.input.nspin);
     drhog2.resize(pw_basis.npw * PARAM.input.nspin);
     for (int i = 0; i < pw_basis.npw * PARAM.input.nspin; ++i)
@@ -351,11 +377,13 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
 
     PARAM.sys.domag = false;
     PARAM.sys.domag_z = false;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 28260.091995611871, 1e-8);
     PARAM.sys.gamma_only_pw= true;
     PARAM.sys.domag = true;
     PARAM.sys.domag_z = true;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 110668.61166927818, 1e-8);
 
@@ -371,9 +399,11 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
         drhog2[i] = std::complex<double>(1.0, 1.0);
     }
     PARAM.sys.gamma_only_pw= false;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 36548.881431837777, 1e-8);
     PARAM.sys.gamma_only_pw= true;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 44776.555369916401, 1e-8);
 }
@@ -399,6 +429,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
     ucell.omega = 2.0;
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     PARAM.input.nspin = 1;
+    sync_cfg(CMtest);
     std::vector<std::complex<double>> drhog1(pw_basis.npw);
     std::vector<std::complex<double>> drhog2(pw_basis.npw);
     for (int i = 0; i < pw_basis.nrxx; ++i)
@@ -413,6 +444,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
     EXPECT_NEAR(inner, -0.3 * ModuleBase::e2 * ModuleBase::FOUR_PI, 1e-8);
 
     PARAM.input.nspin = 2;
+    sync_cfg(CMtest);
     drhog1.resize(pw_basis.npw * PARAM.input.nspin);
     drhog2.resize(pw_basis.npw * PARAM.input.nspin);
     for (int i = 0; i < pw_basis.npw * PARAM.input.nspin; ++i)
@@ -421,13 +453,16 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
         drhog2[i] = std::complex<double>(1.0, 1.0);
     }
     PARAM.sys.gamma_only_pw= false;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 236763.82650318215, 1e-8);
     PARAM.sys.gamma_only_pw= true;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 236763.82650318215 * 2, 1e-8);
 
     PARAM.input.nspin = 4;
+    sync_cfg(CMtest);
     drhog1.resize(pw_basis.npw * PARAM.input.nspin);
     drhog2.resize(pw_basis.npw * PARAM.input.nspin);
     for (int i = 0; i < pw_basis.npw * PARAM.input.nspin; ++i)
@@ -438,11 +473,13 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
 
     PARAM.sys.domag = false;
     PARAM.sys.domag_z = false;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 28260.091995611871, 1e-8);
     PARAM.sys.gamma_only_pw= true;
     PARAM.sys.domag = true;
     PARAM.sys.domag_z = true;
+    sync_cfg(CMtest);
     inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
     EXPECT_NEAR(inner, 110668.61166927818, 1e-8);
 }
