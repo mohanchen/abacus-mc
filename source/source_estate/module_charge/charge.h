@@ -92,12 +92,6 @@ class Charge
 
     void allocate(const int &nspin_in, const bool kin_den);
 
-    void atomic_rho(const int spin_number_need,
-                    const double& omega,
-                    double** rho_in,
-                    const ModuleBase::ComplexMatrix& strucFac,
-                    const UnitCell& ucell) const;
-
     void set_rho_core(const UnitCell& ucell,
                       const ModuleBase::ComplexMatrix& structure_factor, 
                       const bool* numeric);

@@ -30,6 +30,7 @@ list(APPEND objects
     module_charge/chgmixing.cpp
     module_charge/gint_prec_ctrl.cpp
     module_charge/charge.cpp
+    module_charge/charge_atomic.cpp
     module_charge/charge_init.cpp
     module_charge/charge_math.cpp
     module_charge/charge_mpi.cpp

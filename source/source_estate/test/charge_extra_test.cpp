@@ -40,13 +40,20 @@ Charge::~Charge()
     delete[] rho;
     delete rhopw;
 }
-void Charge::atomic_rho(const int spin_number_need,
-                        const double& omega,
-                        double** rho_in,
-                        const ModuleBase::ComplexMatrix& strucFac,
-                        const UnitCell& ucell) const
+
+// mock for module_charge::atomic_rho to keep this unit test isolated
+// from the full PW basis implementation.
+namespace module_charge
+{
+void atomic_rho(const int spin_number_need,
+                const double& omega,
+                double** rho_in,
+                const ModuleBase::ComplexMatrix& strucFac,
+                const UnitCell& ucell,
+                const ModulePW::PW_Basis* rhopw)
 {
 }
+} // namespace module_charge
 
 // mock functions for PW_Basis
 namespace ModulePW

@@ -1,5 +1,7 @@
 #include "charge_extra.h"
 
+#include "charge_atomic.h"
+
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
 #include "source_base/timer.h"
@@ -176,7 +178,7 @@ void Charge_Extra::extrapolate_charge(
     {
         rho_atom[is] = new double[chr->rhopw->nrxx];
     }
-    chr->atomic_rho(this->nspin, ucell.omega, rho_atom, sf->strucFac, ucell);
+    module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom, sf->strucFac, ucell, chr->rhopw);
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)
 #endif
@@ -296,7 +298,7 @@ void Charge_Extra::update_delta_rho(const UnitCell& ucell, const Charge* chr, co
     {
         rho_atom[is] = new double[chr->rhopw->nrxx];
     }
-    chr->atomic_rho(this->nspin, ucell.omega, rho_atom, sf->strucFac, ucell);
+    module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom, sf->strucFac, ucell, chr->rhopw);
 
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)

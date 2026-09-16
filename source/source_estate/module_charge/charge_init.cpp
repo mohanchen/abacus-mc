@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "charge.h"
+#include "charge_atomic.h"
 #include "charge_math.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
@@ -229,7 +230,7 @@ void Charge::init_rho_atomic_and_tau(const UnitCell& ucell,
         {
             std::cout << " Charge::init_rho: use atomic initialization instead." << std::endl;
         }
-        this->atomic_rho(nspin, ucell.omega, rho, strucFac, ucell);
+        module_charge::atomic_rho(nspin, ucell.omega, rho, strucFac, ucell, this->rhopw);
     }
 
     // initial tau = 3/5 rho^2/3, Thomas-Fermi
