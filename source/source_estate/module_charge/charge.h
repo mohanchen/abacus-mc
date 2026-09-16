@@ -1,6 +1,8 @@
 #ifndef CHARGE_H
 #define CHARGE_H
 
+#include <vector>
+
 #include "source_base/complexmatrix.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
@@ -45,13 +47,15 @@ class Charge
 
   private:
 
-    //temporary
-    double *_space_rho = nullptr; 
-    double *_space_rho_save = nullptr;
-    std::complex<double> *_space_rhog = nullptr;
-    std::complex<double> *_space_rhog_save = nullptr;
-    double *_space_kin_r = nullptr;
-    double *_space_kin_r_save = nullptr;
+    // Underlying contiguous storage backing the public rho/rhog/kin_r views.
+    // Each buffer holds nspin rows; rho[is] points at _space_rho.data()+is*nrxx.
+    // Owned here as std::vector so the storage self-manages (no raw new/delete).
+    std::vector<double> _space_rho;
+    std::vector<double> _space_rho_save;
+    std::vector<std::complex<double>> _space_rhog;
+    std::vector<std::complex<double>> _space_rhog_save;
+    std::vector<double> _space_kin_r;
+    std::vector<double> _space_kin_r_save;
 
   public:
 

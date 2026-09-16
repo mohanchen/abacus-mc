@@ -708,12 +708,12 @@ TEST_F(ChargeMixingTest, MixRhoTest)
     PARAM.input.mixing_mode = "plain";
     const int nrxx = pw_basis.nrxx;
     const int npw = pw_basis.npw;
-    charge._space_rho = new double[nspin * nrxx];
-    charge._space_rho_save = new double[nspin * nrxx];
-    charge._space_rhog = new std::complex<double>[nspin * npw];
-    charge._space_rhog_save = new std::complex<double>[nspin * npw];
-    charge._space_kin_r = new double[nspin * nrxx];
-    charge._space_kin_r_save = new double[nspin * nrxx];
+    charge._space_rho.resize(nspin * nrxx);
+    charge._space_rho_save.resize(nspin * nrxx);
+    charge._space_rhog.resize(nspin * npw);
+    charge._space_rhog_save.resize(nspin * npw);
+    charge._space_kin_r.resize(nspin * nrxx);
+    charge._space_kin_r_save.resize(nspin * nrxx);
     charge.rho = new double*[nspin];
     charge.rhog = new std::complex<double>*[nspin];
     charge.rho_save = new double*[nspin];
@@ -722,12 +722,12 @@ TEST_F(ChargeMixingTest, MixRhoTest)
     charge.kin_r_save = new double*[nspin];
     for (int is = 0; is < nspin; is++)
     {
-        charge.rho[is] = charge._space_rho + is * nrxx;
-        charge.rhog[is] = charge._space_rhog + is * npw;
-        charge.rho_save[is] = charge._space_rho_save + is * nrxx;
-        charge.rhog_save[is] = charge._space_rhog_save + is * npw;
-        charge.kin_r[is] = charge._space_kin_r + is * nrxx;
-        charge.kin_r_save[is] = charge._space_kin_r_save + is * nrxx;
+        charge.rho[is] = charge._space_rho.data() + is * nrxx;
+        charge.rhog[is] = charge._space_rhog.data() + is * npw;
+        charge.rho_save[is] = charge._space_rho_save.data() + is * nrxx;
+        charge.rhog_save[is] = charge._space_rhog_save.data() + is * npw;
+        charge.kin_r[is] = charge._space_kin_r.data() + is * nrxx;
+        charge.kin_r_save[is] = charge._space_kin_r_save.data() + is * nrxx;
     }
     std::vector<double> real_ref(nspin * nrxx);
     std::vector<double> real_save_ref(nspin * nrxx);
@@ -796,12 +796,6 @@ TEST_F(ChargeMixingTest, MixRhoTest)
     }
 
     //-------------------------------------------------------------------------
-    delete[] charge._space_rho;
-    delete[] charge._space_rho_save;
-    delete[] charge._space_rhog;
-    delete[] charge._space_rhog_save;
-    delete[] charge._space_kin_r;
-    delete[] charge._space_kin_r_save;
     delete[] charge.rho;
     delete[] charge.rhog;
     delete[] charge.rho_save;
@@ -825,12 +819,12 @@ TEST_F(ChargeMixingTest, MixDoubleGridRhoTest)
     PARAM.input.mixing_mode = "plain";
     const int nrxx = pw_dbasis.nrxx;
     const int npw = pw_dbasis.npw;
-    charge._space_rho = new double[nspin * nrxx];
-    charge._space_rho_save = new double[nspin * nrxx];
-    charge._space_rhog = new std::complex<double>[nspin * npw];
-    charge._space_rhog_save = new std::complex<double>[nspin * npw];
-    charge._space_kin_r = new double[nspin * nrxx];
-    charge._space_kin_r_save = new double[nspin * nrxx];
+    charge._space_rho.resize(nspin * nrxx);
+    charge._space_rho_save.resize(nspin * nrxx);
+    charge._space_rhog.resize(nspin * npw);
+    charge._space_rhog_save.resize(nspin * npw);
+    charge._space_kin_r.resize(nspin * nrxx);
+    charge._space_kin_r_save.resize(nspin * nrxx);
     charge.rho = new double*[nspin];
     charge.rhog = new std::complex<double>*[nspin];
     charge.rho_save = new double*[nspin];
@@ -839,12 +833,12 @@ TEST_F(ChargeMixingTest, MixDoubleGridRhoTest)
     charge.kin_r_save = new double*[nspin];
     for (int is = 0; is < nspin; is++)
     {
-        charge.rho[is] = charge._space_rho + is * nrxx;
-        charge.rhog[is] = charge._space_rhog + is * npw;
-        charge.rho_save[is] = charge._space_rho_save + is * nrxx;
-        charge.rhog_save[is] = charge._space_rhog_save + is * npw;
-        charge.kin_r[is] = charge._space_kin_r + is * nrxx;
-        charge.kin_r_save[is] = charge._space_kin_r_save + is * nrxx;
+        charge.rho[is] = charge._space_rho.data() + is * nrxx;
+        charge.rhog[is] = charge._space_rhog.data() + is * npw;
+        charge.rho_save[is] = charge._space_rho_save.data() + is * nrxx;
+        charge.rhog_save[is] = charge._space_rhog_save.data() + is * npw;
+        charge.kin_r[is] = charge._space_kin_r.data() + is * nrxx;
+        charge.kin_r_save[is] = charge._space_kin_r_save.data() + is * nrxx;
     }
     std::vector<double> real_ref(nspin * nrxx);
     std::vector<double> real_save_ref(nspin * nrxx);
@@ -894,12 +888,6 @@ TEST_F(ChargeMixingTest, MixDoubleGridRhoTest)
     }
 
     //-------------------------------------------------------------------------
-    delete[] charge._space_rho;
-    delete[] charge._space_rho_save;
-    delete[] charge._space_rhog;
-    delete[] charge._space_rhog_save;
-    delete[] charge._space_kin_r;
-    delete[] charge._space_kin_r_save;
     delete[] charge.rho;
     delete[] charge.rhog;
     delete[] charge.rho_save;

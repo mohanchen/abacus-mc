@@ -72,12 +72,7 @@ void Charge::destroy()
         delete[] rhog_save;
         delete[] rho_core;
         delete[] rhog_core;
-        delete[] _space_rho;
-        delete[] _space_rho_save;
-        delete[] _space_rhog;
-        delete[] _space_rhog_save;
-        delete[] _space_kin_r;
-        delete[] _space_kin_r_save;
+        // _space_* storage is owned by std::vector and frees itself here.
         if (XC_Functional::get_ked_flag() || PARAM.inp.out_elf[0] > 0)
         {
             delete[] kin_r;
@@ -116,15 +111,15 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
         std::cout << "\n spin_number = " << nspin << " real_point_number = " << nrxx << std::endl;
     }
 
-    // allocate memory
-    _space_rho = new double[nspin * nrxx];
-    _space_rho_save = new double[nspin * nrxx];
-    _space_rhog = new std::complex<double>[nspin * ngmc];
-    _space_rhog_save = new std::complex<double>[nspin * ngmc];
+    // allocate memory (std::vector self-manages the storage)
+    _space_rho.resize(nspin * nrxx);
+    _space_rho_save.resize(nspin * nrxx);
+    _space_rhog.resize(nspin * ngmc);
+    _space_rhog_save.resize(nspin * ngmc);
     if(kin_den)
     {
-        _space_kin_r = new double[nspin * nrxx];
-        _space_kin_r_save = new double[nspin * nrxx];
+        _space_kin_r.resize(nspin * nrxx);
+        _space_kin_r_save.resize(nspin * nrxx);
     }
     rho = new double*[nspin];
     rhog = new std::complex<double>*[nspin];
@@ -137,19 +132,19 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
     }
     for (int is = 0; is < nspin; is++)
     {
-        rho[is] = _space_rho + is * nrxx;
-        rhog[is] = _space_rhog + is * ngmc;
-        rho_save[is] = _space_rho_save + is * nrxx;
-        rhog_save[is] = _space_rhog_save + is * ngmc;
+        rho[is] = _space_rho.data() + is * nrxx;
+        rhog[is] = _space_rhog.data() + is * ngmc;
+        rho_save[is] = _space_rho_save.data() + is * nrxx;
+        rhog_save[is] = _space_rhog_save.data() + is * ngmc;
         ModuleBase::GlobalFunc::ZEROS(rho[is], nrxx);
         ModuleBase::GlobalFunc::ZEROS(rhog[is], ngmc);
         ModuleBase::GlobalFunc::ZEROS(rho_save[is], nrxx);
         ModuleBase::GlobalFunc::ZEROS(rhog_save[is], ngmc);
         if(kin_den) 
         {
-            kin_r[is] = _space_kin_r + is * nrxx;
+            kin_r[is] = _space_kin_r.data() + is * nrxx;
             ModuleBase::GlobalFunc::ZEROS(kin_r[is], nrxx);
-            kin_r_save[is] = _space_kin_r_save + is * nrxx;
+            kin_r_save[is] = _space_kin_r_save.data() + is * nrxx;
             ModuleBase::GlobalFunc::ZEROS(kin_r_save[is], nrxx);
         }
     }

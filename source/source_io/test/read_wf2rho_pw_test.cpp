@@ -230,8 +230,8 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
     // Initialize charge density
     //----------------------------------------
     chg.rho = new double*[nspin];
-    chg._space_rho = new double[rhopw->nrxx];
-    chg.rho[0] = chg._space_rho;
+    chg._space_rho.resize(rhopw->nrxx);
+    chg.rho[0] = chg._space_rho.data();
     ModuleBase::GlobalFunc::ZEROS(chg.rho[0], rhopw->nrxx);
     chg.rhopw = rhopw;
     chg.nrxx = rhopw->nrxx;
@@ -242,8 +242,8 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
     //----------------------------------------
     Charge chg_ref;
     chg_ref.rho = new double*[nspin];
-    chg_ref._space_rho = new double[rhopw->nrxx];
-    chg_ref.rho[0] = chg_ref._space_rho;
+    chg_ref._space_rho.resize(rhopw->nrxx);
+    chg_ref.rho[0] = chg_ref._space_rho.data();
     ModuleBase::GlobalFunc::ZEROS(chg_ref.rho[0], rhopw->nrxx);
     std::vector<std::complex<double>> rho_tmp(rhopw->nrxx);
     chg_ref.nrxx = rhopw->nrxx;
@@ -348,9 +348,7 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
     }
 
     delete[] chg.rho;
-    delete[] chg._space_rho;
     delete[] chg_ref.rho;
-    delete[] chg_ref._space_rho;
     delete psi;
 
     if (GlobalV::MY_RANK == 0)
