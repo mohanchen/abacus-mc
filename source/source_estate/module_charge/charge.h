@@ -23,6 +23,12 @@ class Charge
     Charge();
     ~Charge();
 
+    // rho/rhog/kin_r views alias the vector-backed _space_* storage, so
+    // copying a Charge would duplicate dangling pointers into another
+    // object's vector buffer. Forbid copies until a deep copy is needed.
+    Charge(const Charge&) = delete;
+    Charge& operator=(const Charge&) = delete;
+
     //==========================================================
     // MEMBER VARIABLES :
     // init_chg : "atomic" or "file"

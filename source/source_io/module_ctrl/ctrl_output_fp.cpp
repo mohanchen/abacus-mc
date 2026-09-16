@@ -91,6 +91,15 @@ void ctrl_output_fp(UnitCell& ucell,
 
             if (XC_Functional::get_ked_flag())
             {
+                // kin_r_save is only allocated when Charge::allocate() saw
+                // kin_den == true; guard against the (now impossible) case
+                // where ked_flag was set after allocation.
+                if (chr.kin_r_save == nullptr || chr.kin_r_save[is] == nullptr)
+                {
+                    ModuleBase::WARNING_QUIT("ctrl_output_fp",
+                        "tau.cube requested (out_chg) but Charge::kin_r_save was never allocated; "
+                        "XC functional with kinetic energy density must be set before Charge::allocate().");
+                }
                 fn = PARAM.globalv.global_out_dir + "tau";
 
                 fn += spin_block + geom_block + ".cube";
