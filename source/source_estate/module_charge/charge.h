@@ -98,28 +98,11 @@ class Charge
 
     void allocate(const int &nspin_in, const bool kin_den);
 
-    void set_rho_core(const UnitCell& ucell,
-                      const ModuleBase::ComplexMatrix& structure_factor, 
-                      const bool* numeric);
-
     void renormalize_rho();
 
     double sum_rho() const;
 
     void save_rho_before_sum_band();
-
-    // for non-linear core correction
-    void non_linear_core_correction
-    (
-        const bool &numeric,
-        const double omega,
-        const double tpiba2,
-        const int mesh,
-        const double *r,
-        const double *rab,
-        const double *rhoc,
-        double *rhocg
-    ) const;
 
     double cal_rho2ne(const double *rho_in) const;
 

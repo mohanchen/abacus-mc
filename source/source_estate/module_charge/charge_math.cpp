@@ -1,5 +1,6 @@
 #include "charge_math.h"
 
+#include "source_base/complexmatrix.h"
 #include "source_base/global_function.h"
 #include "source_base/constants.h"
 #include "source_base/math_integral.h"
@@ -8,6 +9,8 @@
 #include "source_base/timer.h"
 #include "source_base/tool_threading.h"
 #include "source_base/tool_title.h"
+#include "source_basis/module_pw/pw_basis.h"
+#include "source_cell/unitcell.h"
 
 #include <cassert>
 #include <cmath>
@@ -150,6 +153,110 @@ void non_linear_core_correction(const bool numeric,
     ModuleBase::TRY_OMP_PARALLEL(kernel);
 
     return;
+}
+
+// computes the core charge on the real space 3D mesh.
+void set_rho_core(const UnitCell& ucell,
+                  const ModuleBase::ComplexMatrix& structure_factor,
+                  const bool* numeric,
+                  double* rho_core,
+                  std::complex<double>* rhog_core,
+                  const ModulePW::PW_Basis& rhopw)
+{
+    ModuleBase::TITLE("charge_math", "set_rho_core");
+    ModuleBase::timer::start("charge_math", "set_rho_core");
+
+    bool bl = false;
+    for (int it = 0; it < ucell.ntype; it++)
+    {
+        if (ucell.atoms[it].ncpp.nlcc)
+        {
+            bl = true;
+            break;
+        }
+    }
+
+    if (!bl)
+    {
+        ModuleBase::GlobalFunc::ZEROS(rho_core, rhopw.nrxx);
+        ModuleBase::timer::end("charge_math", "set_rho_core");
+        return;
+    }
+
+    std::vector<double> rhocg(rhopw.ngg, 0.0);
+
+    // three dimension.
+    std::vector<std::complex<double>> vg(rhopw.npw);
+
+    for (int it = 0; it < ucell.ntype; it++)
+    {
+        if (ucell.atoms[it].ncpp.nlcc)
+        {
+//----------------------------------------------------------
+// EXPLAIN : drhoc compute the radial fourier transform for
+// each shell of g vec
+//----------------------------------------------------------
+            non_linear_core_correction(numeric,
+                                       ucell.omega,
+                                       ucell.tpiba2,
+                                       ucell.atoms[it].ncpp.msh,
+                                       ucell.atoms[it].ncpp.r.data(),
+                                       ucell.atoms[it].ncpp.rab.data(),
+                                       ucell.atoms[it].ncpp.rho_atc.data(),
+                                       rhocg.data(),
+                                       rhopw.gg_uniq,
+                                       rhopw.ngg);
+//----------------------------------------------------------
+// EXPLAIN : multiply by the structure factor and sum
+//----------------------------------------------------------
+            for (int ig = 0; ig < rhopw.npw; ig++)
+            {
+                vg[ig] += structure_factor(it, ig) * rhocg[rhopw.ig2igg[ig]];
+            }
+        }
+    }
+
+    // for tmp use.
+    for (int ig = 0; ig < rhopw.npw; ig++)
+    {
+        rhog_core[ig] = vg[ig];
+    }
+
+    rhopw.recip2real(vg.data(), rho_core);
+
+    // test on the charge and computation of the core energy
+    double rhoima = 0.0;
+    double rhoneg = 0.0;
+    for (int ir = 0; ir < rhopw.nrxx; ir++)
+    {
+        rhoneg += std::min(0.0, rhopw.fft_bundle.get_auxr_data<double>()[ir].real());
+        rhoima += std::abs(rhopw.fft_bundle.get_auxr_data<double>()[ir].imag());
+        // NOTE: Core charge is computed in reciprocal space and brought to real
+        // space by FFT. For non smooth core charges (or insufficient cut-off)
+        // this may result in negative values in some grid points.
+        // Up to October 1999 the core charge was forced to be positive definite.
+        // This induces an error in the force, and probably stress, calculation if
+        // the number of grid points where the core charge would be otherwise neg
+        // is large. The error disappears for sufficiently high cut-off, but may be
+        // rather large and it is better to leave the core charge as it is.
+        // If you insist to have it positive definite (with the possible problems
+        // mentioned above) uncomment the following lines.  SdG, Oct 15 1999
+    }
+
+#ifdef __MPI
+    // mohan fix bug 2011-04-03
+    Parallel_Reduce::reduce_pool(rhoneg);
+    Parallel_Reduce::reduce_pool(rhoima);
+#endif
+
+    // mohan changed 2010-2-2, make this same as in atomic_rho.
+    // still lack something......
+    rhoneg /= rhopw.nxyz * ucell.omega;
+    rhoima /= rhopw.nxyz * ucell.omega;
+
+    // calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required
+    // The term was present in previous versions of the code but it shouldn't
+    ModuleBase::timer::end("charge_math", "set_rho_core");
 }
 
 } // namespace charge_math

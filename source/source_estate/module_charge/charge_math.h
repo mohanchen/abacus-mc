@@ -7,8 +7,30 @@
 // All grid / geometry inputs are passed explicitly instead of being read
 // from Charge members or globals.
 
+#include <complex>
+
+class UnitCell;
+namespace ModuleBase
+{
+class ComplexMatrix;
+}
+namespace ModulePW
+{
+class PW_Basis;
+}
+
 namespace charge_math
 {
+
+// Compute the core charge (non-linear core correction) on the real-space
+// 3D mesh. rho_core / rhog_core are the output buffers previously owned by
+// Charge; rhopw supplies the reciprocal-grid geometry and FFT backend.
+void set_rho_core(const UnitCell& ucell,
+                  const ModuleBase::ComplexMatrix& structure_factor,
+                  const bool* numeric,
+                  double* rho_core,
+                  std::complex<double>* rhog_core,
+                  const ModulePW::PW_Basis& rhopw);
 
 // Sum the (spin-resolved) charge density over the real-space grid and
 // convert it to a total charge using the cell volume and grid size.
