@@ -170,9 +170,9 @@ TEST_F(ChargeExtraTest, InitCECase4)
     EXPECT_DOUBLE_EQ(CE.beta, 0.0);
     EXPECT_NE(CE.delta_rho1.size(), 0);
     EXPECT_NE(CE.delta_rho2.size(), 0);
-    EXPECT_NE(CE.dis_old1, nullptr);
-    EXPECT_NE(CE.dis_old2, nullptr);
-    EXPECT_NE(CE.dis_now, nullptr);
+    EXPECT_EQ(CE.dis_old1.size(), static_cast<size_t>(ucell->nat));
+    EXPECT_EQ(CE.dis_old2.size(), static_cast<size_t>(ucell->nat));
+    EXPECT_EQ(CE.dis_now.size(), static_cast<size_t>(ucell->nat));
 }
 
 TEST_F(ChargeExtraTest, ExtrapolateChargeCase1)

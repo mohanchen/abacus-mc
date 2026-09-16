@@ -12,16 +12,6 @@ Charge_Extra::Charge_Extra()
 {
 }
 
-Charge_Extra::~Charge_Extra()
-{
-    if(pot_order == 3)
-    {
-        delete[] dis_old1;
-        delete[] dis_old2;
-        delete[] dis_now;
-    }
-}
-
 void Charge_Extra::Init_CE(const int& nspin, const int& natom, const int& nrxx, const std::string chg_extrap)
 {
     if (chg_extrap == "none")
@@ -67,9 +57,9 @@ void Charge_Extra::Init_CE(const int& nspin, const int& natom, const int& nrxx, 
 
     if(pot_order == 3)
     {
-        dis_old1 = new ModuleBase::Vector3<double>[natom];
-        dis_old2 = new ModuleBase::Vector3<double>[natom];
-        dis_now  = new ModuleBase::Vector3<double>[natom];
+        dis_old1.assign(natom, ModuleBase::Vector3<double>());
+        dis_old2.assign(natom, ModuleBase::Vector3<double>());
+        dis_now.assign(natom, ModuleBase::Vector3<double>());
     }
 
     alpha = 1.0;
