@@ -52,14 +52,14 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
 // mohan add 2025-12-02
 bool Charge::kin_density() const
 {
-	if (XC_Functional::get_ked_flag() || PARAM.inp.out_elf[0] > 0)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+    if (XC_Functional::get_ked_flag() || PARAM.inp.out_elf[0] > 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void Charge::destroy()
@@ -90,10 +90,10 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
 {
     ModuleBase::TITLE("Charge", "allocate");
 
-	if (this->rhopw == nullptr)
-	{
-		ModuleBase::WARNING_QUIT("Charge::allocate","rhopw is nullptr.");
-	}
+    if (this->rhopw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge::allocate","rhopw is nullptr.");
+    }
 
     this->nrxx = this->rhopw->nrxx;
     this->nxyz = this->rhopw->nxyz;
@@ -248,10 +248,10 @@ void Charge::atomic_rho(const int spin_number_need,
     ModuleBase::timer::start("Charge", "atomic_rho");
 
     {
-		ModuleBase::ComplexMatrix rho_g3d = [&]() -> ModuleBase::ComplexMatrix 
-		{
-			// use interpolation to get three dimension charge density.
-			ModuleBase::ComplexMatrix rho_g3d(spin_number_need, this->rhopw->npw);
+        ModuleBase::ComplexMatrix rho_g3d = [&]() -> ModuleBase::ComplexMatrix 
+        {
+            // use interpolation to get three dimension charge density.
+            ModuleBase::ComplexMatrix rho_g3d(spin_number_need, this->rhopw->npw);
 
             for (int it = 0; it < ucell.ntype; it++)
             {
@@ -410,10 +410,10 @@ void Charge::atomic_rho(const int spin_number_need,
     #ifdef _OPENMP
     #pragma omp for
     #endif
-							for (int igg = 0; igg < ngg; igg++)
-							{
-								rho_lgl[igg] /= omega;
-							}
+                            for (int igg = 0; igg < ngg; igg++)
+                            {
+                                rho_lgl[igg] /= omega;
+                            }
     #ifdef _OPENMP
                         }
     #endif
@@ -583,12 +583,12 @@ void Charge::atomic_rho(const int spin_number_need,
         {
             this->rhopw->recip2real(&rho_g3d(is, 0), rho_in[is]);
 
-			for (int ir = 0; ir < this->rhopw->nrxx; ++ir) 
-			{
-				ne[is] += rho_in[is][ir];
-			}
+            for (int ir = 0; ir < this->rhopw->nrxx; ++ir) 
+            {
+                ne[is] += rho_in[is][ir];
+            }
 
-			ne[is] *= omega / (double)this->rhopw->nxyz;
+            ne[is] *= omega / (double)this->rhopw->nxyz;
     #ifdef __MPI
             Parallel_Reduce::reduce_pool(ne[is]);
     #endif
@@ -625,10 +625,10 @@ void Charge::atomic_rho(const int spin_number_need,
 
         double ne_tot = 0.0;
         int spin0 = 1;
-		if (spin_number_need == 2) 
-		{
-			spin0 = spin_number_need;
-		}
+        if (spin_number_need == 2) 
+        {
+            spin0 = spin_number_need;
+        }
         for (int is = 0; is < spin0; ++is)
         {
             GlobalV::ofs_warning << "\n SETUP ATOMIC RHO FOR SPIN " << is + 1 << std::endl;
@@ -639,12 +639,12 @@ void Charge::atomic_rho(const int spin_number_need,
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_warning, "should be", PARAM.inp.nelec);
 
         for (int is = 0; is < spin_number_need; ++is) 
-		{
-			for (int ir = 0; ir < this->rhopw->nrxx; ++ir) 
-			{
-				rho_in[is][ir] = rho_in[is][ir] / ne_tot * PARAM.inp.nelec;
-			}
-		}
+        {
+            for (int ir = 0; ir < this->rhopw->nrxx; ++ir) 
+            {
+                rho_in[is][ir] = rho_in[is][ir] / ne_tot * PARAM.inp.nelec;
+            }
+        }
     }
 
     ModuleBase::timer::end("Charge", "atomic_rho");

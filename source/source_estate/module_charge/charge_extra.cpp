@@ -200,7 +200,10 @@ void Charge_Extra::extrapolate_charge(
 
 void Charge_Extra::find_alpha_and_beta(const int& natom, std::ofstream& ofs_running, std::ofstream& ofs_warning)
 {
-    if(istep < 3) return;
+    if(istep < 3)
+    {
+        return;
+    }
 
     double a11 = 0.0;
     double a12 = 0.0;

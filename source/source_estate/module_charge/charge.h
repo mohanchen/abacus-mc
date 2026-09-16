@@ -104,7 +104,7 @@ class Charge
 
     void save_rho_before_sum_band();
 
-	// for non-linear core correction
+    // for non-linear core correction
     void non_linear_core_correction
     (
         const bool &numeric,
@@ -117,13 +117,13 @@ class Charge
         double *rhocg
     ) const;
 
-	double cal_rho2ne(const double *rho_in) const;
+    double cal_rho2ne(const double *rho_in) const;
 
     void check_rho(); // to check whether the charge density is normal
 
     void init_final_scf(); //LiuXh add 20180619
 
-	public:
+    public:
     /**
      * @brief Sum rho at different pools (k-point parallelism).
      *        Only used when GlobalV::KPAR > 1
@@ -136,14 +136,14 @@ class Charge
      */
     void kin_r_mpi();
 
-	/**
-	 * @brief 	Reduce among different pools 
+    /**
+     * @brief     Reduce among different pools 
      *          If NPROC_IN_POOLs are all the same, use GlobalV::KP_WORLD
      *          else, gather rho in a POOL, and then reduce among different POOLs
-	 * 
-	 * @param array_rho f(rho): an array [nrxx]
-	 */
-	void reduce_diff_pools(double* array_rho) const;
+     * 
+     * @param array_rho f(rho): an array [nrxx]
+     */
+    void reduce_diff_pools(double* array_rho) const;
 
     void set_omega(double* omega_in){this->omega_ = omega_in;};
 

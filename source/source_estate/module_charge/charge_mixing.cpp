@@ -16,16 +16,16 @@ Charge_Mixing::Charge_Mixing()
 Charge_Mixing::~Charge_Mixing()
 {
     if(this->mixing != nullptr)
-	{
-		delete this->mixing;
-		this->mixing = nullptr;
-	}
+    {
+        delete this->mixing;
+        this->mixing = nullptr;
+    }
 
-	if(this->mixing_highf != nullptr)
-	{
-		delete this->mixing_highf;
+    if(this->mixing_highf != nullptr)
+    {
+        delete this->mixing_highf;
         this->mixing_highf = nullptr;
-	}
+    }
 }
 
 void Charge_Mixing::set_mixing(const std::string& mixing_mode_in,

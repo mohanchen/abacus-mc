@@ -213,14 +213,14 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         // use new |m| and angle to update {mx, my, mz}
         for (int ig = 0; ig < npw; ig++)
         {
-			chr->rhog[0][ig] = rhog_magabs[ig]; // rhog
-			double norm = std::sqrt(chr->rho[1][ig] * chr->rho[1][ig] 
-					+ chr->rho[2][ig] * chr->rho[2][ig] 
-					+ chr->rho[3][ig] * chr->rho[3][ig]);
-			if (std::abs(norm) < 1e-10) 
-			{ 
-				continue;
-			}
+            chr->rhog[0][ig] = rhog_magabs[ig]; // rhog
+            double norm = std::sqrt(chr->rho[1][ig] * chr->rho[1][ig] 
+                    + chr->rho[2][ig] * chr->rho[2][ig] 
+                    + chr->rho[3][ig] * chr->rho[3][ig]);
+            if (std::abs(norm) < 1e-10) 
+            { 
+                continue;
+            }
             double rescale_tmp = rho_magabs[npw + ig] / norm; 
             chr->rho[1][ig] *= rescale_tmp;
             chr->rho[2][ig] *= rescale_tmp;
@@ -443,14 +443,14 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
             rho_magabs[ir] = chr->rho[0][ir]; // rho
             rho_magabs_save[ir] = chr->rho_save[0][ir]; // rho_save
             // |m| for rho
-			rho_magabs[nrxx + ir] = std::sqrt(chr->rho[1][ir] * chr->rho[1][ir] 
-					+ chr->rho[2][ir] * chr->rho[2][ir] 
-					+ chr->rho[3][ir] * chr->rho[3][ir]);
-			// |m| for rho_save
-			rho_magabs_save[nrxx + ir] = std::sqrt(chr->rho_save[1][ir] * chr->rho_save[1][ir] 
-					+ chr->rho_save[2][ir] * chr->rho_save[2][ir] 
-					+ chr->rho_save[3][ir] * chr->rho_save[3][ir]);
-		}
+            rho_magabs[nrxx + ir] = std::sqrt(chr->rho[1][ir] * chr->rho[1][ir] 
+                    + chr->rho[2][ir] * chr->rho[2][ir] 
+                    + chr->rho[3][ir] * chr->rho[3][ir]);
+            // |m| for rho_save
+            rho_magabs_save[nrxx + ir] = std::sqrt(chr->rho_save[1][ir] * chr->rho_save[1][ir] 
+                    + chr->rho_save[2][ir] * chr->rho_save[2][ir] 
+                    + chr->rho_save[3][ir] * chr->rho_save[3][ir]);
+        }
         rhor_in = rho_magabs_save;
         rhor_out = rho_magabs;
 
@@ -483,14 +483,14 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         for (int ir = 0; ir < nrxx; ir++)
         {
             chr->rho[0][ir] = rho_magabs[ir]; // rho
-			double norm = std::sqrt(chr->rho[1][ir] * chr->rho[1][ir] 
-					+ chr->rho[2][ir] * chr->rho[2][ir] 
-					+ chr->rho[3][ir] * chr->rho[3][ir]);
+            double norm = std::sqrt(chr->rho[1][ir] * chr->rho[1][ir] 
+                    + chr->rho[2][ir] * chr->rho[2][ir] 
+                    + chr->rho[3][ir] * chr->rho[3][ir]);
 
-			if (norm < 1e-10) 
-			{ 
-				continue;
-			}
+            if (norm < 1e-10) 
+            { 
+                continue;
+            }
             double rescale_tmp = rho_magabs[nrxx + ir] / norm; 
             chr->rho[1][ir] *= rescale_tmp;
             chr->rho[2][ir] *= rescale_tmp;
@@ -603,11 +603,11 @@ void Charge_Mixing::mix_rho(Charge* chr)
         }
     }
 
-	if (new_e_iteration) 
-	{
-		new_e_iteration = false;
-	}
+    if (new_e_iteration) 
+    {
+        new_e_iteration = false;
+    }
 
-	ModuleBase::timer::end("Charge_Mixing", "mix_rho");
+    ModuleBase::timer::end("Charge_Mixing", "mix_rho");
     return;
 }

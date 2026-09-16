@@ -67,16 +67,16 @@ void Charge::init_rho(const UnitCell& ucell,
         {
             for (int is = 0; is < nspin; ++is)
             {
-				std::stringstream ssc;
+                std::stringstream ssc;
 
-				if(nspin==1)
-				{
+                if(nspin==1)
+                {
                     ssc << PARAM.globalv.global_readin_dir << "chg.cube";
-				}
-				else
-				{
-					ssc << PARAM.globalv.global_readin_dir << "chgs" << is + 1 << ".cube";
-				}
+                }
+                else
+                {
+                    ssc << PARAM.globalv.global_readin_dir << "chgs" << is + 1 << ".cube";
+                }
 
 
                 if (ModuleIO::read_vdata_palgrid(pgrid,
@@ -264,12 +264,12 @@ void Charge::init_rho(const UnitCell& ucell,
         const ModulePW::PW_Basis_K* pw_wfc = reinterpret_cast<ModulePW::PW_Basis_K*>(const_cast<void*>(wfcpw));
         const K_Vectors* kv = reinterpret_cast<const K_Vectors*>(klist);
 
-		ModuleIO::read_wf2rho_pw(pw_wfc, symm, *this,
+        ModuleIO::read_wf2rho_pw(pw_wfc, symm, *this,
                 PARAM.globalv.global_readin_dir,
-				GlobalV::KPAR, GlobalV::MY_POOL, GlobalV::MY_RANK,
+                GlobalV::KPAR, GlobalV::MY_POOL, GlobalV::MY_RANK,
                 GlobalV::NPROC_IN_POOL, GlobalV::RANK_IN_POOL,
-				PARAM.inp.nbands, nspin, PARAM.globalv.npol,
-				kv->get_nkstot(),kv->ik2iktot,kv->isk,GlobalV::ofs_running);
+                PARAM.inp.nbands, nspin, PARAM.globalv.npol,
+                kv->get_nkstot(),kv->ik2iktot,kv->isk,GlobalV::ofs_running);
     }
 }
 
@@ -296,14 +296,14 @@ void Charge::set_rho_core(const UnitCell& ucell,
     if (!bl)
     {
         ModuleBase::GlobalFunc::ZEROS( this->rho_core, this->rhopw->nrxx);
-    	ModuleBase::timer::end("Charge","set_rho_core");
+        ModuleBase::timer::end("Charge","set_rho_core");
         return;
     }
 
     double *rhocg = new double[this->rhopw->ngg];
     ModuleBase::GlobalFunc::ZEROS(rhocg, this->rhopw->ngg );
 
-	// three dimension.
+    // three dimension.
     std::complex<double> *vg = new std::complex<double>[this->rhopw->npw];
 
     for (int it = 0; it < ucell.ntype;it++)
@@ -333,11 +333,11 @@ void Charge::set_rho_core(const UnitCell& ucell,
         }
     }
 
-	// for tmp use.
-	for(int ig=0; ig< this->rhopw->npw; ig++)
-	{
-		this->rhog_core[ig] = vg[ig];
-	}
+    // for tmp use.
+    for(int ig=0; ig< this->rhopw->npw; ig++)
+    {
+        this->rhog_core[ig] = vg[ig];
+    }
 
     this->rhopw->recip2real(vg, this->rho_core);
 
@@ -360,12 +360,12 @@ void Charge::set_rho_core(const UnitCell& ucell,
         // mentioned above) uncomment the following lines.  SdG, Oct 15 1999
     }
 
-	// mohan fix bug 2011-04-03
+    // mohan fix bug 2011-04-03
     Parallel_Reduce::reduce_pool(rhoneg);
     Parallel_Reduce::reduce_pool(rhoima);
 
-	// mohan changed 2010-2-2, make this same as in atomic_rho.
-	// still lack something......
+    // mohan changed 2010-2-2, make this same as in atomic_rho.
+    // still lack something......
     rhoneg /= this->rhopw->nxyz * ucell.omega;
     rhoima /= this->rhopw->nxyz * ucell.omega;
 
@@ -391,11 +391,11 @@ void Charge::non_linear_core_correction
 {
     ModuleBase::TITLE("charge","drhoc");
 
-	// use labmda instead of repeating codes
-	const auto kernel = [&](int num_threads, int thread_id)
-	{
+    // use labmda instead of repeating codes
+    const auto kernel = [&](int num_threads, int thread_id)
+    {
 
-	double gx = 0.0;
+    double gx = 0.0;
     double rhocg1 = 0.0;
     double *aux = nullptr;
 
@@ -408,25 +408,25 @@ void Charge::non_linear_core_correction
         int igl0 = 0;
         if (this->rhopw->gg_uniq [0] < 1.0e-8)
         {
-			// single thread term
-			if (thread_id == 0)
-			{
-				for (int ir = 0;ir < mesh; ir++)
-				{
-					aux [ir] = r [ir] * r [ir] * rhoc [ir];
-				}
-				ModuleBase::Integral::Simpson_Integral(mesh, aux, rab, rhocg1);
-				//rhocg [1] = fpi * rhocg1 / omega;
-				rhocg [0] = ModuleBase::FOUR_PI * rhocg1 / omega;//mohan modify 2008-01-19
-			}
+            // single thread term
+            if (thread_id == 0)
+            {
+                for (int ir = 0;ir < mesh; ir++)
+                {
+                    aux [ir] = r [ir] * r [ir] * rhoc [ir];
+                }
+                ModuleBase::Integral::Simpson_Integral(mesh, aux, rab, rhocg1);
+                //rhocg [1] = fpi * rhocg1 / omega;
+                rhocg [0] = ModuleBase::FOUR_PI * rhocg1 / omega;//mohan modify 2008-01-19
+            }
             igl0 = 1;
         }
 
-		int igl_beg, igl_end;
-		// exclude igl0
-		ModuleBase::TASK_DIST_1D(num_threads, thread_id, this->rhopw->ngg - igl0, igl_beg, igl_end);
-		igl_beg += igl0;
-		igl_end += igl_beg;
+        int igl_beg, igl_end;
+        // exclude igl0
+        ModuleBase::TASK_DIST_1D(num_threads, thread_id, this->rhopw->ngg - igl0, igl_beg, igl_end);
+        igl_beg += igl0;
+        igl_end += igl_beg;
 
         // G <> 0 term
         for (int igl = igl_beg; igl < igl_end;igl++)
@@ -448,13 +448,13 @@ void Charge::non_linear_core_correction
         // check old version before 2008-12-9
     }
 
-	}; // end kernel
+    }; // end kernel
 
-	// do not use omp parallel when this function is already in parallel block
-	//
-	// it is called in parallel block in Forces::cal_force_cc,
-	// but not in other funtcion such as Stress_Func::stress_cc.
-	ModuleBase::TRY_OMP_PARALLEL(kernel);
+    // do not use omp parallel when this function is already in parallel block
+    //
+    // it is called in parallel block in Forces::cal_force_cc,
+    // but not in other funtcion such as Stress_Func::stress_cc.
+    ModuleBase::TRY_OMP_PARALLEL(kernel);
 
     return;
 }

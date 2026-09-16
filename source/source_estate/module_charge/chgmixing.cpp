@@ -6,8 +6,8 @@
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 
 void module_charge::chgmixing_ks(const int iter, // scf iteration number
-		UnitCell& ucell,
-		elecstate::ElecState* pelec, 
+        UnitCell& ucell,
+        elecstate::ElecState* pelec, 
         Charge &chr, // charge density
         Charge_Mixing* p_chgmix, // charge mixing class
         const int nrxx, // charge density
@@ -18,7 +18,7 @@ void module_charge::chgmixing_ks(const int iter, // scf iteration number
         const double &scf_thr,
         const double &scf_ene_thr,
         const bool converged_u, // mohan add 2025-11-06
-		const Input_para& inp) // input parameters
+        const Input_para& inp) // input parameters
 {
 
     if (PARAM.globalv.ks_run)
@@ -93,7 +93,7 @@ void module_charge::chgmixing_ks(const int iter, // scf iteration number
             }
             //----------charge mixing done-----------
         }
-	}
+    }
 
 #ifdef __MPI
     MPI_Bcast(&drho, 1, MPI_DOUBLE, 0, BP_WORLD);
@@ -122,7 +122,7 @@ void module_charge::chgmixing_ks(const int iter, // scf iteration number
 void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
         Charge_Mixing* p_chgmix, // charge mixing class
         Plus_U_Base& dftu,
-		const Input_para& inp) // input parameters
+        const Input_para& inp) // input parameters
 {
     ModuleBase::TITLE("module_charge", "chgmixing_ks_pw");
 
@@ -158,22 +158,22 @@ void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
                         = spinconstrain::SpinConstrain<std::complex<double>>::getScInstance();
                     if (!sc.mag_converged()) // skip uramping if mag not converged
                     {
-						do_uramping = false;
-					}
-				}
-				if (do_uramping)
-				{
-					dftu.uramping_update(); // update U by uramping if uramping > 0.01
-					std::cout << " U-Ramping! Current U = ";
-					for (int i = 0; i < dftu.get_num_u_types(); i++)
-					{
-						std::cout << dftu.get_u_current(i) * ModuleBase::Ry_to_eV << " ";
-					}
-					std::cout << " eV " << std::endl;
-				}
-			}
-		}
-	}
+                        do_uramping = false;
+                    }
+                }
+                if (do_uramping)
+                {
+                    dftu.uramping_update(); // update U by uramping if uramping > 0.01
+                    std::cout << " U-Ramping! Current U = ";
+                    for (int i = 0; i < dftu.get_num_u_types(); i++)
+                    {
+                        std::cout << dftu.get_u_current(i) * ModuleBase::Ry_to_eV << " ";
+                    }
+                    std::cout << " eV " << std::endl;
+                }
+            }
+        }
+    }
 
     return;
 }
@@ -182,7 +182,7 @@ void module_charge::chgmixing_ks_lcao(const int iter, // scf iteration number
         Charge_Mixing* p_chgmix, // charge mixing class
         Plus_U_Base& dftu,
         const int nnr, // dimension of density matrix
-		const Input_para& inp) // input parameters
+        const Input_para& inp) // input parameters
 {
     ModuleBase::TITLE("module_charge", "chgmixing_ks_lcao");
 

@@ -12,7 +12,7 @@ namespace module_charge
 {
 
 void chgmixing_ks(const int iter, // scf iteration number
-		UnitCell& ucell,
+        UnitCell& ucell,
         elecstate::ElecState* pelec, 
         Charge &chr, // charge density
         Charge_Mixing* p_chgmix, // charge mixing class
@@ -24,18 +24,18 @@ void chgmixing_ks(const int iter, // scf iteration number
         const double &scf_thr,
         const double &scf_ene_thr,
         const bool converged_u, // mohan add 2025-11-06
-		const Input_para& inp); // input parameters
+        const Input_para& inp); // input parameters
 
 void chgmixing_ks_pw(const int iter,
         Charge_Mixing* p_chgmix,
         Plus_U_Base& dftu,
-		const Input_para& inp); // input parameters
+        const Input_para& inp); // input parameters
 
 void chgmixing_ks_lcao(const int iter, // scf iteration number
         Charge_Mixing* p_chgmix, // charge mixing class
         Plus_U_Base& dftu,
         const int nnr, // dimension of density matrix
-		const Input_para& inp); // input parameters
+        const Input_para& inp); // input parameters
 
 }
 

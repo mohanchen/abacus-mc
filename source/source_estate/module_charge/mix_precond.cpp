@@ -7,10 +7,10 @@ void Charge_Mixing::Kerker_screen_recip(std::complex<double>* drhog)
 {
     ModuleBase::TITLE("Charge_Mixing", "Kerker_screen_recip");
 
-	if (this->mixing_gg0 <= 0.0 || this->mixing_beta <= 0.1) 
-	{
-		return;
-	}
+    if (this->mixing_gg0 <= 0.0 || this->mixing_beta <= 0.1) 
+    {
+        return;
+    }
 
     ModuleBase::timer::start("Charge_Mixing", "Kerker_screen_recip");
 
@@ -21,10 +21,10 @@ void Charge_Mixing::Kerker_screen_recip(std::complex<double>* drhog)
     double amin = 0.0;
 
     /// consider a resize for mixing_angle
-	int resize_tmp = 1;
+    int resize_tmp = 1;
     if (nspin == 4 && this->mixing_angle > 0) 
     { 
-    	resize_tmp = 2;
+        resize_tmp = 2;
     }
 
     /// implement Kerker for density and magnetization separately
@@ -78,22 +78,22 @@ void Charge_Mixing::Kerker_screen_real(double* drhor)
 {
     ModuleBase::TITLE("Charge_Mixing", "Kerker_screen_real");
 
-	if (this->mixing_gg0 <= 0.0001 || this->mixing_beta <= 0.1) 
-	{
-		return;
-	}
+    if (this->mixing_gg0 <= 0.0001 || this->mixing_beta <= 0.1) 
+    {
+        return;
+    }
 
     ModuleBase::timer::start("Charge_Mixing", "Kerker_screen_real");
 
     const int nspin = PARAM.inp.nspin;
     assert(nspin==1 || nspin==2 || nspin==4);
 
-	/// consider a resize for mixing_angle
+    /// consider a resize for mixing_angle
     int resize_tmp = 1;
-	if (nspin == 4 && this->mixing_angle > 0) 
-	{ 
-		resize_tmp = 2;
-	}
+    if (nspin == 4 && this->mixing_angle > 0) 
+    { 
+        resize_tmp = 2;
+    }
     
     std::vector<std::complex<double>> drhog(this->rhopw->npw * nspin / resize_tmp);
     std::vector<double> drhor_filter(this->rhopw->nrxx * nspin / resize_tmp);

@@ -136,8 +136,8 @@ double Charge_Mixing::inner_product_recip_rho(std::complex<double>* rho1, std::c
 #endif
         for (int ig = 0; ig < this->rhopw->npw; ++ig)
         {
-			if (ig == ig0) {continue;}
-			sum += (conj(rhog1[0][ig]) * rhog2[0][ig]).real() / this->rhopw->gg[ig];
+            if (ig == ig0) {continue;}
+            sum += (conj(rhog1[0][ig]) * rhog2[0][ig]).real() / this->rhopw->gg[ig];
         }
         sum *= fac;
         return sum;
@@ -216,10 +216,10 @@ double Charge_Mixing::inner_product_recip_rho(std::complex<double>* rho1, std::c
 #endif
             for (int ig = 0; ig < this->rhopw->npw; ig++)
             {
-				if (ig == ig0) 
-				{
-					continue;
-				}
+                if (ig == ig0) 
+                {
+                    continue;
+                }
                 sum += (conj(rhog1[0][ig]) * rhog2[0][ig]).real() / this->rhopw->gg[ig];
             }
             sum *= fac;
@@ -476,10 +476,10 @@ double Charge_Mixing::inner_product_real(double* rho1, double* rho2)
     double rnorm = 0.0;
     // consider a resize for mixing_angle
     int resize_tmp = 1;
-	if (PARAM.inp.nspin == 4 && this->mixing_angle > 0) 
-	{ 
-		resize_tmp = 2;
-	}
+    if (PARAM.inp.nspin == 4 && this->mixing_angle > 0) 
+    { 
+        resize_tmp = 2;
+    }
 
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : rnorm)
