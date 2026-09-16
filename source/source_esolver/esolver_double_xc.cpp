@@ -141,6 +141,8 @@ void ESolver_DoubleXC<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     }
     if (this->p_hamilt_base == nullptr)
     {
+        const bool load_exx_flag = !GlobalC::restart.info_load.restart_exx
+                                   && GlobalC::restart.info_load.load_H;
         this->p_hamilt_base = new hamilt::HamiltLCAO<TK, TR>(ucell,
                                                              this->gd,
                                                              &this->pv,
@@ -155,8 +157,7 @@ void ESolver_DoubleXC<TK, TR>::before_scf(UnitCell& ucell, const int istep)
                                                              this->exx_nao,
                                                              this->exx_info_,
                                                              *this->inp_,
-                                                             !GlobalC::restart.info_load.restart_exx
-                                                                 && GlobalC::restart.info_load.load_H);
+                                                             load_exx_flag);
     }
 
     XC_Functional::set_xc_type(this->inp_->deepks_out_base);
@@ -397,6 +398,9 @@ void ESolver_DoubleXC<TK, TR>::cal_force(BaseCell& basecell, ModuleBase::matrix&
 
     this->deepks.dpks_out_type = "base"; // for deepks method
 
+    FSCalcConfig fs_cfg{this->inp_->nspin, this->inp_->nbands, this->inp_->t_in_h,
+                        this->inp_->sc_mag_switch, this->inp_->device};
+
     fsl.getForceStress(ucell,
                        this->get_vdw_result(),
                        this->inp_->cal_force,
@@ -422,8 +426,7 @@ void ESolver_DoubleXC<TK, TR>::cal_force(BaseCell& basecell, ModuleBase::matrix&
                        this->exx_nao,
                        &ucell.symm,
                        this->exx_info_,
-                       FSCalcConfig{this->inp_->nspin, this->inp_->nbands, this->inp_->t_in_h,
-                                    this->inp_->sc_mag_switch, this->inp_->device});
+                       fs_cfg);
 
     // restore to original xc
     XC_Functional::set_xc_type(ucell.atoms[0].ncpp.xc_func);

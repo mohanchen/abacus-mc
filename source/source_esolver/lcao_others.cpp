@@ -112,7 +112,6 @@ void ESolver_KS_LCAO<TK, TR>::others(BaseCell& basecell, const int istep)
     // and allocate the space for H(R) and S(R).
     // If k point is used here, allocate HlocR after atom_arrange.
     this->RA.for_2d(ucell, this->gd, this->pv, gamma_only_local, PARAM.globalv.npol, orb_.cutoffs());
-    // xiaohui add "OUT_LEVEL", 2015-09-16
     if (this->inp_->out_level != "m" && !gamma_only_local)
     {
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "ParaV.nnr", this->pv.nnr);
@@ -136,6 +135,8 @@ void ESolver_KS_LCAO<TK, TR>::others(BaseCell& basecell, const int istep)
     }
     if (this->p_hamilt == nullptr)
     {
+        const bool load_exx_flag = !GlobalC::restart.info_load.restart_exx
+                                   && GlobalC::restart.info_load.load_H;
         this->p_hamilt = new hamilt::HamiltLCAO<TK, TR>(ucell,
                                                         this->gd,
                                                         &this->pv,
@@ -150,8 +151,7 @@ void ESolver_KS_LCAO<TK, TR>::others(BaseCell& basecell, const int istep)
                                                         this->exx_nao,
                                                         this->exx_info_,
                                                         *this->inp_,
-                                                        !GlobalC::restart.info_load.restart_exx
-                                                            && GlobalC::restart.info_load.load_H);
+                                                        load_exx_flag);
     }
 
     // for each ionic step, the overlap <phi|alpha> must be rebuilt

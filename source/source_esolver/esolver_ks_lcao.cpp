@@ -152,7 +152,6 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     // and allocate the space for H(R) and S(R).
     // If k point is used here, allocate HlocR after atom_arrange.
     this->RA.for_2d(ucell, this->gd, this->pv, PARAM.globalv.gamma_only_local, PARAM.globalv.npol, orb_.cutoffs());
-    // xiaohui add "OUT_LEVEL", 2015-09-16
     if (this->inp_->out_level != "m" && !PARAM.globalv.gamma_only_local)
     {
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "ParaV.nnr", this->pv.nnr);
@@ -167,10 +166,12 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     }
     if (this->p_hamilt == nullptr)
     {
+        const bool load_exx_flag = !GlobalC::restart.info_load.restart_exx
+                                   && GlobalC::restart.info_load.load_H;
         this->p_hamilt = new hamilt::HamiltLCAO<TK, TR>(
             ucell, this->gd, &this->pv, this->pelec->pot, this->kv,
             two_center_bundle_, orb_, this->dmat.dm, this->dftu_.get(), this->deepks, istep, exx_nao, this->exx_info_, *this->inp_,
-            !GlobalC::restart.info_load.restart_exx && GlobalC::restart.info_load.load_H);
+            load_exx_flag);
     }
 
     // 9) for each ionic step, the overlap <phi|alpha> must be rebuilt
@@ -265,6 +266,9 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(BaseCell& basecell, ModuleBase::matrix& 
 
     deepks.dpks_out_type = "tot";  // for deepks method
 
+    FSCalcConfig fs_cfg{this->inp_->nspin, this->inp_->nbands, this->inp_->t_in_h,
+                        this->inp_->sc_mag_switch, this->inp_->device};
+
     fsl.getForceStress(ucell, this->get_vdw_result(), this->inp_->cal_force, this->inp_->cal_stress,
                        this->inp_->test_force, this->inp_->test_stress,
                        this->gd, this->pv, this->pelec, this->dmat, this->psi,
@@ -272,8 +276,7 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(BaseCell& basecell, ModuleBase::matrix& 
                        this->locpp, this->sf, this->kv,
                        this->pw_rho, this->solvent, *this->dftu_, this->deepks,
                        this->exx_nao, &ucell.symm, this->exx_info_,
-                       FSCalcConfig{this->inp_->nspin, this->inp_->nbands, this->inp_->t_in_h,
-                                    this->inp_->sc_mag_switch, this->inp_->device},
+                       fs_cfg,
                        this->inp_->td_stype,
                        static_cast<hamilt::Hamilt<TK>*>(this->p_hamilt));
 
