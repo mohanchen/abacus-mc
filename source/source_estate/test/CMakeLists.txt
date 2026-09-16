@@ -101,7 +101,7 @@ AddTest(
 AddTest(
   TARGET MODULE_ESTATE_charge_test
   LIBS parameter  planewave_serial base device cell_info
-  SOURCES charge_test.cpp ../module_charge/charge.cpp
+  SOURCES charge_test.cpp ../module_charge/charge.cpp ../module_charge/charge_math.cpp
 
 )
 

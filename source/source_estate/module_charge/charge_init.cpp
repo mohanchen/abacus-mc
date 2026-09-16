@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "charge.h"
+#include "charge_math.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
 #include "source_io/module_parameter/parameter.h"
@@ -422,72 +423,14 @@ void Charge::non_linear_core_correction
     const double *rhoc,
     double *rhocg) const
 {
-    ModuleBase::TITLE("charge","drhoc");
-
-    // use labmda instead of repeating codes
-    const auto kernel = [&](int num_threads, int thread_id)
-    {
-
-    double gx = 0.0;
-    double rhocg1 = 0.0;
-    double *aux = nullptr;
-
-    // here we compute the fourier transform is the charge in numeric form
-    if (numeric)
-    {
-        aux = new double [mesh];
-        // G=0 term
-
-        int igl0 = 0;
-        if (this->rhopw->gg_uniq [0] < 1.0e-8)
-        {
-            // single thread term
-            if (thread_id == 0)
-            {
-                for (int ir = 0;ir < mesh; ir++)
-                {
-                    aux [ir] = r [ir] * r [ir] * rhoc [ir];
-                }
-                ModuleBase::Integral::Simpson_Integral(mesh, aux, rab, rhocg1);
-                //rhocg [1] = fpi * rhocg1 / omega;
-                rhocg [0] = ModuleBase::FOUR_PI * rhocg1 / omega;//mohan modify 2008-01-19
-            }
-            igl0 = 1;
-        }
-
-        int igl_beg, igl_end;
-        // exclude igl0
-        ModuleBase::TASK_DIST_1D(num_threads, thread_id, this->rhopw->ngg - igl0, igl_beg, igl_end);
-        igl_beg += igl0;
-        igl_end += igl_beg;
-
-        // G <> 0 term
-        for (int igl = igl_beg; igl < igl_end;igl++)
-        {
-            gx = sqrt(this->rhopw->gg_uniq[igl] * tpiba2);
-            ModuleBase::Sphbes::Spherical_Bessel(mesh, r, gx, 0, aux);
-            for (int ir = 0;ir < mesh; ir++)
-            {
-                aux [ir] = r[ir] * r[ir] * rhoc [ir] * aux [ir];
-            } //  enddo
-            ModuleBase::Integral::Simpson_Integral(mesh, aux, rab, rhocg1);
-            rhocg [igl] = ModuleBase::FOUR_PI * rhocg1 / omega;
-        } //  enddo
-        delete [] aux;
-    }
-    else
-    {
-        // here the case where the charge is in analytic form,
-        // check old version before 2008-12-9
-    }
-
-    }; // end kernel
-
-    // do not use omp parallel when this function is already in parallel block
-    //
-    // it is called in parallel block in Forces::cal_force_cc,
-    // but not in other funtcion such as Stress_Func::stress_cc.
-    ModuleBase::TRY_OMP_PARALLEL(kernel);
-
-    return;
+    charge_math::non_linear_core_correction(numeric,
+                                            omega,
+                                            tpiba2,
+                                            mesh,
+                                            r,
+                                            rab,
+                                            rhoc,
+                                            rhocg,
+                                            this->rhopw->gg_uniq,
+                                            this->rhopw->ngg);
 }

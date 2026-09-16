@@ -17,6 +17,7 @@
 // even in a LSDA calculation.
 //----------------------------------------------------------
 #include "charge.h"
+#include "charge_math.h"
 
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
@@ -174,35 +175,8 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
 
 double Charge::sum_rho() const
 {
-    ModuleBase::TITLE("Charge", "sum_rho");
-
-    double sum_rho = 0.0;
-    int nspin0 = (nspin == 2) ? 2 : 1;
-
-    for (int is = 0; is < nspin0; is++)
-    {
-        for (int ir = 0; ir < nrxx; ir++)
-        {
-            sum_rho += this->rho[is][ir];
-        }
-    }
-
-    // multiply the sum of charge density by a factor
-    sum_rho *= *this->omega_ / static_cast<double>(this->rhopw->nxyz);
-
-#ifdef __MPI
-    Parallel_Reduce::reduce_pool(sum_rho);
-#endif
-
-    // mohan fixed bug 2010-01-18,
-    // sum_rho may be smaller than 1, like Na bcc.
-    if (sum_rho <= 0.1)
-    {
-        GlobalV::ofs_warning << " sum_rho=" << sum_rho << std::endl;
-        ModuleBase::WARNING_QUIT("Charge::renormalize_rho", "Can't find even an electron!");
-    }
-
-    return sum_rho;
+    const int nspin0 = (nspin == 2) ? 2 : 1;
+    return charge_math::sum_rho(this->rho, nspin0, this->nrxx, *this->omega_, this->rhopw->nxyz);
 }
 
 void Charge::renormalize_rho()
@@ -661,19 +635,7 @@ void Charge::save_rho_before_sum_band()
 
 double Charge::cal_rho2ne(const double* rho_in) const
 {
-    assert(this->rhopw->nxyz > 0); // mohan add 2025-12-02
-
-    double ne = 0.0;
-    for (int ir = 0; ir < this->rhopw->nrxx; ir++)
-    {
-        ne += rho_in[ir];
-    }
-#ifdef __MPI
-    Parallel_Reduce::reduce_pool(ne);
-#endif
-    ne = ne * *this->omega_ / (double)this->rhopw->nxyz;
-
-    return ne;
+    return charge_math::cal_rho2ne(rho_in, this->rhopw->nrxx, *this->omega_, this->rhopw->nxyz);
 }
 
 void Charge::check_rho()
