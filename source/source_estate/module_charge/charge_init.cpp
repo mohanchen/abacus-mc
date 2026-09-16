@@ -47,156 +47,181 @@ void Charge::init_rho(const UnitCell& ucell,
     bool read_kin_error = false;
     if (PARAM.inp.init_chg == "file" || PARAM.inp.init_chg == "auto")
     {
-        GlobalV::ofs_running << " Read electron density from file" << std::endl;
+        this->read_rho_from_file(ucell, pgrid, nspin, read_error, read_kin_error);
+    }
 
-        // try to read charge from binary file first, which is the same as QE
-        // liuyu 2023-12-05
-        std::stringstream binary;
-        binary << PARAM.globalv.global_readin_dir << PARAM.inp.suffix + "-CHARGE-DENSITY.restart";
-        // Temporary bridge: use factory until ParaCollection is wired into driver.
-        Parallel::ParaWorld pw_world = Parallel::make_pw_world();
-        if (elecstate::read_rhog(binary.str(), rhopw, nspin, rhog, pw_world, &GlobalV::ofs_warning))
+    this->init_rho_atomic_and_tau(ucell, strucFac, nspin, read_error, read_kin_error);
+
+    this->load_rho_from_restart(ucell, pgrid, nspin);
+
+    if (PARAM.inp.init_chg == "wfc")
+    {
+        this->init_rho_from_wfc(symm, nspin, klist, wfcpw);
+    }
+}
+
+void Charge::read_rho_from_file(const UnitCell& ucell,
+                                const Parallel_Grid& pgrid,
+                                const int nspin,
+                                bool& read_error,
+                                bool& read_kin_error)
+{
+    GlobalV::ofs_running << " Read electron density from file" << std::endl;
+
+    // try to read charge from binary file first, which is the same as QE
+    // liuyu 2023-12-05
+    std::stringstream binary;
+    binary << PARAM.globalv.global_readin_dir << PARAM.inp.suffix + "-CHARGE-DENSITY.restart";
+    // Temporary bridge: use factory until ParaCollection is wired into driver.
+    Parallel::ParaWorld pw_world = Parallel::make_pw_world();
+    if (elecstate::read_rhog(binary.str(), rhopw, nspin, rhog, pw_world, &GlobalV::ofs_warning))
+    {
+        GlobalV::ofs_running << " Read electron density from file: " << binary.str() << std::endl;
+        for (int is = 0; is < nspin; ++is)
         {
-            GlobalV::ofs_running << " Read electron density from file: " << binary.str() << std::endl;
-            for (int is = 0; is < nspin; ++is)
-            {
-                rhopw->recip2real(rhog[is], rho[is]);
-            }
+            rhopw->recip2real(rhog[is], rho[is]);
         }
-        else
+    }
+    else
+    {
+        for (int is = 0; is < nspin; ++is)
         {
-            for (int is = 0; is < nspin; ++is)
+            std::stringstream ssc;
+
+            if(nspin==1)
             {
-                std::stringstream ssc;
-
-                if(nspin==1)
-                {
-                    ssc << PARAM.globalv.global_readin_dir << "chg.cube";
-                }
-                else
-                {
-                    ssc << PARAM.globalv.global_readin_dir << "chgs" << is + 1 << ".cube";
-                }
+                ssc << PARAM.globalv.global_readin_dir << "chg.cube";
+            }
+            else
+            {
+                ssc << PARAM.globalv.global_readin_dir << "chgs" << is + 1 << ".cube";
+            }
 
 
-                if (ModuleIO::read_vdata_palgrid(pgrid,
-                    (PARAM.inp.esolver_type == "sdft" ? GlobalV::RANK_IN_BPGROUP : GlobalV::MY_RANK),
-                    GlobalV::ofs_running,
-                    ssc.str(),
-                    this->rho[is],
-                    ucell.nat))
+            if (ModuleIO::read_vdata_palgrid(pgrid,
+                (PARAM.inp.esolver_type == "sdft" ? GlobalV::RANK_IN_BPGROUP : GlobalV::MY_RANK),
+                GlobalV::ofs_running,
+                ssc.str(),
+                this->rho[is],
+                ucell.nat))
+            {
+                GlobalV::ofs_running << " Read electron density from file: " << ssc.str() << std::endl;
+            }
+            else if (is > 0)    // nspin=2 or 4
+            {
+                if (is == 1)    // failed at the second spin
                 {
-                    GlobalV::ofs_running << " Read electron density from file: " << ssc.str() << std::endl;
-                }
-                else if (is > 0)    // nspin=2 or 4
-                {
-                    if (is == 1)    // failed at the second spin
-                    {
-                        std::cout << " Incomplete electron density file." << std::endl;
-                        read_error = true;
-                        break;
-                    }
-                    else if (is == 2)   // read 2 files when nspin=4
-                    {
-                        GlobalV::ofs_running << " Didn't read in the electron density but would rearrange it later. "
-                            << std::endl;
-                    }
-                    else if (is == 3)   // read 2 files when nspin=4
-                    {
-                        GlobalV::ofs_running << " rearrange electron density " << std::endl;
-                        for (int ir = 0; ir < this->rhopw->nrxx; ir++)
-                        {
-                            this->rho[3][ir] = this->rho[0][ir] - this->rho[1][ir];
-                            this->rho[0][ir] = this->rho[0][ir] + this->rho[1][ir];
-                            this->rho[1][ir] = 0.0;
-                            this->rho[2][ir] = 0.0;
-                        }
-                    }
-                }
-                else
-                {
+                    std::cout << " Incomplete electron density file." << std::endl;
                     read_error = true;
                     break;
                 }
-            }
-        }
-
-        if (read_error)
-        {
-            const std::string warn_msg
-                = " WARNING: \"init_chg\" is enabled but ABACUS failed to read\n charge density from file.\n"
-                  " Please check if there is chg.cube (for nspin=1) or chgsx.cube (x=1,2,etc.) or\n {suffix}-CHARGE-DENSITY.restart in the "
-                  "directory.\n";
-            std::cout << warn_msg;
-            if (PARAM.inp.init_chg == "file")
-            {
-                ModuleBase::WARNING_QUIT("Charge::init_rho",
-                                         "Failed to read in charge density from file.\n For initializing atomic "
-                                         "charge in calculations,\n please set init_chg to atomic in INPUT.");
-            }
-        }
-
-        if (XC_Functional::get_ked_flag())
-        {
-            // If the charge density is not read in, then the kinetic energy density is not read in either
-            if (!read_error)
-            {
-                GlobalV::ofs_running << " try to read kinetic energy density from file" << std::endl;
-                // try to read charge from binary file first, which is the same as QE
-                std::vector<std::complex<double>> kin_g_space(nspin * this->ngmc, {0.0, 0.0});
-                std::vector<std::complex<double>*> kin_g;
-                for (int is = 0; is < nspin; is++)
+                else if (is == 2)   // read 2 files when nspin=4
                 {
-                    kin_g.push_back(kin_g_space.data() + is * this->ngmc);
+                    GlobalV::ofs_running << " Didn't read in the electron density but would rearrange it later. "
+                        << std::endl;
                 }
-
-                std::stringstream binary;
-                binary << PARAM.globalv.global_readin_dir << PARAM.inp.suffix + "-TAU-DENSITY.restart";
-                if (elecstate::read_rhog(binary.str(), rhopw, nspin, kin_g.data(), pw_world, &GlobalV::ofs_warning))
+                else if (is == 3)   // read 2 files when nspin=4
                 {
-                    GlobalV::ofs_running << " Read in the kinetic energy density: " << binary.str() << std::endl;
-                    for (int is = 0; is < nspin; ++is)
+                    GlobalV::ofs_running << " rearrange electron density " << std::endl;
+                    for (int ir = 0; ir < this->rhopw->nrxx; ir++)
                     {
-                        rhopw->recip2real(kin_g[is], this->kin_r[is]);
-                    }
-                }
-                else
-                {
-                    for (int is = 0; is < nspin; is++)
-                    {
-                        std::stringstream ssc;
-                        ssc << PARAM.globalv.global_readin_dir << "SPIN" << is + 1 << "_TAU.cube";
-                        // mohan update 2012-02-10, sunliang update 2023-03-09
-                        if (ModuleIO::read_vdata_palgrid(
-                                pgrid,
-                                (PARAM.inp.esolver_type == "sdft" ? GlobalV::RANK_IN_BPGROUP : GlobalV::MY_RANK),
-                                GlobalV::ofs_running,
-                                ssc.str(),
-                                this->kin_r[is],
-                                ucell.nat))
-                        {
-                            GlobalV::ofs_running << " Read in the kinetic energy density: " << ssc.str() << std::endl;
-                        }
-                        else
-                        {
-                            read_kin_error = true;
-                            std::cout << " WARNING: \"init_chg\" is enabled but ABACUS failed to read kinetic energy "
-                                         "density from file.\n"
-                                         " Please check if there is SPINX_TAU.cube (X=1,...) or "
-                                         "{suffix}-TAU-DENSITY.restart in the directory.\n"
-                                      << std::endl;
-                            break;
-                        }
+                        this->rho[3][ir] = this->rho[0][ir] - this->rho[1][ir];
+                        this->rho[0][ir] = this->rho[0][ir] + this->rho[1][ir];
+                        this->rho[1][ir] = 0.0;
+                        this->rho[2][ir] = 0.0;
                     }
                 }
             }
             else
             {
-                read_kin_error = true;
+                read_error = true;
+                break;
             }
         }
     }
 
+    if (read_error)
+    {
+        const std::string warn_msg
+            = " WARNING: \"init_chg\" is enabled but ABACUS failed to read\n charge density from file.\n"
+              " Please check if there is chg.cube (for nspin=1) or chgsx.cube (x=1,2,etc.) or\n {suffix}-CHARGE-DENSITY.restart in the "
+              "directory.\n";
+        std::cout << warn_msg;
+        if (PARAM.inp.init_chg == "file")
+        {
+            ModuleBase::WARNING_QUIT("Charge::init_rho",
+                                     "Failed to read in charge density from file.\n For initializing atomic "
+                                     "charge in calculations,\n please set init_chg to atomic in INPUT.");
+        }
+    }
+
+    if (XC_Functional::get_ked_flag())
+    {
+        // If the charge density is not read in, then the kinetic energy density is not read in either
+        if (!read_error)
+        {
+            GlobalV::ofs_running << " try to read kinetic energy density from file" << std::endl;
+            // try to read charge from binary file first, which is the same as QE
+            std::vector<std::complex<double>> kin_g_space(nspin * this->ngmc, {0.0, 0.0});
+            std::vector<std::complex<double>*> kin_g;
+            for (int is = 0; is < nspin; is++)
+            {
+                kin_g.push_back(kin_g_space.data() + is * this->ngmc);
+            }
+
+            std::stringstream binary;
+            binary << PARAM.globalv.global_readin_dir << PARAM.inp.suffix + "-TAU-DENSITY.restart";
+            if (elecstate::read_rhog(binary.str(), rhopw, nspin, kin_g.data(), pw_world, &GlobalV::ofs_warning))
+            {
+                GlobalV::ofs_running << " Read in the kinetic energy density: " << binary.str() << std::endl;
+                for (int is = 0; is < nspin; ++is)
+                {
+                    rhopw->recip2real(kin_g[is], this->kin_r[is]);
+                }
+            }
+            else
+            {
+                for (int is = 0; is < nspin; is++)
+                {
+                    std::stringstream ssc;
+                    ssc << PARAM.globalv.global_readin_dir << "SPIN" << is + 1 << "_TAU.cube";
+                    // mohan update 2012-02-10, sunliang update 2023-03-09
+                    if (ModuleIO::read_vdata_palgrid(
+                            pgrid,
+                            (PARAM.inp.esolver_type == "sdft" ? GlobalV::RANK_IN_BPGROUP : GlobalV::MY_RANK),
+                            GlobalV::ofs_running,
+                            ssc.str(),
+                            this->kin_r[is],
+                            ucell.nat))
+                    {
+                        GlobalV::ofs_running << " Read in the kinetic energy density: " << ssc.str() << std::endl;
+                    }
+                    else
+                    {
+                        read_kin_error = true;
+                        std::cout << " WARNING: \"init_chg\" is enabled but ABACUS failed to read kinetic energy "
+                                     "density from file.\n"
+                                     " Please check if there is SPINX_TAU.cube (X=1,...) or "
+                                     "{suffix}-TAU-DENSITY.restart in the directory.\n"
+                                  << std::endl;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            read_kin_error = true;
+        }
+    }
+}
+
+void Charge::init_rho_atomic_and_tau(const UnitCell& ucell,
+                                     const ModuleBase::ComplexMatrix& strucFac,
+                                     const int nspin,
+                                     const bool read_error,
+                                     const bool read_kin_error)
+{
     if (PARAM.inp.init_chg == "atomic" || read_error)
     {
         if (read_error)
@@ -225,7 +250,12 @@ void Charge::init_rho(const UnitCell& ucell,
             }
         }
     }
+}
 
+void Charge::load_rho_from_restart(const UnitCell& ucell,
+                                   const Parallel_Grid& pgrid,
+                                   const int nspin)
+{
     // Peize Lin add 2020.04.04
     if (GlobalC::restart.info_load.load_charge && !GlobalC::restart.info_load.load_charge_finish)
     {
@@ -253,24 +283,27 @@ void Charge::init_rho(const UnitCell& ucell,
         }
         GlobalC::restart.info_load.load_charge_finish = true;
     }
+}
 
-    if (PARAM.inp.init_chg == "wfc")
+void Charge::init_rho_from_wfc(ModuleSymmetry::Symmetry& symm,
+                               const int nspin,
+                               const void* klist,
+                               const void* wfcpw)
+{
+    if (wfcpw == nullptr)
     {
-        if (wfcpw == nullptr)
-        {
-            ModuleBase::WARNING_QUIT("Charge::init_rho", "wfc is only supported for PW-KSDFT.");
-        }
-
-        const ModulePW::PW_Basis_K* pw_wfc = reinterpret_cast<ModulePW::PW_Basis_K*>(const_cast<void*>(wfcpw));
-        const K_Vectors* kv = reinterpret_cast<const K_Vectors*>(klist);
-
-        ModuleIO::read_wf2rho_pw(pw_wfc, symm, *this,
-                PARAM.globalv.global_readin_dir,
-                GlobalV::KPAR, GlobalV::MY_POOL, GlobalV::MY_RANK,
-                GlobalV::NPROC_IN_POOL, GlobalV::RANK_IN_POOL,
-                PARAM.inp.nbands, nspin, PARAM.globalv.npol,
-                kv->get_nkstot(),kv->ik2iktot,kv->isk,GlobalV::ofs_running);
+        ModuleBase::WARNING_QUIT("Charge::init_rho", "wfc is only supported for PW-KSDFT.");
     }
+
+    const ModulePW::PW_Basis_K* pw_wfc = reinterpret_cast<ModulePW::PW_Basis_K*>(const_cast<void*>(wfcpw));
+    const K_Vectors* kv = reinterpret_cast<const K_Vectors*>(klist);
+
+    ModuleIO::read_wf2rho_pw(pw_wfc, symm, *this,
+            PARAM.globalv.global_readin_dir,
+            GlobalV::KPAR, GlobalV::MY_POOL, GlobalV::MY_RANK,
+            GlobalV::NPROC_IN_POOL, GlobalV::RANK_IN_POOL,
+            PARAM.inp.nbands, nspin, PARAM.globalv.npol,
+            kv->get_nkstot(),kv->ik2iktot,kv->isk,GlobalV::ofs_running);
 }
 
 //==========================================================
