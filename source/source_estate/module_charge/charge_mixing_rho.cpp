@@ -44,14 +44,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
     else if (nspin == 2)
     {
         // magnetic density
-        std::complex<double> *rhog_mag = nullptr;
-        std::complex<double> *rhog_mag_save = nullptr;
         const int npw = this->rhopw->npw;
-        // allocate rhog_mag[is*ngmc] and rhog_mag_save[is*ngmc]
-        rhog_mag = new std::complex<double>[npw * nspin];
-        rhog_mag_save = new std::complex<double>[npw * nspin];
-        ModuleBase::GlobalFunc::ZEROS(rhog_mag, npw * nspin);
-        ModuleBase::GlobalFunc::ZEROS(rhog_mag_save, npw * nspin);
+        // rhog_mag[is*ngmc] and rhog_mag_save[is*ngmc], zero-initialized
+        std::vector<std::complex<double>> rhog_mag(npw * nspin);
+        std::vector<std::complex<double>> rhog_mag_save(npw * nspin);
         // get rhog_mag[is*ngmc] and rhog_mag_save[is*ngmc]
         for (int ig = 0; ig < npw; ig++)
         {
@@ -64,28 +60,11 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             rhog_mag_save[ig + npw] = chr->rhog_save[0][ig] - chr->rhog_save[1][ig];
         }
         //
-        rhog_in = rhog_mag_save;
-        rhog_out = rhog_mag;
+        rhog_in = rhog_mag_save.data();
+        rhog_out = rhog_mag.data();
         //
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_recip, this, std::placeholders::_1);
-        auto twobeta_mix
-            = [this, npw](std::complex<double>* out, const std::complex<double>* in, const std::complex<double>* sres) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-                  for (int i = 0; i < npw; ++i)
-                  {
-                      out[i] = in[i] + this->mixing_beta * sres[i];
-                  }
-            // magnetism
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-                  for (int i = npw; i < 2 * npw; ++i)
-                  {
-                      out[i] = in[i] + this->mixing_beta_mag * sres[i];
-                  }
-              };
+        auto twobeta_mix = this->make_twobeta_mix<std::complex<double>>(2 * npw, npw);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -99,9 +78,6 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             chr->rhog[0][ig] = 0.5 * (rhog_mag[ig] + rhog_mag[ig+npw]);
             chr->rhog[1][ig] = 0.5 * (rhog_mag[ig] - rhog_mag[ig+npw]);
         }
-        // delete
-        delete[] rhog_mag;
-        delete[] rhog_mag_save;
         // get rhogs_out for combine_data()
         if ( PARAM.globalv.double_grid)
         {
@@ -119,24 +95,7 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         rhog_out = rhogs_out;
         const int npw = this->rhopw->npw;
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_recip, this, std::placeholders::_1); // use old one
-        auto twobeta_mix
-            = [this, npw](std::complex<double>* out, const std::complex<double>* in, const std::complex<double>* sres) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-                  for (int i = 0; i < npw; ++i)
-                  {
-                      out[i] = in[i] + this->mixing_beta * sres[i];
-                  }
-            // magnetism, mx, my, mz
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-                  for (int i = npw; i < 4 * npw; ++i)
-                  {
-                      out[i] = in[i] + this->mixing_beta_mag * sres[i];
-                  }
-              };
+        auto twobeta_mix = this->make_twobeta_mix<std::complex<double>>(4 * npw, npw);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -150,12 +109,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         {
             ModuleBase::WARNING_QUIT("Charge_Mixing", "double_grid is not supported for new mixing method yet.");
         }
-        // allocate memory for rho_magabs and rho_magabs_save
+        // rho_magabs and rho_magabs_save, zero-initialized
         const int nrxx = this->rhopw->nrxx;
-        double* rho_magabs = new double[nrxx];
-        double* rho_magabs_save = new double[nrxx];
-        ModuleBase::GlobalFunc::ZEROS(rho_magabs, nrxx);
-        ModuleBase::GlobalFunc::ZEROS(rho_magabs_save, nrxx);
+        std::vector<double> rho_magabs(nrxx);
+        std::vector<double> rho_magabs_save(nrxx);
         // calculate rho_magabs and rho_magabs_save
         for (int ir = 0; ir < nrxx; ir++)
         {
@@ -168,12 +125,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             + chr->rho_save[2][ir] * chr->rho_save[2][ir]  
             + chr->rho_save[3][ir] * chr->rho_save[3][ir]);
         }
-        // allocate memory for rhog_magabs and rhog_magabs_save
+        // rhog_magabs and rhog_magabs_save, zero-initialized
         const int npw = this->rhopw->npw;
-        std::complex<double>* rhog_magabs = new std::complex<double>[npw * 2];
-        std::complex<double>* rhog_magabs_save = new std::complex<double>[npw * 2];
-        ModuleBase::GlobalFunc::ZEROS(rhog_magabs, npw * 2);
-        ModuleBase::GlobalFunc::ZEROS(rhog_magabs_save, npw * 2);
+        std::vector<std::complex<double>> rhog_magabs(npw * 2);
+        std::vector<std::complex<double>> rhog_magabs_save(npw * 2);
         // calculate rhog_magabs and rhog_magabs_save
         for (int ig = 0; ig < npw; ig++)
         {
@@ -181,35 +136,18 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             rhog_magabs_save[ig] = chr->rhog_save[0][ig]; // rho_save
         }
         // FT to get rhog_magabs and rhog_magabs_save
-        this->rhopw->real2recip(rho_magabs, rhog_magabs + this->rhopw->npw);
-        this->rhopw->real2recip(rho_magabs_save, rhog_magabs_save + this->rhopw->npw);
+        this->rhopw->real2recip(rho_magabs.data(), rhog_magabs.data() + this->rhopw->npw);
+        this->rhopw->real2recip(rho_magabs_save.data(), rhog_magabs_save.data() + this->rhopw->npw);
         //
-        rhog_in = rhog_magabs_save;
-        rhog_out = rhog_magabs;
+        rhog_in = rhog_magabs_save.data();
+        rhog_out = rhog_magabs.data();
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_recip, this, std::placeholders::_1); // use old one
-        auto twobeta_mix
-            = [this, npw](std::complex<double>* out, const std::complex<double>* in, const std::complex<double>* sres) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-                  for (int i = 0; i < npw; ++i)
-                  {
-                      out[i] = in[i] + this->mixing_beta * sres[i];
-                  }
-            // magnetism, |m|
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-                  for (int i = npw; i < 2 * npw; ++i)
-                  {
-                      out[i] = in[i] + this->mixing_beta_mag * sres[i];
-                  }
-              };
+        auto twobeta_mix = this->make_twobeta_mix<std::complex<double>>(2 * npw, npw);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
         // get new |m| in real space using FT
-        this->rhopw->recip2real(rhog_magabs + this->rhopw->npw, rho_magabs);
+        this->rhopw->recip2real(rhog_magabs.data() + this->rhopw->npw, rho_magabs.data());
         // use new |m| and angle to update {mx, my, mz}
         for (int ig = 0; ig < npw; ig++)
         {
@@ -226,11 +164,6 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             chr->rho[2][ig] *= rescale_tmp;
             chr->rho[3][ig] *= rescale_tmp;
         }
-        // delete
-        delete[] rhog_magabs;
-        delete[] rhog_magabs_save;
-        delete[] rho_magabs;
-        delete[] rho_magabs_save;
     }
 
     if ( PARAM.globalv.double_grid)
@@ -335,14 +268,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     else if (nspin == 2)
     {
         // magnetic density
-        double *rho_mag = nullptr;
-        double *rho_mag_save = nullptr; 
         const int nrxx = this->rhopw->nrxx;
-        // allocate rho_mag[is*nnrx] and rho_mag_save[is*nnrx]
-        rho_mag = new double[nrxx * nspin];
-        rho_mag_save = new double[nrxx * nspin];
-        ModuleBase::GlobalFunc::ZEROS(rho_mag, nrxx * nspin);
-        ModuleBase::GlobalFunc::ZEROS(rho_mag_save, nrxx * nspin);
+        // rho_mag[is*nnrx] and rho_mag_save[is*nnrx], zero-initialized
+        std::vector<double> rho_mag(nrxx * nspin);
+        std::vector<double> rho_mag_save(nrxx * nspin);
         // get rho_mag[is*nnrx] and rho_mag_save[is*nnrx]
         for (int ir = 0; ir < nrxx; ir++)
         {
@@ -355,27 +284,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
             rho_mag_save[ir + nrxx] = chr->rho_save[0][ir] - chr->rho_save[1][ir];
         }
         //
-        rhor_in = rho_mag_save;
-        rhor_out = rho_mag;
+        rhor_in = rho_mag_save.data();
+        rhor_out = rho_mag.data();
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
-        auto twobeta_mix
-            = [this, nrxx](double* out, const double* in, const double* sres) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = 0; i < nrxx; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta * sres[i];
-            }
-            // magnetism
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = nrxx; i < 2 * nrxx; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta_mag * sres[i];
-            }
-        };
+        auto twobeta_mix = this->make_twobeta_mix<double>(2 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         auto inner_product
             = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
@@ -392,9 +304,6 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
             chr->rho[0][ir] = 0.5 * (rho_mag[ir] + rho_mag[ir+nrxx]);
             chr->rho[1][ir] = 0.5 * (rho_mag[ir] - rho_mag[ir+nrxx]);
         }
-        // delete
-        delete[] rho_mag;
-        delete[] rho_mag_save;
     }
     else if (nspin == 4 && PARAM.inp.mixing_angle <= 0)
     {
@@ -403,24 +312,7 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_out = chr->rho[0];
         const int nrxx = this->rhopw->nrxx;
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
-        auto twobeta_mix
-            = [this, nrxx](double* out, const double* in, const double* sres) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = 0; i < nrxx; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta * sres[i];
-            }
-            // magnetism, mx, my, mz
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = nrxx; i < 4 * nrxx; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta_mag * sres[i];
-            }
-        };
+        auto twobeta_mix = this->make_twobeta_mix<double>(4 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         auto inner_product
             = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
@@ -432,11 +324,9 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         // special broyden mixing for {rho, |m|} proposed by J. Phys. Soc. Jpn. 82 (2013) 114706
         // here only consider the case of mixing_angle = 1, which mean only change |m| and keep angle fixed
         const int nrxx = this->rhopw->nrxx;
-        // allocate memory for rho_magabs and rho_magabs_save
-        double* rho_magabs = new double[nrxx * 2];
-        double* rho_magabs_save = new double[nrxx * 2];
-        ModuleBase::GlobalFunc::ZEROS(rho_magabs, nrxx * 2);
-        ModuleBase::GlobalFunc::ZEROS(rho_magabs_save, nrxx * 2);
+        // rho_magabs and rho_magabs_save, zero-initialized
+        std::vector<double> rho_magabs(nrxx * 2);
+        std::vector<double> rho_magabs_save(nrxx * 2);
         // calculate rho_magabs and rho_magabs_save
         for (int ir = 0; ir < nrxx; ir++)
         {
@@ -451,28 +341,11 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
                     + chr->rho_save[2][ir] * chr->rho_save[2][ir] 
                     + chr->rho_save[3][ir] * chr->rho_save[3][ir]);
         }
-        rhor_in = rho_magabs_save;
-        rhor_out = rho_magabs;
+        rhor_in = rho_magabs_save.data();
+        rhor_out = rho_magabs.data();
 
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
-        auto twobeta_mix
-            = [this, nrxx](double* out, const double* in, const double* sres) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = 0; i < nrxx; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta * sres[i];
-            }
-            // magnetism, |m|
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = nrxx; i < 2 * nrxx; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta_mag * sres[i];
-            }
-        };
+        auto twobeta_mix = this->make_twobeta_mix<double>(2 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         auto inner_product
             = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
@@ -496,11 +369,8 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
             chr->rho[2][ir] *= rescale_tmp;
             chr->rho[3][ir] *= rescale_tmp;
         }
-        // delete
-        delete[] rho_magabs;
-        delete[] rho_magabs_save;
     }
-    
+
     double *taur_out=nullptr;
     double *taur_in=nullptr;
     if ((XC_Functional::get_ked_flag()) && mixing_tau)

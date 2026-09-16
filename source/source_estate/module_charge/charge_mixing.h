@@ -4,6 +4,7 @@
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_base/module_mixing/mixing.h"
 #include "source_base/module_mixing/plain_mixing.h"
+#include <functional>
 
 /// Configuration for charge mixing, aggregating the INPUT mixing parameters
 /// together with the runtime globals (nspin, scf_thr_type, double_grid) that
@@ -202,6 +203,34 @@ class Charge_Mixing
      *
      */
     double inner_product_real(double* rho1, double* rho2);
+
+    /**
+     * @brief two-beta mixing functor: mix the first `nunit` elements with
+     * mixing_beta and the rest (nunit..total) with mixing_beta_mag. Used for
+     * magnetic cases (nspin==2/4) where the charge channel and the magnetism
+     * channels use different betas. Replaces the duplicated local lambdas.
+     * @tparam T element type, double (real space) or std::complex<double> (reciprocal)
+     */
+    template <typename T>
+    std::function<void(T*, const T*, const T*)> make_twobeta_mix(const int total, const int nunit)
+    {
+        return [this, total, nunit](T* out, const T* in, const T* sres) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, 256)
+#endif
+            for (int i = 0; i < nunit; ++i)
+            {
+                out[i] = in[i] + this->mixing_beta * sres[i];
+            }
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, 256)
+#endif
+            for (int i = nunit; i < total; ++i)
+            {
+                out[i] = in[i] + this->mixing_beta_mag * sres[i];
+            }
+        };
+    }
 
     /**
      * @brief divide rho/tau to smooth and high frequency parts
