@@ -107,9 +107,9 @@ void module_charge::chgmixing_ks(const int iter, // scf iteration number
 
     // mohan move the following code here, 2025-10-18
     // SCF restart information
-    if (PARAM.inp.mixing_restart > 0
+    if (inp.mixing_restart > 0
         && iter == p_chgmix->mixing_restart_step - 1
-        && iter != PARAM.inp.scf_nmax)
+        && iter != inp.scf_nmax)
     {
         p_chgmix->mixing_restart_last = iter;
         std::cout << " SCF restart after this step!" << std::endl;
