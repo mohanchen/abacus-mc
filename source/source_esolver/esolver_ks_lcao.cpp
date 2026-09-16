@@ -5,7 +5,7 @@
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 #include "source_lcao/module_deltaspin/deltaspin_lcao.h"
 #include "source_lcao/setup_dftu_lcao.h"
-#include "source_lcao/module_dftu/dftu_nao.h" // Plus_U (LCAO DFT+U derived class)
+#include "source_pw/module_pwdft/dftu_base.h" // Plus_U_Base (PW and LCAO share it)
 #include "source_hamilt/hs_matrix_k.h"
 #include "source_estate/module_charge/symm_rho.h"
 #include "source_lcao/lcao_domain.h" // need DeePKS_init
@@ -20,6 +20,7 @@
 #include "source_lcao/module_rdmft/rdmft.h"
 #include "source_estate/module_charge/chgmixing.h" // use charge mixing, mohan add 20251006
 #include "source_estate/module_dm/init_dm.h" // init dm from electronic wave functions
+#include "source_io/module_restart/restart.h" // GlobalC::restart for load_exx_flag
 #include "source_io/module_ctrl/ctrl_runner_lcao.h" // use ctrl_runner_lcao() 
 #include "source_io/module_ctrl/ctrl_iter_lcao.h" // use ctrl_iter_lcao() 
 #include "source_io/module_ctrl/ctrl_scf_lcao.h" // use ctrl_scf_lcao()
@@ -36,7 +37,7 @@ ESolver_KS_LCAO<TK, TR>::ESolver_KS_LCAO()
 {
     this->classname = "ESolver_KS_LCAO";
     this->basisname = "LCAO";
-    this->dftu_.reset(new Plus_U());
+    this->dftu_.reset(new Plus_U_Base());
 }
 
 template <typename TK, typename TR>
@@ -150,7 +151,11 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     // 7) For each atom, calculate the adjacent atoms in different cells
     // and allocate the space for H(R) and S(R).
     // If k point is used here, allocate HlocR after atom_arrange.
-    this->RA.for_2d(ucell, this->gd, this->pv, PARAM.globalv.gamma_only_local, orb_.cutoffs());
+    this->RA.for_2d(ucell, this->gd, this->pv, PARAM.globalv.gamma_only_local, PARAM.globalv.npol, orb_.cutoffs());
+    if (this->inp_->out_level != "m" && !PARAM.globalv.gamma_only_local)
+    {
+        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "ParaV.nnr", this->pv.nnr);
+    }
 
     // 8) initialize the Hamiltonian operators
     // if atom moves, then delete old pointer and add a new one
@@ -161,9 +166,12 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     }
     if (this->p_hamilt == nullptr)
     {
+        const bool load_exx_flag = !GlobalC::restart.info_load.restart_exx
+                                   && GlobalC::restart.info_load.load_H;
         this->p_hamilt = new hamilt::HamiltLCAO<TK, TR>(
             ucell, this->gd, &this->pv, this->pelec->pot, this->kv,
-            two_center_bundle_, orb_, this->dmat.dm, this->dftu_.get(), this->deepks, istep, exx_nao, this->exx_info_);
+            two_center_bundle_, orb_, this->dmat.dm, this->dftu_.get(), this->deepks, istep, exx_nao, this->exx_info_, *this->inp_,
+            load_exx_flag);
     }
 
     // 9) for each ionic step, the overlap <phi|alpha> must be rebuilt
@@ -258,13 +266,18 @@ void ESolver_KS_LCAO<TK, TR>::cal_force(BaseCell& basecell, ModuleBase::matrix& 
 
     deepks.dpks_out_type = "tot";  // for deepks method
 
+    FSCalcConfig fs_cfg{this->inp_->nspin, this->inp_->nbands, this->inp_->t_in_h,
+                        this->inp_->sc_mag_switch, this->inp_->device};
+
     fsl.getForceStress(ucell, this->get_vdw_result(), this->inp_->cal_force, this->inp_->cal_stress,
                        this->inp_->test_force, this->inp_->test_stress,
                        this->gd, this->pv, this->pelec, this->dmat, this->psi,
                        two_center_bundle_, orb_, force, this->scs,
                        this->locpp, this->sf, this->kv,
                        this->pw_rho, this->solvent, *this->dftu_, this->deepks,
-                       this->exx_nao, &ucell.symm, this->exx_info_, this->inp_->td_stype,
+                       this->exx_nao, &ucell.symm, this->exx_info_,
+                       fs_cfg,
+                       this->inp_->td_stype,
                        static_cast<hamilt::Hamilt<TK>*>(this->p_hamilt));
 
     // delete RA after cal_force
@@ -394,7 +407,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(UnitCell& ucell, const int istep, const 
     }
 #endif
 
-    init_dftu_lcao<TK>(istep, iter, this->inp_->dft_plus_u, this->dftu_.get(), this->dmat.dm, ucell, this->chr.rho, this->pw_rho->nrxx);
+    init_dftu_lcao(this->inp_->dft_plus_u, this->dftu_.get(), ucell, this->chr.rho, this->pw_rho->nrxx, &this->orb_);
 
 #ifdef __MLALGO
     // the density matrixes of DeePKS have been updated in each iter
@@ -515,7 +528,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
 	const std::vector<std::vector<TK>>& dm_vec = this->dmat.dm->get_DMK_vector();
 
     // 1) calculate the local occupation number matrix and energy correction in DFT+U
-    finish_dftu_lcao<TK>(iter, conv_esolver, this->inp_->dft_plus_u, this->inp_->out_chg[0], this->dftu_.get(), ucell, dm_vec, this->kv, this->p_chgmix->get_mixing_beta(), hamilt_lcao, PARAM.globalv.global_out_dir, this->inp_->nspin, PARAM.globalv.npol, PARAM.globalv.gamma_only_local);
+    finish_dftu_lcao<TK>(conv_esolver, this->inp_->dft_plus_u, this->inp_->out_chg[0], this->dftu_.get(), ucell, dm_vec, this->kv, this->p_chgmix->get_mixing_beta(), hamilt_lcao, PARAM.globalv.global_out_dir, this->inp_->nspin, PARAM.globalv.npol, PARAM.globalv.gamma_only_local);
 
     // mohan add 2025-11: push DFT+U energy from Plus_U instance to ElecState.
     // Covers both dft_plus_u==1 (new method, energy accumulated by DFTU::contributeHR
