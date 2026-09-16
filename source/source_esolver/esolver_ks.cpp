@@ -65,9 +65,21 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     //! 3) setup charge mixing
     p_chgmix = new Charge_Mixing();
     p_chgmix->set_rhopw(this->pw_rho, this->pw_rhod);
-    p_chgmix->set_mixing(inp.mixing_mode, inp.mixing_beta, inp.mixing_ndim,
-      inp.mixing_gg0, inp.mixing_tau, inp.mixing_beta_mag, inp.mixing_gg0_mag,
-      inp.mixing_gg0_min, inp.mixing_angle, inp.mixing_dmr, ucell.omega, ucell.tpiba);
+    MixingConfig mix_cfg;
+    mix_cfg.mixing_mode = inp.mixing_mode;
+    mix_cfg.mixing_beta = inp.mixing_beta;
+    mix_cfg.mixing_ndim = inp.mixing_ndim;
+    mix_cfg.mixing_gg0 = inp.mixing_gg0;
+    mix_cfg.mixing_tau = inp.mixing_tau;
+    mix_cfg.mixing_beta_mag = inp.mixing_beta_mag;
+    mix_cfg.mixing_gg0_mag = inp.mixing_gg0_mag;
+    mix_cfg.mixing_gg0_min = inp.mixing_gg0_min;
+    mix_cfg.mixing_angle = inp.mixing_angle;
+    mix_cfg.mixing_dmr = inp.mixing_dmr;
+    mix_cfg.nspin = inp.nspin;
+    mix_cfg.scf_thr_type = inp.scf_thr_type;
+    mix_cfg.double_grid = PARAM.globalv.double_grid;
+    p_chgmix->set_mixing(mix_cfg, ucell.omega, ucell.tpiba);
     p_chgmix->init_mixing();
 
     //! 4) setup plane wave for electronic wave functions

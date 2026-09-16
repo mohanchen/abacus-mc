@@ -5,6 +5,27 @@
 #include "source_base/module_mixing/mixing.h"
 #include "source_base/module_mixing/plain_mixing.h"
 
+/// Configuration for charge mixing, aggregating the INPUT mixing parameters
+/// together with the runtime globals (nspin, scf_thr_type, double_grid) that
+/// the mixing logic needs, so that Charge_Mixing does not read PARAM/GlobalV
+/// directly. Callers fill this from the parsed input once per run.
+struct MixingConfig
+{
+    std::string mixing_mode = "broyden"; ///< mixing mode: "plain", "broyden", "pulay"
+    double mixing_beta = 0.8;            ///< mixing beta for density
+    int mixing_ndim = 8;                 ///< mixing ndim for broyden and pulay
+    double mixing_gg0 = 0.0;             ///< mixing gg0 for Kerker screen
+    bool mixing_tau = false;             ///< whether to use tau mixing
+    double mixing_beta_mag = 1.6;        ///< mixing beta for magnetism
+    double mixing_gg0_mag = 0.0;         ///< mixing gg0 for Kerker screen for magnetism
+    double mixing_gg0_min = 0.1;         ///< minimum kerker coefficient
+    double mixing_angle = 0.0;           ///< mixing angle for nspin=4
+    bool mixing_dmr = false;             ///< whether to mix real space density matrix
+    int nspin = 1;                       ///< number of spins
+    int scf_thr_type = 1;                ///< 1: reciprocal, 2: real space threshold
+    bool double_grid = false;            ///< whether double grid is used
+};
+
 class Charge_Mixing
 {
   /// Charge_Mixing class
@@ -22,30 +43,12 @@ class Charge_Mixing
     ~Charge_Mixing();
 
     /**
-     * @brief Set all private mixing paramters
-     * @param mixing_mode_in mixing mode: "plain", "broyden", "pulay"
-     * @param mixing_beta_in mixing beta
-     * @param mixing_ndim_in mixing ndim
-     * @param mixing_gg0_in mixing gg0 for Kerker screen
-     * @param mixing_tau_in whether to use tau mixing
-     * @param mixing_beta_mag_in mixing beta for magnetism
-     * @param mixing_gg0_mag_in mixing gg0 for Kerker screen for magnetism
-     * @param mixing_gg0_min_in minimum kerker coefficient
-     * @param mixing_angle_in mixing angle for nspin=4
-     * @param mixing_dmr_in whether to mixing real space density matrix
+     * @brief Set all private mixing parameters from an aggregated config
+     * @param cfg mixing parameters and runtime globals (nspin, scf_thr_type, double_grid)
      * @param omega_in omega for non-linear core correction
      * @param tpiba_in 2*pi/beta for non-linear core correction
      */
-    void set_mixing(const std::string& mixing_mode_in,
-                    const double& mixing_beta_in,
-                    const int& mixing_ndim_in,
-                    const double& mixing_gg0_in,
-                    const bool& mixing_tau_in,
-                    const double& mixing_beta_mag_in,
-                    const double& mixing_gg0_mag_in,
-                    const double& mixing_gg0_min_in,
-                    const double& mixing_angle_in,
-                    const bool& mixing_dmr_in,
+    void set_mixing(const MixingConfig& cfg,
                     double& omega_in,
                     double& tpiba_in);
 
@@ -138,6 +141,7 @@ class Charge_Mixing
     //======================================
     // private mixing parameters
     //======================================
+    MixingConfig cfg_;                 ///< aggregated mixing config, also holds nspin/scf_thr_type/double_grid
     std::string mixing_mode = "broyden"; ///< mixing mode: "plain", "broyden", "pulay"
     double mixing_beta = 0.8;            ///< mixing beta for density
     double mixing_beta_mag = 1.6;        ///< mixing beta for magnetism
