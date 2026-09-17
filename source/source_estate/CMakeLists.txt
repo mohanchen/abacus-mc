@@ -29,7 +29,7 @@ list(APPEND objects
     module_pot/td_field_manager.cpp
     module_charge/chg_routine.cpp
     module_charge/charge.cpp
-    module_charge/charge_atomic.cpp
+    module_charge/chg_atomic.cpp
     module_charge/charge_init.cpp
     module_charge/chg_tools.cpp
     module_charge/chg_parallel.cpp

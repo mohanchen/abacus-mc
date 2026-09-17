@@ -1,4 +1,4 @@
-#include "charge_atomic.h"
+#include "chg_atomic.h"
 
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"

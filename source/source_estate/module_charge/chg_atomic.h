@@ -1,5 +1,5 @@
-#ifndef CHARGE_ATOMIC_H
-#define CHARGE_ATOMIC_H
+#ifndef CHG_ATOMIC_H
+#define CHG_ATOMIC_H
 
 #include "source_base/complexmatrix.h"
 #include "source_basis/module_pw/pw_basis.h"
@@ -33,4 +33,4 @@ void atomic_rho(const int spin_number_need,
 
 } // namespace module_charge
 
-#endif // CHARGE_ATOMIC_H
+#endif // CHG_ATOMIC_H
