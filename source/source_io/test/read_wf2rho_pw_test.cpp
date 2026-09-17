@@ -9,7 +9,7 @@
 #include "source_cell/klist.h"
 #include "source_cell/unitcell.h"
 #include "source_estate/module_charge/charge.h"
-#include "source_estate/module_charge/symm_rho.h"
+#include "source_estate/module_charge/chg_symm.h"
 #include "source_hamilt/module_xc/xc_functional.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_io/module_wf/read_wf2rho_pw.h"
@@ -55,16 +55,16 @@ Sep_Cell::~Sep_Cell() noexcept
 int XC_Functional::func_type = 0;
 bool XC_Functional::ked_flag = false;
 
-Symmetry_rho::Symmetry_rho()
+namespace module_charge
 {
-}
-Symmetry_rho::~Symmetry_rho()
-{
-}
-void Symmetry_rho::begin(const int& spin_now, const Charge& CHR, const ModulePW::PW_Basis* rho_basis, ModuleSymmetry::Symmetry& symm) const
+void cal_rhog_symm(const int& spin_now,
+                   const Charge& CHR,
+                   const ModulePW::PW_Basis* rho_basis,
+                   ModuleSymmetry::Symmetry& symm)
 {
     return;
 }
+} // namespace module_charge
 
 void cal_ik2iktot(std::vector<int>& ik2iktot, const int& nks, const int& nkstot)
 {

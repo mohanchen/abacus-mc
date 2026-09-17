@@ -3,7 +3,7 @@
 #include "source_io/module_parameter/parameter.h"
 //-----------temporary-------------------------
 #include "source_base/global_function.h"
-#include "source_estate/module_charge/symm_rho.h"
+#include "source_estate/module_charge/chg_symm.h"
 #include "source_hamilt/module_ewald/h_ewald_pw.h"
 #include "source_cell/cal_ux.h"
 #include "source_pw/module_pwdft/force_pw.h"
@@ -240,7 +240,7 @@ void ESolver_OF::before_opt(const int istep, UnitCell& ucell)
     const int nspin = this->inp_->nspin;
     if (this->inp_->init_chg == "file")
     {
-        Symmetry_rho::symmetrize_rho(nspin, this->chr, this->pw_rho, ucell.symm);
+        module_charge::symmetrize_rho(nspin, this->chr, this->pw_rho, ucell.symm);
         for (int is = 0; is < nspin; ++is)
         {
             for (int ibs = 0; ibs < this->pw_rho->nrxx; ++ibs)
@@ -385,19 +385,6 @@ void ESolver_OF::update_rho()
         }
     }
     // // ------------ turn on symmetry may cause instability in optimization ------------
-    // if (ModuleSymmetry::Symmetry::symm_flag == 1)
-    // {
-    //     Symmetry_rho srho;
-    //     for (int is = 0; is < this->inp_->nspin; is++)
-    //     {
-    //         srho.begin(is, *(this->chr), this->pw_rho, Pgrid, ucell.symm);
-    //         for (int ibs = 0; ibs < this->pw_rho->nrxx; ++ibs)
-    //         {
-    //             this->pphi_[is][ibs] = sqrt(this->chr.rho[is][ibs]);
-    //         }
-    //     }
-    // }
-    // // --------------------------------------------------------------------------------
 }
 
 /**

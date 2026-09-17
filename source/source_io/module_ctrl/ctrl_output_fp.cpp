@@ -1,7 +1,7 @@
 #include "ctrl_output_fp.h" // use ctrl_output_fp()
 #include "../module_output/cube_io.h" // use write_vdata_palgrid
 #include "../module_dipole/dipole_io.h" // use write_dipole
-#include "source_estate/module_charge/symm_rho.h" // use Symmetry_rho
+#include "source_estate/module_charge/chg_symm.h" // use module_charge::cal_rhog_symm
 #include "source_hamilt/module_xc/xc_functional.h"    // use XC_Functional
 #include "source_estate/write_elecstat_pot.h" // use write_elecstat_pot
 #include "source_io/module_elf/write_elf.h"
@@ -168,10 +168,9 @@ void ctrl_output_fp(UnitCell& ucell,
     if (inp.out_elf[0] > 0 && should_output)
     {
         chr.cal_elf = true;
-        Symmetry_rho srho;
         for (int is = 0; is < nspin; is++)
         {
-            srho.begin(is, chr, pw_rhod, ucell.symm);
+            module_charge::cal_rhog_symm(is, chr, pw_rhod, ucell.symm);
         }
 
         std::string out_dir = PARAM.globalv.global_out_dir;

@@ -13,7 +13,7 @@
 #include "source_io/module_wf/read_wfc_nao.h"
 //------LCAO HSolver ElecState-------
 #include "source_estate/elecstate_tools.h"
-#include "source_estate/module_charge/symm_rho.h"
+#include "source_estate/module_charge/chg_symm.h"
 #include "source_estate/module_dm/cal_dm_psi.h"
 #include "source_estate/module_dm/cal_edm_tddft.h"
 #include "source_estate/module_pot/h_tddft_pw.h"
@@ -378,7 +378,7 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::hamilt2rho_single(UnitCell& ucell, const
     // Symmetrize the charge density only for ground state
     if (istep <= 1)
     {
-        Symmetry_rho::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rho, ucell.symm);
+        module_charge::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rho, ucell.symm);
     }
 #ifdef __EXX
     if (this->exx_info_.info_ri.real_number)

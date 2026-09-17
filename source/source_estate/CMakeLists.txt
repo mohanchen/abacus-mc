@@ -41,8 +41,8 @@ list(APPEND objects
     module_charge/mix_precond.cpp
     module_charge/charge_mixing_rho.cpp
     module_charge/charge_mixing_uspp.cpp
-    module_charge/symm_rho.cpp
-    module_charge/symm_rhog.cpp
+    module_charge/chg_symm.cpp
+    module_charge/chg_symm_detail.cpp
     rhog_io.cpp
     write_elecstat_pot.cpp
     write_init.cpp

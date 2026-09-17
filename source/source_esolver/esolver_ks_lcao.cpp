@@ -7,7 +7,7 @@
 #include "source_lcao/setup_dftu_lcao.h"
 #include "source_pw/module_pwdft/dftu_base.h" // Plus_U_Base (PW and LCAO share it)
 #include "source_hamilt/hs_matrix_k.h"
-#include "source_estate/module_charge/symm_rho.h"
+#include "source_estate/module_charge/chg_symm.h"
 #include "source_lcao/lcao_domain.h" // need DeePKS_init
 #include "source_lcao/force_stress_lcao.h"
 #include "source_hamilt/module_gint/gint.h"
@@ -234,7 +234,7 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
 #endif
 
     // 16) the electron charge density should be symmetrized,
-    Symmetry_rho::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rho, ucell.symm);
+    module_charge::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rho, ucell.symm);
 
     // 17) update of RDMFT, added by jghan
     if (this->inp_->rdmft == true)
@@ -506,7 +506,7 @@ void ESolver_KS_LCAO<TK, TR>::hamilt2rho_single(UnitCell& ucell, int istep, int 
 #endif
 
     // 5) symmetrize the charge density
-    Symmetry_rho::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rho, ucell.symm);
+    module_charge::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rho, ucell.symm);
 
     // 6) calculate delta energy
     this->pelec->f_en.deband = this->pelec->cal_delta_eband(ucell);

@@ -1,7 +1,7 @@
 #include "esolver_ks_pw.h"
 
 #include "source_estate/elecstate_pw.h"
-#include "source_estate/module_charge/symm_rho.h"
+#include "source_estate/module_charge/chg_symm.h"
 #include "source_hsolver/diago_iter_assist.h"
 #include "source_hsolver/diago_params.h"
 #include "source_hsolver/hsolver_pw.h"
@@ -277,7 +277,7 @@ void ESolver_KS_PW<T, Device>::hamilt2rho_single(UnitCell& ucell, const int iste
     }
 
     // symmetrize the charge density
-    Symmetry_rho::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rhod, ucell.symm);
+    module_charge::symmetrize_rho(this->inp_->nspin, this->chr, this->pw_rhod, ucell.symm);
 
     ModuleBase::timer::end("ESolver_KS_PW", "hamilt2rho_single");
 }
