@@ -8,6 +8,7 @@
 #include "../module_charge/chg_drho.h"
 #include "../module_charge/chg_drho_detail.h"
 #include "../module_charge/chg_precond.h"
+#include "../module_charge/chg_uspp.h"
 #include "source_base/module_mixing/broyden_mixing.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_hamilt/module_xc/xc_functional.h"
@@ -66,10 +67,9 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
  *                 Charge_Mixing::mix_rho_recip(chr)
  *                 Charge_Mixing::mix_rho_real(chr)
  *      - mix rho with different methods
- *   - MixDivCombTest: Charge_Mixing::divide_data
- *                     Charge_Mixing::combine_data
- *                     Charge_Mixing::clean_data
- *    - divide and combine data
+ *   - MixDivCombTest: module_charge::split_dgrid
+ *                     module_charge::merge_dgrid
+ *    - divide and combine data on the USPP double grid
  *
  */
 
@@ -883,37 +883,49 @@ TEST_F(ChargeMixingTest, MixDivCombTest)
     Charge_Mixing CMtest;
     CMtest.set_rhopw(&pw_basis, &pw_dbasis);
     std::vector<std::complex<double>> data(pw_dbasis.npw, 1.0);
-    std::complex<double>*datas, *datahf;
-    std::complex<double>*datas2, *datahf2;
-    CMtest.divide_data(data.data(), datas, datahf);
-    EXPECT_EQ(datas, data.data());
-    EXPECT_EQ(datahf, data.data() + pw_basis.npw);
-    CMtest.combine_data(data.data(), datas, datahf);
-    EXPECT_EQ(datas, nullptr);
-    EXPECT_EQ(datahf, nullptr);
+    const int npw_smooth = pw_basis.npw;
+    const int npw_dense = pw_dbasis.npw;
+    const int npw_hf = npw_dense - npw_smooth;
 
-    CMtest.divide_data(data.data(), datas2, datahf2);
-    CMtest.clean_data(datas2, datahf2);
-    EXPECT_EQ(datas2, nullptr);
-    EXPECT_EQ(datahf2, nullptr);
+    // split: smooth + high-frequency together reconstruct the dense data
+    std::vector<std::complex<double>> datas(npw_smooth);
+    std::vector<std::complex<double>> datahf(npw_hf);
+    module_charge::split_dgrid(data.data(), datas, datahf,
+                                1, npw_smooth, npw_dense);
+    for (int i = 0; i < npw_smooth; ++i)
+    {
+        EXPECT_EQ(datas[i], data[i]);
+    }
+    for (int i = 0; i < npw_hf; ++i)
+    {
+        EXPECT_EQ(datahf[i], data[npw_smooth + i]);
+    }
 
-    // NSPIN = 2
-    PARAM.input.nspin = 2;
-    data.resize(pw_dbasis.npw * 2, 1.0);
-    std::vector<std::complex<double>> dataout(pw_dbasis.npw * 2, 1.0);
-    CMtest.divide_data(data.data(), datas, datahf);
-    CMtest.combine_data(dataout.data(), datas, datahf);
-    EXPECT_EQ(datas, nullptr);
-    EXPECT_EQ(datahf, nullptr);
-    for (int i = 0; i < pw_dbasis.npw * 2; ++i)
+    // merge: inverse of split; output must equal input
+    std::vector<std::complex<double>> dataout(npw_dense, std::complex<double>(0, 0));
+    module_charge::merge_dgrid(dataout.data(), datas, datahf,
+                                1, npw_smooth, npw_dense);
+    for (int i = 0; i < npw_dense; ++i)
     {
         EXPECT_EQ(dataout[i], data[i]);
     }
 
-    CMtest.divide_data(data.data(), datas2, datahf2);
-    CMtest.clean_data(datas2, datahf2);
-    EXPECT_EQ(datas2, nullptr);
-    EXPECT_EQ(datahf2, nullptr);
+    // No explicit cleanup call needed: vectors manage their own storage.
+
+    // NSPIN = 2
+    PARAM.input.nspin = 2;
+    data.resize(npw_dense * 2, 1.0);
+    dataout.assign(npw_dense * 2, std::complex<double>(0, 0));
+    std::vector<std::complex<double>> datas2(npw_smooth * 2);
+    std::vector<std::complex<double>> datahf2(npw_hf * 2);
+    module_charge::split_dgrid(data.data(), datas2, datahf2,
+                                2, npw_smooth, npw_dense);
+    module_charge::merge_dgrid(dataout.data(), datas2, datahf2,
+                                2, npw_smooth, npw_dense);
+    for (int i = 0; i < npw_dense * 2; ++i)
+    {
+        EXPECT_EQ(dataout[i], data[i]);
+    }
 }
 
 TEST_F(ChargeMixingTest, SCFOscillationTest)
