@@ -113,7 +113,7 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             chr->rhog[0][ig] = 0.5 * (rhog_mag[ig] + rhog_mag[ig+npw]);
             chr->rhog[1][ig] = 0.5 * (rhog_mag[ig] - rhog_mag[ig+npw]);
         }
-        // get rhogs_out for combine_data()
+        // sync rhogs_out so merge_dgrid has the latest smooth part
         if ( PARAM.globalv.double_grid)
         {
             for (int ig = 0; ig < npw; ig++)

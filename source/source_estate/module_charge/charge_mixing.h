@@ -180,31 +180,6 @@ class Charge_Mixing
             }
         };
     }
-
-    /**
-     * @brief divide rho/tau to smooth and high frequency parts
-     * @param data_d dense data
-     * @param data_s smooth data
-     * @param data_hf high frequency data = dense data - smooth data
-     *
-     */
-    void divide_data(std::complex<double>* data_d, std::complex<double>*& data_s, std::complex<double>*& data_hf);
-    /**
-     * @brief gather smooth and high frequency parts to rho/tau
-     * @param data_d dense data
-     * @param data_s smooth data
-     * @param data_hf high frequency data = dense data - smooth data
-     *  
-     */
-    void combine_data(std::complex<double>* data_d, std::complex<double>*& data_s, std::complex<double>*& data_hf);
-    /**
-     * @brief clean smooth and high frequency parts
-     * @param data_d dense data
-     * @param data_s smooth data
-     * @param data_hf high frequency data = dense data - smooth data
-     *
-     */
-    void clean_data(std::complex<double>*& data_s, std::complex<double>*& data_hf);
 };
 
 #endif
