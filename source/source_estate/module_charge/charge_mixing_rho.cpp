@@ -1,6 +1,7 @@
 #include "charge_mixing.h"
 #include "chg_drho.h"
 #include "chg_precond.h"
+#include "chg_uspp.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/timer.h"
 #include "source_hamilt/module_xc/xc_functional.h"
@@ -15,9 +16,17 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
 
     std::complex<double>* rhog_in = nullptr;
     std::complex<double>* rhog_out = nullptr;
+    // RAII owners for the smooth / high-frequency parts on the double grid.
+    // The raw pointers below alias these vectors when double_grid is on,
+    // or alias chr->rhog[_save][0] directly when double_grid is off so the
+    // mixing still mutates chr in place.
+    std::vector<std::complex<double>> rho_sg_in;
+    std::vector<std::complex<double>> rho_sg_out;
+    std::vector<std::complex<double>> rho_hf_in;
+    std::vector<std::complex<double>> rho_hf_out;
     // for smooth part
-    std::complex<double>* rhogs_in = chr->rhog_save[0];
-    std::complex<double>* rhogs_out = chr->rhog[0];
+    std::complex<double>* rhogs_in = nullptr;
+    std::complex<double>* rhogs_out = nullptr;
     // for high_frequency part
     std::complex<double>* rhoghf_in = nullptr;
     std::complex<double>* rhoghf_out = nullptr;
@@ -25,8 +34,25 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
     if ( PARAM.globalv.double_grid)
     {
         // divide into smooth part and high_frequency part
-        divide_data(chr->rhog_save[0], rhogs_in, rhoghf_in);
-        divide_data(chr->rhog[0], rhogs_out, rhoghf_out);
+        const int npw_smooth = this->rhopw->npw;
+        const int npw_dense = this->rhodpw->npw;
+        rho_sg_in.resize(nspin * npw_smooth);
+        rho_hf_in.resize(nspin * (npw_dense - npw_smooth));
+        rho_sg_out.resize(nspin * npw_smooth);
+        rho_hf_out.resize(nspin * (npw_dense - npw_smooth));
+        module_charge::split_dgrid(chr->rhog_save[0], rho_sg_in, rho_hf_in,
+                                    nspin, npw_smooth, npw_dense);
+        module_charge::split_dgrid(chr->rhog[0], rho_sg_out, rho_hf_out,
+                                    nspin, npw_smooth, npw_dense);
+        rhogs_in = rho_sg_in.data();
+        rhoghf_in = rho_hf_in.data();
+        rhogs_out = rho_sg_out.data();
+        rhoghf_out = rho_hf_out.data();
+    }
+    else
+    {
+        rhogs_in = chr->rhog_save[0];
+        rhogs_out = chr->rhog[0];
     }
 
     //  inner_product_recip_hartree is a hartree-like sum, unit is Ry
@@ -185,9 +211,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         const int ndimhf = (this->rhodpw->npw - this->rhopw->npw) * nspin;
         this->mixing_highf->plain_mix(rhoghf_out, rhoghf_in, rhoghf_out, ndimhf, nullptr);
 
-        // combine smooth part and high_frequency part
-        combine_data(chr->rhog[0], rhogs_out, rhoghf_out);
-        clean_data(rhogs_in, rhoghf_in);
+        // combine smooth part and high_frequency part;
+        // rho_sg_* / rho_hf_* vectors are released automatically at scope exit
+        module_charge::merge_dgrid(chr->rhog[0], rho_sg_out, rho_hf_out,
+                                    nspin, this->rhopw->npw, this->rhodpw->npw);
     }
 
     // rhog to rho
@@ -217,15 +244,42 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             rhodpw->real2recip(chr->kin_r[is], &kin_g[is * rhodpw->npw]);
             rhodpw->real2recip(chr->kin_r_save[is], &kin_g_save[is * rhodpw->npw]);
         }
+        // RAII owners for the smooth / high-frequency parts on the double grid;
+        // raw pointers below alias these vectors when double_grid is on, or
+        // alias kin_g[_save] directly when double_grid is off so the mixing
+        // mutates the dense buffer in place.
+        std::vector<std::complex<double>> tau_sg_in;
+        std::vector<std::complex<double>> tau_sg_out;
+        std::vector<std::complex<double>> tau_hf_in;
+        std::vector<std::complex<double>> tau_hf_out;
         // for smooth part, for ! PARAM.globalv.double_grid only have this part
-        std::complex<double>*taugs_in = kin_g_save.data(), *taugs_out = kin_g.data();
+        std::complex<double>* taugs_in = nullptr;
+        std::complex<double>* taugs_out = nullptr;
         // for high frequency part
-        std::complex<double>*taughf_in = nullptr, *taughf_out = nullptr;
+        std::complex<double>* taughf_in = nullptr;
+        std::complex<double>* taughf_out = nullptr;
         if ( PARAM.globalv.double_grid)
         {
             // divide into smooth part and high_frequency part
-            divide_data(kin_g_save.data(), taugs_in, taughf_in);
-            divide_data(kin_g.data(), taugs_out, taughf_out);
+            const int npw_smooth = this->rhopw->npw;
+            const int npw_dense = this->rhodpw->npw;
+            tau_sg_in.resize(nspin * npw_smooth);
+            tau_hf_in.resize(nspin * (npw_dense - npw_smooth));
+            tau_sg_out.resize(nspin * npw_smooth);
+            tau_hf_out.resize(nspin * (npw_dense - npw_smooth));
+            module_charge::split_dgrid(kin_g_save.data(), tau_sg_in, tau_hf_in,
+                                        nspin, npw_smooth, npw_dense);
+            module_charge::split_dgrid(kin_g.data(), tau_sg_out, tau_hf_out,
+                                        nspin, npw_smooth, npw_dense);
+            taugs_in = tau_sg_in.data();
+            taughf_in = tau_hf_in.data();
+            taugs_out = tau_sg_out.data();
+            taughf_out = tau_hf_out.data();
+        }
+        else
+        {
+            taugs_in = kin_g_save.data();
+            taugs_out = kin_g.data();
         }
 
         // Note: there is no kerker modification for tau because I'm not sure
@@ -240,9 +294,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             const int ndimhf = (this->rhodpw->npw - this->rhopw->npw) * nspin;
             this->mixing_highf->plain_mix(taughf_out, taughf_in, taughf_out, ndimhf, nullptr);
 
-            // combine smooth part and high_frequency part
-            combine_data(kin_g.data(), taugs_out, taughf_out);
-            clean_data(taugs_in, taughf_in);
+            // combine smooth part and high_frequency part;
+            // tau_sg_* / tau_hf_* vectors are released automatically at scope exit
+            module_charge::merge_dgrid(kin_g.data(), tau_sg_out, tau_hf_out,
+                                        nspin, this->rhopw->npw, this->rhodpw->npw);
         }
 
         // kin_g to kin_r
