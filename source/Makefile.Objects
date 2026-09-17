@@ -330,6 +330,7 @@ OBJS_GINT=batch_biggrid.o\
       gint_fvl.o\
       gint_info.o\
       gint_interface.o\
+      gint_prec_ctrl.o\
       gint_rho.o\
       gint_drho.o\
       gint_tau.o\
@@ -824,7 +825,6 @@ OBJS_SRCPW=h_ewald_pw.o\
     vnl_pw_init_vnl.o\
     vnl_pw_qrad.o\
     chgmixing.o\
-    gint_prec_ctrl.o\
     charge.o\
     charge_atomic.o\
     charge_init.o\

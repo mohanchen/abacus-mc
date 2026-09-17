@@ -124,13 +124,6 @@ AddTest(
 )
 
 AddTest(
-  TARGET MODULE_ESTATE_gint_prec_ctrl
-  LIBS parameter base device
-  SOURCES gint_prec_ctrl_test.cpp
-    ../module_charge/gint_prec_ctrl.cpp
-)
-
-AddTest(
   TARGET MODULE_ESTATE_test_rhog_io
   LIBS parameter base device planewave
   SOURCES test_rhog_io.cpp ../rhog_io.cpp ../../source_basis/module_pw/test/test_tool.cpp
