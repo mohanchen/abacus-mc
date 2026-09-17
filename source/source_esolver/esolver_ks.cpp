@@ -5,7 +5,7 @@
 #include "source_io/module_json/output_info.h"
 
 #include "source_estate/update_pot.h" // mohan add 20251016
-#include "source_estate/module_charge/chgmixing.h" // mohan add 20251018
+#include "source_estate/module_charge/chg_routine.h" // mohan add 20251018
 #include "source_estate/module_charge/chg_drho.h" // module_charge::cal_drho/cal_dkin
 #include "source_pw/module_pwdft/setup_pwwfc.h" // mohan add 20251018
 #include "source_hsolver/hsolver.h"

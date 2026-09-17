@@ -1,5 +1,5 @@
-#ifndef CHGMIXING_H
-#define CHGMIXING_H
+#ifndef CHG_ROUTINE_H
+#define CHG_ROUTINE_H
 
 #include "source_estate/elecstate.h" // use pelec
 #include "source_estate/module_charge/charge.h" // use chr

@@ -1,4 +1,4 @@
-#include "source_estate/module_charge/chgmixing.h"
+#include "source_estate/module_charge/chg_routine.h"
 
 #include "source_base/parallel_comm.h"
 #include "source_estate/update_pot.h"

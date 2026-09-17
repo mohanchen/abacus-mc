@@ -27,7 +27,7 @@ list(APPEND objects
     module_pot/td_field.cpp
     module_pot/td_field_profiles.cpp
     module_pot/td_field_manager.cpp
-    module_charge/chgmixing.cpp
+    module_charge/chg_routine.cpp
     module_charge/charge.cpp
     module_charge/charge_atomic.cpp
     module_charge/charge_init.cpp
