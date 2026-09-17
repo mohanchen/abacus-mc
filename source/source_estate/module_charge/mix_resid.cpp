@@ -260,33 +260,6 @@ double Charge_Mixing::inner_product_recip_rho(std::complex<double>* rho1, std::c
     return sum;
 }
 
-// a simple inner product, now is not used anywhere. For test only.
-double Charge_Mixing::inner_product_recip_simple(std::complex<double>* rho1, std::complex<double>* rho2)
-{
-    ModuleBase::TITLE("Charge_Mixing", "recip_simple");
-    ModuleBase::timer::start("Charge_Mixing", "recip_simple");
-
-    double rnorm = 0.0;
-    // consider a resize for mixing_angle
-    int resize_tmp = 1;
-    if (this->cfg_.nspin == 4 && this->mixing_angle > 0) { resize_tmp = 2;
-}
-#ifdef _OPENMP
-#pragma omp parallel for reduction(+ : rnorm)
-#endif
-    for (int ig = 0; ig < this->rhopw->npw * this->cfg_.nspin / resize_tmp; ++ig)
-    {
-        rnorm += (conj(rho1[ig]) * rho2[ig]).real();
-    }
-#ifdef __MPI
-    Parallel_Reduce::reduce_pool(rnorm);
-#endif
-
-    ModuleBase::timer::end("Charge_Mixing", "recip_simple");
-
-    return rnorm;
-}
-
 // a Hartree-like inner product
 double Charge_Mixing::inner_product_recip_hartree(std::complex<double>* rhog1, std::complex<double>* rhog2)
 {

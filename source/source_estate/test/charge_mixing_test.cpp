@@ -57,7 +57,6 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
  *      - screen drho with Kerker method
  *   - InnerDotTest: Charge_Mixing::inner_product_recip_hartree(rhog1, rhog2)
  *                   Charge_Mixing::inner_product_recip_rho(rhog1, rhog2)
- *                   Charge_Mixing::inner_product_recip_simple(rhog1, rhog2)
  *                   Charge_Mixing::inner_product_real(rho1, rho2)
  *      - calculate the inner product of two vectors
  *   - MixRhoTest: Charge_Mixing::mix_rho(chr)
@@ -275,27 +274,6 @@ TEST_F(ChargeMixingTest, InnerDotRealTest)
     }
     inner = CMtest.inner_product_real(drho1.data(), drho2.data());
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * 2  * (pw_basis.nrxx * 2 - 1), 1e-8);
-}
-
-TEST_F(ChargeMixingTest, InnerDotRecipSimpleTest)
-{
-    Charge_Mixing CMtest;
-    // non mixing angle case
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
-    CMtest.set_rhopw(&pw_basis, &pw_basis);
-    PARAM.input.nspin = 2;
-    sync_cfg(CMtest);
-
-    // a simple sum for inner product
-    std::vector<std::complex<double>> drhog1(pw_basis.npw * PARAM.input.nspin);
-    std::vector<std::complex<double>> drhog2(pw_basis.npw * PARAM.input.nspin);
-    for (int i = 0; i < pw_basis.npw * PARAM.input.nspin; ++i)
-    {
-        drhog1[i] = 1.0;
-        drhog2[i] = double(i);
-    }
-    double inner = CMtest.inner_product_recip_simple(drhog1.data(), drhog2.data());
-    EXPECT_NEAR(inner, 0.5 * pw_basis.npw * PARAM.input.nspin * (pw_basis.npw * PARAM.input.nspin - 1), 1e-8);
 }
 
 TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)

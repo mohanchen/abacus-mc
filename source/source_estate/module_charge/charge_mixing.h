@@ -1,35 +1,11 @@
 #ifndef CHARGE_MIXING_H
 #define CHARGE_MIXING_H
 #include "charge.h"
+#include "mixing_config.h"
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_base/module_mixing/mixing.h"
 #include "source_base/module_mixing/plain_mixing.h"
 #include <functional>
-
-/// Configuration for charge mixing, aggregating the INPUT mixing parameters
-/// together with the runtime globals (nspin, scf_thr_type, double_grid,
-/// gamma_only_pw, domag, domag_z) that the mixing logic needs, so that
-/// Charge_Mixing does not read PARAM/GlobalV directly. Callers fill this
-/// from the parsed input once per run.
-struct MixingConfig
-{
-    std::string mixing_mode = "broyden"; ///< mixing mode: "plain", "broyden", "pulay"
-    double mixing_beta = 0.8;            ///< mixing beta for density
-    int mixing_ndim = 8;                 ///< mixing ndim for broyden and pulay
-    double mixing_gg0 = 0.0;             ///< mixing gg0 for Kerker screen
-    bool mixing_tau = false;             ///< whether to use tau mixing
-    double mixing_beta_mag = 1.6;        ///< mixing beta for magnetism
-    double mixing_gg0_mag = 0.0;         ///< mixing gg0 for Kerker screen for magnetism
-    double mixing_gg0_min = 0.1;         ///< minimum kerker coefficient
-    double mixing_angle = 0.0;           ///< mixing angle for nspin=4
-    bool mixing_dmr = false;             ///< whether to mix real space density matrix
-    int nspin = 1;                       ///< number of spins
-    int scf_thr_type = 1;                ///< 1: reciprocal, 2: real space threshold
-    bool double_grid = false;            ///< whether double grid is used
-    bool gamma_only_pw = false;          ///< whether gamma-only plane wave is used
-    bool domag = false;                  ///< whether magnetism (non-collinear) is considered
-    bool domag_z = false;                ///< whether only the z-component magnetism is considered
-};
 
 class Charge_Mixing
 {
@@ -194,12 +170,10 @@ class Charge_Mixing
     /**
      * @brief Inner product of two complex vectors
      * @brief inner_product_recip_rho is used for charge, like get_drho()
-     * @brief inner_product_recip_hartree and inner_product_recip_simple are used for charge mixing
-     * @brief inner_product_recip_simple is only used for test
+     * @brief inner_product_recip_hartree is used for charge mixing
      * @brief Actually, I am not sure if the definition of inner product for NSPIN=4 is correct, need to be checked.
      */
     double inner_product_recip_rho(std::complex<double>* rho1, std::complex<double>* rho2);
-    double inner_product_recip_simple(std::complex<double>* rho1, std::complex<double>* rho2);
     double inner_product_recip_hartree(std::complex<double>* rho1, std::complex<double>* rho2);
 
     /**
