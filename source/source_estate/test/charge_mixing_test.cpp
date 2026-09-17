@@ -7,6 +7,7 @@
 #include "../module_charge/charge_mixing.h"
 #include "../module_charge/chg_drho.h"
 #include "../module_charge/chg_drho_detail.h"
+#include "../module_charge/chg_precond.h"
 #include "source_base/module_mixing/broyden_mixing.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_hamilt/module_xc/xc_functional.h"
@@ -54,8 +55,8 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
  *                    Charge_Mixing::get_mixing_ndim()
  *                    Charge_Mixing::get_mixing_gg0()
  *      - set the basic parameters of class charge_mixing
- *   - KerkerScreenTest: Charge_Mixing::Kerker_screen_recip(drhog)
- *                       Charge_Mixing::Kerker_screen_real(drhog)
+ *   - KerkerScreenTest: module_charge::kerker_screen_recip(cfg, rhopw, tpiba, drhog)
+ *                       module_charge::kerker_screen_real(cfg, rhopw, tpiba, drhog)
  *      - screen drho with Kerker method
  *   - InnerDotTest: module_charge::inner_product_recip_hartree(rhog1, rhog2)
  *                   module_charge::detail::inner_product_recip_rho(rhog1, rhog2)
@@ -466,12 +467,10 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
 
 TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
 {
-    Charge_Mixing CMtest;
-    CMtest.set_rhopw(&pw_basis, &pw_basis);
     ucell.tpiba = 1.0;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     // nspin = 1
     PARAM.input.nspin = 1;
+    MixingConfig cfg = make_cfg();
     std::complex<double>* drhog = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     std::complex<double>* drhog_old = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     for (int i = 0; i < PARAM.input.nspin*pw_basis.npw; ++i)
@@ -479,20 +478,20 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
         drhog_old[i] = drhog[i] = std::complex<double>(1.0, 1.0);
     }
     // no kerker
-    CMtest.mixing_gg0 = 0.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 0.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     for (int i = 0; i < PARAM.input.nspin*pw_basis.npw; ++i)
     {
         EXPECT_EQ(drhog[i], drhog_old[i]);
     }
     // kerker
-    CMtest.mixing_gg0 = 1.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 1.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     double gg0 = std::pow(ModuleBase::BOHR_TO_A, 2);
     for (int i = 0; i < pw_basis.npw; ++i)
     {
         double gg = this->pw_basis.gg[i];
-        double ref = std::max(gg / (gg + gg0), 0.1 / CMtest.mixing_beta);
+        double ref = std::max(gg / (gg + gg0), 0.1 / cfg.mixing_beta);
         EXPECT_NEAR(drhog[i].real(), ref, 1e-10);
         EXPECT_NEAR(drhog[i].imag(), ref, 1e-10);
     }
@@ -501,8 +500,9 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
 
     // nspin = 2
     PARAM.input.nspin = 2;
-    CMtest.mixing_beta = 0.4;
-    CMtest.mixing_beta_mag = 1.6;
+    cfg = make_cfg();
+    cfg.mixing_beta = 0.4;
+    cfg.mixing_beta_mag = 1.6;
     drhog = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     drhog_old = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     for (int i = 0; i < PARAM.input.nspin*pw_basis.npw; ++i)
@@ -510,20 +510,20 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
         drhog_old[i] = drhog[i] = std::complex<double>(1.0, 1.0);
     }
     // mixing_gg0 = 0.0
-    CMtest.mixing_gg0 = 0.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 0.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     for (int i = 0; i < PARAM.input.nspin*pw_basis.npw; ++i)
     {
         EXPECT_EQ(drhog[i], drhog_old[i]);
     }
     // mixing_gg0 = 1.0, mixing_gg0_mag = 0.0
-    CMtest.mixing_gg0 = 1.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 1.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     gg0 = std::pow(ModuleBase::BOHR_TO_A, 2);
     for (int i = 0; i < pw_basis.npw; ++i)
     {
         double gg = this->pw_basis.gg[i];
-        double ref = std::max(gg / (gg + gg0), 0.1 / CMtest.mixing_beta);
+        double ref = std::max(gg / (gg + gg0), 0.1 / cfg.mixing_beta);
         // rho
         EXPECT_NEAR(drhog[i].real(), ref, 1e-10);
         EXPECT_NEAR(drhog[i].imag(), ref, 1e-10);
@@ -536,6 +536,7 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
 
     // nspin = 4
     PARAM.input.nspin = 4;
+    cfg = make_cfg();
     drhog = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     drhog_old = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     for (int i = 0; i < PARAM.input.nspin*pw_basis.npw; ++i)
@@ -543,20 +544,20 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
         drhog_old[i] = drhog[i] = std::complex<double>(1.0, 1.0);
     }
     // mixing_gg0 = 0.0
-    CMtest.mixing_gg0 = 0.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 0.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     for (int i = 0; i < PARAM.input.nspin*pw_basis.npw; ++i)
     {
         EXPECT_EQ(drhog[i], drhog_old[i]);
     }
     // mixing_gg0 = 1.0, mixing_gg0_mag = 0.0
-    CMtest.mixing_gg0 = 1.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 1.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     gg0 = std::pow(ModuleBase::BOHR_TO_A, 2);
     for (int i = 0; i < pw_basis.npw; ++i)
     {
         double gg = this->pw_basis.gg[i];
-        double ref = std::max(gg / (gg + gg0), 0.1 / CMtest.mixing_beta);
+        double ref = std::max(gg / (gg + gg0), 0.1 / cfg.mixing_beta);
         // rho
         EXPECT_NEAR(drhog[i].real(), ref, 1e-10);
         EXPECT_NEAR(drhog[i].imag(), ref, 1e-10);
@@ -567,15 +568,15 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
         EXPECT_NEAR(drhog[i + pw_basis.npw].imag(), 1.0, 1e-10);
     }
     // mixing_gg0 = 1.0, mixing_gg0_mag = 2.0
-    CMtest.mixing_gg0 = 1.0;
-    CMtest.mixing_gg0_mag = 2.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 1.0;
+    cfg.mixing_gg0_mag = 2.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     double gg1 = std::pow(1.0 * ModuleBase::BOHR_TO_A, 2);
     double gg2 = std::pow(2.0 * ModuleBase::BOHR_TO_A, 2);
     for (int i = 0; i < pw_basis.npw; ++i)
     {
         double gg = this->pw_basis.gg[i];
-        double ref = std::max(gg / (gg + gg1), 0.1 / CMtest.mixing_beta);
+        double ref = std::max(gg / (gg + gg1), 0.1 / cfg.mixing_beta);
         // rho
         EXPECT_NEAR(drhog[i].real(), ref * ref, 1e-10);
         EXPECT_NEAR(drhog[i].imag(), ref * ref, 1e-10);
@@ -583,7 +584,7 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
     for (int i = 0; i < pw_basis.npw; ++i)
     {
         double gg = this->pw_basis.gg[i];
-        double ref = std::max(gg / (gg + gg2), 0.1 / CMtest.mixing_beta_mag);
+        double ref = std::max(gg / (gg + gg2), 0.1 / cfg.mixing_beta_mag);
         // rho
         for (int j = 1; j < PARAM.input.nspin; ++j)
         {
@@ -597,12 +598,10 @@ TEST_F(ChargeMixingTest, KerkerScreenRecipTest)
 
 TEST_F(ChargeMixingTest, KerkerScreenRealTest)
 {
-    Charge_Mixing CMtest;
-    CMtest.set_rhopw(&pw_basis, &pw_basis);
     ucell.tpiba = 1.0;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     // nspin = 1
     PARAM.input.nspin = 1;
+    MixingConfig cfg = make_cfg();
     double* drhor = new double[PARAM.input.nspin*pw_basis.nrxx];
     double* drhor_ref = new double[PARAM.input.nspin*pw_basis.nrxx];
     for (int i = 0; i < PARAM.input.nspin*pw_basis.nrxx; ++i)
@@ -610,8 +609,8 @@ TEST_F(ChargeMixingTest, KerkerScreenRealTest)
         drhor_ref[i] = drhor[i] = 1.0;
     }
     // no kerker
-    CMtest.mixing_gg0 = 0.0;
-    CMtest.Kerker_screen_real(drhor);
+    cfg.mixing_gg0 = 0.0;
+    module_charge::kerker_screen_real(cfg, &pw_basis, ucell.tpiba, drhor);
     for (int i = 0; i < PARAM.input.nspin*pw_basis.nrxx; ++i)
     {
         EXPECT_EQ(drhor[i], drhor_ref[i]);
@@ -621,7 +620,8 @@ TEST_F(ChargeMixingTest, KerkerScreenRealTest)
 
     // nspin = 2
     PARAM.input.nspin = 2;
-    CMtest.mixing_gg0 = 0.0;
+    cfg = make_cfg();
+    cfg.mixing_gg0 = 0.0;
     std::complex<double>* drhog = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     std::complex<double>* drhog_old = new std::complex<double>[PARAM.input.nspin*pw_basis.npw];
     drhor = new double[PARAM.input.nspin*pw_basis.nrxx];
@@ -630,22 +630,22 @@ TEST_F(ChargeMixingTest, KerkerScreenRealTest)
     {
         drhog_old[i] = drhog[i] = std::complex<double>(1.0, 1.0);
     }
-    CMtest.Kerker_screen_recip(drhog); // no kerker
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog); // no kerker
     for (int i = 0; i < PARAM.input.nspin*pw_basis.npw; ++i)
     {
         EXPECT_EQ(drhog[i], drhog_old[i]);
     }
 
     // RECIPROCAL
-    CMtest.mixing_gg0 = 1.0;
-    PARAM.input.mixing_gg0_mag = 0.0;
-    CMtest.Kerker_screen_recip(drhog);
+    cfg.mixing_gg0 = 1.0;
+    cfg.mixing_gg0_mag = 0.0;
+    module_charge::kerker_screen_recip(cfg, &pw_basis, ucell.tpiba, drhog);
     const double gg0 = std::pow(ModuleBase::BOHR_TO_A, 2);
     for (int i = 0; i < pw_basis.npw; ++i)
     {
         std::complex<double> ration = drhog[i] / drhog[i+pw_basis.npw];
         double gg = this->pw_basis.gg[i];
-        double ration_ref = std::max(gg / (gg + gg0), 0.1 / CMtest.mixing_beta);
+        double ration_ref = std::max(gg / (gg + gg0), 0.1 / cfg.mixing_beta);
         EXPECT_NEAR(ration.real(), ration_ref, 1e-10);
         EXPECT_NEAR(ration.imag(), 0, 1e-10);
     }
@@ -654,13 +654,13 @@ TEST_F(ChargeMixingTest, KerkerScreenRealTest)
     pw_basis.recip2real(drhog, drhor_ref);
     pw_basis.recip2real(drhog_old, drhor);
 
-    CMtest.mixing_gg0 = 0.0;
-    PARAM.input.mixing_gg0_mag = 0.0;
+    cfg.mixing_gg0 = 0.0;
+    cfg.mixing_gg0_mag = 0.0;
     // nothing happens
-    CMtest.Kerker_screen_real(drhor);
+    module_charge::kerker_screen_real(cfg, &pw_basis, ucell.tpiba, drhor);
 
-    CMtest.mixing_gg0 = 1.0;
-    CMtest.Kerker_screen_real(drhor);
+    cfg.mixing_gg0 = 1.0;
+    module_charge::kerker_screen_real(cfg, &pw_basis, ucell.tpiba, drhor);
     for (int i = 0; i < pw_basis.nrxx; ++i)
     {
         EXPECT_NEAR(drhor[i], drhor_ref[i], 1e-8);

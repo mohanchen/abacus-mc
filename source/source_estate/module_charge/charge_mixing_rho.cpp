@@ -1,5 +1,6 @@
 #include "charge_mixing.h"
 #include "chg_drho.h"
+#include "chg_precond.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/timer.h"
 #include "source_hamilt/module_xc/xc_functional.h"
@@ -40,7 +41,9 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
     {
         rhog_in = rhogs_in;
         rhog_out = rhogs_out;
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_recip, this, std::placeholders::_1);
+        auto screen = [this](std::complex<double>* p) {
+            module_charge::kerker_screen_recip(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -67,7 +70,9 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         rhog_in = rhog_mag_save.data();
         rhog_out = rhog_mag.data();
         //
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_recip, this, std::placeholders::_1);
+        auto screen = [this](std::complex<double>* p) {
+            module_charge::kerker_screen_recip(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
         auto twobeta_mix = this->make_twobeta_mix<std::complex<double>>(2 * npw, npw);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
@@ -98,7 +103,9 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         rhog_in = rhogs_in;
         rhog_out = rhogs_out;
         const int npw = this->rhopw->npw;
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_recip, this, std::placeholders::_1); // use old one
+        auto screen = [this](std::complex<double>* p) { // use old one
+            module_charge::kerker_screen_recip(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
         auto twobeta_mix = this->make_twobeta_mix<std::complex<double>>(4 * npw, npw);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
@@ -145,7 +152,9 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         //
         rhog_in = rhog_magabs_save.data();
         rhog_out = rhog_magabs.data();
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_recip, this, std::placeholders::_1); // use old one
+        auto screen = [this](std::complex<double>* p) { // use old one
+            module_charge::kerker_screen_recip(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
         auto twobeta_mix = this->make_twobeta_mix<std::complex<double>>(2 * npw, npw);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
@@ -262,8 +271,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     {
         rhor_in = chr->rho_save[0];
         rhor_out = chr->rho[0];
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
-        this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, true);    
+        auto screen = [this](double* p) {
+            module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
+        this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, true);
         auto inner_product = [this](double* rho1, double* rho2)
         {
             return module_charge::inner_product_real(rho1, rho2, *this->rhopw, this->cfg_);
@@ -292,7 +303,9 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         //
         rhor_in = rho_mag_save.data();
         rhor_out = rho_mag.data();
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
+        auto screen = [this](double* p) {
+            module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
         auto twobeta_mix = this->make_twobeta_mix<double>(2 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         auto inner_product = [this](double* rho1, double* rho2)
@@ -319,7 +332,9 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_in = chr->rho_save[0];
         rhor_out = chr->rho[0];
         const int nrxx = this->rhopw->nrxx;
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
+        auto screen = [this](double* p) {
+            module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
         auto twobeta_mix = this->make_twobeta_mix<double>(4 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         auto inner_product = [this](double* rho1, double* rho2)
@@ -354,7 +369,9 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_in = rho_magabs_save.data();
         rhor_out = rho_magabs.data();
 
-        auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
+        auto screen = [this](double* p) {
+            module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
+        };
         auto twobeta_mix = this->make_twobeta_mix<double>(2 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         auto inner_product = [this](double* rho1, double* rho2)

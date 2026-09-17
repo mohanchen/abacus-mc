@@ -37,7 +37,7 @@ list(APPEND objects
     module_charge/charge_mixing.cpp
     module_charge/charge_mixing_dmr.cpp
     module_charge/chg_drho.cpp
-    module_charge/mix_precond.cpp
+    module_charge/chg_precond.cpp
     module_charge/charge_mixing_rho.cpp
     module_charge/charge_mixing_uspp.cpp
     module_charge/chg_symm.cpp

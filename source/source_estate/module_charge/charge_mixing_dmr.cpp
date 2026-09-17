@@ -80,7 +80,9 @@ void Charge_Mixing::mix_dmr(elecstate::DensityMatrix<double, double>* DM)
         dmr_in = dmr_mag_save;
         dmr_out = dmr_mag;
         // no kerker in mixing_dmr
-        //auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
+        //auto screen = [this](double* p) {
+        //    module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
+        //};
         auto twobeta_mix
             = [this, nnr](double* out, const double* in, const double* sres) {
 #ifdef _OPENMP
@@ -176,7 +178,9 @@ void Charge_Mixing::mix_dmr(elecstate::DensityMatrix<std::complex<double>, doubl
         dmr_in = dmr_mag_save;
         dmr_out = dmr_mag;
         // no kerker in mixing_dmr
-        //auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
+        //auto screen = [this](double* p) {
+        //    module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
+        //};
         auto twobeta_mix
             = [this, nnr](double* out, const double* in, const double* sres) {
 #ifdef _OPENMP

@@ -156,18 +156,6 @@ class Charge_Mixing
     void mix_rho_real(Charge* chr);
 
     /**
-     * @brief Kerker screen method for reciprocal space
-     * @param rhog charge density in reciprocal space
-     */
-    void Kerker_screen_recip(std::complex<double>* rhog);
-
-    /**
-     * @brief Kerker screen method for real space
-     * @param rho charge density in real space
-     */
-    void Kerker_screen_real(double* rho);
-
-    /**
      * @brief two-beta mixing functor: mix the first `nunit` elements with
      * mixing_beta and the rest (nunit..total) with mixing_beta_mag. Used for
      * magnetic cases (nspin==2/4) where the charge channel and the magnetism
