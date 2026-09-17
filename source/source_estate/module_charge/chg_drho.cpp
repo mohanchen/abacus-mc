@@ -1,4 +1,4 @@
-#include "charge_mixing.h"
+#include "charge.h"
 #include "chg_drho.h"
 #include "chg_drho_detail.h"
 #include "source_base/timer.h"
@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-namespace
+namespace module_charge
 {
 
 // Charge residual between chr->rho and chr->rho_save, normalized per electron.
@@ -19,8 +19,8 @@ double cal_drho(Charge* chr,
                 const double tpiba)
 {
     assert(chr != nullptr);
-    ModuleBase::TITLE("Charge_Mixing", "get_drho");
-    ModuleBase::timer::start("Charge_Mixing", "get_drho");
+    ModuleBase::TITLE("module_charge", "cal_drho");
+    ModuleBase::timer::start("module_charge", "cal_drho");
     const int nspin = cfg.nspin;
     assert(nspin==1 || nspin==2 || nspin==4);
     double drho = 0.0;
@@ -81,7 +81,7 @@ double cal_drho(Charge* chr,
         drho /= nelec;
     }
 
-    ModuleBase::timer::end("Charge_Mixing", "get_drho");
+    ModuleBase::timer::end("module_charge", "cal_drho");
     return drho;
 }
 
@@ -97,8 +97,8 @@ double cal_dkin(Charge* chr,
     {
         return 0.0;
     };
-    ModuleBase::TITLE("Charge_Mixing", "get_dkin");
-    ModuleBase::timer::start("Charge_Mixing", "get_dkin");
+    ModuleBase::TITLE("module_charge", "cal_dkin");
+    ModuleBase::timer::start("module_charge", "cal_dkin");
     double dkin = 0.0;
 
     // Get dkin from kin_r and kin_r_save for PW and LCAO both, which is different from drho.
@@ -125,26 +125,11 @@ double cal_dkin(Charge* chr,
     dkin *= omega / static_cast<double>(rhopw.nxyz);
     dkin /= nelec;
 
-    ModuleBase::timer::end("Charge_Mixing", "get_dkin");
+    ModuleBase::timer::end("module_charge", "cal_dkin");
     return dkin;
 }
 
-} // namespace
-
-double Charge_Mixing::get_drho(Charge* chr, const double nelec)
-{
-    assert(this->rhopw != nullptr);
-    assert(this->omega != nullptr);
-    assert(this->tpiba != nullptr);
-    return cal_drho(chr, nelec, *this->rhopw, this->cfg_, *this->omega, *this->tpiba);
-}
-
-double Charge_Mixing::get_dkin(Charge* chr, const double nelec)
-{
-    assert(this->rhopw != nullptr);
-    assert(this->omega != nullptr);
-    return cal_dkin(chr, nelec, *this->rhopw, this->cfg_, *this->omega);
-}
+} // namespace module_charge
 
 namespace module_charge
 {

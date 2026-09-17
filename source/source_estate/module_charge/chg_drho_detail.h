@@ -1,7 +1,7 @@
 #ifndef CHG_DRHO_DETAIL_H
 #define CHG_DRHO_DETAIL_H
 
-// Internal reciprocal inner product for the charge residual (get_drho).
+// Internal reciprocal inner product for the charge residual (cal_drho).
 // Not part of the public module_charge API: only chg_drho.cpp and the
 // charge mixing unit test are expected to include this header.
 

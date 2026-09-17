@@ -6,6 +6,7 @@
 
 #include "source_estate/update_pot.h" // mohan add 20251016
 #include "source_estate/module_charge/chgmixing.h" // mohan add 20251018
+#include "source_estate/module_charge/chg_drho.h" // module_charge::cal_drho/cal_dkin
 #include "source_pw/module_pwdft/setup_pwwfc.h" // mohan add 20251018
 #include "source_hsolver/hsolver.h"
 #include "source_io/module_energy/write_eig_occ.h"
@@ -112,7 +113,8 @@ void ESolver_KS::hamilt2rho(UnitCell& ucell, const int istep, const int iter, co
     // example wavefunctions uses 20 processors while density uses 10.
     if (PARAM.globalv.ks_run)
     {
-        drho = p_chgmix->get_drho(&this->chr, this->inp_->nelec);
+        drho = module_charge::cal_drho(&this->chr, this->inp_->nelec, *this->pw_rho,
+                                       p_chgmix->get_mixing_config(), ucell.omega, ucell.tpiba);
         hsolver_error = 0.0;
         if (iter == 1 && this->inp_->calculation != "nscf")
         {
@@ -129,7 +131,8 @@ void ESolver_KS::hamilt2rho(UnitCell& ucell, const int istep, const int iter, co
 
                 this->hamilt2rho_single(ucell, istep, iter, diag_ethr);
 
-                drho = p_chgmix->get_drho(&this->chr, this->inp_->nelec);
+                drho = module_charge::cal_drho(&this->chr, this->inp_->nelec, *this->pw_rho,
+                                               p_chgmix->get_mixing_config(), ucell.omega, ucell.tpiba);
 
                 hsolver_error = hsolver::cal_hsolve_error(this->inp_->basis_type,
                                 this->inp_->esolver_type, diag_ethr, this->inp_->nelec);
@@ -288,7 +291,8 @@ void ESolver_KS::iter_finish(UnitCell& ucell, const int istep, int& iter, bool &
     double dkin = 0.0; // for meta-GGA
     if (XC_Functional::get_ked_flag())
     {
-        dkin = p_chgmix->get_dkin(&this->chr, this->inp_->nelec);
+        dkin = module_charge::cal_dkin(&this->chr, this->inp_->nelec, *this->pw_rho,
+                                       p_chgmix->get_mixing_config(), ucell.omega);
     }
 
     // Iter finish 

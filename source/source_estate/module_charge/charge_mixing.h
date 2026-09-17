@@ -74,14 +74,7 @@ class Charge_Mixing
     void mix_uom(std::vector<double>& uom_in, std::vector<double>& uom_save_in);
 
     /**
-     * @brief Get the drho between rho and rho_save, similar for get_dkin
-     *
-     */
-    double get_drho(Charge* chr, const double nelec);
-    double get_dkin(Charge* chr, const double nelec);
-
-    /**
-     * @brief reset mixing, actually we only call init_mixing() to reset mixing instead of this function 
+     * @brief reset mixing, actually we only call init_mixing() to reset mixing instead of this function
      */
     void mix_reset();
     
@@ -99,6 +92,11 @@ class Charge_Mixing
     int get_mixing_ndim() const {return mixing_ndim;}
     double get_mixing_gg0() const {return mixing_gg0;}
     Base_Mixing::Mixing* get_mixing() const {return mixing;}
+
+    /**
+     * @brief read-only access to the aggregated mixing config set by set_mixing()
+     */
+    const MixingConfig& get_mixing_config() const {return cfg_;}
 
     // for mixing restart
     int mixing_restart_step = 0; //which step to restart mixing during SCF, always equal to scf_namx except for the mixing restart
