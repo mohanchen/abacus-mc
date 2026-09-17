@@ -1,7 +1,7 @@
 #ifndef CHARGE_MIXING_H
 #define CHARGE_MIXING_H
 #include "charge.h"
-#include "mixing_config.h"
+#include "chg_mix_cfg.h"
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_base/module_mixing/mixing.h"
 #include "source_base/module_mixing/plain_mixing.h"

@@ -7,7 +7,7 @@
 
 #include <complex>
 
-#include "mixing_config.h"
+#include "chg_mix_cfg.h"
 
 namespace ModulePW
 {

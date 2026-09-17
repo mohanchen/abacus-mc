@@ -1,5 +1,5 @@
-#ifndef MIXING_CONFIG_H
-#define MIXING_CONFIG_H
+#ifndef CHG_MIX_CFG_H
+#define CHG_MIX_CFG_H
 
 #include <string>
 
@@ -28,4 +28,4 @@ struct MixingConfig
     bool domag_z = false;                ///< whether only the z-component magnetism is considered
 };
 
-#endif // MIXING_CONFIG_H
+#endif // CHG_MIX_CFG_H
