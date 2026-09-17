@@ -1,5 +1,5 @@
-#ifndef CHARGE_MATH_H
-#define CHARGE_MATH_H
+#ifndef CHG_TOOLS_H
+#define CHG_TOOLS_H
 
 // Free numerical kernels extracted from the Charge class so that the
 // density math (summation, electron-count integration, non-linear core
@@ -19,7 +19,7 @@ namespace ModulePW
 class PW_Basis;
 }
 
-namespace charge_math
+namespace module_charge
 {
 
 // Compute the core charge (non-linear core correction) on the real-space
@@ -64,6 +64,6 @@ void non_linear_core_correction(const bool numeric,
                                 const double* gg_uniq,
                                 const int ngg);
 
-} // namespace charge_math
+} // namespace module_charge
 
-#endif // CHARGE_MATH_H
+#endif // CHG_TOOLS_H

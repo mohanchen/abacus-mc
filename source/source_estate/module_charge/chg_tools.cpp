@@ -1,4 +1,4 @@
-#include "charge_math.h"
+#include "chg_tools.h"
 
 #include "source_base/complexmatrix.h"
 #include "source_base/global_function.h"
@@ -16,7 +16,7 @@
 #include <cmath>
 #include <new>
 
-namespace charge_math
+namespace module_charge
 {
 
 double sum_rho(double* const* rho,
@@ -25,7 +25,7 @@ double sum_rho(double* const* rho,
                const double omega,
                const int nxyz)
 {
-    ModuleBase::TITLE("charge_math", "sum_rho");
+    ModuleBase::TITLE("module_charge", "sum_rho");
 
     double sum_rho = 0.0;
 
@@ -48,7 +48,7 @@ double sum_rho(double* const* rho,
     // sum_rho may be smaller than 1, like Na bcc.
     if (sum_rho <= 0.1)
     {
-        ModuleBase::WARNING_QUIT("charge_math::sum_rho", "Can't find even an electron!");
+        ModuleBase::WARNING_QUIT("module_charge::sum_rho", "Can't find even an electron!");
     }
 
     return sum_rho;
@@ -85,7 +85,7 @@ void non_linear_core_correction(const bool numeric,
                                 const double* gg_uniq,
                                 const int ngg)
 {
-    ModuleBase::TITLE("charge_math", "drhoc");
+    ModuleBase::TITLE("module_charge", "drhoc");
 
     // use labmda instead of repeating codes
     const auto kernel = [&](int num_threads, int thread_id)
@@ -163,8 +163,8 @@ void set_rho_core(const UnitCell& ucell,
                   std::complex<double>* rhog_core,
                   const ModulePW::PW_Basis& rhopw)
 {
-    ModuleBase::TITLE("charge_math", "set_rho_core");
-    ModuleBase::timer::start("charge_math", "set_rho_core");
+    ModuleBase::TITLE("module_charge", "set_rho_core");
+    ModuleBase::timer::start("module_charge", "set_rho_core");
 
     bool bl = false;
     for (int it = 0; it < ucell.ntype; it++)
@@ -179,7 +179,7 @@ void set_rho_core(const UnitCell& ucell,
     if (!bl)
     {
         ModuleBase::GlobalFunc::ZEROS(rho_core, rhopw.nrxx);
-        ModuleBase::timer::end("charge_math", "set_rho_core");
+        ModuleBase::timer::end("module_charge", "set_rho_core");
         return;
     }
 
@@ -256,7 +256,7 @@ void set_rho_core(const UnitCell& ucell,
 
     // calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required
     // The term was present in previous versions of the code but it shouldn't
-    ModuleBase::timer::end("charge_math", "set_rho_core");
+    ModuleBase::timer::end("module_charge", "set_rho_core");
 }
 
-} // namespace charge_math
+} // namespace module_charge

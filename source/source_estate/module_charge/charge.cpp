@@ -17,7 +17,7 @@
 // even in a LSDA calculation.
 //----------------------------------------------------------
 #include "charge.h"
-#include "charge_math.h"
+#include "chg_tools.h"
 
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
@@ -176,7 +176,7 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
 double Charge::sum_rho() const
 {
     const int nspin0 = (nspin == 2) ? 2 : 1;
-    return charge_math::sum_rho(this->rho, nspin0, this->nrxx, *this->omega_, this->rhopw->nxyz);
+    return module_charge::sum_rho(this->rho, nspin0, this->nrxx, *this->omega_, this->rhopw->nxyz);
 }
 
 void Charge::renormalize_rho()
@@ -217,7 +217,7 @@ void Charge::save_rho_before_sum_band()
 
 double Charge::cal_rho2ne(const double* rho_in) const
 {
-    return charge_math::cal_rho2ne(rho_in, this->rhopw->nrxx, *this->omega_, this->rhopw->nxyz);
+    return module_charge::cal_rho2ne(rho_in, this->rhopw->nrxx, *this->omega_, this->rhopw->nxyz);
 }
 
 void Charge::check_rho()

@@ -828,7 +828,7 @@ OBJS_SRCPW=h_ewald_pw.o\
     charge.o\
     charge_atomic.o\
     charge_init.o\
-    charge_math.o\
+    chg_tools.o\
     charge_mpi.o\
     charge_extra.o\
     charge_mixing.o\

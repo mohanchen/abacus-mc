@@ -1,5 +1,5 @@
 #include "elecstate.h"
-#include "source_estate/module_charge/charge_math.h"
+#include "source_estate/module_charge/chg_tools.h"
 #include "source_estate/write_init.h"
 
 namespace elecstate
@@ -15,7 +15,7 @@ void init_scf(const UnitCell& ucell,
               ElecState* pelec)
 {
     //! core correction potential.
-    charge_math::set_rho_core(ucell,
+    module_charge::set_rho_core(ucell,
                               strucfac,
                               numeric,
                               pelec->charge->rho_core,

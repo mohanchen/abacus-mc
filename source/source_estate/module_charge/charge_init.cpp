@@ -3,7 +3,7 @@
 
 #include "charge.h"
 #include "charge_atomic.h"
-#include "charge_math.h"
+#include "chg_tools.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
 #include "source_io/module_parameter/parameter.h"
