@@ -100,9 +100,6 @@ void Charge_Mixing::mix_dmr(elecstate::DensityMatrix<double, double>* DM)
             }
         };
         this->mixing->push_data(this->dmr_mdata, dmr_in, dmr_out, nullptr, twobeta_mix, false);
-        //auto inner_product
-        //    = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
-        //this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->dmr_mdata, dmr_out);
         // get new dmr from dmr_mag
         dmr_up = dmr[0]->get_wrapper();
@@ -199,9 +196,6 @@ void Charge_Mixing::mix_dmr(elecstate::DensityMatrix<std::complex<double>, doubl
             }
         };
         this->mixing->push_data(this->dmr_mdata, dmr_in, dmr_out, nullptr, twobeta_mix, false);
-        //auto inner_product
-        //    = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
-        //this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->dmr_mdata, dmr_out);
         // get new dmr from dmr_mag
         dmr_up = dmr[0]->get_wrapper();

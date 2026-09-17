@@ -1,10 +1,12 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-// TODO(governance): remove this access hack once mix_resid.cpp and Charge no
+// TODO(governance): remove this access hack once chg_drho.cpp and Charge no
 // longer read global PARAM/RAW state (Step 4 of the module_charge refactor).
 // The test still has to drive Charge::_space_* and XC_Functional privates.
 #define private public
 #include "../module_charge/charge_mixing.h"
+#include "../module_charge/chg_drho.h"
+#include "../module_charge/chg_drho_detail.h"
 #include "source_base/module_mixing/broyden_mixing.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_hamilt/module_xc/xc_functional.h"
@@ -55,9 +57,9 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
  *   - KerkerScreenTest: Charge_Mixing::Kerker_screen_recip(drhog)
  *                       Charge_Mixing::Kerker_screen_real(drhog)
  *      - screen drho with Kerker method
- *   - InnerDotTest: Charge_Mixing::inner_product_recip_hartree(rhog1, rhog2)
- *                   Charge_Mixing::inner_product_recip_rho(rhog1, rhog2)
- *                   Charge_Mixing::inner_product_real(rho1, rho2)
+ *   - InnerDotTest: module_charge::inner_product_recip_hartree(rhog1, rhog2)
+ *                   module_charge::detail::inner_product_recip_rho(rhog1, rhog2)
+ *                   module_charge::inner_product_real(rho1, rho2)
  *      - calculate the inner product of two vectors
  *   - MixRhoTest: Charge_Mixing::mix_rho(chr)
  *                 Charge_Mixing::mix_rho_recip(chr)
@@ -256,7 +258,7 @@ TEST_F(ChargeMixingTest, InnerDotRealTest)
         drho1[i] = 1.0;
         drho2[i] = double(i);
     }
-    double inner = CMtest.inner_product_real(drho1.data(), drho2.data());
+    double inner = module_charge::inner_product_real(drho1.data(), drho2.data(), pw_basis, CMtest.cfg_);
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * PARAM.input.nspin  * (pw_basis.nrxx * PARAM.input.nspin - 1), 1e-8);
 
     // mixing angle case
@@ -272,7 +274,7 @@ TEST_F(ChargeMixingTest, InnerDotRealTest)
         drho1[i] = 1.0;
         drho2[i] = double(i);
     }
-    inner = CMtest.inner_product_real(drho1.data(), drho2.data());
+    inner = module_charge::inner_product_real(drho1.data(), drho2.data(), pw_basis, CMtest.cfg_);
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * 2  * (pw_basis.nrxx * 2 - 1), 1e-8);
 }
 
@@ -291,7 +293,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
         drhor1[i] = 1.0;
         drhor2[i] = double(i);
     }
-    double inner = CMtest.inner_product_real(drhor1.data(), drhor2.data());
+    double inner = module_charge::inner_product_real(drhor1.data(), drhor2.data(), pw_basis, CMtest.cfg_);
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * (pw_basis.nrxx - 1), 1e-8);
 
     // RECIPROCAL NSPIN=1
@@ -310,7 +312,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
     pw_basis.real2recip(drhor1.data(), drhog1.data());
     pw_basis.real2recip(drhor2.data(), drhog2.data());
 
-    inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
+    inner = module_charge::inner_product_recip_hartree(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, -0.3 * ModuleBase::e2 * ModuleBase::FOUR_PI, 1e-8);
 
     // RECIPROCAL NSPIN=2
@@ -335,11 +337,11 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
     }
     PARAM.sys.gamma_only_pw= false;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_hartree(drhog1_mag.data(), drhog2_mag.data());
+    inner = module_charge::inner_product_recip_hartree(drhog1_mag.data(), drhog2_mag.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 236763.82650318215, 1e-8);
     PARAM.sys.gamma_only_pw= true;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_hartree(drhog1_mag.data(), drhog2_mag.data());
+    inner = module_charge::inner_product_recip_hartree(drhog1_mag.data(), drhog2_mag.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 236763.82650318215 * 2, 1e-8);
 
     // RECIPROCAL NSPIN=4 without mixing_angle
@@ -356,13 +358,13 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
     PARAM.sys.domag = false;
     PARAM.sys.domag_z = false;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
+    inner = module_charge::inner_product_recip_hartree(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 28260.091995611871, 1e-8);
     PARAM.sys.gamma_only_pw= true;
     PARAM.sys.domag = true;
     PARAM.sys.domag_z = true;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
+    inner = module_charge::inner_product_recip_hartree(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 110668.61166927818, 1e-8);
 
     // RECIPROCAL NSPIN=4 with mixing_angle
@@ -378,11 +380,11 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
     }
     PARAM.sys.gamma_only_pw= false;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
+    inner = module_charge::inner_product_recip_hartree(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 36548.881431837777, 1e-8);
     PARAM.sys.gamma_only_pw= true;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_hartree(drhog1.data(), drhog2.data());
+    inner = module_charge::inner_product_recip_hartree(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 44776.555369916401, 1e-8);
 }
 
@@ -399,7 +401,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
         drhor1[i] = 1.0;
         drhor2[i] = double(i);
     }
-    double inner = CMtest.inner_product_real(drhor1.data(), drhor2.data());
+    double inner = module_charge::inner_product_real(drhor1.data(), drhor2.data(), pw_basis, CMtest.cfg_);
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * (pw_basis.nrxx - 1), 1e-8);
 
     // RECIPROCAL
@@ -418,7 +420,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
     pw_basis.real2recip(drhor1.data(), drhog1.data());
     pw_basis.real2recip(drhor2.data(), drhog2.data());
 
-    inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
+    inner = module_charge::detail::inner_product_recip_rho(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, -0.3 * ModuleBase::e2 * ModuleBase::FOUR_PI, 1e-8);
 
     PARAM.input.nspin = 2;
@@ -432,11 +434,11 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
     }
     PARAM.sys.gamma_only_pw= false;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
+    inner = module_charge::detail::inner_product_recip_rho(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 236763.82650318215, 1e-8);
     PARAM.sys.gamma_only_pw= true;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
+    inner = module_charge::detail::inner_product_recip_rho(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 236763.82650318215 * 2, 1e-8);
 
     PARAM.input.nspin = 4;
@@ -452,13 +454,13 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
     PARAM.sys.domag = false;
     PARAM.sys.domag_z = false;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
+    inner = module_charge::detail::inner_product_recip_rho(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 28260.091995611871, 1e-8);
     PARAM.sys.gamma_only_pw= true;
     PARAM.sys.domag = true;
     PARAM.sys.domag_z = true;
     sync_cfg(CMtest);
-    inner = CMtest.inner_product_recip_rho(drhog1.data(), drhog2.data());
+    inner = module_charge::detail::inner_product_recip_rho(drhog1.data(), drhog2.data(), pw_basis, CMtest.cfg_, ucell.omega, ucell.tpiba);
     EXPECT_NEAR(inner, 110668.61166927818, 1e-8);
 }
 

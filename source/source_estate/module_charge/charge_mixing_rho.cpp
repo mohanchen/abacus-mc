@@ -1,4 +1,5 @@
 #include "charge_mixing.h"
+#include "chg_drho.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/timer.h"
 #include "source_hamilt/module_xc/xc_functional.h"
@@ -28,8 +29,11 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
     }
 
     //  inner_product_recip_hartree is a hartree-like sum, unit is Ry
-    auto inner_product
-        = std::bind(&Charge_Mixing::inner_product_recip_hartree, this, std::placeholders::_1, std::placeholders::_2);
+    auto inner_product = [this](std::complex<double>* rhog1, std::complex<double>* rhog2)
+    {
+        return module_charge::inner_product_recip_hartree(
+            rhog1, rhog2, *this->rhopw, this->cfg_, *this->omega, *this->tpiba);
+    };
 
     // DIIS Mixing Only for smooth part, while high_frequency part is mixed by plain mixing method.
     if (nspin == 1)
@@ -260,8 +264,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_out = chr->rho[0];
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, true);    
-        auto inner_product
-            = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
+        auto inner_product = [this](double* rho1, double* rho2)
+        {
+            return module_charge::inner_product_real(rho1, rho2, *this->rhopw, this->cfg_);
+        };
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
     }
@@ -289,8 +295,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
         auto twobeta_mix = this->make_twobeta_mix<double>(2 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
-        auto inner_product
-            = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
+        auto inner_product = [this](double* rho1, double* rho2)
+        {
+            return module_charge::inner_product_real(rho1, rho2, *this->rhopw, this->cfg_);
+        };
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
         // get new rho[is][nrxx] from rho_mag[is*nrxx]
@@ -314,8 +322,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
         auto twobeta_mix = this->make_twobeta_mix<double>(4 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
-        auto inner_product
-            = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
+        auto inner_product = [this](double* rho1, double* rho2)
+        {
+            return module_charge::inner_product_real(rho1, rho2, *this->rhopw, this->cfg_);
+        };
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
     }
@@ -347,8 +357,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         auto screen = std::bind(&Charge_Mixing::Kerker_screen_real, this, std::placeholders::_1);
         auto twobeta_mix = this->make_twobeta_mix<double>(2 * nrxx, nrxx);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
-        auto inner_product
-            = std::bind(&Charge_Mixing::inner_product_real, this, std::placeholders::_1, std::placeholders::_2);
+        auto inner_product = [this](double* rho1, double* rho2)
+        {
+            return module_charge::inner_product_real(rho1, rho2, *this->rhopw, this->cfg_);
+        };
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
 

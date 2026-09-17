@@ -168,21 +168,6 @@ class Charge_Mixing
     void Kerker_screen_real(double* rho);
 
     /**
-     * @brief Inner product of two complex vectors
-     * @brief inner_product_recip_rho is used for charge, like get_drho()
-     * @brief inner_product_recip_hartree is used for charge mixing
-     * @brief Actually, I am not sure if the definition of inner product for NSPIN=4 is correct, need to be checked.
-     */
-    double inner_product_recip_rho(std::complex<double>* rho1, std::complex<double>* rho2);
-    double inner_product_recip_hartree(std::complex<double>* rho1, std::complex<double>* rho2);
-
-    /**
-     * @brief Inner product of two double vectors
-     *
-     */
-    double inner_product_real(double* rho1, double* rho2);
-
-    /**
      * @brief two-beta mixing functor: mix the first `nunit` elements with
      * mixing_beta and the rest (nunit..total) with mixing_beta_mag. Used for
      * magnetic cases (nspin==2/4) where the charge channel and the magnetism
