@@ -9,6 +9,7 @@
 #include "source_cell/klist.h"
 #include "source_cell/unitcell.h"
 #include "source_estate/module_charge/charge.h"
+#include "source_estate/module_charge/chg_parallel.h"
 #include "source_estate/module_charge/chg_symm.h"
 #include "source_hamilt/module_xc/xc_functional.h"
 #include "source_io/module_parameter/parameter.h"
@@ -266,7 +267,7 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
     }
 
 #ifdef __MPI
-    chg_ref.reduce_diff_pools(chg_ref.rho[0]);
+    module_charge::reduce_diff_pools(chg_ref.rho[0], chg_ref);
 #endif
 
     // for spin=1 or 2, npol=1

@@ -63,7 +63,7 @@ AddTest(
     ../elecstate_pw_cal_tau.cpp
     ../elecstate.cpp
     ../occupy.cpp
-    ../module_charge/charge_mpi.cpp
+    ../module_charge/chg_parallel.cpp
     ../../source_lcao/module_deltaspin/spin_constrain.cpp
     ../../source_lcao/module_deltaspin/deltaspin_state.cpp
     ../../source_psi/psi.cpp
@@ -134,16 +134,16 @@ AddTest(
 )
 
 AddTest(
-  TARGET MODULE_ESTATE_charge_mpi_test
+  TARGET MODULE_ESTATE_chg_parallel_test
   LIBS parameter psi base device planewave
-  SOURCES charge_mpi_test.cpp ../module_charge/charge_mpi.cpp
+  SOURCES test_chg_parallel.cpp ../module_charge/chg_parallel.cpp
   # Real MPI test: its main() calls MPI_Init unconditionally, so it must keep
   # __MPI despite this directory disabling it.
   KEEP_FEATURE_DEFINITIONS __MPI
 )
 
-add_test(NAME MODULE_ESTATE_charge_mpi_test_4np
-      COMMAND mpirun -np 4 ./MODULE_ESTATE_charge_mpi_test;
+add_test(NAME MODULE_ESTATE_chg_parallel_test_4np
+      COMMAND mpirun -np 4 ./MODULE_ESTATE_chg_parallel_test;
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 

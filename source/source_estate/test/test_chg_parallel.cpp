@@ -2,6 +2,7 @@
 #include "source_base/parallel_global.h"
 #include "source_base/parallel_grid.h"
 #include "source_estate/module_charge/charge.h"
+#include "source_estate/module_charge/chg_parallel.h"
 #include "source_hamilt/module_xc/xc_functional.h"
 #include "source_io/module_parameter/parameter.h"
 
@@ -29,14 +30,14 @@ auto sum_array = [](const double* v, const int& nv) {
     return sum;
 };
 /************************************************
- *  unit test of module_charge/charge_mpi.cpp
+ *  unit test of module_charge/chg_parallel.cpp
  ***********************************************/
 
 /**
  * - Tested Functions:
- *   - rho_mpi: Charge::rho_mpi():
+ *   - rho_mpi: module_charge::rho_mpi()
  *     - test rho_mpi
- *   - reduce_diff_pools: Charge::reduce_diff_pools()
+ *   - reduce_diff_pools: module_charge::reduce_diff_pools()
  *     - test reduce_diff_pools
  *     - using rhopw and GlobalV
  */
@@ -99,7 +100,7 @@ TEST_F(ChargeMpiTest, reduce_diff_pools1)
         }
         double refsum = sum_array(array_rho, nrxx);
 
-        charge->reduce_diff_pools(array_rho);
+        module_charge::reduce_diff_pools(array_rho, *charge);
         double sum = sum_array(array_rho, nrxx);
         EXPECT_EQ(sum, refsum * GlobalV::KPAR);
 
@@ -154,7 +155,7 @@ TEST_F(ChargeMpiTest, reduce_diff_pools2)
             }
         }
 
-        charge->reduce_diff_pools(array_rho);
+        module_charge::reduce_diff_pools(array_rho, *charge);
         double sum = sum_array(array_rho, nrxx);
         MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_DOUBLE, MPI_SUM, POOL_WORLD);
         EXPECT_EQ(sum, refsum * GlobalV::KPAR);
@@ -200,7 +201,7 @@ TEST_F(ChargeMpiTest, rho_mpi)
         charge->nrxx = nrxx;
         charge->rho[0] = new double[nrxx];
         charge->kin_r[0] = new double[nrxx];
-        charge->rho_mpi();
+        module_charge::rho_mpi(*charge);
 
         delete[] charge->rho[0];
         delete[] charge->rho;
@@ -210,7 +211,7 @@ TEST_F(ChargeMpiTest, rho_mpi)
     }
 
     GlobalV::KPAR = 1;
-    charge->rho_mpi();
+    module_charge::rho_mpi(*charge);
 }
 
 TEST_F(ChargeMpiTest, kin_r_mpi)
@@ -259,7 +260,7 @@ TEST_F(ChargeMpiTest, kin_r_mpi)
         }
         const double refsum = sum_array(charge->kin_r[0], nrxx);
 
-        charge->kin_r_mpi();
+        module_charge::kin_r_mpi(*charge);
         const double sum = sum_array(charge->kin_r[0], nrxx);
         EXPECT_EQ(sum, refsum * GlobalV::KPAR);
 

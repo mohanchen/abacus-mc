@@ -110,28 +110,6 @@ class Charge
 
     void init_final_scf(); //LiuXh add 20180619
 
-    public:
-    /**
-     * @brief Sum rho at different pools (k-point parallelism).
-     *        Only used when GlobalV::KPAR > 1
-     */
-    void rho_mpi();
-
-    /**
-     * @brief Sum kin_r at different pools (k-point/band parallelism).
-     *        Only used when GlobalV::KPAR * bndpar > 1
-     */
-    void kin_r_mpi();
-
-    /**
-     * @brief     Reduce among different pools 
-     *          If NPROC_IN_POOLs are all the same, use GlobalV::KP_WORLD
-     *          else, gather rho in a POOL, and then reduce among different POOLs
-     * 
-     * @param array_rho f(rho): an array [nrxx]
-     */
-    void reduce_diff_pools(double* array_rho) const;
-
     void set_omega(double* omega_in){this->omega_ = omega_in;};
 
     // mohan add 2021-02-20

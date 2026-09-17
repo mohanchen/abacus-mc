@@ -32,7 +32,7 @@ list(APPEND objects
     module_charge/charge_atomic.cpp
     module_charge/charge_init.cpp
     module_charge/chg_tools.cpp
-    module_charge/charge_mpi.cpp
+    module_charge/chg_parallel.cpp
     module_charge/charge_extra.cpp
     module_charge/charge_mixing.cpp
     module_charge/charge_mixing_dmr.cpp
