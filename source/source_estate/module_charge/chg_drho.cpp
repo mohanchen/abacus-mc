@@ -7,15 +7,25 @@
 
 #include <cassert>
 
-double Charge_Mixing::get_drho(Charge* chr, const double nelec)
+namespace
 {
+
+// Charge residual between chr->rho and chr->rho_save, normalized per electron.
+double cal_drho(Charge* chr,
+                const double nelec,
+                const ModulePW::PW_Basis& rhopw,
+                const MixingConfig& cfg,
+                const double omega,
+                const double tpiba)
+{
+    assert(chr != nullptr);
     ModuleBase::TITLE("Charge_Mixing", "get_drho");
     ModuleBase::timer::start("Charge_Mixing", "get_drho");
-    const int nspin = this->cfg_.nspin;
+    const int nspin = cfg.nspin;
     assert(nspin==1 || nspin==2 || nspin==4);
     double drho = 0.0;
 
-    if (this->cfg_.scf_thr_type == 1)
+    if (cfg.scf_thr_type == 1)
     {
         for (int is = 0; is < nspin; ++is)
         {
@@ -27,21 +37,21 @@ double Charge_Mixing::get_drho(Charge* chr, const double nelec)
         }
 
         ModuleBase::GlobalFunc::NOTE("Calculate the charge difference between rho(G) and rho_save(G)");
-        std::vector<std::complex<double>> drhog(nspin * this->rhopw->npw);
+        std::vector<std::complex<double>> drhog(nspin * rhopw.npw);
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)
 #endif
         for (int is = 0; is < nspin; ++is)
         {
-            for (int ig = 0; ig < this->rhopw->npw; ig++)
+            for (int ig = 0; ig < rhopw.npw; ig++)
             {
-                drhog[is * this->rhopw->npw + ig] = chr->rhog[is][ig] - chr->rhog_save[is][ig];
+                drhog[is * rhopw.npw + ig] = chr->rhog[is][ig] - chr->rhog_save[is][ig];
             }
         }
 
         ModuleBase::GlobalFunc::NOTE("Calculate the norm of the Residual std::vector: < R[rho] | R[rho_save] >");
         drho = module_charge::detail::inner_product_recip_rho(
-            drhog.data(), drhog.data(), *this->rhopw, this->cfg_, *this->omega, *this->tpiba);
+            drhog.data(), drhog.data(), rhopw, cfg, omega, tpiba);
     }
     else
     {
@@ -49,14 +59,14 @@ double Charge_Mixing::get_drho(Charge* chr, const double nelec)
         //       The inner_product_real function (L1-norm) is different from that (L2-norm) in mixing.
         for (int is = 0; is < nspin; is++)
         {
-            if (is != 0 && is != 3 && this->cfg_.domag_z)
+            if (is != 0 && is != 3 && cfg.domag_z)
             {
                 continue;
             }
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : drho)
 #endif
-            for (int ir = 0; ir < this->rhopw->nrxx; ir++)
+            for (int ir = 0; ir < rhopw.nrxx; ir++)
             {
                 drho += std::abs(chr->rho[is][ir] - chr->rho_save[is][ir]);
             }
@@ -65,9 +75,9 @@ double Charge_Mixing::get_drho(Charge* chr, const double nelec)
         Parallel_Reduce::reduce_pool(drho);
 #endif
         assert(nelec != 0);
-        assert(*this->omega > 0);
-        assert(this->rhopw->nxyz > 0);
-        drho *= *this->omega / static_cast<double>(this->rhopw->nxyz);
+        assert(omega > 0);
+        assert(rhopw.nxyz > 0);
+        drho *= omega / static_cast<double>(rhopw.nxyz);
         drho /= nelec;
     }
 
@@ -75,8 +85,14 @@ double Charge_Mixing::get_drho(Charge* chr, const double nelec)
     return drho;
 }
 
-double Charge_Mixing::get_dkin(Charge* chr, const double nelec)
+// Kinetic-energy-density residual between chr->kin_r and chr->kin_r_save.
+double cal_dkin(Charge* chr,
+                const double nelec,
+                const ModulePW::PW_Basis& rhopw,
+                const MixingConfig& cfg,
+                const double omega)
 {
+    assert(chr != nullptr);
     if (!(XC_Functional::get_ked_flag()))
     {
         return 0.0;
@@ -86,16 +102,16 @@ double Charge_Mixing::get_dkin(Charge* chr, const double nelec)
     double dkin = 0.0;
 
     // Get dkin from kin_r and kin_r_save for PW and LCAO both, which is different from drho.
-    for (int is = 0; is < this->cfg_.nspin; is++)
+    for (int is = 0; is < cfg.nspin; is++)
     {
-        if (is != 0 && is != 3 && this->cfg_.domag_z)
+        if (is != 0 && is != 3 && cfg.domag_z)
         {
             continue;
         }
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : dkin)
 #endif
-        for (int ir = 0; ir < this->rhopw->nrxx; ir++)
+        for (int ir = 0; ir < rhopw.nrxx; ir++)
         {
             dkin += std::abs(chr->kin_r[is][ir] - chr->kin_r_save[is][ir]);
         }
@@ -104,13 +120,30 @@ double Charge_Mixing::get_dkin(Charge* chr, const double nelec)
     Parallel_Reduce::reduce_pool(dkin);
 #endif
     assert(nelec != 0);
-    assert(*this->omega > 0);
-    assert(this->rhopw->nxyz > 0);
-    dkin *= *this->omega / static_cast<double>(this->rhopw->nxyz);
+    assert(omega > 0);
+    assert(rhopw.nxyz > 0);
+    dkin *= omega / static_cast<double>(rhopw.nxyz);
     dkin /= nelec;
 
     ModuleBase::timer::end("Charge_Mixing", "get_dkin");
     return dkin;
+}
+
+} // namespace
+
+double Charge_Mixing::get_drho(Charge* chr, const double nelec)
+{
+    assert(this->rhopw != nullptr);
+    assert(this->omega != nullptr);
+    assert(this->tpiba != nullptr);
+    return cal_drho(chr, nelec, *this->rhopw, this->cfg_, *this->omega, *this->tpiba);
+}
+
+double Charge_Mixing::get_dkin(Charge* chr, const double nelec)
+{
+    assert(this->rhopw != nullptr);
+    assert(this->omega != nullptr);
+    return cal_dkin(chr, nelec, *this->rhopw, this->cfg_, *this->omega);
 }
 
 namespace module_charge
