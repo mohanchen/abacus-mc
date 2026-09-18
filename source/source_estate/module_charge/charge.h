@@ -82,10 +82,6 @@ class Charge
 
   public:
 
-    double **nhat = nullptr; //compensation charge for PAW
-    double **nhat_save = nullptr; //compensation charge for PAW
-                                 // wenfei 2023-09-05
-
     double *rho_core = nullptr;
     std::complex<double> *rhog_core = nullptr;
 

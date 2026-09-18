@@ -110,11 +110,10 @@ class Charge_Mixing
   private:
 
     // mixing_data
-    /// Mixing object for charge, kinetic energy, and compensation density
+    /// Mixing object for charge and kinetic energy
     std::unique_ptr<Base_Mixing::Mixing> mixing;
     Base_Mixing::Mixing_Data rho_mdata;    ///< Mixing data for charge density
     Base_Mixing::Mixing_Data tau_mdata;    ///< Mixing data for kinetic energy density
-    Base_Mixing::Mixing_Data nhat_mdata;   ///< Mixing data for compensation density
     Base_Mixing::Mixing_Data dmr_mdata;    ///< Mixing data for real space density matrix
     Base_Mixing::Mixing_Data uom_mdata;    ///< Mixing data for DFT+U occupation matrix
     std::unique_ptr<Base_Mixing::Plain_Mixing> mixing_highf; ///< The high_frequency part is mixed by plain mixing method.
