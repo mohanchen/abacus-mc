@@ -680,7 +680,6 @@ OBJS_IO=module_parameter/input_conv.o\
     abacusjson.o\
     general_info.o\
     init_info.o\
-    readin_info.o\
     output_info.o\
     parse_args.o\
     module_parameter/availability.o\
