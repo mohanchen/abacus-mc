@@ -134,15 +134,6 @@ class Charge
 
     void save_rho_before_sum_band();
 
-    double cal_rho2ne(const double *rho_in) const;
-
-    /**
-     * @brief Check whether the charge density integrates to the electron number
-     *
-     * @param nelec target total electron number (PARAM.inp.nelec)
-     */
-    void check_rho(const double nelec);
-
     /**
      * @brief Allocate the rho buffers used to output the final SCF density
      *

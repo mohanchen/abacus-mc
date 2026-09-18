@@ -13,6 +13,7 @@
 #include "source_estate/elecstate_lcao.h"
 #include "source_estate/elecstate_tools.h"
 #include "source_estate/module_charge/chg_init.h"
+#include "source_estate/module_charge/chg_tools.h"
 #include "source_hsolver/hsolver_lcao.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_io/module_restart/restart.h" // GlobalC::restart for load_exx_flag
@@ -106,7 +107,9 @@ void ESolver_DoubleXC<TK, TR>::before_all_runners(BaseCell& basecell, const Inpu
     const bool kin_den = this->chr_base.kin_density(this->inp_->out_elf[0] > 0); // mohan add 20251202
     this->chr_base.allocate(this->inp_->nspin, kin_den, this->inp_->test_charge);
     this->chr_base.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, nullptr, init_rho_cfg);
-    this->chr_base.check_rho(this->inp_->nelec);
+    module_charge::check_rho(this->chr_base.rho, this->chr_base.nspin,
+                             this->chr_base.rhopw->nrxx, ucell.omega,
+                             this->chr_base.rhopw->nxyz, this->inp_->nelec);
 
     // 11) initialize the potential
     if (this->pelec_base->pot == nullptr)

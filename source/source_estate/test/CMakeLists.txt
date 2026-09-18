@@ -108,6 +108,12 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_ESTATE_chg_tools
+  LIBS parameter planewave_serial base device cell_info
+  SOURCES test_chg_tools.cpp ../module_charge/chg_tools.cpp
+)
+
+AddTest(
   TARGET MODULE_ESTATE_charge_mixing
   LIBS parameter base  psi  device planewave_serial cell_info
   SOURCES test_chg_mix.cpp

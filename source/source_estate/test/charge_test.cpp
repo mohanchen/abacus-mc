@@ -5,6 +5,7 @@
 #define protected public
 #include "source_cell/unitcell.h"
 #include "source_estate/module_charge/charge.h"
+#include "source_estate/module_charge/chg_tools.h"
 #include "source_hamilt/module_xc/xc_functional.h"
 #include "source_io/module_parameter/parameter.h"
 #include "prepare_unitcell.h"
@@ -49,7 +50,7 @@ void Set_GlobalV_Default()
  *     - calculate \sum_{is}^nspin \sum_{ir}^nrxx rho[is][ir]
  *   - RenormalizeRho: Charge::renormalize_rho()
  *     - renormalize rho so as to ensure the sum of rho equals to total number of electrons
- *   - CheckNe: Charge::cal_rho2ne()
+ *   - CheckNe: module_charge::cal_rho2ne()
  *     - check the total number of electrons summed from rho[is]
  *   - SaveRhoBeforeSumBand: Charge::save_rho_before_sum_band()
  *     - meaning as the function name
@@ -175,7 +176,8 @@ TEST_F(ChargeTest, CheckNe)
     charge->set_omega(&ucell->omega);;
     charge->renormalize_rho(PARAM.input.nelec);
     EXPECT_NEAR(charge->sum_rho(), 8.0, 1e-10);
-    EXPECT_NEAR(charge->cal_rho2ne(charge->rho[0]), 8.0, 1e-10);
+    EXPECT_NEAR(module_charge::cal_rho2ne(charge->rho[0], rhopw->nrxx, ucell->omega, rhopw->nxyz),
+                8.0, 1e-10);
 }
 
 TEST_F(ChargeTest, SaveRhoBeforeSumBand)
@@ -199,7 +201,8 @@ TEST_F(ChargeTest, SaveRhoBeforeSumBand)
     charge->set_omega(&ucell->omega);;
     charge->renormalize_rho(PARAM.input.nelec);
     charge->save_rho_before_sum_band();
-    EXPECT_NEAR(charge->cal_rho2ne(charge->rho_save[0]), 8.0, 1e-10);
+    EXPECT_NEAR(module_charge::cal_rho2ne(charge->rho_save[0], rhopw->nrxx, ucell->omega, rhopw->nxyz),
+                8.0, 1e-10);
 }
 
 TEST_F(ChargeTest, InitFinalScf)

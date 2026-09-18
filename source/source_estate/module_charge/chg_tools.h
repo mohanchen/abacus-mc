@@ -50,6 +50,19 @@ double cal_rho2ne(const double* rho_in,
                   const double omega,
                   const int nxyz);
 
+// Check that the charge density integrates to the target electron number.
+// rho[is][ir] is the density for spin channel is. For nspin == 1 or 4 the
+// total density in rho[0] is compared with nelec; for nspin == 2 the spin-up
+// (rho[0]) and spin-down (rho[1]) channels must each integrate to a
+// non-negative number and their sum must match nelec. A mismatch emits a
+// warning; a negative spin-channel electron number aborts the run.
+void check_rho(double* const* rho,
+               const int nspin,
+               const int nrxx,
+               const double omega,
+               const int nxyz,
+               const double nelec);
+
 // Non-linear core correction: Fourier transform of the (numeric) core
 // charge. gg_uniq / ngg supply the reciprocal grid shells previously read
 // from Charge::rhopw.

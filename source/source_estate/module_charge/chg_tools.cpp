@@ -9,6 +9,7 @@
 #include "source_base/math_sphbes.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
+#include "source_base/tool_quit.h"
 #include "source_base/tool_threading.h"
 #include "source_base/tool_title.h"
 #include "source_basis/module_pw/pw_basis.h"
@@ -74,6 +75,50 @@ double cal_rho2ne(const double* rho_in,
     ne = ne * omega / static_cast<double>(nxyz);
 
     return ne;
+}
+
+void check_rho(double* const* rho,
+               const int nspin,
+               const int nrxx,
+               const double omega,
+               const int nxyz,
+               const double nelec)
+{
+    ModuleBase::TITLE("module_charge", "check_rho");
+
+    assert(rho != nullptr);
+    assert(nelec > 0.0);
+
+    if (nspin == 1 || nspin == 4)
+    {
+        const double ne = cal_rho2ne(rho[0], nrxx, omega, nxyz);
+        if (std::abs(ne - nelec) > 1.0e-6)
+        {
+            ModuleBase::WARNING("Charge", "Charge is not equal to the number of electrons!");
+        }
+    }
+    else if (nspin == 2)
+    {
+        // for spin up
+        const double ne_up = cal_rho2ne(rho[0], nrxx, omega, nxyz);
+        if (ne_up < 0.0)
+        {
+            ModuleBase::WARNING_QUIT("Charge",
+                "Number of spin-down electrons set in starting magnetization exceeds all available.");
+        }
+        // for spin down
+        const double ne_dn = cal_rho2ne(rho[1], nrxx, omega, nxyz);
+        if (ne_dn < 0.0)
+        {
+            ModuleBase::WARNING_QUIT("Charge",
+                "Number of spin-up electrons set in starting magnetization exceeds all available.");
+        }
+        // for total charge
+        if (std::abs(ne_up + ne_dn - nelec) > 1.0e-6)
+        {
+            ModuleBase::WARNING("Charge", "Charge is not equal to the number of electrons!");
+        }
+    }
 }
 
 void non_linear_core_correction(const NlcCtx& ctx,

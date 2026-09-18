@@ -226,50 +226,6 @@ void Charge::save_rho_before_sum_band()
     return;
 }
 
-double Charge::cal_rho2ne(const double* rho_in) const
-{
-    return module_charge::cal_rho2ne(rho_in, this->rhopw->nrxx, *this->omega_, this->rhopw->nxyz);
-}
-
-void Charge::check_rho(const double nelec)
-{
-    assert(nelec > 0.0);
-
-    if (this->nspin==1 || this->nspin==4)
-    {
-        double ne = 0.0;
-        ne = this->cal_rho2ne(rho[0]);
-        if (std::abs(ne - nelec) > 1.0e-6)
-        {
-            ModuleBase::WARNING("Charge", "Charge is not equal to the number of electrons!");
-        }
-    }
-    else if (this->nspin == 2)
-    {
-        // for spin up
-        double ne_up = 0.0;
-        ne_up = this->cal_rho2ne(rho[0]);
-        if (ne_up < 0.0)
-        {
-            ModuleBase::WARNING_QUIT("Charge",
-                "Number of spin-down electrons set in starting magnetization exceeds all available.");
-        }
-        // for spin down
-        double ne_dn = 0.0;
-        ne_dn = this->cal_rho2ne(rho[1]);
-        if (ne_dn < 0.0)
-        {
-            ModuleBase::WARNING_QUIT("Charge",
-                "Number of spin-up electrons set in starting magnetization exceeds all available.");
-        }
-        // for total charge
-        if (std::abs(ne_up + ne_dn - nelec) > 1.0e-6)
-        {
-            ModuleBase::WARNING("Charge", "Charge is not equal to the number of electrons!");
-        }
-    }
-}
-
 // LiuXh add 20180619
 void Charge::init_final_scf(const int nspin_in, const int test_charge)
 {

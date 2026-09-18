@@ -5,6 +5,7 @@
 #include "source_base/global_function.h"
 #include "source_estate/module_charge/chg_init.h"
 #include "source_estate/module_charge/chg_symm.h"
+#include "source_estate/module_charge/chg_tools.h"
 #include "source_hamilt/module_ewald/h_ewald_pw.h"
 #include "source_cell/cal_ux.h"
 #include "source_pw/module_pwdft/force_pw.h"
@@ -94,7 +95,8 @@ void ESolver_OF::before_all_runners(BaseCell& basecell, const Input_para& inp)
     init_rho_cfg.domag_z = PARAM.globalv.domag_z;
     init_rho_cfg.npol = PARAM.globalv.npol;
     this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, nullptr, init_rho_cfg);
-    this->chr.check_rho(inp.nelec); // check the rho
+    module_charge::check_rho(this->chr.rho, this->chr.nspin, this->chr.rhopw->nrxx, ucell.omega,
+                             this->chr.rhopw->nxyz, inp.nelec); // check the rho
 
     // initialize local pseudopotential
     this->locpp.init_vloc(ucell,pw_rho);

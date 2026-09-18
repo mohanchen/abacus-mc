@@ -8,6 +8,7 @@
 #include "source_estate/module_charge/chg_routine.h" // mohan add 20251018
 #include "source_estate/module_charge/chg_drho.h" // module_charge::cal_drho/cal_dkin
 #include "source_estate/module_charge/chg_init.h" // module_charge::InitRhoCfg
+#include "source_estate/module_charge/chg_tools.h" // module_charge::check_rho
 #include "source_pw/module_pwdft/setup_pwwfc.h" // mohan add 20251018
 #include "source_hsolver/hsolver.h"
 #include "source_io/module_energy/write_eig_occ.h"
@@ -105,7 +106,8 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     init_rho_cfg.domag_z = PARAM.globalv.domag_z;
     init_rho_cfg.npol = PARAM.globalv.npol;
     this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, this->pw_wfc, init_rho_cfg);
-    this->chr.check_rho(inp.nelec); // check the rho
+    module_charge::check_rho(this->chr.rho, this->chr.nspin, this->chr.rhopw->nrxx, ucell.omega,
+                             this->chr.rhopw->nxyz, inp.nelec); // check the rho
   
 }
 
