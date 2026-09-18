@@ -2,8 +2,8 @@
 #include "source_estate/module_charge/chg_dmr.h"
 
 #include "source_base/parallel_comm.h"
+#include "source_pw/module_pwdft/dftu_base.h" // Plus_U_Base members used below
 #include "source_estate/update_pot.h"
-#include "source_lcao/module_deltaspin/spin_constrain.h"
 
 void module_charge::chgmixing_ks(const int iter,
         UnitCell& ucell,
@@ -123,6 +123,7 @@ void module_charge::chgmixing_ks(const int iter,
 void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
         Charge_Mixing* p_chgmix, // charge mixing class
         Plus_U_Base& dftu,
+        const bool mag_converged, ///< whether DeltaSpin magnetization converged (true when disabled)
         const Input_para& inp) // input parameters
 {
     ModuleBase::TITLE("module_charge", "chgmixing_ks_pw");
@@ -152,17 +153,7 @@ void module_charge::chgmixing_ks_pw(const int iter, // scf iteration number
             }
             if (dftu.get_uramping() > 0.01)
             {
-                bool do_uramping = true;
-                if (inp.sc_mag_switch)
-                {
-                    spinconstrain::SpinConstrain<std::complex<double>>& sc
-                        = spinconstrain::SpinConstrain<std::complex<double>>::getScInstance();
-                    if (!sc.mag_converged()) // skip uramping if mag not converged
-                    {
-                        do_uramping = false;
-                    }
-                }
-                if (do_uramping)
+                if (mag_converged) // skip uramping if mag not converged
                 {
                     dftu.uramping_update(); // update U by uramping if uramping > 0.01
                     std::cout << " U-Ramping! Current U = ";

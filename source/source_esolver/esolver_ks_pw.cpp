@@ -196,7 +196,16 @@ void ESolver_KS_PW<T, Device>::iter_init(UnitCell& ucell, const int istep, const
 {
     ESolver_KS::iter_init(ucell, istep, iter);
 
-    module_charge::chgmixing_ks_pw(iter, this->p_chgmix, *this->dftu_, *this->inp_);
+    // query DeltaSpin convergence for U-ramping; treat as converged when disabled
+    bool mag_converged = true;
+    if (this->inp_->sc_mag_switch)
+    {
+        spinconstrain::SpinConstrain<std::complex<double>>& sc
+            = spinconstrain::SpinConstrain<std::complex<double>>::getScInstance();
+        mag_converged = sc.mag_converged();
+    }
+
+    module_charge::chgmixing_ks_pw(iter, this->p_chgmix, *this->dftu_, mag_converged, *this->inp_);
 
     // mohan move harris functional here, 2012-06-05
     // use 'rho(in)' and 'v_h and v_xc'(in)

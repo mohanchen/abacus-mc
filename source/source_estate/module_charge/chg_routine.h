@@ -6,7 +6,9 @@
 #include "source_estate/module_charge/chg_mix.h" // use p_chgmix
 #include "source_io/module_parameter/input_parameter.h" // use Input_para
 #include "source_cell/unitcell.h"
-#include "source_pw/module_pwdft/dftu_base.h"
+
+// Plus_U_Base forward declaration, full definition in source_pw/module_pwdft/dftu_base.h
+class Plus_U_Base;
 
 namespace module_charge
 {
@@ -34,6 +36,7 @@ void chgmixing_ks(const int iter,
 void chgmixing_ks_pw(const int iter,
         Charge_Mixing* p_chgmix,
         Plus_U_Base& dftu,
+        const bool mag_converged, ///< whether DeltaSpin magnetization converged; pass true when sc_mag_switch is off
         const Input_para& inp); // input parameters
 
 void chgmixing_ks_lcao(const int iter, // scf iteration number
