@@ -119,7 +119,6 @@ void kerker_screen_real(const MixingConfig& cfg,
         // Thus we cannot use kerker_screen_recip(drhog.data()) directly after it.
         rhopw->real2recip(drhor + is * rhopw->nrxx, drhog.data() + is * rhopw->npw);
     }
-    /// implement Kerker for density and magnetization separately
     double fac = 0.0;
     double gg0 = 0.0;
     double amin = 0.0;

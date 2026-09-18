@@ -114,7 +114,7 @@ class Charge_Extra
     std::vector<std::vector<double>> delta_rho3; ///< the third last step difference of rho and atomic_rho
 
     double alpha; ///< parameter used in the second order extrapolation
-    double beta;  ///< parameter used in the second order extrapolation
+    double beta;  ///< coefficient for the third delta_rho contribution
 
     /**
      * @brief determine alpha and beta

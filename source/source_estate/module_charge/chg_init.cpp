@@ -171,7 +171,6 @@ void read_kin_file(Charge& chr,
     double** const kin_r = chr.kin_r;
 
     ofs_running << " try to read kinetic energy density from file" << std::endl;
-    // try to read charge from binary file first, which is the same as QE
     std::vector<std::complex<double>> kin_g_space(nspin * chr.ngmc, {0.0, 0.0});
     std::vector<std::complex<double>*> kin_g;
     for (int is = 0; is < nspin; is++)
@@ -179,7 +178,6 @@ void read_kin_file(Charge& chr,
         kin_g.push_back(kin_g_space.data() + is * chr.ngmc);
     }
 
-    // Temporary bridge: use factory until ParaCollection is wired into driver.
     Parallel::ParaWorld pw_world = Parallel::make_pw_world();
     std::stringstream binary;
     binary << readin_dir << suffix + "-TAU-DENSITY.restart";

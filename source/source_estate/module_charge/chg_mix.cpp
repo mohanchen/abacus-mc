@@ -519,7 +519,6 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     double* rhor_in=nullptr;
     double* rhor_out=nullptr;
 
-    // Kerker screening functor, shared by all nspin branches
     auto screen = [this](double* p) {
         module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
     };
@@ -560,7 +559,6 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     }
     else if (nspin == 4 && cfg_.mixing_angle <= 0)
     {
-        // normal broyden mixing for {rho, mx, my, mz}
         rhor_in = chr->rho_save[0];
         rhor_out = chr->rho[0];
         const int nrxx = this->rhopw->nrxx;
@@ -571,13 +569,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     }
     else if (nspin == 4 && cfg_.mixing_angle > 0)
     {
-        // special broyden mixing for {rho, |m|} proposed by J. Phys. Soc. Jpn. 82 (2013) 114706
-        // here only consider the case of mixing_angle = 1, which mean only change |m| and keep angle fixed
+        // real-space version of the {rho, |m|} broyden mixing
         const int nrxx = this->rhopw->nrxx;
-        // rho_magabs and rho_magabs_save, zero-initialized
         std::vector<double> rho_magabs(nrxx * 2);
         std::vector<double> rho_magabs_save(nrxx * 2);
-        // calculate rho_magabs and rho_magabs_save
         for (int ir = 0; ir < nrxx; ir++)
         {
             rho_magabs[ir] = chr->rho[0][ir]; // rho
@@ -599,7 +594,6 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
 
-        // use new |m| and angle to update {mx, my, mz}
         for (int ir = 0; ir < nrxx; ir++)
         {
             chr->rho[0][ir] = rho_magabs[ir]; // rho

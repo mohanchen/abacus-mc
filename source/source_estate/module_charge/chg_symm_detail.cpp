@@ -375,7 +375,6 @@ void psymmg_soc(std::complex<double>* rhog_x, std::complex<double>* rhog_y,
 #ifdef __MPI
     }
 
-    // (4) send the result to other procs in the same pool
     rhog_piece_to_all(rho_basis, rhogtot_x, rhog_x);
     rhog_piece_to_all(rho_basis, rhogtot_y, rhog_y);
     rhog_piece_to_all(rho_basis, rhogtot_z, rhog_z);

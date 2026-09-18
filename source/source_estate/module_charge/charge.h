@@ -48,7 +48,7 @@ class Charge
     std::complex<double> **rhog_save = nullptr;
 
     double **kin_r = nullptr; // kinetic energy density in real space, for meta-GGA
-    double **kin_r_save = nullptr; // kinetic energy density in real space, for meta-GGA
+    double **kin_r_save = nullptr; // same as kin_r, kept for mixing
     const Parallel_Grid* pgrid = nullptr;
 
   private:

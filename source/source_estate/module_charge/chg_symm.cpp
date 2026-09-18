@@ -86,7 +86,6 @@ void cal_rhog_symm(const int& spin_now,
 
         if (XC_Functional::get_ked_flag() && kin_r != nullptr)
         {
-            // Use std::vector to manage kin_g instead of raw pointer
             std::vector<std::complex<double>> kin_g(ngmc);
             rho_basis->real2recip(kin_r[spin_now], kin_g.data());
             detail::psymmg(kin_g.data(), rho_basis, symm);
