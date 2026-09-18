@@ -107,15 +107,18 @@ void Charge_Mixing::init_mixing()
     // (re)construct mixing object
     if (this->mixing_mode == "broyden")
     {
-        this->mixing = std::make_unique<Base_Mixing::Broyden_Mixing>(this->mixing_ndim, this->mixing_beta);
+        this->mixing = std::unique_ptr<Base_Mixing::Broyden_Mixing>(
+            new Base_Mixing::Broyden_Mixing(this->mixing_ndim, this->mixing_beta));
     }
     else if (this->mixing_mode == "plain")
     {
-        this->mixing = std::make_unique<Base_Mixing::Plain_Mixing>(this->mixing_beta);
+        this->mixing = std::unique_ptr<Base_Mixing::Plain_Mixing>(
+            new Base_Mixing::Plain_Mixing(this->mixing_beta));
     }
     else if (this->mixing_mode == "pulay")
     {
-        this->mixing = std::make_unique<Base_Mixing::Pulay_Mixing>(this->mixing_ndim, this->mixing_beta);
+        this->mixing = std::unique_ptr<Base_Mixing::Pulay_Mixing>(
+            new Base_Mixing::Pulay_Mixing(this->mixing_ndim, this->mixing_beta));
     }
     else
     {
@@ -126,7 +129,8 @@ void Charge_Mixing::init_mixing()
     {
         // ONLY smooth part of charge density is mixed by specific mixing method
         // The high_frequency part is mixed by plain mixing method.
-        this->mixing_highf = std::make_unique<Base_Mixing::Plain_Mixing>(this->mixing_beta);
+        this->mixing_highf = std::unique_ptr<Base_Mixing::Plain_Mixing>(
+            new Base_Mixing::Plain_Mixing(this->mixing_beta));
     }
 
     // allocate memory for mixing data, if exists, free it first and then allocate new memory
