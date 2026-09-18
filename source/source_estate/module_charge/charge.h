@@ -85,8 +85,6 @@ class Charge
     double *rho_core = nullptr;
     std::complex<double> *rhog_core = nullptr;
 
-    int prenspin = 1;
-
     void set_rhopw(ModulePW::PW_Basis* rhopw_in);
 
     /**
