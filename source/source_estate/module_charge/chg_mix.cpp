@@ -209,7 +209,8 @@ void Charge_Mixing::mix_reset()
     }
 }
 
-bool Charge_Mixing::if_scf_oscillate(const int iteration, const double drho, const int iternum_used, const double threshold)
+bool Charge_Mixing::if_scf_oscillate(const int iteration, const double drho,
+                                     const int iternum_used, const double threshold)
 {
     ModuleBase::TITLE("Charge_Mixing", "if_scf_oscillate");
 
@@ -375,8 +376,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         //
         rhog_in = rhog_mag_save.data();
         rhog_out = rhog_mag.data();
-        std::function<void(std::complex<double>*, const std::complex<double>*, const std::complex<double>*)> twobeta_mix
-            = module_charge::detail::make_twobeta_mix<std::complex<double>>(2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(std::complex<double>*, const std::complex<double>*,
+            const std::complex<double>*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<std::complex<double>>(
+                2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -402,8 +405,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         rhog_in = rhogs_in;
         rhog_out = rhogs_out;
         const int npw = this->rhopw->npw;
-        std::function<void(std::complex<double>*, const std::complex<double>*, const std::complex<double>*)> twobeta_mix
-            = module_charge::detail::make_twobeta_mix<std::complex<double>>(4 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(std::complex<double>*, const std::complex<double>*,
+            const std::complex<double>*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<std::complex<double>>(
+                4 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -449,8 +454,10 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         //
         rhog_in = rhog_magabs_save.data();
         rhog_out = rhog_magabs.data();
-        std::function<void(std::complex<double>*, const std::complex<double>*, const std::complex<double>*)> twobeta_mix
-            = module_charge::detail::make_twobeta_mix<std::complex<double>>(2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(std::complex<double>*, const std::complex<double>*,
+            const std::complex<double>*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<std::complex<double>>(
+                2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -499,7 +506,8 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         {
             // use rhodpw for double_grid
             // rhodpw is the same as rhopw for ! cfg_.double_grid
-            this->rhodpw->recip_to_real<std::complex<double>,double,base_device::DEVICE_CPU>(chr->rhog[is], chr->rho[is]);
+            this->rhodpw->recip_to_real<std::complex<double>, double,
+                base_device::DEVICE_CPU>(chr->rhog[is], chr->rho[is]);
         }
     }
     // For kinetic energy density

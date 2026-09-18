@@ -83,7 +83,8 @@ void atomic_rho(const int spin_number_need,
                                     }
                                 }
                                 rhoatm[0] = pow((rhoatm[2] / rhoatm[1]),
-                                                atom->ncpp.r[1] / (atom->ncpp.r[2] - atom->ncpp.r[1])); // zws add, sunliang updated 2024-03-04
+                                                atom->ncpp.r[1]
+                                                    / (atom->ncpp.r[2] - atom->ncpp.r[1]));
                                 if (rhoatm[0] < 1e-12)
                                 {
                                     rhoatm[0] = rhoatm[1];
@@ -100,7 +101,7 @@ void atomic_rho(const int spin_number_need,
                                                                        charge);
                                 ModuleBase::GlobalFunc::OUT(GlobalV::ofs_warning, "charge from rho_at", charge);
                                 assert(charge != 0.0
-                                       || charge == atom->ncpp.zv); // Peize Lin add charge==atom->zv for bsse 2021.04.07
+                                       || charge == atom->ncpp.zv); // bsse correction
 
                                 double scale = 1.0;
                                 if (charge != atom->ncpp.zv)
@@ -132,7 +133,8 @@ void atomic_rho(const int spin_number_need,
                             {
                                 rho1d[ir] = rhoatm[ir];
                             }
-                            ModuleBase::Integral::Simpson_Integral(mesh, rho1d.data(), atom->ncpp.rab.data(), rho_lgl[0]);
+                            ModuleBase::Integral::Simpson_Integral(mesh, rho1d.data(),
+                                                                    atom->ncpp.rab.data(), rho_lgl[0]);
                             gstart = 1;
                         }
                         if (PARAM.inp.test_charge > 0)
@@ -173,7 +175,8 @@ void atomic_rho(const int spin_number_need,
                                         rho1d[ir] = rhoatm[ir] * ModuleBase::libm::sin(gxx) / gxx;
                                     }
                                 }
-                                ModuleBase::Integral::Simpson_Integral(mesh, rho1d.data(), atom->ncpp.rab.data(), rho_lgl[igg]);
+                                ModuleBase::Integral::Simpson_Integral(mesh, rho1d.data(),
+                                                                        atom->ncpp.rab.data(), rho_lgl[igg]);
                             }
 #ifdef _OPENMP
 #pragma omp single
@@ -257,7 +260,8 @@ void atomic_rho(const int spin_number_need,
                                 for (int ig = 0; ig < npw; ig++)
                                 {
                                     const double Gtau = gcar[ig][0] * tau_x + gcar[ig][1] * tau_y + gcar[ig][2] * tau_z;
-                                    std::complex<double> swap = ModuleBase::libm::exp(ci_tpi * Gtau) * rho_lgl[ig2igg[ig]];
+                                    std::complex<double> swap
+                                        = ModuleBase::libm::exp(ci_tpi * Gtau) * rho_lgl[ig2igg[ig]];
                                     rho_g3d(0, ig) += swap * up;
                                     rho_g3d(1, ig) += swap * dw;
                                 }

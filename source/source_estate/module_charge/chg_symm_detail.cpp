@@ -62,7 +62,8 @@ void reduce_to_fullrhog(const ModulePW::PW_Basis* rho_basis,
         else if(GlobalV::RANK_IN_POOL==0)
         {
             MPI_Recv(rhog_piece, rho_basis->npw_per[proc], MPI_DOUBLE_COMPLEX, proc, proc, POOL_WORLD, &ierror);
-            MPI_Recv(ig2isz_piece, rho_basis->npw_per[proc], MPI_INT, proc, proc+rho_basis->poolnproc, POOL_WORLD,  &ierror);
+            MPI_Recv(ig2isz_piece, rho_basis->npw_per[proc], MPI_INT,
+                     proc, proc + rho_basis->poolnproc, POOL_WORLD, &ierror);
         }
 
         if(GlobalV::RANK_IN_POOL==0)
@@ -113,7 +114,9 @@ void rhog_piece_to_all(const ModulePW::PW_Basis* rho_basis,
     }// GlobalV::RANK_IN_POOL == 0
     else
     {
-        MPI_Recv(rhog_part, rho_basis->npw_per[GlobalV::RANK_IN_POOL], MPI_DOUBLE_COMPLEX, 0, GlobalV::RANK_IN_POOL, POOL_WORLD, &ierror);
+        MPI_Recv(rhog_part, rho_basis->npw_per[GlobalV::RANK_IN_POOL],
+                 MPI_DOUBLE_COMPLEX, 0, GlobalV::RANK_IN_POOL,
+                 POOL_WORLD, &ierror);
     }
     return;
 }

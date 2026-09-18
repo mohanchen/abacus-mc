@@ -95,17 +95,22 @@ class Charge_Mixing
     const MixingConfig& get_mixing_config() const {return cfg_;}
 
     // for mixing restart
-    int mixing_restart_step = 0; //which step to restart mixing during SCF, always equal to scf_namx except for the mixing restart
-    int mixing_restart_count = 0; // the number of restart mixing during SCF. Do not set mixing_restart_count as bool since I want to keep some flexibility in the future
-    int mixing_restart_last = 0; // the label of mixing restart step, store the step number of the last mixing restart
+    /// which step to restart mixing during SCF
+    int mixing_restart_step = 0;
+    /// the number of restart mixing during SCF
+    int mixing_restart_count = 0;
+    /// the label of mixing restart step
+    int mixing_restart_last = 0;
 
     // to calculate the slope of drho curve during SCF, which is used to determine if SCF oscillate
-    bool if_scf_oscillate(const int iteration, const double drho, const int iternum_used, const double threshold);
-    
+    bool if_scf_oscillate(const int iteration, const double drho,
+                           const int iternum_used, const double threshold);
+
   private:
-  
+
     // mixing_data
-    Base_Mixing::Mixing* mixing = nullptr; ///< Mixing object to mix charge density, kinetic energy density and compensation density
+    /// Mixing object for charge, kinetic energy, and compensation density
+    Base_Mixing::Mixing* mixing = nullptr;
     Base_Mixing::Mixing_Data rho_mdata;    ///< Mixing data for charge density
     Base_Mixing::Mixing_Data tau_mdata;    ///< Mixing data for kinetic energy density
     Base_Mixing::Mixing_Data nhat_mdata;   ///< Mixing data for compensation density

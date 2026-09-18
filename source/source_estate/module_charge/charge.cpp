@@ -238,14 +238,16 @@ void Charge::check_rho()
         ne_up = this->cal_rho2ne(rho[0]);
         if (ne_up < 0.0)
         {
-            ModuleBase::WARNING_QUIT("Charge", "Number of spin-down electrons set in starting magnetization exceeds all available.");
+            ModuleBase::WARNING_QUIT("Charge",
+                "Number of spin-down electrons set in starting magnetization exceeds all available.");
         }
         // for spin down
         double ne_dn = 0.0;
         ne_dn = this->cal_rho2ne(rho[1]);
         if (ne_dn < 0.0)
         {
-            ModuleBase::WARNING_QUIT("Charge", "Number of spin-up electrons set in starting magnetization exceeds all available.");
+            ModuleBase::WARNING_QUIT("Charge",
+                "Number of spin-up electrons set in starting magnetization exceeds all available.");
         }
         // for total charge
         if (std::abs(ne_up + ne_dn - PARAM.inp.nelec) > 1.0e-6)
@@ -263,7 +265,8 @@ void Charge::init_final_scf()
     assert(allocate_rho_final_scf == false);
     if (PARAM.inp.test_charge > 1)
     {
-        std::cout << "\n spin_number = " << PARAM.inp.nspin << " real_point_number = " << this->rhopw->nrxx << std::endl;
+        std::cout << "\n spin_number = " << PARAM.inp.nspin
+                  << " real_point_number = " << this->rhopw->nrxx << std::endl;
     }
 
     // allocate memory

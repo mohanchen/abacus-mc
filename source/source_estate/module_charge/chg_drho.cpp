@@ -443,7 +443,8 @@ double inner_product_recip_hartree(const std::complex<double>* rhog1,
             if (ig0 > 0)
             {
                 sum += fac2
-                       * ((conj(rhog1[ig0 + npw]) * rhog2[ig0 + npw]).real() + (conj(rhog1[ig0 + 2*npw]) * rhog2[ig0 + 2*npw]).real()
+                       * ((conj(rhog1[ig0 + npw]) * rhog2[ig0 + npw]).real()
+                          + (conj(rhog1[ig0 + 2*npw]) * rhog2[ig0 + 2*npw]).real()
                           + (conj(rhog1[ig0 + 3*npw]) * rhog2[ig0 + 3*npw]).real());
             }
             double fac3 = fac2;
@@ -460,7 +461,8 @@ double inner_product_recip_hartree(const std::complex<double>* rhog1,
                     continue;
 }
                 sum += fac3
-                       * ((conj(rhog1[ig + npw]) * rhog2[ig + npw]).real() + (conj(rhog1[ig + 2*npw]) * rhog2[ig + 2*npw]).real()
+                       * ((conj(rhog1[ig + npw]) * rhog2[ig + npw]).real()
+                          + (conj(rhog1[ig + 2*npw]) * rhog2[ig + 2*npw]).real()
                           + (conj(rhog1[ig + 3*npw]) * rhog2[ig + 3*npw]).real());
             }
         }

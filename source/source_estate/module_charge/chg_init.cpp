@@ -364,7 +364,9 @@ void init_rho(Charge& chr,
         {
             const std::string warn_msg
                 = " WARNING: \"init_chg\" is enabled but ABACUS failed to read\n charge density from file.\n"
-                  " Please check if there is chg.cube (for nspin=1) or chgsx.cube (x=1,2,etc.) or\n {suffix}-CHARGE-DENSITY.restart in the "
+                  " Please check if there is chg.cube (for nspin=1) or"
+                  " chgsx.cube (x=1,2,etc.) or\n"
+                  " {suffix}-CHARGE-DENSITY.restart in the "
                   "directory.\n";
             std::cout << warn_msg;
             if (init_chg == "file")
