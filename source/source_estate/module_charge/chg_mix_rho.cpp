@@ -102,10 +102,6 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
         // get rhog[is][ngmc] from rhog_mag[is*ngmc]
-        for (int is = 0; is < nspin; is++)
-        {
-            ModuleBase::GlobalFunc::ZEROS(chr->rhog[is], npw);
-        }
         module_charge::detail::unpack_rho_mag(chr->rhog[0], chr->rhog[1], rhog_mag.data(), npw);
         // sync rhogs_out so merge_dgrid has the latest smooth part
         if ( cfg_.double_grid)
@@ -233,7 +229,7 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
     {
         module_charge::detail::mix_tau_recip(chr, nspin, cfg_.double_grid,
                       this->rhopw, this->rhodpw,
-                      this->mixing, this->tau_mdata, this->mixing_highf);
+                      this->mixing.get(), this->tau_mdata, this->mixing_highf.get());
     }
 
     ModuleBase::timer::end("Charge_Mixing", "mix_rho_recip");
@@ -284,10 +280,6 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
         // get new rho[is][nrxx] from rho_mag[is*nrxx]
-        for (int is = 0; is < nspin; is++)
-        {
-            ModuleBase::GlobalFunc::ZEROS(chr->rho[is], nrxx);
-        }
         module_charge::detail::unpack_rho_mag(chr->rho[0], chr->rho[1], rho_mag.data(), nrxx);
     }
     else if (nspin == 4 && cfg_.mixing_angle <= 0)

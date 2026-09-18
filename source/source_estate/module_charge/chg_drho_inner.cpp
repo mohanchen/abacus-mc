@@ -52,7 +52,7 @@ double recip_rho_nspin1(const std::complex<double>* rho1,
 double recip_rho_nspin2(const std::complex<double>* rho1,
                         const std::complex<double>* rho2,
                         const ModulePW::PW_Basis& rhopw,
-                        const MixingConfig const& cfg,
+                        const MixingConfig& cfg,
                         const double fac,
                         const double fac2)
 {
@@ -112,7 +112,7 @@ double recip_rho_nspin2(const std::complex<double>* rho1,
 double recip_rho_nspin4_mag(const std::complex<double>* rho1,
                             const std::complex<double>* rho2,
                             const ModulePW::PW_Basis& rhopw,
-                            const MixingConfig const& cfg,
+                            const MixingConfig& cfg,
                             const double fac,
                             const double fac2)
 {
@@ -170,7 +170,7 @@ double recip_rho_nspin4_mag(const std::complex<double>* rho1,
 double recip_hartree_nspin4_trad(const std::complex<double>* rhog1,
                                  const std::complex<double>* rhog2,
                                  const ModulePW::PW_Basis& rhopw,
-                                 const MixingConfig const& cfg,
+                                 const MixingConfig& cfg,
                                  const double fac,
                                  const double fac2)
 {
@@ -228,7 +228,7 @@ double recip_hartree_nspin4_trad(const std::complex<double>* rhog1,
 double recip_hartree_nspin4_angle(const std::complex<double>* rhog1,
                                   const std::complex<double>* rhog2,
                                   const ModulePW::PW_Basis& rhopw,
-                                  const MixingConfig const& cfg,
+                                  const MixingConfig& cfg,
                                   const double fac,
                                   const double fac2)
 {
@@ -280,7 +280,7 @@ double recip_hartree_nspin4_angle(const std::complex<double>* rhog1,
 double recip_hartree_nspin2(const std::complex<double>* rhog1,
                             const std::complex<double>* rhog2,
                             const ModulePW::PW_Basis& rhopw,
-                            const MixingConfig const& cfg,
+                            const MixingConfig& cfg,
                             const double fac,
                             const double fac2)
 {
@@ -412,25 +412,25 @@ double inner_product_recip_hartree(const std::complex<double>* rhog1,
 
     if (cfg.nspin == 1)
     {
-        sum += coulomb_sum_single(rhog1, rhog2, rhopw, fac);
+        sum += detail::coulomb_sum_single(rhog1, rhog2, rhopw, fac);
     }
     else if (cfg.nspin == 2)
     {
-        sum += recip_hartree_nspin2(rhog1, rhog2, rhopw, cfg, fac, fac2);
+        sum += detail::recip_hartree_nspin2(rhog1, rhog2, rhopw, cfg, fac, fac2);
     }
     else if (cfg.nspin == 4)
     {
         if (!cfg.domag && !cfg.domag_z)
         {
-            sum += coulomb_sum_single(rhog1, rhog2, rhopw, fac);
+            sum += detail::coulomb_sum_single(rhog1, rhog2, rhopw, fac);
         }
         else if (cfg.mixing_angle <= 0)
         {
-            sum += recip_hartree_nspin4_trad(rhog1, rhog2, rhopw, cfg, fac, fac2);
+            sum += detail::recip_hartree_nspin4_trad(rhog1, rhog2, rhopw, cfg, fac, fac2);
         }
         else
         {
-            sum += recip_hartree_nspin4_angle(rhog1, rhog2, rhopw, cfg, fac, fac2);
+            sum += detail::recip_hartree_nspin4_angle(rhog1, rhog2, rhopw, cfg, fac, fac2);
         }
     }
 #ifdef __MPI

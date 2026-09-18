@@ -3,7 +3,6 @@
 #include <functional>
 #include <vector>
 
-#include "source_base/global_function.h"
 #include "source_base/module_mixing/mixing.h"
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
@@ -169,8 +168,6 @@ void mix_dmr(const std::vector<double*>& dmr_out,
         mixing->mix_data(mdata, dmr_mag.data());
 
         // Transform the mixed charge/magnetization channels back to up/down.
-        ModuleBase::GlobalFunc::ZEROS(dmr_out[0], nnr);
-        ModuleBase::GlobalFunc::ZEROS(dmr_out[1], nnr);
         for (int ir = 0; ir < nnr; ++ir)
         {
             dmr_out[0][ir] = 0.5 * (dmr_mag[ir] + dmr_mag[ir + nnr]);

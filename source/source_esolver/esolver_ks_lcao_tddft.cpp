@@ -13,6 +13,7 @@
 #include "source_io/module_wf/read_wfc_nao.h"
 //------LCAO HSolver ElecState-------
 #include "source_estate/elecstate_tools.h"
+#include "source_estate/module_charge/chg_atomic.h"
 #include "source_estate/module_charge/chg_symm.h"
 #include "source_estate/module_dm/cal_dm_psi.h"
 #include "source_estate/module_dm/cal_edm_tddft.h"
@@ -203,7 +204,15 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::runner(BaseCell& basecell, const int ist
         if (estep != 0)
         {
             this->CE.update_all_dis(ucell);
-            this->CE.extrapolate_charge(&this->Pgrid, ucell, &this->chr, &this->sf, GlobalV::ofs_running, GlobalV::ofs_warning);
+            const module_charge::AtomicRhoCfg atomic_rho_cfg_tddft{
+                PARAM.inp.nelec,
+                PARAM.inp.test_charge,
+                PARAM.globalv.domag,
+                PARAM.globalv.domag_z,
+                GlobalV::ofs_warning};
+            this->CE.extrapolate_charge(&this->Pgrid, ucell, &this->chr, &this->sf,
+                                        GlobalV::ofs_running, GlobalV::ofs_warning,
+                                        atomic_rho_cfg_tddft);
             this->exx_nao.before_scf(ucell, this->kv, this->orb_, this->p_chgmix, totstep, *this->inp_, this->exx_info_);
             elecstate::init_scf(ucell,
                                 this->Pgrid,

@@ -245,7 +245,8 @@ void init_rho_atomic_and_tau(Charge& chr,
                              const double& omega,
                              const std::string& init_chg,
                              const bool read_error,
-                             const bool read_kin_error)
+                             const bool read_kin_error,
+                             const AtomicRhoCfg& atomic_rho_cfg)
 {
     const int nspin = chr.nspin;
 
@@ -255,7 +256,7 @@ void init_rho_atomic_and_tau(Charge& chr,
         {
             std::cout << " Charge::init_rho: use atomic initialization instead." << std::endl;
         }
-        module_charge::atomic_rho(nspin, omega, chr.rho, strucFac, ucell, chr.rhopw);
+        module_charge::atomic_rho(nspin, omega, chr.rho, strucFac, ucell, chr.rhopw, atomic_rho_cfg);
     }
 
     // initial tau = 3/5 rho^2/3, Thomas-Fermi
@@ -400,8 +401,15 @@ void init_rho(Charge& chr,
         }
     }
 
+    const AtomicRhoCfg atomic_rho_cfg{
+        PARAM.inp.nelec,
+        PARAM.inp.test_charge,
+        PARAM.globalv.domag,
+        PARAM.globalv.domag_z,
+        GlobalV::ofs_warning};
     init_rho_atomic_and_tau(chr, ucell, strucFac, ucell.omega,
-                            init_chg, read_error, read_kin_error);
+                            init_chg, read_error, read_kin_error,
+                            atomic_rho_cfg);
 
     load_rho_from_restart(chr, ucell, pgrid, GlobalC::restart,
                           readin_dir, rank, GlobalV::ofs_running);

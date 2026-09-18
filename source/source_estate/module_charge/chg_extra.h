@@ -13,6 +13,9 @@
 namespace module_charge
 {
 
+/// Forward declaration: see chg_atomic.h for the full definition.
+struct AtomicRhoCfg;
+
 /**
  * @brief charge extrapolation method
  *
@@ -71,6 +74,7 @@ class Charge_Extra
      * @param sf the structure factor
      * @param ofs_running the output stream
      * @param ofs_warning the output stream
+     * @param atomic_rho_cfg configuration for atomic_rho (nelec, magnetism, verbosity)
      */
     void extrapolate_charge(
         Parallel_Grid* Pgrid,
@@ -78,7 +82,8 @@ class Charge_Extra
         Charge* chr,
         Structure_Factor* sf,
         std::ofstream& ofs_running,
-        std::ofstream& ofs_warning);
+        std::ofstream& ofs_warning,
+        const AtomicRhoCfg& atomic_rho_cfg);
 
     /**
      * @brief update displacements
@@ -96,8 +101,12 @@ class Charge_Extra
      * @param ucell the cell information
      * @param chr the charge density
      * @param sf the structure factor
+     * @param atomic_rho_cfg configuration for atomic_rho (nelec, magnetism, verbosity)
      */
-    void update_delta_rho(const UnitCell& ucell, const Charge* chr, const Structure_Factor* sf);
+    void update_delta_rho(const UnitCell& ucell,
+                          const Charge* chr,
+                          const Structure_Factor* sf,
+                          const AtomicRhoCfg& atomic_rho_cfg);
 
   private:
     int istep = 0; ///< the current step

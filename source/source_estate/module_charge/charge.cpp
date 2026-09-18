@@ -32,6 +32,7 @@
 #include "source_hamilt/module_xc/xc_functional.h"
 #include "source_io/module_parameter/parameter.h"
 
+#include <algorithm>
 #include <vector>
 
 Charge::Charge()
@@ -149,16 +150,16 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
         rhog[is] = _space_rhog.data() + is * ngmc;
         rho_save[is] = _space_rho_save.data() + is * nrxx;
         rhog_save[is] = _space_rhog_save.data() + is * ngmc;
-        ModuleBase::GlobalFunc::ZEROS(rho[is], nrxx);
-        ModuleBase::GlobalFunc::ZEROS(rhog[is], ngmc);
-        ModuleBase::GlobalFunc::ZEROS(rho_save[is], nrxx);
-        ModuleBase::GlobalFunc::ZEROS(rhog_save[is], ngmc);
-        if(kin_den) 
+        std::fill(rho[is], rho[is] + nrxx, 0.0);
+        std::fill(rhog[is], rhog[is] + ngmc, std::complex<double>(0.0, 0.0));
+        std::fill(rho_save[is], rho_save[is] + nrxx, 0.0);
+        std::fill(rhog_save[is], rhog_save[is] + ngmc, std::complex<double>(0.0, 0.0));
+        if(kin_den)
         {
             kin_r[is] = _space_kin_r.data() + is * nrxx;
-            ModuleBase::GlobalFunc::ZEROS(kin_r[is], nrxx);
+            std::fill(kin_r[is], kin_r[is] + nrxx, 0.0);
             kin_r_save[is] = _space_kin_r_save.data() + is * nrxx;
-            ModuleBase::GlobalFunc::ZEROS(kin_r_save[is], nrxx);
+            std::fill(kin_r_save[is], kin_r_save[is] + nrxx, 0.0);
         }
     }
 
@@ -174,11 +175,11 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
 
     _space_rho_core.resize(nrxx);
     this->rho_core = _space_rho_core.data();
-    ModuleBase::GlobalFunc::ZEROS(rho_core, nrxx);
+    std::fill(rho_core, rho_core + nrxx, 0.0);
 
     _space_rhog_core.resize(ngmc);
     this->rhog_core = _space_rhog_core.data();
-    ModuleBase::GlobalFunc::ZEROS(rhog_core, ngmc);
+    std::fill(rhog_core, rhog_core + ngmc, std::complex<double>(0.0, 0.0));
 
     ModuleBase::Memory::record("Chg::rho_core", sizeof(double) * nrxx);
     ModuleBase::Memory::record("Chg::rhog_core", sizeof(double) * ngmc);
@@ -306,10 +307,10 @@ void Charge::init_final_scf()
         rhog[is] = _space_rhog.data() + is * ngmc;
         rho_save[is] = _space_rho_save.data() + is * nrxx;
         rhog_save[is] = _space_rhog_save.data() + is * ngmc;
-        ModuleBase::GlobalFunc::ZEROS(rho[is], nrxx);
-        ModuleBase::GlobalFunc::ZEROS(rhog[is], ngmc);
-        ModuleBase::GlobalFunc::ZEROS(rho_save[is], nrxx);
-        ModuleBase::GlobalFunc::ZEROS(rhog_save[is], ngmc);
+        std::fill(rho[is], rho[is] + nrxx, 0.0);
+        std::fill(rhog[is], rhog[is] + ngmc, std::complex<double>(0.0, 0.0));
+        std::fill(rho_save[is], rho_save[is] + nrxx, 0.0);
+        std::fill(rhog_save[is], rhog_save[is] + ngmc, std::complex<double>(0.0, 0.0));
     }
 
     ModuleBase::Memory::record("Chg::rho", sizeof(double) * ns * nrxx);
@@ -319,11 +320,11 @@ void Charge::init_final_scf()
 
     _space_rho_core.resize(nrxx);
     this->rho_core = _space_rho_core.data();
-    ModuleBase::GlobalFunc::ZEROS(rho_core, nrxx);
+    std::fill(rho_core, rho_core + nrxx, 0.0);
 
     _space_rhog_core.resize(ngmc);
     this->rhog_core = _space_rhog_core.data();
-    ModuleBase::GlobalFunc::ZEROS(rhog_core, ngmc);
+    std::fill(rhog_core, rhog_core + ngmc, std::complex<double>(0.0, 0.0));
 
     ModuleBase::Memory::record("Chg::rho_core", sizeof(double) * this->rhopw->nrxx);
     ModuleBase::Memory::record("Chg::rhog_core", sizeof(double) * this->rhopw->npw);

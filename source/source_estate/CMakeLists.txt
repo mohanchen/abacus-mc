@@ -30,6 +30,7 @@ list(APPEND objects
     module_charge/chg_routine.cpp
     module_charge/charge.cpp
     module_charge/chg_atomic.cpp
+    module_charge/chg_atomic_inner.cpp
     module_charge/chg_init.cpp
     module_charge/chg_tools.cpp
     module_charge/chg_parallel.cpp

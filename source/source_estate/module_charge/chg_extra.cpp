@@ -75,7 +75,8 @@ void Charge_Extra::extrapolate_charge(
     Charge* chr,
     Structure_Factor* sf,
     std::ofstream& ofs_running,
-    std::ofstream& ofs_warning)
+    std::ofstream& ofs_warning,
+    const AtomicRhoCfg& atomic_rho_cfg)
 {
     ModuleBase::TITLE("Charge_Extra","extrapolate_charge");
     ModuleBase::timer::start("Charge_Extra", "extrapolate_charge");
@@ -174,7 +175,7 @@ void Charge_Extra::extrapolate_charge(
         rho_atom_ptr[is] = rho_atom[is].data();
     }
     module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom_ptr.data(),
-        sf->strucFac, ucell, chr->rhopw);
+        sf->strucFac, ucell, chr->rhopw, atomic_rho_cfg);
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)
 #endif
@@ -276,7 +277,10 @@ void Charge_Extra::update_all_dis(const UnitCell& ucell)
     return;
 }
 
-void Charge_Extra::update_delta_rho(const UnitCell& ucell, const Charge* chr, const Structure_Factor* sf)
+void Charge_Extra::update_delta_rho(const UnitCell& ucell,
+                                    const Charge* chr,
+                                    const Structure_Factor* sf,
+                                    const AtomicRhoCfg& atomic_rho_cfg)
 {
     if (pot_order == 0)
     {
@@ -292,7 +296,7 @@ void Charge_Extra::update_delta_rho(const UnitCell& ucell, const Charge* chr, co
         rho_atom_ptr[is] = rho_atom[is].data();
     }
     module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom_ptr.data(),
-        sf->strucFac, ucell, chr->rhopw);
+        sf->strucFac, ucell, chr->rhopw, atomic_rho_cfg);
 
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)

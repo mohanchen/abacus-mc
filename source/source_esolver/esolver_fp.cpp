@@ -2,6 +2,7 @@
 
 #include "source_base/tool_quit.h"
 #include "source_cell/cal_ux.h"
+#include "source_estate/module_charge/chg_atomic.h"
 #include "source_estate/module_charge/chg_symm.h"
 #include "source_cell/read_pp_ucell.h"
 #include "source_estate/param_update.h"
@@ -165,7 +166,13 @@ void ESolver_FP::after_scf(UnitCell& ucell, const int istep, const bool conv_eso
     ModuleIO::output_efermi(conv_esolver, this->pelec->eferm.ef);
 
     //! Update delta_rho for charge extrapolation
-    CE.update_delta_rho(ucell, &(this->chr), &(this->sf));
+    const module_charge::AtomicRhoCfg atomic_rho_cfg_after{
+        PARAM.inp.nelec,
+        PARAM.inp.test_charge,
+        PARAM.globalv.domag,
+        PARAM.globalv.domag_z,
+        GlobalV::ofs_warning};
+    CE.update_delta_rho(ucell, &(this->chr), &(this->sf), atomic_rho_cfg_after);
 
     //! print out charge density, potential, elf, etc.
 	ModuleIO::ctrl_output_fp(ucell, *this->inp_, this->pelec, this->pw_big, this->pw_rhod, 
@@ -218,8 +225,15 @@ void ESolver_FP::before_scf(UnitCell& ucell, const int istep)
     if (ucell.ionic_position_updated)
     {
         this->CE.update_all_dis(ucell);
+        const module_charge::AtomicRhoCfg atomic_rho_cfg_before{
+            PARAM.inp.nelec,
+            PARAM.inp.test_charge,
+            PARAM.globalv.domag,
+            PARAM.globalv.domag_z,
+            GlobalV::ofs_warning};
         this->CE.extrapolate_charge(&this->Pgrid, ucell, &this->chr, &this->sf,
-                                    GlobalV::ofs_running, GlobalV::ofs_warning);
+                                    GlobalV::ofs_running, GlobalV::ofs_warning,
+                                    atomic_rho_cfg_before);
     }
 
     //! Evaluate the vdW correction once for this ionic configuration.

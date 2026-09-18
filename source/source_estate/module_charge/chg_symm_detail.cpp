@@ -1,5 +1,6 @@
 #include "chg_symm_detail.h"
 
+#include <algorithm>
 #include <functional>
 
 #include "source_base/parallel_reduce.h"
@@ -31,8 +32,8 @@ void reduce_to_fullrhog(const ModulePW::PW_Basis* rho_basis,
     int npw_start=0;
     for(int proc=0; proc<rho_basis->poolnproc; ++proc)
     {
-        ModuleBase::GlobalFunc::ZEROS(rhog_piece, max_npw);
-        ModuleBase::GlobalFunc::ZEROS(ig2isz_piece, max_npw);
+        std::fill(rhog_piece, rhog_piece + max_npw, std::complex<double>(0.0, 0.0));
+        std::fill(ig2isz_piece, ig2isz_piece + max_npw, 0);
 
         MPI_Status ierror;
 
@@ -229,8 +230,6 @@ void psymmg(std::complex<double>* rhog_part, const ModulePW::PW_Basis *rho_basis
         ig2isztot_vec.resize(rho_basis->npwtot);
         rhogtot = rhogtot_vec.data();
         ig2isztot = ig2isztot_vec.data();
-        ModuleBase::GlobalFunc::ZEROS(rhogtot, rho_basis->npwtot);
-        ModuleBase::GlobalFunc::ZEROS(ig2isztot, rho_basis->npwtot);
     }
     // find max_npw
     int max_npw=0;
@@ -339,10 +338,6 @@ void psymmg_soc(std::complex<double>* rhog_x, std::complex<double>* rhog_y,
         rhogtot_y = rhogtot_y_vec.data();
         rhogtot_z = rhogtot_z_vec.data();
         ig2isztot = ig2isztot_vec.data();
-        ModuleBase::GlobalFunc::ZEROS(rhogtot_x, rho_basis->npwtot);
-        ModuleBase::GlobalFunc::ZEROS(rhogtot_y, rho_basis->npwtot);
-        ModuleBase::GlobalFunc::ZEROS(rhogtot_z, rho_basis->npwtot);
-        ModuleBase::GlobalFunc::ZEROS(ig2isztot, rho_basis->npwtot);
     }
     // find max_npw
     int max_npw=0;

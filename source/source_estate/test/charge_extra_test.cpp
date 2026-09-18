@@ -3,6 +3,7 @@
 #define private public
 #define protected public
 #include "source_io/module_parameter/parameter.h"
+#include "source_estate/module_charge/chg_atomic.h"
 #include "source_estate/module_charge/chg_extra.h"
 #include "prepare_unitcell.h"
 #include "source_base/module_fft/fft_bundle.h"
@@ -50,7 +51,8 @@ void atomic_rho(const int spin_number_need,
                 double** rho_in,
                 const ModuleBase::ComplexMatrix& strucFac,
                 const UnitCell& ucell,
-                const ModulePW::PW_Basis* rhopw)
+                const ModulePW::PW_Basis* rhopw,
+                const AtomicRhoCfg& cfg)
 {
 }
 } // namespace module_charge
@@ -183,7 +185,13 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase1)
     CE.pot_order = 3;
 
     GlobalV::ofs_running.open("log");
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning);
+    const module_charge::AtomicRhoCfg atomic_rho_cfg_test{
+        PARAM.inp.nelec,
+        PARAM.inp.test_charge,
+        PARAM.globalv.domag,
+        PARAM.globalv.domag_z,
+        GlobalV::ofs_warning};
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results
@@ -205,7 +213,13 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase2)
     CE.pot_order = 3;
 
     GlobalV::ofs_running.open("log");
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning);
+    const module_charge::AtomicRhoCfg atomic_rho_cfg_test{
+        PARAM.inp.nelec,
+        PARAM.inp.test_charge,
+        PARAM.globalv.domag,
+        PARAM.globalv.domag_z,
+        GlobalV::ofs_warning};
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results
@@ -227,7 +241,13 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase3)
     CE.pot_order = 3;
 
     GlobalV::ofs_running.open("log");
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning);
+    const module_charge::AtomicRhoCfg atomic_rho_cfg_test{
+        PARAM.inp.nelec,
+        PARAM.inp.test_charge,
+        PARAM.globalv.domag,
+        PARAM.globalv.domag_z,
+        GlobalV::ofs_warning};
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results
@@ -248,7 +268,13 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase4)
     CE.istep = 3;
 
     GlobalV::ofs_running.open("log");
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning);
+    const module_charge::AtomicRhoCfg atomic_rho_cfg_test{
+        PARAM.inp.nelec,
+        PARAM.inp.test_charge,
+        PARAM.globalv.domag,
+        PARAM.globalv.domag_z,
+        GlobalV::ofs_warning};
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results

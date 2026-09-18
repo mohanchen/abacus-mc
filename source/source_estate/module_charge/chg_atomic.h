@@ -4,32 +4,32 @@
 #include "source_base/complexmatrix.h"
 #include "source_basis/module_pw/pw_basis.h"
 
+#include <ostream>
+
 class UnitCell;
 
 namespace module_charge
 {
 
+/// Configuration for atomic_rho, replacing GlobalV/PARAM reads
+struct AtomicRhoCfg
+{
+    double nelec;        ///< target total electron number (PARAM.inp.nelec)
+    int test_charge;    ///< verbosity flag (PARAM.inp.test_charge)
+    bool domag;         ///< whether to compute magnetization (PARAM.globalv.domag)
+    bool domag_z;       ///< whether to compute z-only magnetization
+    std::ostream& ofs_warning; ///< warning output stream
+};
+
 // Superposition of atomic charges contained in the array rho_at
 // (read from pseudopotential files).
-//
-// spin_number_need is the number of spin components to be calculated:
-//   1 -> total atomic charge density
-//   2 -> spin up/down densities assuming uniform atomic polarization
-//        equal to start_mag(it)
-//   4 -> noncollinear case: total density in component 0, magnetization
-//        vector in components 1..3
-//
-// NB: spin_number_need may differ from nspin (e.g. in update only the
-// total charge is needed even in an LSDA calculation).
-//
-// All grid / basis inputs are passed explicitly via rhopw instead of
-// being read from Charge members.
 void atomic_rho(const int spin_number_need,
                 const double& omega,
                 double** rho_in,
                 const ModuleBase::ComplexMatrix& strucFac,
                 const UnitCell& ucell,
-                const ModulePW::PW_Basis* rhopw);
+                const ModulePW::PW_Basis* rhopw,
+                const AtomicRhoCfg& cfg);
 
 } // namespace module_charge
 

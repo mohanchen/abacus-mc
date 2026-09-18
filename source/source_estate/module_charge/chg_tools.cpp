@@ -1,9 +1,9 @@
 #include "chg_tools.h"
 
+#include <algorithm>
 #include <functional>
 
 #include "source_base/complexmatrix.h"
-#include "source_base/global_function.h"
 #include "source_base/constants.h"
 #include "source_base/math_integral.h"
 #include "source_base/math_sphbes.h"
@@ -182,7 +182,7 @@ void set_rho_core(const UnitCell& ucell,
 
     if (!bl)
     {
-        ModuleBase::GlobalFunc::ZEROS(rho_core, rhopw.nrxx);
+        std::fill(rho_core, rho_core + rhopw.nrxx, 0.0);
         ModuleBase::timer::end("module_charge", "set_rho_core");
         return;
     }
@@ -196,12 +196,13 @@ void set_rho_core(const UnitCell& ucell,
     {
         if (ucell.atoms[it].ncpp.nlcc)
         {
+            assert(numeric != nullptr);
 //----------------------------------------------------------
 // EXPLAIN : drhoc compute the radial fourier transform for
 // each shell of g vec
 //----------------------------------------------------------
             NlcCtx nlc_ctx{
-                numeric,
+                numeric[it],
                 ucell.omega,
                 ucell.tpiba2,
                 ucell.atoms[it].ncpp.msh,
