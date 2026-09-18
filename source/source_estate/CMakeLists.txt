@@ -38,6 +38,7 @@ list(APPEND objects
     module_charge/chg_mix_rho.cpp
     module_charge/chg_dmr.cpp
     module_charge/chg_drho.cpp
+    module_charge/chg_drho_inner.cpp
     module_charge/chg_precond.cpp
     module_charge/chg_tau.cpp
     module_charge/chg_symm.cpp
