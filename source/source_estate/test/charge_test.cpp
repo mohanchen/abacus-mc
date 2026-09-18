@@ -132,7 +132,6 @@ TEST_F(ChargeTest, SumRho)
             charge->rho[is][ir] = 0.1;
         }
     }
-    charge->set_omega(&ucell->omega);;
     EXPECT_NEAR(charge->sum_rho(), 0.1 * nspin * rhopw->nrxx * ucell->omega / rhopw->nxyz, 1E-10);
 }
 
@@ -152,7 +151,6 @@ TEST_F(ChargeTest, RenormalizeRho)
         }
     }
     EXPECT_EQ(PARAM.input.nelec, 8);
-    charge->set_omega(&ucell->omega);;
     charge->renormalize_rho(PARAM.input.nelec);
     EXPECT_NEAR(charge->sum_rho(), 8.0, 1e-10);
 }
@@ -173,7 +171,6 @@ TEST_F(ChargeTest, CheckNe)
         }
     }
     EXPECT_EQ(PARAM.input.nelec, 8);
-    charge->set_omega(&ucell->omega);;
     charge->renormalize_rho(PARAM.input.nelec);
     EXPECT_NEAR(charge->sum_rho(), 8.0, 1e-10);
     EXPECT_NEAR(module_charge::cal_rho2ne(charge->rho[0], rhopw->nrxx, ucell->omega, rhopw->nxyz),
@@ -198,7 +195,6 @@ TEST_F(ChargeTest, SaveRhoBeforeSumBand)
     EXPECT_EQ(PARAM.input.nelec, 8);
     XC_Functional::func_type = 3;
     XC_Functional::ked_flag = true;
-    charge->set_omega(&ucell->omega);;
     charge->renormalize_rho(PARAM.input.nelec);
     charge->save_rho_before_sum_band();
     EXPECT_NEAR(module_charge::cal_rho2ne(charge->rho_save[0], rhopw->nrxx, ucell->omega, rhopw->nxyz),

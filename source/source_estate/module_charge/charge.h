@@ -142,8 +142,6 @@ class Charge
      */
     void init_final_scf(const int nspin_in, const int test_charge); //LiuXh add 20180619
 
-    void set_omega(double* omega_in){this->omega_ = omega_in;};
-
     // mohan add 2021-02-20
     int nrxx=0; // number of r vectors in this processor
     int nxyz = 0; // total number of r vectors
@@ -155,8 +153,6 @@ class Charge
   private:
 
     void destroy();    // free arrays  liuyu 2023-03-12
-
-    double* omega_ = nullptr; // omega for non-linear core correction
 
     bool allocate_rho;
 

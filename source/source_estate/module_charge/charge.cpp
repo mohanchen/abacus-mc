@@ -185,7 +185,7 @@ void Charge::allocate(const int& nspin_in, const bool kin_den, const int test_ch
 double Charge::sum_rho() const
 {
     const int nspin0 = (nspin == 2) ? 2 : 1;
-    return module_charge::sum_rho(this->rho, nspin0, this->nrxx, *this->omega_, this->rhopw->nxyz);
+    return module_charge::sum_rho(this->rho, nspin0, this->nrxx, this->rhopw->omega, this->rhopw->nxyz);
 }
 
 void Charge::renormalize_rho(const double nelec)

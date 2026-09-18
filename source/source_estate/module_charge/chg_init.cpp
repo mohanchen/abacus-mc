@@ -354,8 +354,6 @@ void init_rho(Charge& chr,
     std::transform(init_chg_upper.begin(), init_chg_upper.end(), init_chg_upper.begin(), ::toupper);
     std::cout << " START CHARGE         : " << init_chg_upper << std::endl;
 
-    // we need to set the omega for the charge density
-    chr.set_omega(&ucell.omega);
     chr.pgrid = &pgrid;
 
     const std::string& init_chg = cfg.init_chg;
