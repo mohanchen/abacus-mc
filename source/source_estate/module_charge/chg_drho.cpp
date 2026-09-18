@@ -72,9 +72,7 @@ double cal_drho(Charge* chr,
                 drho += std::abs(chr->rho[is][ir] - chr->rho_save[is][ir]);
             }
         }
-#ifdef __MPI
         Parallel_Reduce::reduce_pool(drho);
-#endif
         assert(nelec != 0);
         assert(omega > 0);
         assert(rhopw.nxyz > 0);
@@ -117,9 +115,7 @@ double cal_dkin(Charge* chr,
             dkin += std::abs(chr->kin_r[is][ir] - chr->kin_r_save[is][ir]);
         }
     }
-#ifdef __MPI
     Parallel_Reduce::reduce_pool(dkin);
-#endif
     assert(nelec != 0);
     assert(omega > 0);
     assert(rhopw.nxyz > 0);
@@ -152,9 +148,7 @@ double inner_product_real(const double* rho1,
     {
         rnorm += rho1[ir] * rho2[ir];
     }
-#ifdef __MPI
     Parallel_Reduce::reduce_pool(rnorm);
-#endif
     return rnorm;
 }
 

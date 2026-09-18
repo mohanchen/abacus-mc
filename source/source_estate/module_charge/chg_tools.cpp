@@ -42,9 +42,7 @@ double sum_rho(double* const* rho,
     // multiply the sum of charge density by a factor
     sum_rho *= omega / static_cast<double>(nxyz);
 
-#ifdef __MPI
     Parallel_Reduce::reduce_pool(sum_rho);
-#endif
 
     // mohan fixed bug 2010-01-18,
     // sum_rho may be smaller than 1, like Na bcc.
@@ -68,9 +66,7 @@ double cal_rho2ne(const double* rho_in,
     {
         ne += rho_in[ir];
     }
-#ifdef __MPI
     Parallel_Reduce::reduce_pool(ne);
-#endif
     ne = ne * omega / static_cast<double>(nxyz);
 
     return ne;
@@ -250,11 +246,9 @@ void set_rho_core(const UnitCell& ucell,
         // mentioned above) uncomment the following lines.  SdG, Oct 15 1999
     }
 
-#ifdef __MPI
     // mohan fix bug 2011-04-03
     Parallel_Reduce::reduce_pool(rhoneg);
     Parallel_Reduce::reduce_pool(rhoima);
-#endif
 
     // mohan changed 2010-2-2, make this same as in atomic_rho.
     // still lack something......
