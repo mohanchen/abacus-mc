@@ -18,7 +18,7 @@ void symmetrize_rho(const int nspin,
         // spatially like nspin=1); rho[1,2,3] are the spin density (rho^x, rho^y, rho^z) which
         // must be symmetrized TOGETHER with the per-operation spin rotation W(g).
         cal_rhog_symm(0, chr, pw, symm);
-        cal_rhog_symm_soc(chr, pw, symm);
+        cal_rhog_symm_soc(chr.rho, chr.rhog, pw, symm);
         return;
     }
     for (int is = 0; is < nspin; is++)
@@ -95,13 +95,6 @@ void cal_rhog_symm(const int& spin_now,
 
     ModuleBase::timer::end("module_charge", "cal_rhog_symm");
     return;
-}
-
-void cal_rhog_symm_soc(const Charge& chr,
-                       const ModulePW::PW_Basis* rho_basis,
-                       ModuleSymmetry::Symmetry& symm)
-{
-    cal_rhog_symm_soc(chr.rho, chr.rhog, rho_basis, symm);
 }
 
 void cal_rhog_symm_soc(double** rho,

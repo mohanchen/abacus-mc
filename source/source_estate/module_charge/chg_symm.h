@@ -62,13 +62,6 @@ void cal_rhog_symm(const int& spin_now,
                    const ModulePW::PW_Basis* pw,
                    ModuleSymmetry::Symmetry& symm);
 
-/// @brief Symmetrize the nspin=4 spin density (rho^x, rho^y, rho^z = rho[1,2,3]) with the
-///        coupled spin rotation. The charge component rho^0 = rho[0] is handled separately
-///        by the ordinary scalar cal_rhog_symm().
-void cal_rhog_symm_soc(const Charge& CHR,
-                       const ModulePW::PW_Basis* pw,
-                       ModuleSymmetry::Symmetry& symm);
-
 /**
  * @brief Symmetrize raw nspin=4 spin-density arrays with coupled spin rotations.
  *
