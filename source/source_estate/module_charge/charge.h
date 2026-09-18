@@ -134,14 +134,6 @@ class Charge
 
     void save_rho_before_sum_band();
 
-    /**
-     * @brief Allocate the rho buffers used to output the final SCF density
-     *
-     * @param nspin_in number of spins
-     * @param test_charge verbosity flag (PARAM.inp.test_charge)
-     */
-    void init_final_scf(const int nspin_in, const int test_charge); //LiuXh add 20180619
-
     // mohan add 2021-02-20
     int nrxx=0; // number of r vectors in this processor
     int nxyz = 0; // total number of r vectors
@@ -155,8 +147,6 @@ class Charge
     void destroy();    // free arrays  liuyu 2023-03-12
 
     bool allocate_rho;
-
-    bool allocate_rho_final_scf; // LiuXh add 20180606
 };
 
 #endif // charge

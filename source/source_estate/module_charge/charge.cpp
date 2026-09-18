@@ -37,7 +37,6 @@
 Charge::Charge()
 {
     allocate_rho = false;
-    allocate_rho_final_scf = false; // LiuXh add 20180619
 }
 
 Charge::~Charge()
@@ -58,7 +57,7 @@ bool Charge::kin_density(const bool out_elf) const
 
 void Charge::destroy()
 {
-    if (allocate_rho || allocate_rho_final_scf) // LiuXh add 20180619
+    if (allocate_rho)
     {
         // All storage (rho, rhog, rho_core, etc.) is backed by std::vector
         // members that self-manage; just clear the vectors.
@@ -223,68 +222,5 @@ void Charge::save_rho_before_sum_band()
             ModuleBase::GlobalFunc::DCOPY(kin_r[is], kin_r_save[is], this->rhopw->nrxx);
         }
     }
-    return;
-}
-
-// LiuXh add 20180619
-void Charge::init_final_scf(const int nspin_in, const int test_charge)
-{
-    ModuleBase::TITLE("Charge", "init_after_scf");
-
-    assert(nspin_in > 0);
-
-    assert(allocate_rho_final_scf == false);
-    if (test_charge > 1)
-    {
-        std::cout << "\n spin_number = " << nspin_in
-                  << " real_point_number = " << this->rhopw->nrxx << std::endl;
-    }
-
-    // allocate memory for final SCF (std::vector self-manages storage)
-    const int ns = nspin_in;
-    const int nrxx = this->rhopw->nrxx;
-    const int ngmc = this->rhopw->npw;
-    _space_rho.resize(ns * nrxx);
-    _space_rho_save.resize(ns * nrxx);
-    _space_rhog.resize(ns * ngmc);
-    _space_rhog_save.resize(ns * ngmc);
-    _ptrs_rho.resize(ns);
-    _ptrs_rhog.resize(ns);
-    _ptrs_rho_save.resize(ns);
-    _ptrs_rhog_save.resize(ns);
-    rho = _ptrs_rho.data();
-    rhog = _ptrs_rhog.data();
-    rho_save = _ptrs_rho_save.data();
-    rhog_save = _ptrs_rhog_save.data();
-
-    for (int is = 0; is < ns; is++)
-    {
-        rho[is] = _space_rho.data() + is * nrxx;
-        rhog[is] = _space_rhog.data() + is * ngmc;
-        rho_save[is] = _space_rho_save.data() + is * nrxx;
-        rhog_save[is] = _space_rhog_save.data() + is * ngmc;
-        std::fill(rho[is], rho[is] + nrxx, 0.0);
-        std::fill(rhog[is], rhog[is] + ngmc, std::complex<double>(0.0, 0.0));
-        std::fill(rho_save[is], rho_save[is] + nrxx, 0.0);
-        std::fill(rhog_save[is], rhog_save[is] + ngmc, std::complex<double>(0.0, 0.0));
-    }
-
-    ModuleBase::Memory::record("Chg::rho", sizeof(double) * ns * nrxx);
-    ModuleBase::Memory::record("Chg::rho_save", sizeof(double) * ns * nrxx);
-    ModuleBase::Memory::record("Chg::rhog", sizeof(double) * ns * ngmc);
-    ModuleBase::Memory::record("Chg::rhog_save", sizeof(double) * ns * ngmc);
-
-    _space_rho_core.resize(nrxx);
-    this->rho_core = _space_rho_core.data();
-    std::fill(rho_core, rho_core + nrxx, 0.0);
-
-    _space_rhog_core.resize(ngmc);
-    this->rhog_core = _space_rhog_core.data();
-    std::fill(rhog_core, rhog_core + ngmc, std::complex<double>(0.0, 0.0));
-
-    ModuleBase::Memory::record("Chg::rho_core", sizeof(double) * this->rhopw->nrxx);
-    ModuleBase::Memory::record("Chg::rhog_core", sizeof(double) * this->rhopw->npw);
-
-    this->allocate_rho_final_scf = true;
     return;
 }

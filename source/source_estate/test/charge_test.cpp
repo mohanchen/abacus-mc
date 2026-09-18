@@ -54,8 +54,6 @@ void Set_GlobalV_Default()
  *     - check the total number of electrons summed from rho[is]
  *   - SaveRhoBeforeSumBand: Charge::save_rho_before_sum_band()
  *     - meaning as the function name
- *   - InitFinalScf:: Charge::init_final_scf()
- *     - similar to Charge::allocate(), but for final scf
  */
 
 class ChargeTest : public ::testing::Test
@@ -87,7 +85,6 @@ class ChargeTest : public ::testing::Test
 TEST_F(ChargeTest, Constructor)
 {
     EXPECT_FALSE(charge->allocate_rho);
-    EXPECT_FALSE(charge->allocate_rho_final_scf);
 }
 
 TEST_F(ChargeTest, Allocate)
@@ -199,15 +196,5 @@ TEST_F(ChargeTest, SaveRhoBeforeSumBand)
     charge->save_rho_before_sum_band();
     EXPECT_NEAR(module_charge::cal_rho2ne(charge->rho_save[0], rhopw->nrxx, ucell->omega, rhopw->nxyz),
                 8.0, 1e-10);
-}
-
-TEST_F(ChargeTest, InitFinalScf)
-{
-    charge->set_rhopw(rhopw);
-    XC_Functional::func_type = 1;
-    XC_Functional::ked_flag = false;
-    PARAM.input.test_charge = 2;
-    charge->init_final_scf(PARAM.input.nspin, PARAM.input.test_charge);
-    EXPECT_TRUE(charge->allocate_rho_final_scf);
 }
 
