@@ -6,6 +6,7 @@
 #include "chg_uspp.h"
 
 #include <functional>
+#include <memory>
 
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/module_mixing/broyden_mixing.h"
@@ -17,23 +18,12 @@
 
 Charge_Mixing::Charge_Mixing()
 {
-    this->mixing = nullptr;
-    this->mixing_highf = nullptr;
+    // unique_ptr members default-construct to nullptr
 }
 
 Charge_Mixing::~Charge_Mixing()
 {
-    if(this->mixing != nullptr)
-    {
-        delete this->mixing;
-        this->mixing = nullptr;
-    }
-
-    if(this->mixing_highf != nullptr)
-    {
-        delete this->mixing_highf;
-        this->mixing_highf = nullptr;
-    }
+    // unique_ptr members (mixing, mixing_highf) are released automatically
 }
 
 void Charge_Mixing::set_mixing(const MixingConfig& cfg,
@@ -117,18 +107,15 @@ void Charge_Mixing::init_mixing()
     // (re)construct mixing object
     if (this->mixing_mode == "broyden")
     {
-        delete this->mixing;
-        this->mixing = new Base_Mixing::Broyden_Mixing(this->mixing_ndim, this->mixing_beta);
+        this->mixing = std::make_unique<Base_Mixing::Broyden_Mixing>(this->mixing_ndim, this->mixing_beta);
     }
     else if (this->mixing_mode == "plain")
     {
-        delete this->mixing;
-        this->mixing = new Base_Mixing::Plain_Mixing(this->mixing_beta);
+        this->mixing = std::make_unique<Base_Mixing::Plain_Mixing>(this->mixing_beta);
     }
     else if (this->mixing_mode == "pulay")
     {
-        delete this->mixing;
-        this->mixing = new Base_Mixing::Pulay_Mixing(this->mixing_ndim, this->mixing_beta);
+        this->mixing = std::make_unique<Base_Mixing::Pulay_Mixing>(this->mixing_ndim, this->mixing_beta);
     }
     else
     {
@@ -139,8 +126,7 @@ void Charge_Mixing::init_mixing()
     {
         // ONLY smooth part of charge density is mixed by specific mixing method
         // The high_frequency part is mixed by plain mixing method.
-        delete this->mixing_highf;
-        this->mixing_highf = new Base_Mixing::Plain_Mixing(this->mixing_beta);
+        this->mixing_highf = std::make_unique<Base_Mixing::Plain_Mixing>(this->mixing_beta);
     }
 
     // allocate memory for mixing data, if exists, free it first and then allocate new memory

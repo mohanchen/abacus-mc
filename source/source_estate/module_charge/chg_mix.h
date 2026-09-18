@@ -5,6 +5,7 @@
 #include "source_base/module_mixing/mixing.h"
 #include "source_base/module_mixing/plain_mixing.h"
 #include <functional>
+#include <memory>
 
 class Charge_Mixing
 {
@@ -79,7 +80,7 @@ class Charge_Mixing
     double get_mixing_beta() const {return mixing_beta;}
     int get_mixing_ndim() const {return mixing_ndim;}
     double get_mixing_gg0() const {return mixing_gg0;}
-    Base_Mixing::Mixing* get_mixing() const {return mixing;}
+    Base_Mixing::Mixing* get_mixing() const {return mixing.get();}
 
     /**
      * @brief mutable access to the real-space density-matrix mixing history
@@ -110,13 +111,13 @@ class Charge_Mixing
 
     // mixing_data
     /// Mixing object for charge, kinetic energy, and compensation density
-    Base_Mixing::Mixing* mixing = nullptr;
+    std::unique_ptr<Base_Mixing::Mixing> mixing;
     Base_Mixing::Mixing_Data rho_mdata;    ///< Mixing data for charge density
     Base_Mixing::Mixing_Data tau_mdata;    ///< Mixing data for kinetic energy density
     Base_Mixing::Mixing_Data nhat_mdata;   ///< Mixing data for compensation density
     Base_Mixing::Mixing_Data dmr_mdata;    ///< Mixing data for real space density matrix
     Base_Mixing::Mixing_Data uom_mdata;    ///< Mixing data for DFT+U occupation matrix
-    Base_Mixing::Plain_Mixing* mixing_highf = nullptr; ///< The high_frequency part is mixed by plain mixing method.
+    std::unique_ptr<Base_Mixing::Plain_Mixing> mixing_highf; ///< The high_frequency part is mixed by plain mixing method.
 
     //======================================
     // private mixing parameters

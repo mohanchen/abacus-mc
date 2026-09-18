@@ -23,8 +23,10 @@ void reduce_to_fullrhog(const ModulePW::PW_Basis* rho_basis,
 {
     ModuleBase::TITLE("module_charge","reduce_to_fullrhog");
 
-    std::complex<double>* rhog_piece = new std::complex<double>[max_npw];
-    int* ig2isz_piece = new int[max_npw];
+    std::vector<std::complex<double>> rhog_piece_vec(max_npw);
+    std::vector<int> ig2isz_piece_vec(max_npw);
+    std::complex<double>* rhog_piece = rhog_piece_vec.data();
+    int* ig2isz_piece = ig2isz_piece_vec.data();
 
     int npw_start=0;
     for(int proc=0; proc<rho_basis->poolnproc; ++proc)
@@ -80,8 +82,6 @@ void reduce_to_fullrhog(const ModulePW::PW_Basis* rho_basis,
     {
         assert(npw_start==rho_basis->npwtot);
     }
-    delete[] rhog_piece;
-    delete[] ig2isz_piece;
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -132,7 +132,8 @@ void get_ixyz2ipw(const ModulePW::PW_Basis* rho_basis,
     //step 1: get ipsz2ipw
 
     //get ipsz2ipw from ig2isztot
-    int* ipsz2ipw = new int [rho_basis->nstot*rho_basis->nz];
+    std::vector<int> ipsz2ipw_vec(rho_basis->nstot * rho_basis->nz);
+    int* ipsz2ipw = ipsz2ipw_vec.data();
     for(int i=0;i<rho_basis->nstot*rho_basis->nz;++i)
     {
         ipsz2ipw[i]=-1;
@@ -161,7 +162,8 @@ void get_ixyz2ipw(const ModulePW::PW_Basis* rho_basis,
     //step2: ixyz to ipsz
 
     //save the start-index of (nst*nz) till each core
-    int* nstnz_start = new int[rho_basis->poolnproc];
+    std::vector<int> nstnz_start_vec(rho_basis->poolnproc);
+    int* nstnz_start = nstnz_start_vec.data();
     nstnz_start[0]=0;
     for (int ip=1; ip<rho_basis->poolnproc; ++ip)
     {
@@ -191,8 +193,7 @@ void get_ixyz2ipw(const ModulePW::PW_Basis* rho_basis,
     }
     assert (ixyz==rho_basis->fftnxyz-1);
 
-    delete[] nstnz_start;
-    delete[] ipsz2ipw;
+
     return;
 }
 
@@ -204,7 +205,8 @@ namespace detail
 void psymmg(std::complex<double>* rhog_part, const ModulePW::PW_Basis *rho_basis, ModuleSymmetry::Symmetry &symm)
 {
     //(1) get fftixy2is and do Allreduce
-    int * fftixy2is = new int [rho_basis->fftnxy];
+    std::vector<int> fftixy2is_vec(rho_basis->fftnxy);
+    int* fftixy2is = fftixy2is_vec.data();
     rho_basis->getfftixy2is(fftixy2is);        //current proc
 #ifdef __MPI
     Parallel_Reduce::reduce_pool(fftixy2is, rho_basis->fftnxy);
@@ -217,14 +219,18 @@ void psymmg(std::complex<double>* rhog_part, const ModulePW::PW_Basis *rho_basis
     }
 
     // (2) reduce all rho from the first pool.
-    std::complex<double>* rhogtot;
+    std::vector<std::complex<double>> rhogtot_vec;
+    std::vector<int> ig2isztot_vec;
+    std::complex<double>* rhogtot = nullptr;
     int* ig2isztot = nullptr;
     if(GlobalV::RANK_IN_POOL == 0)
     {
-        rhogtot = new std::complex<double>[rho_basis->npwtot];
+        rhogtot_vec.resize(rho_basis->npwtot);
+        ig2isztot_vec.resize(rho_basis->npwtot);
+        rhogtot = rhogtot_vec.data();
+        ig2isztot = ig2isztot_vec.data();
         ModuleBase::GlobalFunc::ZEROS(rhogtot, rho_basis->npwtot);
-        ig2isztot = new int[rho_basis->npwtot];
-        ModuleBase::GlobalFunc::ZEROS(rhogtot, rho_basis->npwtot);
+        ModuleBase::GlobalFunc::ZEROS(ig2isztot, rho_basis->npwtot);
     }
     // find max_npw
     int max_npw=0;
@@ -242,7 +248,8 @@ void psymmg(std::complex<double>* rhog_part, const ModulePW::PW_Basis *rho_basis
     {
 #endif
         //init ixyz2ipw
-        int* ixyz2ipw = new int[rho_basis->fftnxyz];
+        std::vector<int> ixyz2ipw_vec(rho_basis->fftnxyz);
+        int* ixyz2ipw = ixyz2ipw_vec.data();
         for(int i=0;i<rho_basis->fftnxyz;++i)
         {
             ixyz2ipw[i]=-1;
@@ -265,20 +272,12 @@ void psymmg(std::complex<double>* rhog_part, const ModulePW::PW_Basis *rho_basis
             rho_basis->fftnx, rho_basis->fftny, rho_basis->fftnz,
             rho_basis->gamma_only, kgmat.data(), gtr.data(), nop);
 #endif
-        delete[] ixyz2ipw;
 #ifdef __MPI
     }
 
     // (4) send the result to other procs in the same pool
     rhog_piece_to_all(rho_basis, rhogtot, rhog_part);
-
-    if(GlobalV::RANK_IN_POOL==0)
-    {
-        delete[] rhogtot;
-        delete[] ig2isztot;
-    }
 #endif
-    delete[] fftixy2is;
     return;
 }
 
@@ -308,8 +307,9 @@ void psymmg_soc(std::complex<double>* rhog_x, std::complex<double>* rhog_y,
     };
 
     //(1) get fftixy2is and do Allreduce
-    int * fftixy2is = new int [rho_basis->fftnxy];
-    rho_basis->getfftixy2is(fftixy2is);        //current proc
+    std::vector<int> fftixy2is_vec(rho_basis->fftnxy);
+    int* fftixy2is = fftixy2is_vec.data();
+    rho_basis->getfftixy2is(fftixy2is);
 #ifdef __MPI
     Parallel_Reduce::reduce_pool(fftixy2is, rho_basis->fftnxy);
     if(rho_basis->poolnproc>1)
@@ -321,19 +321,27 @@ void psymmg_soc(std::complex<double>* rhog_x, std::complex<double>* rhog_y,
     }
 
     // (2) reduce all three spin components from the first pool.
+    std::vector<std::complex<double>> rhogtot_x_vec;
+    std::vector<std::complex<double>> rhogtot_y_vec;
+    std::vector<std::complex<double>> rhogtot_z_vec;
+    std::vector<int> ig2isztot_vec;
     std::complex<double>* rhogtot_x = nullptr;
     std::complex<double>* rhogtot_y = nullptr;
     std::complex<double>* rhogtot_z = nullptr;
     int* ig2isztot = nullptr;
     if(GlobalV::RANK_IN_POOL == 0)
     {
-        rhogtot_x = new std::complex<double>[rho_basis->npwtot];
-        rhogtot_y = new std::complex<double>[rho_basis->npwtot];
-        rhogtot_z = new std::complex<double>[rho_basis->npwtot];
+        rhogtot_x_vec.resize(rho_basis->npwtot);
+        rhogtot_y_vec.resize(rho_basis->npwtot);
+        rhogtot_z_vec.resize(rho_basis->npwtot);
+        ig2isztot_vec.resize(rho_basis->npwtot);
+        rhogtot_x = rhogtot_x_vec.data();
+        rhogtot_y = rhogtot_y_vec.data();
+        rhogtot_z = rhogtot_z_vec.data();
+        ig2isztot = ig2isztot_vec.data();
         ModuleBase::GlobalFunc::ZEROS(rhogtot_x, rho_basis->npwtot);
         ModuleBase::GlobalFunc::ZEROS(rhogtot_y, rho_basis->npwtot);
         ModuleBase::GlobalFunc::ZEROS(rhogtot_z, rho_basis->npwtot);
-        ig2isztot = new int[rho_basis->npwtot];
         ModuleBase::GlobalFunc::ZEROS(ig2isztot, rho_basis->npwtot);
     }
     // find max_npw
@@ -354,7 +362,8 @@ void psymmg_soc(std::complex<double>* rhog_x, std::complex<double>* rhog_y,
     {
 #endif
         //init ixyz2ipw
-        int* ixyz2ipw = new int[rho_basis->fftnxyz];
+        std::vector<int> ixyz2ipw_vec(rho_basis->fftnxyz);
+        int* ixyz2ipw = ixyz2ipw_vec.data();
         for(int i=0;i<rho_basis->fftnxyz;++i)
         {
             ixyz2ipw[i]=-1;
@@ -377,23 +386,13 @@ void psymmg_soc(std::complex<double>* rhog_x, std::complex<double>* rhog_y,
             rho_basis->fftnx, rho_basis->fftny, rho_basis->fftnz,
             trs_inv.data(), kgmat.data(), gtr.data(), nop);
 #endif
-        delete[] ixyz2ipw;
 #ifdef __MPI
     }
 
     rhog_piece_to_all(rho_basis, rhogtot_x, rhog_x);
     rhog_piece_to_all(rho_basis, rhogtot_y, rhog_y);
     rhog_piece_to_all(rho_basis, rhogtot_z, rhog_z);
-
-    if(GlobalV::RANK_IN_POOL==0)
-    {
-        delete[] rhogtot_x;
-        delete[] rhogtot_y;
-        delete[] rhogtot_z;
-        delete[] ig2isztot;
-    }
 #endif
-    delete[] fftixy2is;
     return;
 }
 

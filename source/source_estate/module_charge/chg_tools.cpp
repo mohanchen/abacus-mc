@@ -95,12 +95,13 @@ void non_linear_core_correction(const bool numeric,
 
     double gx = 0.0;
     double rhocg1 = 0.0;
-    double *aux = nullptr;
+    std::vector<double> aux_vec;
 
     // here we compute the fourier transform is the charge in numeric form
     if (numeric)
     {
-        aux = new double [mesh];
+        aux_vec.resize(mesh);
+        double* aux = aux_vec.data();
         // G=0 term
 
         int igl0 = 0;
@@ -138,7 +139,6 @@ void non_linear_core_correction(const bool numeric,
             ModuleBase::Integral::Simpson_Integral(mesh, aux, rab, rhocg1);
             rhocg [igl] = ModuleBase::FOUR_PI * rhocg1 / omega;
         } //  enddo
-        delete [] aux;
     }
     else
     {

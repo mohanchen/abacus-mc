@@ -166,12 +166,15 @@ void Charge_Extra::extrapolate_charge(
     }
 
     sf->setup(&ucell, *Pgrid, chr->rhopw);
-    double** rho_atom = new double*[this->nspin];
+    std::vector<std::vector<double>> rho_atom(this->nspin,
+        std::vector<double>(chr->rhopw->nrxx));
+    std::vector<double*> rho_atom_ptr(this->nspin);
     for (int is = 0; is < this->nspin; is++)
     {
-        rho_atom[is] = new double[chr->rhopw->nrxx];
+        rho_atom_ptr[is] = rho_atom[is].data();
     }
-    module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom, sf->strucFac, ucell, chr->rhopw);
+    module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom_ptr.data(),
+        sf->strucFac, ucell, chr->rhopw);
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)
 #endif
@@ -184,11 +187,6 @@ void Charge_Extra::extrapolate_charge(
         }
     }
 
-    for (int is = 0; is < this->nspin; is++)
-    {
-        delete[] rho_atom[is];
-    }
-    delete[] rho_atom;
     ModuleBase::timer::end("Charge_Extra", "extrapolate_charge");
     return;
 }
@@ -286,12 +284,15 @@ void Charge_Extra::update_delta_rho(const UnitCell& ucell, const Charge* chr, co
     }
 
     // obtain the difference between chr->rho and atomic_rho
-    double** rho_atom = new double*[this->nspin];
+    std::vector<std::vector<double>> rho_atom(this->nspin,
+        std::vector<double>(chr->rhopw->nrxx));
+    std::vector<double*> rho_atom_ptr(this->nspin);
     for (int is = 0; is < this->nspin; is++)
     {
-        rho_atom[is] = new double[chr->rhopw->nrxx];
+        rho_atom_ptr[is] = rho_atom[is].data();
     }
-    module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom, sf->strucFac, ucell, chr->rhopw);
+    module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom_ptr.data(),
+        sf->strucFac, ucell, chr->rhopw);
 
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)
@@ -306,12 +307,6 @@ void Charge_Extra::update_delta_rho(const UnitCell& ucell, const Charge* chr, co
             delta_rho1[is][ir] *= ucell.omega;
         }
     }
-
-    for (int is = 0; is < this->nspin; is++)
-    {
-        delete[] rho_atom[is];
-    }
-    delete[] rho_atom;
     return;
 }
 
