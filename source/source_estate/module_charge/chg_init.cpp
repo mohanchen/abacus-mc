@@ -41,33 +41,40 @@ namespace module_charge
 namespace
 {
 
+/// Aggregated file-reading configuration for read_rho_file / read_kin_file
+struct ReadCfg
+{
+    const std::string& suffix;
+    const std::string& readin_dir;
+    int rank;
+    std::ostream& ofs_running;
+    std::ostream& ofs_warning;
+};
+
 /**
  * @brief Read charge density from restart binary or cube files into chr.rho.
  *
  * Charge members accessed: chr.rhopw, chr.ngmc, chr.rhog, chr.rho, chr.nspin.
  *
  * @param chr [inout] Charge object supplying the rho/rhog buffers
- * @param suffix [in] restart file prefix
- * @param readin_dir [in] directory to read from
- * @param rank [in] this processor's rank for palgrid reads
- * @param ofs_running [inout] running log stream
- * @param ofs_warning [inout] warning log stream
+ * @param cfg [in] file-reading configuration (suffix, dir, rank, logs)
  * @param read_error [out] whether rho reading failed
  */
 void read_rho_file(Charge& chr,
                    const UnitCell& ucell,
                    const Parallel_Grid& pgrid,
-                   const std::string& suffix,
-                   const std::string& readin_dir,
-                   const int rank,
-                   std::ostream& ofs_running,
-                   std::ostream& ofs_warning,
+                   const ReadCfg& cfg,
                    bool& read_error)
 {
     const int nspin = chr.nspin;
     ModulePW::PW_Basis* const rhopw = chr.rhopw;
     std::complex<double>** const rhog = chr.rhog;
     double** const rho = chr.rho;
+    const std::string& suffix = cfg.suffix;
+    const std::string& readin_dir = cfg.readin_dir;
+    const int rank = cfg.rank;
+    std::ostream& ofs_running = cfg.ofs_running;
+    std::ostream& ofs_warning = cfg.ofs_warning;
 
     ofs_running << " Read electron density from file" << std::endl;
 
@@ -159,16 +166,17 @@ void read_rho_file(Charge& chr,
 void read_kin_file(Charge& chr,
                    const UnitCell& ucell,
                    const Parallel_Grid& pgrid,
-                   const std::string& suffix,
-                   const std::string& readin_dir,
-                   const int rank,
-                   std::ostream& ofs_running,
-                   std::ostream& ofs_warning,
+                   const ReadCfg& cfg,
                    bool& read_kin_error)
 {
     const int nspin = chr.nspin;
     ModulePW::PW_Basis* const rhopw = chr.rhopw;
     double** const kin_r = chr.kin_r;
+    const std::string& suffix = cfg.suffix;
+    const std::string& readin_dir = cfg.readin_dir;
+    const int rank = cfg.rank;
+    std::ostream& ofs_running = cfg.ofs_running;
+    std::ostream& ofs_warning = cfg.ofs_warning;
 
     ofs_running << " try to read kinetic energy density from file" << std::endl;
     std::vector<std::complex<double>> kin_g_space(nspin * chr.ngmc, {0.0, 0.0});
@@ -357,8 +365,9 @@ void init_rho(Charge& chr,
     bool read_kin_error = false;
     if (init_chg == "file" || init_chg == "auto")
     {
-        read_rho_file(chr, ucell, pgrid, suffix, readin_dir, rank,
-                      GlobalV::ofs_running, GlobalV::ofs_warning, read_error);
+        ReadCfg cfg{suffix, readin_dir, rank,
+                    GlobalV::ofs_running, GlobalV::ofs_warning};
+        read_rho_file(chr, ucell, pgrid, cfg, read_error);
 
         if (read_error)
         {
@@ -382,8 +391,7 @@ void init_rho(Charge& chr,
         {
             if (!read_error)
             {
-                read_kin_file(chr, ucell, pgrid, suffix, readin_dir, rank,
-                              GlobalV::ofs_running, GlobalV::ofs_warning, read_kin_error);
+                read_kin_file(chr, ucell, pgrid, cfg, read_kin_error);
             }
             else
             {
