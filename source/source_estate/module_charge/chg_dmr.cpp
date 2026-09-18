@@ -8,7 +8,6 @@
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
 #include "source_base/tool_title.h"
-#include "source_estate/module_dm/density_matrix.h"
 
 namespace module_charge
 {
@@ -51,6 +50,43 @@ void twobeta_step(double* out,
     }
 }
 
+/**
+ * @brief Validate the arguments of mix_dmr. Aborts via WARNING_QUIT on the
+ *        first invalid input.
+ */
+void check_dmr_inputs(const std::vector<double*>& dmr_out,
+                      const std::vector<const double*>& dmr_in,
+                      const int nnr,
+                      const Base_Mixing::Mixing* mixing,
+                      const MixingConfig& cfg)
+{
+    if (mixing == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "mixing pointer is null");
+    }
+    if (nnr <= 0)
+    {
+        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "nnr must be > 0");
+    }
+    if (cfg.nspin != 1 && cfg.nspin != 2 && cfg.nspin != 4)
+    {
+        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "unsupported nspin, require 1, 2 or 4");
+    }
+    const int nspin_need = (cfg.nspin == 2) ? 2 : 1;
+    if (static_cast<int>(dmr_out.size()) < nspin_need
+        || static_cast<int>(dmr_in.size()) < nspin_need)
+    {
+        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "not enough DMR buffers for nspin");
+    }
+    for (int is = 0; is < nspin_need; ++is)
+    {
+        if (dmr_out[is] == nullptr || dmr_in[is] == nullptr)
+        {
+            ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "DMR buffer pointer is null");
+        }
+    }
+}
+
 } // namespace
 
 void init_mixing_dmr(Base_Mixing::Mixing* mixing,
@@ -86,66 +122,42 @@ void init_mixing_dmr(Base_Mixing::Mixing* mixing,
     ModuleBase::timer::end("module_charge", "init_mixing_dmr");
 }
 
-template <typename TK>
-void mix_dmr(elecstate::DensityMatrix<TK, double>* dm,
+void mix_dmr(const std::vector<double*>& dmr_out,
+             const std::vector<const double*>& dmr_in,
+             const int nnr,
              Base_Mixing::Mixing* mixing,
              Base_Mixing::Mixing_Data& mdata,
              const MixingConfig& cfg)
 {
     ModuleBase::TITLE("module_charge", "mix_dmr");
     ModuleBase::timer::start("module_charge", "mix_dmr");
-    if (dm == nullptr)
-    {
-        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "density matrix pointer is null");
-    }
-    if (mixing == nullptr)
-    {
-        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "mixing pointer is null");
-    }
-    if (cfg.nspin != 1 && cfg.nspin != 2 && cfg.nspin != 4)
-    {
-        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "unsupported nspin, require 1, 2 or 4");
-    }
+    check_dmr_inputs(dmr_out, dmr_in, nnr, mixing, cfg);
 
-    std::vector<hamilt::HContainer<double>*> dmr = dm->get_DMR_vector();
-    std::vector<std::vector<double>>& dmr_save = dm->get_DMR_save();
-
-    double* dmr_in = nullptr;
-    double* dmr_out = nullptr;
     if (cfg.nspin == 1 || cfg.nspin == 4)
     {
-        dmr_in = dmr_save[0].data();
-        dmr_out = dmr[0]->get_wrapper();
-        mixing->push_data(mdata, dmr_in, dmr_out, nullptr, false);
-        mixing->mix_data(mdata, dmr_out);
+        mixing->push_data(mdata, dmr_in[0], dmr_out[0], nullptr, false);
+        mixing->mix_data(mdata, dmr_out[0]);
     }
     else // cfg.nspin == 2
     {
         // Magnetic density matrix: up/down channels are transformed into
         // charge/magnetization channels before mixing and back afterwards.
-        const int nnr = dmr[0]->get_nnr();
         std::vector<double> dmr_mag(nnr * cfg.nspin, 0.0);
         std::vector<double> dmr_mag_save(nnr * cfg.nspin, 0.0);
 
         // Transfer the current DMR into the charge/magnetization layout.
-        double* dmr_up = dmr[0]->get_wrapper();
-        double* dmr_down = dmr[1]->get_wrapper();
         for (int ir = 0; ir < nnr; ++ir)
         {
-            dmr_mag[ir] = dmr_up[ir] + dmr_down[ir];
-            dmr_mag[ir + nnr] = dmr_up[ir] - dmr_down[ir];
+            dmr_mag[ir] = dmr_out[0][ir] + dmr_out[1][ir];
+            dmr_mag[ir + nnr] = dmr_out[0][ir] - dmr_out[1][ir];
         }
         // Transfer the saved DMR into the charge/magnetization layout.
-        dmr_up = dmr_save[0].data();
-        dmr_down = dmr_save[1].data();
         for (int ir = 0; ir < nnr; ++ir)
         {
-            dmr_mag_save[ir] = dmr_up[ir] + dmr_down[ir];
-            dmr_mag_save[ir + nnr] = dmr_up[ir] - dmr_down[ir];
+            dmr_mag_save[ir] = dmr_in[0][ir] + dmr_in[1][ir];
+            dmr_mag_save[ir + nnr] = dmr_in[0][ir] - dmr_in[1][ir];
         }
 
-        dmr_in = dmr_mag_save.data();
-        dmr_out = dmr_mag.data();
         const double beta = cfg.mixing_beta;
         const double beta_mag = cfg.mixing_beta_mag;
         std::function<void(double*, const double*, const double*)> twobeta
@@ -153,30 +165,19 @@ void mix_dmr(elecstate::DensityMatrix<TK, double>* dm,
                   twobeta_step(out, in, sres, nnr, beta, beta_mag);
               };
         // No Kerker screening in DMR mixing.
-        mixing->push_data(mdata, dmr_in, dmr_out, nullptr, twobeta, false);
-        mixing->mix_data(mdata, dmr_out);
+        mixing->push_data(mdata, dmr_mag_save.data(), dmr_mag.data(), nullptr, twobeta, false);
+        mixing->mix_data(mdata, dmr_mag.data());
 
         // Transform the mixed charge/magnetization channels back to up/down.
-        dmr_up = dmr[0]->get_wrapper();
-        dmr_down = dmr[1]->get_wrapper();
-        ModuleBase::GlobalFunc::ZEROS(dmr_up, nnr);
-        ModuleBase::GlobalFunc::ZEROS(dmr_down, nnr);
+        ModuleBase::GlobalFunc::ZEROS(dmr_out[0], nnr);
+        ModuleBase::GlobalFunc::ZEROS(dmr_out[1], nnr);
         for (int ir = 0; ir < nnr; ++ir)
         {
-            dmr_up[ir] = 0.5 * (dmr_mag[ir] + dmr_mag[ir + nnr]);
-            dmr_down[ir] = 0.5 * (dmr_mag[ir] - dmr_mag[ir + nnr]);
+            dmr_out[0][ir] = 0.5 * (dmr_mag[ir] + dmr_mag[ir + nnr]);
+            dmr_out[1][ir] = 0.5 * (dmr_mag[ir] - dmr_mag[ir + nnr]);
         }
     }
     ModuleBase::timer::end("module_charge", "mix_dmr");
 }
-
-template void mix_dmr<double>(elecstate::DensityMatrix<double, double>* dm,
-                              Base_Mixing::Mixing* mixing,
-                              Base_Mixing::Mixing_Data& mdata,
-                              const MixingConfig& cfg);
-template void mix_dmr<std::complex<double>>(elecstate::DensityMatrix<std::complex<double>, double>* dm,
-                                            Base_Mixing::Mixing* mixing,
-                                            Base_Mixing::Mixing_Data& mdata,
-                                            const MixingConfig& cfg);
 
 } // namespace module_charge

@@ -4,7 +4,12 @@
 // Stateless real-space density-matrix (DMR) mixing kernels extracted from
 // Charge_Mixing. The mixing history (Mixing_Data) and the Mixing strategy
 // object remain owned by Charge_Mixing and are passed in explicitly; the
-// functions do not read Charge_Mixing members or PARAM/GlobalV.
+// functions do not read Charge_Mixing members or PARAM/GlobalV. The kernels
+// work on raw contiguous double buffers (one per spin channel) and do not
+// depend on DensityMatrix or HContainer; the caller extracts those buffers
+// from its LCAO containers.
+
+#include <vector>
 
 #include "chg_mix_cfg.h"
 
@@ -13,12 +18,6 @@ namespace Base_Mixing
 class Mixing;
 class Mixing_Data;
 } // namespace Base_Mixing
-
-namespace elecstate
-{
-template <typename TK, typename TR>
-class DensityMatrix;
-} // namespace elecstate
 
 namespace module_charge
 {
@@ -48,15 +47,18 @@ void init_mixing_dmr(Base_Mixing::Mixing* mixing,
  * the up/down channels are transformed into charge/magnetization channels,
  * mixed with independent betas, and transformed back.
  *
- * @tparam TK        scalar type of the density matrix (double or
- *                   std::complex<double>); the DMR storage itself is real
- * @param dm         density-matrix object supplying DMR and DMR_save
- * @param mixing     mixing strategy object, non-null
- * @param mdata      DMR mixing history buffer
- * @param cfg        mixing config (nspin and the two mixing betas)
+ * @param dmr_out  writable DMR buffers, one per spin channel, each of length
+ *                 nnr; mixed results are written back through these pointers
+ * @param dmr_in   DMR buffers saved at the previous mixing step, one per spin
+ *                 channel, each of length nnr (read-only)
+ * @param nnr      number of DMR elements per spin channel, > 0
+ * @param mixing   mixing strategy object, non-null
+ * @param mdata    DMR mixing history buffer
+ * @param cfg      mixing config (nspin and the two mixing betas)
  */
-template <typename TK>
-void mix_dmr(elecstate::DensityMatrix<TK, double>* dm,
+void mix_dmr(const std::vector<double*>& dmr_out,
+             const std::vector<const double*>& dmr_in,
+             const int nnr,
              Base_Mixing::Mixing* mixing,
              Base_Mixing::Mixing_Data& mdata,
              const MixingConfig& cfg);

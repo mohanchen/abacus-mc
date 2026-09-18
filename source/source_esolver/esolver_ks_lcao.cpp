@@ -565,7 +565,21 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     {
         if (this->inp_->mixing_restart > 0 && this->p_chgmix->mixing_restart_count > 0 && this->inp_->mixing_dmr)
         {
-            module_charge::mix_dmr(this->dmat.dm,
+            // Extract the contiguous per-spin DMR buffers expected by the
+            // stateless mixing kernel.
+            const std::vector<hamilt::HContainer<double>*>& dmr_containers
+                = this->dmat.dm->get_DMR_vector();
+            const std::vector<std::vector<double>>& dmr_save = this->dmat.dm->get_DMR_save();
+            std::vector<double*> dmr_out;
+            std::vector<const double*> dmr_in;
+            for (std::size_t is = 0; is < dmr_containers.size(); ++is)
+            {
+                dmr_out.push_back(dmr_containers[is]->get_wrapper());
+                dmr_in.push_back(dmr_save[is].data());
+            }
+            module_charge::mix_dmr(dmr_out,
+                                   dmr_in,
+                                   dmr_containers[0]->get_nnr(),
                                    this->p_chgmix->get_mixing(),
                                    this->p_chgmix->get_dmr_mdata(),
                                    this->p_chgmix->get_mixing_config());
