@@ -36,6 +36,7 @@ struct InitRhoCfg
  *        restart cache, or wavefunctions, depending on cfg.init_chg.
  *
  * @param chr [inout] Charge object whose rho/rhog/kin_r buffers are filled.
+ * @param rhopw [in] plane-wave basis bound to chr (grid sizes and FFT backend)
  * @param ucell [in] unit cell
  * @param pgrid [in] parallel grid descriptor
  * @param strucFac [in] structure factor for atomic-charge superposition
@@ -45,6 +46,7 @@ struct InitRhoCfg
  * @param cfg [in] INPUT values for charge initialization
  */
 void init_rho(Charge& chr,
+              const ModulePW::PW_Basis& rhopw,
               const UnitCell& ucell,
               const Parallel_Grid& pgrid,
               const ModuleBase::ComplexMatrix& strucFac,

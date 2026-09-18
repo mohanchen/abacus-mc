@@ -191,7 +191,7 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase1)
         PARAM.globalv.domag,
         PARAM.globalv.domag_z,
         GlobalV::ofs_warning};
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, *charge.rhopw, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results
@@ -219,7 +219,7 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase2)
         PARAM.globalv.domag,
         PARAM.globalv.domag_z,
         GlobalV::ofs_warning};
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, *charge.rhopw, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results
@@ -247,7 +247,7 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase3)
         PARAM.globalv.domag,
         PARAM.globalv.domag_z,
         GlobalV::ofs_warning};
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, *charge.rhopw, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results
@@ -274,7 +274,7 @@ TEST_F(ChargeExtraTest, ExtrapolateChargeCase4)
         PARAM.globalv.domag,
         PARAM.globalv.domag_z,
         GlobalV::ofs_warning};
-    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
+    CE.extrapolate_charge(pgrid, *ucell.get(), &charge, *charge.rhopw, &sf, GlobalV::ofs_running, GlobalV::ofs_warning, atomic_rho_cfg_test);
     GlobalV::ofs_running.close();
 
     // Check the results

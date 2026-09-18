@@ -298,7 +298,7 @@ void ESolver_KS::iter_finish(UnitCell& ucell, const int istep, int& iter, bool &
     ctx.oscillate_esolver = this->oscillate_esolver;
     ctx.conv_esolver = conv_esolver;
     module_charge::chgmixing_ks(iter, ucell, this->pelec, this->chr,
-        this->p_chgmix, ctx, *this->inp_);
+        *this->chr.rhopw, this->p_chgmix, ctx, *this->inp_);
     this->drho = ctx.drho;
     this->oscillate_esolver = ctx.oscillate_esolver;
     conv_esolver = ctx.conv_esolver;

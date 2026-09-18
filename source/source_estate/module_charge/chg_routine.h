@@ -4,6 +4,7 @@
 #include "source_estate/elecstate.h" // use pelec
 #include "source_estate/module_charge/charge.h" // use chr
 #include "source_estate/module_charge/chg_mix.h" // use p_chgmix
+#include "source_basis/module_pw/pw_basis.h" // use PW_Basis
 #include "source_io/module_parameter/input_parameter.h" // use Input_para
 #include "source_cell/unitcell.h"
 
@@ -30,6 +31,7 @@ void chgmixing_ks(const int iter,
         UnitCell& ucell,
         elecstate::ElecState* pelec,
         Charge &chr,
+        const ModulePW::PW_Basis& rhopw,
         Charge_Mixing* p_chgmix,
         ScfMixingCtx& ctx,
         const Input_para& inp);

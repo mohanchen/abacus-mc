@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "charge.h"
+#include "source_basis/module_pw/pw_basis.h"
 #include "source_cell/unitcell.h"
 #include "source_pw/module_pwdft/stru_fac.h"
 #ifdef __MPI
@@ -71,6 +72,7 @@ class Charge_Extra
      * @param Pgrid parallel grids
      * @param ucell the cell information
      * @param chr the charge density
+     * @param rhopw plane-wave basis bound to chr
      * @param sf the structure factor
      * @param ofs_running the output stream
      * @param ofs_warning the output stream
@@ -80,6 +82,7 @@ class Charge_Extra
         Parallel_Grid* Pgrid,
         UnitCell& ucell,
         Charge* chr,
+        const ModulePW::PW_Basis& rhopw,
         Structure_Factor* sf,
         std::ofstream& ofs_running,
         std::ofstream& ofs_warning,
@@ -100,11 +103,13 @@ class Charge_Extra
      *
      * @param ucell the cell information
      * @param chr the charge density
+     * @param rhopw plane-wave basis bound to chr
      * @param sf the structure factor
      * @param atomic_rho_cfg configuration for atomic_rho (nelec, magnetism, verbosity)
      */
     void update_delta_rho(const UnitCell& ucell,
                           const Charge* chr,
+                          const ModulePW::PW_Basis& rhopw,
                           const Structure_Factor* sf,
                           const AtomicRhoCfg& atomic_rho_cfg);
 

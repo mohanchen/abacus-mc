@@ -172,7 +172,7 @@ void ESolver_FP::after_scf(UnitCell& ucell, const int istep, const bool conv_eso
         PARAM.globalv.domag,
         PARAM.globalv.domag_z,
         GlobalV::ofs_warning};
-    CE.update_delta_rho(ucell, &(this->chr), &(this->sf), atomic_rho_cfg_after);
+    CE.update_delta_rho(ucell, &(this->chr), *this->pw_rhod, &(this->sf), atomic_rho_cfg_after);
 
     //! print out charge density, potential, elf, etc.
 	ModuleIO::ctrl_output_fp(ucell, *this->inp_, this->pelec, this->pw_big, this->pw_rhod, 
@@ -231,8 +231,8 @@ void ESolver_FP::before_scf(UnitCell& ucell, const int istep)
             PARAM.globalv.domag,
             PARAM.globalv.domag_z,
             GlobalV::ofs_warning};
-        this->CE.extrapolate_charge(&this->Pgrid, ucell, &this->chr, &this->sf,
-                                    GlobalV::ofs_running, GlobalV::ofs_warning,
+        this->CE.extrapolate_charge(&this->Pgrid, ucell, &this->chr, *this->pw_rhod,
+                                    &this->sf, GlobalV::ofs_running, GlobalV::ofs_warning,
                                     atomic_rho_cfg_before);
     }
 

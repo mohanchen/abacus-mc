@@ -9,6 +9,7 @@ void module_charge::chgmixing_ks(const int iter,
         UnitCell& ucell,
         elecstate::ElecState* pelec,
         Charge &chr,
+        const ModulePW::PW_Basis& rhopw,
         Charge_Mixing* p_chgmix,
         ScfMixingCtx& ctx,
         const Input_para& inp)
@@ -20,7 +21,7 @@ void module_charge::chgmixing_ks(const int iter,
     double& drho = ctx.drho;
     bool& oscillate_esolver = ctx.oscillate_esolver;
     bool& conv_esolver = ctx.conv_esolver;
-    const int nrxx = chr.rhopw->nrxx;
+    const int nrxx = rhopw.nrxx;
 
     if (ctx.ks_run)
     {

@@ -32,7 +32,7 @@ void Charge::init_rho(const UnitCell& ucell,
                       const void* wfcpw,
                       const module_charge::InitRhoCfg& cfg)
 {
-    module_charge::init_rho(*this, ucell, pgrid, strucFac, symm, klist, wfcpw, cfg);
+    module_charge::init_rho(*this, *this->rhopw, ucell, pgrid, strucFac, symm, klist, wfcpw, cfg);
 }
 
 namespace module_charge
@@ -54,20 +54,21 @@ struct ReadCfg
 /**
  * @brief Read charge density from restart binary or cube files into chr.rho.
  *
- * Charge members accessed: chr.rhopw, chr.ngmc, chr.rhog, chr.rho, chr.nspin.
+ * Charge members accessed: chr.rhog, chr.rho, chr.nspin.
  *
  * @param chr [inout] Charge object supplying the rho/rhog buffers
+ * @param rhopw [in] plane-wave basis for file decoding and Fourier transforms
  * @param cfg [in] file-reading configuration (suffix, dir, rank, logs)
  * @param read_error [out] whether rho reading failed
  */
 void read_rho_file(Charge& chr,
+                   const ModulePW::PW_Basis& rhopw,
                    const UnitCell& ucell,
                    const Parallel_Grid& pgrid,
                    const ReadCfg& cfg,
                    bool& read_error)
 {
     const int nspin = chr.nspin;
-    ModulePW::PW_Basis* const rhopw = chr.rhopw;
     std::complex<double>** const rhog = chr.rhog;
     double** const rho = chr.rho;
     const std::string& suffix = cfg.suffix;
@@ -84,12 +85,12 @@ void read_rho_file(Charge& chr,
     binary << readin_dir << suffix + "-CHARGE-DENSITY.restart";
     // Temporary bridge: use factory until ParaCollection is wired into driver.
     Parallel::ParaWorld pw_world = Parallel::make_pw_world();
-    if (elecstate::read_rhog(binary.str(), rhopw, nspin, rhog, pw_world, &ofs_warning))
+    if (elecstate::read_rhog(binary.str(), &rhopw, nspin, rhog, pw_world, &ofs_warning))
     {
         ofs_running << " Read electron density from file: " << binary.str() << std::endl;
         for (int is = 0; is < nspin; ++is)
         {
-            rhopw->recip2real(rhog[is], rho[is]);
+            rhopw.recip2real(rhog[is], rho[is]);
         }
     }
     else
@@ -132,7 +133,7 @@ void read_rho_file(Charge& chr,
                 else if (is == 3)   // read 2 files when nspin=4
                 {
                     ofs_running << " rearrange electron density " << std::endl;
-                    for (int ir = 0; ir < rhopw->nrxx; ir++)
+                    for (int ir = 0; ir < rhopw.nrxx; ir++)
                     {
                         rho[3][ir] = rho[0][ir] - rho[1][ir];
                         rho[0][ir] = rho[0][ir] + rho[1][ir];
@@ -153,9 +154,10 @@ void read_rho_file(Charge& chr,
 /**
  * @brief Read kinetic-energy density from restart binary or cube files.
  *
- * Charge members accessed: chr.rhopw, chr.ngmc, chr.kin_r, chr.nspin.
+ * Charge members accessed: chr.kin_r, chr.nspin.
  *
  * @param chr [inout] Charge object supplying the kin_r buffer
+ * @param rhopw [in] plane-wave basis for file decoding and Fourier transforms
  * @param suffix [in] restart file prefix
  * @param readin_dir [in] directory to read from
  * @param rank [in] this processor's rank for palgrid reads
@@ -164,13 +166,13 @@ void read_rho_file(Charge& chr,
  * @param read_kin_error [out] whether kinetic-density reading failed
  */
 void read_kin_file(Charge& chr,
+                   const ModulePW::PW_Basis& rhopw,
                    const UnitCell& ucell,
                    const Parallel_Grid& pgrid,
                    const ReadCfg& cfg,
                    bool& read_kin_error)
 {
     const int nspin = chr.nspin;
-    ModulePW::PW_Basis* const rhopw = chr.rhopw;
     double** const kin_r = chr.kin_r;
     const std::string& suffix = cfg.suffix;
     const std::string& readin_dir = cfg.readin_dir;
@@ -179,22 +181,22 @@ void read_kin_file(Charge& chr,
     std::ostream& ofs_warning = cfg.ofs_warning;
 
     ofs_running << " try to read kinetic energy density from file" << std::endl;
-    std::vector<std::complex<double>> kin_g_space(nspin * chr.ngmc, {0.0, 0.0});
+    std::vector<std::complex<double>> kin_g_space(nspin * rhopw.npw, {0.0, 0.0});
     std::vector<std::complex<double>*> kin_g;
     for (int is = 0; is < nspin; is++)
     {
-        kin_g.push_back(kin_g_space.data() + is * chr.ngmc);
+        kin_g.push_back(kin_g_space.data() + is * rhopw.npw);
     }
 
     Parallel::ParaWorld pw_world = Parallel::make_pw_world();
     std::stringstream binary;
     binary << readin_dir << suffix + "-TAU-DENSITY.restart";
-    if (elecstate::read_rhog(binary.str(), rhopw, nspin, kin_g.data(), pw_world, &ofs_warning))
+    if (elecstate::read_rhog(binary.str(), &rhopw, nspin, kin_g.data(), pw_world, &ofs_warning))
     {
         ofs_running << " Read in the kinetic energy density: " << binary.str() << std::endl;
         for (int is = 0; is < nspin; ++is)
         {
-            rhopw->recip2real(kin_g[is], kin_r[is]);
+            rhopw.recip2real(kin_g[is], kin_r[is]);
         }
     }
     else
@@ -231,15 +233,17 @@ void read_kin_file(Charge& chr,
 /**
  * @brief Atomic-density fallback plus Thomas-Fermi kinetic-energy-density init.
  *
- * Charge members accessed: chr.rhopw, chr.rho, chr.kin_r, chr.nspin.
+ * Charge members accessed: chr.rho, chr.kin_r, chr.nspin.
  *
  * @param chr [inout] Charge object supplying rho/kin_r buffers
+ * @param rhopw [in] plane-wave basis for atomic superposition and grid size
  * @param omega [in] unit-cell volume
  * @param init_chg [in] INPUT.init_chg
  * @param read_error [in] whether rho reading failed
  * @param read_kin_error [in] whether kinetic-density reading failed
  */
 void init_rho_atomic_and_tau(Charge& chr,
+                             const ModulePW::PW_Basis& rhopw,
                              const UnitCell& ucell,
                              const ModuleBase::ComplexMatrix& strucFac,
                              const double& omega,
@@ -256,7 +260,7 @@ void init_rho_atomic_and_tau(Charge& chr,
         {
             std::cout << " Charge::init_rho: use atomic initialization instead." << std::endl;
         }
-        module_charge::atomic_rho(nspin, omega, chr.rho, strucFac, ucell, chr.rhopw, atomic_rho_cfg);
+        module_charge::atomic_rho(nspin, omega, chr.rho, strucFac, ucell, &rhopw, atomic_rho_cfg);
     }
 
     // initial tau = 3/5 rho^2/3, Thomas-Fermi
@@ -271,7 +275,7 @@ void init_rho_atomic_and_tau(Charge& chr,
             const double fact = (3.0 / 5.0) * pow(3.0 * ModuleBase::PI * ModuleBase::PI, 2.0 / 3.0);
             for (int is = 0; is < nspin; ++is)
             {
-                for (int ir = 0; ir < chr.rhopw->nrxx; ++ir)
+                for (int ir = 0; ir < rhopw.nrxx; ++ir)
                 {
                     chr.kin_r[is][ir] = fact * pow(std::abs(chr.rho[is][ir]) * nspin, 5.0 / 3.0) / nspin;
                 }
@@ -283,15 +287,17 @@ void init_rho_atomic_and_tau(Charge& chr,
 /**
  * @brief Load charge density from the restart disk cache if requested.
  *
- * Charge members accessed: chr.nrxx, chr.rho, chr.nspin.
+ * Charge members accessed: chr.rho, chr.nspin.
  *
  * @param chr [inout] Charge object supplying rho buffer
+ * @param rhopw [in] plane-wave basis supplying the local real-space grid size
  * @param restart [inout] restart manager
  * @param readin_dir [in] fallback cube-file directory
  * @param rank [in] this processor's rank for palgrid reads
  * @param ofs_running [inout] running log stream
  */
 void load_rho_from_restart(Charge& chr,
+                           const ModulePW::PW_Basis& rhopw,
                            const UnitCell& ucell,
                            const Parallel_Grid& pgrid,
                            Restart& restart,
@@ -308,7 +314,7 @@ void load_rho_from_restart(Charge& chr,
         {
             try
             {
-                restart.load_disk("charge", is, chr.nrxx, chr.rho[is]);
+                restart.load_disk("charge", is, rhopw.nrxx, chr.rho[is]);
             }
             catch (const std::exception& e)
             {
@@ -337,6 +343,7 @@ void load_rho_from_restart(Charge& chr,
 // INPUT.init_chg and dispatches to the stage helpers above.
 // ---------------------------------------------------------------------------
 void init_rho(Charge& chr,
+              const ModulePW::PW_Basis& rhopw,
               const UnitCell& ucell,
               const Parallel_Grid& pgrid,
               const ModuleBase::ComplexMatrix& strucFac,
@@ -367,7 +374,7 @@ void init_rho(Charge& chr,
     {
         ReadCfg cfg{suffix, readin_dir, rank,
                     GlobalV::ofs_running, GlobalV::ofs_warning};
-        read_rho_file(chr, ucell, pgrid, cfg, read_error);
+        read_rho_file(chr, rhopw, ucell, pgrid, cfg, read_error);
 
         if (read_error)
         {
@@ -391,7 +398,7 @@ void init_rho(Charge& chr,
         {
             if (!read_error)
             {
-                read_kin_file(chr, ucell, pgrid, cfg, read_kin_error);
+                read_kin_file(chr, rhopw, ucell, pgrid, cfg, read_kin_error);
             }
             else
             {
@@ -406,11 +413,11 @@ void init_rho(Charge& chr,
         cfg.domag,
         cfg.domag_z,
         GlobalV::ofs_warning};
-    init_rho_atomic_and_tau(chr, ucell, strucFac, ucell.omega,
+    init_rho_atomic_and_tau(chr, rhopw, ucell, strucFac, ucell.omega,
                             init_chg, read_error, read_kin_error,
                             atomic_rho_cfg);
 
-    load_rho_from_restart(chr, ucell, pgrid, GlobalC::restart,
+    load_rho_from_restart(chr, rhopw, ucell, pgrid, GlobalC::restart,
                           readin_dir, rank, GlobalV::ofs_running);
 
     if (init_chg == "wfc")

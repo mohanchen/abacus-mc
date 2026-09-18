@@ -73,6 +73,7 @@ void Charge_Extra::extrapolate_charge(
     Parallel_Grid* Pgrid,
     UnitCell& ucell,
     Charge* chr,
+    const ModulePW::PW_Basis& rhopw,
     Structure_Factor* sf,
     std::ofstream& ofs_running,
     std::ofstream& ofs_warning,
@@ -103,7 +104,7 @@ void Charge_Extra::extrapolate_charge(
     rho_extr = std::min(istep, pot_order);
     if(rho_extr == 0)
     {
-        sf->setup(&ucell, *Pgrid, chr->rhopw);
+        sf->setup(&ucell, *Pgrid, &rhopw);
         ofs_running << " charge density from previous step !" << std::endl;
         ModuleBase::timer::end("Charge_Extra", "extrapolate_charge");
         return;
@@ -121,7 +122,7 @@ void Charge_Extra::extrapolate_charge(
 #endif
         for (int is = 0; is < this->nspin; is++)
         {
-            for (int ir = 0; ir < chr->rhopw->nrxx; ir++)
+            for (int ir = 0; ir < rhopw.nrxx; ir++)
             {
                 chr->rho[is][ir] = delta_rho1[is][ir];
             }
@@ -137,7 +138,7 @@ void Charge_Extra::extrapolate_charge(
 #endif
         for (int is = 0; is < this->nspin; is++)
         {
-            for (int ir = 0; ir < chr->rhopw->nrxx; ir++)
+            for (int ir = 0; ir < rhopw.nrxx; ir++)
             {
                 chr->rho[is][ir] = 2 * delta_rho1[is][ir] - delta_rho2[is][ir];
             }
@@ -158,7 +159,7 @@ void Charge_Extra::extrapolate_charge(
 #endif
         for (int is = 0; is < this->nspin; is++)
         {
-            for (int ir = 0; ir < chr->rhopw->nrxx; ir++)
+            for (int ir = 0; ir < rhopw.nrxx; ir++)
             {
                 chr->rho[is][ir]
                     = one_add_alpha * delta_rho1[is][ir] + beta_alpha * delta_rho2[is][ir] - beta * delta_rho3[is][ir];
@@ -166,22 +167,22 @@ void Charge_Extra::extrapolate_charge(
         }
     }
 
-    sf->setup(&ucell, *Pgrid, chr->rhopw);
+    sf->setup(&ucell, *Pgrid, &rhopw);
     std::vector<std::vector<double>> rho_atom(this->nspin,
-        std::vector<double>(chr->rhopw->nrxx));
+        std::vector<double>(rhopw.nrxx));
     std::vector<double*> rho_atom_ptr(this->nspin);
     for (int is = 0; is < this->nspin; is++)
     {
         rho_atom_ptr[is] = rho_atom[is].data();
     }
     module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom_ptr.data(),
-        sf->strucFac, ucell, chr->rhopw, atomic_rho_cfg);
+        sf->strucFac, ucell, &rhopw, atomic_rho_cfg);
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)
 #endif
     for (int is = 0; is < this->nspin; is++)
     {
-        for(int ir=0; ir<chr->rhopw->nrxx; ir++)
+        for(int ir=0; ir<rhopw.nrxx; ir++)
         {
             chr->rho[is][ir] /= ucell.omega;
             chr->rho[is][ir] += rho_atom[is][ir];
@@ -279,6 +280,7 @@ void Charge_Extra::update_all_dis(const UnitCell& ucell)
 
 void Charge_Extra::update_delta_rho(const UnitCell& ucell,
                                     const Charge* chr,
+                                    const ModulePW::PW_Basis& rhopw,
                                     const Structure_Factor* sf,
                                     const AtomicRhoCfg& atomic_rho_cfg)
 {
@@ -289,21 +291,21 @@ void Charge_Extra::update_delta_rho(const UnitCell& ucell,
 
     // obtain the difference between chr->rho and atomic_rho
     std::vector<std::vector<double>> rho_atom(this->nspin,
-        std::vector<double>(chr->rhopw->nrxx));
+        std::vector<double>(rhopw.nrxx));
     std::vector<double*> rho_atom_ptr(this->nspin);
     for (int is = 0; is < this->nspin; is++)
     {
         rho_atom_ptr[is] = rho_atom[is].data();
     }
     module_charge::atomic_rho(this->nspin, ucell.omega, rho_atom_ptr.data(),
-        sf->strucFac, ucell, chr->rhopw, atomic_rho_cfg);
+        sf->strucFac, ucell, &rhopw, atomic_rho_cfg);
 
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) schedule(static, 512)
 #endif
     for (int is = 0; is < this->nspin; is++)
     {
-        for (int ir = 0; ir < chr->rhopw->nrxx; ir++)
+        for (int ir = 0; ir < rhopw.nrxx; ir++)
         {
             delta_rho3[is][ir] = delta_rho2[is][ir];
             delta_rho2[is][ir] = delta_rho1[is][ir];
