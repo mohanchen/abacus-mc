@@ -53,16 +53,22 @@ double cal_rho2ne(const double* rho_in,
 // Non-linear core correction: Fourier transform of the (numeric) core
 // charge. gg_uniq / ngg supply the reciprocal grid shells previously read
 // from Charge::rhopw.
-void non_linear_core_correction(const bool numeric,
-                                const double omega,
-                                const double tpiba2,
-                                const int mesh,
-                                const double* r,
-                                const double* rab,
-                                const double* rhoc,
-                                double* rhocg,
-                                const double* gg_uniq,
-                                const int ngg);
+/// Radial grid and density data for non-linear core correction
+struct NlcCtx
+{
+    bool numeric;       ///< whether the pseudo-potential has numeric data
+    double omega;      ///< cell volume
+    double tpiba2;     ///< 2*pi/alat squared
+    int mesh;          ///< radial mesh size
+    const double* r;   ///< radial grid points
+    const double* rab; ///< radial grid weights
+    const double* rhoc; ///< core charge on the radial grid
+    const double* gg_uniq; ///< unique |G|^2 values
+    int ngg;           ///< number of unique |G|^2 shells
+};
+
+void non_linear_core_correction(const NlcCtx& ctx,
+                                double* rhocg);
 
 } // namespace module_charge
 

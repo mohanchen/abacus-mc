@@ -76,18 +76,20 @@ double cal_rho2ne(const double* rho_in,
     return ne;
 }
 
-void non_linear_core_correction(const bool numeric,
-                                const double omega,
-                                const double tpiba2,
-                                const int mesh,
-                                const double* r,
-                                const double* rab,
-                                const double* rhoc,
-                                double* rhocg,
-                                const double* gg_uniq,
-                                const int ngg)
+void non_linear_core_correction(const NlcCtx& ctx,
+                                double* rhocg)
 {
     ModuleBase::TITLE("module_charge", "drhoc");
+
+    const bool numeric = ctx.numeric;
+    const double omega = ctx.omega;
+    const double tpiba2 = ctx.tpiba2;
+    const int mesh = ctx.mesh;
+    const double* r = ctx.r;
+    const double* rab = ctx.rab;
+    const double* rhoc = ctx.rhoc;
+    const double* gg_uniq = ctx.gg_uniq;
+    const int ngg = ctx.ngg;
 
     // use labmda instead of repeating codes
     const std::function<void(int, int)> kernel = [&](int num_threads, int thread_id)
@@ -198,16 +200,18 @@ void set_rho_core(const UnitCell& ucell,
 // EXPLAIN : drhoc compute the radial fourier transform for
 // each shell of g vec
 //----------------------------------------------------------
-            non_linear_core_correction(numeric,
-                                       ucell.omega,
-                                       ucell.tpiba2,
-                                       ucell.atoms[it].ncpp.msh,
-                                       ucell.atoms[it].ncpp.r.data(),
-                                       ucell.atoms[it].ncpp.rab.data(),
-                                       ucell.atoms[it].ncpp.rho_atc.data(),
-                                       rhocg.data(),
-                                       rhopw.gg_uniq,
-                                       rhopw.ngg);
+            NlcCtx nlc_ctx{
+                numeric,
+                ucell.omega,
+                ucell.tpiba2,
+                ucell.atoms[it].ncpp.msh,
+                ucell.atoms[it].ncpp.r.data(),
+                ucell.atoms[it].ncpp.rab.data(),
+                ucell.atoms[it].ncpp.rho_atc.data(),
+                rhopw.gg_uniq,
+                rhopw.ngg
+            };
+            non_linear_core_correction(nlc_ctx, rhocg.data());
 //----------------------------------------------------------
 // EXPLAIN : multiply by the structure factor and sum
 //----------------------------------------------------------
