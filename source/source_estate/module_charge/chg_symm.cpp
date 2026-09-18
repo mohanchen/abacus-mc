@@ -7,6 +7,12 @@
 namespace module_charge
 {
 
+// TODO: callers currently pass different grids for LCAO-based paths:
+// esolver_ks_lcao (and TDDFT/SDFT LCAO) pass the smooth pw_rho, while
+// esolver_ks_lcaopw (LIP) and get_pchg_pw pass the dense pw_rhod. The two
+// coincide only because LCAO rejects USPP, so double_grid is always false there
+// (see uspp_support.cpp). If LCAO is extended to USPP, verify which grid the
+// charge symmetrization must use before relaxing that restriction.
 void symmetrize_rho(const int nspin,
                     const Charge& chr,
                     const ModulePW::PW_Basis* pw,
