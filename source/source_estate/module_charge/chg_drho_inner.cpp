@@ -381,7 +381,9 @@ double inner_product_recip_rho(const std::complex<double>* rho1,
         }
         break;
     }
+#ifdef __MPI
     Parallel_Reduce::reduce_pool(sum);
+#endif
     sum *= omega * 0.5;
 
     ModuleBase::timer::end("Charge_Mixing", "recip_rho");
@@ -431,7 +433,9 @@ double inner_product_recip_hartree(const std::complex<double>* rhog1,
             sum += detail::recip_hartree_nspin4_angle(rhog1, rhog2, rhopw, cfg, fac, fac2);
         }
     }
+#ifdef __MPI
     Parallel_Reduce::reduce_pool(sum);
+#endif
     sum *= omega * 0.5;
 
     ModuleBase::timer::end("Charge_Mixing", "recip_hartree");

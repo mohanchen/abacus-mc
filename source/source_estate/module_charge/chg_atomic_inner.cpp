@@ -356,7 +356,9 @@ void normalize_and_check(double** rho_in,
         }
 
         ne[is] *= omega / static_cast<double>(rhopw->nxyz);
+#ifdef __MPI
         Parallel_Reduce::reduce_pool(ne[is]);
+#endif
         // we check that everything is correct
         double neg = 0.0;
         double rea = 0.0;
@@ -370,9 +372,11 @@ void normalize_and_check(double** rho_in,
             ima += std::abs(rhopw->fft_bundle.get_auxr_data<double>()[ir].imag());
         }
 
+#ifdef __MPI
         Parallel_Reduce::reduce_pool(neg);
         Parallel_Reduce::reduce_pool(ima);
         Parallel_Reduce::reduce_pool(sumrea);
+#endif
         // mohan fix bug 2011-04-03
         neg = neg / static_cast<double>(rhopw->nxyz) * omega;
         ima = ima / static_cast<double>(rhopw->nxyz) * omega;
