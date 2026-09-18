@@ -3,7 +3,6 @@
 
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 
 namespace module_charge {
 namespace detail {
@@ -17,8 +16,8 @@ void mix_tau_recip(Charge* chr,
                    Base_Mixing::Mixing_Data& tau_mdata,
                    Base_Mixing::Plain_Mixing* mixing_highf)
 {
-    ModuleBase::TITLE("Charge_Mixing", "mix_tau_recip");
-    ModuleBase::timer::start("Charge_Mixing", "mix_tau_recip");
+    ModuleBase::TITLE("module_charge", "mix_tau_recip");
+    ModuleBase::timer::start("module_charge", "mix_tau_recip");
 
     if (chr == nullptr)
     {
@@ -108,7 +107,7 @@ void mix_tau_recip(Charge* chr,
         rhodpw->recip2real(&kin_g[is * rhodpw->npw], chr->kin_r[is]);
     }
 
-    ModuleBase::timer::end("Charge_Mixing", "mix_tau_recip");
+    ModuleBase::timer::end("module_charge", "mix_tau_recip");
 }
 
 } // namespace detail
