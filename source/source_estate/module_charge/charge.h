@@ -90,8 +90,8 @@ class Charge
                   const Parallel_Grid& pgrid,
                   const ModuleBase::ComplexMatrix& strucFac,
                   ModuleSymmetry::Symmetry& symm,
-                  const void* klist = nullptr,
-                  const void* wfcpw = nullptr);
+                  const void* klist,
+                  const void* wfcpw);
 
     // mohan add 2025-12-02
     bool kin_density() const;

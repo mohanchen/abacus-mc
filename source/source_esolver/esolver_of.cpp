@@ -81,7 +81,7 @@ void ESolver_OF::before_all_runners(BaseCell& basecell, const Input_para& inp)
         ModuleBase::WARNING_QUIT("esolver_of", "meta-GGA and Hybrid functionals are not supported by OFDFT.");
     }
 
-    this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv);
+    this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, nullptr);
     this->chr.check_rho(); // check the rho
 
     // initialize local pseudopotential
