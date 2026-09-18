@@ -283,7 +283,7 @@ void Charge::init_final_scf()
                   << " real_point_number = " << this->rhopw->nrxx << std::endl;
     }
 
-    // allocate memory (std::vector self-manages the storage)
+    // allocate memory for final SCF (std::vector self-manages storage)
     const int ns = PARAM.inp.nspin;
     const int nrxx = this->rhopw->nrxx;
     const int ngmc = this->rhopw->npw;
