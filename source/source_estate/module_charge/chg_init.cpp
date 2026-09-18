@@ -6,7 +6,6 @@
 #include "chg_atomic.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_base/libm/libm.h"
 #include "source_base/timer.h"
 #include "source_cell/magnetism.h"
@@ -30,9 +29,10 @@ void Charge::init_rho(const UnitCell& ucell,
                       const ModuleBase::ComplexMatrix& strucFac,
                       ModuleSymmetry::Symmetry& symm,
                       const void* klist,
-                      const void* wfcpw)
+                      const void* wfcpw,
+                      const module_charge::InitRhoCfg& cfg)
 {
-    module_charge::init_rho(*this, ucell, pgrid, strucFac, symm, klist, wfcpw);
+    module_charge::init_rho(*this, ucell, pgrid, strucFac, symm, klist, wfcpw, cfg);
 }
 
 namespace module_charge
@@ -342,14 +342,15 @@ void init_rho(Charge& chr,
               const ModuleBase::ComplexMatrix& strucFac,
               ModuleSymmetry::Symmetry& symm,
               const void* klist,
-              const void* wfcpw)
+              const void* wfcpw,
+              const InitRhoCfg& cfg)
 {
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "init_chg", PARAM.inp.init_chg);
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "init_chg", cfg.init_chg);
 
-    const int nspin = PARAM.inp.nspin;
+    const int nspin = chr.nspin;
     assert(nspin > 0);
 
-    std::string init_chg_upper = PARAM.inp.init_chg;
+    std::string init_chg_upper = cfg.init_chg;
     std::transform(init_chg_upper.begin(), init_chg_upper.end(), init_chg_upper.begin(), ::toupper);
     std::cout << " START CHARGE         : " << init_chg_upper << std::endl;
 
@@ -357,10 +358,10 @@ void init_rho(Charge& chr,
     chr.set_omega(&ucell.omega);
     chr.pgrid = &pgrid;
 
-    const std::string& init_chg = PARAM.inp.init_chg;
-    const std::string& suffix = PARAM.inp.suffix;
-    const std::string& readin_dir = PARAM.globalv.global_readin_dir;
-    const int rank = (PARAM.inp.esolver_type == "sdft" ? GlobalV::RANK_IN_BPGROUP : GlobalV::MY_RANK);
+    const std::string& init_chg = cfg.init_chg;
+    const std::string& suffix = cfg.suffix;
+    const std::string& readin_dir = cfg.global_readin_dir;
+    const int rank = (cfg.esolver_type == "sdft" ? GlobalV::RANK_IN_BPGROUP : GlobalV::MY_RANK);
 
     bool read_error = false;
     bool read_kin_error = false;
@@ -402,10 +403,10 @@ void init_rho(Charge& chr,
     }
 
     const AtomicRhoCfg atomic_rho_cfg{
-        PARAM.inp.nelec,
-        PARAM.inp.test_charge,
-        PARAM.globalv.domag,
-        PARAM.globalv.domag_z,
+        cfg.nelec,
+        cfg.test_charge,
+        cfg.domag,
+        cfg.domag_z,
         GlobalV::ofs_warning};
     init_rho_atomic_and_tau(chr, ucell, strucFac, ucell.omega,
                             init_chg, read_error, read_kin_error,
@@ -428,7 +429,7 @@ void init_rho(Charge& chr,
                                  readin_dir,
                                  GlobalV::KPAR, GlobalV::MY_POOL, GlobalV::MY_RANK,
                                  GlobalV::NPROC_IN_POOL, GlobalV::RANK_IN_POOL,
-                                 PARAM.inp.nbands, nspin, PARAM.globalv.npol,
+                                 cfg.nbands, nspin, cfg.npol,
                                  kv->get_nkstot(), kv->ik2iktot, kv->isk, GlobalV::ofs_running);
     }
 }

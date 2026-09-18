@@ -9,8 +9,9 @@ namespace LCAO_domain
 {
 	void dm2rho(std::vector<hamilt::HContainer<double>*> &dmr,
 			const int nspin,
-			Charge* chr, 
-			bool skip_normalize = false);
+			Charge* chr,
+			const double nelec,
+			const bool skip_normalize);
 
 	void dm2tau(std::vector<hamilt::HContainer<double>*> &dmr,
 			const int nspin,

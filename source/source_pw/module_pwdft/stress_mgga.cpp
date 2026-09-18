@@ -81,7 +81,11 @@ void Stress_Func<FPTYPE, Device>::stress_mgga(const UnitCell& ucell,
     {
         for (int ipol = 0; ipol < 6; ++ipol)
         {
-            module_charge::reduce_diff_pools(&crosstaus_pack[is][ipol * nrxx], *chr);
+            module_charge::reduce_diff_pools(&crosstaus_pack[is][ipol * nrxx],
+                                             *chr,
+                                             GlobalV::KPAR,
+                                             PARAM.globalv.all_ks_run,
+                                             PARAM.inp.bndpar);
         }
     }
 #endif

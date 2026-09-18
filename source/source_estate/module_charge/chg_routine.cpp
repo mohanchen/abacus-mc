@@ -22,7 +22,7 @@ void module_charge::chgmixing_ks(const int iter,
     bool& conv_esolver = ctx.conv_esolver;
     const int nrxx = chr.rhopw->nrxx;
 
-    if (PARAM.globalv.ks_run)
+    if (ctx.ks_run)
     {
         // mixing will restart at p_chgmix->mixing_restart steps
         if (drho <= inp.mixing_restart && inp.mixing_restart > 0.0
@@ -89,7 +89,7 @@ void module_charge::chgmixing_ks(const int iter,
             }
             if (inp.scf_thr_type == 2)
             {
-                chr.renormalize_rho(); // renormalize rho in R-space would
+                chr.renormalize_rho(inp.nelec); // renormalize rho in R-space would
                                                   // induce a error in K-space
             }
             //----------charge mixing done-----------

@@ -14,6 +14,11 @@
 //a forward declaration of UnitCell
 class UnitCell;
 
+namespace module_charge
+{
+struct InitRhoCfg;
+}
+
 // Electron Charge Density
 class Charge
 {
@@ -91,26 +96,45 @@ class Charge
     /**
      * @brief Init charge density from file or atomic pseudo-wave-functions
      *
-     * @param eferm_iout [out] fermi energy to be initialized
      * @param ucell [in] unit cell
+     * @param pgrid [in] parallel grid descriptor
      * @param strucFac [in] structure factor
      * @param symm [in] symmetry
      * @param klist [in] k points list if needed
      * @param wfcpw [in] PW basis for wave function if needed
+     * @param cfg [in] INPUT values for charge initialization
      */
     void init_rho(const UnitCell& ucell,
                   const Parallel_Grid& pgrid,
                   const ModuleBase::ComplexMatrix& strucFac,
                   ModuleSymmetry::Symmetry& symm,
                   const void* klist,
-                  const void* wfcpw);
+                  const void* wfcpw,
+                  const module_charge::InitRhoCfg& cfg);
 
     // mohan add 2025-12-02
-    bool kin_density() const;
+    /**
+     * @brief Whether the kinetic-energy density is needed
+     *
+     * @param out_elf whether ELF output is requested (PARAM.inp.out_elf[0] > 0)
+     */
+    bool kin_density(const bool out_elf) const;
 
-    void allocate(const int &nspin_in, const bool kin_den);
+    /**
+     * @brief Allocate the rho/rhog/kin_r buffers
+     *
+     * @param nspin_in number of spins
+     * @param kin_den whether to allocate the kinetic-energy density buffers
+     * @param test_charge verbosity flag (PARAM.inp.test_charge)
+     */
+    void allocate(const int &nspin_in, const bool kin_den, const int test_charge);
 
-    void renormalize_rho();
+    /**
+     * @brief Renormalize rho so that its integral equals the electron number
+     *
+     * @param nelec target total electron number (PARAM.inp.nelec)
+     */
+    void renormalize_rho(const double nelec);
 
     double sum_rho() const;
 
@@ -118,9 +142,20 @@ class Charge
 
     double cal_rho2ne(const double *rho_in) const;
 
-    void check_rho(); // to check whether the charge density is normal
+    /**
+     * @brief Check whether the charge density integrates to the electron number
+     *
+     * @param nelec target total electron number (PARAM.inp.nelec)
+     */
+    void check_rho(const double nelec);
 
-    void init_final_scf(); //LiuXh add 20180619
+    /**
+     * @brief Allocate the rho buffers used to output the final SCF density
+     *
+     * @param nspin_in number of spins
+     * @param test_charge verbosity flag (PARAM.inp.test_charge)
+     */
+    void init_final_scf(const int nspin_in, const int test_charge); //LiuXh add 20180619
 
     void set_omega(double* omega_in){this->omega_ = omega_in;};
 

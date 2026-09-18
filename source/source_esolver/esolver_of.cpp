@@ -3,6 +3,7 @@
 #include "source_io/module_parameter/parameter.h"
 //-----------temporary-------------------------
 #include "source_base/global_function.h"
+#include "source_estate/module_charge/chg_init.h"
 #include "source_estate/module_charge/chg_symm.h"
 #include "source_hamilt/module_ewald/h_ewald_pw.h"
 #include "source_cell/cal_ux.h"
@@ -81,8 +82,19 @@ void ESolver_OF::before_all_runners(BaseCell& basecell, const Input_para& inp)
         ModuleBase::WARNING_QUIT("esolver_of", "meta-GGA and Hybrid functionals are not supported by OFDFT.");
     }
 
-    this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, nullptr);
-    this->chr.check_rho(); // check the rho
+    module_charge::InitRhoCfg init_rho_cfg;
+    init_rho_cfg.init_chg = inp.init_chg;
+    init_rho_cfg.suffix = inp.suffix;
+    init_rho_cfg.esolver_type = inp.esolver_type;
+    init_rho_cfg.global_readin_dir = PARAM.globalv.global_readin_dir;
+    init_rho_cfg.nelec = inp.nelec;
+    init_rho_cfg.nbands = inp.nbands;
+    init_rho_cfg.test_charge = inp.test_charge;
+    init_rho_cfg.domag = PARAM.globalv.domag;
+    init_rho_cfg.domag_z = PARAM.globalv.domag_z;
+    init_rho_cfg.npol = PARAM.globalv.npol;
+    this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, nullptr, init_rho_cfg);
+    this->chr.check_rho(inp.nelec); // check the rho
 
     // initialize local pseudopotential
     this->locpp.init_vloc(ucell,pw_rho);
@@ -219,8 +231,8 @@ void ESolver_OF::before_opt(const int istep, UnitCell& ucell)
         delete this->ptemp_rho_;
         this->ptemp_rho_ = new Charge();
 		this->ptemp_rho_->set_rhopw(this->pw_rho);
-		const bool kin_den = this->ptemp_rho_->kin_density(); // mohan add 20251202
-		this->ptemp_rho_->allocate(this->inp_->nspin, kin_den);
+		const bool kin_den = this->ptemp_rho_->kin_density(this->inp_->out_elf[0] > 0); // mohan add 20251202
+		this->ptemp_rho_->allocate(this->inp_->nspin, kin_den, this->inp_->test_charge);
 
         for (int is = 0; is < this->inp_->nspin; ++is)
         {

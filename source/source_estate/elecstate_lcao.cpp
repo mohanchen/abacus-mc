@@ -70,7 +70,7 @@ void ElecStateLCAO<double>::dm2rho(std::vector<double*> pexsi_DM,
         ModuleGint::cal_gint_tau(dm->get_DMR_vector(), PARAM.inp.nspin, this->charge->kin_r);
     }
 
-    this->charge->renormalize_rho();
+    this->charge->renormalize_rho(PARAM.inp.nelec);
 
     ModuleBase::timer::end("ElecStateLCAO", "dm2rho");
     return;
@@ -91,7 +91,7 @@ void ElecStateLCAO<TK>::dmToRho(std::vector<hamilt::HContainer<double>*>& dmr,
                                 Charge* chr,
                                 bool skip_charge)
 {
-    LCAO_domain::dm2rho(dmr, nspin, chr, skip_charge);
+    LCAO_domain::dm2rho(dmr, nspin, chr, PARAM.inp.nelec, skip_charge);
 }
 
 template class ElecStateLCAO<double>;               // Gamma_only case

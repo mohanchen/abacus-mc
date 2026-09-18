@@ -127,6 +127,7 @@ class ChargeMixingTest : public ::testing::Test
         cfg.gamma_only_pw = PARAM.globalv.gamma_only_pw;
         cfg.domag = PARAM.globalv.domag;
         cfg.domag_z = PARAM.globalv.domag_z;
+        cfg.scf_nmax = PARAM.input.scf_nmax;
         return cfg;
     }
 

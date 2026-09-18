@@ -26,6 +26,7 @@ struct MixingConfig
     bool gamma_only_pw = false;          ///< whether gamma-only plane wave is used
     bool domag = false;                  ///< whether magnetism (non-collinear) is considered
     bool domag_z = false;                ///< whether only the z-component magnetism is considered
+    int scf_nmax = 100;                  ///< max SCF iterations, sizes the drho oscillation history (PARAM.inp.scf_nmax)
 };
 
 #endif // CHG_MIX_CFG_H

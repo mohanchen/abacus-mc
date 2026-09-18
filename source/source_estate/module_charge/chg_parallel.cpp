@@ -10,22 +10,24 @@
 #include "source_base/parallel_comm.h"
 #include "source_base/timer.h"
 #include "source_hamilt/module_xc/xc_functional.h"
-#include "source_io/module_parameter/parameter.h"
 
 namespace module_charge
 {
 
-void reduce_diff_pools(double* array_rho, const Charge& chr)
+void reduce_diff_pools(double* array_rho, const Charge& chr, const int kpar,
+                       const bool all_ks_run, const int bndpar)
 {
     ModuleBase::TITLE("Charge", "reduce_diff_pools");
     ModuleBase::timer::start("Charge", "reduce_diff_pools");
     assert(array_rho != nullptr);
-    if (GlobalV::KPAR > 1)
+    assert(kpar >= 1);
+    assert(bndpar >= 1);
+    if (kpar > 1)
     {
         assert(chr.pgrid != nullptr);
         chr.pgrid->reduce_across_pools(array_rho);
     }
-    if (PARAM.globalv.all_ks_run && PARAM.inp.bndpar > 1)
+    if (all_ks_run && bndpar > 1)
     {
         assert(chr.nrxx > 0);
         MPI_Allreduce(MPI_IN_PLACE, array_rho, chr.nrxx, MPI_DOUBLE, MPI_SUM, BP_WORLD);
@@ -33,23 +35,27 @@ void reduce_diff_pools(double* array_rho, const Charge& chr)
     ModuleBase::timer::end("Charge", "reduce_diff_pools");
 }
 
-void rho_mpi(Charge& chr)
+void rho_mpi(Charge& chr, const int kpar, const bool all_ks_run,
+             const int bndpar, const int nspin, const bool out_elf)
 {
     ModuleBase::TITLE("Charge", "rho_mpi");
-    if (GlobalV::KPAR * PARAM.inp.bndpar <= 1)
+    assert(kpar >= 1);
+    assert(bndpar >= 1);
+    assert(nspin > 0);
+    if (kpar * bndpar <= 1)
     {
         return;
     }
     ModuleBase::timer::start("Charge", "rho_mpi");
 
     assert(chr.rho != nullptr);
-    for (int is = 0; is < PARAM.inp.nspin; ++is)
+    for (int is = 0; is < nspin; ++is)
     {
-        reduce_diff_pools(chr.rho[is], chr);
-        if (XC_Functional::get_ked_flag() || PARAM.inp.out_elf[0] > 0)
+        reduce_diff_pools(chr.rho[is], chr, kpar, all_ks_run, bndpar);
+        if (XC_Functional::get_ked_flag() || out_elf)
         {
             assert(chr.kin_r != nullptr);
-            reduce_diff_pools(chr.kin_r[is], chr);
+            reduce_diff_pools(chr.kin_r[is], chr, kpar, all_ks_run, bndpar);
         }
     }
 
@@ -57,21 +63,25 @@ void rho_mpi(Charge& chr)
     return;
 }
 
-void kin_r_mpi(Charge& chr)
+void kin_r_mpi(Charge& chr, const int kpar, const bool all_ks_run,
+               const int bndpar, const int nspin, const bool out_elf)
 {
     ModuleBase::TITLE("Charge", "kin_r_mpi");
-    if (GlobalV::KPAR * PARAM.inp.bndpar <= 1)
+    assert(kpar >= 1);
+    assert(bndpar >= 1);
+    assert(nspin > 0);
+    if (kpar * bndpar <= 1)
     {
         return;
     }
     ModuleBase::timer::start("Charge", "kin_r_mpi");
 
-    if (XC_Functional::get_ked_flag() || PARAM.inp.out_elf[0] > 0)
+    if (XC_Functional::get_ked_flag() || out_elf)
     {
         assert(chr.kin_r != nullptr);
-        for (int is = 0; is < PARAM.inp.nspin; ++is)
+        for (int is = 0; is < nspin; ++is)
         {
-            reduce_diff_pools(chr.kin_r[is], chr);
+            reduce_diff_pools(chr.kin_r[is], chr, kpar, all_ks_run, bndpar);
         }
     }
 

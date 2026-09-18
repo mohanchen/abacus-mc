@@ -822,8 +822,8 @@ template<typename T, typename TR>
 void ModuleESolver::ESolver_LR<T, TR>::read_ks_chg(Charge& chg_gs)
 {
     chg_gs.set_rhopw(this->pw_rho);
-    const bool kin_den = chg_gs.kin_density(); // mohan add 20251202
-    chg_gs.allocate(this->nspin, kin_den);
+    const bool kin_den = chg_gs.kin_density(this->inp_->out_elf[0] > 0); // mohan add 20251202
+    chg_gs.allocate(this->nspin, kin_den, this->inp_->test_charge);
     GlobalV::ofs_running << " try to read charge from file : ";
     for (int is = 0; is < this->nspin; ++is)
     {

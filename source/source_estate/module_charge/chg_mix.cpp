@@ -8,7 +8,6 @@
 #include <functional>
 #include <memory>
 
-#include "source_io/module_parameter/parameter.h"
 #include "source_base/module_mixing/broyden_mixing.h"
 #include "source_base/module_mixing/pulay_mixing.h"
 #include "source_base/parallel_common.h"
@@ -206,7 +205,7 @@ bool Charge_Mixing::if_scf_oscillate(const int iteration, const double drho,
 
     if(this->_drho_history.size() == 0)
     {
-        this->_drho_history.resize(PARAM.inp.scf_nmax);
+        this->_drho_history.resize(this->cfg_.scf_nmax);
     }
 
     // add drho into history

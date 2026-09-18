@@ -267,7 +267,8 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
     }
 
 #ifdef __MPI
-    module_charge::reduce_diff_pools(chg_ref.rho[0], chg_ref);
+    module_charge::reduce_diff_pools(chg_ref.rho[0], chg_ref, GlobalV::KPAR,
+                                     PARAM.globalv.all_ks_run, PARAM.inp.bndpar);
 #endif
 
     // for spin=1 or 2, npol=1

@@ -128,16 +128,17 @@ void Charge::init_rho(const UnitCell&,
                       ModuleBase::ComplexMatrix const&,
                       ModuleSymmetry::Symmetry& symm,
                       const void*,
-                      const void*)
+                      const void*,
+                      const module_charge::InitRhoCfg&)
 {
 }
 void Charge::set_rhopw(ModulePW::PW_Basis*)
 {
 }
-void Charge::renormalize_rho()
+void Charge::renormalize_rho(const double)
 {
 }
-void Charge::check_rho()
+void Charge::check_rho(const double)
 {
 }
 

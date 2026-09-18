@@ -673,7 +673,11 @@ void Stochastic_Iter<T, Device>::cal_storho(const UnitCell& ucell,
     {
         for (int is = 0; is < nspin; ++is)
         {
-            module_charge::reduce_diff_pools(sto_rho[is], *pes->charge);
+            module_charge::reduce_diff_pools(sto_rho[is],
+                                             *pes->charge,
+                                             GlobalV::KPAR,
+                                             PARAM.globalv.all_ks_run,
+                                             PARAM.inp.bndpar);
             if (!PARAM.globalv.all_ks_run && PARAM.inp.bndpar > 1)
             {
                 MPI_Allreduce(MPI_IN_PLACE, sto_rho[is], nrxx, MPI_DOUBLE, MPI_SUM, BP_WORLD);

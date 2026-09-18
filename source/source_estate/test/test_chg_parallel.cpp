@@ -100,7 +100,8 @@ TEST_F(ChargeMpiTest, reduce_diff_pools1)
         }
         double refsum = sum_array(array_rho, nrxx);
 
-        module_charge::reduce_diff_pools(array_rho, *charge);
+        module_charge::reduce_diff_pools(array_rho, *charge, GlobalV::KPAR,
+                                         PARAM.globalv.all_ks_run, PARAM.inp.bndpar);
         double sum = sum_array(array_rho, nrxx);
         EXPECT_EQ(sum, refsum * GlobalV::KPAR);
 
@@ -155,7 +156,8 @@ TEST_F(ChargeMpiTest, reduce_diff_pools2)
             }
         }
 
-        module_charge::reduce_diff_pools(array_rho, *charge);
+        module_charge::reduce_diff_pools(array_rho, *charge, GlobalV::KPAR,
+                                         PARAM.globalv.all_ks_run, PARAM.inp.bndpar);
         double sum = sum_array(array_rho, nrxx);
         MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_DOUBLE, MPI_SUM, POOL_WORLD);
         EXPECT_EQ(sum, refsum * GlobalV::KPAR);
@@ -201,7 +203,9 @@ TEST_F(ChargeMpiTest, rho_mpi)
         charge->nrxx = nrxx;
         charge->rho[0] = new double[nrxx];
         charge->kin_r[0] = new double[nrxx];
-        module_charge::rho_mpi(*charge);
+        module_charge::rho_mpi(*charge, GlobalV::KPAR, PARAM.globalv.all_ks_run,
+                               PARAM.inp.bndpar, PARAM.inp.nspin,
+                               PARAM.inp.out_elf[0] > 0);
 
         delete[] charge->rho[0];
         delete[] charge->rho;
@@ -211,7 +215,9 @@ TEST_F(ChargeMpiTest, rho_mpi)
     }
 
     GlobalV::KPAR = 1;
-    module_charge::rho_mpi(*charge);
+    module_charge::rho_mpi(*charge, GlobalV::KPAR, PARAM.globalv.all_ks_run,
+                           PARAM.inp.bndpar, PARAM.inp.nspin,
+                           PARAM.inp.out_elf[0] > 0);
 }
 
 TEST_F(ChargeMpiTest, kin_r_mpi)
@@ -260,7 +266,9 @@ TEST_F(ChargeMpiTest, kin_r_mpi)
         }
         const double refsum = sum_array(charge->kin_r[0], nrxx);
 
-        module_charge::kin_r_mpi(*charge);
+        module_charge::kin_r_mpi(*charge, GlobalV::KPAR, PARAM.globalv.all_ks_run,
+                                 PARAM.inp.bndpar, PARAM.inp.nspin,
+                                 PARAM.inp.out_elf[0] > 0);
         const double sum = sum_array(charge->kin_r[0], nrxx);
         EXPECT_EQ(sum, refsum * GlobalV::KPAR);
 

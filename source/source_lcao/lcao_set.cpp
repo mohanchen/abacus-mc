@@ -160,7 +160,7 @@ void LCAO_domain::init_chg_dm(
     LCAO_domain::init_dm_from_file<TK>(readin_dir, nspin, dmat, ucell, pv);
 
     // Step 2: Convert density matrix to charge density
-    LCAO_domain::dm2rho(dmat.dm->get_DMR_vector(), nspin, chr, true);
+    LCAO_domain::dm2rho(dmat.dm->get_DMR_vector(), nspin, chr, PARAM.inp.nelec, true);
 
     return;
 }

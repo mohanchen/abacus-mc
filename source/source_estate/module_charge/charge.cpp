@@ -30,7 +30,6 @@
 #include "source_cell/unitcell.h"
 #include "source_cell/magnetism.h"
 #include "source_hamilt/module_xc/xc_functional.h"
-#include "source_io/module_parameter/parameter.h"
 
 #include <algorithm>
 #include <vector>
@@ -52,16 +51,9 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
 }
 
 // mohan add 2025-12-02
-bool Charge::kin_density() const
+bool Charge::kin_density(const bool out_elf) const
 {
-    if (XC_Functional::get_ked_flag() || PARAM.inp.out_elf[0] > 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return XC_Functional::get_ked_flag() || out_elf;
 }
 
 void Charge::destroy()
@@ -89,9 +81,11 @@ void Charge::destroy()
     }
 }
 
-void Charge::allocate(const int& nspin_in, const bool kin_den)
+void Charge::allocate(const int& nspin_in, const bool kin_den, const int test_charge)
 {
     ModuleBase::TITLE("Charge", "allocate");
+
+    assert(nspin_in > 0);
 
     if (this->rhopw == nullptr)
     {
@@ -114,7 +108,7 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
     //  mohan add 2021-02-20
     this->nspin = nspin_in;
 
-    if (PARAM.inp.test_charge > 1)
+    if (test_charge > 1)
     {
         std::cout << "\n spin_number = " << nspin << " real_point_number = " << nrxx << std::endl;
     }
@@ -194,14 +188,16 @@ double Charge::sum_rho() const
     return module_charge::sum_rho(this->rho, nspin0, this->nrxx, *this->omega_, this->rhopw->nxyz);
 }
 
-void Charge::renormalize_rho()
+void Charge::renormalize_rho(const double nelec)
 {
     ModuleBase::TITLE("Charge", "renormalize_rho");
+
+    assert(nelec > 0.0);
 
     const double sr = this->sum_rho();
     GlobalV::ofs_warning << std::setprecision(15);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_warning, "charge before normalized", sr);
-    const double normalize_factor = PARAM.inp.nelec / sr;
+    const double normalize_factor = nelec / sr;
 
     for (int is = 0; is < nspin; is++)
     {
@@ -219,7 +215,7 @@ void Charge::renormalize_rho()
 
 void Charge::save_rho_before_sum_band()
 {
-    for (int is = 0; is < PARAM.inp.nspin; is++)
+    for (int is = 0; is < nspin; is++)
     {
         ModuleBase::GlobalFunc::DCOPY(rho[is], rho_save[is], this->rhopw->nrxx);
         if (XC_Functional::get_ked_flag())
@@ -235,13 +231,15 @@ double Charge::cal_rho2ne(const double* rho_in) const
     return module_charge::cal_rho2ne(rho_in, this->rhopw->nrxx, *this->omega_, this->rhopw->nxyz);
 }
 
-void Charge::check_rho()
+void Charge::check_rho(const double nelec)
 {
+    assert(nelec > 0.0);
+
     if (this->nspin==1 || this->nspin==4)
     {
         double ne = 0.0;
         ne = this->cal_rho2ne(rho[0]);
-        if (std::abs(ne - PARAM.inp.nelec) > 1.0e-6)
+        if (std::abs(ne - nelec) > 1.0e-6)
         {
             ModuleBase::WARNING("Charge", "Charge is not equal to the number of electrons!");
         }
@@ -265,7 +263,7 @@ void Charge::check_rho()
                 "Number of spin-up electrons set in starting magnetization exceeds all available.");
         }
         // for total charge
-        if (std::abs(ne_up + ne_dn - PARAM.inp.nelec) > 1.0e-6)
+        if (std::abs(ne_up + ne_dn - nelec) > 1.0e-6)
         {
             ModuleBase::WARNING("Charge", "Charge is not equal to the number of electrons!");
         }
@@ -273,19 +271,21 @@ void Charge::check_rho()
 }
 
 // LiuXh add 20180619
-void Charge::init_final_scf()
+void Charge::init_final_scf(const int nspin_in, const int test_charge)
 {
     ModuleBase::TITLE("Charge", "init_after_scf");
 
+    assert(nspin_in > 0);
+
     assert(allocate_rho_final_scf == false);
-    if (PARAM.inp.test_charge > 1)
+    if (test_charge > 1)
     {
-        std::cout << "\n spin_number = " << PARAM.inp.nspin
+        std::cout << "\n spin_number = " << nspin_in
                   << " real_point_number = " << this->rhopw->nrxx << std::endl;
     }
 
     // allocate memory for final SCF (std::vector self-manages storage)
-    const int ns = PARAM.inp.nspin;
+    const int ns = nspin_in;
     const int nrxx = this->rhopw->nrxx;
     const int ngmc = this->rhopw->npw;
     _space_rho.resize(ns * nrxx);

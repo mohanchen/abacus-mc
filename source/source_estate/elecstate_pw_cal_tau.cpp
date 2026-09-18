@@ -57,7 +57,12 @@ void ElecStatePW<T, Device>::cal_tau(const psi::Psi<T, Device>& psi)
         }
     }
 #ifdef __MPI
-    module_charge::kin_r_mpi(*this->charge);
+    module_charge::kin_r_mpi(*this->charge,
+                             GlobalV::KPAR,
+                             PARAM.globalv.all_ks_run,
+                             PARAM.inp.bndpar,
+                             PARAM.inp.nspin,
+                             PARAM.inp.out_elf[0] > 0);
 #endif
     ModuleBase::TITLE("ElecStatePW", "cal_tau");
 }

@@ -172,7 +172,12 @@ template <typename T, typename Device>
 void ElecStatePW<T, Device>::parallelK()
 {
 #ifdef __MPI
-    module_charge::rho_mpi(*this->charge);
+    module_charge::rho_mpi(*this->charge,
+                           GlobalV::KPAR,
+                           PARAM.globalv.all_ks_run,
+                           PARAM.inp.bndpar,
+                           PARAM.inp.nspin,
+                           PARAM.inp.out_elf[0] > 0);
 #endif
 }
 

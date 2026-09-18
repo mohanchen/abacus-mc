@@ -7,6 +7,7 @@
 #include "source_estate/update_pot.h" // mohan add 20251016
 #include "source_estate/module_charge/chg_routine.h" // mohan add 20251018
 #include "source_estate/module_charge/chg_drho.h" // module_charge::cal_drho/cal_dkin
+#include "source_estate/module_charge/chg_init.h" // module_charge::InitRhoCfg
 #include "source_pw/module_pwdft/setup_pwwfc.h" // mohan add 20251018
 #include "source_hsolver/hsolver.h"
 #include "source_io/module_energy/write_eig_occ.h"
@@ -83,6 +84,7 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     mix_cfg.gamma_only_pw = PARAM.globalv.gamma_only_pw;
     mix_cfg.domag = PARAM.globalv.domag;
     mix_cfg.domag_z = PARAM.globalv.domag_z;
+    mix_cfg.scf_nmax = inp.scf_nmax;
     p_chgmix->set_mixing(mix_cfg, ucell.omega, ucell.tpiba);
     p_chgmix->init_mixing();
 
@@ -91,8 +93,19 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
 
     //! 5) read in charge density, mohan add 2025-11-28
     //! Inititlize the charge density.
-    this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, this->pw_wfc);
-    this->chr.check_rho(); // check the rho
+    module_charge::InitRhoCfg init_rho_cfg;
+    init_rho_cfg.init_chg = inp.init_chg;
+    init_rho_cfg.suffix = inp.suffix;
+    init_rho_cfg.esolver_type = inp.esolver_type;
+    init_rho_cfg.global_readin_dir = PARAM.globalv.global_readin_dir;
+    init_rho_cfg.nelec = inp.nelec;
+    init_rho_cfg.nbands = inp.nbands;
+    init_rho_cfg.test_charge = inp.test_charge;
+    init_rho_cfg.domag = PARAM.globalv.domag;
+    init_rho_cfg.domag_z = PARAM.globalv.domag_z;
+    init_rho_cfg.npol = PARAM.globalv.npol;
+    this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, this->pw_wfc, init_rho_cfg);
+    this->chr.check_rho(inp.nelec); // check the rho
   
 }
 
@@ -274,6 +287,7 @@ void ESolver_KS::iter_finish(UnitCell& ucell, const int istep, int& iter, bool &
     ctx.scf_thr = this->scf_thr;
     ctx.scf_ene_thr = this->scf_ene_thr;
     ctx.converged_u = converged_u;
+    ctx.ks_run = PARAM.globalv.ks_run;
     ctx.drho = this->drho;
     ctx.oscillate_esolver = this->oscillate_esolver;
     ctx.conv_esolver = conv_esolver;
