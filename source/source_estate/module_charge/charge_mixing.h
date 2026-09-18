@@ -122,7 +122,7 @@ class Charge_Mixing
     double mixing_beta_mag = 1.6;        ///< mixing beta for magnetism
     int mixing_ndim = 8;                 ///< mixing ndim for broyden and pulay
     double mixing_gg0 = 0.0;             ///< mixing gg0 for Kerker screen
-    bool mixing_tau = false;             ///< whether to use tau mixing
+
     double mixing_gg0_mag = 0.0;         ///< mixing gg0 for Kerker screen for magnetism
     double mixing_gg0_min = 0.1;         ///< minimum kerker coefficient
     double mixing_angle = 0.0;           ///< mixing angle for nspin=4
@@ -131,8 +131,6 @@ class Charge_Mixing
     double* tpiba = nullptr;                  ///< 2*pi/beta for non-linear core correction
     double* tpiba2 = nullptr;                 ///< 2*pi/beta^2 for non-linear core correction
     std::vector<double> _drho_history; ///< history of drho used to determine the oscillation, size is scf_nmax
-    
-    bool new_e_iteration = true;
 
     ModulePW::PW_Basis* rhopw = nullptr;  ///< smooth grid
     ModulePW::PW_Basis* rhodpw = nullptr; ///< dense grid, same as rhopw for ncpp.
@@ -148,34 +146,6 @@ class Charge_Mixing
      * @param chr pointer of Charge object
      */
     void mix_rho_real(Charge* chr);
-
-    /**
-     * @brief two-beta mixing functor: mix the first `nunit` elements with
-     * mixing_beta and the rest (nunit..total) with mixing_beta_mag. Used for
-     * magnetic cases (nspin==2/4) where the charge channel and the magnetism
-     * channels use different betas. Replaces the duplicated local lambdas.
-     * @tparam T element type, double (real space) or std::complex<double> (reciprocal)
-     */
-    template <typename T>
-    std::function<void(T*, const T*, const T*)> make_twobeta_mix(const int total, const int nunit)
-    {
-        return [this, total, nunit](T* out, const T* in, const T* sres) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = 0; i < nunit; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta * sres[i];
-            }
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static, 256)
-#endif
-            for (int i = nunit; i < total; ++i)
-            {
-                out[i] = in[i] + this->mixing_beta_mag * sres[i];
-            }
-        };
-    }
 };
 
 #endif

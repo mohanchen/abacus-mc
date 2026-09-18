@@ -161,7 +161,7 @@ TEST_F(ChargeMixingTest, SetMixingTest)
     EXPECT_EQ(CMtest.get_mixing_beta(), 1.0);
     EXPECT_EQ(CMtest.get_mixing_ndim(), 1);
     EXPECT_EQ(CMtest.get_mixing_gg0(), 1.0);
-    EXPECT_EQ(CMtest.mixing_tau, false);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_tau, false);
     EXPECT_EQ(CMtest.mixing_beta_mag, 1.6);
     EXPECT_EQ(CMtest.mixing_gg0_mag, 0.0);
     EXPECT_EQ(CMtest.mixing_gg0_min, 0.1);
@@ -172,7 +172,7 @@ TEST_F(ChargeMixingTest, SetMixingTest)
     PARAM.input.mixing_mode = "plain";
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     EXPECT_EQ(CMtest.mixing_mode, "plain");
-    EXPECT_EQ(CMtest.mixing_tau, true);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_tau, true);
 
     PARAM.input.mixing_beta = 1.1;
     std::string output;

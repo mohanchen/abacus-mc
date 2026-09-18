@@ -41,7 +41,7 @@ void Charge_Mixing::set_mixing(const MixingConfig& cfg,
     this->mixing_beta_mag = cfg.mixing_beta_mag;
     this->mixing_ndim = cfg.mixing_ndim;
     this->mixing_gg0 = cfg.mixing_gg0;
-    this->mixing_tau = cfg.mixing_tau;
+
     this->mixing_gg0_mag = cfg.mixing_gg0_mag;
     this->mixing_gg0_min = cfg.mixing_gg0_min;
     this->mixing_angle = cfg.mixing_angle;
@@ -165,7 +165,7 @@ void Charge_Mixing::init_mixing()
     }
 
     // initailize tau_mdata
-    if ((XC_Functional::get_ked_flag()) && mixing_tau)
+    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
     {
         if (this->cfg_.scf_thr_type == 1)
         {
@@ -195,7 +195,7 @@ void Charge_Mixing::mix_reset()
     this->mixing->reset();
     this->rho_mdata.reset();
     // initailize tau_mdata
-    if ((XC_Functional::get_ked_flag()) && mixing_tau)
+    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
     {
         this->tau_mdata.reset();
     }
