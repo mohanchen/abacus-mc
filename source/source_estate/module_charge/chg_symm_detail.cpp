@@ -1,4 +1,7 @@
 #include "chg_symm_detail.h"
+
+#include <functional>
+
 #include "source_base/parallel_reduce.h"
 #include "source_base/parallel_global.h"
 #include "source_cell/module_symmetry/symm_rot_spin.h"
@@ -281,7 +284,7 @@ void psymmg_soc(std::complex<double>* rhog_x, std::complex<double>* rhog_y,
 {
     // build the per-operation spin-rotation matrices W(g) from the cartesian rotation
     // gmatc(g) = direct_to_cartesian(gmatrix(g)) = latvec^-1 * gmatrix(g) * latvec.
-    auto build_wspin = [&rho_basis, &symm]() {
+    std::function<std::vector<ModuleBase::Matrix3>()> build_wspin = [&rho_basis, &symm]() {
         const ModuleBase::Matrix3 latvec = rho_basis->latvec;
         const ModuleBase::Matrix3 ilatvec = latvec.Inverse();
         // index [0,nrotk) unitary, [nrotk, nrotk+nrotk_anti) the spatial parts of the

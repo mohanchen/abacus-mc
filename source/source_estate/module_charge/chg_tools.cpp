@@ -1,5 +1,7 @@
 #include "chg_tools.h"
 
+#include <functional>
+
 #include "source_base/complexmatrix.h"
 #include "source_base/global_function.h"
 #include "source_base/constants.h"
@@ -88,7 +90,7 @@ void non_linear_core_correction(const bool numeric,
     ModuleBase::TITLE("module_charge", "drhoc");
 
     // use labmda instead of repeating codes
-    const auto kernel = [&](int num_threads, int thread_id)
+    const std::function<void(int, int)> kernel = [&](int num_threads, int thread_id)
     {
 
     double gx = 0.0;

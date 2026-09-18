@@ -5,6 +5,8 @@
 #include "chg_tau.h"
 #include "chg_uspp.h"
 
+#include <functional>
+
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/module_mixing/broyden_mixing.h"
 #include "source_base/module_mixing/pulay_mixing.h"
@@ -341,14 +343,15 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
     }
 
     //  inner_product_recip_hartree is a hartree-like sum, unit is Ry
-    auto inner_product = [this](std::complex<double>* rhog1, std::complex<double>* rhog2)
+    std::function<double(std::complex<double>*, std::complex<double>*)> inner_product
+        = [this](std::complex<double>* rhog1, std::complex<double>* rhog2)
     {
         return module_charge::inner_product_recip_hartree(
             rhog1, rhog2, *this->rhopw, this->cfg_, *this->omega, *this->tpiba);
     };
 
     // Kerker screening functor, shared by all nspin branches
-    auto screen = [this](std::complex<double>* p) {
+    std::function<void(std::complex<double>*)> screen = [this](std::complex<double>* p) {
         module_charge::kerker_screen_recip(this->cfg_, this->rhopw, *this->tpiba, p);
     };
 
@@ -372,7 +375,8 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         //
         rhog_in = rhog_mag_save.data();
         rhog_out = rhog_mag.data();
-        auto twobeta_mix = module_charge::detail::make_twobeta_mix<std::complex<double>>(2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(std::complex<double>*, const std::complex<double>*, const std::complex<double>*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<std::complex<double>>(2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -398,7 +402,8 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         rhog_in = rhogs_in;
         rhog_out = rhogs_out;
         const int npw = this->rhopw->npw;
-        auto twobeta_mix = module_charge::detail::make_twobeta_mix<std::complex<double>>(4 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(std::complex<double>*, const std::complex<double>*, const std::complex<double>*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<std::complex<double>>(4 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -444,7 +449,8 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         //
         rhog_in = rhog_magabs_save.data();
         rhog_out = rhog_magabs.data();
-        auto twobeta_mix = module_charge::detail::make_twobeta_mix<std::complex<double>>(2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(std::complex<double>*, const std::complex<double>*, const std::complex<double>*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<std::complex<double>>(2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -519,10 +525,10 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     double* rhor_in=nullptr;
     double* rhor_out=nullptr;
 
-    auto screen = [this](double* p) {
+    std::function<void(double*)> screen = [this](double* p) {
         module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
     };
-    auto inner_product = [this](double* rho1, double* rho2)
+    std::function<double(double*, double*)> inner_product = [this](double* rho1, double* rho2)
     {
         return module_charge::inner_product_real(rho1, rho2, *this->rhopw, this->cfg_);
     };
@@ -546,7 +552,8 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         //
         rhor_in = rho_mag_save.data();
         rhor_out = rho_mag.data();
-        auto twobeta_mix = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(double*, const double*, const double*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
@@ -562,7 +569,8 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_in = chr->rho_save[0];
         rhor_out = chr->rho[0];
         const int nrxx = this->rhopw->nrxx;
-        auto twobeta_mix = module_charge::detail::make_twobeta_mix<double>(4 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(double*, const double*, const double*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<double>(4 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
@@ -589,7 +597,8 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_in = rho_magabs_save.data();
         rhor_out = rho_magabs.data();
 
-        auto twobeta_mix = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
+        std::function<void(double*, const double*, const double*)> twobeta_mix
+            = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);

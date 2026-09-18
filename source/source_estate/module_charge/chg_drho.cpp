@@ -6,6 +6,7 @@
 #include "source_hamilt/module_xc/xc_functional.h"
 
 #include <cassert>
+#include <functional>
 
 namespace module_charge
 {
@@ -163,7 +164,7 @@ double inner_product_recip_rho(const std::complex<double>* rho1,
 
     double sum = 0.0;
 
-    auto part_of_noncolin = [&]()
+    std::function<double()> part_of_noncolin = [&]()
     {
         double sum = 0.0;
         const int ig0 = rhopw.ig_gge0;
@@ -344,7 +345,7 @@ double inner_product_recip_hartree(const std::complex<double>* rhog1,
     const int npw = rhopw.npw;
 
     // a lambda function for summing the charge density
-    auto part_of_rho = [&]()
+    std::function<double()> part_of_rho = [&]()
     {
         double sum = 0.0;
         const int ig0 = rhopw.ig_gge0;
