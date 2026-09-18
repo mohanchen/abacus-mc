@@ -2,9 +2,8 @@
 #define CHG_RHO_DETAIL_H
 
 // Internal helpers for charge density mixing (mix_rho_recip/mix_rho_real).
-// Not part of the public module_charge API: only charge_mixing.cpp,
-// charge_mixing_rho.cpp and the charge mixing unit test are expected to
-// include this header.
+// Not part of the public module_charge API: only charge_mixing.cpp
+// and the charge mixing unit test are expected to include this header.
 
 #include <functional>
 #include <complex>
@@ -117,29 +116,6 @@ void unpack_rho_mag(T* d0, T* d1, const T* in, const int n)
         d1[i] = 0.5 * (in[i] - in[i + n]);
     }
 }
-
-/**
- * @brief Mix kinetic energy density in reciprocal space.
- *        Handles the double-grid split/merge for the smooth and
- *        high-frequency parts, DIIS mixing of the smooth part, and
- *        plain mixing of the high-frequency part.
- * @param chr pointer to Charge object (must have kin_r/kin_r_save)
- * @param nspin number of spins
- * @param double_grid whether double grid is used
- * @param rhopw smooth grid
- * @param rhodpw dense grid (same as rhopw when double_grid is off)
- * @param mixing DIIS mixing object
- * @param tau_mdata mixing data for tau
- * @param mixing_highf plain mixing for high-frequency part (may be null when double_grid is off)
- */
-void mix_tau_recip(Charge* chr,
-                   const int nspin,
-                   const bool double_grid,
-                   ModulePW::PW_Basis* rhopw,
-                   ModulePW::PW_Basis* rhodpw,
-                   Base_Mixing::Mixing* mixing,
-                   Base_Mixing::Mixing_Data& tau_mdata,
-                   Base_Mixing::Plain_Mixing* mixing_highf);
 
 } // namespace detail
 } // namespace module_charge

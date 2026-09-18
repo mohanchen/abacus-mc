@@ -30,7 +30,7 @@ list(APPEND objects
     module_charge/chg_routine.cpp
     module_charge/charge.cpp
     module_charge/chg_atomic.cpp
-    module_charge/charge_init.cpp
+    module_charge/chg_init.cpp
     module_charge/chg_tools.cpp
     module_charge/chg_parallel.cpp
     module_charge/chg_extra.cpp
@@ -38,7 +38,7 @@ list(APPEND objects
     module_charge/chg_dmr.cpp
     module_charge/chg_drho.cpp
     module_charge/chg_precond.cpp
-    module_charge/charge_mixing_rho.cpp
+    module_charge/chg_tau.cpp
     module_charge/chg_symm.cpp
     module_charge/chg_uspp.cpp
     module_charge/chg_symm_detail.cpp

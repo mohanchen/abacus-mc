@@ -124,34 +124,6 @@ class Charge
 
     void destroy();    // free arrays  liuyu 2023-03-12
 
-    // --- init_rho stages (extracted to keep init_rho's complexity down) ---
-
-    // Read charge (and kinetic-energy) density from file/auto into rho/kin_r.
-    // Sets read_error / read_kin_error so later stages can fall back.
-    void read_rho_from_file(const UnitCell& ucell,
-                            const Parallel_Grid& pgrid,
-                            const int nspin,
-                            bool& read_error,
-                            bool& read_kin_error);
-
-    // Atomic-density fallback plus Thomas-Fermi kinetic-energy-density init.
-    void init_rho_atomic_and_tau(const UnitCell& ucell,
-                                 const ModuleBase::ComplexMatrix& strucFac,
-                                 const int nspin,
-                                 const bool read_error,
-                                 const bool read_kin_error);
-
-    // Load charge from the restart disk cache if requested.
-    void load_rho_from_restart(const UnitCell& ucell,
-                               const Parallel_Grid& pgrid,
-                               const int nspin);
-
-    // Initialise rho from wavefunctions (PW-KSDFT only).
-    void init_rho_from_wfc(ModuleSymmetry::Symmetry& symm,
-                           const int nspin,
-                           const void* klist,
-                           const void* wfcpw);
-
     double* omega_ = nullptr; // omega for non-linear core correction
 
     bool allocate_rho;

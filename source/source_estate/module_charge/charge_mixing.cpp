@@ -2,6 +2,7 @@
 #include "chg_drho.h"
 #include "chg_precond.h"
 #include "chg_rho_detail.h"
+#include "chg_tau.h"
 #include "chg_uspp.h"
 
 #include "source_io/module_parameter/parameter.h"

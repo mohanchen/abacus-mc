@@ -1,4 +1,4 @@
-#include "chg_rho_detail.h"
+#include "chg_tau.h"
 #include "chg_uspp.h"
 
 #include "source_base/timer.h"
