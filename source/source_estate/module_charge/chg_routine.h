@@ -11,20 +11,25 @@
 namespace module_charge
 {
 
-void chgmixing_ks(const int iter, // scf iteration number
+/// Aggregated SCF convergence thresholds and status flags for chgmixing_ks
+struct ScfMixingCtx
+{
+    double hsolver_error;  ///< solver error from diagonalization
+    double scf_thr;        ///< charge density convergence threshold
+    double scf_ene_thr;    ///< energy convergence threshold
+    bool converged_u;      ///< whether DFT+U has converged
+    double drho;            ///< charge density deviation (in/out)
+    bool oscillate_esolver; ///< whether esolver oscillates (out)
+    bool conv_esolver;      ///< whether esolver converged (out)
+};
+
+void chgmixing_ks(const int iter,
         UnitCell& ucell,
-        elecstate::ElecState* pelec, 
-        Charge &chr, // charge density
-        Charge_Mixing* p_chgmix, // charge mixing class
-        const int nrxx, // charge density
-        double &drho, // charge density deviation
-        bool &oscillate_esolver, // whether the esolver has oscillation of charge density
-        bool &conv_esolver,
-        const double &hsolver_error,
-        const double &scf_thr,
-        const double &scf_ene_thr,
-        const bool converged_u, // mohan add 2025-11-06
-        const Input_para& inp); // input parameters
+        elecstate::ElecState* pelec,
+        Charge &chr,
+        Charge_Mixing* p_chgmix,
+        ScfMixingCtx& ctx,
+        const Input_para& inp);
 
 void chgmixing_ks_pw(const int iter,
         Charge_Mixing* p_chgmix,

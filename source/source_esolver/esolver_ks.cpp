@@ -269,9 +269,19 @@ void ESolver_KS::iter_finish(UnitCell& ucell, const int istep, int& iter, bool &
     }
 #endif
 
-    module_charge::chgmixing_ks(iter, ucell, this->pelec, this->chr, this->p_chgmix, 
-      this->pw_rhod->nrxx, this->drho, this->oscillate_esolver, conv_esolver, hsolver_error, 
-      this->scf_thr, this->scf_ene_thr, converged_u, *this->inp_);
+    module_charge::ScfMixingCtx ctx;
+    ctx.hsolver_error = hsolver_error;
+    ctx.scf_thr = this->scf_thr;
+    ctx.scf_ene_thr = this->scf_ene_thr;
+    ctx.converged_u = converged_u;
+    ctx.drho = this->drho;
+    ctx.oscillate_esolver = this->oscillate_esolver;
+    ctx.conv_esolver = conv_esolver;
+    module_charge::chgmixing_ks(iter, ucell, this->pelec, this->chr,
+        this->p_chgmix, ctx, *this->inp_);
+    this->drho = ctx.drho;
+    this->oscillate_esolver = ctx.oscillate_esolver;
+    conv_esolver = ctx.conv_esolver;
 
     // 2.3) Update potentials (should be done every SF iter)
     elecstate::update_pot(ucell, this->pelec, this->chr, conv_esolver);

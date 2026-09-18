@@ -5,21 +5,22 @@
 #include "source_estate/update_pot.h"
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 
-void module_charge::chgmixing_ks(const int iter, // scf iteration number
+void module_charge::chgmixing_ks(const int iter,
         UnitCell& ucell,
-        elecstate::ElecState* pelec, 
-        Charge &chr, // charge density
-        Charge_Mixing* p_chgmix, // charge mixing class
-        const int nrxx, // charge density
-        double &drho, // charge density deviation
-        bool &oscillate_esolver, // whether the esolver has oscillation of charge density
-        bool &conv_esolver,
-        const double &hsolver_error,
-        const double &scf_thr,
-        const double &scf_ene_thr,
-        const bool converged_u, // mohan add 2025-11-06
-        const Input_para& inp) // input parameters
+        elecstate::ElecState* pelec,
+        Charge &chr,
+        Charge_Mixing* p_chgmix,
+        ScfMixingCtx& ctx,
+        const Input_para& inp)
 {
+    const double& hsolver_error = ctx.hsolver_error;
+    const double& scf_thr = ctx.scf_thr;
+    const double& scf_ene_thr = ctx.scf_ene_thr;
+    const bool& converged_u = ctx.converged_u;
+    double& drho = ctx.drho;
+    bool& oscillate_esolver = ctx.oscillate_esolver;
+    bool& conv_esolver = ctx.conv_esolver;
+    const int nrxx = chr.rhopw->nrxx;
 
     if (PARAM.globalv.ks_run)
     {
