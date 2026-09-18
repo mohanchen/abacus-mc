@@ -67,18 +67,24 @@ void Charge::destroy()
 {
     if (allocate_rho || allocate_rho_final_scf) // LiuXh add 20180619
     {
-        delete[] rho;
-        delete[] rhog;
-        delete[] rho_save;
-        delete[] rhog_save;
-        delete[] rho_core;
-        delete[] rhog_core;
-        // _space_* storage is owned by std::vector and frees itself here.
-        if (XC_Functional::get_ked_flag() || PARAM.inp.out_elf[0] > 0)
-        {
-            delete[] kin_r;
-            delete[] kin_r_save;
-        }
+        // All storage (rho, rhog, rho_core, etc.) is backed by std::vector
+        // members that self-manage; just clear the vectors.
+        _ptrs_rho.clear();
+        _ptrs_rhog.clear();
+        _ptrs_rho_save.clear();
+        _ptrs_rhog_save.clear();
+        _ptrs_kin_r.clear();
+        _ptrs_kin_r_save.clear();
+        _space_rho_core.clear();
+        _space_rhog_core.clear();
+        rho = nullptr;
+        rhog = nullptr;
+        rho_save = nullptr;
+        rhog_save = nullptr;
+        rho_core = nullptr;
+        rhog_core = nullptr;
+        kin_r = nullptr;
+        kin_r_save = nullptr;
     }
 }
 
@@ -122,14 +128,20 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
         _space_kin_r.resize(nspin * nrxx);
         _space_kin_r_save.resize(nspin * nrxx);
     }
-    rho = new double*[nspin];
-    rhog = new std::complex<double>*[nspin];
-    rho_save = new double*[nspin];
-    rhog_save = new std::complex<double>*[nspin];
+    _ptrs_rho.resize(nspin);
+    _ptrs_rhog.resize(nspin);
+    _ptrs_rho_save.resize(nspin);
+    _ptrs_rhog_save.resize(nspin);
+    rho = _ptrs_rho.data();
+    rhog = _ptrs_rhog.data();
+    rho_save = _ptrs_rho_save.data();
+    rhog_save = _ptrs_rhog_save.data();
     if(kin_den)
     {
-        kin_r = new double*[nspin];
-        kin_r_save = new double*[nspin];
+        _ptrs_kin_r.resize(nspin);
+        _ptrs_kin_r_save.resize(nspin);
+        kin_r = _ptrs_kin_r.data();
+        kin_r_save = _ptrs_kin_r_save.data();
     }
     for (int is = 0; is < nspin; is++)
     {
@@ -160,10 +172,12 @@ void Charge::allocate(const int& nspin_in, const bool kin_den)
         ModuleBase::Memory::record("Chg::kin_r_save", sizeof(double) * nspin * ngmc);
     }
 
-    this->rho_core = new double[nrxx]; // core charge in real space
+    _space_rho_core.resize(nrxx);
+    this->rho_core = _space_rho_core.data();
     ModuleBase::GlobalFunc::ZEROS(rho_core, nrxx);
 
-    this->rhog_core = new std::complex<double>[ngmc]; // reciprocal core charge
+    _space_rhog_core.resize(ngmc);
+    this->rhog_core = _space_rhog_core.data();
     ModuleBase::GlobalFunc::ZEROS(rhog_core, ngmc);
 
     ModuleBase::Memory::record("Chg::rho_core", sizeof(double) * nrxx);
@@ -269,34 +283,47 @@ void Charge::init_final_scf()
                   << " real_point_number = " << this->rhopw->nrxx << std::endl;
     }
 
-    // allocate memory
-    rho = new double*[PARAM.inp.nspin];
-    rhog = new std::complex<double>*[PARAM.inp.nspin];
-    rho_save = new double*[PARAM.inp.nspin];
-    rhog_save = new std::complex<double>*[PARAM.inp.nspin];
+    // allocate memory (std::vector self-manages the storage)
+    const int ns = PARAM.inp.nspin;
+    const int nrxx = this->rhopw->nrxx;
+    const int ngmc = this->rhopw->npw;
+    _space_rho.resize(ns * nrxx);
+    _space_rho_save.resize(ns * nrxx);
+    _space_rhog.resize(ns * ngmc);
+    _space_rhog_save.resize(ns * ngmc);
+    _ptrs_rho.resize(ns);
+    _ptrs_rhog.resize(ns);
+    _ptrs_rho_save.resize(ns);
+    _ptrs_rhog_save.resize(ns);
+    rho = _ptrs_rho.data();
+    rhog = _ptrs_rhog.data();
+    rho_save = _ptrs_rho_save.data();
+    rhog_save = _ptrs_rhog_save.data();
 
-    for (int is = 0; is < PARAM.inp.nspin; is++)
+    for (int is = 0; is < ns; is++)
     {
-        rho[is] = new double[this->rhopw->nrxx];
-        rhog[is] = new std::complex<double>[this->rhopw->npw];
-        rho_save[is] = new double[this->rhopw->nrxx];
-        rhog_save[is] = new std::complex<double>[this->rhopw->npw];
-        ModuleBase::GlobalFunc::ZEROS(rho[is], this->rhopw->nrxx);
-        ModuleBase::GlobalFunc::ZEROS(rhog[is], this->rhopw->npw);
-        ModuleBase::GlobalFunc::ZEROS(rho_save[is], this->rhopw->nrxx);
-        ModuleBase::GlobalFunc::ZEROS(rhog_save[is], this->rhopw->npw);
+        rho[is] = _space_rho.data() + is * nrxx;
+        rhog[is] = _space_rhog.data() + is * ngmc;
+        rho_save[is] = _space_rho_save.data() + is * nrxx;
+        rhog_save[is] = _space_rhog_save.data() + is * ngmc;
+        ModuleBase::GlobalFunc::ZEROS(rho[is], nrxx);
+        ModuleBase::GlobalFunc::ZEROS(rhog[is], ngmc);
+        ModuleBase::GlobalFunc::ZEROS(rho_save[is], nrxx);
+        ModuleBase::GlobalFunc::ZEROS(rhog_save[is], ngmc);
     }
 
-    ModuleBase::Memory::record("Chg::rho", sizeof(double) * PARAM.inp.nspin * this->rhopw->nrxx);
-    ModuleBase::Memory::record("Chg::rho_save", sizeof(double) * PARAM.inp.nspin * this->rhopw->nrxx);
-    ModuleBase::Memory::record("Chg::rhog", sizeof(double) * PARAM.inp.nspin * this->rhopw->npw);
-    ModuleBase::Memory::record("Chg::rhog_save", sizeof(double) * PARAM.inp.nspin * this->rhopw->npw);
+    ModuleBase::Memory::record("Chg::rho", sizeof(double) * ns * nrxx);
+    ModuleBase::Memory::record("Chg::rho_save", sizeof(double) * ns * nrxx);
+    ModuleBase::Memory::record("Chg::rhog", sizeof(double) * ns * ngmc);
+    ModuleBase::Memory::record("Chg::rhog_save", sizeof(double) * ns * ngmc);
 
-    this->rho_core = new double[this->rhopw->nrxx]; // core charge in real space
-    ModuleBase::GlobalFunc::ZEROS(rho_core, this->rhopw->nrxx);
+    _space_rho_core.resize(nrxx);
+    this->rho_core = _space_rho_core.data();
+    ModuleBase::GlobalFunc::ZEROS(rho_core, nrxx);
 
-    this->rhog_core = new std::complex<double>[this->rhopw->npw]; // reciprocal core charge
-    ModuleBase::GlobalFunc::ZEROS(rhog_core, this->rhopw->npw);
+    _space_rhog_core.resize(ngmc);
+    this->rhog_core = _space_rhog_core.data();
+    ModuleBase::GlobalFunc::ZEROS(rhog_core, ngmc);
 
     ModuleBase::Memory::record("Chg::rho_core", sizeof(double) * this->rhopw->nrxx);
     ModuleBase::Memory::record("Chg::rhog_core", sizeof(double) * this->rhopw->npw);

@@ -63,6 +63,18 @@ class Charge
     std::vector<double> _space_kin_r;
     std::vector<double> _space_kin_r_save;
 
+    // Pointer arrays backing the public double** views (rho, rhog, etc.)
+    std::vector<double*> _ptrs_rho;
+    std::vector<std::complex<double>*> _ptrs_rhog;
+    std::vector<double*> _ptrs_rho_save;
+    std::vector<std::complex<double>*> _ptrs_rhog_save;
+    std::vector<double*> _ptrs_kin_r;
+    std::vector<double*> _ptrs_kin_r_save;
+
+    // Contiguous storage for rho_core and rhog_core
+    std::vector<double> _space_rho_core;
+    std::vector<std::complex<double>> _space_rhog_core;
+
   public:
 
     double **nhat = nullptr; //compensation charge for PAW
