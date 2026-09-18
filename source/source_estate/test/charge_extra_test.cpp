@@ -3,7 +3,7 @@
 #define private public
 #define protected public
 #include "source_io/module_parameter/parameter.h"
-#include "source_estate/module_charge/charge_extra.h"
+#include "source_estate/module_charge/chg_extra.h"
 #include "prepare_unitcell.h"
 #include "source_base/module_fft/fft_bundle.h"
 #undef private
@@ -91,7 +91,7 @@ void Structure_Factor::setup(const UnitCell*, const Parallel_Grid&, const Module
 }
 
 /************************************************
- *  unit test of module_charge/charge_extra.cpp
+ *  unit test of module_charge/chg_extra.cpp
  ***********************************************/
 
 /**
@@ -109,7 +109,7 @@ void Structure_Factor::setup(const UnitCell*, const Parallel_Grid&, const Module
 class ChargeExtraTest : public ::testing::Test
 {
   protected:
-    Charge_Extra CE;
+    module_charge::Charge_Extra CE;
     UcellTestPrepare utp = UcellTestLib["Si"];
     std::unique_ptr<UnitCell> ucell;
     Parallel_Grid* pgrid = nullptr;

@@ -1,4 +1,4 @@
-#include "charge_extra.h"
+#include "chg_extra.h"
 
 #include "chg_atomic.h"
 
@@ -7,6 +7,9 @@
 #include "source_base/timer.h"
 #include "source_base/tool_threading.h"
 #include "source_io/module_output/cube_io.h"
+
+namespace module_charge
+{
 
 Charge_Extra::Charge_Extra()
 {
@@ -311,3 +314,5 @@ void Charge_Extra::update_delta_rho(const UnitCell& ucell, const Charge* chr, co
     delete[] rho_atom;
     return;
 }
+
+} // namespace module_charge

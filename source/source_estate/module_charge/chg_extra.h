@@ -1,5 +1,5 @@
-#ifndef CHARGE_EXTRA_H
-#define CHARGE_EXTRA_H
+#ifndef CHG_EXTRA_H
+#define CHG_EXTRA_H
 
 #include <vector>
 
@@ -9,6 +9,9 @@
 #ifdef __MPI
 #include "source_base/parallel_grid.h"
 #endif
+
+namespace module_charge
+{
 
 /**
  * @brief charge extrapolation method
@@ -122,5 +125,7 @@ class Charge_Extra
      */
     void find_alpha_and_beta(const int& natom, std::ofstream& ofs_running, std::ofstream& ofs_warning);
 };
+
+} // namespace module_charge
 
 #endif
