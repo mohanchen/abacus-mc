@@ -5,7 +5,9 @@
 
 #include "source_base/global_function.h"
 #include "source_base/module_mixing/mixing.h"
+#include "source_base/timer.h"
 #include "source_base/tool_quit.h"
+#include "source_base/tool_title.h"
 #include "source_estate/module_dm/density_matrix.h"
 
 namespace module_charge
@@ -56,6 +58,8 @@ void init_mixing_dmr(Base_Mixing::Mixing* mixing,
                      const int nnr,
                      const MixingConfig& cfg)
 {
+    ModuleBase::TITLE("module_charge", "init_mixing_dmr");
+    ModuleBase::timer::start("module_charge", "init_mixing_dmr");
     if (mixing == nullptr)
     {
         ModuleBase::WARNING_QUIT("module_charge::init_mixing_dmr", "mixing pointer is null");
@@ -79,6 +83,7 @@ void init_mixing_dmr(Base_Mixing::Mixing* mixing,
 
     // Clear the history counters while keeping the allocated storage.
     mdata.reset();
+    ModuleBase::timer::end("module_charge", "init_mixing_dmr");
 }
 
 template <typename TK>
@@ -87,6 +92,8 @@ void mix_dmr(elecstate::DensityMatrix<TK, double>* dm,
              Base_Mixing::Mixing_Data& mdata,
              const MixingConfig& cfg)
 {
+    ModuleBase::TITLE("module_charge", "mix_dmr");
+    ModuleBase::timer::start("module_charge", "mix_dmr");
     if (dm == nullptr)
     {
         ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "density matrix pointer is null");
@@ -160,6 +167,7 @@ void mix_dmr(elecstate::DensityMatrix<TK, double>* dm,
             dmr_down[ir] = 0.5 * (dmr_mag[ir] - dmr_mag[ir + nnr]);
         }
     }
+    ModuleBase::timer::end("module_charge", "mix_dmr");
 }
 
 template void mix_dmr<double>(elecstate::DensityMatrix<double, double>* dm,

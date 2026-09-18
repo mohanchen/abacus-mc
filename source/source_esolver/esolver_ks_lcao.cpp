@@ -8,6 +8,7 @@
 #include "source_pw/module_pwdft/dftu_base.h" // Plus_U_Base (PW and LCAO share it)
 #include "source_hamilt/hs_matrix_k.h"
 #include "source_estate/module_charge/chg_symm.h"
+#include "source_estate/module_charge/chg_dmr.h"
 #include "source_lcao/lcao_domain.h" // need DeePKS_init
 #include "source_lcao/force_stress_lcao.h"
 #include "source_hamilt/module_gint/gint.h"
@@ -564,7 +565,10 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     {
         if (this->inp_->mixing_restart > 0 && this->p_chgmix->mixing_restart_count > 0 && this->inp_->mixing_dmr)
         {
-            this->p_chgmix->mix_dmr(this->dmat.dm);
+            module_charge::mix_dmr(this->dmat.dm,
+                                   this->p_chgmix->get_mixing(),
+                                   this->p_chgmix->get_dmr_mdata(),
+                                   this->p_chgmix->get_mixing_config());
         }
     }
 

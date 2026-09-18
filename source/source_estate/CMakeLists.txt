@@ -35,7 +35,6 @@ list(APPEND objects
     module_charge/chg_parallel.cpp
     module_charge/chg_extra.cpp
     module_charge/charge_mixing.cpp
-    module_charge/charge_mixing_dmr.cpp
     module_charge/chg_dmr.cpp
     module_charge/chg_drho.cpp
     module_charge/chg_precond.cpp

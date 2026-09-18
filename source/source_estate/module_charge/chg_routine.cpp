@@ -1,4 +1,5 @@
 #include "source_estate/module_charge/chg_routine.h"
+#include "source_estate/module_charge/chg_dmr.h"
 
 #include "source_base/parallel_comm.h"
 #include "source_estate/update_pot.h"
@@ -227,7 +228,10 @@ void module_charge::chgmixing_ks_lcao(const int iter, // scf iteration number
         if (inp.mixing_dmr) // for mixing_dmr
         {
             // allocate memory for dmr_mdata
-            p_chgmix->allocate_mixing_dmr(nnr);
+            module_charge::init_mixing_dmr(p_chgmix->get_mixing(),
+                                           p_chgmix->get_dmr_mdata(),
+                                           nnr,
+                                           p_chgmix->get_mixing_config());
         }
     }
 }

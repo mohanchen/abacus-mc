@@ -832,7 +832,7 @@ OBJS_SRCPW=h_ewald_pw.o\
     chg_parallel.o\
     chg_extra.o\
     charge_mixing.o\
-    charge_mixing_dmr.o\
+    chg_dmr.o\
     chg_drho.o\
     chg_precond.o\
     charge_mixing_rho.o\

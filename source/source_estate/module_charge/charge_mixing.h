@@ -2,7 +2,6 @@
 #define CHARGE_MIXING_H
 #include "charge.h"
 #include "chg_mix_cfg.h"
-#include "source_estate/module_dm/density_matrix.h"
 #include "source_base/module_mixing/mixing.h"
 #include "source_base/module_mixing/plain_mixing.h"
 #include <functional>
@@ -15,9 +14,11 @@ class Charge_Mixing
   /// 1. set_mixing() to set all private mixing parameters
   /// 2. init_mixing() to initialize mixing, including allocating memory for mixing data and reset mixing
   /// 3. mix_rho() to mix charge density
-  /// 4. mix_dmr() to mix real-space density matrix
+  /// Real-space density matrix mixing is implemented by the stateless
+  /// module_charge::init_mixing_dmr/mix_dmr functions in chg_dmr.h; this class
+  /// only owns the mixing history buffer, exposed through get_dmr_mdata().
   /// how to use it:
-  /// you can (re)start a mixing by calling set_mixing() and init_mixing() before calling mix_rho() or mix_dmr()
+  /// you can (re)start a mixing by calling set_mixing() and init_mixing() before calling mix_rho()
 
   public:
     Charge_Mixing();
@@ -42,23 +43,10 @@ class Charge_Mixing
     void init_mixing();
 
     /**
-     * @brief allocate memory of dmr_mdata
-     * @param nnr size of real-space density matrix
-     */
-    void allocate_mixing_dmr(const int nnr);
-
-    /**
      * @brief charge mixing
      * @param chr pointer of Charge object
      */
     void mix_rho(Charge* chr);
-
-    /**
-     * @brief density matrix mixing, only for LCAO
-     * @param DM pointer of DensityMatrix object
-     */
-    void mix_dmr(elecstate::DensityMatrix<double, double>* DM);
-    void mix_dmr(elecstate::DensityMatrix<std::complex<double>, double>* DM);
 
     /**
      * @brief allocate memory of uom_mdata
@@ -92,6 +80,14 @@ class Charge_Mixing
     int get_mixing_ndim() const {return mixing_ndim;}
     double get_mixing_gg0() const {return mixing_gg0;}
     Base_Mixing::Mixing* get_mixing() const {return mixing;}
+
+    /**
+     * @brief mutable access to the real-space density-matrix mixing history
+     *
+     * The history buffer is owned by Charge_Mixing and driven by the
+     * stateless module_charge::init_mixing_dmr/mix_dmr functions in chg_dmr.h.
+     */
+    Base_Mixing::Mixing_Data& get_dmr_mdata() {return dmr_mdata;}
 
     /**
      * @brief read-only access to the aggregated mixing config set by set_mixing()
