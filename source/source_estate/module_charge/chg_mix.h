@@ -1,5 +1,5 @@
-#ifndef CHARGE_MIXING_H
-#define CHARGE_MIXING_H
+#ifndef CHG_MIX_H
+#define CHG_MIX_H
 #include "charge.h"
 #include "chg_mix_cfg.h"
 #include "source_base/module_mixing/mixing.h"

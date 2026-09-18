@@ -2,7 +2,7 @@
 #define CHG_RHO_DETAIL_H
 
 // Internal helpers for charge density mixing (mix_rho_recip/mix_rho_real).
-// Not part of the public module_charge API: only charge_mixing.cpp
+// Not part of the public module_charge API: only chg_mix.cpp
 // and the charge mixing unit test are expected to include this header.
 
 #include <functional>

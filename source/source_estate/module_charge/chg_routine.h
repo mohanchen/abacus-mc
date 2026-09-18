@@ -3,7 +3,7 @@
 
 #include "source_estate/elecstate.h" // use pelec
 #include "source_estate/module_charge/charge.h" // use chr
-#include "source_estate/module_charge/charge_mixing.h" // use p_chgmix
+#include "source_estate/module_charge/chg_mix.h" // use p_chgmix
 #include "source_io/module_parameter/input_parameter.h" // use Input_para
 #include "source_cell/unitcell.h"
 #include "source_pw/module_pwdft/dftu_base.h"

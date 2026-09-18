@@ -4,7 +4,7 @@
 // longer read global PARAM/RAW state (Step 4 of the module_charge refactor).
 // The test still has to drive Charge::_space_* and XC_Functional privates.
 #define private public
-#include "../module_charge/charge_mixing.h"
+#include "../module_charge/chg_mix.h"
 #include "../module_charge/chg_drho.h"
 #include "../module_charge/chg_drho_detail.h"
 #include "../module_charge/chg_precond.h"
@@ -42,7 +42,7 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
 
 // mock class cell
 /************************************************
- *  unit test of charge_mixing.cpp
+ *  unit test of chg_mix.cpp
  ***********************************************/
 
 /**
