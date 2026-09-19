@@ -1,5 +1,5 @@
-#ifndef RHOG_IO_H
-#define RHOG_IO_H
+#ifndef CHG_RHOG_IO_H
+#define CHG_RHOG_IO_H
 
 #include <string>
 #include <cassert>
@@ -42,7 +42,7 @@
  *    rho   
  */
 
-namespace elecstate
+namespace module_charge
 {
 
 bool read_rhog(const std::string& filename,
@@ -61,6 +61,6 @@ bool write_rhog(const std::string& fchg,
                 const Parallel::ParaWorld& pw_world,
                 std::ostream* os_warning);
 
-} // namespace elecstate
+} // namespace module_charge
 
 #endif

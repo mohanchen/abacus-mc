@@ -45,7 +45,7 @@ list(APPEND objects
     module_charge/chg_symm.cpp
     module_charge/chg_uspp.cpp
     module_charge/chg_symm_detail.cpp
-    rhog_io.cpp
+    module_charge/chg_rhog_io.cpp
     write_elecstat_pot.cpp
     write_init.cpp
     fp_energy.cpp

@@ -844,7 +844,7 @@ OBJS_SRCPW=h_ewald_pw.o\
     chg_symm.o\
     chg_symm_detail.o\
     chg_uspp.o\
-    rhog_io.o\
+    chg_rhog_io.o\
     write_elecstat_pot.o\
     write_init.o\
     fp_energy.o\

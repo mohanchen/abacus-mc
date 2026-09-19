@@ -135,7 +135,7 @@ AddTest(
 AddTest(
   TARGET MODULE_ESTATE_test_rhog_io
   LIBS parameter base device planewave
-  SOURCES test_rhog_io.cpp ../rhog_io.cpp ../../source_basis/module_pw/test/test_tool.cpp
+  SOURCES test_rhog_io.cpp ../module_charge/chg_rhog_io.cpp ../../source_basis/module_pw/test/test_tool.cpp
   # This test drives PW_Basis::initmpi and read/write_rhog's MPI collectives,
   # so it must keep __MPI even though this directory disables it. Its main()
   # calls MPI_Init via test_tool.cpp's setupmpi().

@@ -1,6 +1,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "source_estate/rhog_io.h"
+#include "source_estate/module_charge/chg_rhog_io.h"
 #include "source_base/module_parallel/para_world.h"
 #include "source_base/module_parallel/para_tag.h"
 #include "source_base/module_parallel/para_bridge.h"
@@ -77,7 +77,7 @@ TEST_F(ReadRhogTest, ReadRhog)
     std::string filename = "./support/charge-density.dat";
     setup_pw_basis();
 
-    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
+    bool result = module_charge::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
 
     EXPECT_TRUE(result);
     EXPECT_DOUBLE_EQ(rhog[0][0].real(), -1.0304462993299456e-05);
@@ -95,10 +95,10 @@ TEST_F(ReadRhogTest, NotFoundFile)
     std::string filename = "notfound.txt";
 
     open_warning("test_read_rhog.txt");
-    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
+    bool result = module_charge::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
     close_warning();
 
-    std::string expected_content = " elecstate::read_rhog  warning : Can't open file notfound.txt\n";
+    std::string expected_content = " module_charge::read_rhog  warning : Can't open file notfound.txt\n";
     EXPECT_FALSE(result);
     EXPECT_EQ(read_warning_file("test_read_rhog.txt"), expected_content);
     std::remove("test_read_rhog.txt");
@@ -115,12 +115,12 @@ TEST_F(ReadRhogTest, InconsistentGammaOnly)
     rhopw.npwtot = 1000;
 
     open_warning("test_read_rhog.txt");
-    bool result = elecstate::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world, &warning_stream);
+    bool result = module_charge::read_rhog(filename, &rhopw, 2, rhog.data(), pw_world, &warning_stream);
     close_warning();
 
     std::string expected_content
-        = " elecstate::read_rhog  warning : some planewaves in file are not used\n elecstate::read_rhog  warning : some "
-          "spin channels in file are missing\n elecstate::read_rhog  warning : gamma_only read from file is "
+        = " module_charge::read_rhog  warning : some planewaves in file are not used\n module_charge::read_rhog  warning : some "
+          "spin channels in file are missing\n module_charge::read_rhog  warning : gamma_only read from file is "
           "inconsistent with INPUT\n";
 
     EXPECT_FALSE(result);
@@ -136,10 +136,10 @@ TEST_F(ReadRhogTest, SomePWMissing)
     rhopw.npwtot = 2000;
 
     open_warning("test_read_rhog.txt");
-    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
+    bool result = module_charge::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, &warning_stream);
     close_warning();
 
-    std::string expected_content = " elecstate::read_rhog  warning : some planewaves in file are missing\n";
+    std::string expected_content = " module_charge::read_rhog  warning : some planewaves in file are missing\n";
     EXPECT_TRUE(result);
     EXPECT_EQ(read_warning_file("test_read_rhog.txt"), expected_content);
     std::remove("test_read_rhog.txt");
@@ -149,7 +149,7 @@ TEST_F(ReadRhogTest, SomePWMissing)
 TEST_F(ReadRhogTest, OsNullptrSilent)
 {
     std::string filename = "notfound.txt";
-    bool result = elecstate::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
+    bool result = module_charge::read_rhog(filename, &rhopw, 1, rhog.data(), pw_world, nullptr);
     EXPECT_FALSE(result);
 }
 
@@ -164,7 +164,7 @@ TEST_F(ReadRhogTest, WriteRoundTrip)
     std::string tmpfile = "test_rhog_roundtrip.dat";
 
     // write
-    bool write_result = elecstate::write_rhog(
+    bool write_result = module_charge::write_rhog(
         tmpfile, rhopw.gamma_only, &rhopw, 1,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -176,7 +176,7 @@ TEST_F(ReadRhogTest, WriteRoundTrip)
     std::vector<std::complex<double>*> rhog_read;
     rhog_read.push_back(rhog_read_data[0].data());
 
-    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 1, rhog_read.data(), pw_world, nullptr);
+    bool read_result = module_charge::read_rhog(tmpfile, &rhopw, 1, rhog_read.data(), pw_world, nullptr);
     EXPECT_TRUE(read_result);
 
     // compare: within MPI precision tolerance
@@ -200,7 +200,7 @@ TEST_F(ReadRhogTest, WriteFileFail)
     rhog_data[0].assign(rhopw.npw, std::complex<double>(1.0, 0.0));
 
     // try to write to a directory path (not a file) — should fail
-    bool result = elecstate::write_rhog(
+    bool result = module_charge::write_rhog(
         "/tmp", rhopw.gamma_only, &rhopw, 1,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -228,7 +228,7 @@ TEST_F(ReadRhogTest, WriteRoundTripNspin2)
     std::string tmpfile = "test_rhog_roundtrip_nspin2.dat";
 
     // write nspin=2
-    bool write_result = elecstate::write_rhog(
+    bool write_result = module_charge::write_rhog(
         tmpfile, rhopw.gamma_only, &rhopw, 2,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -241,7 +241,7 @@ TEST_F(ReadRhogTest, WriteRoundTripNspin2)
     rhog_read.push_back(rhog_read_data[0].data());
     rhog_read.push_back(rhog_read_data[1].data());
 
-    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 2, rhog_read.data(), pw_world, nullptr);
+    bool read_result = module_charge::read_rhog(tmpfile, &rhopw, 2, rhog_read.data(), pw_world, nullptr);
     EXPECT_TRUE(read_result);
 
     int diff_count = 0;
@@ -283,7 +283,7 @@ TEST_F(ReadRhogTest, WriteRoundTripNspin4)
 
     std::string tmpfile = "test_rhog_roundtrip_nspin4.dat";
 
-    bool write_result = elecstate::write_rhog(
+    bool write_result = module_charge::write_rhog(
         tmpfile, rhopw.gamma_only, &rhopw, 4,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -298,7 +298,7 @@ TEST_F(ReadRhogTest, WriteRoundTripNspin4)
         rhog_read.push_back(rhog_read_data[is].data());
     }
 
-    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 4, rhog_read.data(), pw_world, nullptr);
+    bool read_result = module_charge::read_rhog(tmpfile, &rhopw, 4, rhog_read.data(), pw_world, nullptr);
     EXPECT_TRUE(read_result);
 
     int diff_count = 0;
@@ -338,7 +338,7 @@ TEST_F(ReadRhogTest, ReadRhogNspin2To4SpecialPath)
 
     std::string tmpfile = "test_rhog_nspin2_to_4.dat";
 
-    bool write_result = elecstate::write_rhog(
+    bool write_result = module_charge::write_rhog(
         tmpfile, rhopw.gamma_only, &rhopw, 2,
         ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0),
         rhog.data(), pw_world, nullptr);
@@ -353,7 +353,7 @@ TEST_F(ReadRhogTest, ReadRhogNspin2To4SpecialPath)
         rhog_read.push_back(rhog_read_data[is].data());
     }
 
-    bool read_result = elecstate::read_rhog(tmpfile, &rhopw, 4, rhog_read.data(), pw_world, nullptr);
+    bool read_result = module_charge::read_rhog(tmpfile, &rhopw, 4, rhog_read.data(), pw_world, nullptr);
     EXPECT_TRUE(read_result);
 
     // Verify the special transformation at L173-181:

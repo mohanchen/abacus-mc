@@ -10,7 +10,7 @@
 #include "source_hamilt/module_vdw/vdw.h"
 #include "source_io/module_output/output_log.h"
 #include "source_io/module_output/print_info.h"
-#include "source_estate/rhog_io.h"
+#include "source_estate/module_charge/chg_rhog_io.h"
 #include "source_io/module_parameter/parameter.h"
 
 #include "source_pw/module_pwdft/setup_pwrho.h" // mohan 20251005
@@ -282,7 +282,7 @@ void ESolver_FP::iter_finish(UnitCell& ucell, const int istep, int& iter, bool& 
             // Only pool 0 writes the rhog file (rhog is identical across pools).
             if (GlobalV::MY_POOL == 0)
             {
-                elecstate::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-CHARGE-DENSITY.restart",
+                module_charge::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-CHARGE-DENSITY.restart",
                                      PARAM.globalv.gamma_only_pw,
                                      this->pw_rhod,
                                      this->inp_->nspin,
@@ -303,7 +303,7 @@ void ESolver_FP::iter_finish(UnitCell& ucell, const int istep, int& iter, bool& 
                 }
                 if (GlobalV::MY_POOL == 0)
                 {
-                    elecstate::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-TAU-DENSITY.restart",
+                    module_charge::write_rhog(PARAM.globalv.global_out_dir + this->inp_->suffix + "-TAU-DENSITY.restart",
                                          PARAM.globalv.gamma_only_pw,
                                          this->pw_rhod,
                                          this->inp_->nspin,
