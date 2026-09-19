@@ -24,4 +24,17 @@ AddTest(
   KEEP_FEATURE_DEFINITIONS __MPI
 )
 
+AddTest(
+  TARGET MODULE_CHARGE_charge
+  LIBS parameter planewave_serial base device cell_info
+  SOURCES test_charge.cpp ../charge.cpp ../chg_atomic.cpp ../chg_atomic_inner.cpp ../chg_tools.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_extra
+  LIBS parameter base device cell_info
+  SOURCES test_chg_extra.cpp ../chg_extra.cpp ../../../source_io/module_output/read_cube.cpp ../../../source_io/module_output/write_cube.cpp
+ ../../../source_base/module_fft/fft_bundle.cpp ../../../source_base/module_fft/fft_cpu.cpp
+)
+
 endif()

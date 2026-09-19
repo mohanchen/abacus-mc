@@ -101,13 +101,6 @@ AddTest(
 )
 
 AddTest(
-  TARGET MODULE_ESTATE_charge_test
-  LIBS parameter  planewave_serial base device cell_info
-  SOURCES charge_test.cpp ../module_charge/charge.cpp ../module_charge/chg_atomic.cpp ../module_charge/chg_atomic_inner.cpp ../module_charge/chg_tools.cpp
-
-)
-
-AddTest(
   TARGET MODULE_ESTATE_chg_tools
   LIBS parameter planewave_serial base device cell_info
   SOURCES test_chg_tools.cpp ../module_charge/chg_tools.cpp
@@ -123,13 +116,6 @@ AddTest(
   ../module_charge/chg_drho_inner.cpp
   ../module_charge/chg_precond.cpp ../module_charge/chg_tau.cpp
   ../module_charge/chg_uspp.cpp
-)
-
-AddTest(
-  TARGET MODULE_ESTATE_charge_extra
-  LIBS parameter base device cell_info
-  SOURCES charge_extra_test.cpp ../module_charge/chg_extra.cpp ../../source_io/module_output/read_cube.cpp ../../source_io/module_output/write_cube.cpp
- ../../source_base/module_fft/fft_bundle.cpp ../../source_base/module_fft/fft_cpu.cpp
 )
 
 AddTest(
