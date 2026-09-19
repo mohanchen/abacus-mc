@@ -100,36 +100,4 @@ AddTest(
     ../module_pot/td_field.cpp ../module_pot/td_field_profiles.cpp ../module_pot/td_field_manager.cpp
 )
 
-AddTest(
-  TARGET MODULE_ESTATE_chg_tools
-  LIBS parameter planewave_serial base device cell_info
-  SOURCES test_chg_tools.cpp ../module_charge/chg_tools.cpp
-)
-
-AddTest(
-  TARGET MODULE_ESTATE_charge_mixing
-  LIBS parameter base  psi  device planewave_serial cell_info
-  SOURCES test_chg_mix.cpp
-  ../module_charge/chg_mix.cpp ../module_charge/chg_mix_rho.cpp
-  ../module_charge/chg_dmr.cpp
-  ../module_charge/chg_drho.cpp
-  ../module_charge/chg_drho_inner.cpp
-  ../module_charge/chg_precond.cpp ../module_charge/chg_tau.cpp
-  ../module_charge/chg_uspp.cpp
-)
-
-AddTest(
-  TARGET MODULE_ESTATE_chg_parallel_test
-  LIBS parameter psi base device planewave
-  SOURCES test_chg_parallel.cpp ../module_charge/chg_parallel.cpp
-  # Real MPI test: its main() calls MPI_Init unconditionally, so it must keep
-  # __MPI despite this directory disabling it.
-  KEEP_FEATURE_DEFINITIONS __MPI
-)
-
-add_test(NAME MODULE_ESTATE_chg_parallel_test_4np
-      COMMAND mpirun -np 4 ./MODULE_ESTATE_chg_parallel_test;
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
 endif()

@@ -8,7 +8,7 @@
 
 // chg_tools.cpp references UnitCell (set_rho_core), so the test binary links
 // the cell_info objects whose unitcell.cpp needs Magnetism symbols. Provide
-// the same lightweight mocks as charge_test.cpp.
+// the same lightweight mocks as test_charge.cpp.
 Magnetism::Magnetism()
 {
     this->tot_mag = 0.0;

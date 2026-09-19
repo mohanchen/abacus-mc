@@ -4,11 +4,11 @@
 // longer read global PARAM/RAW state (Step 4 of the module_charge refactor).
 // The test still has to drive Charge::_space_* and XC_Functional privates.
 #define private public
-#include "../module_charge/chg_mix.h"
-#include "../module_charge/chg_drho.h"
-#include "../module_charge/chg_drho_detail.h"
-#include "../module_charge/chg_precond.h"
-#include "../module_charge/chg_uspp.h"
+#include "../chg_mix.h"
+#include "../chg_drho.h"
+#include "../chg_drho_detail.h"
+#include "../chg_precond.h"
+#include "../chg_uspp.h"
 #include "source_base/module_mixing/broyden_mixing.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_hamilt/module_xc/xc_functional.h"

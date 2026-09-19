@@ -37,4 +37,36 @@ AddTest(
  ../../../source_base/module_fft/fft_bundle.cpp ../../../source_base/module_fft/fft_cpu.cpp
 )
 
+AddTest(
+  TARGET MODULE_CHARGE_tools
+  LIBS parameter planewave_serial base device cell_info
+  SOURCES test_chg_tools.cpp ../chg_tools.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_mix
+  LIBS parameter base  psi  device planewave_serial cell_info
+  SOURCES test_chg_mix.cpp
+  ../chg_mix.cpp ../chg_mix_rho.cpp
+  ../chg_dmr.cpp
+  ../chg_drho.cpp
+  ../chg_drho_inner.cpp
+  ../chg_precond.cpp ../chg_tau.cpp
+  ../chg_uspp.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_parallel
+  LIBS parameter psi base device planewave
+  SOURCES test_chg_parallel.cpp ../chg_parallel.cpp
+  # Real MPI test: its main() calls MPI_Init unconditionally, so it must keep
+  # __MPI despite this directory disabling it.
+  KEEP_FEATURE_DEFINITIONS __MPI
+)
+
+add_test(NAME MODULE_CHARGE_parallel_4np
+      COMMAND mpirun -np 4 ./MODULE_CHARGE_parallel;
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 endif()
