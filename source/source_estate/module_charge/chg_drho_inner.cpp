@@ -5,6 +5,8 @@
 #include <functional>
 #include <vector>
 
+#include "source_basis/module_pw/pw_basis.h"
+#include "source_base/global_function.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 
