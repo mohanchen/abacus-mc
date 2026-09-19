@@ -10,7 +10,6 @@
 #include "source_base/parallel_common.h"
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 
 void Charge_Mixing::mix_rho_recip(Charge* chr)
 {
@@ -225,7 +224,7 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         }
     }
     // For kinetic energy density
-    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
+    if (cfg_.mixing_tau)
     {
         module_charge::detail::mix_tau_recip(chr, nspin, cfg_.double_grid,
                       this->rhopw, this->rhodpw,
@@ -341,7 +340,7 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
 
     double *taur_out=nullptr;
     double *taur_in=nullptr;
-    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
+    if (cfg_.mixing_tau)
     {
         taur_in = chr->kin_r_save[0];
         taur_out = chr->kin_r[0];
@@ -382,7 +381,7 @@ void Charge_Mixing::mix_rho(Charge* chr)
         }
     }
     std::vector<double> kin_r123;
-    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
+    if (cfg_.mixing_tau)
     {
         kin_r123.resize(nspin * nrxx);
         for (int is = 0; is < nspin; ++is)
@@ -425,7 +424,7 @@ void Charge_Mixing::mix_rho(Charge* chr)
         }
     }
 
-    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
+    if (cfg_.mixing_tau)
     {
         for (int is = 0; is < nspin; ++is)
         {

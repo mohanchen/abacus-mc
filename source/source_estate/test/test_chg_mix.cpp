@@ -115,7 +115,9 @@ class ChargeMixingTest : public ::testing::Test
         cfg.mixing_beta = PARAM.input.mixing_beta;
         cfg.mixing_ndim = PARAM.input.mixing_ndim;
         cfg.mixing_gg0 = PARAM.input.mixing_gg0;
-        cfg.mixing_tau = PARAM.input.mixing_tau;
+        // Mirror the esolver-side resolution: tau mixing requires a
+        // kinetic-energy-density functional.
+        cfg.mixing_tau = PARAM.input.mixing_tau && XC_Functional::get_ked_flag();
         cfg.mixing_beta_mag = PARAM.input.mixing_beta_mag;
         cfg.mixing_gg0_mag = PARAM.input.mixing_gg0_mag;
         cfg.mixing_gg0_min = PARAM.input.mixing_gg0_min;
@@ -170,10 +172,12 @@ TEST_F(ChargeMixingTest, SetMixingTest)
     EXPECT_EQ(CMtest.mixing_dmr, false);
 
     PARAM.input.mixing_tau = true;
+    XC_Functional::ked_flag = true;
     PARAM.input.mixing_mode = "plain";
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     EXPECT_EQ(CMtest.mixing_mode, "plain");
     EXPECT_EQ(CMtest.get_mixing_config().mixing_tau, true);
+    XC_Functional::ked_flag = false;
 
     PARAM.input.mixing_beta = 1.1;
     std::string output;
@@ -230,9 +234,9 @@ TEST_F(ChargeMixingTest, InitMixingTest)
 
     PARAM.input.nspin = 1;
     PARAM.input.mixing_tau = true;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     XC_Functional::func_type = 3;
     XC_Functional::ked_flag = true;
+    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     CMtest.init_mixing();
     EXPECT_EQ(CMtest.tau_mdata.length, pw_basis.nrxx);
 

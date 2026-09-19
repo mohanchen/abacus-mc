@@ -13,7 +13,6 @@
 #include "source_base/parallel_common.h"
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 
 Charge_Mixing::Charge_Mixing()
 {
@@ -162,7 +161,7 @@ void Charge_Mixing::init_mixing()
     }
 
     // initailize tau_mdata
-    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
+    if (cfg_.mixing_tau)
     {
         if (this->cfg_.scf_thr_type == 1)
         {
@@ -192,7 +191,7 @@ void Charge_Mixing::mix_reset()
     this->mixing->reset();
     this->rho_mdata.reset();
     // initailize tau_mdata
-    if ((XC_Functional::get_ked_flag()) && cfg_.mixing_tau)
+    if (cfg_.mixing_tau)
     {
         this->tau_mdata.reset();
     }

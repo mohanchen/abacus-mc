@@ -73,7 +73,8 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     mix_cfg.mixing_beta = inp.mixing_beta;
     mix_cfg.mixing_ndim = inp.mixing_ndim;
     mix_cfg.mixing_gg0 = inp.mixing_gg0;
-    mix_cfg.mixing_tau = inp.mixing_tau;
+    // tau mixing is only meaningful for kinetic-energy-density functionals
+    mix_cfg.mixing_tau = inp.mixing_tau && XC_Functional::get_ked_flag();
     mix_cfg.mixing_beta_mag = inp.mixing_beta_mag;
     mix_cfg.mixing_gg0_mag = inp.mixing_gg0_mag;
     mix_cfg.mixing_gg0_min = inp.mixing_gg0_min;

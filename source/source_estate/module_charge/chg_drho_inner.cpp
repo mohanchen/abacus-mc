@@ -7,7 +7,6 @@
 
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 
 namespace module_charge
 {
