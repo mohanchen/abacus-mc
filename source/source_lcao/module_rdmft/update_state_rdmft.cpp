@@ -113,7 +113,7 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
             this->pelec->cal_tau(wfc);
         }
 
-        charge->renormalize_rho(PARAM.inp.nelec);
+        charge->renormalize_rho(PARAM.inp.nelec, ucell.omega);
     }
     else
     {
@@ -135,7 +135,7 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
             this->pelec->cal_tau(wfc);
         }
 
-        charge->renormalize_rho(PARAM.inp.nelec);
+        charge->renormalize_rho(PARAM.inp.nelec, ucell.omega);
     }
 
     // charge density symmetrization

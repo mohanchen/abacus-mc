@@ -135,7 +135,7 @@ void Charge::init_rho(const UnitCell&,
 void Charge::set_rhopw(ModulePW::PW_Basis*)
 {
 }
-void Charge::renormalize_rho(const double)
+void Charge::renormalize_rho(const double, const double)
 {
 }
 

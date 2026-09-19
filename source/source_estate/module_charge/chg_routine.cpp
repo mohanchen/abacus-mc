@@ -90,7 +90,7 @@ void module_charge::chgmixing_ks(const int iter,
             }
             if (inp.scf_thr_type == 2)
             {
-                chr.renormalize_rho(inp.nelec); // renormalize rho in R-space would
+                chr.renormalize_rho(inp.nelec, ucell.omega); // renormalize rho in R-space would
                                                   // induce a error in K-space
             }
             //----------charge mixing done-----------

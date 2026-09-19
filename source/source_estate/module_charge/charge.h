@@ -122,10 +122,16 @@ class Charge
      * @brief Renormalize rho so that its integral equals the electron number
      *
      * @param nelec target total electron number (PARAM.inp.nelec)
+     * @param omega current unit-cell volume. Must be ucell.omega, NOT
+     *        rhopw->omega, because in variable-cell calculations (e.g. NPT)
+     *        rhopw->omega is stale (pw_rho/pw_rhod are not rebuilt on cell
+     *        change) while ucell.omega is updated every step. Using the stale
+     *        volume gives a wrong electron count and a wrong renormalization
+     *        factor, which corrupts the stress.
      */
-    void renormalize_rho(const double nelec);
+    void renormalize_rho(const double nelec, const double omega);
 
-    double sum_rho() const;
+    double sum_rho(const double omega) const;
 
     void save_rho_before_sum_band();
 

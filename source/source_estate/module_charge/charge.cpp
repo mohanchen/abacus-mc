@@ -176,19 +176,24 @@ void Charge::allocate(const int& nspin_in, const bool kin_den, const bool meta_g
     return;
 }
 
-double Charge::sum_rho() const
+double Charge::sum_rho(const double omega) const
 {
     const int nspin0 = (nspin == 2) ? 2 : 1;
-    return module_charge::sum_rho(this->rho, nspin0, this->nrxx, this->rhopw->omega, this->rhopw->nxyz);
+    // NOTE: omega must be ucell.omega, NOT rhopw->omega. In variable-cell
+    // calculations (e.g. NPT) rhopw->omega is stale because pw_rho/pw_rhod
+    // are not rebuilt on cell change, while ucell.omega is updated every
+    // MD step. Using the stale volume gives a wrong electron count.
+    return module_charge::sum_rho(this->rho, nspin0, this->nrxx, omega, this->rhopw->nxyz);
 }
 
-void Charge::renormalize_rho(const double nelec)
+void Charge::renormalize_rho(const double nelec, const double omega)
 {
     ModuleBase::TITLE("Charge", "renormalize_rho");
 
     assert(nelec > 0.0);
+    assert(omega > 0.0);
 
-    const double sr = this->sum_rho();
+    const double sr = this->sum_rho(omega);
     GlobalV::ofs_warning << std::setprecision(15);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_warning, "charge before normalized", sr);
     const double normalize_factor = nelec / sr;
@@ -201,7 +206,7 @@ void Charge::renormalize_rho(const double nelec)
         }
     }
 
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_warning, "charge after normalized", this->sum_rho());
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_warning, "charge after normalized", this->sum_rho(omega));
 
     GlobalV::ofs_running << std::setprecision(6);
     return;

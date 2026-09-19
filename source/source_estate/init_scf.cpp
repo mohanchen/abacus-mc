@@ -25,7 +25,7 @@ void init_scf(const UnitCell& ucell,
     //! renormalize the charge density
     if(PARAM.inp.init_chg != "dm_no_renormalize")
     {
-        pelec->charge->renormalize_rho(inp.nelec);
+        pelec->charge->renormalize_rho(inp.nelec, ucell.omega);
     }
 
     //! initialize the potential

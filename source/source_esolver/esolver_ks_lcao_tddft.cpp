@@ -383,6 +383,7 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::hamilt2rho_single(UnitCell& ucell, const
                                    *this->dmat.dm,
                                    this->chr,
                                    this->inp_->nspin,
+                                   ucell.omega,
                                    skip_charge);
         }
     }

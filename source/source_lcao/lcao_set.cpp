@@ -254,7 +254,7 @@ void LCAO_domain::init_chg_hr(
                                               GlobalV::NPROC,
                                               GlobalV::MY_RANK);
     hamilt::HamiltHSMatrix<TK> hs(p_hamilt);
-    hsolver_lcao_obj.solve(hs, psi, pelec, dm, chr, nspin, 0);
+    hsolver_lcao_obj.solve(hs, psi, pelec, dm, chr, nspin, ucell.omega, 0);
 }
 
 

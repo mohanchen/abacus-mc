@@ -11,6 +11,7 @@ namespace LCAO_domain
 			const int nspin,
 			Charge* chr,
 			const double nelec,
+			const double omega,
 			const bool skip_normalize);
 
 	void dm2tau(std::vector<hamilt::HContainer<double>*> &dmr,
