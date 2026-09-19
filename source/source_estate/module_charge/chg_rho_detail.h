@@ -68,13 +68,17 @@ std::function<void(T*, const T*, const T*)> make_twobeta_mix(
 template <typename T>
 void pack_rho_mag(T* out, const T* d0, const T* d1, const int n)
 {
-    if (out == nullptr || d0 == nullptr || d1 == nullptr)
-    {
-        ModuleBase::WARNING_QUIT("pack_rho_mag", "pointer is null");
-    }
     if (n < 0)
     {
         ModuleBase::WARNING_QUIT("pack_rho_mag", "n must be >= 0");
+    }
+    // A rank may own zero real-space grid points (n == 0) when the grid is
+    // decomposed across more processes than it has slabs. Its buffers are
+    // legitimately null in that case and the loop below performs no access;
+    // only a null buffer with a positive n is a genuine bug.
+    if (n > 0 && (out == nullptr || d0 == nullptr || d1 == nullptr))
+    {
+        ModuleBase::WARNING_QUIT("pack_rho_mag", "pointer is null");
     }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 512)
@@ -99,13 +103,14 @@ void pack_rho_mag(T* out, const T* d0, const T* d1, const int n)
 template <typename T>
 void unpack_rho_mag(T* d0, T* d1, const T* in, const int n)
 {
-    if (d0 == nullptr || d1 == nullptr || in == nullptr)
-    {
-        ModuleBase::WARNING_QUIT("unpack_rho_mag", "pointer is null");
-    }
     if (n < 0)
     {
         ModuleBase::WARNING_QUIT("unpack_rho_mag", "n must be >= 0");
+    }
+    // A rank may own zero real-space grid points (n == 0); see pack_rho_mag.
+    if (n > 0 && (d0 == nullptr || d1 == nullptr || in == nullptr))
+    {
+        ModuleBase::WARNING_QUIT("unpack_rho_mag", "pointer is null");
     }
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 512)
