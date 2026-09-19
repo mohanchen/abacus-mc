@@ -106,6 +106,7 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     init_rho_cfg.domag = PARAM.globalv.domag;
     init_rho_cfg.domag_z = PARAM.globalv.domag_z;
     init_rho_cfg.npol = PARAM.globalv.npol;
+    init_rho_cfg.meta_gga = XC_Functional::get_ked_flag();
     this->chr.init_rho(ucell, this->Pgrid, this->sf.strucFac, ucell.symm, &this->kv, this->pw_wfc, init_rho_cfg);
     module_charge::check_rho(this->chr.rho, this->chr.nspin, this->chr.rhopw->nrxx, ucell.omega,
                              this->chr.rhopw->nxyz, inp.nelec); // check the rho

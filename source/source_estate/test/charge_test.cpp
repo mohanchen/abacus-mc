@@ -106,11 +106,13 @@ TEST_F(ChargeTest, Allocate)
     XC_Functional::ked_flag = true;
     charge->set_rhopw(rhopw);
     EXPECT_FALSE(charge->allocate_rho);
-    const bool kin_den = charge->kin_density(PARAM.input.out_elf[0] > 0);
-    charge->allocate(PARAM.input.nspin, kin_den, PARAM.input.test_charge);
+    const bool kin_den = XC_Functional::get_ked_flag() || (PARAM.input.out_elf[0] > 0);
+    charge->allocate(PARAM.input.nspin, kin_den, XC_Functional::get_ked_flag(),
+                     PARAM.input.test_charge);
     EXPECT_TRUE(charge->allocate_rho);
     // test if Charge::allocate() be called twice
-    EXPECT_NO_THROW(charge->allocate(PARAM.input.nspin, kin_den, PARAM.input.test_charge));
+    EXPECT_NO_THROW(charge->allocate(PARAM.input.nspin, kin_den, XC_Functional::get_ked_flag(),
+                                     PARAM.input.test_charge));
     EXPECT_TRUE(charge->allocate_rho);
 }
 
@@ -118,8 +120,9 @@ TEST_F(ChargeTest, SumRho)
 {
     charge->set_rhopw(rhopw);
     EXPECT_FALSE(charge->allocate_rho);
-    const bool kin_den = charge->kin_density(PARAM.input.out_elf[0] > 0);
-    charge->allocate(PARAM.input.nspin, kin_den, PARAM.input.test_charge);
+    const bool kin_den = XC_Functional::get_ked_flag() || (PARAM.input.out_elf[0] > 0);
+    charge->allocate(PARAM.input.nspin, kin_den, XC_Functional::get_ked_flag(),
+                     PARAM.input.test_charge);
     EXPECT_TRUE(charge->allocate_rho);
     int nspin = (PARAM.input.nspin == 2) ? 2 : 1;
     for (int is = 0; is < nspin; is++)
@@ -136,8 +139,9 @@ TEST_F(ChargeTest, RenormalizeRho)
 {
     charge->set_rhopw(rhopw);
     EXPECT_FALSE(charge->allocate_rho);
-    const bool kin_den = charge->kin_density(PARAM.input.out_elf[0] > 0);
-    charge->allocate(PARAM.input.nspin, kin_den, PARAM.input.test_charge);
+    const bool kin_den = XC_Functional::get_ked_flag() || (PARAM.input.out_elf[0] > 0);
+    charge->allocate(PARAM.input.nspin, kin_den, XC_Functional::get_ked_flag(),
+                     PARAM.input.test_charge);
     EXPECT_TRUE(charge->allocate_rho);
     int nspin = (PARAM.input.nspin == 2) ? 2 : 1;
     for (int is = 0; is < nspin; is++)
@@ -156,8 +160,9 @@ TEST_F(ChargeTest, CheckNe)
 {
     charge->set_rhopw(rhopw);
     EXPECT_FALSE(charge->allocate_rho);
-    const bool kin_den = charge->kin_density(PARAM.input.out_elf[0] > 0);
-    charge->allocate(PARAM.input.nspin, kin_den, PARAM.input.test_charge);
+    const bool kin_den = XC_Functional::get_ked_flag() || (PARAM.input.out_elf[0] > 0);
+    charge->allocate(PARAM.input.nspin, kin_den, XC_Functional::get_ked_flag(),
+                     PARAM.input.test_charge);
     EXPECT_TRUE(charge->allocate_rho);
     int nspin = (PARAM.input.nspin == 2) ? 2 : 1;
     for (int is = 0; is < nspin; is++)
@@ -178,8 +183,9 @@ TEST_F(ChargeTest, SaveRhoBeforeSumBand)
 {
     charge->set_rhopw(rhopw);
     EXPECT_FALSE(charge->allocate_rho);
-    const bool kin_den = charge->kin_density(PARAM.input.out_elf[0] > 0);
-    charge->allocate(PARAM.input.nspin, kin_den, PARAM.input.test_charge);
+    const bool kin_den = XC_Functional::get_ked_flag() || (PARAM.input.out_elf[0] > 0);
+    charge->allocate(PARAM.input.nspin, kin_den, XC_Functional::get_ked_flag(),
+                     PARAM.input.test_charge);
     EXPECT_TRUE(charge->allocate_rho);
     int nspin = (PARAM.input.nspin == 2) ? 2 : 1;
     for (int is = 0; is < nspin; is++)

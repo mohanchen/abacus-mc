@@ -14,7 +14,6 @@
 #include "source_estate/rhog_io.h"
 #include "source_io/module_wf/read_wf2rho_pw.h"
 #include "source_io/module_restart/restart.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 #include "source_cell/klist.h"
 #include "source_base/module_parallel/para_world.h"
 #include "source_base/module_parallel/para_tag.h"
@@ -239,6 +238,7 @@ void read_kin_file(Charge& chr,
  * @param rhopw [in] plane-wave basis for atomic superposition and grid size
  * @param omega [in] unit-cell volume
  * @param init_chg [in] INPUT.init_chg
+ * @param meta_gga [in] whether the functional is meta-GGA (tau TF-init needed)
  * @param read_error [in] whether rho reading failed
  * @param read_kin_error [in] whether kinetic-density reading failed
  */
@@ -248,6 +248,7 @@ void init_rho_atomic_and_tau(Charge& chr,
                              const ModuleBase::ComplexMatrix& strucFac,
                              const double& omega,
                              const std::string& init_chg,
+                             const bool meta_gga,
                              const bool read_error,
                              const bool read_kin_error,
                              const AtomicRhoCfg& atomic_rho_cfg)
@@ -264,7 +265,7 @@ void init_rho_atomic_and_tau(Charge& chr,
     }
 
     // initial tau = 3/5 rho^2/3, Thomas-Fermi
-    if (XC_Functional::get_ked_flag())
+    if (meta_gga)
     {
         if (init_chg == "atomic" || read_kin_error)
         {
@@ -370,6 +371,8 @@ void init_rho(Charge& chr,
 
     bool read_error = false;
     bool read_kin_error = false;
+    // Capture before the local ReadCfg (also named cfg) shadows the argument.
+    const bool meta_gga = cfg.meta_gga;
     if (init_chg == "file" || init_chg == "auto")
     {
         ReadCfg cfg{suffix, readin_dir, rank,
@@ -394,7 +397,7 @@ void init_rho(Charge& chr,
         }
 
         // If the charge density is not read in, then the kinetic energy density is not read in either
-        if (XC_Functional::get_ked_flag())
+        if (meta_gga)
         {
             if (!read_error)
             {
@@ -414,7 +417,7 @@ void init_rho(Charge& chr,
         cfg.domag_z,
         GlobalV::ofs_warning};
     init_rho_atomic_and_tau(chr, rhopw, ucell, strucFac, ucell.omega,
-                            init_chg, read_error, read_kin_error,
+                            init_chg, cfg.meta_gga, read_error, read_kin_error,
                             atomic_rho_cfg);
 
     load_rho_from_restart(chr, rhopw, ucell, pgrid, GlobalC::restart,

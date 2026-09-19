@@ -3,7 +3,6 @@
 #include "chg_drho_detail.h"
 #include "source_base/timer.h"
 #include "source_base/parallel_reduce.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 
 #include <cassert>
 #include <functional>
@@ -94,7 +93,7 @@ double cal_dkin(Charge* chr,
                 const double omega)
 {
     assert(chr != nullptr);
-    if (!(XC_Functional::get_ked_flag()))
+    if (!(chr->meta_gga))
     {
         return 0.0;
     };

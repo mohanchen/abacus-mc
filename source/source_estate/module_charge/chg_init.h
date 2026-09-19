@@ -28,6 +28,7 @@ struct InitRhoCfg
     int test_charge = 0;           ///< verbosity flag (PARAM.inp.test_charge)
     bool domag = false;            ///< whether to compute magnetization (PARAM.globalv.domag)
     bool domag_z = false;          ///< whether to compute z-only magnetization (PARAM.globalv.domag_z)
+    bool meta_gga = false;         ///< whether the functional is meta-GGA (XC_Functional::get_ked_flag())
     int npol = 1;                  ///< number of polarization components (PARAM.globalv.npol)
 };
 

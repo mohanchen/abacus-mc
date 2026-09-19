@@ -106,22 +106,17 @@ class Charge
                   const void* wfcpw,
                   const module_charge::InitRhoCfg& cfg);
 
-    // mohan add 2025-12-02
-    /**
-     * @brief Whether the kinetic-energy density is needed
-     *
-     * @param out_elf whether ELF output is requested (PARAM.inp.out_elf[0] > 0)
-     */
-    bool kin_density(const bool out_elf) const;
-
     /**
      * @brief Allocate the rho/rhog/kin_r buffers
      *
      * @param nspin_in number of spins
      * @param kin_den whether to allocate the kinetic-energy density buffers
+     * @param meta_gga whether the functional is meta-GGA (kin_r carries XC
+     *        physics, not just ELF output); stored for tau handling
      * @param test_charge verbosity flag (PARAM.inp.test_charge)
      */
-    void allocate(const int &nspin_in, const bool kin_den, const int test_charge);
+    void allocate(const int &nspin_in, const bool kin_den, const bool meta_gga,
+                  const int test_charge);
 
     /**
      * @brief Renormalize rho so that its integral equals the electron number
@@ -139,6 +134,7 @@ class Charge
     int nxyz = 0; // total number of r vectors
     int ngmc=0; // number of g vectors in this processor
     int nspin=0; // number of spins
+    bool meta_gga = false; // whether the functional is meta-GGA (set by allocate)
     ModulePW::PW_Basis* rhopw = nullptr;// When double_grid is used, rhopw = rhodpw (dense grid)
 
   private:

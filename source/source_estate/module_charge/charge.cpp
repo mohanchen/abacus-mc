@@ -29,7 +29,6 @@
 #include "source_base/tool_threading.h"
 #include "source_cell/unitcell.h"
 #include "source_cell/magnetism.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 
 #include <algorithm>
 #include <vector>
@@ -47,12 +46,6 @@ Charge::~Charge()
 void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
 {
     this->rhopw = rhopw_in;
-}
-
-// mohan add 2025-12-02
-bool Charge::kin_density(const bool out_elf) const
-{
-    return XC_Functional::get_ked_flag() || out_elf;
 }
 
 void Charge::destroy()
@@ -80,11 +73,13 @@ void Charge::destroy()
     }
 }
 
-void Charge::allocate(const int& nspin_in, const bool kin_den, const int test_charge)
+void Charge::allocate(const int& nspin_in, const bool kin_den, const bool meta_gga,
+                      const int test_charge)
 {
     ModuleBase::TITLE("Charge", "allocate");
 
     assert(nspin_in > 0);
+    this->meta_gga = meta_gga;
 
     if (this->rhopw == nullptr)
     {
@@ -217,7 +212,7 @@ void Charge::save_rho_before_sum_band()
     for (int is = 0; is < nspin; is++)
     {
         ModuleBase::GlobalFunc::DCOPY(rho[is], rho_save[is], this->rhopw->nrxx);
-        if (XC_Functional::get_ked_flag())
+        if (this->meta_gga)
         {
             ModuleBase::GlobalFunc::DCOPY(kin_r[is], kin_r_save[is], this->rhopw->nrxx);
         }
