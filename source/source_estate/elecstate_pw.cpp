@@ -176,8 +176,7 @@ void ElecStatePW<T, Device>::parallelK()
                            GlobalV::KPAR,
                            PARAM.globalv.all_ks_run,
                            PARAM.inp.bndpar,
-                           PARAM.inp.nspin,
-                           PARAM.inp.out_elf[0] > 0);
+                           PARAM.inp.nspin);
 #endif
 }
 

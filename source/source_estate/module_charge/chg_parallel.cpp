@@ -9,7 +9,6 @@
 #include "source_base/global_variable.h"
 #include "source_base/parallel_comm.h"
 #include "source_base/timer.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 
 namespace module_charge
 {
@@ -36,7 +35,7 @@ void reduce_diff_pools(double* array_rho, const Charge& chr, const int kpar,
 }
 
 void rho_mpi(Charge& chr, const int kpar, const bool all_ks_run,
-             const int bndpar, const int nspin, const bool out_elf)
+             const int bndpar, const int nspin)
 {
     ModuleBase::TITLE("Charge", "rho_mpi");
     assert(kpar >= 1);
@@ -52,9 +51,8 @@ void rho_mpi(Charge& chr, const int kpar, const bool all_ks_run,
     for (int is = 0; is < nspin; ++is)
     {
         reduce_diff_pools(chr.rho[is], chr, kpar, all_ks_run, bndpar);
-        if (XC_Functional::get_ked_flag() || out_elf)
+        if (chr.kin_r != nullptr)
         {
-            assert(chr.kin_r != nullptr);
             reduce_diff_pools(chr.kin_r[is], chr, kpar, all_ks_run, bndpar);
         }
     }
@@ -64,7 +62,7 @@ void rho_mpi(Charge& chr, const int kpar, const bool all_ks_run,
 }
 
 void kin_r_mpi(Charge& chr, const int kpar, const bool all_ks_run,
-               const int bndpar, const int nspin, const bool out_elf)
+               const int bndpar, const int nspin)
 {
     ModuleBase::TITLE("Charge", "kin_r_mpi");
     assert(kpar >= 1);
@@ -76,9 +74,8 @@ void kin_r_mpi(Charge& chr, const int kpar, const bool all_ks_run,
     }
     ModuleBase::timer::start("Charge", "kin_r_mpi");
 
-    if (XC_Functional::get_ked_flag() || out_elf)
+    if (chr.kin_r != nullptr)
     {
-        assert(chr.kin_r != nullptr);
         for (int is = 0; is < nspin; ++is)
         {
             reduce_diff_pools(chr.kin_r[is], chr, kpar, all_ks_run, bndpar);

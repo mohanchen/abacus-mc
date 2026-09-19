@@ -141,8 +141,7 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
     // charge density symmetrization
     for (int is = 0; is < nspin; is++)
     {
-        module_charge::cal_rhog_symm(is, *(this->charge), rho_basis, ucell.symm,
-                                     XC_Functional::get_ked_flag());
+        module_charge::cal_rhog_symm(is, *(this->charge), rho_basis, ucell.symm);
     }
 
 }

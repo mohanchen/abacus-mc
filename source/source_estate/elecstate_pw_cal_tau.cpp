@@ -61,8 +61,7 @@ void ElecStatePW<T, Device>::cal_tau(const psi::Psi<T, Device>& psi)
                              GlobalV::KPAR,
                              PARAM.globalv.all_ks_run,
                              PARAM.inp.bndpar,
-                             PARAM.inp.nspin,
-                             PARAM.inp.out_elf[0] > 0);
+                             PARAM.inp.nspin);
 #endif
     ModuleBase::TITLE("ElecStatePW", "cal_tau");
 }

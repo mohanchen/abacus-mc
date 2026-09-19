@@ -204,8 +204,7 @@ TEST_F(ChargeMpiTest, rho_mpi)
         charge->rho[0] = new double[nrxx];
         charge->kin_r[0] = new double[nrxx];
         module_charge::rho_mpi(*charge, GlobalV::KPAR, PARAM.globalv.all_ks_run,
-                               PARAM.inp.bndpar, PARAM.inp.nspin,
-                               PARAM.inp.out_elf[0] > 0);
+                               PARAM.inp.bndpar, PARAM.inp.nspin);
 
         delete[] charge->rho[0];
         delete[] charge->rho;
@@ -216,15 +215,13 @@ TEST_F(ChargeMpiTest, rho_mpi)
 
     GlobalV::KPAR = 1;
     module_charge::rho_mpi(*charge, GlobalV::KPAR, PARAM.globalv.all_ks_run,
-                           PARAM.inp.bndpar, PARAM.inp.nspin,
-                           PARAM.inp.out_elf[0] > 0);
+                           PARAM.inp.bndpar, PARAM.inp.nspin);
 }
 
 TEST_F(ChargeMpiTest, kin_r_mpi)
 {
     if (GlobalV::NPROC >= 2 && GlobalV::NPROC % 2 == 0)
     {
-        XC_Functional::set_xc_type("scan");
         ASSERT_EQ(PARAM.inp.nspin, 1);
         ASSERT_EQ(PARAM.inp.bndpar, 1);
         GlobalV::KPAR = 2;
@@ -267,15 +264,13 @@ TEST_F(ChargeMpiTest, kin_r_mpi)
         const double refsum = sum_array(charge->kin_r[0], nrxx);
 
         module_charge::kin_r_mpi(*charge, GlobalV::KPAR, PARAM.globalv.all_ks_run,
-                                 PARAM.inp.bndpar, PARAM.inp.nspin,
-                                 PARAM.inp.out_elf[0] > 0);
+                                 PARAM.inp.bndpar, PARAM.inp.nspin);
         const double sum = sum_array(charge->kin_r[0], nrxx);
         EXPECT_EQ(sum, refsum * GlobalV::KPAR);
 
         delete[] charge->kin_r[0];
         delete[] charge->kin_r;
         delete rhopw;
-        XC_Functional::set_xc_type("pbe");
     }
 }
 

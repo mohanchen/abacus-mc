@@ -46,14 +46,13 @@ void symmetrize_rho(const int nspin,
 /**
  * @brief Symmetrize one spin channel of the charge density.
  *
- * @param symm_kin whether to symmetrize the kinetic-energy density kin_r
- *        (true for meta-GGA functionals or when ELF output consumes kin_r)
+ * The kinetic-energy density kin_r is symmetrized as well whenever its
+ * buffer is allocated (meta-GGA functionals, or ELF output requested).
  */
 void cal_rhog_symm(const int& spin_now,
                    const Charge& CHR,
                    const ModulePW::PW_Basis* pw,
-                   ModuleSymmetry::Symmetry& symm,
-                   const bool symm_kin);
+                   ModuleSymmetry::Symmetry& symm);
 
 /**
  * @brief Symmetrize one spin channel of raw density arrays.

@@ -61,8 +61,7 @@ namespace module_charge
 void cal_rhog_symm(const int& spin_now,
                    const Charge& CHR,
                    const ModulePW::PW_Basis* rho_basis,
-                   ModuleSymmetry::Symmetry& symm,
-                   const bool symm_kin)
+                   ModuleSymmetry::Symmetry& symm)
 {
     return;
 }
