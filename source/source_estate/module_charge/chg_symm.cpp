@@ -23,20 +23,21 @@ void symmetrize_rho(const int nspin,
         // nspin=4 (non-collinear/SOC): rho[0] is the charge density rho^0 (scalar, symmetrized
         // spatially like nspin=1); rho[1,2,3] are the spin density (rho^x, rho^y, rho^z) which
         // must be symmetrized TOGETHER with the per-operation spin rotation W(g).
-        cal_rhog_symm(0, chr, pw, symm);
+        cal_rhog_symm(0, chr, pw, symm, XC_Functional::get_ked_flag());
         cal_rhog_symm_soc(chr.rho, chr.rhog, pw, symm);
         return;
     }
     for (int is = 0; is < nspin; is++)
     {
-        cal_rhog_symm(is, chr, pw, symm);
+        cal_rhog_symm(is, chr, pw, symm, XC_Functional::get_ked_flag());
     }
 }
 
 void cal_rhog_symm(const int& spin_now,
                    const Charge& chr,
                    const ModulePW::PW_Basis* rho_basis,
-                   ModuleSymmetry::Symmetry& symm)
+                   ModuleSymmetry::Symmetry& symm,
+                   const bool symm_kin)
 {
     assert(spin_now < 4); // added by zhengdy-soc
 
@@ -54,7 +55,7 @@ void cal_rhog_symm(const int& spin_now,
 
     rho_basis->recip2real(chr.rhog[spin_now], chr.rho[spin_now]);
 
-    if (XC_Functional::get_ked_flag() || chr.cal_elf)
+    if (symm_kin)
     {
         // Use std::vector to manage kin_g instead of raw pointer
         std::vector<std::complex<double>> kin_g(rho_basis->npw);

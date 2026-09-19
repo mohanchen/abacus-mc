@@ -167,10 +167,12 @@ void ctrl_output_fp(UnitCell& ucell,
     // 6) write ELF
     if (inp.out_elf[0] > 0 && should_output)
     {
-        chr.cal_elf = true;
+        // write_elf() consumes chr.kin_r; tau must be symmetrized here because
+        // the regular SCF path only symmetrizes tau for meta-GGA functionals.
+        const bool symm_kin = true;
         for (int is = 0; is < nspin; is++)
         {
-            module_charge::cal_rhog_symm(is, chr, pw_rhod, ucell.symm);
+            module_charge::cal_rhog_symm(is, chr, pw_rhod, ucell.symm, symm_kin);
         }
 
         std::string out_dir = PARAM.globalv.global_out_dir;
