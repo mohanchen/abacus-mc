@@ -168,7 +168,7 @@ TEST_F(ChargeMixingTest, SetMixingTest)
     EXPECT_EQ(CMtest.get_mixing_ndim(), 1);
     EXPECT_EQ(CMtest.get_mixing_config().mixing_gg0, 1.0);
     EXPECT_EQ(CMtest.get_mixing_config().mixing_tau, false);
-    EXPECT_EQ(CMtest.mixing_beta_mag, 1.6);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_beta_mag, 1.6);
     EXPECT_EQ(CMtest.get_mixing_config().mixing_gg0_mag, 0.0);
     EXPECT_EQ(CMtest.get_mixing_config().mixing_gg0_min, 0.1);
     EXPECT_EQ(CMtest.get_mixing_config().mixing_angle, -10.0);
@@ -178,7 +178,7 @@ TEST_F(ChargeMixingTest, SetMixingTest)
     XC_Functional::ked_flag = true;
     PARAM.input.mixing_mode = "plain";
     CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
-    EXPECT_EQ(CMtest.mixing_mode, "plain");
+    EXPECT_EQ(CMtest.get_mixing_mode(), "plain");
     EXPECT_EQ(CMtest.get_mixing_config().mixing_tau, true);
     XC_Functional::ked_flag = false;
 

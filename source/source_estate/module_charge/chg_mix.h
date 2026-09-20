@@ -125,10 +125,6 @@ class Charge_Mixing
     // private mixing parameters
     //======================================
     MixingConfig cfg_;                 ///< aggregated mixing config, also holds nspin/scf_thr_type/double_grid
-    std::string mixing_mode = "broyden"; ///< mixing mode: "plain", "broyden", "pulay"
-    double mixing_beta = 0.8;            ///< mixing beta for density
-    double mixing_beta_mag = 1.6;        ///< mixing beta for magnetism
-    int mixing_ndim = 8;                 ///< mixing ndim for broyden and pulay
     double* omega = nullptr;                  ///< omega for non-linear core correction
     double* tpiba = nullptr;                  ///< 2*pi/beta for non-linear core correction
     std::vector<double> _drho_history; ///< history of drho used to determine the oscillation, size is scf_nmax
