@@ -79,12 +79,18 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
         const int nrow = pv.nrow;
 
         tmp_edmk.create(ncol, nrow);
-        std::complex<double>* Htmp = new std::complex<double>[nloc];
-        std::complex<double>* Sinv = new std::complex<double>[nloc];
-        std::complex<double>* tmp1 = new std::complex<double>[nloc];
-        std::complex<double>* tmp2 = new std::complex<double>[nloc];
-        std::complex<double>* tmp3 = new std::complex<double>[nloc];
-        std::complex<double>* tmp4 = new std::complex<double>[nloc];
+        std::vector<std::complex<double>> Htmp_vec(nloc);
+        std::vector<std::complex<double>> Sinv_vec(nloc);
+        std::vector<std::complex<double>> tmp1_vec(nloc);
+        std::vector<std::complex<double>> tmp2_vec(nloc);
+        std::vector<std::complex<double>> tmp3_vec(nloc);
+        std::vector<std::complex<double>> tmp4_vec(nloc);
+        std::complex<double>* Htmp = Htmp_vec.data();
+        std::complex<double>* Sinv = Sinv_vec.data();
+        std::complex<double>* tmp1 = tmp1_vec.data();
+        std::complex<double>* tmp2 = tmp2_vec.data();
+        std::complex<double>* tmp3 = tmp3_vec.data();
+        std::complex<double>* tmp4 = tmp4_vec.data();
 
         ModuleBase::GlobalFunc::ZEROS(Htmp, nloc);
         ModuleBase::GlobalFunc::ZEROS(Sinv, nloc);
@@ -253,12 +259,6 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
 
         BlasConnector::copy(nloc, tmp4, inc, tmp_edmk.c, inc);
 
-        delete[] Htmp;
-        delete[] Sinv;
-        delete[] tmp1;
-        delete[] tmp2;
-        delete[] tmp3;
-        delete[] tmp4;
 #else
         // for serial version
         tmp_edmk.create(pv.ncol, pv.nrow);
@@ -281,7 +281,8 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
         int INFO = 0;
 
         int lwork = 3 * nlocal - 1; // tmp
-        std::complex<double>* work = new std::complex<double>[lwork];
+        std::vector<std::complex<double>> work_vec(lwork);
+        std::complex<double>* work = work_vec.data();
         ModuleBase::GlobalFunc::ZEROS(work, lwork);
 
         int IPIV[nlocal];
@@ -299,7 +300,6 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
             }
         }
         tmp_edmk = 0.5 * (Sinv * Htmp * tmp_dmk_base + tmp_dmk_base * Htmp * Sinv);
-        delete[] work;
 #endif
     } // end ik
 
