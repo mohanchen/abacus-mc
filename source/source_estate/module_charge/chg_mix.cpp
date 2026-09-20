@@ -28,20 +28,20 @@ void Charge_Mixing::set_mixing(const MixingConfig& cfg,
                                double& omega_in,
                                double& tpiba_in)
 {
-    // store the aggregated config; init_mixing/mix_rho read nspin,
-    // scf_thr_type and double_grid from it instead of PARAM/GlobalV.
+    // store the aggregated config; init_mixing/mix_rho and the stateless
+    // Kerker kernels all read nspin, scf_thr_type, double_grid, mixing_gg0,
+    // mixing_gg0_mag, mixing_gg0_min, mixing_angle, mixing_dmr from cfg_
+    // instead of PARAM/GlobalV. cfg_ is treated as an immutable INPUT
+    // snapshot; runtime overrides (e.g. close_kerker_gg0) live as flags on
+    // Charge_Mixing itself, never by mutating cfg_.
     this->cfg_ = cfg;
-    // get private mixing parameters
+    // mirror only the parameters that init_mixing needs to construct the
+    // Mixing/Plain_Mixing objects; the Kerker kernels and the mix_rho_*
+    // branches read everything else directly from cfg_.
     this->mixing_mode = cfg.mixing_mode;
     this->mixing_beta = cfg.mixing_beta;
     this->mixing_beta_mag = cfg.mixing_beta_mag;
     this->mixing_ndim = cfg.mixing_ndim;
-    this->mixing_gg0 = cfg.mixing_gg0;
-
-    this->mixing_gg0_mag = cfg.mixing_gg0_mag;
-    this->mixing_gg0_min = cfg.mixing_gg0_min;
-    this->mixing_angle = cfg.mixing_angle;
-    this->mixing_dmr = cfg.mixing_dmr;
     this->omega = &omega_in;
     this->tpiba = &tpiba_in;
     // check the paramters
@@ -77,17 +77,17 @@ void Charge_Mixing::set_mixing(const MixingConfig& cfg,
 
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_type", this->mixing_mode);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_beta", this->mixing_beta);
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0", this->mixing_gg0);
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0_min", this->mixing_gg0_min);
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0", cfg_.mixing_gg0);
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0_min", cfg_.mixing_gg0_min);
 
     if (cfg.nspin==2 || cfg.nspin==4)
     {
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_beta_mag", this->mixing_beta_mag);
-        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0_mag", this->mixing_gg0_mag);
+        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0_mag", cfg_.mixing_gg0_mag);
     }
-    if (this->mixing_angle > 0)
+    if (cfg_.mixing_angle > 0)
     {
-        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_angle", this->mixing_angle);
+        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_angle", cfg_.mixing_angle);
     }
 
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_ndim", this->mixing_ndim);
@@ -135,7 +135,7 @@ void Charge_Mixing::init_mixing()
     // initailize rho_mdata
     if (this->cfg_.scf_thr_type == 1)
     {
-        if (this->cfg_.nspin == 4 && this->mixing_angle > 0 )
+        if (this->cfg_.nspin == 4 && this->cfg_.mixing_angle > 0 )
         {
             this->mixing->init_mixing_data(this->rho_mdata,
                                         this->rhopw->npw * 2,
@@ -150,7 +150,7 @@ void Charge_Mixing::init_mixing()
     }
     else
     {
-        if (this->cfg_.nspin == 4 && this->mixing_angle > 0 )
+        if (this->cfg_.nspin == 4 && this->cfg_.mixing_angle > 0 )
         {
             this->mixing->init_mixing_data(this->rho_mdata, this->rhopw->nrxx * 2, sizeof(double));
         }

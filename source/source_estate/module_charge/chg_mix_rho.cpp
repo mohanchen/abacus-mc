@@ -68,8 +68,14 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             rhog1, rhog2, *this->rhopw, this->cfg_, *this->omega, *this->tpiba);
     };
 
-    // Kerker screening functor, shared by all nspin branches
+    // Kerker screening functor, shared by all nspin branches.
+    // Short-circuit when close_kerker_gg0() was called (non-separate-loop
+    // EXX path): cfg_ is immutable, so the disable flag lives on the object.
     std::function<void(std::complex<double>*)> screen = [this](std::complex<double>* p) {
+        if (this->kerker_disabled_)
+        {
+            return;
+        }
         module_charge::kerker_screen_recip(this->cfg_, this->rhopw, *this->tpiba, p);
     };
 
@@ -246,7 +252,12 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     double* rhor_in=nullptr;
     double* rhor_out=nullptr;
 
+    // Kerker screening functor (see mix_rho_recip for the disable flag rationale).
     std::function<void(double*)> screen = [this](double* p) {
+        if (this->kerker_disabled_)
+        {
+            return;
+        }
         module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
     };
     std::function<double(double*, double*)> inner_product = [this](double* rho1, double* rho2)

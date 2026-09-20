@@ -54,7 +54,7 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
  *                    Charge_Mixing::get_mixing_mode()
  *                    Charge_Mixing::get_mixing_beta()
  *                    Charge_Mixing::get_mixing_ndim()
- *                    Charge_Mixing::get_mixing_gg0()
+ *                    Charge_Mixing::get_mixing_config()
  *      - set the basic parameters of class charge_mixing
  *   - KerkerScreenTest: module_charge::kerker_screen_recip(cfg, rhopw, tpiba, drhog)
  *                       module_charge::kerker_screen_real(cfg, rhopw, tpiba, drhog)
@@ -67,6 +67,9 @@ void Charge::set_rhopw(ModulePW::PW_Basis* rhopw_in)
  *                 Charge_Mixing::mix_rho_recip(chr)
  *                 Charge_Mixing::mix_rho_real(chr)
  *      - mix rho with different methods
+ *   - CloseKerkerGg0DisablesScreenReal: Charge_Mixing::close_kerker_gg0()
+ *      - regression test: close_kerker_gg0() must short-circuit the Kerker
+ *        screening lambda in mix_rho_real so output matches cfg.mixing_gg0=0
  *   - MixDivCombTest: module_charge::split_dgrid
  *                     module_charge::merge_dgrid
  *    - divide and combine data on the USPP double grid
@@ -163,13 +166,13 @@ TEST_F(ChargeMixingTest, SetMixingTest)
     EXPECT_EQ(CMtest.get_mixing_mode(), "broyden");
     EXPECT_EQ(CMtest.get_mixing_beta(), 1.0);
     EXPECT_EQ(CMtest.get_mixing_ndim(), 1);
-    EXPECT_EQ(CMtest.get_mixing_gg0(), 1.0);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_gg0, 1.0);
     EXPECT_EQ(CMtest.get_mixing_config().mixing_tau, false);
     EXPECT_EQ(CMtest.mixing_beta_mag, 1.6);
-    EXPECT_EQ(CMtest.mixing_gg0_mag, 0.0);
-    EXPECT_EQ(CMtest.mixing_gg0_min, 0.1);
-    EXPECT_EQ(CMtest.mixing_angle, -10.0);
-    EXPECT_EQ(CMtest.mixing_dmr, false);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_gg0_mag, 0.0);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_gg0_min, 0.1);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_angle, -10.0);
+    EXPECT_EQ(CMtest.get_mixing_config().mixing_dmr, false);
 
     PARAM.input.mixing_tau = true;
     XC_Functional::ked_flag = true;
@@ -787,6 +790,116 @@ TEST_F(ChargeMixingTest, MixRhoTest)
     delete[] charge.rhog_save;
     delete[] charge.kin_r;
     delete[] charge.kin_r_save;
+}
+
+// Regression test: close_kerker_gg0() must short-circuit the Kerker screening
+// lambda in mix_rho_real. Before the chg_precond refactor (commit 6d127d517)
+// the kernels read this->mixing_gg0; after, they read cfg_ which is an
+// immutable INPUT snapshot, so writing the dead member was a no-op and the
+// non-separate-loop EXX path silently failed to disable Kerker. This test
+// pins the fix: output after close_kerker_gg0() must match the cfg.mixing_gg0
+// = 0 baseline.
+TEST_F(ChargeMixingTest, CloseKerkerGg0DisablesScreenReal)
+{
+    PARAM.sys.double_grid = false;
+    charge.set_rhopw(&pw_basis);
+    const int nspin = PARAM.input.nspin = 1;
+    PARAM.sys.domag_z = false;
+    XC_Functional::func_type = 3;
+    XC_Functional::ked_flag = false;
+    PARAM.input.mixing_beta = 0.7;
+    PARAM.input.mixing_ndim = 1;
+    PARAM.input.mixing_gg0 = 1.0; // Kerker active by default
+    PARAM.input.mixing_tau = false;
+    PARAM.input.mixing_mode = "plain";
+    PARAM.input.scf_thr_type = 2; // real-space path
+
+    const int nrxx = pw_basis.nrxx;
+    charge._space_rho.resize(nspin * nrxx);
+    charge._space_rho_save.resize(nspin * nrxx);
+    charge.rho = new double*[nspin];
+    charge.rho_save = new double*[nspin];
+    for (int is = 0; is < nspin; is++)
+    {
+        charge.rho[is] = charge._space_rho.data() + is * nrxx;
+        charge.rho_save[is] = charge._space_rho_save.data() + is * nrxx;
+    }
+    // Non-trivial real-space residual: linear ramp so Kerker (which damps
+    // long wavelengths) actually changes the output vs the no-Kerker path.
+    std::vector<double> real_ref(nspin * nrxx);
+    std::vector<double> real_save_ref(nspin * nrxx);
+    for (int i = 0; i < nspin * nrxx; ++i)
+    {
+        real_ref[i] = 0.3 + 0.01 * i;
+        real_save_ref[i] = 0.1 + 0.005 * i;
+    }
+
+    // --- Run A: close_kerker_gg0() then mix_rho ---
+    Charge_Mixing CM_disabled;
+    CM_disabled.set_rhopw(&pw_basis, &pw_basis);
+    CM_disabled.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CM_disabled.init_mixing();
+    CM_disabled.close_kerker_gg0();
+    for (int i = 0; i < nspin * nrxx; ++i)
+    {
+        charge._space_rho[i] = real_ref[i];
+        charge._space_rho_save[i] = real_save_ref[i];
+    }
+    CM_disabled.mix_rho(&charge);
+    std::vector<double> rho_A(charge._space_rho);
+
+    // --- Run B: cfg.mixing_gg0 = 0 baseline, no close_kerker_gg0 ---
+    Charge_Mixing CM_baseline;
+    CM_baseline.set_rhopw(&pw_basis, &pw_basis);
+    MixingConfig cfg_off = make_cfg();
+    cfg_off.mixing_gg0 = 0.0; // Kerker off at config level
+    CM_baseline.set_mixing(cfg_off, ucell.omega, ucell.tpiba);
+    CM_baseline.init_mixing();
+    for (int i = 0; i < nspin * nrxx; ++i)
+    {
+        charge._space_rho[i] = real_ref[i];
+        charge._space_rho_save[i] = real_save_ref[i];
+    }
+    CM_baseline.mix_rho(&charge);
+    std::vector<double> rho_B(charge._space_rho);
+
+    // close_kerker_gg0 path must match the Kerker-off baseline.
+    for (int i = 0; i < nspin * nrxx; ++i)
+    {
+        EXPECT_NEAR(rho_A[i], rho_B[i], 1e-10)
+            << "i=" << i << ": close_kerker_gg0 did not disable Kerker";
+    }
+
+    // --- Run C: Kerker active, no close_kerker_gg0. Output must differ from A
+    // to prove the disable flag was load-bearing (not that Kerker was a no-op
+    // for this input to begin with). ---
+    Charge_Mixing CM_active;
+    CM_active.set_rhopw(&pw_basis, &pw_basis);
+    CM_active.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CM_active.init_mixing();
+    for (int i = 0; i < nspin * nrxx; ++i)
+    {
+        charge._space_rho[i] = real_ref[i];
+        charge._space_rho_save[i] = real_save_ref[i];
+    }
+    CM_active.mix_rho(&charge);
+    std::vector<double> rho_C(charge._space_rho);
+
+    bool any_diff = false;
+    for (int i = 0; i < nspin * nrxx; ++i)
+    {
+        if (std::abs(rho_A[i] - rho_C[i]) > 1e-8)
+        {
+            any_diff = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(any_diff)
+        << "Kerker-active output equals Kerker-disabled output, so the "
+           "close_kerker_gg0 test cannot prove the flag does anything";
+
+    delete[] charge.rho;
+    delete[] charge.rho_save;
 }
 
 TEST_F(ChargeMixingTest, MixDoubleGridRhoTest)
