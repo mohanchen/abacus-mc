@@ -20,11 +20,19 @@ namespace elecstate
 template <typename TK, typename TR>
 DensityMatrix<TK, TR>::~DensityMatrix()
 {
+    this->clear_DMR();
+    delete[] this->dmr_tmp_;
+}
+
+template <typename TK, typename TR>
+void DensityMatrix<TK, TR>::clear_DMR()
+{
     for (hamilt::HContainer<TR>*& it: this->_DMR)
     {
         delete it;
     }
-    delete[] this->dmr_tmp_;
+    this->_DMR.clear();
+    this->_dmr_ready = false;
 }
 
 template <typename TK, typename TR>

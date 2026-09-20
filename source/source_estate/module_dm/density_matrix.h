@@ -291,6 +291,11 @@ class DensityMatrix
 
   private:
     /**
+     * @brief delete all HContainer objects in _DMR and clear the vector
+     */
+    void clear_DMR();
+
+    /**
      * @brief HContainer for density matrix in real space for 2D parallelization
      * vector.size() = 1 for non-polarization and SOC
      * vector.size() = 2 for spin-polarization

@@ -8,6 +8,7 @@
 #include "source_cell/klist.h"
 
 #include <cstddef>
+#include <memory>
 #include <stdexcept>
 
 namespace elecstate
@@ -18,16 +19,9 @@ template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell* ucell)
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    // ensure _DMR is empty
-    for (hamilt::HContainer<TR>*& it: this->_DMR)
-    {
-        delete it;
-    }
-    this->_DMR.clear();
-    this->_dmr_ready = false;
+    this->clear_DMR();
     // construct a new DMR
-    hamilt::HContainer<TR>* tmp_DMR;
-    tmp_DMR = new hamilt::HContainer<TR>(this->_paraV);
+    std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->_paraV));
     // set up a HContainer
     for (int iat1 = 0; iat1 < ucell->nat; iat1++)
     {
@@ -58,13 +52,12 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
         tmp_DMR->fix_gamma();
     }
     tmp_DMR->allocate(nullptr, true);
-    this->_DMR.push_back(tmp_DMR);
+    this->_DMR.push_back(tmp_DMR.release());
     // add another DMR if nspin==2
     if (this->_nspin == 2)
     {
-        hamilt::HContainer<TR>* tmp_DMR1;
-        tmp_DMR1 = new hamilt::HContainer<TR>(*tmp_DMR);
-        this->_DMR.push_back(tmp_DMR1);
+        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
+        this->_DMR.push_back(tmp_DMR1.release());
     }
     ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
 }
@@ -74,16 +67,9 @@ template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    // ensure _DMR is empty
-    for (hamilt::HContainer<TR>*& it: this->_DMR)
-    {
-        delete it;
-    }
-    this->_DMR.clear();
-    this->_dmr_ready = false;
+    this->clear_DMR();
     // construct a new DMR
-    hamilt::HContainer<TR>* tmp_DMR;
-    tmp_DMR = new hamilt::HContainer<TR>(this->_paraV);
+    std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->_paraV));
     // set up a HContainer
     for (int iat1 = 0; iat1 < ucell->nat; iat1++)
     {
@@ -113,13 +99,12 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
         tmp_DMR->fix_gamma();
     }
     tmp_DMR->allocate(nullptr, true);
-    this->_DMR.push_back(tmp_DMR);
+    this->_DMR.push_back(tmp_DMR.release());
     // add another DMR if nspin==2
     if (this->_nspin == 2)
     {
-        hamilt::HContainer<TR>* tmp_DMR1;
-        tmp_DMR1 = new hamilt::HContainer<TR>(*tmp_DMR);
-        this->_DMR.push_back(tmp_DMR1);
+        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
+        this->_DMR.push_back(tmp_DMR1.release());
     }
     ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
 }
@@ -129,21 +114,14 @@ template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TR>& DMR_in)
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    // ensure _DMR is empty
-    for (hamilt::HContainer<TR>*& it: this->_DMR)
-    {
-        delete it;
-    }
-    this->_DMR.clear();
-    this->_dmr_ready = false;
+    this->clear_DMR();
     // set up a HContainer using another one
     for (int is = 0; is < this->_nspin; ++is) // loop over spin
     {
-        hamilt::HContainer<TR>* tmp_DMR;
-        tmp_DMR = new hamilt::HContainer<TR>(DMR_in);
+        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(DMR_in));
         // zero.out
         tmp_DMR->set_zero();
-        this->_DMR.push_back(tmp_DMR);
+        this->_DMR.push_back(tmp_DMR.release());
     }
     ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
 }
@@ -152,19 +130,13 @@ template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TRShift>& DMR_in)
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    // ensure _DMR is empty
-    for (hamilt::HContainer<TR>*& it: this->_DMR)
-    {
-        delete it;
-    }
-    this->_DMR.clear();
-    this->_dmr_ready = false;
+    this->clear_DMR();
     // set up a HContainer using another one
     int size_ap = DMR_in.size_atom_pairs();
     if (size_ap > 0)
     {
         const Parallel_Orbitals* paraV_ = DMR_in.get_atom_pair(0).get_paraV();
-        hamilt::HContainer<TR>* tmp_DMR = new hamilt::HContainer<TR>(paraV_);
+        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(paraV_));
         for (int iap = 0; iap < size_ap; iap++)
         {
             const int iat1 = DMR_in.get_atom_pair(iap).get_atom_i();
@@ -177,11 +149,11 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TRShift>& DMR_in)
             }
         }
         tmp_DMR->allocate(nullptr, true);
-        this->_DMR.push_back(tmp_DMR);
+        this->_DMR.push_back(tmp_DMR.release());
         if (this->_nspin == 2)
         {
-            hamilt::HContainer<TR>* tmp_DMR1 = new hamilt::HContainer<TR>(*tmp_DMR);
-            this->_DMR.push_back(tmp_DMR1);
+            std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
+            this->_DMR.push_back(tmp_DMR1.release());
         }
     }
     ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
