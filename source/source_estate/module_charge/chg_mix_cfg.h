@@ -10,23 +10,23 @@
 /// from the parsed input once per run.
 struct MixingConfig
 {
-    std::string mixing_mode = "broyden"; ///< mixing mode: "plain", "broyden", "pulay"
-    double mixing_beta = 0.8;            ///< mixing beta for density
-    int mixing_ndim = 8;                 ///< mixing ndim for broyden and pulay
-    double mixing_gg0 = 0.0;             ///< mixing gg0 for Kerker screen
-    bool mixing_tau = false;             ///< whether to use tau mixing
-    double mixing_beta_mag = 1.6;        ///< mixing beta for magnetism
-    double mixing_gg0_mag = 0.0;         ///< mixing gg0 for Kerker screen for magnetism
-    double mixing_gg0_min = 0.1;         ///< minimum kerker coefficient
-    double mixing_angle = 0.0;           ///< mixing angle for nspin=4
-    bool mixing_dmr = false;             ///< whether to mix real space density matrix
-    int nspin = 1;                       ///< number of spins
-    int scf_thr_type = 1;                ///< 1: reciprocal, 2: real space threshold
-    bool double_grid = false;            ///< whether double grid is used
-    bool gamma_only_pw = false;          ///< whether gamma-only plane wave is used
-    bool domag = false;                  ///< whether magnetism (non-collinear) is considered
-    bool domag_z = false;                ///< whether only the z-component magnetism is considered
-    int scf_nmax = 100;                  ///< max SCF iterations, sizes the drho oscillation history (PARAM.inp.scf_nmax)
+    std::string mixing_mode;   ///< mixing mode: "plain", "broyden", "pulay"
+    double mixing_beta;        ///< mixing beta for density
+    int mixing_ndim;           ///< mixing ndim for broyden and pulay
+    double mixing_gg0;         ///< mixing gg0 for Kerker screen
+    bool mixing_tau;           ///< whether to use tau mixing
+    double mixing_beta_mag;    ///< mixing beta for magnetism
+    double mixing_gg0_mag;     ///< mixing gg0 for Kerker screen for magnetism
+    double mixing_gg0_min;     ///< minimum kerker coefficient
+    double mixing_angle;       ///< mixing angle for nspin=4
+    bool mixing_dmr;           ///< whether to mix real space density matrix
+    int nspin;                 ///< number of spins
+    int scf_thr_type;          ///< 1: reciprocal, 2: real space threshold
+    bool double_grid;          ///< whether double grid is used
+    bool gamma_only_pw;        ///< whether gamma-only plane wave is used
+    bool domag;                ///< whether magnetism (non-collinear) is considered
+    bool domag_z;              ///< whether only the z-component magnetism is considered
+    int scf_nmax;              ///< max SCF iterations, sizes the drho oscillation history (PARAM.inp.scf_nmax)
 };
 
 #endif // CHG_MIX_CFG_H
