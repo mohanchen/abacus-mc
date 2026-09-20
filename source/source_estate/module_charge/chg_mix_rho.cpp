@@ -182,21 +182,30 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         this->mixing->mix_data(this->rho_mdata, rhog_out);
         // get new |m| in real space using FT
         this->rhopw->recip2real(rhog_magabs.data() + this->rhopw->npw, rho_magabs.data());
-        // use new |m| and angle to update {mx, my, mz}
+        // Reciprocal-space rho was mixed into rhog_magabs[0..npw-1]; write it
+        // back to chr->rhog[0]. This copy is bounded by the reciprocal grid.
         for (int ig = 0; ig < npw; ig++)
         {
-            chr->rhog[0][ig] = rhog_magabs[ig]; // rhog
-            double norm = std::sqrt(chr->rho[1][ig] * chr->rho[1][ig]
-                    + chr->rho[2][ig] * chr->rho[2][ig]
-                    + chr->rho[3][ig] * chr->rho[3][ig]);
+            chr->rhog[0][ig] = rhog_magabs[ig];
+        }
+        // The new |m| in real space was produced by recip2real above into
+        // rho_magabs[0..nrxx-1]. Rescale {mx,my,mz} on every real-space point.
+        // The loop bound is nrxx (not npw) and the source is rho_magabs[ir]
+        // (not rho_magabs[npw+ig]), otherwise the tail [npw,nrxx) is left
+        // unscaled and rho_magabs[npw+ig] reads out of bounds when npw>0.
+        for (int ir = 0; ir < nrxx; ir++)
+        {
+            double norm = std::sqrt(chr->rho[1][ir] * chr->rho[1][ir]
+                    + chr->rho[2][ir] * chr->rho[2][ir]
+                    + chr->rho[3][ir] * chr->rho[3][ir]);
             if (std::abs(norm) < 1e-10)
             {
                 continue;
             }
-            double rescale_tmp = rho_magabs[npw + ig] / norm;
-            chr->rho[1][ig] *= rescale_tmp;
-            chr->rho[2][ig] *= rescale_tmp;
-            chr->rho[3][ig] *= rescale_tmp;
+            double rescale_tmp = rho_magabs[ir] / norm;
+            chr->rho[1][ir] *= rescale_tmp;
+            chr->rho[2][ir] *= rescale_tmp;
+            chr->rho[3][ir] *= rescale_tmp;
         }
     }
 
