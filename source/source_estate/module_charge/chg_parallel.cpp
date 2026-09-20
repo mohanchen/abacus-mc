@@ -18,7 +18,10 @@ void reduce_diff_pools(double* array_rho, const Charge& chr, const int kpar,
 {
     ModuleBase::TITLE("Charge", "reduce_diff_pools");
     ModuleBase::timer::start("Charge", "reduce_diff_pools");
-    assert(array_rho != nullptr);
+    // A rank may own zero real-space grid points (nrxx == 0); in that case
+    // the buffer is legitimately null and the MPI calls below use count 0.
+    // Only a null buffer with a non-zero nrxx is a genuine bug.
+    assert(array_rho != nullptr || chr.nrxx == 0);
     assert(kpar >= 1);
     assert(bndpar >= 1);
     if (kpar > 1)
@@ -28,7 +31,8 @@ void reduce_diff_pools(double* array_rho, const Charge& chr, const int kpar,
     }
     if (all_ks_run && bndpar > 1)
     {
-        assert(chr.nrxx > 0);
+        // nrxx may be 0 on ranks with empty grid partitions; MPI_Allreduce
+        // with count 0 is valid and ignores the buffer.
         MPI_Allreduce(MPI_IN_PLACE, array_rho, chr.nrxx, MPI_DOUBLE, MPI_SUM, BP_WORLD);
     }
     ModuleBase::timer::end("Charge", "reduce_diff_pools");
