@@ -7,7 +7,6 @@
 #include "source_base/module_device/memory_op.h"              // memory operations
 #include "source_base/module_external/lapack_connector.h"
 #include "source_base/module_external/scalapack_connector.h"
-#include "source_io/module_parameter/parameter.h" // use PARAM.globalv
 #include "source_lcao/module_rt/gather_mat.h"     // gatherMatrix and distributeMatrix
 #include "source_lcao/module_rt/propagator.h"     // Include header for create_identity_matrix
 
@@ -62,7 +61,7 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
     ModuleBase::TITLE("elecstate", "cal_edm_tddft");
     ModuleBase::timer::start("TD_Efficiency", "cal_edm_tddft");
 
-    const int nlocal = PARAM.globalv.nlocal;
+    const int nlocal = pv.nrow;
     assert(nlocal >= 0);
 
     dmat.dm->EDMK.resize(kv.get_nks());
@@ -315,7 +314,7 @@ void cal_edm_tddft_tensor(Parallel_Orbitals& pv,
     ModuleBase::TITLE("elecstate", "cal_edm_tddft_tensor");
     ModuleBase::timer::start("TD_Efficiency", "cal_edm_tddft");
 
-    const int nlocal = PARAM.globalv.nlocal;
+    const int nlocal = pv.nrow;
     assert(nlocal >= 0);
     dmat.dm->EDMK.resize(kv.get_nks());
 
@@ -546,7 +545,7 @@ void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
     ModuleBase::TITLE("elecstate", "cal_edm_tddft_tensor_lapack");
     ModuleBase::timer::start("TD_Efficiency", "cal_edm_tddft");
 
-    const int nlocal = PARAM.globalv.nlocal;
+    const int nlocal = pv.nrow;
     assert(nlocal >= 0);
     dmat.dm->EDMK.resize(kv.get_nks());
 
