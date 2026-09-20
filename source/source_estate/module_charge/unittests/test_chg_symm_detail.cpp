@@ -3,6 +3,7 @@
 #include "source_base/matrix3.h"
 #include "source_base/vector3.h"
 #include "source_basis/module_pw/pw_basis.h"
+#include "source_cell/magnetism.h"
 #include "source_cell/module_symmetry/symmetry.h"
 #include "source_cell/module_symmetry/symm_rot_spin.h"
 #include "source_estate/module_charge/chg_symm_detail.h"
@@ -10,6 +11,17 @@
 #include <array>
 #include <complex>
 #include <vector>
+
+// unitcell.cpp (pulled in via the cell_info object library) references
+// Magnetism; provide a lightweight stub, mirroring test_chg_symm.cpp.
+Magnetism::Magnetism()
+{
+    this->tot_mag = 0.0;
+    this->abs_mag = 0.0;
+}
+Magnetism::~Magnetism()
+{
+}
 
 /************************************************
  *  unit test of module_charge/chg_symm_detail.cpp

@@ -110,10 +110,9 @@ TEST_F(ChgTauTest, NonDoubleGridPlainMixingValue)
 {
     const int nspin = 1;
     setup_charge(nspin);
-    Base_Mixing::Plain_Mixing mixing;
-    mixing.set_mixing_beta(0.5);
+    Base_Mixing::Plain_Mixing mixing(0.5);
     Base_Mixing::Mixing_Data mdata;
-    mixing.init_mixing(1, pw_basis.npw);
+    mixing.init_mixing_data(mdata, pw_basis.npw, sizeof(std::complex<double>));
 
     // uniform kinetic densities
     for (int ir = 0; ir < pw_basis.nrxx; ++ir)
