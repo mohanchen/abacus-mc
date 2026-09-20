@@ -22,13 +22,13 @@ template<typename T> struct ShiftRealComplex
 template<>
 struct ShiftRealComplex<double> 
 {
-	using type = std::complex<double>;
+    using type = std::complex<double>;
 };
 
 template<>
 struct ShiftRealComplex<std::complex<double>> 
 {
-	using type = double;
+    using type = double;
 };
 
 
@@ -73,13 +73,13 @@ namespace DensityMatrix_Tools
 template <typename TK, typename TR>
 class DensityMatrix
 {
-	using TRShift = typename ShiftRealComplex<TR>::type;
+    using TRShift = typename ShiftRealComplex<TR>::type;
 
-	public:
-	/**
-	 * @brief Destructor of class DensityMatrix
-	 */
-	~DensityMatrix();
+    public:
+    /**
+     * @brief Destructor of class DensityMatrix
+     */
+    ~DensityMatrix();
 
     /**
      * @brief Constructor of class DensityMatrix for multi-k calculation
@@ -90,10 +90,10 @@ class DensityMatrix
      * @param nk number of k-points, not always equal to K_Vectors::get_nks()/nspin_dm.
      *               it will be set to kvec_d.size() if the value is invalid
      */
-	DensityMatrix(const Parallel_Orbitals* _paraV, 
-			const int nspin, 
-			const std::vector<ModuleBase::Vector3<double>>& kvec_d, 
-			const int nk);
+    DensityMatrix(const Parallel_Orbitals* _paraV, 
+            const int nspin, 
+            const std::vector<ModuleBase::Vector3<double>>& kvec_d, 
+            const int nk);
 
     /**
      * @brief Constructor of class DensityMatrix for gamma-only calculation, where kvector is not required

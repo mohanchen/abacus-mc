@@ -12,10 +12,10 @@ namespace elecstate
 
 template <typename TK> 
 void init_dm(UnitCell& ucell,
-		ElecState* pelec,
+        ElecState* pelec,
         LCAO_domain::Setup_DM<TK> &dmat,
         psi::Psi<TK>* psi,
-		Charge &chr,
+        Charge &chr,
         const int iter,
         const int exx_two_level_step);
 
