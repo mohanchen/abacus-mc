@@ -63,9 +63,11 @@ void check_dmr_inputs(const std::vector<double*>& dmr_out,
     {
         ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "mixing pointer is null");
     }
-    if (nnr <= 0)
+    // nnr is local to each MPI rank and may legitimately be zero when no atom
+    // pairs survive the cutoff on that rank; only negative values are invalid.
+    if (nnr < 0)
     {
-        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "nnr must be > 0");
+        ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "nnr must be >= 0");
     }
     if (cfg.nspin != 1 && cfg.nspin != 2 && cfg.nspin != 4)
     {
@@ -77,9 +79,11 @@ void check_dmr_inputs(const std::vector<double*>& dmr_out,
     {
         ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "not enough DMR buffers for nspin");
     }
+    // Non-null buffers are required only when there are elements to mix; an
+    // empty partition (nnr == 0) may legitimately carry null pointers.
     for (int is = 0; is < nspin_need; ++is)
     {
-        if (dmr_out[is] == nullptr || dmr_in[is] == nullptr)
+        if (nnr > 0 && (dmr_out[is] == nullptr || dmr_in[is] == nullptr))
         {
             ModuleBase::WARNING_QUIT("module_charge::mix_dmr", "DMR buffer pointer is null");
         }
@@ -99,9 +103,11 @@ void init_mixing_dmr(Base_Mixing::Mixing* mixing,
     {
         ModuleBase::WARNING_QUIT("module_charge::init_mixing_dmr", "mixing pointer is null");
     }
-    if (nnr <= 0)
+    // nnr is local to each MPI rank and may legitimately be zero when no atom
+    // pairs survive the cutoff on that rank; only negative values are invalid.
+    if (nnr < 0)
     {
-        ModuleBase::WARNING_QUIT("module_charge::init_mixing_dmr", "nnr must be > 0");
+        ModuleBase::WARNING_QUIT("module_charge::init_mixing_dmr", "nnr must be >= 0");
     }
 
     const int dmr_nspin = (cfg.nspin == 2) ? 2 : 1;
