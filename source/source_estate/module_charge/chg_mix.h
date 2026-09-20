@@ -41,7 +41,6 @@ class Charge_Mixing
     /// The Kerker kernels read cfg_ (immutable INPUT snapshot), so the
     /// disable flag must live on Charge_Mixing itself rather than mutating cfg_.
     void close_kerker_gg0() { kerker_disabled_ = true; }
-    void conserve_setting() { mixing_beta = 0.01; mixing_beta_mag = 0.04; }
     /**
      * @brief initialize mixing, including constructing mixing and allocating memory for mixing data
      * @brief this function should be called at eachiterinit()
