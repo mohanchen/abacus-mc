@@ -133,7 +133,7 @@ void DensityMatrix_Tools::cal_DMR(
             }
 
             std::vector<TK> DMK_mat_trans(mat_size);
-            std::vector<TK> tmp_DMR( (PARAM.inp.nspin==4) ? mat_size*R_size : 0);
+            std::vector<Tk> tmp_DMR( (dm._nspin==4) ? mat_size*R_size : 0);
             for(int ik = 0; ik < dm._nk; ++ik)
             {
                 if(ik_in >= 0 && ik_in != ik) { continue; }
@@ -152,10 +152,10 @@ void DensityMatrix_Tools::cal_DMR(
                 {
                     // (kr+i*ki) * (Dr+i*Di) = (kr*Dr-ki*Di) + i*(kr*Di+ki*Dr)
                     const TK kphase = kphase_vec[ik][iR];
-                    if(PARAM.inp.nspin != 4)                // only save real kr*Dr-ki*Di
+                    if(dm._nspin != 4)                // only save real kr*Dr-ki*Di
                     {
                         func_exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
-                    } else if(PARAM.inp.nspin == 4)
+                    } else if(dm._nspin == 4)
                     {
                         BlasConnector::axpy(mat_size,
                                             kphase,
@@ -169,7 +169,7 @@ void DensityMatrix_Tools::cal_DMR(
 
             // if nspin == 4
             // copy tmp_DMR to fill target_DMR
-            if(PARAM.inp.nspin == 4)
+            if(dm._nspin == 4)
             {
                 // step_trace ={0, 1, local_col, local_col+1} for NSPIN=4
                 int step_trace[4]{};
@@ -281,7 +281,7 @@ void DensityMatrix_Tools::cal_DMR_td(
                     double sinp, cosp;
                     ModuleBase::libm::sincos(arg, &sinp, &cosp);
                     kphase_vec[ik][iR] = TK(cosp, sinp);
-                    if(PARAM.inp.td_stype==2)
+                    if(!phase_hybrid.empty())
                     {
                         //phase for hybrid gauge tddft
                         kphase_vec[ik][iR] *= phase_hybrid.at(R_index);
@@ -290,7 +290,7 @@ void DensityMatrix_Tools::cal_DMR_td(
             }
 
             std::vector<TK> DMK_mat_trans(mat_size);
-            std::vector<TK> tmp_DMR( (PARAM.inp.nspin==4) ? mat_size*R_size : 0);
+            std::vector<Tk> tmp_DMR( (dm._nspin==4) ? mat_size*R_size : 0);
             for(int ik = 0; ik < dm._nk; ++ik)
             {
                 if(ik_in >= 0 && ik_in != ik) { continue; }
@@ -308,10 +308,10 @@ void DensityMatrix_Tools::cal_DMR_td(
                 {
                     // (kr+i*ki) * (Dr+i*Di) = (kr*Dr-ki*Di) + i*(kr*Di+ki*Dr)
                     const TK kphase = kphase_vec[ik][iR];
-                    if(PARAM.inp.nspin != 4)                // only save real kr*Dr-ki*Di
+                    if(dm._nspin != 4)                // only save real kr*Dr-ki*Di
                     {
                         func_exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
-                    } else if(PARAM.inp.nspin == 4)
+                    } else if(dm._nspin == 4)
                     {
                         BlasConnector::axpy(mat_size,
                                             kphase,
@@ -325,7 +325,7 @@ void DensityMatrix_Tools::cal_DMR_td(
 
             // if nspin == 4
             // copy tmp_DMR to fill target_DMR
-            if(PARAM.inp.nspin == 4)
+            if(dm._nspin == 4)
             {
                 int step_trace[4]{};
                 constexpr int npol = 2;
