@@ -98,6 +98,14 @@ void Charge_Mixing::init_mixing()
     ModuleBase::TITLE("Charge_Mixing", "init_mixing");
     ModuleBase::timer::start("Charge_Mixing", "init_mixing");
 
+    /// Fail fast when set_rhopw was skipped: the grid sizes below would
+    /// otherwise dereference a null pointer.
+    if (this->rhopw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "set_rhopw must be called before init_mixing");
+    }
+
     // (re)construct mixing object
     if (this->cfg_.mixing_mode == "broyden")
     {
@@ -197,6 +205,20 @@ bool Charge_Mixing::if_scf_oscillate(const int iteration, const double drho,
                                      const int iternum_used, const double threshold)
 {
     ModuleBase::TITLE("Charge_Mixing", "if_scf_oscillate");
+
+    /// Fail fast when set_mixing was skipped: cfg_.scf_nmax is otherwise an
+    /// indeterminate value, which would resize the history to zero and then
+    /// write out of bounds (heap corruption instead of a clear error).
+    if (this->cfg_.scf_nmax <= 0)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "set_mixing must be called before if_scf_oscillate");
+    }
+    if (iteration < 1 || iteration > this->cfg_.scf_nmax)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "iteration must be within [1, scf_nmax]");
+    }
 
     if(this->_drho_history.size() == 0)
     {

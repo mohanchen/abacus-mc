@@ -307,6 +307,10 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
         drhor1[i] = 1.0;
         drhor2[i] = double(i);
     }
+    // Populate cfg_ before the first inner_product call: the function reads
+    // nspin from cfg_, which is default-constructed (and thus invalid) until
+    // set_mixing runs.
+    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     double inner = module_charge::inner_product_real(drhor1.data(), drhor2.data(), pw_basis, CMtest.cfg_);
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * (pw_basis.nrxx - 1), 1e-8);
 
@@ -415,6 +419,8 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
         drhor1[i] = 1.0;
         drhor2[i] = double(i);
     }
+    // Populate cfg_ before the first inner_product call (see the hartree test).
+    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     double inner = module_charge::inner_product_real(drhor1.data(), drhor2.data(), pw_basis, CMtest.cfg_);
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * (pw_basis.nrxx - 1), 1e-8);
 
@@ -1055,6 +1061,11 @@ TEST_F(ChargeMixingTest, SCFOscillationTest)
 {
     Charge_Mixing CMtest;
     int scf_nmax = 20;
+    // if_scf_oscillate sizes _drho_history from cfg_.scf_nmax, so cfg_ must
+    // be populated before the loop; a default-constructed cfg_ leaves it 0.
+    PARAM.input.scf_nmax = scf_nmax;
+    CMtest.set_rhopw(&pw_basis, &pw_basis);
+    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
     int scf_os_ndim = 3;
     double scf_os_thr = -0.05;
     bool scf_oscillate = false;

@@ -380,6 +380,24 @@ void Charge_Mixing::mix_rho(Charge* chr)
     ModuleBase::TITLE("Charge_Mixing", "mix_rho");
     ModuleBase::timer::start("Charge_Mixing", "mix_rho");
 
+    /// Fail fast on invalid arguments and a skipped set_rhopw: the body
+    /// dereferences these pointers unconditionally below.
+    if (chr == nullptr || chr->rhopw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "chr or chr->rhopw is null in mix_rho");
+    }
+    if (this->rhopw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "set_rhopw must be called before mix_rho");
+    }
+    if (cfg_.double_grid && this->rhodpw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "rhodpw is null when double_grid is enabled");
+    }
+
     const int nspin = cfg_.nspin;
     assert(nspin==1 || nspin==2 || nspin==4);
 
