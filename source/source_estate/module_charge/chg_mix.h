@@ -80,9 +80,9 @@ class Charge_Mixing
 
     // extracting parameters normally these parameters will not be used outside charge mixing
     // while Exx is using them as well as some other places
-    const std::string& get_mixing_mode() const {return mixing_mode;}
-    double get_mixing_beta() const {return mixing_beta;}
-    int get_mixing_ndim() const {return mixing_ndim;}
+    const std::string& get_mixing_mode() const {return cfg_.mixing_mode;}
+    double get_mixing_beta() const {return cfg_.mixing_beta;}
+    int get_mixing_ndim() const {return cfg_.mixing_ndim;}
     Base_Mixing::Mixing* get_mixing() const {return mixing.get();}
 
     /**
