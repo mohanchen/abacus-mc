@@ -111,28 +111,33 @@ class ChargeMixingTest : public ::testing::Test
 
     // Build a MixingConfig from the PARAM.input values set in the ctor, so
     // set_mixing is driven by explicit config instead of a 12-arg call.
+    // Aggregate-initialize so that adding a field to MixingConfig without
+    // updating this list is a compile error (-Wmissing-field-initializers
+    // promoted to error via pragma). Fields are in declaration order.
     MixingConfig make_cfg()
     {
-        MixingConfig cfg;
-        cfg.mixing_mode = PARAM.input.mixing_mode;
-        cfg.mixing_beta = PARAM.input.mixing_beta;
-        cfg.mixing_ndim = PARAM.input.mixing_ndim;
-        cfg.mixing_gg0 = PARAM.input.mixing_gg0;
-        // Mirror the esolver-side resolution: tau mixing requires a
-        // kinetic-energy-density functional.
-        cfg.mixing_tau = PARAM.input.mixing_tau && XC_Functional::get_ked_flag();
-        cfg.mixing_beta_mag = PARAM.input.mixing_beta_mag;
-        cfg.mixing_gg0_mag = PARAM.input.mixing_gg0_mag;
-        cfg.mixing_gg0_min = PARAM.input.mixing_gg0_min;
-        cfg.mixing_angle = PARAM.input.mixing_angle;
-        cfg.mixing_dmr = PARAM.input.mixing_dmr;
-        cfg.nspin = PARAM.input.nspin;
-        cfg.scf_thr_type = PARAM.input.scf_thr_type;
-        cfg.double_grid = PARAM.globalv.double_grid;
-        cfg.gamma_only_pw = PARAM.globalv.gamma_only_pw;
-        cfg.domag = PARAM.globalv.domag;
-        cfg.domag_z = PARAM.globalv.domag_z;
-        cfg.scf_nmax = PARAM.input.scf_nmax;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wmissing-field-initializers"
+        MixingConfig cfg{
+            PARAM.input.mixing_mode,                                 // mixing_mode
+            PARAM.input.mixing_beta,                                 // mixing_beta
+            PARAM.input.mixing_ndim,                                 // mixing_ndim
+            PARAM.input.mixing_gg0,                                  // mixing_gg0
+            PARAM.input.mixing_tau && XC_Functional::get_ked_flag(), // mixing_tau
+            PARAM.input.mixing_beta_mag,                             // mixing_beta_mag
+            PARAM.input.mixing_gg0_mag,                              // mixing_gg0_mag
+            PARAM.input.mixing_gg0_min,                              // mixing_gg0_min
+            PARAM.input.mixing_angle,                                // mixing_angle
+            PARAM.input.mixing_dmr,                                  // mixing_dmr
+            PARAM.input.nspin,                                       // nspin
+            PARAM.input.scf_thr_type,                               // scf_thr_type
+            PARAM.globalv.double_grid,                              // double_grid
+            PARAM.globalv.gamma_only_pw,                            // gamma_only_pw
+            PARAM.globalv.domag,                                    // domag
+            PARAM.globalv.domag_z,                                  // domag_z
+            PARAM.input.scf_nmax                                    // scf_nmax
+        };
+#pragma GCC diagnostic pop
         return cfg;
     }
 
