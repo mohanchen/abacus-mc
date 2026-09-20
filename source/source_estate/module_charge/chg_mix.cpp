@@ -25,12 +25,17 @@ Charge_Mixing::~Charge_Mixing()
 }
 
 void Charge_Mixing::set_mixing(const MixingConfig& cfg,
+                               ModulePW::PW_Basis* rhopw_in,
+                               ModulePW::PW_Basis* rhodpw_in,
                                double& omega_in,
                                double& tpiba_in)
 {
     // store the aggregated config; init_mixing/mix_rho read nspin,
     // scf_thr_type and double_grid from it instead of PARAM/GlobalV.
     this->cfg_ = cfg;
+    // store the smooth and dense grids
+    this->rhopw = rhopw_in;
+    this->rhodpw = rhodpw_in;
     // get private mixing parameters
     this->mixing_mode = cfg.mixing_mode;
     this->mixing_beta = cfg.mixing_beta;
@@ -178,12 +183,6 @@ void Charge_Mixing::init_mixing()
     ModuleBase::timer::end("Charge_Mixing", "init_mixing");
 
     return;
-}
-
-void Charge_Mixing::set_rhopw(ModulePW::PW_Basis* rhopw_in, ModulePW::PW_Basis* rhodpw_in)
-{
-    this->rhopw = rhopw_in;
-    this->rhodpw = rhodpw_in;
 }
 
 void Charge_Mixing::mix_reset()

@@ -67,7 +67,6 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
 
     //! 3) setup charge mixing
     p_chgmix = new Charge_Mixing();
-    p_chgmix->set_rhopw(this->pw_rho, this->pw_rhod);
     MixingConfig mix_cfg;
     mix_cfg.mixing_mode = inp.mixing_mode;
     mix_cfg.mixing_beta = inp.mixing_beta;
@@ -87,7 +86,7 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     mix_cfg.domag = PARAM.globalv.domag;
     mix_cfg.domag_z = PARAM.globalv.domag_z;
     mix_cfg.scf_nmax = inp.scf_nmax;
-    p_chgmix->set_mixing(mix_cfg, ucell.omega, ucell.tpiba);
+    p_chgmix->set_mixing(mix_cfg, this->pw_rho, this->pw_rhod, ucell.omega, ucell.tpiba);
     p_chgmix->init_mixing();
 
     //! 4) setup plane wave for electronic wave functions
