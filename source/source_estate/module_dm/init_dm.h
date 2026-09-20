@@ -10,14 +10,23 @@
 namespace elecstate
 {
 
-template <typename TK> 
+struct Init_DM_Config
+{
+    std::string esolver_type;
+    int td_stype;
+    int nspin;
+    double nelec;
+};
+
+template <typename TK>
 void init_dm(UnitCell& ucell,
         ElecState* pelec,
         LCAO_domain::Setup_DM<TK> &dmat,
         psi::Psi<TK>* psi,
         Charge &chr,
         const int iter,
-        const int exx_two_level_step);
+        const int exx_two_level_step,
+        const Init_DM_Config& cfg);
 
 }
 

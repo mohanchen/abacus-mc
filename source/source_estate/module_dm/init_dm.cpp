@@ -12,7 +12,8 @@ void elecstate::init_dm(UnitCell& ucell,
         psi::Psi<TK>* psi,
         Charge &chr,
         const int iter,
-        const int exx_two_level_step)
+        const int exx_two_level_step,
+        const Init_DM_Config& cfg)
 {
     ModuleBase::TITLE("elecstate", "init_dm");
 
@@ -23,7 +24,7 @@ void elecstate::init_dm(UnitCell& ucell,
         elecstate::calEBand(pelec->ekb, pelec->wg, pelec->f_en);
 
         elecstate::cal_dm_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
-        if (PARAM.inp.esolver_type!="tddft" && PARAM.inp.td_stype == 2)
+        if (cfg.esolver_type != "tddft" && cfg.td_stype == 2)
         {
             dmat.dm->cal_DMR_td(TD_info::td_vel_op->get_phase_hybrid(), TD_info::cart_At, -1);
         }
@@ -33,9 +34,9 @@ void elecstate::init_dm(UnitCell& ucell,
         }
 
         // mohan add 2025-11-12, use density matrix to calculate the charge density
-        LCAO_domain::dm2rho(dmat.dm->get_DMR_vector(), PARAM.inp.nspin, &chr, PARAM.inp.nelec, ucell.omega, false);
+        LCAO_domain::dm2rho(dmat.dm->get_DMR_vector(), cfg.nspin, &chr, cfg.nelec, ucell.omega, false);
 
-        unitcell::cal_ux(ucell, PARAM.inp.nspin);
+        unitcell::cal_ux(ucell, cfg.nspin);
 
         //! update the potentials by using new electron charge density
         pelec->pot->update_from_charge(&chr, &ucell);
@@ -54,7 +55,8 @@ template void elecstate::init_dm<double>(UnitCell& ucell,
         psi::Psi<double>* psi,
         Charge &chr,
         const int iter,
-        const int exx_two_level_step);
+        const int exx_two_level_step,
+        const Init_DM_Config& cfg);
 
 template void elecstate::init_dm<std::complex<double>>(UnitCell& ucell,
         elecstate::ElecState* pelec,
@@ -62,5 +64,6 @@ template void elecstate::init_dm<std::complex<double>>(UnitCell& ucell,
         psi::Psi<std::complex<double>>* psi,
         Charge &chr,
         const int iter,
-        const int exx_two_level_step);
+        const int exx_two_level_step,
+        const Init_DM_Config& cfg);
 
