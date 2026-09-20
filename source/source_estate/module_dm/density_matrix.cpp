@@ -20,7 +20,7 @@ namespace elecstate
 template <typename TK, typename TR>
 DensityMatrix<TK, TR>::~DensityMatrix()
 {
-    for (auto& it: this->_DMR)
+    for (hamilt::HContainer<TR>*& it: this->_DMR)
     {
         delete it;
     }

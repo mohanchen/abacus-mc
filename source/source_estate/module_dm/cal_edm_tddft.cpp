@@ -650,7 +650,7 @@ void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
                                                                          ipiv_dev.template data<int>());
 
             // 2. Solve S * Sinv = I
-            auto Sinv_dev = module_rt::create_identity_matrix<std::complex<double>>(nlocal, ct_device_type);
+            ct::Tensor Sinv_dev = module_rt::create_identity_matrix<std::complex<double>>(nlocal, ct_device_type);
 
             ct::kernels::lapack_getrs<std::complex<double>, ct_Device>()('N',
                                                                          nlocal,

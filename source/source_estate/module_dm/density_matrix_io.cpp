@@ -19,12 +19,11 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
     // ensure _DMR is empty
-    for (auto& it: this->_DMR)
+    for (hamilt::HContainer<TR>*& it: this->_DMR)
     {
         delete it;
     }
     this->_DMR.clear();
-    // a newly allocated DMR is not a wavefunction-derived density matrix until cal_DMR()
     this->_dmr_ready = false;
     // construct a new DMR
     hamilt::HContainer<TR>* tmp_DMR;
@@ -32,7 +31,7 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
     // set up a HContainer
     for (int iat1 = 0; iat1 < ucell->nat; iat1++)
     {
-        auto tau1 = ucell->get_tau(iat1);
+        ModuleBase::Vector3<double> tau1 = ucell->get_tau(iat1);
         int T1, I1;
         ucell->iat2iait(iat1, &I1, &T1);
         AdjacentAtomInfo adjs;
@@ -76,7 +75,7 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
     // ensure _DMR is empty
-    for (auto& it: this->_DMR)
+    for (hamilt::HContainer<TR>*& it: this->_DMR)
     {
         delete it;
     }
@@ -88,7 +87,7 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
     // set up a HContainer
     for (int iat1 = 0; iat1 < ucell->nat; iat1++)
     {
-        auto tau1 = ucell->get_tau(iat1);
+        ModuleBase::Vector3<double> tau1 = ucell->get_tau(iat1);
         int T1, I1;
         ucell->iat2iait(iat1, &I1, &T1);
         for (int ad = 0; ad < ra.na_each[iat1]; ++ad)
@@ -131,7 +130,7 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TR>& DMR_in)
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
     // ensure _DMR is empty
-    for (auto& it: this->_DMR)
+    for (hamilt::HContainer<TR>*& it: this->_DMR)
     {
         delete it;
     }
@@ -154,7 +153,7 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TRShift>& DMR_in)
 {
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
     // ensure _DMR is empty
-    for (auto& it: this->_DMR)
+    for (hamilt::HContainer<TR>*& it: this->_DMR)
     {
         delete it;
     }
