@@ -35,26 +35,22 @@ void Charge_Mixing::set_mixing(const MixingConfig& cfg,
     // snapshot; runtime overrides (e.g. close_kerker_gg0) live as flags on
     // Charge_Mixing itself, never by mutating cfg_.
     this->cfg_ = cfg;
-    // mirror only the parameters that init_mixing needs to construct the
-    // Mixing/Plain_Mixing objects; the Kerker kernels and the mix_rho_*
-    // branches read everything else directly from cfg_.
-    this->mixing_mode = cfg.mixing_mode;
-    this->mixing_beta = cfg.mixing_beta;
-    this->mixing_beta_mag = cfg.mixing_beta_mag;
-    this->mixing_ndim = cfg.mixing_ndim;
+    // omega and tpiba are pointers to external runtime state (cell volume
+    // and lattice constant) that changes across SCF iterations; they are
+    // not INPUT parameters and therefore stay out of MixingConfig.
     this->omega = &omega_in;
     this->tpiba = &tpiba_in;
     // check the paramters
-    if (this->mixing_beta > 1.0 || this->mixing_beta < 0.0)
+    if (this->cfg_.mixing_beta > 1.0 || this->cfg_.mixing_beta < 0.0)
     {
         ModuleBase::WARNING_QUIT("Charge_Mixing", "You'd better set mixing_beta to [0.0, 1.0]!");
     }
-    if (cfg.nspin >= 2 && this->mixing_beta_mag < 0.0)
+    if (this->cfg_.nspin >= 2 && this->cfg_.mixing_beta_mag < 0.0)
     {
         ModuleBase::WARNING_QUIT("Charge_Mixing", "You'd better set mixing_beta_mag >= 0.0!");
     }
 
-    if (!(this->mixing_mode == "plain" || this->mixing_mode == "broyden" || this->mixing_mode == "pulay"))
+    if (!(this->cfg_.mixing_mode == "plain" || this->cfg_.mixing_mode == "broyden" || this->cfg_.mixing_mode == "pulay"))
     {
         ModuleBase::WARNING_QUIT("Charge_Mixing", "This Mixing mode is not implemended yet,coming soon.");
     }
@@ -75,14 +71,14 @@ void Charge_Mixing::set_mixing(const MixingConfig& cfg,
     GlobalV::ofs_running << "\n";
 
 
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_type", this->mixing_mode);
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_beta", this->mixing_beta);
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_type", this->cfg_.mixing_mode);
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_beta", this->cfg_.mixing_beta);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0", cfg_.mixing_gg0);
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0_min", cfg_.mixing_gg0_min);
 
-    if (cfg.nspin==2 || cfg.nspin==4)
+    if (this->cfg_.nspin==2 || this->cfg_.nspin==4)
     {
-        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_beta_mag", this->mixing_beta_mag);
+        ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_beta_mag", this->cfg_.mixing_beta_mag);
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_gg0_mag", cfg_.mixing_gg0_mag);
     }
     if (cfg_.mixing_angle > 0)
@@ -90,7 +86,7 @@ void Charge_Mixing::set_mixing(const MixingConfig& cfg,
         ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_angle", cfg_.mixing_angle);
     }
 
-    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_ndim", this->mixing_ndim);
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "mixing_ndim", this->cfg_.mixing_ndim);
 
     return;
 }
