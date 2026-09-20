@@ -135,7 +135,7 @@ TEST_F(DMTest, cal_DMR_full)
     hamilt::HContainer<std::complex<double>> dmR_full(ucell, paraV);
     // calculate this->_DMR
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-    DM.cal_DMR_full(&dmR_full);
+    DM.cal_DMR_full(&dmR_full, -1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time
         = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
@@ -205,7 +205,7 @@ TEST_F(DMTest, cal_DMR_blas_double)
     }
     // calculate this->_DMR
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-    DM.cal_DMR();
+    DM.cal_DMR(-1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time
         = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
@@ -271,7 +271,7 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     DM.init_DMR(&gd, &ucell);
     // calculate this->_DMR
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-    DM.cal_DMR();
+    DM.cal_DMR(-1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time
         = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);

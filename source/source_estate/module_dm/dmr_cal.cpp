@@ -77,7 +77,7 @@ void DensityMatrix_Tools::cal_DMR(
             }
 
             std::vector<TK> DMK_mat_trans(mat_size);
-            std::vector<Tk> tmp_DMR( (dm._nspin==4) ? mat_size*R_size : 0);
+            std::vector<TK> tmp_DMR( (dm._nspin==4) ? mat_size*R_size : 0);
             for(int ik = 0; ik < dm._nk; ++ik)
             {
                 if(ik_in >= 0 && ik_in != ik) { continue; }
@@ -234,7 +234,7 @@ void DensityMatrix_Tools::cal_DMR_td(
             }
 
             std::vector<TK> DMK_mat_trans(mat_size);
-            std::vector<Tk> tmp_DMR( (dm._nspin==4) ? mat_size*R_size : 0);
+            std::vector<TK> tmp_DMR( (dm._nspin==4) ? mat_size*R_size : 0);
             for(int ik = 0; ik < dm._nk; ++ik)
             {
                 if(ik_in >= 0 && ik_in != ik) { continue; }

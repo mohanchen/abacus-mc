@@ -12,46 +12,6 @@
 
 namespace elecstate
 {
-void print_local_matrix(std::ostream& os,
-                        const std::complex<double>* matrix_data,
-                        int local_rows,
-                        int local_cols,
-                        const std::string& matrix_name,
-                        int rank)
-{
-    if (!matrix_name.empty() || rank >= 0)
-    {
-        os << "=== ";
-        if (!matrix_name.empty())
-        {
-            os << "Matrix: " << matrix_name;
-            if (rank >= 0)
-                os << " ";
-        }
-        if (rank >= 0)
-        {
-            os << "(Process: " << rank + 1 << ")";
-        }
-        os << " (Local dims: " << local_rows << " x " << local_cols << ") ===" << std::endl;
-    }
-
-    os << std::fixed << std::setprecision(10) << std::showpos;
-
-    for (int i = 0; i < local_rows; ++i) // Iterate over rows (i)
-    {
-        for (int j = 0; j < local_cols; ++j) // Iterate over columns (j)
-        {
-            // For column-major storage, element (i, j) is at index i + j * LDA
-            // where LDA (leading dimension) is typically the number of *rows* in the local block.
-            int idx = i + j * local_rows;
-            os << "(" << std::real(matrix_data[idx]) << "," << std::imag(matrix_data[idx]) << ") ";
-        }
-        os << std::endl; // New line after each row
-    }
-    os.unsetf(std::ios_base::fixed | std::ios_base::showpos);
-    os << std::endl;
-}
-
 // use the original formula (Hamiltonian matrix) to calculate energy density matrix
 void cal_edm_tddft(Parallel_Orbitals& pv,
                    LCAO_domain::Setup_DM<std::complex<double>>& dmat,
