@@ -44,6 +44,18 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_CHARGE_uspp
+  LIBS base device
+  SOURCES test_chg_uspp.cpp ../chg_uspp.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_dmr
+  LIBS base device
+  SOURCES test_chg_dmr.cpp ../chg_dmr.cpp
+)
+
+AddTest(
   TARGET MODULE_CHARGE_mix
   LIBS parameter base  psi  device planewave_serial cell_info
   SOURCES test_chg_mix.cpp
