@@ -99,6 +99,30 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_CHARGE_symm
+  LIBS parameter base device cell_info planewave_serial symmetry
+  SOURCES test_chg_symm.cpp ../chg_symm.cpp ../chg_symm_detail.cpp ../charge.cpp ../chg_tools.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_symm_detail
+  LIBS base device cell_info planewave_serial symmetry
+  SOURCES test_chg_symm_detail.cpp ../chg_symm_detail.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_atomic_inner
+  LIBS parameter base device cell_info planewave_serial
+  SOURCES test_chg_atomic_inner.cpp ../chg_atomic_inner.cpp ../charge.cpp ../chg_tools.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_atomic
+  LIBS parameter base device cell_info planewave_serial
+  SOURCES test_chg_atomic.cpp ../chg_atomic.cpp ../chg_atomic_inner.cpp ../charge.cpp ../chg_tools.cpp
+)
+
+AddTest(
   TARGET MODULE_CHARGE_parallel
   LIBS parameter psi base device planewave
   SOURCES test_chg_parallel.cpp ../chg_parallel.cpp
