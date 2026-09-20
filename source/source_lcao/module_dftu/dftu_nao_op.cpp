@@ -165,7 +165,7 @@ void hamilt::DFTU_onsite<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
         dmr_sym.reset(new elecstate::DensityMatrix<TK, double>(pv, nspin0, kvec_d_full, static_cast<int>(kvec_d_full.size())));
         dmr_sym->init_DMR(*this->dm_->get_DMR_pointer(1));
         dmr_sym->get_DMK_vector() = dmk_full;
-        dmr_sym->cal_DMR();
+        dmr_sym->cal_DMR(-1);
     }
 
     // loop over all Hubbard-projector center atoms (iat0)

@@ -484,7 +484,7 @@ void ExcitonPlotter<T>::plot_average_density(const int istate, const std::string
         dm.set_DMK_pointer(ik, dmk[ik].template data<T>());
     }
     LR_Util::initialize_DMR(dm, this->pmat, this->ucell, this->gd_, this->orb_cutoff_);
-    dm.cal_DMR();
+    dm.cal_DMR(-1);
 
     double** rho_result = nullptr;
     LR_Util::_allocate_2order_nested_ptr(rho_result, this->nspin_x, this->rho_basis.nrxx);

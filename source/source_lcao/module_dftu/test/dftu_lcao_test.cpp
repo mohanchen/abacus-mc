@@ -153,7 +153,7 @@ TEST_F(DFTUTest, constructHRd2d)
             dm.set_DMK(1, 0, i, j, factor);
         }
     }
-    dm.cal_DMR();
+    dm.cal_DMR(-1);
     // reset HR
     for (int i = 0; i < HR->get_nnr(); i++)
     {
@@ -233,7 +233,7 @@ TEST_F(DFTUTest, constructHRd2cd)
             }
         }
     }
-    dm.cal_DMR();
+    dm.cal_DMR(-1);
     // reset HR
     for (int i = 0; i < HR->get_nnr(); i++)
     {

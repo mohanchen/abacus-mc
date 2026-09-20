@@ -44,7 +44,7 @@ elecstate::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
         elecstate::cal_dm_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
     }
     edm.init_DMR(ra, &ucell);
-    edm.cal_DMR();
+    edm.cal_DMR(-1);
     return edm;
 }
 
@@ -102,6 +102,6 @@ elecstate::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
 
     // cal_dm_2d
     edm.init_DMR(ra, &ucell);
-    edm.cal_DMR();
+    edm.cal_DMR(-1);
     return edm;
 }

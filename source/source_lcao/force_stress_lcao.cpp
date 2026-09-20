@@ -331,7 +331,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         std::vector<int> ijrs = dmat.dm->get_DMR_pointer(1)->get_ijr_info();
         tmp_dmr.insert_ijrs(&ijrs);
         tmp_dmr.allocate();
-        dmat.dm->cal_DMR_full(&tmp_dmr);
+        dmat.dm->cal_DMR_full(&tmp_dmr, -1);
         // Nonlocal force/stress from the temporary complex DMR
         hamilt::Nonlocal<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_nonlocal(
             nullptr, kv.kvec_d, nullptr, &ucell, orb.cutoffs(), &gd,

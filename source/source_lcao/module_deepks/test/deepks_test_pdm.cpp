@@ -69,7 +69,7 @@ void test_deepks<T>::set_p_elec_DM()
     {
         p_elec_DM->set_DMK_pointer(ik, dm_new[ik].data());
     }
-    p_elec_DM->cal_DMR();
+    p_elec_DM->cal_DMR(-1);
 }
 
 template <typename T>

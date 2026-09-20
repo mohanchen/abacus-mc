@@ -100,7 +100,7 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
         elecstate::DensityMatrix<TK, double> DM_gamma_only(ParaV, nspin);
         elecstate::cal_dm_psi(ParaV, wg, wfc, DM_gamma_only);
         DM_gamma_only.init_DMR(this->gd, &ucell);
-        DM_gamma_only.cal_DMR();
+        DM_gamma_only.cal_DMR(-1);
 
         for (int is = 0; is < nspin; is++)
         {
@@ -121,7 +121,7 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
         elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, kv->kvec_d, nk_total);
         elecstate::cal_dm_psi(ParaV, wg, wfc, DM);
         DM.init_DMR(this->gd, &ucell);
-        DM.cal_DMR();
+        DM.cal_DMR(-1);
 
         for (int is = 0; is < nspin; is++)
         {

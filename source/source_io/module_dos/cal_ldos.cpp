@@ -57,7 +57,7 @@ void Cal_ldos<T>::cal_ldos_lcao(
 
         elecstate::cal_dm_psi(dmat.dm->get_paraV_pointer(), weight, psi, dm_ldos);
         dm_ldos.init_DMR(&grid_driver, &ucell);
-        dm_ldos.cal_DMR();
+        dm_ldos.cal_DMR(-1);
 
         // allocate ldos space
         std::vector<double> ldos_space(PARAM.inp.nspin * chr.nrxx);

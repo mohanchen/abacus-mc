@@ -70,7 +70,7 @@ void Get_pchg_lcao::begin_gamma(const UnitCell& ucell,
         }
 
         DM.init_DMR(&grid_driver, &ucell);
-        DM.cal_DMR();
+        DM.cal_DMR(-1);
         ModuleGint::cal_gint_rho(DM.get_DMR_vector(), nspin_, rho_pointers.data());
 
         for (int is = 0; is < nspin_; ++is)
@@ -185,7 +185,7 @@ void Get_pchg_lcao::begin_k(const ModulePW::PW_Basis& rho_pw,
 
             DM.init_DMR(&grid_driver, &ucell);
             // The no-argument transform sums all local k-point contributions into one density.
-            DM.cal_DMR();
+            DM.cal_DMR(-1);
             ModuleGint::cal_gint_rho(DM.get_DMR_vector(), nspin_, rho_pointers.data());
 
             // Symmetrize only the merged density, using coupled spin rotations for nspin=4.

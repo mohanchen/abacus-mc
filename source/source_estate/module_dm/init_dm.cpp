@@ -25,11 +25,11 @@ void elecstate::init_dm(UnitCell& ucell,
         elecstate::cal_dm_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
         if (PARAM.inp.esolver_type!="tddft" && PARAM.inp.td_stype == 2)
         {
-            dmat.dm->cal_DMR_td(TD_info::td_vel_op->get_phase_hybrid(), TD_info::cart_At);
+            dmat.dm->cal_DMR_td(TD_info::td_vel_op->get_phase_hybrid(), TD_info::cart_At, -1);
         }
         else
         {
-            dmat.dm->cal_DMR();
+            dmat.dm->cal_DMR(-1);
         }
 
         // mohan add 2025-11-12, use density matrix to calculate the charge density

@@ -24,7 +24,7 @@ namespace LR
         const int& sl = ispin_ks[0];
         const auto psil_ks = LR_Util::get_psi_spin(psi_ks, sl, nk);
 
-        this->DM_trans->cal_DMR();  //DM_trans->get_DMR_vector() is 2d-block parallized
+        this->DM_trans->cal_DMR(-1);  //DM_trans->get_DMR_vector() is 2d-block parallized
         // LR_Util::print_DMR(*DM_trans, ucell.nat, "DMR");
 
         // ========================= begin grid calculation=========================

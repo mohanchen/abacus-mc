@@ -63,11 +63,11 @@ void ModuleIO::write_current(const UnitCell& ucell,
 
     if(PARAM.inp.td_stype!=2)
     {
-        tmp_dm.cal_DMR();
+        tmp_dm.cal_DMR(-1);
     }
     else
     {
-        tmp_dm.cal_DMR_td(td_p->get_phase_hybrid(),TD_info::cart_At);
+        tmp_dm.cal_DMR_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);
     }
     //DM_real.sum_DMR_spin();
     //DM_imag.sum_DMR_spin();

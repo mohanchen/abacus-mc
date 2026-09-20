@@ -224,7 +224,7 @@ void ESolver_KS_LCAO<TK, TR>::before_scf(UnitCell& ucell, const int istep)
         // 13.1.2) two cases are considered:
         // 1. DMK in DensityMatrix is not empty (istep > 0), then DMR is initialized by DMK
         // 2. DMK in DensityMatrix is empty (istep == 0), then DMR is initialized by zeros
-        this->dmat.dm->cal_DMR();
+        this->dmat.dm->cal_DMR(-1);
     }
     // 13.2) init_scf, should be before_scf? mohan add 2025-03-10
     elecstate::init_scf(ucell, this->Pgrid, this->sf.strucFac, this->locpp.numeric,

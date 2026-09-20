@@ -230,7 +230,7 @@ class DensityMatrix
      * if ik_in < 0, calculate all k-points
      * if ik_in >= 0, calculate only one k-point without summing over k-points
      */
-    void cal_DMR(const int ik_in = -1);
+    void cal_DMR(const int ik_in);
 
     /**
      * @brief calculate density matrix DMR with additional vector potential phase, used for hybrid gauge tddft
@@ -240,7 +240,7 @@ class DensityMatrix
      */
     void cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
                     const ModuleBase::Vector3<double> At,
-                    const int ik_in = -1);
+                    const int ik_in);
 
     /**
      * @brief calculate complex density matrix DMR with both real and imaginary part for noncollinear-spin calculation
@@ -250,7 +250,7 @@ class DensityMatrix
      * if ik_in < 0, calculate all k-points
      * if ik_in >= 0, calculate only one k-point
      */
-    void cal_DMR_full(hamilt::HContainer<std::complex<double>>* dmR_out, const int ik_in = -1) const;
+    void cal_DMR_full(hamilt::HContainer<std::complex<double>>* dmR_out, const int ik_in) const;
 
     /**
      * @brief (Only nspin=2) switch DMR to total density matrix or magnetization density matrix

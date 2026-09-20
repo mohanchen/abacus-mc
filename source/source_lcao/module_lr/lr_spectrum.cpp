@@ -30,7 +30,7 @@ elecstate::DensityMatrix<T, T> LR::LR_Spectrum<T>::cal_transition_density_matrix
     if (need_R)
     {
         LR_Util::initialize_DMR(DM_trans, this->pmat, this->ucell, this->gd_, this->orb_cutoff_);
-        DM_trans.cal_DMR();
+        DM_trans.cal_DMR(-1);
     }
     return DM_trans;
 }
