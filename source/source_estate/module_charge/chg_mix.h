@@ -131,7 +131,6 @@ class Charge_Mixing
     int mixing_ndim = 8;                 ///< mixing ndim for broyden and pulay
     double* omega = nullptr;                  ///< omega for non-linear core correction
     double* tpiba = nullptr;                  ///< 2*pi/beta for non-linear core correction
-    double* tpiba2 = nullptr;                 ///< 2*pi/beta^2 for non-linear core correction
     std::vector<double> _drho_history; ///< history of drho used to determine the oscillation, size is scf_nmax
 
     ModulePW::PW_Basis* rhopw = nullptr;  ///< smooth grid
