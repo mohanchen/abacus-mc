@@ -22,7 +22,11 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
 
 #ifdef __MPI
 // for Gamma-Only case with MPI
-void psiMulPsiMpi(const psi::Psi<double>& psi1, const psi::Psi<double>& psi2, double* dm_out, const int* desc_psi, const int* desc_dm);
+void psiMulPsiMpi(const psi::Psi<double>& psi1,
+                  const psi::Psi<double>& psi2,
+                  double* dm_out,
+                  const int* desc_psi,
+                  const int* desc_dm);
 
 // for multi-k case with MPI
 void psiMulPsiMpi(const psi::Psi<std::complex<double>>& psi1,
@@ -36,7 +40,9 @@ void psiMulPsiMpi(const psi::Psi<std::complex<double>>& psi1,
 void psiMulPsi(const psi::Psi<double>& psi1, const psi::Psi<double>& psi2, double* dm_out);
 
 // for multi-k case without MPI
-void psiMulPsi(const psi::Psi<std::complex<double>>& psi1, const psi::Psi<std::complex<double>>& psi2, std::complex<double>* dm_out);
+void psiMulPsi(const psi::Psi<std::complex<double>>& psi1,
+               const psi::Psi<std::complex<double>>& psi2,
+               std::complex<double>* dm_out);
 #endif
 }; // namespace elecstate
 #endif

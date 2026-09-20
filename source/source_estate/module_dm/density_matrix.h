@@ -58,10 +58,15 @@ namespace DensityMatrix_Tools
         const int ik_in);
 
     template <typename TR>
-    extern void func_exp_mul_dmk(const std::complex<double> kphase, const std::vector<std::complex<double>> &DMK_mat_trans, TR* target_DMR_mat);
+    extern void func_exp_mul_dmk(const std::complex<double> kphase,
+                                const std::vector<std::complex<double>>& DMK_mat_trans,
+                                TR* target_DMR_mat);
 
     template <typename TR>
-    extern void func_xyz_to_updown(const std::complex<double> tmp[4], const int icol, const int step_trace[4], TR* target_DMR_mat);
+    extern void func_xyz_to_updown(const std::complex<double> tmp[4],
+                                  const int icol,
+                                  const int step_trace[4],
+                                  TR* target_DMR_mat);
 }
 
 
@@ -233,7 +238,9 @@ class DensityMatrix
      * if ik_in < 0, calculate all k-points
      * if ik_in >= 0, calculate only one k-point
      */
-    void cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid, const ModuleBase::Vector3<double> At, const int ik_in = -1);
+    void cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+                    const ModuleBase::Vector3<double> At,
+                    const int ik_in = -1);
 
     /**
      * @brief calculate complex density matrix DMR with both real and imaginary part for noncollinear-spin calculation
@@ -336,9 +343,20 @@ class DensityMatrix
     std::vector<TR> dmr_origin_;
     TR* dmr_tmp_ = nullptr;
 
-    friend void DensityMatrix_Tools::cal_DMR<TK,TR>(const DensityMatrix<TK, TR> &dm, std::vector<hamilt::HContainer<TR>*> &dmR_out, const int ik_in);
-    friend void DensityMatrix_Tools::cal_DMR_td<TK,TR>(const DensityMatrix<TK, TR> &dm, std::vector<hamilt::HContainer<TR>*> &dmR_out, const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid, const ModuleBase::Vector3<double> At, const int ik_in);
-    friend void DensityMatrix_Tools::cal_DMR_full<TK,TR>(const DensityMatrix<TK, TR> &dm, hamilt::HContainer<std::complex<double>>* dmR_out, const int ik_in);
+    friend void DensityMatrix_Tools::cal_DMR<TK, TR>(
+        const DensityMatrix<TK, TR>& dm,
+        std::vector<hamilt::HContainer<TR>*>& dmR_out,
+        const int ik_in);
+    friend void DensityMatrix_Tools::cal_DMR_td<TK, TR>(
+        const DensityMatrix<TK, TR>& dm,
+        std::vector<hamilt::HContainer<TR>*>& dmR_out,
+        const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+        const ModuleBase::Vector3<double> At,
+        const int ik_in);
+    friend void DensityMatrix_Tools::cal_DMR_full<TK, TR>(
+        const DensityMatrix<TK, TR>& dm,
+        hamilt::HContainer<std::complex<double>>* dmR_out,
+        const int ik_in);
 };
 
 } // namespace elecstate

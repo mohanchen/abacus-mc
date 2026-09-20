@@ -133,7 +133,11 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
 }
 
 #ifdef __MPI
-void psiMulPsiMpi(const psi::Psi<double>& psi1, const psi::Psi<double>& psi2, double* dm_out, const int* desc_psi, const int* desc_dm)
+void psiMulPsiMpi(const psi::Psi<double>& psi1,
+                  const psi::Psi<double>& psi2,
+                  double* dm_out,
+                  const int* desc_psi,
+                  const int* desc_dm)
 {
     ModuleBase::timer::start("psiMulPsiMpi", "pdgemm");
     const double one_float = 1.0, zero_float = 0.0;
@@ -222,7 +226,9 @@ void psiMulPsi(const psi::Psi<double>& psi1, const psi::Psi<double>& psi2, doubl
                            nlocal);
 }
 
-void psiMulPsi(const psi::Psi<std::complex<double>>& psi1, const psi::Psi<std::complex<double>>& psi2, std::complex<double>* dm_out)
+void psiMulPsi(const psi::Psi<std::complex<double>>& psi1,
+               const psi::Psi<std::complex<double>>& psi2,
+               std::complex<double>* dm_out)
 {
     const int one_int = 1;
     const char N_char = 'N', T_char = 'T';

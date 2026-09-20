@@ -28,7 +28,10 @@ DensityMatrix<TK, TR>::~DensityMatrix()
 }
 
 template <typename TK, typename TR>
-DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in, const int nspin, const std::vector<ModuleBase::Vector3<double>>& kvec_d, const int nk)
+DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in,
+                                     const int nspin,
+                                     const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                                     const int nk)
     : _paraV(paraV_in), _nspin(nspin), _kvec_d(kvec_d), _nk((nk > 0 && nk <= _kvec_d.size()) ? nk : _kvec_d.size())
 {
     ModuleBase::TITLE("DensityMatrix", "resize_DMK");
@@ -42,7 +45,9 @@ DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in, const in
 }
 
 template <typename TK, typename TR>
-DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in, const int nspin) :_paraV(paraV_in), _nspin(nspin), _kvec_d({ ModuleBase::Vector3<double>(0,0,0) }), _nk(1)
+DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in, const int nspin)
+    : _paraV(paraV_in), _nspin(nspin),
+      _kvec_d({ModuleBase::Vector3<double>(0, 0, 0)}), _nk(1)
 {
     ModuleBase::TITLE("DensityMatrix", "resize_gamma");
     this->_DMK.resize(_nspin);
@@ -348,19 +353,28 @@ void DensityMatrix_Tools::cal_DMR_td(
     ModuleBase::timer::end("DensityMatrix", "cal_DMR_td");
 }
 template <>
-void DensityMatrix<double, double>::cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid, const ModuleBase::Vector3<double> At, const int ik_in)
+void DensityMatrix<double, double>::cal_DMR_td(
+    const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+    const ModuleBase::Vector3<double> At,
+    const int ik_in)
 {
     return;
 }
 template <>
-void DensityMatrix<std::complex<double>, double>::cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid, const ModuleBase::Vector3<double> At, const int ik_in)
+void DensityMatrix<std::complex<double>, double>::cal_DMR_td(
+    const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+    const ModuleBase::Vector3<double> At,
+    const int ik_in)
 {
     DensityMatrix_Tools::cal_DMR_td(*this, this->_DMR, phase_hybrid, At, ik_in);
     this->_dmr_ready = true;
 }
 
 template <>
-void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid, const ModuleBase::Vector3<double> At, const int ik_in)
+void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR_td(
+    const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+    const ModuleBase::Vector3<double> At,
+    const int ik_in)
 {
     DensityMatrix_Tools::cal_DMR_td(*this, this->_DMR, phase_hybrid, At, ik_in);
     this->_dmr_ready = true;
@@ -616,7 +630,10 @@ void DensityMatrix<TK, TR>::switch_dmr(const int mode)
 
 
 template <>
-void DensityMatrix_Tools::func_exp_mul_dmk<double>(const std::complex<double> kphase, const std::vector<std::complex<double>> &DMK_mat_trans, double* target_DMR_mat)
+void DensityMatrix_Tools::func_exp_mul_dmk<double>(
+    const std::complex<double> kphase,
+    const std::vector<std::complex<double>>& DMK_mat_trans,
+    double* target_DMR_mat)
 {
     const std::size_t mat_size = DMK_mat_trans.size();
     for(std::size_t i = 0; i < mat_size; i++)
@@ -628,7 +645,10 @@ void DensityMatrix_Tools::func_exp_mul_dmk<double>(const std::complex<double> kp
 }
 
 template <>
-void DensityMatrix_Tools::func_exp_mul_dmk<std::complex<double>>(const std::complex<double> kphase, const std::vector<std::complex<double>> &DMK_mat_trans, std::complex<double>* target_DMR_mat)
+void DensityMatrix_Tools::func_exp_mul_dmk<std::complex<double>>(
+    const std::complex<double> kphase,
+    const std::vector<std::complex<double>>& DMK_mat_trans,
+    std::complex<double>* target_DMR_mat)
 {
     BlasConnector::axpy(DMK_mat_trans.size(),
                         kphase,
@@ -639,7 +659,11 @@ void DensityMatrix_Tools::func_exp_mul_dmk<std::complex<double>>(const std::comp
 }
 
 template <>
-void DensityMatrix_Tools::func_xyz_to_updown<double>(const std::complex<double> tmp[4], const int icol, const int step_trace[4], double* target_DMR_mat)
+void DensityMatrix_Tools::func_xyz_to_updown<double>(
+    const std::complex<double> tmp[4],
+    const int icol,
+    const int step_trace[4],
+    double* target_DMR_mat)
 {
     target_DMR_mat[icol + step_trace[0]] = tmp[0].real() + tmp[3].real();  // rho_0 = (rho_upup + rho_downdown).real()
     target_DMR_mat[icol + step_trace[1]] = tmp[1].real() + tmp[2].real();  // rho_x = (rho_updown + rho_downup).real()
@@ -653,13 +677,18 @@ void DensityMatrix_Tools::func_xyz_to_updown<double>(const std::complex<double> 
 }
 
 template <>
-void DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(const std::complex<double> tmp[4], const int icol, const int step_trace[4], std::complex<double>* target_DMR_mat)
+void DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(
+    const std::complex<double> tmp[4],
+    const int icol,
+    const int step_trace[4],
+    std::complex<double>* target_DMR_mat)
 {
-    target_DMR_mat[icol + step_trace[0]] = tmp[0] + tmp[3];                                         // rho_0 = (rho_upup + rho_downdown)
-    target_DMR_mat[icol + step_trace[1]] = tmp[1] + tmp[2];                                         // rho_x = (rho_updown + rho_downup)
+    target_DMR_mat[icol + step_trace[0]] = tmp[0] + tmp[3];  // rho_0 = (rho_upup + rho_downdown)
+    target_DMR_mat[icol + step_trace[1]] = tmp[1] + tmp[2];  // rho_x = (rho_updown + rho_downup)
     // rho_y sign accounts for the conjugated stored DM block (conj(P)); see the <double> specialization above.
-    target_DMR_mat[icol + step_trace[2]] = -ModuleBase::IMAG_UNIT * (tmp[1] - tmp[2]); // rho_y = -i*(rho_updown - rho_downup)
-    target_DMR_mat[icol + step_trace[3]] = tmp[0] - tmp[3];                                         // rho_z = (rho_upup - rho_downdown)
+    target_DMR_mat[icol + step_trace[2]]
+        = -ModuleBase::IMAG_UNIT * (tmp[1] - tmp[2]);  // rho_y = -i*(rho_updown - rho_downup)
+    target_DMR_mat[icol + step_trace[3]] = tmp[0] - tmp[3];  // rho_z = (rho_upup - rho_downdown)
 }
 
 
