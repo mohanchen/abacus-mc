@@ -211,7 +211,6 @@ void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR(const in
 
 
 
-// calculate DMR from DMK using blas for multi-k calculation
 template <typename TK, typename TR_in, typename TR_out>
 void DensityMatrix_Tools::cal_DMR_td(
     const DensityMatrix<TK, TR_in> &dm,
@@ -221,7 +220,6 @@ void DensityMatrix_Tools::cal_DMR_td(
     const int ik_in)
 {
     ModuleBase::TITLE("DensityMatrix", "cal_DMR_td");
-    // To check whether DMR has been initialized
     assert(dmR_out.size()==dm._nspin && "DMR has not been initialized!");
 
     ModuleBase::timer::start("DensityMatrix", "cal_DMR_td");
@@ -230,7 +228,6 @@ void DensityMatrix_Tools::cal_DMR_td(
     {
         const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
         hamilt::HContainer<TR_out>*const target_DMR = dmR_out[is - 1];
-        // set zero since this function is called in every scf step
         target_DMR->set_zero();
         #ifdef _OPENMP
         #pragma omp parallel for schedule(dynamic)
@@ -240,7 +237,6 @@ void DensityMatrix_Tools::cal_DMR_td(
             hamilt::AtomPair<TR_out>& target_ap = target_DMR->get_atom_pair(i);
             const int iat1 = target_ap.get_atom_i();
             const int iat2 = target_ap.get_atom_j();
-            // get global indexes of whole matrix for each atom in this process
             const int row_ap = dm._paraV->atom_begin_row[iat1];
             const int col_ap = dm._paraV->atom_begin_col[iat2];
             const int row_size = dm._paraV->get_nrow_atom(iat1);
@@ -268,7 +264,6 @@ void DensityMatrix_Tools::cal_DMR_td(
                 {
                     if(ik_in >= 0 && ik_in != ik) { continue; }
                     // cal k_phase
-                    // if TK==std::complex<double>, kphase is e^{ikR}
                     const ModuleBase::Vector3<double> dR(R_index[0], R_index[1], R_index[2]);
                     const double arg = (dm._kvec_d[ik] * dR) * ModuleBase::TWO_PI;
                     double sinp, cosp;
@@ -287,7 +282,6 @@ void DensityMatrix_Tools::cal_DMR_td(
             for(int ik = 0; ik < dm._nk; ++ik)
             {
                 if(ik_in >= 0 && ik_in != ik) { continue; }
-                // copy column-major DMK to row-major DMK_mat_trans (for the purpose of computational efficiency)
                 const TK*const DMK_mat_ptr
                     = dm._DMK[ik + ik_begin].data()
                       + col_ap * dm._paraV->nrow + row_ap;
@@ -321,7 +315,6 @@ void DensityMatrix_Tools::cal_DMR_td(
             // copy tmp_DMR to fill target_DMR
             if(PARAM.inp.nspin == 4)
             {
-                // step_trace ={0, 1, local_col, local_col+1} for NSPIN=4
                 int step_trace[4]{};
                 constexpr int npol = 2;
                 for (int is = 0; is < npol; is++) {
@@ -338,13 +331,11 @@ void DensityMatrix_Tools::cal_DMR_td(
                     {
                         for (int icol = 0; icol < col_size; icol += 2)
                         {
-                            // catch the 4 spin component value of one orbital pair
                             tmp[0] = tmp_DMR_mat[icol + step_trace[0]];
                             tmp[1] = tmp_DMR_mat[icol + step_trace[1]];
                             tmp[2] = tmp_DMR_mat[icol + step_trace[2]];
                             tmp[3] = tmp_DMR_mat[icol + step_trace[3]];
-                            
-                            // transfer to Pauli matrix, save them back to the target_DMR_mat
+
                             func_xyz_to_updown(tmp, icol, step_trace, target_DMR_mat);
                         }
                         tmp_DMR_mat += col_size * 2;
@@ -377,10 +368,9 @@ void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR_td(const
 
 
 
-// calculate DMR from DMK using blas for multi-k calculation
 template <typename TK, typename TR_in, typename TR_out>
 void DensityMatrix_Tools::cal_DMR_full(
-    const DensityMatrix<TK, TR_in> &dm, 
+    const DensityMatrix<TK, TR_in> &dm,
     hamilt::HContainer<TR_out>* dmR_out,
     const int ik_in)
 {
@@ -389,7 +379,6 @@ void DensityMatrix_Tools::cal_DMR_full(
     ModuleBase::timer::start("DensityMatrix", "cal_DMR_full");
     const int ld_hk = dm._paraV->nrow;
     hamilt::HContainer<TR_out>* target_DMR = dmR_out;
-    // set zero since this function is called in every scf step
     target_DMR->set_zero();
     #ifdef _OPENMP
     #pragma omp parallel for schedule(dynamic)
@@ -399,7 +388,6 @@ void DensityMatrix_Tools::cal_DMR_full(
         hamilt::AtomPair<TR_out>& target_ap = target_DMR->get_atom_pair(i);
         const int iat1 = target_ap.get_atom_i();
         const int iat2 = target_ap.get_atom_j();
-        // get global indexes of whole matrix for each atom in this process
         const int row_ap = dm._paraV->atom_begin_row[iat1];
         const int col_ap = dm._paraV->atom_begin_col[iat2];
         const int row_size = dm._paraV->get_nrow_atom(iat1);
@@ -427,7 +415,6 @@ void DensityMatrix_Tools::cal_DMR_full(
             {
                 if(ik_in >= 0 && ik_in != ik) { continue; }
                 // cal k_phase
-                // if TK==std::complex<double>, kphase is e^{ikR}
                 const ModuleBase::Vector3<double> dR(R_index[0], R_index[1], R_index[2]);
                 const double arg = (dm._kvec_d[ik] * dR) * ModuleBase::TWO_PI;
                 double sinp, cosp;
@@ -440,7 +427,6 @@ void DensityMatrix_Tools::cal_DMR_full(
         for(int ik = 0; ik < dm._nk; ++ik)
         {
             if(ik_in >= 0 && ik_in != ik) { continue; }
-            // copy column-major DMK to row-major DMK_mat_trans (for the purpose of computational efficiency)
             const TK*const DMK_mat_ptr
                 = dm._DMK[ik].data()
                   + col_ap * dm._paraV->nrow + row_ap;
@@ -489,7 +475,6 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
     assert(ik_in == -1 || ik_in == 0);
     assert(this->_nk == 1);
 
-    // To check whether DMR has been initialized
     assert(this->_DMR.size()==this->_nspin && "DMR has not been initialized!");
 
     ModuleBase::timer::start("DensityMatrix", "cal_DMR");
@@ -498,7 +483,6 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
     {
         const int ik_begin = this->_nk * (is - 1); // jump this->_nk for spin_down if nspin==2
         hamilt::HContainer<TR>*const target_DMR = this->_DMR[is - 1];
-        // set zero since this function is called in every scf step
         target_DMR->set_zero();
         #ifdef _OPENMP
         #pragma omp parallel for schedule(dynamic)
@@ -508,7 +492,6 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
             hamilt::AtomPair<TR>& target_ap = target_DMR->get_atom_pair(i);
             const int iat1 = target_ap.get_atom_i();
             const int iat2 = target_ap.get_atom_j();
-            // get global indexes of whole matrix for each atom in this process
             const int row_ap = this->_paraV->atom_begin_row[iat1];
             const int col_ap = this->_paraV->atom_begin_col[iat2];
             const int row_size = this->_paraV->get_nrow_atom(iat1);

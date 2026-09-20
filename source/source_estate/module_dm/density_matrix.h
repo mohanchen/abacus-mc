@@ -94,7 +94,6 @@ class DensityMatrix
      * @brief Constructor of class DensityMatrix for gamma-only calculation, where kvector is not required
      * @param _paraV pointer of Parallel_Orbitals object
      * @param nspin number of spin of the density matrix, set by user according to global nspin
-     *  (usually {nspin_global -> nspin_dm} = {1->1, 2->2, 4->1}, but sometimes 2->1 like in LR-TDDFT)
      */
     DensityMatrix(const Parallel_Orbitals* _paraV, const int nspin);
 
@@ -232,7 +231,7 @@ class DensityMatrix
      * @brief calculate density matrix DMR with additional vector potential phase, used for hybrid gauge tddft
      * @param ik_in
      * if ik_in < 0, calculate all k-points
-     * if ik_in >= 0, calculate only one k-point without summing over k-points
+     * if ik_in >= 0, calculate only one k-point
      */
     void cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid, const ModuleBase::Vector3<double> At, const int ik_in = -1);
 
@@ -242,7 +241,7 @@ class DensityMatrix
      * @param dmR_out pointer of HContainer object to store the calculated complex DMR
      * @param ik_in
      * if ik_in < 0, calculate all k-points
-     * if ik_in >= 0, calculate only one k-point without summing over k-points
+     * if ik_in >= 0, calculate only one k-point
      */
     void cal_DMR_full(hamilt::HContainer<std::complex<double>>* dmR_out, const int ik_in = -1) const;
 
@@ -296,9 +295,8 @@ class DensityMatrix
     bool _dmr_ready = false;
 
     /**
-     * @brief HContainer for density matrix in real space for gird parallelization
-     * vector.size() = 1 for non-polarization and SOC
-     * vector.size() = 2 for spin-polarization
+     * @brief HContainer for density matrix in real space for grid parallelization
+     * same size semantics as _DMR
      */
     std::vector<hamilt::HContainer<TR>*> _DMR_grid;
 

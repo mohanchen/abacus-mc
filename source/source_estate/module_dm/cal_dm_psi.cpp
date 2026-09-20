@@ -77,18 +77,15 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
     ModuleBase::TITLE("elecstate", "cal_dm_psi");
     ModuleBase::timer::start("elecstate", "cal_dm_psi");
 
-    // dm.resize(wfc.get_nk(), ParaV->ncol, ParaV->nrow);
     const int nbands_local = wfc.get_nbands();
     const int nbasis_local = wfc.get_nbasis();
 
     // dm = wfc.T * wg * wfc.conj()
-    // dm[is](iw1,iw2) = \sum_{ib} wfc[is](ib,iw1).T * wg(is,ib) * wfc[is](ib,iw2).conj()
     for (int ik = 0; ik < wfc.get_nk(); ++ik)
     {
         wfc.fix_k(ik);
         std::complex<double>* dmk_pointer = DM.get_DMK_pointer(ik);
         // dm.fix_k(ik);
-        // dm[ik].create(ParaV->ncol, ParaV->nrow);
         // wg_wfc(ib,iw) = wg[ib] * wfc(ib,iw);
         psi::Psi<std::complex<double>> wg_wfc(1, wfc.get_nbands(), wfc.get_nbasis(), wfc.get_nbasis(), true);
 
@@ -124,7 +121,6 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
             BlasConnector::scal(nbasis_local, wg_local, wg_wfc_pointer, 1);
         }
 
-        // C++: dm(iw1,iw2) = wfc(ib,iw1).T * wg_wfc(ib,iw2)
 #ifdef __MPI
         psiMulPsiMpi(wg_wfc, wfc, dmk_pointer, ParaV->desc_wfc, ParaV->desc);
 #else
