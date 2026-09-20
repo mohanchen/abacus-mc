@@ -137,8 +137,11 @@ TEST_F(ChargeMixRhoTest, MixRhoUnsetRhopwAborts)
 {
     Charge_Mixing cm;
     MixingConfig cfg = make_cfg(1, 2, false, false);
+    // Do NOT call init_mixing() here: init_mixing already WARNING_QUITs when
+    // set_rhopw was skipped, which would kill the death-test parent process
+    // before EXPECT_DEATH runs. The guard under test lives in mix_rho itself
+    // and only checks this->rhopw == nullptr, independent of init_mixing.
     cm.set_mixing(cfg, omega, tpiba);
-    cm.init_mixing();
     setup_charge(1);
     EXPECT_DEATH(cm.mix_rho(&charge), "");
 }
