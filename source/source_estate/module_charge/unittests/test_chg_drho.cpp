@@ -9,9 +9,7 @@
 #include <cmath>
 #include <vector>
 
-// chg_drho.cpp pulls in Charge (charge.cpp) which references Magnetism and
-// XC_Functional; provide lightweight mocks consistent with the other
-// module_charge unit tests.
+// charge.cpp references Magnetism; provide a lightweight stub.
 Magnetism::Magnetism()
 {
     this->tot_mag = 0.0;
@@ -20,8 +18,6 @@ Magnetism::Magnetism()
 Magnetism::~Magnetism()
 {
 }
-int XC_Functional::func_type = 1;
-bool XC_Functional::ked_flag = false;
 
 /************************************************
  *  unit test of module_charge/chg_drho.cpp

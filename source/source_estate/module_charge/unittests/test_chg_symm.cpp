@@ -9,7 +9,7 @@
 #include <complex>
 #include <vector>
 
-// charge.cpp references Magnetism and XC_Functional; provide stubs.
+// charge.cpp references Magnetism; provide a lightweight stub.
 Magnetism::Magnetism()
 {
     this->tot_mag = 0.0;
@@ -18,8 +18,6 @@ Magnetism::Magnetism()
 Magnetism::~Magnetism()
 {
 }
-int XC_Functional::func_type = 1;
-bool XC_Functional::ked_flag = false;
 
 /************************************************
  *  unit test of module_charge/chg_symm.cpp

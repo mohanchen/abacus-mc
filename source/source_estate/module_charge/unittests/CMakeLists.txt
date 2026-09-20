@@ -123,6 +123,25 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_CHARGE_tau
+  LIBS parameter base psi device planewave_serial cell_info
+  SOURCES test_chg_tau.cpp ../chg_tau.cpp ../chg_uspp.cpp ../charge.cpp ../chg_tools.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_routine
+  LIBS parameter base psi device planewave_serial cell_info
+  SOURCES test_chg_routine.cpp ../chg_routine.cpp ../chg_dmr.cpp ../charge.cpp ../chg_tools.cpp
+  ../chg_mix.cpp ../chg_mix_rho.cpp ../chg_drho.cpp ../chg_drho_inner.cpp ../chg_precond.cpp ../chg_uspp.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_init
+  LIBS parameter base device cell_info planewave_serial
+  SOURCES test_chg_init.cpp ../chg_init.cpp ../chg_atomic.cpp ../chg_atomic_inner.cpp ../chg_rhog_io.cpp ../charge.cpp ../chg_tools.cpp
+)
+
+AddTest(
   TARGET MODULE_CHARGE_parallel
   LIBS parameter psi base device planewave
   SOURCES test_chg_parallel.cpp ../chg_parallel.cpp

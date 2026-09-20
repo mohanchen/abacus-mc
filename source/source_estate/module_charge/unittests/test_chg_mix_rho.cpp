@@ -6,16 +6,11 @@
 #include "source_estate/module_charge/charge.h"
 #include "source_estate/module_charge/chg_mix.h"
 #include "source_estate/module_charge/chg_mix_cfg.h"
-#include "source_hamilt/module_xc/xc_functional.h"
 #include "source_io/module_parameter/parameter.h"
 
 #include <vector>
 
-// chg_mix.cpp pulls in GlobalV::ofs_running and XC_Functional; provide the
-// same lightweight stubs as the other module_charge unit tests.
-int XC_Functional::func_type = 1;
-bool XC_Functional::ked_flag = false;
-
+// charge.cpp references Magnetism; provide a lightweight stub.
 Magnetism::Magnetism()
 {
     this->tot_mag = 0.0;
