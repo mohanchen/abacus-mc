@@ -1,11 +1,12 @@
 #include "gtest/gtest.h"
 
+#include "source_base/math_integral.h"
 #include "source_base/matrix3.h"
 #include "source_basis/module_pw/pw_basis.h"
 #include "source_cell/unitcell.h"
 #include "source_cell/atom_spec.h"
 #include "source_estate/module_charge/charge.h"
-#include "source_estate/module_charge/chg_atomic_inner.h"
+#include "source_estate/module_charge/chg_atomic_detail.h"
 
 #include <cmath>
 #include <complex>

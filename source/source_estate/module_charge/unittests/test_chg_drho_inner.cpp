@@ -3,6 +3,7 @@
 #include "source_base/constants.h"
 #include "source_base/matrix3.h"
 #include "source_basis/module_pw/pw_basis.h"
+#include "source_estate/module_charge/chg_drho.h"
 #include "source_estate/module_charge/chg_drho_detail.h"
 #include "source_estate/module_charge/chg_mix_cfg.h"
 
