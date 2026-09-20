@@ -75,9 +75,9 @@ void DensityMatrix_Tools::cal_DMR(
         hamilt::HContainer<TR_out>*const target_DMR = dmR_out[is - 1];
         // set zero since this function is called in every scf step
         target_DMR->set_zero();
-        #ifdef _OPENMP
-        #pragma omp parallel for schedule(dynamic)
-        #endif
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
         for (int i = 0; i < target_DMR->size_atom_pairs(); ++i)
         {
             hamilt::AtomPair<TR_out>& target_ap = target_DMR->get_atom_pair(i);
@@ -99,13 +99,13 @@ void DensityMatrix_Tools::cal_DMR(
             {
                 const ModuleBase::Vector3<int> R_index = target_ap.get_R_index(iR);
                 hamilt::BaseMatrix<TR_out>*const target_mat = target_ap.find_matrix(R_index);
-                #ifdef __DEBUG
+#ifdef __DEBUG
                 if (target_mat == nullptr)
                 {
                     std::cout << "target_mat is nullptr" << std::endl;
                     continue;
                 }
-                #endif
+#endif
                 target_DMR_mat_vec[iR] = target_mat->get_pointer();
                 for(int ik = 0; ik < dm._nk; ++ik)
                 {
@@ -229,9 +229,9 @@ void DensityMatrix_Tools::cal_DMR_td(
         const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
         hamilt::HContainer<TR_out>*const target_DMR = dmR_out[is - 1];
         target_DMR->set_zero();
-        #ifdef _OPENMP
-        #pragma omp parallel for schedule(dynamic)
-        #endif
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
         for (int i = 0; i < target_DMR->size_atom_pairs(); ++i)
         {
             hamilt::AtomPair<TR_out>& target_ap = target_DMR->get_atom_pair(i);
@@ -252,13 +252,13 @@ void DensityMatrix_Tools::cal_DMR_td(
             {
                 const ModuleBase::Vector3<int> R_index = target_ap.get_R_index(iR);
                 hamilt::BaseMatrix<TR_out>*const target_mat = target_ap.find_matrix(R_index);
-                #ifdef __DEBUG
+#ifdef __DEBUG
                 if (target_mat == nullptr)
                 {
                     std::cout << "target_mat is nullptr" << std::endl;
                     continue;
                 }
-                #endif
+#endif
                 target_DMR_mat_vec[iR] = target_mat->get_pointer();
                 for(int ik = 0; ik < dm._nk; ++ik)
                 {
@@ -380,9 +380,9 @@ void DensityMatrix_Tools::cal_DMR_full(
     const int ld_hk = dm._paraV->nrow;
     hamilt::HContainer<TR_out>* target_DMR = dmR_out;
     target_DMR->set_zero();
-    #ifdef _OPENMP
-    #pragma omp parallel for schedule(dynamic)
-    #endif
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
     for (int i = 0; i < target_DMR->size_atom_pairs(); ++i)
     {
         hamilt::AtomPair<TR_out>& target_ap = target_DMR->get_atom_pair(i);
@@ -403,13 +403,13 @@ void DensityMatrix_Tools::cal_DMR_full(
         {
             const ModuleBase::Vector3<int> R_index = target_ap.get_R_index(iR);
             hamilt::BaseMatrix<TR_out>*const target_mat = target_ap.find_matrix(R_index);
-            #ifdef __DEBUG
+#ifdef __DEBUG
             if (target_mat == nullptr)
             {
                 std::cout << "target_mat is nullptr" << std::endl;
                 continue;
             }
-            #endif
+#endif
             target_DMR_mat_vec[iR] = target_mat->get_pointer();
             for(int ik = 0; ik < dm._nk; ++ik)
             {
@@ -484,9 +484,9 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
         const int ik_begin = this->_nk * (is - 1); // jump this->_nk for spin_down if nspin==2
         hamilt::HContainer<TR>*const target_DMR = this->_DMR[is - 1];
         target_DMR->set_zero();
-        #ifdef _OPENMP
-        #pragma omp parallel for schedule(dynamic)
-        #endif
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
         for (int i = 0; i < target_DMR->size_atom_pairs(); ++i)
         {
             hamilt::AtomPair<TR>& target_ap = target_DMR->get_atom_pair(i);
@@ -502,13 +502,13 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
             const ModuleBase::Vector3<int> R_index = target_ap.get_R_index(0);
             assert(R_index.x == 0 && R_index.y == 0 && R_index.z == 0);
             hamilt::BaseMatrix<TR>*const target_mat = target_ap.find_matrix(R_index);
-            #ifdef __DEBUG
+#ifdef __DEBUG
             if (target_mat == nullptr)
             {
                 std::cout << "target_mat is nullptr" << std::endl;
                 continue;
             }
-            #endif
+#endif
             // k index
             constexpr TK kphase = 1;
             // transpose DMK col=>row
