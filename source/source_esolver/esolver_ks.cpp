@@ -68,25 +68,31 @@ void ESolver_KS::before_all_runners(BaseCell& basecell, const Input_para& inp)
     //! 3) setup charge mixing
     p_chgmix = new Charge_Mixing();
     p_chgmix->set_rhopw(this->pw_rho, this->pw_rhod);
-    MixingConfig mix_cfg;
-    mix_cfg.mixing_mode = inp.mixing_mode;
-    mix_cfg.mixing_beta = inp.mixing_beta;
-    mix_cfg.mixing_ndim = inp.mixing_ndim;
-    mix_cfg.mixing_gg0 = inp.mixing_gg0;
-    // tau mixing is only meaningful for kinetic-energy-density functionals
-    mix_cfg.mixing_tau = inp.mixing_tau && XC_Functional::get_ked_flag();
-    mix_cfg.mixing_beta_mag = inp.mixing_beta_mag;
-    mix_cfg.mixing_gg0_mag = inp.mixing_gg0_mag;
-    mix_cfg.mixing_gg0_min = inp.mixing_gg0_min;
-    mix_cfg.mixing_angle = inp.mixing_angle;
-    mix_cfg.mixing_dmr = inp.mixing_dmr;
-    mix_cfg.nspin = inp.nspin;
-    mix_cfg.scf_thr_type = inp.scf_thr_type;
-    mix_cfg.double_grid = PARAM.globalv.double_grid;
-    mix_cfg.gamma_only_pw = PARAM.globalv.gamma_only_pw;
-    mix_cfg.domag = PARAM.globalv.domag;
-    mix_cfg.domag_z = PARAM.globalv.domag_z;
-    mix_cfg.scf_nmax = inp.scf_nmax;
+    // Aggregate-initialize MixingConfig so that adding a field without
+    // updating this list is a compile error (-Wmissing-field-initializers
+    // promoted to error via pragma). Fields are in declaration order.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wmissing-field-initializers"
+    MixingConfig mix_cfg{
+        inp.mixing_mode,                                  // mixing_mode
+        inp.mixing_beta,                                  // mixing_beta
+        inp.mixing_ndim,                                  // mixing_ndim
+        inp.mixing_gg0,                                   // mixing_gg0
+        inp.mixing_tau && XC_Functional::get_ked_flag(),  // mixing_tau
+        inp.mixing_beta_mag,                              // mixing_beta_mag
+        inp.mixing_gg0_mag,                               // mixing_gg0_mag
+        inp.mixing_gg0_min,                               // mixing_gg0_min
+        inp.mixing_angle,                                 // mixing_angle
+        inp.mixing_dmr,                                   // mixing_dmr
+        inp.nspin,                                        // nspin
+        inp.scf_thr_type,                                 // scf_thr_type
+        PARAM.globalv.double_grid,                        // double_grid
+        PARAM.globalv.gamma_only_pw,                      // gamma_only_pw
+        PARAM.globalv.domag,                              // domag
+        PARAM.globalv.domag_z,                            // domag_z
+        inp.scf_nmax                                      // scf_nmax
+    };
+#pragma GCC diagnostic pop
     p_chgmix->set_mixing(mix_cfg, ucell.omega, ucell.tpiba);
     p_chgmix->init_mixing();
 
