@@ -56,6 +56,37 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_CHARGE_precond
+  LIBS base device planewave_serial
+  SOURCES test_chg_precond.cpp ../chg_precond.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_drho
+  LIBS parameter planewave_serial base device cell_info
+  SOURCES test_chg_drho.cpp ../chg_drho.cpp ../chg_drho_inner.cpp ../charge.cpp ../chg_tools.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_drho_inner
+  LIBS base device planewave_serial
+  SOURCES test_chg_drho_inner.cpp ../chg_drho_inner.cpp
+)
+
+AddTest(
+  TARGET MODULE_CHARGE_mix_rho
+  LIBS parameter base psi device planewave_serial cell_info
+  SOURCES test_chg_mix_rho.cpp
+  ../chg_mix.cpp ../chg_mix_rho.cpp
+  ../chg_dmr.cpp
+  ../chg_drho.cpp
+  ../chg_drho_inner.cpp
+  ../chg_precond.cpp ../chg_tau.cpp
+  ../chg_uspp.cpp
+  ../charge.cpp ../chg_tools.cpp
+)
+
+AddTest(
   TARGET MODULE_CHARGE_mix
   LIBS parameter base  psi  device planewave_serial cell_info
   SOURCES test_chg_mix.cpp
