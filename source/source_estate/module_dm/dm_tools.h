@@ -24,13 +24,13 @@ namespace DensityMatrix_Tools
 {
     template <typename TK, typename TR_in, typename TR_out>
     extern void cal_DMR(
-        const DensityMatrix<TK, TR_in> &dm,
+        DensityMatrix<TK, TR_in> &dm,
         std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
         const int ik_in);
 
     template <typename TK, typename TR_in, typename TR_out>
     extern void cal_DMR_td(
-        const DensityMatrix<TK, TR_in> &dm,
+        DensityMatrix<TK, TR_in> &dm,
         std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
         const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
         const ModuleBase::Vector3<double> At,

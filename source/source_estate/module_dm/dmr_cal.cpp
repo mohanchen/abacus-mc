@@ -14,7 +14,7 @@ namespace elecstate
 // calculate DMR from DMK using blas for multi-k calculation
 template <typename TK, typename TR_in, typename TR_out>
 void DensityMatrix_Tools::cal_DMR(
-    const DensityMatrix<TK, TR_in> &dm,
+    DensityMatrix<TK, TR_in> &dm,
     std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
     const int ik_in)
 {
@@ -149,27 +149,26 @@ void DensityMatrix_Tools::cal_DMR(
         }
     }
     ModuleBase::timer::end("DensityMatrix", "cal_DMR");
+    dm._dmr_ready = true;
 }
 
 template <>
 void DensityMatrix<std::complex<double>, double>::cal_DMR(const int ik_in)
 {
     DensityMatrix_Tools::cal_DMR(*this, this->_DMR, ik_in);
-    this->_dmr_ready = true;
 }
 
 template <>
 void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR(const int ik_in)
 {
     DensityMatrix_Tools::cal_DMR(*this, this->_DMR, ik_in);
-    this->_dmr_ready = true;
 }
 
 
 
 template <typename TK, typename TR_in, typename TR_out>
 void DensityMatrix_Tools::cal_DMR_td(
-    const DensityMatrix<TK, TR_in> &dm,
+    DensityMatrix<TK, TR_in> &dm,
     std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
     const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
     const ModuleBase::Vector3<double> At,
@@ -302,6 +301,7 @@ void DensityMatrix_Tools::cal_DMR_td(
         }
     }
     ModuleBase::timer::end("DensityMatrix", "cal_DMR_td");
+    dm._dmr_ready = true;
 }
 template <>
 void DensityMatrix<double, double>::cal_DMR_td(
@@ -318,7 +318,6 @@ void DensityMatrix<std::complex<double>, double>::cal_DMR_td(
     const int ik_in)
 {
     DensityMatrix_Tools::cal_DMR_td(*this, this->_DMR, phase_hybrid, At, ik_in);
-    this->_dmr_ready = true;
 }
 
 template <>
@@ -328,7 +327,6 @@ void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR_td(
     const int ik_in)
 {
     DensityMatrix_Tools::cal_DMR_td(*this, this->_DMR, phase_hybrid, At, ik_in);
-    this->_dmr_ready = true;
 }
 
 

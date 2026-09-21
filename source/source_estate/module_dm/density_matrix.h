@@ -303,11 +303,11 @@ class DensityMatrix
     std::vector<TR> dmr_tmp_;
 
     friend void DensityMatrix_Tools::cal_DMR<TK, TR>(
-        const DensityMatrix<TK, TR>& dm,
+        DensityMatrix<TK, TR>& dm,
         std::vector<hamilt::HContainer<TR>*>& dmR_out,
         const int ik_in);
     friend void DensityMatrix_Tools::cal_DMR_td<TK, TR>(
-        const DensityMatrix<TK, TR>& dm,
+        DensityMatrix<TK, TR>& dm,
         std::vector<hamilt::HContainer<TR>*>& dmR_out,
         const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
         const ModuleBase::Vector3<double> At,
