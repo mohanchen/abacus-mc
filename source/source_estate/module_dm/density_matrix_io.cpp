@@ -303,11 +303,14 @@ void DensityMatrix<TK, TR>::save_DMR()
 
 // read *.dmk into density matrix dm(k)
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::read_DMK(const std::string directory, const int ispin, const int ik)
+void DensityMatrix_Tools::read_DMK_file(DensityMatrix<TK, TR>& dm,
+                                        const std::string& directory,
+                                        const int ispin,
+                                        const int ik)
 {
     ModuleBase::TITLE("DensityMatrix", "read_DMK");
 #ifdef __DEBUG
-    assert(ispin > 0 && ispin <= this->_nspin);
+    assert(ispin > 0 && ispin <= dm._nspin);
 #endif
     // read
     std::string fn;
@@ -328,31 +331,40 @@ void DensityMatrix<TK, TR>::read_DMK(const std::string directory, const int ispi
         // quit the program or not.
         bool quit = false;
 
-        ModuleBase::CHECK_DOUBLE(ifs, this->_kvec_d[ik].x, quit);
-        ModuleBase::CHECK_DOUBLE(ifs, this->_kvec_d[ik].y, quit);
-        ModuleBase::CHECK_DOUBLE(ifs, this->_kvec_d[ik].z, quit);
-        ModuleBase::CHECK_INT(ifs, this->_paraV->nrow);
-        ModuleBase::CHECK_INT(ifs, this->_paraV->ncol);
+        ModuleBase::CHECK_DOUBLE(ifs, dm._kvec_d[ik].x, quit);
+        ModuleBase::CHECK_DOUBLE(ifs, dm._kvec_d[ik].y, quit);
+        ModuleBase::CHECK_DOUBLE(ifs, dm._kvec_d[ik].z, quit);
+        ModuleBase::CHECK_INT(ifs, dm._paraV->nrow);
+        ModuleBase::CHECK_INT(ifs, dm._paraV->ncol);
     } // If file exist, read in data.
     // Finish reading the first part of density matrix.
 
-    for (int i = 0; i < this->_paraV->nrow; ++i)
+    for (int i = 0; i < dm._paraV->nrow; ++i)
     {
-        for (int j = 0; j < this->_paraV->ncol; ++j)
+        for (int j = 0; j < dm._paraV->ncol; ++j)
         {
-            ifs >> this->_DMK[ik + this->_nk * (ispin - 1)][i * this->_paraV->ncol + j];
+            ifs >> dm._DMK[ik + dm._nk * (ispin - 1)][i * dm._paraV->ncol + j];
         }
     }
     ifs.close();
 }
 
+template <typename TK, typename TR>
+void DensityMatrix<TK, TR>::read_DMK(const std::string directory, const int ispin, const int ik)
+{
+    DensityMatrix_Tools::read_DMK_file(*this, directory, ispin, ik);
+}
+
 // output density matrix dm(k) into *.dmk
-template <>
-void DensityMatrix<double, double>::write_DMK(const std::string directory, const int ispin, const int ik)
+template <typename TK, typename TR>
+void DensityMatrix_Tools::write_DMK_file(const DensityMatrix<TK, TR>& dm,
+                                         const std::string& directory,
+                                         const int ispin,
+                                         const int ik)
 {
     ModuleBase::TITLE("DensityMatrix", "write_DMK");
 #ifdef __DEBUG
-    assert(ispin > 0 && ispin <= this->_nspin);
+    assert(ispin > 0 && ispin <= dm._nspin);
 #endif
     // write
     std::string fn;
@@ -363,21 +375,21 @@ void DensityMatrix<double, double>::write_DMK(const std::string directory, const
     {
         ModuleBase::WARNING("elecstate::write_dmk", "Can't create DENSITY MATRIX File!");
     }
-    ofs << this->_kvec_d[ik].x << " " << this->_kvec_d[ik].y << " " << this->_kvec_d[ik].z << std::endl;
-    ofs << "\n  " << this->_paraV->nrow << " " << this->_paraV->ncol << std::endl;
+    ofs << dm._kvec_d[ik].x << " " << dm._kvec_d[ik].y << " " << dm._kvec_d[ik].z << std::endl;
+    ofs << "\n  " << dm._paraV->nrow << " " << dm._paraV->ncol << std::endl;
 
     ofs << std::setprecision(3);
     ofs << std::scientific;
 
-    for (int i = 0; i < this->_paraV->nrow; ++i)
+    for (int i = 0; i < dm._paraV->nrow; ++i)
     {
-        for (int j = 0; j < this->_paraV->ncol; ++j)
+        for (int j = 0; j < dm._paraV->ncol; ++j)
         {
             if (j % 8 == 0)
             {
                 ofs << "\n";
             }
-            ofs << " " << this->_DMK[ik + this->_nk * (ispin - 1)][i * this->_paraV->ncol + j];
+            ofs << " " << dm._DMK[ik + dm._nk * (ispin - 1)][i * dm._paraV->ncol + j];
         }
     }
 
@@ -385,11 +397,15 @@ void DensityMatrix<double, double>::write_DMK(const std::string directory, const
 }
 
 template <>
-void DensityMatrix<std::complex<double>, double>::write_DMK(const std::string directory, const int ispin, const int ik)
+void DensityMatrix_Tools::write_DMK_file<std::complex<double>, double>(
+    const DensityMatrix<std::complex<double>, double>& dm,
+    const std::string& directory,
+    const int ispin,
+    const int ik)
 {
     ModuleBase::TITLE("DensityMatrix", "write_DMK");
 #ifdef __DEBUG
-    assert(ispin > 0 && ispin <= this->_nspin);
+    assert(ispin > 0 && ispin <= dm._nspin);
 #endif
     // write
     std::string fn;
@@ -400,26 +416,58 @@ void DensityMatrix<std::complex<double>, double>::write_DMK(const std::string di
     {
         ModuleBase::WARNING("elecstate::write_dmk", "Can't create DENSITY MATRIX File!");
     }
-    ofs << this->_kvec_d[ik].x << " " << this->_kvec_d[ik].y << " " << this->_kvec_d[ik].z << std::endl;
-    ofs << "\n  " << this->_paraV->nrow << " " << this->_paraV->ncol << std::endl;
+    ofs << dm._kvec_d[ik].x << " " << dm._kvec_d[ik].y << " " << dm._kvec_d[ik].z << std::endl;
+    ofs << "\n  " << dm._paraV->nrow << " " << dm._paraV->ncol << std::endl;
 
     ofs << std::setprecision(3);
     ofs << std::scientific;
 
-    for (int i = 0; i < this->_paraV->nrow; ++i)
+    for (int i = 0; i < dm._paraV->nrow; ++i)
     {
-        for (int j = 0; j < this->_paraV->ncol; ++j)
+        for (int j = 0; j < dm._paraV->ncol; ++j)
         {
             if (j % 8 == 0)
             {
                 ofs << "\n";
             }
-            ofs << " " << this->_DMK[ik + this->_nk * (ispin - 1)][i * this->_paraV->ncol + j].real();
+            ofs << " " << dm._DMK[ik + dm._nk * (ispin - 1)][i * dm._paraV->ncol + j].real();
         }
     }
 
     ofs.close();
 }
+
+template <typename TK, typename TR>
+void DensityMatrix<TK, TR>::write_DMK(const std::string directory, const int ispin, const int ik)
+{
+    DensityMatrix_Tools::write_DMK_file(*this, directory, ispin, ik);
+}
+
+// explicit instantiation for DensityMatrix_Tools IO functions
+template void DensityMatrix_Tools::read_DMK_file<double, double>(DensityMatrix<double, double>&,
+                                                                 const std::string&,
+                                                                 const int,
+                                                                 const int);
+template void DensityMatrix_Tools::read_DMK_file<std::complex<double>, double>(
+    DensityMatrix<std::complex<double>, double>&,
+    const std::string&,
+    const int,
+    const int);
+template void DensityMatrix_Tools::read_DMK_file<std::complex<double>, std::complex<double>>(
+    DensityMatrix<std::complex<double>, std::complex<double>>&,
+    const std::string&,
+    const int,
+    const int);
+template void DensityMatrix_Tools::write_DMK_file<double, double>(const DensityMatrix<double, double>&,
+                                                                  const std::string&,
+                                                                  const int,
+                                                                  const int);
+// write_DMK_file<std::complex<double>, double> has an explicit specialization above
+template void DensityMatrix_Tools::write_DMK_file<std::complex<double>, std::complex<double>>(
+    const DensityMatrix<std::complex<double>, std::complex<double>>&,
+    const std::string&,
+    const int,
+    const int);
 
 // T of HContainer can be double or std::complex<double>
 template class DensityMatrix<double, double>;               // Gamma-Only case

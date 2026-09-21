@@ -316,6 +316,16 @@ class DensityMatrix
         const DensityMatrix<TK, TR>& dm,
         hamilt::HContainer<std::complex<double>>* dmR_out,
         const int ik_in);
+    friend void DensityMatrix_Tools::read_DMK_file<TK, TR>(
+        DensityMatrix<TK, TR>& dm,
+        const std::string& directory,
+        const int ispin,
+        const int ik);
+    friend void DensityMatrix_Tools::write_DMK_file<TK, TR>(
+        const DensityMatrix<TK, TR>& dm,
+        const std::string& directory,
+        const int ispin,
+        const int ik);
 };
 
 } // namespace elecstate
