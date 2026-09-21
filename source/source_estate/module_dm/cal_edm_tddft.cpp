@@ -10,7 +10,7 @@
 #include "source_lcao/module_rt/gather_mat.h"     // gatherMatrix and distributeMatrix
 #include "source_lcao/module_rt/propagator.h"     // Include header for create_identity_matrix
 
-namespace elecstate
+namespace module_dm
 {
 // use the original formula (Hamiltonian matrix) to calculate energy density matrix
 void cal_edm_tddft(Parallel_Orbitals& pv,
@@ -266,4 +266,4 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
     return;
 } // cal_edm_tddft
 
-} // namespace elecstate
+} // namespace module_dm

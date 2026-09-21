@@ -15,9 +15,14 @@ class Charge_Mixing;
 namespace elecstate
 {
     class ElecState;
+}
+namespace module_dm
+{
     template <typename TK, typename TR>
     class DensityMatrix;
-
+}
+namespace elecstate
+{
     /// for symmetry, multi-k, nspin<4: restore DM(k) form DM(k_ibz)
     std::vector<std::vector<std::complex<double>>> restore_dm(const K_Vectors& kv,
         const std::vector<std::vector<std::complex<double>>>& dm_k_ibz,
@@ -104,7 +109,7 @@ public:
     /// @brief in eachiterinit:  do DM mixing and calculate Hexx when entering 2nd SCF
     void exx_eachiterinit(const int istep,
                           const UnitCell& ucell,
-                          const elecstate::DensityMatrix<T, double>& dm/**< double should be Tdata if complex-PBE-DM is supported*/,
+                          const module_dm::DensityMatrix<T, double>& dm/**< double should be Tdata if complex-PBE-DM is supported*/,
                           const K_Vectors& kv,
                           const int& iter);
 
@@ -116,7 +121,7 @@ public:
                          const UnitCell& ucell,
                          hamilt::Hamilt<T>& hamilt,
 						 elecstate::ElecState& elec,
-						 elecstate::DensityMatrix<T,double>* dm, // mohan add 2025-11-04
+						 module_dm::DensityMatrix<T,double>* dm, // mohan add 2025-11-04
                          Charge_Mixing& chgmix,
                          const double& scf_ene_thr,
                          int& iter,
@@ -125,7 +130,7 @@ public:
     /// @brief: in do_after_converge: add exx operators; do DM mixing if seperate loop
     bool exx_after_converge(const UnitCell& ucell,
                             hamilt::Hamilt<T>& hamilt,
-                            const elecstate::DensityMatrix<T, double>& dm/**< double should be Tdata if complex-PBE-DM is supported*/,
+                            const module_dm::DensityMatrix<T, double>& dm/**< double should be Tdata if complex-PBE-DM is supported*/,
                             const K_Vectors& kv,
                             const int& nspin,
                             int& iter,
@@ -139,7 +144,7 @@ public:
     /// >0: not the first outer loop. contributeHk will do enerything normally.
     int two_level_step = 0;
     double etot_last_outer_loop = 0.0;
-    elecstate::DensityMatrix<T, double>* dm_last_step;
+    module_dm::DensityMatrix<T, double>* dm_last_step;
 
     size_t hybrid_step() const { return hybrid_step_; }
     void set_hybrid_step(size_t s) { hybrid_step_ = s; }

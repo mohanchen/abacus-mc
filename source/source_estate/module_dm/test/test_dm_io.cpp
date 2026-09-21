@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include "source_cell/unitcell.h"
 #include "source_estate/module_dm/density_matrix.h"
+#include "source_estate/module_dm/dm_io.h"
 #include "source_estate/module_dm/dm_tools.h"
 #include "prepare_unitcell.h"
 
@@ -119,14 +120,14 @@ TEST_F(DMTest, DMConstructor1)
     int nspin = 1;
     // construct DM
     std::cout << paraV->nrow << paraV->ncol << std::endl;
-    elecstate::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks());
+    module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks());
     // read DMK
     std::string directory = "./support/";
     for (int is = 1; is <= nspin; ++is)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ++ik)
         {
-            elecstate::DensityMatrix_Tools::read_DMK_file(DM, directory, is, ik);
+            module_dm::read_DMK_file(DM, directory, is, ik);
         }
     }
     // write DMK
@@ -135,17 +136,17 @@ TEST_F(DMTest, DMConstructor1)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ++ik)
         {
-            elecstate::DensityMatrix_Tools::write_DMK_file(DM, directory, is, ik);
+            module_dm::write_DMK_file(DM, directory, is, ik);
         }
     }
     // construct a new DM
-    elecstate::DensityMatrix<double, double> DM1(paraV, nspin, kv->kvec_d, kv->get_nks());
+    module_dm::DensityMatrix<double, double> DM1(paraV, nspin, kv->kvec_d, kv->get_nks());
     directory = "./support/output";
     for (int is = 1; is <= nspin; ++is)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ++ik)
         {
-            elecstate::DensityMatrix_Tools::read_DMK_file(DM1, directory, is, ik);
+            module_dm::read_DMK_file(DM1, directory, is, ik);
         }
     }
     // compare DMK1 with DMK

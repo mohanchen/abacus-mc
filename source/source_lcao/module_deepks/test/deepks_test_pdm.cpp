@@ -55,13 +55,13 @@ void test_deepks<T>::set_p_elec_DM()
     if (this->gamma_only_local)
     {
         nk = this->nspin;
-        this->p_elec_DM = new elecstate::DensityMatrix<T, double>(&ParaO, this->nspin);
+        this->p_elec_DM = new module_dm::DensityMatrix<T, double>(&ParaO, this->nspin);
     }
     else
     {
         nk = kv.get_nkstot();
         this->p_elec_DM
-            = new elecstate::DensityMatrix<T, double>(&ParaO, this->nspin, kv.kvec_d, kv.get_nkstot() / this->nspin);
+            = new module_dm::DensityMatrix<T, double>(&ParaO, this->nspin, kv.kvec_d, kv.get_nkstot() / this->nspin);
     }
     p_elec_DM->init_DMR(&Test_Deepks::GridD, &ucell);
 

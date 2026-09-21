@@ -478,7 +478,7 @@ void ExcitonPlotter<T>::plot_average_density(const int istate, const std::string
         ModuleBase::WARNING_QUIT("ExcitonPlotter", "Unknown average density type: " + type + ". Use hole or elec.");
     }
     const auto dmk = type == "hole" ? cal_effective_dmk_hole(istate) : cal_effective_dmk_elec(istate);
-    elecstate::DensityMatrix<T, double> dm(&this->pmat, this->nspin_x, this->kv.kvec_d, this->nk);
+    module_dm::DensityMatrix<T, double> dm(&this->pmat, this->nspin_x, this->kv.kvec_d, this->nk);
     for (int ik = 0; ik < this->nk; ++ik)
     {
         dm.set_DMK_pointer(ik, dmk[ik].template data<T>());

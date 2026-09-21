@@ -111,7 +111,7 @@ class InitDMFileTest : public testing::Test
     }
 
     /// Create DensityMatrix with given nspin and initialize DMR from an HContainer template
-    elecstate::DensityMatrix<double, double>* create_dm(int nspin)
+    module_dm::DensityMatrix<double, double>* create_dm(int nspin)
     {
         K_Vectors kv;
         int nks = (nspin == 2) ? 2 : 1;
@@ -119,7 +119,7 @@ class InitDMFileTest : public testing::Test
         kv.kvec_d.resize(kv.get_nks());
 
         int nspin_dm = (nspin == 2) ? 2 : 1;
-        auto* dm = new elecstate::DensityMatrix<double, double>(
+        auto* dm = new module_dm::DensityMatrix<double, double>(
             paraV, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
 
         // Create a template HContainer and init DMR from it

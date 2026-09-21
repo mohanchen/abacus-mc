@@ -41,7 +41,7 @@ class ElecStateLCAO : public ElecState
      */
 	void dm2rho(std::vector<TK*> pexsi_DM,
 			std::vector<TK*> pexsi_EDM,
-			DensityMatrix<TK, double>* dm,
+			module_dm::DensityMatrix<TK, double>* dm,
 			const double omega);
 
     /**

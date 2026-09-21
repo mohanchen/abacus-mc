@@ -9,7 +9,7 @@
 #include "source_base/constants.h"
 #include "source_cell/klist.h"
 
-namespace elecstate
+namespace module_dm
 {
 
 //----------------------------------------------------
@@ -223,4 +223,4 @@ template class DensityMatrix<double, double>;               // Gamma-Only case
 template class DensityMatrix<std::complex<double>, double>; // Multi-k case
 template class DensityMatrix<std::complex<double>, std::complex<double>>; // For EXX in future
 
-} // namespace elecstate
+} // namespace module_dm

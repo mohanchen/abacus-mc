@@ -85,7 +85,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                              const Input_para& inp,
                              K_Vectors& kv,
                              elecstate::ElecState* pelec,
-                             elecstate::DensityMatrix<TK, double>* dm, // mohan add 2025-11-04
+                             module_dm::DensityMatrix<TK, double>* dm, // mohan add 2025-11-04
                              Parallel_Orbitals& pv,
                              Grid_Driver& gd,
                              psi::Psi<TK>* psi,
@@ -747,7 +747,7 @@ template void ModuleIO::ctrl_scf_lcao<double, double>(
     const Input_para& inp,
     K_Vectors& kv,
     elecstate::ElecState* pelec,
-    elecstate::DensityMatrix<double, double>* dm, // mohan add 2025-11-04
+    module_dm::DensityMatrix<double, double>* dm, // mohan add 2025-11-04
     Parallel_Orbitals& pv,
     Grid_Driver& gd,
     psi::Psi<double>* psi,
@@ -776,7 +776,7 @@ template void ModuleIO::ctrl_scf_lcao<std::complex<double>, double>(
     const Input_para& inp,
     K_Vectors& kv,
     elecstate::ElecState* pelec,
-    elecstate::DensityMatrix<std::complex<double>, double>* dm, // mohan add 2025-11-04
+    module_dm::DensityMatrix<std::complex<double>, double>* dm, // mohan add 2025-11-04
     Parallel_Orbitals& pv,
     Grid_Driver& gd,
     psi::Psi<std::complex<double>>* psi,
@@ -804,7 +804,7 @@ template void ModuleIO::ctrl_scf_lcao<std::complex<double>, std::complex<double>
     const Input_para& inp,
     K_Vectors& kv,
     elecstate::ElecState* pelec,
-    elecstate::DensityMatrix<std::complex<double>, double>* dm, // mohan add 2025-11-04
+    module_dm::DensityMatrix<std::complex<double>, double>* dm, // mohan add 2025-11-04
     Parallel_Orbitals& pv,
     Grid_Driver& gd,
     psi::Psi<std::complex<double>>* psi,

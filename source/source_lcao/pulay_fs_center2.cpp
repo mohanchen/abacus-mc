@@ -4,7 +4,7 @@ template<>  // gamma-only, provided xy
 void PulayForceStress::cal_pulay_fs(
 		ModuleBase::matrix& force,
 		ModuleBase::matrix& stress,
-		const elecstate::DensityMatrix<double, double>& dm,
+		const module_dm::DensityMatrix<double, double>& dm,
 		const UnitCell& ucell,
 		const Parallel_Orbitals& pv,
 		const double* (&dHSx)[3],
@@ -74,7 +74,7 @@ template<>  //multi-k, provided xy
 void PulayForceStress::cal_pulay_fs(
 		ModuleBase::matrix& force,
 		ModuleBase::matrix& stress,
-		const elecstate::DensityMatrix<std::complex<double>, double>& dm,
+		const module_dm::DensityMatrix<std::complex<double>, double>& dm,
 		const UnitCell& ucell,
 		const Parallel_Orbitals& pv,
 		const double* (&dHSx)[3],
@@ -111,7 +111,7 @@ template<>  // multi-k, provided x
 void PulayForceStress::cal_pulay_fs(
         ModuleBase::matrix& force,
         ModuleBase::matrix& stress,
-        const elecstate::DensityMatrix<std::complex<double>, double>& dm,
+        const module_dm::DensityMatrix<std::complex<double>, double>& dm,
         const UnitCell& ucell,
         const Parallel_Orbitals& pv,
         const double* (&dHSx)[3],

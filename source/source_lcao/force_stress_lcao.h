@@ -179,7 +179,7 @@ double Force_Stress_LCAO<T>::force_invalid_threshold_ev = 0.00;
 // only for DFT+U, mohan add 2025-11-04
 template <typename T>
 void assign_dmk_ptr(
-    elecstate::DensityMatrix<T,double>* dm,
+    module_dm::DensityMatrix<T,double>* dm,
     std::vector<std::vector<double>>*& dmk_d,
     std::vector<std::vector<std::complex<double>>>*& dmk_c
 );

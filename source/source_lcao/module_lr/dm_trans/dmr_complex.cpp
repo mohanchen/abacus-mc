@@ -2,7 +2,7 @@
 #include "source_base/timer.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/libm/libm.h"
-namespace elecstate
+namespace module_dm
 {
     template<>
     void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR(int ik_in)

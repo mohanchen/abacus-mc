@@ -29,7 +29,7 @@ class Setup_DM
     // allocate density matrix
     void allocate_dm(const K_Vectors* kv, const Parallel_Orbitals* pv, const int nspin);
 
-    elecstate::DensityMatrix<TK, double>* dm = nullptr;
+    module_dm::DensityMatrix<TK, double>* dm = nullptr;
 
 };
 

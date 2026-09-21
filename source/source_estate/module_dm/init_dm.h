@@ -7,7 +7,7 @@
 #include "source_estate/module_charge/charge.h" // use charge
 #include "source_lcao/setup_dm.h" // define Setup_DM
 
-namespace elecstate
+namespace module_dm
 {
 
 struct Init_DM_Config
@@ -20,7 +20,7 @@ struct Init_DM_Config
 
 template <typename TK>
 void init_dm(UnitCell& ucell,
-        ElecState* pelec,
+        elecstate::ElecState* pelec,
         LCAO_domain::Setup_DM<TK> &dmat,
         psi::Psi<TK>* psi,
         Charge &chr,

@@ -10,7 +10,7 @@
 #include "source_lcao/module_rt/gather_mat.h"
 #include "source_lcao/module_rt/propagator.h"
 
-namespace elecstate
+namespace module_dm
 {
 
 // Template function for EDM calculation supporting CPU and GPU
@@ -294,4 +294,4 @@ template void cal_edm_tddft_tensor_lapack<base_device::DEVICE_GPU>(Parallel_Orbi
                                                                    hamilt::Hamilt<std::complex<double>>* p_hamilt);
 #endif // __CUDA
 
-} // namespace elecstate
+} // namespace module_dm

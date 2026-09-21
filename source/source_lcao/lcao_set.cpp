@@ -207,7 +207,7 @@ void LCAO_domain::init_chg_hr(
     const Parallel_Orbitals* pv,
     psi::Psi<TK>& psi,
     elecstate::ElecState* pelec,
-    elecstate::DensityMatrix<TK, double>& dm,
+    module_dm::DensityMatrix<TK, double>& dm,
     Charge& chr,
     const std::string& ks_solver)
 {
@@ -359,7 +359,7 @@ template void LCAO_domain::init_chg_hr<double, double>(
     const Parallel_Orbitals* pv,
     psi::Psi<double>& psi,
     elecstate::ElecState* pelec,
-    elecstate::DensityMatrix<double, double>& dm,
+    module_dm::DensityMatrix<double, double>& dm,
     Charge& chr,
     const std::string& ks_solver);
 template void LCAO_domain::init_chg_hr<std::complex<double>, double>(
@@ -370,7 +370,7 @@ template void LCAO_domain::init_chg_hr<std::complex<double>, double>(
     const Parallel_Orbitals* pv,
     psi::Psi<std::complex<double>>& psi,
     elecstate::ElecState* pelec,
-    elecstate::DensityMatrix<std::complex<double>, double>& dm,
+    module_dm::DensityMatrix<std::complex<double>, double>& dm,
     Charge& chr,
     const std::string& ks_solver);
 template void LCAO_domain::init_chg_hr<std::complex<double>, std::complex<double>>(
@@ -381,6 +381,6 @@ template void LCAO_domain::init_chg_hr<std::complex<double>, std::complex<double
     const Parallel_Orbitals* pv,
     psi::Psi<std::complex<double>>& psi,
     elecstate::ElecState* pelec,
-    elecstate::DensityMatrix<std::complex<double>, double>& dm,
+    module_dm::DensityMatrix<std::complex<double>, double>& dm,
     Charge& chr,
     const std::string& ks_solver);

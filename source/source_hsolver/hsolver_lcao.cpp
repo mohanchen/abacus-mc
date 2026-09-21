@@ -42,7 +42,7 @@ template <typename TK>
 void HSolverLCAO<TK>::solve(HSMatrix<TK>& hs,
                                    psi::Psi<TK>& psi,
 								   elecstate::ElecState* pes,
-								   elecstate::DensityMatrix<TK, double>& dm, // mohan add 2025-11-03
+								   module_dm::DensityMatrix<TK, double>& dm, // mohan add 2025-11-03
 								   Charge &chr,
                                    const int nspin,
                                    const double omega,
@@ -98,7 +98,7 @@ void HSolverLCAO<TK>::solve(HSMatrix<TK>& hs,
                                      pes->skip_weights);
 
         elecstate::calEBand(pes->ekb, pes->wg, pes->f_en);
-        elecstate::cal_dm_psi(dm.get_paraV_pointer(), pes->wg, psi, dm);
+        module_dm::cal_dm_psi(dm.get_paraV_pointer(), pes->wg, psi, dm);
         dm.cal_DMR(-1);
 
         if (!skip_charge)

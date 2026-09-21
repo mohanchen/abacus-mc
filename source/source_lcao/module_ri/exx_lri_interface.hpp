@@ -178,7 +178,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_beforescf(const int istep,
 template<typename T, typename Tdata>
 void Exx_LRI_Interface<T, Tdata>::exx_eachiterinit(const int istep,
                                                    const UnitCell& ucell,
-                                                   const elecstate::DensityMatrix<T, double>& dm,
+                                                   const module_dm::DensityMatrix<T, double>& dm,
                                                    const K_Vectors& kv,
                                                    const int& iter)
 {
@@ -211,7 +211,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_eachiterinit(const int istep,
                 this->mix_DMk_2D.set_mixing(this->p_chgmix_->get_mixing());
             }
 
-            auto cal = [this, &ucell,&kv, &flag_restart](const elecstate::DensityMatrix<T, double>& dm_in)
+            auto cal = [this, &ucell,&kv, &flag_restart](const module_dm::DensityMatrix<T, double>& dm_in)
             {
                 if (this->exx_spacegroup_symmetry)
                     { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm_in.get_DMK_vector(), *dm_in.get_paraV_pointer()), flag_restart); }
@@ -276,7 +276,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_iter_finish(const K_Vectors& kv,
 		const UnitCell& ucell,
 		hamilt::Hamilt<T>& hamilt,
 		elecstate::ElecState& elec,
-		elecstate::DensityMatrix<T,double>* dm, // mohan add 2025-11-04
+		module_dm::DensityMatrix<T,double>* dm, // mohan add 2025-11-04
 		Charge_Mixing& chgmix,
 		const double& scf_ene_thr,
 		int& iter,
@@ -359,7 +359,7 @@ template<typename T, typename Tdata>
 bool Exx_LRI_Interface<T, Tdata>::exx_after_converge(
     const UnitCell& ucell,
     hamilt::Hamilt<T>& hamilt,
-    const elecstate::DensityMatrix<T, double>& dm,
+    const module_dm::DensityMatrix<T, double>& dm,
     const K_Vectors& kv,
     const int& nspin,
     int& iter,

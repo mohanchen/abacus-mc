@@ -11,7 +11,7 @@ endif()
 AddTest(
   TARGET MODULE_ESTATE_dm_io_test_serial
   LIBS parameter base device cell_info symmetry
-  SOURCES test_dm_io.cpp ../density_matrix.cpp ../density_matrix_io.cpp
+  SOURCES test_dm_io.cpp ../density_matrix.cpp ../density_matrix_io.cpp ../dm_io.cpp
   ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/base_matrix.cpp
   ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/hcontainer.cpp
   ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/atom_pair.cpp

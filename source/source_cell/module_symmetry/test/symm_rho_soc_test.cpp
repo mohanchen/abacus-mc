@@ -217,7 +217,7 @@ ModuleBase::Vector3<double> real_extract(const ModuleSymmetry::SpinRotation::Su2
     const int col_size = 2;
     const int step_trace[4] = {0, 1, col_size, col_size + 1};
     double out[4] = {0.0, 0.0, 0.0, 0.0}; // rho0/x/y/z written at icol=0
-    elecstate::DensityMatrix_Tools::func_xyz_to_updown<double>(tmp, 0, step_trace, out);
+    module_dm::DensityMatrix_Tools::func_xyz_to_updown<double>(tmp, 0, step_trace, out);
     return ModuleBase::Vector3<double>(out[step_trace[1]], out[step_trace[2]], out[step_trace[3]]);
 }
 } // namespace

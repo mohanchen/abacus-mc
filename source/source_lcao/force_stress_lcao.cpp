@@ -38,7 +38,7 @@
 // mohan add 2025-11-04
 template <>
 void assign_dmk_ptr<double>(
-    elecstate::DensityMatrix<double,double>* dm,
+    module_dm::DensityMatrix<double,double>* dm,
     std::vector<std::vector<double>>*& dmk_d,
     std::vector<std::vector<std::complex<double>>>*& dmk_c
 ) {
@@ -49,7 +49,7 @@ void assign_dmk_ptr<double>(
 
 template <>
 void assign_dmk_ptr<std::complex<double>>(
-    elecstate::DensityMatrix<std::complex<double>,double>* dm,
+    module_dm::DensityMatrix<std::complex<double>,double>* dm,
     std::vector<std::vector<double>>*& dmk_d,
     std::vector<std::vector<std::complex<double>>>*& dmk_c
 ) {
@@ -243,7 +243,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
     // Calculate forces and stresses using new operator-based methods
     // Step 1: Calculate Energy Density Matrix (EDM) for overlap force
     // EDM = Σ_k w_k * ε_k * |ψ_k><ψ_k|
-    elecstate::DensityMatrix<T, double> edm = edm_cal.cal_edm(pelec, *psi, *dmat.dm, kv, pv,
+    module_dm::DensityMatrix<T, double> edm = edm_cal.cal_edm(pelec, *psi, *dmat.dm, kv, pv,
                                                            cfg.nspin, cfg.nbands, ucell, *this->RA);
 
     // Step 2: Handle different spin cases

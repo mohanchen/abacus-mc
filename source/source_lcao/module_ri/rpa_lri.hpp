@@ -41,7 +41,7 @@ inline void trim_malloc_cache()
 template <typename T, typename Tdata>
 void RPA_LRI<T, Tdata>::postSCF(const UnitCell& ucell,
                                 const MPI_Comm& mpi_comm_in,
-                                const elecstate::DensityMatrix<T, Tdata>& dm,
+                                const module_dm::DensityMatrix<T, Tdata>& dm,
                                 const elecstate::ElecState* pelec,
                                 const K_Vectors& kv,
                                 const LCAO_Orbitals& orb,
@@ -106,7 +106,7 @@ void RPA_LRI<T, Tdata>::init(const MPI_Comm& mpi_comm_in, const K_Vectors& kv_in
 }
 
 template <typename T, typename Tdata>
-void RPA_LRI<T, Tdata>::cal_postSCF_exx(const elecstate::DensityMatrix<T, Tdata>& dm,
+void RPA_LRI<T, Tdata>::cal_postSCF_exx(const module_dm::DensityMatrix<T, Tdata>& dm,
                                         const MPI_Comm& mpi_comm_in,
                                         const UnitCell& ucell,
                                         const K_Vectors& kv,

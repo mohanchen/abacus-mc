@@ -39,7 +39,7 @@ namespace lcao
 
 void cal_mi_lcao(ScState& state,
                  hamilt::Operator<std::complex<double>>* p_operator,
-                 elecstate::DensityMatrix<std::complex<double>, double>* dm,
+                 module_dm::DensityMatrix<std::complex<double>, double>* dm,
                  const int& step,
                  bool print)
 {

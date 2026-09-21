@@ -97,8 +97,8 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
     if( PARAM.inp.gamma_only )
     {
         // calculate DMK and DMR
-        elecstate::DensityMatrix<TK, double> DM_gamma_only(ParaV, nspin);
-        elecstate::cal_dm_psi(ParaV, wg, wfc, DM_gamma_only);
+        module_dm::DensityMatrix<TK, double> DM_gamma_only(ParaV, nspin);
+        module_dm::cal_dm_psi(ParaV, wg, wfc, DM_gamma_only);
         DM_gamma_only.init_DMR(this->gd, &ucell);
         DM_gamma_only.cal_DMR(-1);
 
@@ -118,8 +118,8 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
     else
     {
         // calculate DMK and DMR
-        elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, kv->kvec_d, nk_total);
-        elecstate::cal_dm_psi(ParaV, wg, wfc, DM);
+        module_dm::DensityMatrix<TK, double> DM(ParaV, nspin, kv->kvec_d, nk_total);
+        module_dm::cal_dm_psi(ParaV, wg, wfc, DM);
         DM.init_DMR(this->gd, &ucell);
         DM.cal_DMR(-1);
 

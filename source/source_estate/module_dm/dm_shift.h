@@ -3,7 +3,7 @@
 
 #include <complex>
 
-namespace elecstate
+namespace module_dm
 {
 /**
  * @brief map a real/complex type to the opposite one
@@ -27,6 +27,6 @@ struct ShiftRealComplex<std::complex<double>>
     using type = double;
 };
 
-} // namespace elecstate
+} // namespace module_dm
 
 #endif

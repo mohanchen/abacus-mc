@@ -291,6 +291,7 @@ OBJS_ELECSTAT_LCAO=elecstate_lcao.o\
       init_dm.o\
       density_matrix.o\
       density_matrix_io.o\
+      dm_io.o\
       cal_dm_psi.o\
       cal_edm_tddft.o\
 

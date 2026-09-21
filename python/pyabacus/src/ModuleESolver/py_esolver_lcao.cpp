@@ -346,7 +346,7 @@ template class PyHamiltonianAccessor<std::complex<double>, double>;
 // ============================================================================
 
 template <typename TK, typename TR>
-void PyDensityMatrixAccessor<TK, TR>::set_from_dm(elecstate::DensityMatrix<TK, TR>* dm)
+void PyDensityMatrixAccessor<TK, TR>::set_from_dm(module_dm::DensityMatrix<TK, TR>* dm)
 {
     dm_ptr_ = dm;
 

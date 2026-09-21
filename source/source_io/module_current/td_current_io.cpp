@@ -54,9 +54,9 @@ void ModuleIO::write_current(const UnitCell& ucell,
     // be refactored in the future.
     const int nspin0 = PARAM.inp.nspin;
     const int nspin_dm = std::map<int, int>({ {1,1},{2,2},{4,1} })[nspin0];
-    elecstate::DensityMatrix<std::complex<double>, std::complex<double>> tmp_dm(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
+    module_dm::DensityMatrix<std::complex<double>, std::complex<double>> tmp_dm(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
     // calculate DMK
-    elecstate::cal_dm_psi(pv, pelec->wg, psi[0], tmp_dm);
+    module_dm::cal_dm_psi(pv, pelec->wg, psi[0], tmp_dm);
 
     // init DMR
     tmp_dm.init_DMR(ra, &ucell);
@@ -223,11 +223,11 @@ void ModuleIO::write_current_eachk(const UnitCell& ucell,
 
     const int nspin0 = PARAM.inp.nspin;
     const int nspin_dm = std::map<int, int>({ {1,1},{2,2},{4,1} })[nspin0];
-    elecstate::DensityMatrix<std::complex<double>, std::complex<double>> tmp_dm(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
-    //elecstate::DensityMatrix<std::complex<double>, double> DM_real(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
-    //elecstate::DensityMatrix<std::complex<double>, double> DM_imag(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
+    module_dm::DensityMatrix<std::complex<double>, std::complex<double>> tmp_dm(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
+    //module_dm::DensityMatrix<std::complex<double>, double> DM_real(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
+    //module_dm::DensityMatrix<std::complex<double>, double> DM_imag(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
     // calculate DMK
-    elecstate::cal_dm_psi(pv, pelec->wg, psi[0], tmp_dm);
+    module_dm::cal_dm_psi(pv, pelec->wg, psi[0], tmp_dm);
 
     // init DMR
     tmp_dm.init_DMR(ra, &ucell);

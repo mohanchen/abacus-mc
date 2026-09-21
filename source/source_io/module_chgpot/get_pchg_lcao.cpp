@@ -61,8 +61,8 @@ void Get_pchg_lcao::begin_gamma(const UnitCell& ucell,
         }
 
         // Construct a band-resolved density matrix before evaluating its density on the grid.
-        elecstate::DensityMatrix<double, double> DM(&para_orb_, nspin_);
-        elecstate::cal_dm_psi(&para_orb_, state_weights, *psi_gamma_, DM);
+        module_dm::DensityMatrix<double, double> DM(&para_orb_, nspin_);
+        module_dm::cal_dm_psi(&para_orb_, state_weights, *psi_gamma_, DM);
 
         for (int is = 0; is < nspin_; ++is)
         {
@@ -147,8 +147,8 @@ void Get_pchg_lcao::begin_k(const ModulePW::PW_Basis& rho_pw,
         // Collinear spin channels are stored as two k blocks; spinors use one block per k point.
         const int nspin_dm = nspin_ == 2 ? 2 : 1;
         const int nk_output = kv.get_nks() / nspin_dm;
-        elecstate::DensityMatrix<std::complex<double>, double> DM(&para_orb_, nspin_dm, kv.kvec_d, nk_output);
-        elecstate::cal_dm_psi(&para_orb_, state_weights, *psi_k_, DM);
+        module_dm::DensityMatrix<std::complex<double>, double> DM(&para_orb_, nspin_dm, kv.kvec_d, nk_output);
+        module_dm::cal_dm_psi(&para_orb_, state_weights, *psi_k_, DM);
 
         if (if_separate_k)
         {

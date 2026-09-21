@@ -38,9 +38,9 @@ void RDMFT<TK, TR>::get_DM_XC(std::vector< std::vector<TK> >& DM_XC)
         wk_funEta_wfc.fix_k(ik);
         TK* DM_Kpointer = DM_XC[ik].data();
 #ifdef __MPI
-        elecstate::psiMulPsiMpi(wk_funEta_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
+        module_dm::psiMulPsiMpi(wk_funEta_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
 #else
-        elecstate::psiMulPsi(wk_funEta_wfc, wfc, DM_Kpointer);
+        module_dm::psiMulPsi(wk_funEta_wfc, wfc, DM_Kpointer);
 #endif            
     }
 }
@@ -164,8 +164,8 @@ void RDMFT<TK, TR>::cal_V_XC(const UnitCell& ucell)
     // // //test
     // DM_XC_pass = DM_XC;
 
-    // elecstate::DensityMatrix<TK, double> DM_test(ParaV, nspin, kv->kvec_d, nk_total);
-    // elecstate::cal_dm_psi(ParaV, wg, wfc, DM_test);
+    // module_dm::DensityMatrix<TK, double> DM_test(ParaV, nspin, kv->kvec_d, nk_total);
+    // module_dm::cal_dm_psi(ParaV, wg, wfc, DM_test);
     // DM_test.init_DMR(this->gd, this->ucell);
     // DM_test.cal_DMR(-1);
 

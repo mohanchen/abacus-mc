@@ -93,7 +93,7 @@ TEST(SocMagnetizationRoundtrip, ExtractRecoversPhysicalMagnetization)
 
         // 2x2 output buffer (row-major), func writes rho0/x/y/z into step_trace slots at icol=0
         double out[4] = {0, 0, 0, 0};
-        elecstate::DensityMatrix_Tools::func_xyz_to_updown<double>(tmp, 0, step_trace, out);
+        module_dm::DensityMatrix_Tools::func_xyz_to_updown<double>(tmp, 0, step_trace, out);
 
         const double mx = out[step_trace[1]];
         const double my = out[step_trace[2]];
@@ -128,7 +128,7 @@ TEST(SocMagnetizationRoundtrip, ComplexSpecializationRecoversPhysicalMagnetizati
         build_DM_block_as_cal_dm_psi(c, 1.0, tmp);
 
         cd out[4] = {cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0)};
-        elecstate::DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(tmp, 0, step_trace, out);
+        module_dm::DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(tmp, 0, step_trace, out);
 
         EXPECT_NEAR(out[step_trace[1]].real(), m_ref[0], 1e-10) << "m_x";
         EXPECT_NEAR(out[step_trace[2]].real(), m_ref[1], 1e-10) << "m_y (complex specialization)";

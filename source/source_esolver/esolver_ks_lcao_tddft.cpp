@@ -443,14 +443,14 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::iter_finish(UnitCell& ucell,
     {
         if (use_tensor && use_lapack)
         {
-            elecstate::cal_edm_tddft_tensor_lapack<Device>(this->pv,
+            module_dm::cal_edm_tddft_tensor_lapack<Device>(this->pv,
                                                            this->dmat,
                                                            this->kv,
                                                            static_cast<hamilt::Hamilt<std::complex<double>>*>(this->p_hamilt));
         }
         else
         {
-            elecstate::cal_edm_tddft(this->pv, this->dmat, this->kv, static_cast<hamilt::Hamilt<std::complex<double>>*>(this->p_hamilt));
+            module_dm::cal_edm_tddft(this->pv, this->dmat, this->kv, static_cast<hamilt::Hamilt<std::complex<double>>*>(this->p_hamilt));
         }
     }
 }
@@ -618,7 +618,7 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::weight_dm_rho(const UnitCell& ucell)
     // Calculate Eband energy
     elecstate::calEBand(this->pelec->ekb, this->pelec->wg, this->pelec->f_en);
 
-    elecstate::cal_dm_psi(this->dmat.dm->get_paraV_pointer(), this->pelec->wg, this->psi[0], *this->dmat.dm);
+    module_dm::cal_dm_psi(this->dmat.dm->get_paraV_pointer(), this->pelec->wg, this->psi[0], *this->dmat.dm);
     if (this->inp_->td_stype == 2)
     {
         this->dmat.dm->cal_DMR_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);

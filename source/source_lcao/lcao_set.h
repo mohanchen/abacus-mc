@@ -126,7 +126,7 @@ void init_chg_hr(
 	const Parallel_Orbitals* pv,
 	psi::Psi<TK>& psi,
 	elecstate::ElecState* pelec,
-	elecstate::DensityMatrix<TK, double>& dm,
+	module_dm::DensityMatrix<TK, double>& dm,
 	Charge& chr,
 	const std::string& ks_solver);
 } // end namespace

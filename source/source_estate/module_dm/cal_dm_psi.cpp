@@ -5,14 +5,14 @@
 #include "source_base/timer.h"
 #include "source_psi/psi.h"
 
-namespace elecstate
+namespace module_dm
 {
 
 // for Gamma-Only case where DMK is double
 void cal_dm_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<double>& wfc,
-                elecstate::DensityMatrix<double, double>& DM)
+                module_dm::DensityMatrix<double, double>& DM)
 {
     ModuleBase::TITLE("elecstate", "cal_dm_psi");
     ModuleBase::timer::start("elecstate", "cal_dm_psi");
@@ -72,7 +72,7 @@ template <typename TR>
 void cal_dm_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<std::complex<double>>& wfc,
-                elecstate::DensityMatrix<std::complex<double>, TR>& DM)
+                module_dm::DensityMatrix<std::complex<double>, TR>& DM)
 {
     ModuleBase::TITLE("elecstate", "cal_dm_psi");
     ModuleBase::timer::start("elecstate", "cal_dm_psi");
@@ -255,9 +255,9 @@ void psiMulPsi(const psi::Psi<std::complex<double>>& psi1,
 template void cal_dm_psi(const Parallel_Orbitals* ParaV,
                          const ModuleBase::matrix& wg,
                          const psi::Psi<std::complex<double>>& wfc,
-                         elecstate::DensityMatrix<std::complex<double>, std::complex<double>>& DM);
+                         module_dm::DensityMatrix<std::complex<double>, std::complex<double>>& DM);
 template void cal_dm_psi(const Parallel_Orbitals* ParaV,
                          const ModuleBase::matrix& wg,
                          const psi::Psi<std::complex<double>>& wfc,
-                         elecstate::DensityMatrix<std::complex<double>, double>& DM);
-} // namespace elecstate
+                         module_dm::DensityMatrix<std::complex<double>, double>& DM);
+} // namespace module_dm

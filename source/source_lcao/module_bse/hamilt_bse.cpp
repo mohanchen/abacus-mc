@@ -77,7 +77,7 @@ HamiltBSE<T>::HamiltBSE(const int& nspin,
 
     if (!this->bse_ri_hartree && this->ri_hartree_benchmark == "none")
     {
-        this->DM_trans = LR_Util::make_unique<elecstate::DensityMatrix<T, T>>(&pmat, 1/*nspin*/, kv_in.kvec_d, nk);
+        this->DM_trans = LR_Util::make_unique<module_dm::DensityMatrix<T, T>>(&pmat, 1/*nspin*/, kv_in.kvec_d, nk);
         this->DM_trans->set_DMK_zero();
         LR_Util::initialize_DMR(*this->DM_trans, this->pmat, this->ucell, this->gd, this->orb_cutoff);
     }
@@ -575,7 +575,7 @@ void HamiltBSE<std::complex<double>>::grid_calculation(hamilt::HContainer<std::c
     ModuleBase::TITLE("HamiltBSE", "grid_calculation(complex)");
     ModuleBase::timer::start("HamiltBSE", "grid_calculation(complex)");
 
-    elecstate::DensityMatrix<std::complex<double>, double> DM_trans_real_imag(&this->pmat, 1, this->kv.kvec_d, this->nk);
+    module_dm::DensityMatrix<std::complex<double>, double> DM_trans_real_imag(&this->pmat, 1, this->kv.kvec_d, this->nk);
     DM_trans_real_imag.init_DMR(VR);
     hamilt::HContainer<double> HR_real_imag(ucell, &this->pmat);
     LR_Util::initialize_HR<std::complex<double>, double>(HR_real_imag, ucell, gd, orb_cutoff);

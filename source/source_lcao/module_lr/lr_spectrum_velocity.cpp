@@ -84,7 +84,7 @@ namespace LR
     ModuleBase::Vector3<T> LR::LR_Spectrum<T>::cal_transition_dipole_istate_velocity_R(const int istate, const Velocity_op<std::complex<double>>& vR)
     {
         // transition density matrix D(R)
-        const elecstate::DensityMatrix<T, T>& DM_trans = this->cal_transition_density_matrix(istate);
+        const module_dm::DensityMatrix<T, T>& DM_trans = this->cal_transition_density_matrix(istate);
 
         std::vector<std::complex<double>> trans_dipole(3, 0.0);    // $=\sum_{uvR} v(R) D(R) = \sum_{aik}X_{aik}<ik|v|ak>$
         const std::complex<double> fac = ModuleBase::IMAG_UNIT / (omega[istate] / ModuleBase::e2);    // Ry to Hartree
@@ -106,7 +106,7 @@ namespace LR
     ModuleBase::Vector3<T> LR::LR_Spectrum<T>::cal_transition_dipole_istate_velocity_k(const int istate, const Velocity_op<std::complex<double>>& vR)
     {
         // transition density matrix D(R)
-        const elecstate::DensityMatrix<T, T>& DM_trans = this->cal_transition_density_matrix(istate, this->X, false);
+        const module_dm::DensityMatrix<T, T>& DM_trans = this->cal_transition_density_matrix(istate, this->X, false);
 
         std::vector<std::complex<double>> trans_dipole(3, 0.0);    // $=\sum_{uvk} v(k) D(k) = \sum_{aik}X_{aik}<ik|v|ak>$
         const std::complex<double> fac = ModuleBase::IMAG_UNIT / (omega[istate] / ModuleBase::e2);    // Ry to Hartree

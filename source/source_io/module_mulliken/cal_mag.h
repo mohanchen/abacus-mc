@@ -26,7 +26,7 @@ template <typename TK>
 void cal_mag(Parallel_Orbitals* pv,
              hamilt::Hamilt<TK>* p_ham,
              K_Vectors& kv,
-             elecstate::DensityMatrix<TK,double>* dm,
+             module_dm::DensityMatrix<TK,double>* dm,
              const TwoCenterBundle& two_center_bundle,
              const LCAO_Orbitals& orb,
              UnitCell& ucell,

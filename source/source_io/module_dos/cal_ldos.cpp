@@ -50,12 +50,12 @@ void Cal_ldos<T>::cal_ldos_lcao(
 
         // calculate dm-like for ldos
         const int nspin_dm = PARAM.inp.nspin == 2 ? 2 : 1;
-        elecstate::DensityMatrix<T, double> dm_ldos(dmat.dm->get_paraV_pointer(),
+        module_dm::DensityMatrix<T, double> dm_ldos(dmat.dm->get_paraV_pointer(),
                                                     nspin_dm,
                                                     kv.kvec_d,
                                                     kv.get_nks() / nspin_dm);
 
-        elecstate::cal_dm_psi(dmat.dm->get_paraV_pointer(), weight, psi, dm_ldos);
+        module_dm::cal_dm_psi(dmat.dm->get_paraV_pointer(), weight, psi, dm_ldos);
         dm_ldos.init_DMR(&grid_driver, &ucell);
         dm_ldos.cal_DMR(-1);
 

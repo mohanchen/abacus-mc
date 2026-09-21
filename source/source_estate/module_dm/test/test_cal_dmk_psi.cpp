@@ -107,7 +107,7 @@ TEST_F(DMTest, cal_dmk_psi_nspin1)
     std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
     std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
     int nspin = 1;
-    elecstate::DensityMatrix<double, double> DM(kv, paraV, nspin);
+    module_dm::DensityMatrix<double, double> DM(kv, paraV, nspin);
     // compare
     EXPECT_EQ(DM.get_DMK_nks(), kv->get_nks());
     EXPECT_EQ(DM.get_DMK_nrow(), paraV->nrow);

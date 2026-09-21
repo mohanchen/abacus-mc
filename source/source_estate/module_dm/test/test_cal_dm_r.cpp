@@ -116,7 +116,7 @@ TEST_F(DMTest, cal_DMR_full)
     kv->set_nks(nks);
     kv->kvec_d.resize(nks);
     // construct DM
-    elecstate::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks());
+    module_dm::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks());
     // set this->_DMK
     for (int is = 1; is <= nspin; is++)
     {
@@ -180,7 +180,7 @@ TEST_F(DMTest, cal_DMR_blas_double)
     kv->set_nks(nks);
     kv->kvec_d.resize(nks);
     // construct DM
-    elecstate::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
+    module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
     // set this->_DMK
     for (int is = 1; is <= nspin; is++)
     {
@@ -251,7 +251,7 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     kv->kvec_d[1].x = 0.5;
     kv->kvec_d[3].x = 0.5;
     // construct DM
-    elecstate::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
+    module_dm::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
     // set this->_DMK
     for (int is = 1; is <= nspin; is++)
     {

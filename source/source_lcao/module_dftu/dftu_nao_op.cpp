@@ -30,7 +30,7 @@ hamilt::DFTU_onsite<hamilt::OperatorLCAO<TK, TR>>::DFTU_onsite(HS_Matrix_K<TK>* 
                                                  Plus_U_Base* p_dftu,
                                                  const int nspin_in,
                                                  const double onsite_radius,
-                                                 const elecstate::DensityMatrix<TK, double>* dm_in)
+                                                 const module_dm::DensityMatrix<TK, double>* dm_in)
     : hamilt::OperatorLCAO<TK, TR>(hsk_in, kvec_d_in, hR_in),
       ucell(&ucell_in),
       dftu(p_dftu),
@@ -133,7 +133,7 @@ void hamilt::DFTU_onsite<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
     // actually symmetric; reconstruct the full-BZ DMR once here (reused by every
     // atom below) via the same D(k) restoration EXX already uses for its own
     // real-space density matrix (ModuleSymmetry::Symmetry_rotation::restore_dm).
-    std::unique_ptr<elecstate::DensityMatrix<TK, double>> dmr_sym;
+    std::unique_ptr<module_dm::DensityMatrix<TK, double>> dmr_sym;
     if (!this->dftu->is_occmat_ready() && this->kv_ != nullptr && ModuleSymmetry::Symmetry::symm_flag == 1
         && !this->kv_->kstars.empty())
     {
@@ -162,7 +162,7 @@ void hamilt::DFTU_onsite<hamilt::OperatorLCAO<TK, TR>>::contributeHR()
             for (const std::pair<const int, ModuleBase::Vector3<double>>& isym_kvd : this->kv_->kstars[ik_ibz]) { kvec_d_full.push_back(isym_kvd.second); }
         }
         const std::vector<std::vector<TK>> dmk_full = this->symrot_.restore_dm(*this->kv_, this->dm_->get_DMK_vector(), *pv);
-        dmr_sym.reset(new elecstate::DensityMatrix<TK, double>(pv, nspin0, kvec_d_full, static_cast<int>(kvec_d_full.size())));
+        dmr_sym.reset(new module_dm::DensityMatrix<TK, double>(pv, nspin0, kvec_d_full, static_cast<int>(kvec_d_full.size())));
         dmr_sym->init_DMR(*this->dm_->get_DMR_pointer(1));
         dmr_sym->get_DMK_vector() = dmk_full;
         dmr_sym->cal_DMR(-1);

@@ -16,7 +16,7 @@ template <typename TK>
 void Setup_DM<TK>::allocate_dm(const K_Vectors* kv, const Parallel_Orbitals* pv, const int nspin)
 {
     const int nspin_dm = nspin == 2 ? 2 : 1;
-    this->dm = new elecstate::DensityMatrix<TK, double>(pv, nspin_dm, kv->kvec_d, kv->get_nks() / nspin_dm);
+    this->dm = new module_dm::DensityMatrix<TK, double>(pv, nspin_dm, kv->kvec_d, kv->get_nks() / nspin_dm);
 }
 
 template class Setup_DM<double>;               // Gamma_only case

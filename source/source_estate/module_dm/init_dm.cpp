@@ -6,7 +6,7 @@
 #include "source_lcao/module_rt/td_info.h"
 
 template <typename TK>
-void elecstate::init_dm(UnitCell& ucell,
+void module_dm::init_dm(UnitCell& ucell,
         elecstate::ElecState* pelec,
         LCAO_domain::Setup_DM<TK> &dmat,
         psi::Psi<TK>* psi,
@@ -23,7 +23,7 @@ void elecstate::init_dm(UnitCell& ucell,
 
         elecstate::calEBand(pelec->ekb, pelec->wg, pelec->f_en);
 
-        elecstate::cal_dm_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
+        module_dm::cal_dm_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
         if (cfg.esolver_type != "tddft" && cfg.td_stype == 2)
         {
             dmat.dm->cal_DMR_td(TD_info::td_vel_op->get_phase_hybrid(), TD_info::cart_At, -1);
@@ -49,7 +49,7 @@ void elecstate::init_dm(UnitCell& ucell,
 }
 
 
-template void elecstate::init_dm<double>(UnitCell& ucell,
+template void module_dm::init_dm<double>(UnitCell& ucell,
         elecstate::ElecState* pelec,
         LCAO_domain::Setup_DM<double> &dmat,
         psi::Psi<double>* psi,
@@ -58,7 +58,7 @@ template void elecstate::init_dm<double>(UnitCell& ucell,
         const int exx_two_level_step,
         const Init_DM_Config& cfg);
 
-template void elecstate::init_dm<std::complex<double>>(UnitCell& ucell,
+template void module_dm::init_dm<std::complex<double>>(UnitCell& ucell,
         elecstate::ElecState* pelec,
         LCAO_domain::Setup_DM<std::complex<double>> &dmat,
         psi::Psi<std::complex<double>>* psi,

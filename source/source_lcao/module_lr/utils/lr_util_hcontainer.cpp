@@ -1,8 +1,8 @@
 #include "lr_util_hcontainer.h"
 namespace LR_Util
 {
-    void get_DMR_real_imag_part(const elecstate::DensityMatrix<std::complex<double>, std::complex<double>>& DMR,
-        elecstate::DensityMatrix<std::complex<double>, double>& DMR_real,
+    void get_DMR_real_imag_part(const module_dm::DensityMatrix<std::complex<double>, std::complex<double>>& DMR,
+        module_dm::DensityMatrix<std::complex<double>, double>& DMR_real,
         const int& nat,
         const char& type)
     {

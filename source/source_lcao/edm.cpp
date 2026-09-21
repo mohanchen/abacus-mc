@@ -4,9 +4,9 @@
 #include "source_base/memory_recorder.h"
 #include "source_io/module_parameter/parameter.h"
 template<>
-elecstate::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate::ElecState* pelec,
+module_dm::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate::ElecState* pelec,
     const psi::Psi<double>& psi,
-    const elecstate::DensityMatrix<double, double>& dm,
+    const module_dm::DensityMatrix<double, double>& dm,
     const K_Vectors& kv,
     const Parallel_Orbitals& pv,
     const int& nspin, 
@@ -26,7 +26,7 @@ elecstate::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
     }
 
     // construct a DensityMatrix for Gamma-Only
-    elecstate::DensityMatrix<double, double> edm(&pv, nspin);
+    module_dm::DensityMatrix<double, double> edm(&pv, nspin);
     
 #ifdef __PEXSI
     if (PARAM.inp.ks_solver == "pexsi")
@@ -41,7 +41,7 @@ elecstate::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
     else
 #endif
     {
-        elecstate::cal_dm_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
+        module_dm::cal_dm_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
     }
     edm.init_DMR(ra, &ucell);
     edm.cal_DMR(-1);
@@ -49,10 +49,10 @@ elecstate::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
 }
 
 template<>
-elecstate::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<double>>::cal_edm(
+module_dm::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<double>>::cal_edm(
     const elecstate::ElecState* pelec,
     const psi::Psi<std::complex<double>>& psi,
-    const elecstate::DensityMatrix<std::complex<double>, double>& dm,
+    const module_dm::DensityMatrix<std::complex<double>, double>& dm,
     const K_Vectors& kv,
     const Parallel_Orbitals& pv,
     const int& nspin, 
@@ -63,7 +63,7 @@ elecstate::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
 
     // construct a DensityMatrix object
     const int nspin_dm = nspin == 2 ? 2 : 1;
-    elecstate::DensityMatrix<std::complex<double>, double> edm(&pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
+    module_dm::DensityMatrix<std::complex<double>, double> edm(&pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
 
     //--------------------------------------------
     // calculate the energy density matrix here.
@@ -97,7 +97,7 @@ elecstate::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
     else
     {
         // cal_dm_psi
-        elecstate::cal_dm_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
+        module_dm::cal_dm_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
     }
 
     // cal_dm_2d

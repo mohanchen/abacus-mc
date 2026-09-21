@@ -5,20 +5,20 @@
 #include "source_base/matrix.h"
 #include "source_psi/psi.h"
 
-namespace elecstate
+namespace module_dm
 {
 // for Gamma-Only case where DMK is double
 void cal_dm_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<double>& wfc,
-                elecstate::DensityMatrix<double, double>& DM);
+                module_dm::DensityMatrix<double, double>& DM);
 
 // for Multi-k case where DMK is std::complex<double>
 template <typename TR>
 void cal_dm_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<std::complex<double>>& wfc,
-                elecstate::DensityMatrix<std::complex<double>, TR>& DM);
+                module_dm::DensityMatrix<std::complex<double>, TR>& DM);
 
 #ifdef __MPI
 // for Gamma-Only case with MPI
@@ -44,5 +44,5 @@ void psiMulPsi(const psi::Psi<std::complex<double>>& psi1,
                const psi::Psi<std::complex<double>>& psi2,
                std::complex<double>* dm_out);
 #endif
-}; // namespace elecstate
+} // namespace module_dm
 #endif

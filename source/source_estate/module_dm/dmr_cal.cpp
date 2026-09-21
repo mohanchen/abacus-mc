@@ -8,7 +8,7 @@
 #include "source_io/module_parameter/parameter.h"
 #include "source_cell/klist.h"
 
-namespace elecstate
+namespace module_dm
 {
 
 // calculate DMR from DMK using blas for multi-k calculation
@@ -487,4 +487,4 @@ void DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(
     target_DMR_mat[icol + step_trace[3]] = tmp[0] - tmp[3];  // rho_z = (rho_upup - rho_downdown)
 }
 
-} // namespace elecstate
+} // namespace module_dm

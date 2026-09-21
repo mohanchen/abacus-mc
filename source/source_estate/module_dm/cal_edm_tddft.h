@@ -6,7 +6,7 @@
 #include "source_hamilt/hamilt.h"
 #include "source_lcao/setup_dm.h"
 
-namespace elecstate
+namespace module_dm
 {
 void cal_edm_tddft(Parallel_Orbitals& pv,
                    LCAO_domain::Setup_DM<std::complex<double>>& dmat,
@@ -18,5 +18,5 @@ void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
                                  LCAO_domain::Setup_DM<std::complex<double>>& dmat,
                                  K_Vectors& kv,
                                  hamilt::Hamilt<std::complex<double>>* p_hamilt);
-} // namespace elecstate
+} // namespace module_dm
 #endif // CAL_EDM_TDDFT_H

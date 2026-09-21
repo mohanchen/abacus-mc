@@ -15,7 +15,7 @@ namespace PulayForceStress
     inline void cal_pulay_fs(
         ModuleBase::matrix& f,
         ModuleBase::matrix& s,
-        const elecstate::DensityMatrix<TK, TR>& dm,
+        const module_dm::DensityMatrix<TK, TR>& dm,
         const UnitCell& ucell,
         const Parallel_Orbitals& pv,
         const double** dHSx,
