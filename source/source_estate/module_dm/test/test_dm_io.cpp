@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include "source_cell/unitcell.h"
 #include "source_estate/module_dm/density_matrix.h"
+#include "source_estate/module_dm/dm_tools.h"
 #include "prepare_unitcell.h"
 
 // mock functions
@@ -125,7 +126,7 @@ TEST_F(DMTest, DMConstructor1)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ++ik)
         {
-            DM.read_DMK(directory, is, ik);
+            elecstate::DensityMatrix_Tools::read_DMK_file(DM, directory, is, ik);
         }
     }
     // write DMK
@@ -144,7 +145,7 @@ TEST_F(DMTest, DMConstructor1)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ++ik)
         {
-            DM1.read_DMK(directory, is, ik);
+            elecstate::DensityMatrix_Tools::read_DMK_file(DM1, directory, is, ik);
         }
     }
     // compare DMK1 with DMK

@@ -349,12 +349,6 @@ void DensityMatrix_Tools::read_DMK_file(DensityMatrix<TK, TR>& dm,
     ifs.close();
 }
 
-template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::read_DMK(const std::string directory, const int ispin, const int ik)
-{
-    DensityMatrix_Tools::read_DMK_file(*this, directory, ispin, ik);
-}
-
 // output density matrix dm(k) into *.dmk
 template <typename TK, typename TR>
 void DensityMatrix_Tools::write_DMK_file(const DensityMatrix<TK, TR>& dm,
