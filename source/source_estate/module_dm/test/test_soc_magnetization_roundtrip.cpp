@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "source_estate/module_dm/density_matrix.h"
+#include "source_estate/module_dm/dm_tools.h"
 
 #include <complex>
 #include <cmath>

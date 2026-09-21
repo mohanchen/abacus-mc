@@ -64,7 +64,7 @@ AddTest(
 AddTest(
   TARGET MODULE_ESTATE_dm_soc_magnetization_roundtrip_test
   LIBS parameter  base device
-  SOURCES test_soc_magnetization_roundtrip.cpp ../density_matrix.cpp ../density_matrix_io.cpp tmp_mocks.cpp
+  SOURCES test_soc_magnetization_roundtrip.cpp ../density_matrix.cpp ../density_matrix_io.cpp ../dmr_cal.cpp tmp_mocks.cpp
   ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/base_matrix.cpp
   ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/hcontainer.cpp
   ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/atom_pair.cpp

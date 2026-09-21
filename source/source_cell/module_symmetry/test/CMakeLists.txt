@@ -22,6 +22,7 @@ AddTest(
   LIBS parameter base ${math_libs} device symmetry
   SOURCES symm_rho_soc_test.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/density_matrix.cpp
+    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_cal.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/base_matrix.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/hcontainer.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/atom_pair.cpp
