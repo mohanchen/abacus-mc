@@ -6,12 +6,16 @@
 #include "source_base/parallel_cell.h"
 #include "source_cell/mdcell_reader.h"
 #include "source_cell/mdcell.h"
+#include "source_cell/module_neighlist/domain_decomposition.h"
 #include "source_io/module_parameter/parameter.h"
 #include "fire.h"
 #include "langevin.h"
 #include "md_func.h"
 #include "source_base/global_file.h"
 #include "source_base/timer.h"
+#ifdef __JSON
+#include "source_io/module_json/output_info.h"
+#endif
 #include "source_io/module_output/print_info.h"
 #include "msst.h"
 #include "nhchain.h"
@@ -24,7 +28,7 @@
 namespace Run_MD
 {
 
-void prepare_mdcell(MDCell& mdcell, const Parameter& param_in)
+void prepare_mdcell(MDCell& mdcell, const Parameter& param_in, DomainDecomposition& decomp)
 {
     const Input_para& input = param_in.inp;
     std::vector<int> effective_replicate = input.cell_replica;
@@ -37,45 +41,75 @@ void prepare_mdcell(MDCell& mdcell, const Parameter& param_in)
     mdcell = MDCellReader::read_stru(param_in.globalv.global_in_stru,
                                      effective_replicate,
                                      input.mdp.md_neighbor_skin / ModuleBase::BOHR_TO_A,
-                                     comm_domain);
+                                     comm_domain,
+                                     decomp);
     GlobalV::ofs_running << std::endl;
     ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "TOTAL ATOM NUMBER", mdcell.nat());
     GlobalV::ofs_running << std::endl;
 }
 
-void prepare_mdcell(MDCell& mdcell, UnitCell& ucell)
+void prepare_mdcell(MDCell& mdcell, UnitCell& ucell, DomainDecomposition& decomp)
 {
-    mdcell.initialize_from_unitcell(ucell, 0.0, ModuleBase::world_comm_domain());
+    const ModuleBase::CommunicationDomain comm_domain = ModuleBase::world_comm_domain();
+    decomp.init(comm_domain, ucell.latvec, ucell.lat0, 0.0, 0.0);
+    const std::vector<LocalAtom> owned_atoms = decomp.split_owned_atoms_from_ucell(ucell);
+    std::vector<std::string> type_labels;
+    std::vector<double> type_masses;
+    std::vector<std::int64_t> type_atom_counts;
+    for (int it = 0; it < ucell.ntype; ++it)
+    {
+        type_labels.push_back(ucell.atoms[it].label);
+        type_masses.push_back(ucell.atoms[it].mass);
+        type_atom_counts.push_back(ucell.atoms[it].na);
+    }
+    mdcell.initialize_from_owned_atoms(ucell.latvec,
+                                       ucell.GT,
+                                       ucell.lat0,
+                                       ucell.omega,
+                                       ucell.nat,
+                                       owned_atoms,
+                                       type_labels,
+                                       type_masses,
+                                       type_atom_counts,
+                                       0.0,
+                                       comm_domain);
+    mdcell.set_backing_unitcell(ucell);
     mdcell.mutable_stru_meta() = unitcell::make_stru_meta(ucell);
 }
 
 void md_line(MDCell& mdcell,
              ModuleESolver::ESolver* p_esolver,
-             const Parameter& param_in)
+             const Parameter& param_in,
+             DomainDecomposition& decomp)
 {
     ModuleBase::TITLE("Run_MD", "md_line");
     ModuleBase::timer::start("Run_MD", "md_line");
     /// determine the md_type
     MD_base* mdrun = nullptr;
+    /// the integrators take the values they use, not the whole Parameter
+    const MD_para& mdp = param_in.mdp;
+    const bool cal_stress = param_in.inp.cal_stress;
+    const bool init_vel = param_in.inp.init_vel;
+    const int my_rank = param_in.globalv.myrank;
     if (param_in.mdp.md_type == "fire")
     {
-        mdrun = new FIRE(param_in, mdcell);
+        mdrun = new FIRE(mdp, cal_stress, init_vel, my_rank, param_in.inp.force_thr, mdcell);
     }
     else if ((param_in.mdp.md_type == "nvt" && param_in.mdp.md_thermostat == "nhc") || param_in.mdp.md_type == "npt")
     {
-        mdrun = new Nose_Hoover(param_in, mdcell);
+        mdrun = new Nose_Hoover(mdp, cal_stress, init_vel, my_rank, mdcell);
     }
     else if (param_in.mdp.md_type == "nve" || param_in.mdp.md_type == "nvt")
     {
-        mdrun = new Verlet(param_in, mdcell);
+        mdrun = new Verlet(mdp, cal_stress, init_vel, my_rank, mdcell);
     }
     else if (param_in.mdp.md_type == "langevin")
     {
-        mdrun = new Langevin(param_in, mdcell);
+        mdrun = new Langevin(mdp, cal_stress, init_vel, my_rank, mdcell);
     }
     else if (param_in.mdp.md_type == "msst")
     {
-        mdrun = new MSST(param_in, mdcell);
+        mdrun = new MSST(mdp, cal_stress, init_vel, my_rank, mdcell);
     }
     else
     {
@@ -85,9 +119,18 @@ void md_line(MDCell& mdcell,
     /// md cycle, mohan update 2026-01-04, change '<=' to '<'
     while ((mdrun->step_ + mdrun->step_rst_) < param_in.mdp.md_nstep && !mdrun->stop)
     {
+#ifdef __JSON
+        // JSON output currently follows the UnitCell-backed electronic-structure path.
+        // Start one output record before the solver appends SCF information for this MD step.
+        if (mdcell.has_backing_unitcell())
+        {
+            Json::init_output_array_obj();
+        }
+#endif
+
         if (mdrun->step_ == 0)
         {
-            mdrun->setup(p_esolver, PARAM.globalv.global_readin_dir);
+            mdrun->setup(p_esolver, param_in.globalv.global_readin_dir, decomp);
         }
         else
         {
@@ -102,6 +145,7 @@ void md_line(MDCell& mdcell,
             MD_func::force_virial(p_esolver,
                                   mdrun->step_,
                                   mdcell,
+                                  decomp,
                                   mdrun->potential,
                                   param_in.inp.cal_stress,
                                   mdrun->virial,
@@ -125,7 +169,8 @@ void md_line(MDCell& mdcell,
             MD_func::dump_info(mdrun->step_ + mdrun->step_rst_,
                                PARAM.globalv.global_out_dir,
                                mdcell,
-                               param_in,
+                               mdp,
+                               cal_stress,
                                mdrun->virial);
         }
 

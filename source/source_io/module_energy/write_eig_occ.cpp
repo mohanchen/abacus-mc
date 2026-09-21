@@ -1,6 +1,7 @@
 #include "write_eig_occ.h"
 
-#include "source_io/module_output/band_parallel_output.h"
+#include "source_base/module_parallel/para_bridge.h"
+#include "source_base/module_parallel/para_band_output.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
@@ -11,7 +12,11 @@
 #include <mpi.h> // use MPI_Barrier
 #endif
 
-void ModuleIO::write_eig_iter(const ModuleBase::matrix &ekb,const ModuleBase::matrix &wg, const K_Vectors& kv)
+void ModuleIO::write_eig_iter(const ModuleBase::matrix &ekb,
+		const ModuleBase::matrix &wg,
+		const K_Vectors& kv,
+		const int nbands,
+		const int nspin)
 {
     ModuleBase::TITLE("ModuleIO","write_eig_iter");
 	ModuleBase::timer::start("ModuleIO", "write_eig_iter");
@@ -19,10 +24,10 @@ void ModuleIO::write_eig_iter(const ModuleBase::matrix &ekb,const ModuleBase::ma
 	GlobalV::ofs_running << "\n PRINT #EIGENVALUES# AND #OCCUPATIONS#" << std::endl;
 
     // Taoni fix bndpar on 2026-08-21
-    const ModuleBase::matrix global_ekb = ModuleIO::gather_band_matrix(ekb, PARAM.inp.nbands);
-    const ModuleBase::matrix global_wg = ModuleIO::gather_band_matrix(wg, PARAM.inp.nbands);
+    const Parallel::ParaBandOutput band_output(ekb.nc, nbands, Parallel::make_band_world());
+    const ModuleBase::matrix global_ekb = band_output.gather_matrix(ekb);
+    const ModuleBase::matrix global_wg = band_output.gather_matrix(wg);
 
-    const int nspin = PARAM.inp.nspin;
     const int nks = kv.get_nks();
 	const int nkstot = kv.get_nkstot();
     const int nk_fac = nspin == 2 ? 2 : 1;
@@ -160,8 +165,11 @@ void ModuleIO::write_eig_iter(const ModuleBase::matrix &ekb,const ModuleBase::ma
 }
 
 void ModuleIO::write_eig_file(const ModuleBase::matrix &ekb,
-		const ModuleBase::matrix &wg, 
+		const ModuleBase::matrix &wg,
 		const K_Vectors& kv,
+		const int nbands,
+		const int nspin,
+		const std::string& out_dir,
 		const int istep)
 {
 	ModuleBase::TITLE("ModuleIO","write_eig_file");
@@ -177,10 +185,10 @@ void ModuleIO::write_eig_file(const ModuleBase::matrix &ekb,
 	GlobalV::ofs_running << "\n";
 */
 
-    const int nspin = PARAM.inp.nspin;
     // Taoni fix bndpar on 2026-08-21
-    const ModuleBase::matrix global_ekb = ModuleIO::gather_band_matrix(ekb, PARAM.inp.nbands);
-    const ModuleBase::matrix global_wg = ModuleIO::gather_band_matrix(wg, PARAM.inp.nbands);
+    const Parallel::ParaBandOutput band_output(ekb.nc, nbands, Parallel::make_band_world());
+    const ModuleBase::matrix global_ekb = band_output.gather_matrix(ekb);
+    const ModuleBase::matrix global_wg = band_output.gather_matrix(wg);
     const int nks = kv.get_nks();
 	const int nkstot = kv.get_nkstot();
 
@@ -213,7 +221,7 @@ void ModuleIO::write_eig_file(const ModuleBase::matrix &ekb,
 #endif    
 
     // file name to store eigenvalues
-    std::string filename = PARAM.globalv.global_out_dir + "eig_occ.txt";
+    std::string filename = out_dir + "eig_occ.txt";
 
     GlobalV::ofs_running << " Write eigenvalues and occupations to file: " << filename << std::endl;
 
