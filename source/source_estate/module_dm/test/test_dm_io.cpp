@@ -135,7 +135,7 @@ TEST_F(DMTest, DMConstructor1)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ++ik)
         {
-            DM.write_DMK(directory, is, ik);
+            elecstate::DensityMatrix_Tools::write_DMK_file(DM, directory, is, ik);
         }
     }
     // construct a new DM

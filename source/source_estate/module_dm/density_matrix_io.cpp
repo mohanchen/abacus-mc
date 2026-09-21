@@ -431,12 +431,6 @@ void DensityMatrix_Tools::write_DMK_file<std::complex<double>, double>(
     ofs.close();
 }
 
-template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::write_DMK(const std::string directory, const int ispin, const int ik)
-{
-    DensityMatrix_Tools::write_DMK_file(*this, directory, ispin, ik);
-}
-
 // explicit instantiation for DensityMatrix_Tools IO functions
 template void DensityMatrix_Tools::read_DMK_file<double, double>(DensityMatrix<double, double>&,
                                                                  const std::string&,

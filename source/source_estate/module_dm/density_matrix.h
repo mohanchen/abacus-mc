@@ -213,14 +213,6 @@ class DensityMatrix
     void switch_dmr(const int mode);
 
     /**
-     * @brief write density matrix dm(ik) into *.dmk
-     * @param directory directory of *.dmk files
-     * @param ispin spin index (1 - spin up (support SOC) or 2 - spin down)
-     * @param ik k-point index
-     */
-    void write_DMK(const std::string directory, const int ispin, const int ik);
-
-    /**
      * @brief save _DMR into _DMR_save
      */
     void save_DMR();
