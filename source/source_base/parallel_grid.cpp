@@ -160,7 +160,10 @@ void Parallel_Grid::reduce_across_pools(double* data) const
         return;
     }
 
-    assert(data != nullptr);
+    // A rank may own zero real-space grid points (nrxx == 0); the buffer is
+    // legitimately null in that case. MPI_Allreduce below uses count 0 and
+    // ignores the buffer. Only a null buffer with a non-zero nrxx is a bug.
+    assert(data != nullptr || this->nrxx == 0);
     if (KP_WORLD != MPI_COMM_NULL)
     {
         // Equal-sized pools give corresponding ranks identical z-slab layouts,

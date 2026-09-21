@@ -68,8 +68,14 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
             rhog1, rhog2, *this->rhopw, this->cfg_, *this->omega, *this->tpiba);
     };
 
-    // Kerker screening functor, shared by all nspin branches
+    // Kerker screening functor, shared by all nspin branches.
+    // Short-circuit when close_kerker_gg0() was called (non-separate-loop
+    // EXX path): cfg_ is immutable, so the disable flag lives on the object.
     std::function<void(std::complex<double>*)> screen = [this](std::complex<double>* p) {
+        if (this->kerker_disabled_)
+        {
+            return;
+        }
         module_charge::kerker_screen_recip(this->cfg_, this->rhopw, *this->tpiba, p);
     };
 
@@ -96,7 +102,7 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         std::function<void(std::complex<double>*, const std::complex<double>*,
             const std::complex<double>*)> twobeta_mix
             = module_charge::detail::make_twobeta_mix<std::complex<double>>(
-                2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+                2 * npw, npw, this->cfg_.mixing_beta, this->cfg_.mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -121,7 +127,7 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         std::function<void(std::complex<double>*, const std::complex<double>*,
             const std::complex<double>*)> twobeta_mix
             = module_charge::detail::make_twobeta_mix<std::complex<double>>(
-                4 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+                4 * npw, npw, this->cfg_.mixing_beta, this->cfg_.mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
@@ -170,27 +176,36 @@ void Charge_Mixing::mix_rho_recip(Charge* chr)
         std::function<void(std::complex<double>*, const std::complex<double>*,
             const std::complex<double>*)> twobeta_mix
             = module_charge::detail::make_twobeta_mix<std::complex<double>>(
-                2 * npw, npw, this->mixing_beta, this->mixing_beta_mag);
+                2 * npw, npw, this->cfg_.mixing_beta, this->cfg_.mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhog_in, rhog_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhog_out);
         // get new |m| in real space using FT
         this->rhopw->recip2real(rhog_magabs.data() + this->rhopw->npw, rho_magabs.data());
-        // use new |m| and angle to update {mx, my, mz}
+        // Reciprocal-space rho was mixed into rhog_magabs[0..npw-1]; write it
+        // back to chr->rhog[0]. This copy is bounded by the reciprocal grid.
         for (int ig = 0; ig < npw; ig++)
         {
-            chr->rhog[0][ig] = rhog_magabs[ig]; // rhog
-            double norm = std::sqrt(chr->rho[1][ig] * chr->rho[1][ig]
-                    + chr->rho[2][ig] * chr->rho[2][ig]
-                    + chr->rho[3][ig] * chr->rho[3][ig]);
+            chr->rhog[0][ig] = rhog_magabs[ig];
+        }
+        // The new |m| in real space was produced by recip2real above into
+        // rho_magabs[0..nrxx-1]. Rescale {mx,my,mz} on every real-space point.
+        // The loop bound is nrxx (not npw) and the source is rho_magabs[ir]
+        // (not rho_magabs[npw+ig]), otherwise the tail [npw,nrxx) is left
+        // unscaled and rho_magabs[npw+ig] reads out of bounds when npw>0.
+        for (int ir = 0; ir < nrxx; ir++)
+        {
+            double norm = std::sqrt(chr->rho[1][ir] * chr->rho[1][ir]
+                    + chr->rho[2][ir] * chr->rho[2][ir]
+                    + chr->rho[3][ir] * chr->rho[3][ir]);
             if (std::abs(norm) < 1e-10)
             {
                 continue;
             }
-            double rescale_tmp = rho_magabs[npw + ig] / norm;
-            chr->rho[1][ig] *= rescale_tmp;
-            chr->rho[2][ig] *= rescale_tmp;
-            chr->rho[3][ig] *= rescale_tmp;
+            double rescale_tmp = rho_magabs[ir] / norm;
+            chr->rho[1][ir] *= rescale_tmp;
+            chr->rho[2][ir] *= rescale_tmp;
+            chr->rho[3][ir] *= rescale_tmp;
         }
     }
 
@@ -246,7 +261,12 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
     double* rhor_in=nullptr;
     double* rhor_out=nullptr;
 
+    // Kerker screening functor (see mix_rho_recip for the disable flag rationale).
     std::function<void(double*)> screen = [this](double* p) {
+        if (this->kerker_disabled_)
+        {
+            return;
+        }
         module_charge::kerker_screen_real(this->cfg_, this->rhopw, *this->tpiba, p);
     };
     std::function<double(double*, double*)> inner_product = [this](double* rho1, double* rho2)
@@ -274,7 +294,7 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_in = rho_mag_save.data();
         rhor_out = rho_mag.data();
         std::function<void(double*, const double*, const double*)> twobeta_mix
-            = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
+            = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->cfg_.mixing_beta, this->cfg_.mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
@@ -287,7 +307,7 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_out = chr->rho[0];
         const int nrxx = this->rhopw->nrxx;
         std::function<void(double*, const double*, const double*)> twobeta_mix
-            = module_charge::detail::make_twobeta_mix<double>(4 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
+            = module_charge::detail::make_twobeta_mix<double>(4 * nrxx, nrxx, this->cfg_.mixing_beta, this->cfg_.mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
@@ -315,7 +335,7 @@ void Charge_Mixing::mix_rho_real(Charge* chr)
         rhor_out = rho_magabs.data();
 
         std::function<void(double*, const double*, const double*)> twobeta_mix
-            = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->mixing_beta, this->mixing_beta_mag);
+            = module_charge::detail::make_twobeta_mix<double>(2 * nrxx, nrxx, this->cfg_.mixing_beta, this->cfg_.mixing_beta_mag);
         this->mixing->push_data(this->rho_mdata, rhor_in, rhor_out, screen, twobeta_mix, true);
         this->mixing->cal_coef(this->rho_mdata, inner_product);
         this->mixing->mix_data(this->rho_mdata, rhor_out);
@@ -359,6 +379,24 @@ void Charge_Mixing::mix_rho(Charge* chr)
 {
     ModuleBase::TITLE("Charge_Mixing", "mix_rho");
     ModuleBase::timer::start("Charge_Mixing", "mix_rho");
+
+    /// Fail fast on invalid arguments and a skipped set_rhopw: the body
+    /// dereferences these pointers unconditionally below.
+    if (chr == nullptr || chr->rhopw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "chr or chr->rhopw is null in mix_rho");
+    }
+    if (this->rhopw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "set_rhopw must be called before mix_rho");
+    }
+    if (cfg_.double_grid && this->rhodpw == nullptr)
+    {
+        ModuleBase::WARNING_QUIT("Charge_Mixing",
+                                 "rhodpw is null when double_grid is enabled");
+    }
 
     const int nspin = cfg_.nspin;
     assert(nspin==1 || nspin==2 || nspin==4);

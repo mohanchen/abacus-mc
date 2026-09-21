@@ -39,8 +39,12 @@ class Charge_Mixing
                     double& omega_in,
                     double& tpiba_in);
 
-    void close_kerker_gg0() { mixing_gg0 = 0.0; mixing_gg0_mag = 0.0; }
-    void conserve_setting() { mixing_beta = 0.01; mixing_beta_mag = 0.04; }
+    /// Disable Kerker screening for subsequent mix_rho calls.
+    /// Used by the non-separate-loop EXX path (exx_lri_interface.hpp)
+    /// after EXX convergence: Kerker damping fights the DM update there.
+    /// The Kerker kernels read cfg_ (immutable INPUT snapshot), so the
+    /// disable flag must live on Charge_Mixing itself rather than mutating cfg_.
+    void close_kerker_gg0() { kerker_disabled_ = true; }
     /**
      * @brief initialize mixing, including constructing mixing and allocating memory for mixing data
      * @brief this function should be called at eachiterinit()
@@ -73,10 +77,9 @@ class Charge_Mixing
     
     // extracting parameters normally these parameters will not be used outside charge mixing
     // while Exx is using them as well as some other places
-    const std::string& get_mixing_mode() const {return mixing_mode;}
-    double get_mixing_beta() const {return mixing_beta;}
-    int get_mixing_ndim() const {return mixing_ndim;}
-    double get_mixing_gg0() const {return mixing_gg0;}
+    const std::string& get_mixing_mode() const {return cfg_.mixing_mode;}
+    double get_mixing_beta() const {return cfg_.mixing_beta;}
+    int get_mixing_ndim() const {return cfg_.mixing_ndim;}
     Base_Mixing::Mixing* get_mixing() const {return mixing.get();}
 
     /**
@@ -119,23 +122,19 @@ class Charge_Mixing
     // private mixing parameters
     //======================================
     MixingConfig cfg_;                 ///< aggregated mixing config, also holds nspin/scf_thr_type/double_grid
-    std::string mixing_mode = "broyden"; ///< mixing mode: "plain", "broyden", "pulay"
-    double mixing_beta = 0.8;            ///< mixing beta for density
-    double mixing_beta_mag = 1.6;        ///< mixing beta for magnetism
-    int mixing_ndim = 8;                 ///< mixing ndim for broyden and pulay
-    double mixing_gg0 = 0.0;             ///< mixing gg0 for Kerker screen
-
-    double mixing_gg0_mag = 0.0;         ///< mixing gg0 for Kerker screen for magnetism
-    double mixing_gg0_min = 0.1;         ///< minimum kerker coefficient
-    double mixing_angle = 0.0;           ///< mixing angle for nspin=4
-    bool mixing_dmr = false;             ///< whether to mixing real space density matrix
     double* omega = nullptr;                  ///< omega for non-linear core correction
     double* tpiba = nullptr;                  ///< 2*pi/beta for non-linear core correction
-    double* tpiba2 = nullptr;                 ///< 2*pi/beta^2 for non-linear core correction
     std::vector<double> _drho_history; ///< history of drho used to determine the oscillation, size is scf_nmax
 
     ModulePW::PW_Basis* rhopw = nullptr;  ///< smooth grid
     ModulePW::PW_Basis* rhodpw = nullptr; ///< dense grid, same as rhopw for ncpp.
+
+    /// Runtime override set by close_kerker_gg0(): short-circuits the
+    /// Kerker screening lambdas in mix_rho_recip/mix_rho_real so the
+    /// non-separate-loop EXX path can disable Kerker after convergence.
+    /// Lives here, not in MixingConfig, because cfg_ is an immutable
+    /// INPUT snapshot consumed by the stateless Kerker kernels.
+    bool kerker_disabled_ = false;
 
     /**
      * @brief charge mixing for reciprocal space
