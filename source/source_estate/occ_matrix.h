@@ -40,6 +40,20 @@ class OccupationMatrix
         occ_[iat][l][n][spin](m1, m2) = val;
     }
 
+    // n-free variants: the radial channel index is always 0
+    double get(int iat, int l, int spin, int m1, int m2) const
+    {
+        return get(iat, l, 0, spin, m1, m2);
+    }
+    double get_save(int iat, int l, int spin, int m1, int m2) const
+    {
+        return get_save(iat, l, 0, spin, m1, m2);
+    }
+    void set(int iat, int l, int spin, int m1, int m2, double val)
+    {
+        set(iat, l, 0, spin, m1, m2, val);
+    }
+
     /// direct matrix access for kernels that operate on whole blocks
     ModuleBase::matrix& mat(int iat, int l, int n, int spin)
     {
@@ -56,6 +70,24 @@ class OccupationMatrix
     const ModuleBase::matrix& mat_save(int iat, int l, int n, int spin) const
     {
         return occ_save_[iat][l][n][spin];
+    }
+
+    // n-free variants: the radial channel index is always 0
+    ModuleBase::matrix& mat(int iat, int l, int spin)
+    {
+        return mat(iat, l, 0, spin);
+    }
+    const ModuleBase::matrix& mat(int iat, int l, int spin) const
+    {
+        return mat(iat, l, 0, spin);
+    }
+    ModuleBase::matrix& mat_save(int iat, int l, int spin)
+    {
+        return mat_save(iat, l, 0, spin);
+    }
+    const ModuleBase::matrix& mat_save(int iat, int l, int spin) const
+    {
+        return mat_save(iat, l, 0, spin);
     }
 
     // --- bulk data access (used by IO and legacy call sites) ---
