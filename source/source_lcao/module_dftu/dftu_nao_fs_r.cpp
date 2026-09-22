@@ -30,7 +30,7 @@ void cal_fs_nao_r_impl(const UnitCell* ucell,
                        ModuleBase::matrix& force,
                        ModuleBase::matrix& stress)
 {
-    ModuleBase::timer::start("DFTU", "cal_fs_nao_r");
+    ModuleBase::timer::start("DFTU_LCAO", "cal_fs_nao_r");
 
     const Parallel_Orbitals* pv = dmR[0]->get_paraV();
     const int npol = ucell->get_npol();
@@ -256,7 +256,7 @@ void cal_fs_nao_r_impl(const UnitCell* ucell,
         stress.c[3] = stress.c[1]; // stress(1,0)
     }
 
-    ModuleBase::timer::end("DFTU", "cal_fs_nao_r");
+    ModuleBase::timer::end("DFTU_LCAO", "cal_fs_nao_r");
 }
 
 void cal_fs_nao_r(const UnitCell* ucell,

@@ -520,7 +520,6 @@ void run_gamma_loop(const DftuFsEnv& env,
     Plus_U_Base& dftu = env.dftu();
     const UnitCell& ucell = env.ucell();
     const Parallel_Orbitals& pv = env.pv();
-    const int npol = env.npol();
     const int nlocal = pv.get_global_row_size();
 
     const char transN = 'N';
@@ -569,7 +568,6 @@ void run_k_loop(const DftuFsEnv& env,
     Plus_U_Base& dftu = env.dftu();
     const UnitCell& ucell = env.ucell();
     const Parallel_Orbitals& pv = env.pv();
-    const int npol = env.npol();
     const int nlocal = pv.get_global_row_size();
 
     const char transN = 'N';

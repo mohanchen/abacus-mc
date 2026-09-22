@@ -203,9 +203,11 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 
     //=================Part 1======================
     // call PBLAS routine to calculate the product of the S and density matrix
-    char transN = 'N', transT = 'T';
+    char transN = 'N';
+    char transT = 'T';
     const int one_int = 1;
-    const double alpha = 1.0, beta = 0.0;
+    const double alpha = 1.0;
+    const double beta = 0.0;
 
     std::vector<double> srho(pv->nloc);
     for (int is = 0; is < nspin; is++)
@@ -224,7 +226,6 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
             one_int,
             &pv->desc[0],
             dm_gamma[is].data(),
-            //dm_gamma[is].c,
             one_int,
             one_int,
             &pv->desc[0],
@@ -434,8 +435,7 @@ void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
                 }
 
                 default:
-                    std::cout << "Not supported NSPIN parameter" << std::endl;
-                    exit(0);
+                    ModuleBase::WARNING_QUIT("DFTU_LCAO", "Not supported NSPIN parameter");
                 }
             } // end l
         } // end ia
@@ -540,8 +540,7 @@ void process_occ_channel_gamma(OccupationMatrix& occmat,
                     break;
 
                 default:
-                    std::cout << "Not supported NSPIN parameter" << std::endl;
-                    exit(0);
+                    ModuleBase::WARNING_QUIT("DFTU_LCAO", "Not supported NSPIN parameter");
                 }
             } // L
         } // ia

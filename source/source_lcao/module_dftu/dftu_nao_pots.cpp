@@ -151,7 +151,8 @@ void DFTU_LCAO::cal_pot_uterm(Plus_U_Base& dftu,
     //=============================================================
     //   PART2: call pblas to calculate effective potential matrix
     //=============================================================
-    const char transN = 'N', transT = 'T';
+    const char transN = 'N';
+    const char transT = 'T';
     const int one_int = 1;
     const T half = static_cast<T>(0.5);
     const T one = static_cast<T>(1.0);
