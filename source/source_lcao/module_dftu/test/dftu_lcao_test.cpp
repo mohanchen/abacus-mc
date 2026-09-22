@@ -78,10 +78,9 @@ class DFTUTest : public ::testing::Test
             dftu.occmat().data()[iat].resize(3);
             for (int l = 0; l < 3; l++)
             {
-                dftu.occmat().data()[iat][l].resize(1);
-                dftu.occmat().data()[iat][l][0].resize(2);
-                dftu.occmat().data()[iat][l][0][0].create(2 * l + 1, 2 * l + 1);
-                dftu.occmat().data()[iat][l][0][1].create(2 * l + 1, 2 * l + 1);
+                dftu.occmat().data()[iat][l].resize(2);
+                dftu.occmat().data()[iat][l][0].create(2 * l + 1, 2 * l + 1);
+                dftu.occmat().data()[iat][l][1].create(2 * l + 1, 2 * l + 1);
             }
         }
         dftu.u_current = {U_test};
@@ -101,7 +100,7 @@ class DFTUTest : public ::testing::Test
     // DFTUTest, which is a friend of Plus_U_Base.
     double occ_mat_c(int iat, int spin, int icc) const
     {
-        return dftu.occmat().data()[iat][2][0][spin].c[icc];
+        return dftu.occmat().data()[iat][2][spin].c[icc];
     }
 
 #ifdef __MPI

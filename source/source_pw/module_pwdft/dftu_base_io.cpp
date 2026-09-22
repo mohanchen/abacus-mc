@@ -194,7 +194,7 @@ void read_occup_m(const UnitCell& ucell,
                                 for (int m1 = 0; m1 < 2 * L + 1; m1++)
                                 {
                                     ifdftu >> value;
-                                    occ.set(iat, L, zeta, spin, m0, m1, value);
+                                    occ.set(iat, L, spin, m0, m1, value);
                                 }
                                 ifdftu.ignore(150, '\n');
                             }
@@ -220,7 +220,7 @@ void read_occup_m(const UnitCell& ucell,
                                 {
                                     int m1_all = m1 + (2 * L + 1) * ipol1;
                                     ifdftu >> value;
-                                    occ.set(iat, L, zeta, 0, m0_all, m1_all, value);
+                                    occ.set(iat, L, 0, m0_all, m1_all, value);
                                 }
                             }
                             ifdftu.ignore(150, '\n');
@@ -289,14 +289,14 @@ void local_occup_bcast(const UnitCell& ucell,
                     {
                         for (int spin = 0; spin < 2; spin++)
                         {
-                            Parallel_Common::bcast_double(occ.mat(iat, l, n, spin).c,
-                                                          occ.mat(iat, l, n, spin).nr * occ.mat(iat, l, n, spin).nc);
+                            Parallel_Common::bcast_double(occ.mat(iat, l, spin).c,
+                                                          occ.mat(iat, l, spin).nr * occ.mat(iat, l, spin).nc);
                         }
                     }
                     else if (nspin == 4) // SOC
                     {
-                        Parallel_Common::bcast_double(occ.mat(iat, l, n, 0).c,
-                                                      occ.mat(iat, l, n, 0).nr * occ.mat(iat, l, n, 0).nc);
+                        Parallel_Common::bcast_double(occ.mat(iat, l, 0).c,
+                                                      occ.mat(iat, l, 0).nr * occ.mat(iat, l, 0).nc);
                     }
                 }
             }
@@ -442,7 +442,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                 {
                                     for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                     {
-                                        A[m0][m1] = dftu.occmat().get(iat, l, n, is, m0, m1);
+                                        A[m0][m1] = dftu.occmat().get(iat, l, is, m0, m1);
                                     }
                                 }
                                 std::vector<double> eigenvalues = CalculateEigenvalues(A, 2 * l + 1);
@@ -464,7 +464,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                 for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                 {
                                     ofs << std::setw(12)
-                                        << dftu.occmat().get(iat, l, n, is, m0, m1);
+                                        << dftu.occmat().get(iat, l, is, m0, m1);
                                 }
                                 ofs << std::endl;
                             }
@@ -489,7 +489,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                 {
                                     for (int m1 = 0; m1 < 2 * l + 1; m1++)
                                     {
-                                        A[m0][m1] = dftu.occmat().get(iat, l, n, 0, m0, m1);
+                                        A[m0][m1] = dftu.occmat().get(iat, l, 0, m0, m1);
                                         index++;
                                     }
                                 }
@@ -523,7 +523,7 @@ void write_occup_m(const Plus_U_Base& dftu,
                                         {
                                             int m1_all = m1 + (2 * l + 1) * ipol1;
                                             ofs << std::setw(12) << std::setprecision(8) << std::fixed
-                                                << dftu.occmat().get(iat, l, n, 0, m0_all, m1_all);
+                                                << dftu.occmat().get(iat, l, 0, m0_all, m1_all);
                                         }
                                     }
                                     ofs << std::endl;
