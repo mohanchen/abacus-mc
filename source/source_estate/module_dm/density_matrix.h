@@ -81,18 +81,23 @@ class DensityMatrix
      * @param kvec_d direct coordinates of kpoints
      * @param nk number of k-points, not always equal to K_Vectors::get_nks()/nspin_dm.
      *               it will be set to kvec_d.size() if the value is invalid
+     * @param nspin_global the global physical nspin from INPUT (1/2/4); defaults to nspin for
+     *               non-SOC cases where they coincide. Pass 4 explicitly for SOC/noncollinear
+     *               calculations so that cal_DMR selects the spin-resolved (Pauli) branch.
      */
     DensityMatrix(const Parallel_Orbitals* pv,
             const int nspin, 
             const std::vector<ModuleBase::Vector3<double>>& kvec_d, 
-            const int nk);
+            const int nk,
+            const int nspin_global = 0);
 
     /**
      * @brief Constructor of class DensityMatrix for gamma-only calculation, where kvector is not required
      * @param pv pointer of Parallel_Orbitals object
      * @param nspin number of spin of the density matrix, set by user according to global nspin
+     * @param nspin_global the global physical nspin from INPUT (1/2/4); defaults to nspin.
      */
-    DensityMatrix(const Parallel_Orbitals* pv, const int nspin);
+    DensityMatrix(const Parallel_Orbitals* pv, const int nspin, const int nspin_global = 0);
 
     /**
      * @brief initialize density matrix DMR from UnitCell
@@ -339,6 +344,15 @@ class DensityMatrix
      * _nspin means the number of isolated spin-polarization states
      */
     int _nspin = 1;
+
+    /**
+     * @brief the global physical nspin from INPUT (1/2/4).
+     * For SOC/noncollinear (global nspin==4) the density matrix is stored with _nspin==1
+     * (a single 2x2 spin-block matrix), but cal_DMR/cal_DMR_td must still take the
+     * spin-resolved (Pauli) branch. _nspin cannot distinguish this, so keep the global
+     * value here. Equals _nspin for non-SOC cases.
+     */
+    int _nspin_global = 1;
 
     /**
      * @brief real number of k-points

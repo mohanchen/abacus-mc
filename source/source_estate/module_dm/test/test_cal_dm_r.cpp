@@ -338,6 +338,100 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     delete kv;
 }
 
+// Regression test for the SOC/noncollinear (global nspin==4) cal_DMR path.
+//
+// Background: in a real SOC run setup_dm.cpp constructs the DensityMatrix with
+//   nspin_dm = 1   (the 2x2 spin block is stored as ONE doubled matrix),
+// while the GLOBAL physical nspin is 4. cal_DMR must still take the
+// spin-resolved (Pauli) branch, which folds each 2x2 complex spin block into
+// (rho_0, rho_x, rho_y, rho_z) via func_xyz_to_updown(). That branch used to be
+// selected by the global PARAM.inp.nspin==4; a refactor (commit dcad8913d)
+// switched the condition to dm._nspin==4, which is never true in SOC
+// (_nspin==1), silently dropping the rho_x/y/z spin channels and producing a
+// wrong charge density (tests/03_NAO_multik/*spin4* failed by ~41 eV).
+//
+// This test reproduces the real SOC construction (nspin_dm=1, nspin_global=4)
+// and fills the DMK with a constant complex value (a + i b). It then checks
+// that cal_DMR selects the Pauli branch:
+//   * correct (Pauli) branch : rho_0 = (uu+dd).real() = 2a, rho_z = (uu-dd).real() = 0
+//   * wrong   (real-project) : every element = a  (imaginary part b dropped)
+// With the pre-fix condition (_nspin==4 never taken) this test FAILS because
+// rho_0 would come out as a instead of 2a.
+TEST_F(DMTest, cal_DMR_soc_pauli_branch)
+{
+    // SOC doubles the orbital dimension (npol = 2): each atom carries nw*npol rows/cols.
+    // The fixture's ucell has nw = test_nw, so the doubled global dimension is used here.
+    const int npol = 2;
+    const int global_dim_soc = test_size * test_nw * npol;
+#ifdef __MPI
+    Parallel_Orbitals* pv_soc = new Parallel_Orbitals();
+    pv_soc->init(global_dim_soc, global_dim_soc, 2, MPI_COMM_WORLD);
+    // build the iat2iwt map for the doubled (spinor) orbital count
+    std::vector<int> iat2iwt_soc(test_size);
+    for (int iat = 0; iat < test_size; ++iat)
+    {
+        iat2iwt_soc[iat] = iat * test_nw * npol;
+    }
+    pv_soc->set_atomic_trace(iat2iwt_soc.data(), test_size, global_dim_soc);
+#else
+    Parallel_Orbitals* pv_soc = paraV; // fallback; MPI path is the supported configuration
+#endif
+
+    // a single Gamma k-point; construct exactly like the real SOC setup_dm does:
+    // nspin_dm = 1, but the global physical nspin = 4.
+    std::vector<ModuleBase::Vector3<double>> kvec_d(1, ModuleBase::Vector3<double>(0.0, 0.0, 0.0));
+    const int nspin_dm = 1;
+    const int nspin_global = 4;
+    module_dm::DensityMatrix<std::complex<double>, double> DM(pv_soc, nspin_dm, kvec_d, 1, nspin_global);
+
+    // fill the single DMK with a constant complex value (a + i b)
+    const double a = 0.5;
+    const double b = 0.25;
+    for (int i = 0; i < pv_soc->nrow; i++)
+    {
+        for (int j = 0; j < pv_soc->ncol; j++)
+        {
+            DM.set_DMK(1, 0, i, j, std::complex<double>(a, b));
+        }
+    }
+
+    // build the real-space DMR
+    Grid_Driver gd(0, 0);
+    DM.init_DMR(&gd, &ucell);
+    DM.cal_DMR(-1);
+
+    // check the Gamma (R = 0) block: rho_0 must be 2a (Pauli), NOT a (real projection);
+    // rho_x = rho_y = rho_z = 0 for uu == dd and real off-diagonals.
+    hamilt::HContainer<double>* dmr = DM.get_DMR_pointer(1);
+    for (int i = 0; i < dmr->size_atom_pairs(); i++)
+    {
+        hamilt::AtomPair<double>& ap = dmr->get_atom_pair(i);
+        double* rho = ap.get_HR_values(0, 0, 0).get_pointer();
+        const int col_size = ap.get_col_size();
+        const int row_size = ap.get_row_size();
+        // walk the 2x2 spin blocks (step_trace = {0, 1, col_size, col_size+1})
+        for (int irow = 0; irow < row_size; irow += 2)
+        {
+            for (int icol = 0; icol < col_size; icol += 2)
+            {
+                const double* blk = rho + irow * col_size + icol;
+                const double rho_0 = blk[0];            // step_trace[0]
+                const double rho_x = blk[1];            // step_trace[1]
+                const double rho_y = blk[col_size];     // step_trace[2]
+                const double rho_z = blk[col_size + 1]; // step_trace[3]
+                EXPECT_NEAR(rho_0, 2.0 * a, 1e-10)
+                    << "rho_0 wrong: cal_DMR did NOT take the SOC Pauli branch (nspin_global==4)";
+                EXPECT_NEAR(rho_x, 0.0, 1e-10);
+                EXPECT_NEAR(rho_y, 0.0, 1e-10);
+                EXPECT_NEAR(rho_z, 0.0, 1e-10);
+            }
+        }
+    }
+#ifdef __MPI
+    delete pv_soc;
+#endif
+}
+
 int main(int argc, char** argv)
 {
 #ifdef __MPI

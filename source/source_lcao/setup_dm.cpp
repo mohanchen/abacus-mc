@@ -17,7 +17,9 @@ void allocate_dm(module_dm::Setup_DM<TK>& dmat,
                  const int nspin)
 {
     const int nspin_dm = nspin == 2 ? 2 : 1;
-    dmat.dm = new module_dm::DensityMatrix<TK, double>(pv, nspin_dm, kv->kvec_d, kv->get_nks() / nspin_dm);
+    // pass the global physical nspin so that cal_DMR can select the spin-resolved (Pauli)
+    // branch for SOC/noncollinear (nspin==4), where nspin_dm itself collapses to 1.
+    dmat.dm = new module_dm::DensityMatrix<TK, double>(pv, nspin_dm, kv->kvec_d, kv->get_nks() / nspin_dm, nspin);
 }
 
 template void allocate_dm<double>(module_dm::Setup_DM<double>&,
