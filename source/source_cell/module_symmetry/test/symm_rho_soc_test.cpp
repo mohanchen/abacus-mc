@@ -6,7 +6,7 @@
 #include "../symmetry.h"
 #include "../symm_rot_spin.h"
 #include "source_cell/unitcell.h"
-#include "source_estate/module_dm/dm_tools.h" // real func_xyz_to_updown
+#include "source_estate/module_dm/density_matrix.h" // real func_xyz_to_updown
 
 /************************************************
  *  unit test of Symmetry::rhog_symmetry_nspin4

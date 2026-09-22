@@ -46,8 +46,10 @@ set(DEEPKS_UNIT_COMMON_SOURCES
     ../../../source_cell/cal_nelec_nband.cpp
     ../../../source_estate/module_dm/density_matrix.cpp
     ../../../source_estate/module_dm/dmr_gamma.cpp
-    ../../../source_estate/module_dm/density_matrix_io.cpp
-    ../../../source_estate/module_dm/dmr_cal.cpp
+    ../../../source_estate/module_dm/dmr_init.cpp
+    ../../../source_estate/module_dm/dm_setter.cpp
+    ../../../source_estate/module_dm/dm_getter.cpp
+    ../../../source_estate/module_dm/dm_tools.cpp
     ../../../source_estate/module_dm/dmr_k.cpp
     ../../../source_estate/module_dm/dmr_td.cpp
     ../../../source_estate/module_dm/dmr_full.cpp

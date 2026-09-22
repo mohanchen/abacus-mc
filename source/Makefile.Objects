@@ -290,12 +290,14 @@ OBJS_ELECSTAT=elecstate.o\
 OBJS_ELECSTAT_LCAO=elecstate_lcao.o\
       init_dm.o\
       density_matrix.o\
-      density_matrix_io.o\
+      dmr_init.o\
+      dm_setter.o\
+      dm_getter.o\
       dmr_gamma.o\
       dmr_k.o\
       dmr_td.o\
       dmr_full.o\
-      dmr_cal.o\
+      dm_tools.o\
       cal_dm_psi.o\
       cal_edm_tddft.o\
 

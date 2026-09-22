@@ -9,7 +9,9 @@ AddTest(
   SOURCES test_init_dm_from_file.cpp tmp_mocks.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/density_matrix.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_gamma.cpp
-    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/density_matrix_io.cpp
+    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_init.cpp
+    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dm_setter.cpp
+    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dm_getter.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/base_matrix.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/hcontainer.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/atom_pair.cpp

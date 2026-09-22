@@ -19,8 +19,10 @@ AddTest(
   SOURCES dftu_lcao_test.cpp ../dftu_nao_op.cpp ../dftu_nao_adj.cpp ../dftu_nao_pots.cpp ../dftu_nao_fs_r.cpp ../dftu_nao_for_r.cpp ../dftu_nao_str_r.cpp
   ../../../source_estate/module_dm/density_matrix.cpp
   ../../../source_estate/module_dm/dmr_gamma.cpp
-  ../../../source_estate/module_dm/density_matrix_io.cpp
-  ../../../source_estate/module_dm/dmr_cal.cpp
+  ../../../source_estate/module_dm/dmr_init.cpp
+  ../../../source_estate/module_dm/dm_setter.cpp
+  ../../../source_estate/module_dm/dm_getter.cpp
+  ../../../source_estate/module_dm/dm_tools.cpp
   ../../../source_estate/module_dm/dmr_k.cpp
   ../../../source_estate/module_dm/dmr_td.cpp
   ../../../source_estate/module_dm/dmr_full.cpp

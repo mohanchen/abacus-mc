@@ -23,7 +23,7 @@ AddTest(
   SOURCES symm_rho_soc_test.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/density_matrix.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_gamma.cpp
-    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_cal.cpp
+    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dm_tools.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_k.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_td.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_full.cpp
