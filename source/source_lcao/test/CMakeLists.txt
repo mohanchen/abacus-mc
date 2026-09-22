@@ -8,6 +8,7 @@ AddTest(
   LIBS parameter base device symmetry
   SOURCES test_init_dm_from_file.cpp tmp_mocks.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/density_matrix.cpp
+    ${ABACUS_SOURCE_DIR}/source_estate/module_dm/dmr_gamma.cpp
     ${ABACUS_SOURCE_DIR}/source_estate/module_dm/density_matrix_io.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/base_matrix.cpp
     ${ABACUS_SOURCE_DIR}/source_hamilt/module_hcontainer/hcontainer.cpp

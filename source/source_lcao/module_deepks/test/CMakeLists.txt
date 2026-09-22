@@ -45,8 +45,12 @@ set(DEEPKS_UNIT_COMMON_SOURCES
     ../../../source_cell/read_orb.cpp
     ../../../source_cell/cal_nelec_nband.cpp
     ../../../source_estate/module_dm/density_matrix.cpp
+    ../../../source_estate/module_dm/dmr_gamma.cpp
     ../../../source_estate/module_dm/density_matrix_io.cpp
     ../../../source_estate/module_dm/dmr_cal.cpp
+    ../../../source_estate/module_dm/dmr_k.cpp
+    ../../../source_estate/module_dm/dmr_td.cpp
+    ../../../source_estate/module_dm/dmr_full.cpp
     ../../center2orb.cpp
     ../../center2orb_orb11.cpp
     ../../center2orb_orb21.cpp
