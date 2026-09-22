@@ -16,7 +16,7 @@ namespace module_dm
 // Template function for EDM calculation supporting CPU and GPU
 template <typename Device>
 void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
-                                 LCAO_domain::Setup_DM<std::complex<double>>& dmat,
+                                 Setup_DM<std::complex<double>>& dmat,
                                  K_Vectors& kv,
                                  hamilt::Hamilt<std::complex<double>>* p_hamilt)
 {
@@ -284,12 +284,12 @@ void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
 
 // Explicit instantiation of template functions
 template void cal_edm_tddft_tensor_lapack<base_device::DEVICE_CPU>(Parallel_Orbitals& pv,
-                                                                   LCAO_domain::Setup_DM<std::complex<double>>& dmat,
+                                                                   Setup_DM<std::complex<double>>& dmat,
                                                                    K_Vectors& kv,
                                                                    hamilt::Hamilt<std::complex<double>>* p_hamilt);
 #if ((defined __CUDA) /* || (defined __ROCM) */)
 template void cal_edm_tddft_tensor_lapack<base_device::DEVICE_GPU>(Parallel_Orbitals& pv,
-                                                                   LCAO_domain::Setup_DM<std::complex<double>>& dmat,
+                                                                   Setup_DM<std::complex<double>>& dmat,
                                                                    K_Vectors& kv,
                                                                    hamilt::Hamilt<std::complex<double>>* p_hamilt);
 #endif // __CUDA

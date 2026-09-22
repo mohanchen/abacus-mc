@@ -11,7 +11,7 @@
 #include "source_estate/elecstate.h"// use ElecState
 #include "source_psi/psi.h" // use electronic wave functions
 #include "source_estate/module_charge/charge.h" // use charge
-#include "source_lcao/setup_dm.h" // define Setup_DM
+#include "source_estate/module_dm/setup_dm.h" // define Setup_DM
 #include "source_hamilt/module_hcontainer/hcontainer.h"
 
 namespace module_dm
@@ -35,7 +35,7 @@ struct Init_DM_Config
 template <typename TK>
 void init_dm(UnitCell& ucell,
         elecstate::ElecState* pelec,
-        LCAO_domain::Setup_DM<TK> &dmat,
+        Setup_DM<TK> &dmat,
         psi::Psi<TK>* psi,
         Charge &chr,
         const int iter,

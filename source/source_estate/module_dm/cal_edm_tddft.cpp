@@ -14,7 +14,7 @@ namespace module_dm
 {
 // use the original formula (Hamiltonian matrix) to calculate energy density matrix
 void cal_edm_tddft(Parallel_Orbitals& pv,
-                   LCAO_domain::Setup_DM<std::complex<double>>& dmat,
+                   Setup_DM<std::complex<double>>& dmat,
                    K_Vectors& kv,
                    hamilt::Hamilt<std::complex<double>>* p_hamilt)
 {
