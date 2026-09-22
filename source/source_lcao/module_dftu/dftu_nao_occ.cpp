@@ -37,7 +37,7 @@ inline double real_part_conj(const std::complex<double>& x)
 ///        from the S*DM product srho. Reads npol and the corr_iwt lookup
 ///        directly from occmat so callers do not thread those scalars through.
 template <typename T>
-void accumulate_occ_channel(OccupationMatrix& occmat,
+void acc_channel(OccupationMatrix& occmat,
                             const Parallel_Orbitals& pv,
                             const T* srho,
                             int iat,
@@ -88,7 +88,7 @@ void accumulate_occ_channel(OccupationMatrix& occmat,
 /// @brief Walk the (it, ia, l) atom mesh for one k-point and accumulate
 ///        each qualifying channel of occmat from the S*DM product srho.
 template <typename T>
-void accumulate_occ_for_ik(OccupationMatrix& occmat,
+void acc_for_ik(OccupationMatrix& occmat,
                            const UnitCell& ucell,
                            const Parallel_Orbitals& pv,
                            const T* srho,
@@ -116,7 +116,7 @@ void accumulate_occ_for_ik(OccupationMatrix& occmat,
                     continue;
                 }
 
-                accumulate_occ_channel(occmat, pv, srho, iat, l, spin);
+                acc_channel(occmat, pv, srho, iat, l, spin);
             } // end l
         } // end ia
     } // end it
@@ -126,7 +126,7 @@ void accumulate_occ_for_ik(OccupationMatrix& occmat,
 ///        redistributing the ibz k-point's full weight (already baked into
 ///        srho_ibz) across all kstar_size members via Symmetry_rotation's
 ///        built-in 1/kstar_size scaling (see restore_dm/rot_matrix_ao).
-void accumulate_occ_over_kstar(OccupationMatrix& occmat,
+void acc_over_kstar(OccupationMatrix& occmat,
                                const UnitCell& ucell,
                                const Parallel_Orbitals& pv,
                                const K_Vectors& kv,
@@ -162,7 +162,7 @@ void accumulate_occ_over_kstar(OccupationMatrix& occmat,
                 srho_rot = dftu_occ_symrot.rot_matrix_ao(srho_ibz, ik_ibz, kstar_size, isym_M, pv, true);
             }
         }
-        accumulate_occ_for_ik(occmat, ucell, pv, srho_rot.data(), spin, l_channel);
+        acc_for_ik(occmat, ucell, pv, srho_rot.data(), spin, l_channel);
     }
 }
 
@@ -171,7 +171,7 @@ void accumulate_occ_over_kstar(OccupationMatrix& occmat,
 ///        nspin=1 mirrors spin-0 into spin-1; nspin=2 symmetrizes each spin;
 ///        nspin=4 symmetrizes the single Pauli block. Reads nspin and npol
 ///        from occmat so callers do not thread them through.
-void reduce_and_symmetrize_occ(OccupationMatrix& occmat,
+void reduce_symm(OccupationMatrix& occmat,
                                const UnitCell& ucell,
                                const std::vector<int>& l_channel)
 {
@@ -257,7 +257,7 @@ void reduce_and_symmetrize_occ(OccupationMatrix& occmat,
 ///        MPI-Allreduce across ranks, then symmetrize per the nspin
 ///        convention. Reads nspin and npol from occmat so callers do not
 ///        thread them through.
-void process_occ_channel_gamma(OccupationMatrix& occmat,
+void acc_channel_gamma(OccupationMatrix& occmat,
                                const UnitCell& ucell,
                                const Parallel_Orbitals& pv,
                                const double* srho,
@@ -287,7 +287,7 @@ void process_occ_channel_gamma(OccupationMatrix& occmat,
                 }
 
                 // Calculate the local occupation number matrix
-                accumulate_occ_channel(occmat, pv, srho, iat, l, spin);
+                acc_channel(occmat, pv, srho, iat, l, spin);
                 ModuleBase::matrix& occ_is = occmat.mat(iat, l, spin);
 
                 // MPI Allreduce across ranks (in-place)
@@ -416,16 +416,16 @@ void cal_occ_mat_k(const Parallel_Orbitals* pv,
             // per-spin ibz range (mirrors RI_2D_Comm::split_m2D_ktoR_k's
             // "ik % ik_list.size()", but on the global index rather than the local one).
             const int ik_ibz = kv.ik2iktot[ik] % static_cast<int>(kv.kstars.size());
-            accumulate_occ_over_kstar(dftu.occmat(), ucell, *pv, kv, srho, ik_ibz, spin, nspin, l_channel);
+            acc_over_kstar(dftu.occmat(), ucell, *pv, kv, srho, ik_ibz, spin, nspin, l_channel);
         }
         else
         {
-            accumulate_occ_for_ik(dftu.occmat(), ucell, *pv, srho.data(), spin, l_channel);
+            acc_for_ik(dftu.occmat(), ucell, *pv, srho.data(), spin, l_channel);
         }
     } // ik
 
     // MPI Allreduce + symmetrize per (iat, l, n=0) channel across all ranks
-    reduce_and_symmetrize_occ(dftu.occmat(), ucell, l_channel);
+    reduce_symm(dftu.occmat(), ucell, l_channel);
 
     if(dftu.has_occ_mixer() && dftu.is_occmat_ready())
     {
@@ -491,7 +491,7 @@ void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 #endif
 
         // Per (it, ia, l, n=0, spin) block: accumulate + Allreduce + symmetrize
-        process_occ_channel_gamma(dftu.occmat(), ucell, *pv, srho.data(), is, l_channel);
+        acc_channel_gamma(dftu.occmat(), ucell, *pv, srho.data(), is, l_channel);
     } // is
 
     if(dftu.has_occ_mixer() && dftu.is_occmat_ready())
