@@ -98,7 +98,7 @@ Grid_Driver::~Grid_Driver()
 }
 
 // mock Record_adj
-#include "source_lcao/record_adj.h"
+#include "source_cell/record_adj.h"
 Record_adj::Record_adj()
 {
 }

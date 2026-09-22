@@ -57,7 +57,6 @@ if(ENABLE_LCAO)
         setup_deepks.cpp
         setup_dm.cpp
         rho_tau_lcao.cpp
-		record_adj.cpp
         center2orb.cpp
         center2orb_orb11.cpp
         center2orb_orb21.cpp

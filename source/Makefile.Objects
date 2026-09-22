@@ -216,6 +216,7 @@ OBJS_CELL=atom_pseudo.o\
     reciprocal_grid.o\
     cell_index.o\
     cell_tools.o\
+    record_adj.o\
     check_atomic_stru.o\
     update_cell.o\
     bcast_cell.o\
@@ -782,7 +783,6 @@ OBJS_LCAO=evolve_elec.o\
       center2orb_orb11.o\
       center2orb_orb21.o\
       center2orb_orb22.o\
-      record_adj.o\
 
 OBJS_MODULE_RI=conv_coulomb_pot_k.o\
       exx_abfs-abfs_index.o\

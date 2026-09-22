@@ -3,7 +3,7 @@
 
 #include "esolver_ks.h"
 #include "source_hamilt/module_xc/exx_info.h" // LCAO owns full Exx_Info
-#include "source_lcao/record_adj.h" // adjacent atoms
+#include "source_cell/record_adj.h" // adjacent atoms
 #include "source_basis/module_nao/two_center_bundle.h" // nao basis
 #include "source_hamilt/module_gint/gint_info.h"
 #include "source_hamilt/module_gint/gint_prec_ctrl.h"
