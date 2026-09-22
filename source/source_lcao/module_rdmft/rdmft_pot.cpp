@@ -25,23 +25,14 @@ namespace rdmft
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::get_DM_XC(std::vector< std::vector<TK> >& DM_XC)
 {
-    // get wk_funEta_wfc = wk*g(eta)*conj(wfc)
-    psi::Psi<TK> wk_funEta_wfc(wfc);
-    conj_psi(wk_funEta_wfc);
-    occNum_MulPsi(ParaV, wk_fun_occNum, wk_funEta_wfc, 0);
-
-    // get the special DM_XC used in constructing V_exx_XC
+    // get the special DM_XC used in constructing V_exx_XC.
+    // wk_fun_occNum holds wk*g(eta); cal_dmk_psi applies the conjugation
+    // and the band weighting internally (g(eta) is used with symbol = 0,
+    // where occNum_func is the identity, so wk_fun_occNum is the weight itself).
     for(int ik=0; ik<wfc.get_nk(); ++ik)
     {
-        // after this, be careful with wfc.get_pointer(), we can use &wfc(ik,inbn,inbs) instead
-        wfc.fix_k(ik);
-        wk_funEta_wfc.fix_k(ik);
         TK* DM_Kpointer = DM_XC[ik].data();
-#ifdef __MPI
-        module_dm::psi2dm_mpi(wk_funEta_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
-#else
-        module_dm::psi2dm(wk_funEta_wfc, wfc, DM_Kpointer);
-#endif            
+        module_dm::cal_dmk_psi(ParaV, wk_fun_occNum, ik, wfc, DM_Kpointer);
     }
 }
 

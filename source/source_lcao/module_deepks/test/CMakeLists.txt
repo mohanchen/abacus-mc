@@ -53,9 +53,10 @@ set(DEEPKS_UNIT_COMMON_SOURCES
     ../../../source_estate/module_dm/dmr_k.cpp
     ../../../source_estate/module_dm/dmr_td.cpp
     ../../../source_estate/module_dm/dmr_full.cpp
-    # cal_dm_psi.cpp defines module_dm::psi2dm_mpi / psi2dm, referenced via cal_dm.h by
-    # deepks_lcao.cpp / operator_lcao.cpp. It was dropped when density_matrix.cpp was
-    # split (dmr_* / dm_*), causing undefined reference to psi2dm_mpi at link time.
+    # cal_dm_psi.cpp defines module_dm::cal_dmk_psi / cal_dm_psi, referenced via
+    # cal_dm.h by deepks_lcao.cpp / operator_lcao.cpp. It was dropped when
+    # density_matrix.cpp was split (dmr_* / dm_*), causing undefined reference
+    # to cal_dmk_psi at link time.
     ../../../source_estate/module_dm/cal_dm_psi.cpp
     ../../center2orb.cpp
     ../../center2orb_orb11.cpp
