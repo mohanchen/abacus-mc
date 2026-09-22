@@ -89,7 +89,7 @@ void ESolver_DoubleXC<TK, TR>::before_all_runners(BaseCell& basecell, const Inpu
     }
 
     // 6) initialize the density matrix
-    this->dmat_base.allocate_dm(&this->kv, &this->pv, this->inp_->nspin);
+    LCAO_domain::allocate_dm(this->dmat_base, &this->kv, &this->pv, this->inp_->nspin);
 
     // 10) inititlize the charge density
     module_charge::InitRhoCfg init_rho_cfg;

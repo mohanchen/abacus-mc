@@ -1,25 +1,32 @@
 #include "source_lcao/setup_dm.h"
-#include "source_estate/cal_dm.h"
 #include "source_base/timer.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
-#include "source_hamilt/module_xc/xc_functional.h"
-#include "source_lcao/module_deltaspin/spin_constrain.h"
-#include "source_io/module_parameter/parameter.h"
-#include "source_hamilt/module_gint/gint_interface.h"
+#include "source_cell/klist.h"
+#include "source_basis/module_ao/parallel_orbitals.h"
 #include <vector>
 
 namespace LCAO_domain
 {
 
 // change init_dm to allocate_dm, mohan 2025-10-31
+// Moved from member function to free function so that Setup_DM itself
+// can live in module_dm without depending on LCAO-layer modules.
 template <typename TK>
-void Setup_DM<TK>::allocate_dm(const K_Vectors* kv, const Parallel_Orbitals* pv, const int nspin)
+void allocate_dm(module_dm::Setup_DM<TK>& dmat,
+                 const K_Vectors* kv,
+                 const Parallel_Orbitals* pv,
+                 const int nspin)
 {
     const int nspin_dm = nspin == 2 ? 2 : 1;
-    this->dm = new module_dm::DensityMatrix<TK, double>(pv, nspin_dm, kv->kvec_d, kv->get_nks() / nspin_dm);
+    dmat.dm = new module_dm::DensityMatrix<TK, double>(pv, nspin_dm, kv->kvec_d, kv->get_nks() / nspin_dm);
 }
 
-template class Setup_DM<double>;               // Gamma_only case
-template class Setup_DM<std::complex<double>>; // multi-k case
+template void allocate_dm<double>(module_dm::Setup_DM<double>&,
+                                  const K_Vectors*,
+                                  const Parallel_Orbitals*,
+                                  const int);
+template void allocate_dm<std::complex<double>>(module_dm::Setup_DM<std::complex<double>>&,
+                                                const K_Vectors*,
+                                                const Parallel_Orbitals*,
+                                                const int);
 
-} // namespace elecstate
+} // namespace LCAO_domain
