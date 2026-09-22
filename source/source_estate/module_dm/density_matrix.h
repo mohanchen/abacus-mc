@@ -140,17 +140,32 @@ class DensityMatrix
      * wavefunction-derived calculation
      * @return true if DMR is ready for Hamiltonian construction
      */
-    bool is_dmr_ready() const { return this->_dmr_ready; }
+    bool is_dmr_ready() const
+    {
+        return this->_dmr_ready;
+    }
 
     /**
      * @brief get pointer vector of DMR
      * @return HContainer<TR>* vector of DMR
      */
-    const std::vector<hamilt::HContainer<TR>*>& get_DMR_vector() const {return this->_DMR;}
-    std::vector<hamilt::HContainer<TR>*>& get_DMR_vector() {return this->_DMR;}
+    const std::vector<hamilt::HContainer<TR>*>& get_DMR_vector() const
+    {
+        return this->_DMR;
+    }
+    std::vector<hamilt::HContainer<TR>*>& get_DMR_vector()
+    {
+        return this->_DMR;
+    }
 
-    const std::vector<std::vector<TR>>& get_DMR_save() const {return this->_DMR_save;}
-    std::vector<std::vector<TR>>& get_DMR_save() {return this->_DMR_save;}
+    const std::vector<std::vector<TR>>& get_DMR_save() const
+    {
+        return this->_DMR_save;
+    }
+    std::vector<std::vector<TR>>& get_DMR_save()
+    {
+        return this->_DMR_save;
+    }
 
     /**
      * @brief get pointer of DMK
@@ -162,8 +177,14 @@ class DensityMatrix
     /**
      * @brief get pointer vector of DMK
     */
-    const std::vector<std::vector<TK>>& get_DMK_vector() const {return this->_DMK;}
-    std::vector<std::vector<TK>>& get_DMK_vector() {return this->_DMK;}
+    const std::vector<std::vector<TK>>& get_DMK_vector() const
+    {
+        return this->_DMK;
+    }
+    std::vector<std::vector<TK>>& get_DMK_vector()
+    {
+        return this->_DMK;
+    }
 
     /**
      * @brief set _DMK using a input TK* pointer
@@ -174,9 +195,15 @@ class DensityMatrix
     /**
      * @brief get pointer of paraV
      */
-    const Parallel_Orbitals* get_paraV_pointer() const {return this->_paraV;}
+    const Parallel_Orbitals* get_paraV_pointer() const
+    {
+        return this->_paraV;
+    }
 
-    const std::vector<ModuleBase::Vector3<double>>& get_kvec_d() const { return this->_kvec_d; }
+    const std::vector<ModuleBase::Vector3<double>>& get_kvec_d() const
+    {
+        return this->_kvec_d;
+    }
 
     /**
      * @brief calculate density matrix DMR from dm(k) using blas::axpy

@@ -68,7 +68,10 @@ void DensityMatrix_Tools::cal_DMR(
                 target_DMR_mat_vec[iR] = target_mat->get_pointer();
                 for(int ik = 0; ik < dm._nk; ++ik)
                 {
-                    if(ik_in >= 0 && ik_in != ik) { continue; }
+                    if(ik_in >= 0 && ik_in != ik)
+                    {
+                        continue;
+                    }
                     // cal k_phase
                     // if TK==std::complex<double>, kphase is e^{ikR}
                     const ModuleBase::Vector3<double> dR(R_index[0], R_index[1], R_index[2]);
@@ -83,15 +86,21 @@ void DensityMatrix_Tools::cal_DMR(
             std::vector<TK> tmp_DMR( (dm._nspin==4) ? mat_size*R_size : 0);
             for(int ik = 0; ik < dm._nk; ++ik)
             {
-                if(ik_in >= 0 && ik_in != ik) { continue; }
+                if(ik_in >= 0 && ik_in != ik)
+                {
+                    continue;
+                }
                 // copy column-major DMK to row-major DMK_mat_trans (for the purpose of computational efficiency)
                 const TK*const DMK_mat_ptr
                     = dm._DMK[ik + ik_begin].data()
                       + col_ap * dm._paraV->nrow + row_ap;
-                for(int icol = 0; icol < col_size; ++icol) {
-                    for(int irow = 0; irow < row_size; ++irow) {
+                for(int icol = 0; icol < col_size; ++icol)
+                {
+                    for(int irow = 0; irow < row_size; ++irow)
+                    {
                         DMK_mat_trans[irow * col_size + icol] = DMK_mat_ptr[icol * ld_hk + irow];
-                }}
+                    }
+                }
 
                 // if nspin != 4, fill DMR
                 // if nspin == 4, fill tmp_DMR
@@ -100,17 +109,18 @@ void DensityMatrix_Tools::cal_DMR(
                     // (kr+i*ki) * (Dr+i*Di) = (kr*Dr-ki*Di) + i*(kr*Di+ki*Dr)
                     const TK kphase = kphase_vec[ik][iR];
                     if(dm._nspin != 4)                // only save real kr*Dr-ki*Di
-                    {
-                        func_exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
-                    } else if(dm._nspin == 4)
-                    {
-                        BlasConnector::axpy(mat_size,
-                                            kphase,
-                                            DMK_mat_trans.data(),
-                                            1,
-                                            &tmp_DMR[iR * mat_size],
-                                            1);
-                    }
+                {
+                    func_exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
+                }
+                else if(dm._nspin == 4)
+                {
+                    BlasConnector::axpy(mat_size,
+                                        kphase,
+                                        DMK_mat_trans.data(),
+                                        1,
+                                        &tmp_DMR[iR * mat_size],
+                                        1);
+                }
                 }
             }
 
@@ -121,10 +131,13 @@ void DensityMatrix_Tools::cal_DMR(
                 // step_trace ={0, 1, local_col, local_col+1} for NSPIN=4
                 int step_trace[4]{};
                 constexpr int npol = 2;
-                for (int is = 0; is < npol; is++) {
-                    for (int is2 = 0; is2 < npol; is2++) {
+                for (int is = 0; is < npol; is++)
+                {
+                    for (int is2 = 0; is2 < npol; is2++)
+                    {
                         step_trace[is * npol + is2] = target_ap.get_col_size() * is + is2;
-                }}
+                    }
+                }
 
                 TK tmp[4]{};
                 for(int iR = 0; iR < R_size; ++iR)

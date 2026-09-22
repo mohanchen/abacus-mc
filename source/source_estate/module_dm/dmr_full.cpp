@@ -55,7 +55,10 @@ void DensityMatrix_Tools::cal_DMR_full(
             target_DMR_mat_vec[iR] = target_mat->get_pointer();
             for(int ik = 0; ik < dm._nk; ++ik)
             {
-                if(ik_in >= 0 && ik_in != ik) { continue; }
+                if(ik_in >= 0 && ik_in != ik)
+                {
+                    continue;
+                }
                 // cal k_phase
                 const ModuleBase::Vector3<double> dR(R_index[0], R_index[1], R_index[2]);
                 const double arg = (dm._kvec_d[ik] * dR) * ModuleBase::TWO_PI;
@@ -68,14 +71,20 @@ void DensityMatrix_Tools::cal_DMR_full(
         std::vector<TK> DMK_mat_trans(mat_size);
         for(int ik = 0; ik < dm._nk; ++ik)
         {
-            if(ik_in >= 0 && ik_in != ik) { continue; }
+            if(ik_in >= 0 && ik_in != ik)
+            {
+                continue;
+            }
             const TK*const DMK_mat_ptr
                 = dm._DMK[ik].data()
                   + col_ap * dm._paraV->nrow + row_ap;
-            for(int icol = 0; icol < col_size; ++icol) {
-                for(int irow = 0; irow < row_size; ++irow) {
+            for(int icol = 0; icol < col_size; ++icol)
+            {
+                for(int irow = 0; irow < row_size; ++irow)
+                {
                     DMK_mat_trans[irow * col_size + icol] = DMK_mat_ptr[icol * ld_hk + irow];
-            }}
+                }
+            }
 
             for(int iR = 0; iR < R_size; ++iR)
             {
@@ -95,7 +104,9 @@ void DensityMatrix_Tools::cal_DMR_full(
 template <>
 void DensityMatrix<double, double>::cal_DMR_full(
     hamilt::HContainer<std::complex<double>>* dmR_out,
-    const int ik_in) const{}
+    const int ik_in) const
+{
+}
 template <>
 void DensityMatrix<std::complex<double>, double>::cal_DMR_full(
     hamilt::HContainer<std::complex<double>>* dmR_out,
