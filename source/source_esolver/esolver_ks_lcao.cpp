@@ -392,14 +392,19 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(UnitCell& ucell, const int istep, const 
                   this->exx_nao.exd->two_level_step : this->exx_nao.exc->two_level_step;
 		}
 #endif
-		module_dm::init_dm<TK>(ucell, this->pelec, this->dmat, this->psi, this->chr, iter, exx_two_level_step,
-			{PARAM.inp.esolver_type, PARAM.inp.td_stype, PARAM.inp.nspin, PARAM.inp.nelec,
-			 (PARAM.inp.td_stype == 2 && PARAM.inp.esolver_type != "tddft")
-				 ? &TD_info::td_vel_op->get_phase_hybrid()
-				 : nullptr,
-			 (PARAM.inp.td_stype == 2 && PARAM.inp.esolver_type != "tddft") ? TD_info::cart_At
-																		  : ModuleBase::Vector3<double>(),
-			 &LCAO_domain::dm2rho});
+		module_dm::Init_DM_Config init_dm_cfg;
+	init_dm_cfg.esolver_type = PARAM.inp.esolver_type;
+	init_dm_cfg.td_stype = PARAM.inp.td_stype;
+	init_dm_cfg.nspin = PARAM.inp.nspin;
+	init_dm_cfg.nelec = PARAM.inp.nelec;
+	init_dm_cfg.td_phase_hybrid = (PARAM.inp.td_stype == 2 && PARAM.inp.esolver_type != "tddft")
+		? &TD_info::td_vel_op->get_phase_hybrid()
+		: nullptr;
+	init_dm_cfg.td_cart_At = (PARAM.inp.td_stype == 2 && PARAM.inp.esolver_type != "tddft")
+		? TD_info::cart_At
+		: ModuleBase::Vector3<double>();
+	init_dm_cfg.dm2rho_func = &LCAO_domain::dm2rho;
+	module_dm::init_dm<TK>(ucell, this->pelec, this->dmat, this->psi, this->chr, iter, exx_two_level_step, init_dm_cfg);
 	}
 
 #ifdef __EXX
