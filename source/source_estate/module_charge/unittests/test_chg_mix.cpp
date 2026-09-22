@@ -200,7 +200,6 @@ TEST_F(ChargeMixingTest, SetMixingTest)
 #endif
     cfg.nspin = 1;
     Charge_Mixing CMtest;
-    CMtest.set_rhopw(&pw_basis, &pw_basis);
     cfg.mixing_beta = 1.0;
     cfg.mixing_ndim = 1;
     cfg.mixing_gg0 = 1.0;
@@ -220,7 +219,7 @@ TEST_F(ChargeMixingTest, SetMixingTest)
     cfg.mixing_tau = true;
     XC_Functional::set_ked_flag(true);
     cfg.mixing_mode = "plain";
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     EXPECT_EQ(CMtest.get_mixing_mode(), "plain");
     EXPECT_EQ(CMtest.get_mixing_config().mixing_tau, true);
     XC_Functional::set_ked_flag(false);
@@ -281,13 +280,13 @@ TEST_F(ChargeMixingTest, InitMixingTest)
     cfg.mixing_tau = true;
     XC_Functional::set_func_type(3);
     XC_Functional::set_ked_flag(true);
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     CMtest.init_mixing();
     EXPECT_EQ(CMtest.get_tau_mdata().length, pw_basis.nrxx);
 
     cfg.nspin = 4;
     cfg.mixing_angle = 1.0;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     CMtest.init_mixing();
     EXPECT_EQ(CMtest.get_rho_mdata().length, 2 * pw_basis.nrxx);
 }
@@ -296,8 +295,7 @@ TEST_F(ChargeMixingTest, InnerDotRealTest)
 {
     Charge_Mixing CMtest;
     // non mixing angle case
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
-    CMtest.set_rhopw(&pw_basis, &pw_basis);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     cfg.nspin = 4;
     sync_cfg(CMtest);
 
@@ -314,7 +312,7 @@ TEST_F(ChargeMixingTest, InnerDotRealTest)
 
     // mixing angle case
     cfg.mixing_angle = 1.0;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     cfg.nspin = 4;
 
     // a simple sum for inner product
@@ -346,14 +344,14 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
     // Populate cfg_ before the first inner_product call: the function reads
     // nspin from cfg_, which is default-constructed (and thus invalid) until
     // set_mixing runs.
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     double inner = module_charge::inner_product_real(drhor1.data(), drhor2.data(), pw_basis, CMtest.get_mixing_config());
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * (pw_basis.nrxx - 1), 1e-8);
 
     // RECIPROCAL NSPIN=1
     ucell.tpiba2 = 1.0;
     ucell.omega = 2.0;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     cfg.nspin = 1;
     sync_cfg(CMtest);
     std::vector<std::complex<double>> drhog1(pw_basis.npw);
@@ -424,7 +422,7 @@ TEST_F(ChargeMixingTest, InnerDotRecipHartreeTest)
     // RECIPROCAL NSPIN=4 with mixing_angle
     cfg.nspin = 4;
     cfg.mixing_angle = 1.0;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     drhog1.resize(pw_basis.npw * 2);
     drhog2.resize(pw_basis.npw * 2);
     for (int i = 0; i < pw_basis.npw * 2; ++i)
@@ -446,7 +444,6 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
 {
     // REAL
     Charge_Mixing CMtest;
-    CMtest.set_rhopw(&pw_basis, &pw_basis);
     cfg.nspin = 1;
     std::vector<double> drhor1(pw_basis.nrxx);
     std::vector<double> drhor2(pw_basis.nrxx);
@@ -456,14 +453,14 @@ TEST_F(ChargeMixingTest, InnerDotRecipRhoTest)
         drhor2[i] = double(i);
     }
     // Populate cfg_ before the first inner_product call (see the hartree test).
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     double inner = module_charge::inner_product_real(drhor1.data(), drhor2.data(), pw_basis, CMtest.get_mixing_config());
     EXPECT_NEAR(inner, 0.5 * pw_basis.nrxx * (pw_basis.nrxx - 1), 1e-8);
 
     // RECIPROCAL
     ucell.tpiba2 = 1.0;
     ucell.omega = 2.0;
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     cfg.nspin = 1;
     sync_cfg(CMtest);
     std::vector<std::complex<double>> drhog1(pw_basis.npw);
@@ -765,9 +762,8 @@ TEST_F(ChargeMixingTest, MixRhoTest)
     //--------------------------------MAIN BODY--------------------------------
     // RECIPROCAL
     Charge_Mixing CMtest_recip;
-    CMtest_recip.set_rhopw(&pw_basis, &pw_basis);
     cfg.scf_thr_type= 1;
-    CMtest_recip.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest_recip.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     CMtest_recip.init_mixing();
     for(int i = 0 ; i < nspin * npw; ++i)
     {
@@ -796,8 +792,7 @@ TEST_F(ChargeMixingTest, MixRhoTest)
     // REAL
     Charge_Mixing CMtest_real;
     cfg.scf_thr_type= 2;
-    CMtest_real.set_rhopw(&pw_basis, &pw_basis);
-    CMtest_real.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest_real.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     CMtest_real.init_mixing();
     for(int i = 0 ; i < nspin * nrxx; ++i)
     {
@@ -954,7 +949,7 @@ TEST_F(ChargeMixingTest, MixDoubleGridRhoTest)
     Charge_Mixing CMtest_recip;
 
     cfg.scf_thr_type= 1;
-    CMtest_recip.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest_recip.set_mixing(make_cfg(), &pw_basis, &pw_dbasis, ucell.omega, ucell.tpiba);
 
     CMtest_recip.init_mixing();
     for (int i = 0; i < nspin * npw; ++i)
@@ -991,7 +986,6 @@ TEST_F(ChargeMixingTest, MixDivCombTest)
     // NSPIN = 1
     cfg.nspin = 1;
     Charge_Mixing CMtest;
-    CMtest.set_rhopw(&pw_basis, &pw_dbasis);
     std::vector<std::complex<double>> data(pw_dbasis.npw, 1.0);
     const int npw_smooth = pw_basis.npw;
     const int npw_dense = pw_dbasis.npw;
@@ -1045,8 +1039,7 @@ TEST_F(ChargeMixingTest, SCFOscillationTest)
     // if_scf_oscillate sizes _drho_history from cfg_.scf_nmax, so cfg_ must
     // be populated before the loop; a default-constructed cfg_ leaves it 0.
     cfg.scf_nmax = scf_nmax;
-    CMtest.set_rhopw(&pw_basis, &pw_basis);
-    CMtest.set_mixing(make_cfg(), ucell.omega, ucell.tpiba);
+    CMtest.set_mixing(make_cfg(), &pw_basis, &pw_basis, ucell.omega, ucell.tpiba);
     int scf_os_ndim = 3;
     double scf_os_thr = -0.05;
     bool scf_oscillate = false;
