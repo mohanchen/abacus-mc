@@ -64,7 +64,6 @@ if(ENABLE_LCAO)
       module_dm/density_matrix.cpp
       module_dm/dmr_cal.cpp
       module_dm/density_matrix_io.cpp
-      module_dm/dm_io.cpp
       module_dm/cal_dm_psi.cpp
       module_dm/cal_edm_tddft.cpp
       module_dm/cal_edm_tddft_lapack.cpp

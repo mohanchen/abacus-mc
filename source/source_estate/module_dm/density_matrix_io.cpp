@@ -301,8 +301,6 @@ void DensityMatrix<TK, TR>::save_DMR()
     ModuleBase::timer::end("DensityMatrix", "save_DMR");
 }
 
-// read/write DMK moved to dm_io.cpp (module_dm)
-
 // T of HContainer can be double or std::complex<double>
 template class DensityMatrix<double, double>;               // Gamma-Only case
 template class DensityMatrix<std::complex<double>, double>; // Multi-k case

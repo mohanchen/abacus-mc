@@ -3,7 +3,6 @@
 
 #include <string>
 
-#include "dm_io.h"
 #include "dm_shift.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_lcao/record_adj.h"
@@ -301,16 +300,6 @@ class DensityMatrix
         const DensityMatrix<TK, TR>& dm,
         hamilt::HContainer<std::complex<double>>* dmR_out,
         const int ik_in);
-    friend void read_DMK_file<TK, TR>(
-        DensityMatrix<TK, TR>& dm,
-        const std::string& directory,
-        const int ispin,
-        const int ik);
-    friend void write_DMK_file<TK, TR>(
-        const DensityMatrix<TK, TR>& dm,
-        const std::string& directory,
-        const int ispin,
-        const int ik);
 };
 
 } // namespace module_dm
