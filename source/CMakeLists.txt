@@ -572,7 +572,14 @@ if(USE_CUDA)
   target_compile_definitions(driver PRIVATE __USE_NVTX)
   # NVTX is header-only since CUDA 12.9; older toolkits need libnvToolsExt.
   if(CUDAToolkit_VERSION VERSION_LESS 12.9)
-    target_link_libraries(${ABACUS_BIN_NAME} PRIVATE CUDA::nvToolsExt)
+    # timer.cpp (in target base) references nvtxRangePushA/nvtxRangePop, so
+    # every consumer of base's object files needs libnvToolsExt on its link
+    # line. Attach it to base itself so the dependency propagates through
+    # base's link interface to the main executable and to every unit test
+    # that links base; linking it only to the executable leaves those tests
+    # with undefined NVTX references (e.g. MODULE_CELL_SYMMETRY_analysis on
+    # CUDA 12.2 CI).
+    target_link_libraries(base INTERFACE CUDA::nvToolsExt)
   endif()
 endif()
 
