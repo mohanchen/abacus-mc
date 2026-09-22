@@ -21,7 +21,7 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
     this->clear_DMR();
     // construct a new DMR
-    std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->_paraV));
+    std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->pv));
     // set up a HContainer
     for (int iat1 = 0; iat1 < ucell->nat; iat1++)
     {
@@ -36,13 +36,13 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
             const int T2 = adjs.ntype[ad];
             const int I2 = adjs.natom[ad];
             int iat2 = ucell->itia2iat(T2, I2);
-            if (this->_paraV->is_invalid_atom_pair(iat1, iat2))
+            if (this->pv->is_invalid_atom_pair(iat1, iat2))
             {
                 continue;
             }
             ModuleBase::Vector3<int>& R_index = adjs.box[ad];
             // std::cout << "R_index: " << R_index.x << " " << R_index.y << " " << R_index.z << std::endl;
-            hamilt::AtomPair<TR> tmp_ap(iat1, iat2, R_index, this->_paraV);
+            hamilt::AtomPair<TR> tmp_ap(iat1, iat2, R_index, this->pv);
             tmp_DMR->insert_pair(tmp_ap);
         }
     }
@@ -69,7 +69,7 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
     this->clear_DMR();
     // construct a new DMR
-    std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->_paraV));
+    std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->pv));
     // set up a HContainer
     for (int iat1 = 0; iat1 < ucell->nat; iat1++)
     {
@@ -81,7 +81,7 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
             const int T2 = ra.get_info(iat1, ad)[3];
             const int I2 = ra.get_info(iat1, ad)[4];
             int iat2 = ucell->itia2iat(T2, I2);
-            if (this->_paraV->is_invalid_atom_pair(iat1, iat2))
+            if (this->pv->is_invalid_atom_pair(iat1, iat2))
             {
                 continue;
             }
@@ -90,7 +90,7 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
                                         ra.get_info(iat1, ad)[0],
                                         ra.get_info(iat1, ad)[1],
                                         ra.get_info(iat1, ad)[2],
-                                        this->_paraV);
+                                        this->pv);
             tmp_DMR->insert_pair(tmp_ap);
         }
     }
@@ -191,7 +191,7 @@ void DensityMatrix<TK, TR>::set_DMK_pointer(const int ik, TK* DMK_in)
 #ifdef __DEBUG
     assert(ik < this->_nk * this->_nspin);
 #endif
-    this->_DMK[ik].assign(DMK_in, DMK_in + this->_paraV->nrow * this->_paraV->ncol);
+    this->_DMK[ik].assign(DMK_in, DMK_in + this->pv->nrow * this->pv->ncol);
 }
 
 // set _DMK element
@@ -203,7 +203,7 @@ void DensityMatrix<TK, TR>::set_DMK(const int ispin, const int ik, const int i, 
     assert(ik >= 0 && ik < this->_nk);
 #endif
     // consider transpose col=>row
-    this->_DMK[ik + this->_nk * (ispin - 1)][i * this->_paraV->nrow + j] = value;
+    this->_DMK[ik + this->_nk * (ispin - 1)][i * this->pv->nrow + j] = value;
 }
 
 // set _DMK element
@@ -213,7 +213,7 @@ void DensityMatrix<TK, TR>::set_DMK_zero()
     for (int ik = 0; ik < _nspin * _nk; ik++)
     {
         ModuleBase::GlobalFunc::ZEROS(this->_DMK[ik].data(),
-                                      this->_paraV->get_row_size() * this->_paraV->get_col_size());
+                                      this->pv->get_row_size() * this->pv->get_col_size());
     }
 }
 
@@ -225,7 +225,7 @@ TK DensityMatrix<TK, TR>::get_DMK(const int ispin, const int ik, const int i, co
     assert(ispin > 0 && ispin <= this->_nspin);
 #endif
     // consider transpose col=>row
-    return this->_DMK[ik + this->_nk * (ispin - 1)][i * this->_paraV->nrow + j];
+    return this->_DMK[ik + this->_nk * (ispin - 1)][i * this->pv->nrow + j];
 }
 
 // get _DMK nks, nrow, ncol
@@ -253,7 +253,7 @@ int DensityMatrix<TK, TR>::get_DMK_nrow() const
 #ifdef __DEBUG
     assert(this->_DMK.size() != 0);
 #endif
-    return this->_paraV->nrow;
+    return this->pv->nrow;
 }
 
 template <typename TK, typename TR>
@@ -262,7 +262,7 @@ int DensityMatrix<TK, TR>::get_DMK_ncol() const
 #ifdef __DEBUG
     assert(this->_DMK.size() != 0);
 #endif
-    return this->_paraV->ncol;
+    return this->pv->ncol;
 }
 
 template <typename TK, typename TR>

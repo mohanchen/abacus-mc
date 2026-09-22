@@ -27,7 +27,7 @@ void DensityMatrix_Tools::cal_DMR(
                                  "DMR has not been initialized: dmR_out.size() != nspin!");
     }
 
-    const int ld_hk = dm._paraV->nrow;
+    const int ld_hk = dm.pv->nrow;
     for (int is = 1; is <= dm._nspin; ++is)
     {
         const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
@@ -43,10 +43,10 @@ void DensityMatrix_Tools::cal_DMR(
             const int iat1 = target_ap.get_atom_i();
             const int iat2 = target_ap.get_atom_j();
             // get global indexes of whole matrix for each atom in this process
-            const int row_ap = dm._paraV->atom_begin_row[iat1];
-            const int col_ap = dm._paraV->atom_begin_col[iat2];
-            const int row_size = dm._paraV->get_nrow_atom(iat1);
-            const int col_size = dm._paraV->get_ncol_atom(iat2);
+            const int row_ap = dm.pv->atom_begin_row[iat1];
+            const int col_ap = dm.pv->atom_begin_col[iat2];
+            const int row_size = dm.pv->get_nrow_atom(iat1);
+            const int col_size = dm.pv->get_ncol_atom(iat2);
             const int mat_size = row_size * col_size;
             const int R_size = target_ap.get_R_size();
             assert(row_ap != -1 && col_ap != -1 && "Atom-pair not belong this process");
@@ -93,7 +93,7 @@ void DensityMatrix_Tools::cal_DMR(
                 // copy column-major DMK to row-major DMK_mat_trans (for the purpose of computational efficiency)
                 const TK*const DMK_mat_ptr
                     = dm._DMK[ik + ik_begin].data()
-                      + col_ap * dm._paraV->nrow + row_ap;
+                      + col_ap * dm.pv->nrow + row_ap;
                 for(int icol = 0; icol < col_size; ++icol)
                 {
                     for(int irow = 0; irow < row_size; ++irow)

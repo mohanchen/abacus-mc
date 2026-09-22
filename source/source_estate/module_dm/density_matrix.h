@@ -37,24 +37,24 @@ class DensityMatrix
 
     /**
      * @brief Constructor of class DensityMatrix for multi-k calculation
-     * @param _paraV pointer of Parallel_Orbitals object
+     * @param pv pointer of Parallel_Orbitals object
      * @param nspin number of spin of the density matrix, set by user according to global nspin
      *  (usually {nspin_global -> nspin_dm} = {1->1, 2->2, 4->1}, but sometimes 2->1 like in LR-TDDFT)
      * @param kvec_d direct coordinates of kpoints
      * @param nk number of k-points, not always equal to K_Vectors::get_nks()/nspin_dm.
      *               it will be set to kvec_d.size() if the value is invalid
      */
-    DensityMatrix(const Parallel_Orbitals* _paraV, 
+    DensityMatrix(const Parallel_Orbitals* pv,
             const int nspin, 
             const std::vector<ModuleBase::Vector3<double>>& kvec_d, 
             const int nk);
 
     /**
      * @brief Constructor of class DensityMatrix for gamma-only calculation, where kvector is not required
-     * @param _paraV pointer of Parallel_Orbitals object
+     * @param pv pointer of Parallel_Orbitals object
      * @param nspin number of spin of the density matrix, set by user according to global nspin
      */
-    DensityMatrix(const Parallel_Orbitals* _paraV, const int nspin);
+    DensityMatrix(const Parallel_Orbitals* pv, const int nspin);
 
     /**
      * @brief initialize density matrix DMR from UnitCell
@@ -197,7 +197,7 @@ class DensityMatrix
      */
     const Parallel_Orbitals* get_paraV_pointer() const
     {
-        return this->_paraV;
+        return this->pv;
     }
 
     const std::vector<ModuleBase::Vector3<double>>& get_kvec_d() const
@@ -280,7 +280,7 @@ class DensityMatrix
     /**
      * @brief density matrix in k space, which is a vector[ik]
      * DMK should be a [_nspin][_nk][i][j] matrix,
-     * whose size is _nspin * _nk * _paraV->get_nrow() * _paraV->get_ncol()
+     * whose size is _nspin * _nk * pv->get_nrow() * pv->get_ncol()
      */
     // std::vector<ModuleBase::ComplexMatrix> _DMK;
     std::vector<std::vector<TK>> _DMK;
@@ -293,7 +293,7 @@ class DensityMatrix
     /**
      * @brief Parallel_Orbitals object, which contain all information of 2D block cyclic distribution
      */
-    const Parallel_Orbitals* _paraV = nullptr;
+    const Parallel_Orbitals* pv = nullptr;
 
     /**
      * @brief spin-polarization index (1 - none spin and SOC ; 2 - spin polarization)
