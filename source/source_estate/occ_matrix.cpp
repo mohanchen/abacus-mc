@@ -13,7 +13,7 @@ void OccupationMatrix::init(const UnitCell& cell,
 
     this->occ_.resize(cell.nat);
     this->occ_save_.resize(cell.nat);
-    this->iatlnmipol2iwt_.resize(cell.nat);
+    this->corr_iwt_.resize(cell.nat);
 
     for (int it = 0; it < cell.ntype; ++it)
     {
@@ -23,7 +23,7 @@ void OccupationMatrix::init(const UnitCell& cell,
 
             occ_[iat].resize(cell.atoms[it].nwl + 1);
             occ_save_[iat].resize(cell.atoms[it].nwl + 1);
-            iatlnmipol2iwt_[iat].resize(cell.atoms[it].nwl + 1);
+            corr_iwt_[iat].resize(cell.atoms[it].nwl + 1);
 
             if (l_channel[it] == -1)
             {
@@ -56,16 +56,10 @@ void OccupationMatrix::init(const UnitCell& cell,
 
             for (int L = 0; L <= cell.atoms[it].nwl; L++)
             {
-                iatlnmipol2iwt_[iat][L].resize(cell.atoms[it].l_nchi[L]);
-
-                for (int n = 0; n < cell.atoms[it].l_nchi[L]; n++)
+                corr_iwt_[iat][L].resize(2 * L + 1);
+                for (int m = 0; m < 2 * L + 1; m++)
                 {
-                    iatlnmipol2iwt_[iat][L][n].resize(2 * L + 1);
-
-                    for (int m = 0; m < 2 * L + 1; m++)
-                    {
-                        iatlnmipol2iwt_[iat][L][n][m].resize(npol);
-                    }
+                    corr_iwt_[iat][L][m].resize(npol);
                 }
             }
 
@@ -78,7 +72,10 @@ void OccupationMatrix::init(const UnitCell& cell,
                 const int n = cell.atoms[it].iw2n[iw0];
                 const int m = cell.atoms[it].iw2m[iw0];
 
-                iatlnmipol2iwt_[iat][l][n][m][ipol] = iwt;
+                if (n == 0)
+                {
+                    corr_iwt_[iat][l][m][ipol] = iwt;
+                }
             }
         }
     }

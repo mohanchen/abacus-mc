@@ -11,9 +11,9 @@ class UnitCell;
  * @brief On-site occupation matrices for DFT+U.
  *
  * Owns the nested occ[iat][l][spin] matrices together with their saved
- * copy (used by mixing) and the iat->(l,n,m,ipol)->iwt lookup table.
- * Only the first radial channel (n=0) of each correlated l is stored;
- * the lookup table still spans every radial channel.
+ * copy (used by mixing) and the corr_iwt[iat][l][m][ipol] lookup table
+ * mapping the correlated orbital (first radial channel) to its global
+ * orbital index iwt.
  * Layout:
  *   nspin=1/2: occ[iat][l] has 2 spin channels of (2l+1)x(2l+1)
  *   nspin=4:   occ[iat][l] has 1 channel of (2l+1)*npol x (2l+1)*npol
@@ -22,7 +22,7 @@ class UnitCell;
 class OccupationMatrix
 {
   public:
-    /// allocate occ/occ_save/iatlnmipol2iwt according to the cell
+    /// allocate occ/occ_save/corr_iwt according to the cell
     void init(const UnitCell& cell,
               const std::vector<int>& l_channel,
               int nspin,
@@ -67,18 +67,11 @@ class OccupationMatrix
     const std::vector<std::vector<std::vector<ModuleBase::matrix>>>& data_save() const { return occ_save_; }
 
     // --- lookup table ---
-    /// global orbital index of the correlated orbital (n=0) of atom iat
+    /// global orbital index of the correlated orbital (first radial
+    /// channel) of atom iat. Only the correlated channel is stored.
     int corr_iwt(int iat, int l, int m, int ipol) const
     {
-        return iatlnmipol2iwt_[iat][l][0][m][ipol];
-    }
-    int iwt(int iat, int l, int n, int m, int ipol) const
-    {
-        return iatlnmipol2iwt_[iat][l][n][m][ipol];
-    }
-    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt() const
-    {
-        return iatlnmipol2iwt_;
+        return corr_iwt_[iat][l][m][ipol];
     }
 
     // --- flat (de)serialization of one atom's correlated orbital ---
@@ -115,7 +108,7 @@ class OccupationMatrix
   private:
     std::vector<std::vector<std::vector<ModuleBase::matrix>>> occ_;
     std::vector<std::vector<std::vector<ModuleBase::matrix>>> occ_save_;
-    std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> iatlnmipol2iwt_;
+    std::vector<std::vector<std::vector<std::vector<int>>>> corr_iwt_;
     int nspin_ = 0;
     int npol_ = 0;
 };

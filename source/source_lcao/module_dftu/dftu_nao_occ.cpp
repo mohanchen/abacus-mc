@@ -253,7 +253,7 @@ namespace DFTU_LCAO {
 
 /// @brief Accumulate one (iat, l, spin) channel of the occupation matrix
 ///        from the complex S*DM product srho for the multi-k case. Reads npol
-///        and the iatlnmipol2iwt lookup directly from occmat so callers do
+///        and the corr_iwt lookup directly from occmat so callers do
 ///        not need to thread those scalars through.
 void accumulate_occ_channel_k(OccupationMatrix& occmat,
                               const Parallel_Orbitals& pv,
@@ -305,7 +305,7 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
 
 /// @brief Accumulate one (iat, l, spin) channel of the occupation matrix
 ///        from the real S*DM product srho for the gamma-only case. Reads npol
-///        and the iatlnmipol2iwt lookup directly from occmat so callers do
+///        and the corr_iwt lookup directly from occmat so callers do
 ///        not need to thread those scalars through. Uses the combined
 ///        (m0_all, m1_all) channel index consistently with the multi-k path.
 void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
@@ -444,7 +444,7 @@ void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
 
 /// @brief Walk the (it, ia, l) atom mesh for one k-point and accumulate
 ///        each qualifying channel of occmat from the complex S*DM product
-///        srho. Reads npol and the iatlnmipol2iwt lookup from occmat so
+///        srho. Reads npol and the corr_iwt lookup from occmat so
 ///        callers do not thread them through.
 void accumulate_occ_k_for_ik(OccupationMatrix& occmat,
                              const UnitCell& ucell,
