@@ -51,13 +51,9 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
         std::complex<double>* tmp3 = tmp3_vec.data();
         std::complex<double>* tmp4 = tmp4_vec.data();
 
-        ModuleBase::GlobalFunc::ZEROS(Htmp, nloc);
-        ModuleBase::GlobalFunc::ZEROS(Sinv, nloc);
-        ModuleBase::GlobalFunc::ZEROS(tmp1, nloc);
-        ModuleBase::GlobalFunc::ZEROS(tmp2, nloc);
-        ModuleBase::GlobalFunc::ZEROS(tmp3, nloc);
-        ModuleBase::GlobalFunc::ZEROS(tmp4, nloc);
-
+        // The buffers are value-initialized to zero by the std::vector
+        // constructors and fully overwritten below (Htmp/Sinv by copy,
+        // tmp1~tmp4 by gemm with beta == 0), so no explicit zeroing is needed.
         const int inc = 1;
 
         hamilt::MatrixBlock<std::complex<double>> h_mat;
@@ -242,7 +238,6 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
         int lwork = 3 * nlocal - 1; // tmp
         std::vector<std::complex<double>> work_vec(lwork);
         std::complex<double>* work = work_vec.data();
-        ModuleBase::GlobalFunc::ZEROS(work, lwork);
 
         int IPIV[nlocal];
 

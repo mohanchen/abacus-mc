@@ -7,6 +7,7 @@
 #include "source_base/tool_title.h"
 #include "source_cell/klist.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -42,8 +43,7 @@ void DensityMatrix<TK, TR>::set_DMK_zero()
 {
     for (int ik = 0; ik < _nspin * _nk; ik++)
     {
-        ModuleBase::GlobalFunc::ZEROS(this->_DMK[ik].data(),
-                                      this->pv->get_row_size() * this->pv->get_col_size());
+        std::fill(this->_DMK[ik].begin(), this->_DMK[ik].end(), TK{});
     }
 }
 
@@ -72,12 +72,10 @@ void DensityMatrix<TK, TR>::save_DMR()
     {
         TR* DMR_pointer = this->_DMR[is]->get_wrapper();
         TR* DMR_save_pointer = _DMR_save[is].data();
-        // set to zero
-        ModuleBase::GlobalFunc::ZEROS(DMR_save_pointer, nnr);
-        for (int i = 0; i < nnr; i++)
-        {
-            DMR_save_pointer[i] = DMR_pointer[i];
-        }
+        // The resize above value-initializes newly added elements, and the
+        // whole [0, nnr) range is overwritten by the copy, so a prior
+        // zeroing of the destination would be a dead store.
+        std::copy(DMR_pointer, DMR_pointer + nnr, DMR_save_pointer);
     }
 
     ModuleBase::timer::end("DensityMatrix", "save_DMR");
