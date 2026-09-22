@@ -47,7 +47,7 @@ inline void load_occ_from_file(const Plus_U_Base& dftu,
     {
         for (int i = 0; i < static_cast<int>(occ.size()); i++)
         {
-            occ[i] = dftu.occmat().get(iat0, target_L, 0, current_spin,
+            occ[i] = dftu.occmat().get(iat0, target_L, current_spin,
                                        i / (2 * target_L + 1), i % (2 * target_L + 1));
         }
     }
