@@ -351,8 +351,9 @@ TEST_F(DMTest, cal_DMR_blas_complex)
 // wrong charge density (tests/03_NAO_multik/*spin4* failed by ~41 eV).
 //
 // This test reproduces the real SOC construction (nspin_dm=1, nspin_global=4)
-// and fills the DMK with a constant complex value (a + i b). It then checks
-// that cal_DMR selects the Pauli branch:
+// and fills the spin-diagonal DMK entries (uu, dd) with (a + i b), leaving the
+// spin off-diagonal entries (ud, du) zero. It then checks that cal_DMR selects
+// the Pauli branch:
 //   * correct (Pauli) branch : rho_0 = (uu+dd).real() = 2a, rho_z = (uu-dd).real() = 0
 //   * wrong   (real-project) : every element = a  (imaginary part b dropped)
 // With the pre-fix condition (_nspin==4 never taken) this test FAILS because
@@ -384,24 +385,36 @@ TEST_F(DMTest, cal_DMR_soc_pauli_branch)
     const int nspin_global = 4;
     module_dm::DensityMatrix<std::complex<double>, double> DM(pv_soc, nspin_dm, kvec_d, 1, nspin_global);
 
-    // fill the single DMK with a constant complex value (a + i b)
+    // fill the single DMK: spin-diagonal entries (uu, dd) are (a + i b),
+    // spin off-diagonal entries (ud, du) stay zero. With a constant fill the
+    // 2x2 spin block would also have ud = du = (a + i b), and rho_x =
+    // Re(ud + du) would correctly be 2a instead of the asserted 0.
     const double a = 0.5;
     const double b = 0.25;
     for (int i = 0; i < pv_soc->nrow; i++)
     {
         for (int j = 0; j < pv_soc->ncol; j++)
         {
-            DM.set_DMK(1, 0, i, j, std::complex<double>(a, b));
+            // global spinor indices determine the spin parity; local indices
+            // need not preserve parity under a 2D block-cyclic distribution
+            const bool same_spin = (pv_soc->local2global_row(i) % npol)
+                                   == (pv_soc->local2global_col(j) % npol);
+            const std::complex<double> dmk_value = same_spin
+                                                       ? std::complex<double>(a, b)
+                                                       : std::complex<double>(0.0, 0.0);
+            DM.set_DMK(1, 0, i, j, dmk_value);
         }
     }
 
     // build the real-space DMR
     Grid_Driver gd(0, 0);
     DM.init_DMR(&gd, &ucell);
+    // Gamma-only: reduce R vectors to (0, 0, 0), as cal_DMR_blas_double does
+    DM.get_DMR_pointer(1)->fix_gamma();
     DM.cal_DMR(-1);
 
     // check the Gamma (R = 0) block: rho_0 must be 2a (Pauli), NOT a (real projection);
-    // rho_x = rho_y = rho_z = 0 for uu == dd and real off-diagonals.
+    // rho_x = rho_y = rho_z = 0 for uu == dd and zero spin off-diagonals.
     hamilt::HContainer<double>* dmr = DM.get_DMR_pointer(1);
     for (int i = 0; i < dmr->size_atom_pairs(); i++)
     {
