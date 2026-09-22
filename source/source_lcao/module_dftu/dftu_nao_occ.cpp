@@ -251,7 +251,7 @@ void DFTU_LCAO::cal_occ_mat_gamma(const Parallel_Orbitals* pv,
 
 namespace DFTU_LCAO {
 
-/// @brief Accumulate one (iat, l, n, spin) channel of the occupation matrix
+/// @brief Accumulate one (iat, l, spin) channel of the occupation matrix
 ///        from the complex S*DM product srho for the multi-k case. Reads npol
 ///        and the iatlnmipol2iwt lookup directly from occmat so callers do
 ///        not need to thread those scalars through.
@@ -260,19 +260,18 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
                               const std::complex<double>* srho,
                               int iat,
                               int l,
-                              int n,
                               int spin)
 {
     const int npol = occmat.npol();
     const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
         = occmat.iatlnmipol2iwt();
-    ModuleBase::matrix& occ = occmat.mat(iat, l, n, spin);
+    ModuleBase::matrix& occ = occmat.mat(iat, l, spin);
     const int two_l_plus_one = 2 * l + 1;
     for (int m0 = 0; m0 < two_l_plus_one; m0++)
     {
         for (int ipol0 = 0; ipol0 < npol; ipol0++)
         {
-            const int iwt0 = iatlnmipol2iwt[iat][l][n][m0][ipol0];
+            const int iwt0 = iatlnmipol2iwt[iat][l][0][m0][ipol0];
             const int mu = pv.global2local_row(iwt0);
             const int mu_prime = pv.global2local_col(iwt0);
 
@@ -280,7 +279,7 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
             {
                 for (int ipol1 = 0; ipol1 < npol; ipol1++)
                 {
-                    const int iwt1 = iatlnmipol2iwt[iat][l][n][m1][ipol1];
+                    const int iwt1 = iatlnmipol2iwt[iat][l][0][m1][ipol1];
                     const int nu = pv.global2local_col(iwt1);
                     const int nu_prime = pv.global2local_row(iwt1);
 
@@ -306,7 +305,7 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
     } // m0
 }
 
-/// @brief Accumulate one (iat, l, n, spin) channel of the occupation matrix
+/// @brief Accumulate one (iat, l, spin) channel of the occupation matrix
 ///        from the real S*DM product srho for the gamma-only case. Reads npol
 ///        and the iatlnmipol2iwt lookup directly from occmat so callers do
 ///        not need to thread those scalars through. Uses the combined
@@ -316,19 +315,18 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
                                   const double* srho,
                                   int iat,
                                   int l,
-                                  int n,
                                   int spin)
 {
     const int npol = occmat.npol();
     const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
         = occmat.iatlnmipol2iwt();
-    ModuleBase::matrix& occ_is = occmat.mat(iat, l, n, spin);
+    ModuleBase::matrix& occ_is = occmat.mat(iat, l, spin);
     const int two_l_plus_one = 2 * l + 1;
     for (int m0 = 0; m0 < two_l_plus_one; m0++)
     {
         for (int ipol0 = 0; ipol0 < npol; ipol0++)
         {
-            const int iwt0 = iatlnmipol2iwt[iat][l][n][m0][ipol0];
+            const int iwt0 = iatlnmipol2iwt[iat][l][0][m0][ipol0];
             const int mu = pv.global2local_row(iwt0);
             const int mu_prime = pv.global2local_col(iwt0);
 
@@ -336,7 +334,7 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
             {
                 for (int ipol1 = 0; ipol1 < npol; ipol1++)
                 {
-                    const int iwt1 = iatlnmipol2iwt[iat][l][n][m1][ipol1];
+                    const int iwt1 = iatlnmipol2iwt[iat][l][0][m1][ipol1];
                     const int nu = pv.global2local_col(iwt1);
                     const int nu_prime = pv.global2local_row(iwt1);
 
@@ -361,7 +359,7 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
     } // m0
 }
 
-/// @brief MPI Allreduce each (iat, l, n=0) channel of occmat across all ranks
+/// @brief MPI Allreduce each (iat, l) channel of occmat across all ranks
 ///        and symmetrize it (Hermitian average) per the nspin convention:
 ///        nspin=1 mirrors spin-0 into spin-1; nspin=2 symmetrizes each spin;
 ///        nspin=4 symmetrizes the single Pauli block. Reads nspin and npol
@@ -393,74 +391,62 @@ void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
                     continue;
                 }
 
-                const int N = ucell.atoms[it].l_nchi[l];
-
-                for (int n = 0; n < N; n++)
+                if (nspin == 1 || nspin == 4)
                 {
-                    // if(!Yukawa && n!=0) continue;
-                    if (n != 0)
-                    {
-                        continue;
-                    }
-                    // set the local occupation mumber matrix of spin up and down zeros
+                    ModuleBase::matrix& occ0 = occmat.mat(iat, l, 0);
+                    // MPI Allreduce across ranks (in-place)
+                    Parallel_Reduce::reduce_all(&occ0(0, 0),
+                                                (2 * l + 1) * npol * (2 * l + 1) * npol);
+                }
+                else if (nspin == 2)
+                {
+                    ModuleBase::matrix& occ0 = occmat.mat(iat, l, 0);
+                    // MPI Allreduce across ranks (in-place)
+                    Parallel_Reduce::reduce_all(&occ0(0, 0),
+                                                (2 * l + 1) * (2 * l + 1));
 
-                    if (nspin == 1 || nspin == 4)
-                    {
-                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
-                        // MPI Allreduce across ranks (in-place)
-                        Parallel_Reduce::reduce_all(&occ0(0, 0),
-                                                    (2 * l + 1) * npol * (2 * l + 1) * npol);
-                    }
-                    else if (nspin == 2)
-                    {
-                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
-                        // MPI Allreduce across ranks (in-place)
-                        Parallel_Reduce::reduce_all(&occ0(0, 0),
-                                                    (2 * l + 1) * (2 * l + 1));
+                    ModuleBase::matrix& occ1 = occmat.mat(iat, l, 1);
+                    // MPI Allreduce across ranks (in-place)
+                    Parallel_Reduce::reduce_all(&occ1(0, 0),
+                                                (2 * l + 1) * (2 * l + 1));
+                }
 
-                        ModuleBase::matrix& occ1 = occmat.mat(iat, l, n, 1);
-                        // MPI Allreduce across ranks (in-place)
-                        Parallel_Reduce::reduce_all(&occ1(0, 0),
-                                                    (2 * l + 1) * (2 * l + 1));
-                    }
+                switch (nspin)
+                {
+                case 1:
+                {
+                    ModuleBase::matrix& occ0 = occmat.mat(iat, l, 0);
+                    occ0 += transpose(occ0);
+                    occ0 *= 0.5;
+                    occmat.mat(iat, l, 1) += occ0;
+                    break;
+                }
 
-                    switch (nspin)
+                case 2:
+                    for (int is = 0; is < nspin; is++)
                     {
-                    case 1:
-                    {
-                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
-                        occ0 += transpose(occ0);
-                        occ0 *= 0.5;
-                        occmat.mat(iat, l, n, 1) += occ0;
-                        break;
+                        ModuleBase::matrix& occ_is = occmat.mat(iat, l, is);
+                        occ_is += transpose(occ_is);
                     }
+                    break;
 
-                    case 2:
-                        for (int is = 0; is < nspin; is++)
-                        {
-                            ModuleBase::matrix& occ_is = occmat.mat(iat, l, n, is);
-                            occ_is += transpose(occ_is);
-                        }
-                        break;
+                case 4:
+                {
+                    ModuleBase::matrix& occ0 = occmat.mat(iat, l, 0);
+                    occ0 += transpose(occ0);
+                    break;
+                }
 
-                    case 4:
-                    {
-                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
-                        occ0 += transpose(occ0);
-                        break;
-                    }
-
-                    default:
-                        std::cout << "Not supported NSPIN parameter" << std::endl;
-                        exit(0);
-                    }
-                } // end n
+                default:
+                    std::cout << "Not supported NSPIN parameter" << std::endl;
+                    exit(0);
+                }
             } // end l
         } // end ia
     } // end it
 }
 
-/// @brief Walk the (it, ia, l, n=0) atom mesh for one k-point and accumulate
+/// @brief Walk the (it, ia, l) atom mesh for one k-point and accumulate
 ///        each qualifying channel of occmat from the complex S*DM product
 ///        srho. Reads npol and the iatlnmipol2iwt lookup from occmat so
 ///        callers do not thread them through.
@@ -492,25 +478,14 @@ void accumulate_occ_k_for_ik(OccupationMatrix& occmat,
                     continue;
                 }
 
-                const int N = ucell.atoms[it].l_nchi[l];
-
-                for (int n = 0; n < N; n++)
-                {
-                    // if(!Yukawa && n!=0) continue;
-                    if (n != 0)
-                    {
-                        continue;
-                    }
-
-                    // Calculate the local occupation number matrix
-                    accumulate_occ_channel_k(occmat, pv, srho, iat, l, n, spin);
-                } // end n
+                // Calculate the local occupation number matrix
+                accumulate_occ_channel_k(occmat, pv, srho, iat, l, spin);
             } // end l
         } // end ia
     } // end it
 }
 
-/// @brief Process one (it, ia, l, n=0, spin) block of the gamma-only
+/// @brief Process one (it, ia, l, spin) block of the gamma-only
 ///        occupation matrix: accumulate from the real S*DM product srho,
 ///        MPI-Allreduce across ranks, then symmetrize per the nspin
 ///        convention. Reads nspin and npol from occmat so callers do not
@@ -544,45 +519,34 @@ void process_occ_channel_gamma(OccupationMatrix& occmat,
                     continue;
                 }
 
-                const int N = ucell.atoms[it].l_nchi[l];
+                // Calculate the local occupation number matrix
+                accumulate_occ_channel_gamma(occmat, pv, srho, iat, l, spin);
+                ModuleBase::matrix& occ_is = occmat.mat(iat, l, spin);
 
-                for (int n = 0; n < N; n++)
+                // MPI Allreduce across ranks (in-place)
+                Parallel_Reduce::reduce_all(&occ_is(0, 0),
+                                            (2 * l + 1) * npol * (2 * l + 1) * npol);
+
+                // for the case spin independent calculation
+                switch (nspin)
                 {
-                    if (n != 0)
-                    {
-                        continue;
-                    }
+                case 1:
+                {
+                    ModuleBase::matrix& occ0 = occmat.mat(iat, l, 0);
+                    occ0 += transpose(occ0);
+                    occ0 *= 0.5;
+                    occmat.mat(iat, l, 1) += occ0;
+                    break;
+                }
 
-                    // Calculate the local occupation number matrix
-                    accumulate_occ_channel_gamma(occmat, pv, srho, iat, l, n, spin);
-                    ModuleBase::matrix& occ_is = occmat.mat(iat, l, n, spin);
+                case 2:
+                    occ_is += transpose(occ_is);
+                    break;
 
-                    // MPI Allreduce across ranks (in-place)
-                    Parallel_Reduce::reduce_all(&occ_is(0, 0),
-                                                (2 * l + 1) * npol * (2 * l + 1) * npol);
-
-                    // for the case spin independent calculation
-                    switch (nspin)
-                    {
-                    case 1:
-                    {
-                        ModuleBase::matrix& occ0 = occmat.mat(iat, l, n, 0);
-                        occ0 += transpose(occ0);
-                        occ0 *= 0.5;
-                        occmat.mat(iat, l, n, 1) += occ0;
-                        break;
-                    }
-
-                    case 2:
-                        occ_is += transpose(occ_is);
-                        break;
-
-                    default:
-                        std::cout << "Not supported NSPIN parameter" << std::endl;
-                        exit(0);
-                    }
-
-                } // end for(n)
+                default:
+                    std::cout << "Not supported NSPIN parameter" << std::endl;
+                    exit(0);
+                }
             } // L
         } // ia
     } // it
