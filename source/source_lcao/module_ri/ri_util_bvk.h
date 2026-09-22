@@ -23,14 +23,22 @@ namespace RI_Util
 		return std::array<int,3>{kv.nmp[0], kv.nmp[1], kv.nmp[2]};
 	}
 
-	// cell index c folded into [0, period) like (c % period + period) % period
+	// Fold a cell index into [-period/2, period/2) to match LibRI's
+	// Array_Operator::operator%: (c % period + 3 * period / 2) % period - period / 2
+	template<typename Tcell>
+	inline Tcell fold_cell_centered(const Tcell c, const Tcell period)
+	{
+		return (c % period + 3 * period / 2) % period - period / 2;
+	}
+
 	template<typename Tcell>
 	std::vector<std::array<Tcell,1>>
 	get_Born_von_Karmen_cells( const std::array<Tcell,1> &Born_von_Karman_period )
 	{
 		std::vector<std::array<Tcell,1>> Born_von_Karman_cells;
 		for( Tcell c=0; c<Born_von_Karman_period[0]; ++c )
-			Born_von_Karman_cells.emplace_back( std::array<Tcell,1>{c} );
+			Born_von_Karman_cells.emplace_back(
+				std::array<Tcell,1>{ fold_cell_centered(c, Born_von_Karman_period[0]) });
 		return Born_von_Karman_cells;
 	}
 
@@ -49,7 +57,7 @@ namespace RI_Util
 				std::array<Tcell,Ndim> cell;
 				for(size_t i=0; i<Ndim-1; ++i)
 					cell[i] = sub_cell[i];
-				cell.back() = c;
+				cell.back() = fold_cell_centered(c, Born_von_Karman_period.back());
 				Born_von_Karman_cells.emplace_back(std::move(cell));
 			}
 		return Born_von_Karman_cells;
