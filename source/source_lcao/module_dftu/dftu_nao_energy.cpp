@@ -35,7 +35,7 @@ double calc_energy_u_collinear(const Plus_U_Base& dftu,
         }
         if (dftu.use_yukawa())
         {
-            energy_u_local += 0.5 * (dftu.yukawa().get_U(T, l, 0) - dftu.yukawa().get_J(T, l, 0))
+            energy_u_local += 0.5 * (dftu.yukawa().get_U(T, l) - dftu.yukawa().get_J(T, l))
                               * (nm_trace - nm2_trace);
         }
         else
@@ -81,7 +81,7 @@ double calc_energy_u_noncollinear(const Plus_U_Base& dftu,
     }
     if (dftu.use_yukawa())
     {
-        energy_u_local += 0.5 * (dftu.yukawa().get_U(T, l, 0) - dftu.yukawa().get_J(T, l, 0))
+        energy_u_local += 0.5 * (dftu.yukawa().get_U(T, l) - dftu.yukawa().get_J(T, l))
                           * (nm_trace - nm2_trace);
     }
     else
