@@ -1,7 +1,7 @@
 #ifndef CAL_DM_H
 #define CAL_DM_H
 
-#include "math_tools.h"
+#include "source_estate/module_dm/cal_dm_psi.h"
 #include "source_base/timer.h"
 #include "source_base/matrix.h"
 #include "source_base/complexmatrix.h"
@@ -55,9 +55,9 @@ inline void cal_dm(const Parallel_Orbitals* ParaV, const ModuleBase::matrix& wg,
 
         // C++: dm(iw1,iw2) = wfc(ib,iw1).T * wg_wfc(ib,iw2)
 #ifdef __MPI
-        psiMulPsiMpi(wg_wfc, wfc, dm[ik], ParaV->desc_wfc, ParaV->desc);
+        module_dm::psi2dm_mpi(wg_wfc, wfc, dm[ik].c, ParaV->desc_wfc, ParaV->desc);
 #else
-        psiMulPsi(wg_wfc, wfc, dm[ik]);
+        module_dm::psi2dm(wg_wfc, wfc, dm[ik].c);
 #endif
     }
     ModuleBase::timer::end("elecstate","cal_dm");
@@ -114,9 +114,9 @@ inline void cal_dm(const Parallel_Orbitals* ParaV, const ModuleBase::matrix& wg,
 
         // C++: dm(iw1,iw2) = wfc(ib,iw1).T * wg_wfc(ib,iw2)
 #ifdef __MPI
-        psiMulPsiMpi(wg_wfc, wfc, dm[ik], ParaV->desc_wfc, ParaV->desc);
+        module_dm::psi2dm_mpi(wg_wfc, wfc, dm[ik].c, ParaV->desc_wfc, ParaV->desc);
 #else
-        psiMulPsi(wg_wfc, wfc, dm[ik]);
+        module_dm::psi2dm(wg_wfc, wfc, dm[ik].c);
 #endif
     }
 

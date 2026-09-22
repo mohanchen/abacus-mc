@@ -38,9 +38,9 @@ void RDMFT<TK, TR>::get_DM_XC(std::vector< std::vector<TK> >& DM_XC)
         wk_funEta_wfc.fix_k(ik);
         TK* DM_Kpointer = DM_XC[ik].data();
 #ifdef __MPI
-        module_dm::psiMulPsiMpi(wk_funEta_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
+        module_dm::psi2dm_mpi(wk_funEta_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
 #else
-        module_dm::psiMulPsi(wk_funEta_wfc, wfc, DM_Kpointer);
+        module_dm::psi2dm(wk_funEta_wfc, wfc, DM_Kpointer);
 #endif            
     }
 }
