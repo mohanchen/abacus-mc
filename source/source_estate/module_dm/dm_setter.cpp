@@ -72,9 +72,9 @@ void DensityMatrix<TK, TR>::save_DMR()
     {
         TR* DMR_pointer = this->_DMR[is]->get_wrapper();
         TR* DMR_save_pointer = _DMR_save[is].data();
-        // The resize above value-initializes newly added elements, and the
-        // whole [0, nnr) range is overwritten by the copy, so a prior
-        // zeroing of the destination would be a dead store.
+        // copy DMR_pointer into DMR_save_pointer over [0, nnr); the
+        // destination is fully overwritten, so prior zeroing is a dead
+        // store, and resize above value-initializes newly added elements.
         std::copy(DMR_pointer, DMR_pointer + nnr, DMR_save_pointer);
     }
 
