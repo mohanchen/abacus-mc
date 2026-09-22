@@ -106,8 +106,6 @@ void accumulate_onsite_force(Plus_U_Base& dftu,
     assert(dim >= 0 && dim < 3);
     assert(npol == 1 || npol == 2);
     const std::vector<int>& l_channel = dftu.get_l_channel_vec();
-    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
-        = dftu.occmat().iatlnmipol2iwt();
     for (int it = 0; it < ucell.ntype; it++)
     {
         if (!has_valid_correlated_channel(ucell, l_channel, it))
@@ -122,7 +120,7 @@ void accumulate_onsite_force(Plus_U_Base& dftu,
             {
                 for (int ipol = 0; ipol < npol; ipol++)
                 {
-                    const int iwt = iatlnmipol2iwt[iat][lc][0][m][ipol];
+                    const int iwt = dftu.occmat().corr_iwt(iat, lc, m, ipol);
                     const int mu = pv.global2local_row(iwt);
                     const int nu = pv.global2local_col(iwt);
                     if (mu < 0 || nu < 0)

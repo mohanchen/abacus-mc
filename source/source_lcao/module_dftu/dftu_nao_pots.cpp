@@ -67,8 +67,6 @@ void DFTU_LCAO::cal_pot_onsite(const Plus_U_Base& dftu,
     std::fill(pot_onsite, pot_onsite + pv->nloc, T(0));
 
     const int npol = dftu.occmat().npol();
-    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
-        = dftu.occmat().iatlnmipol2iwt();
 
     for (int it = 0; it < ucell.ntype; ++it)
     {
@@ -90,7 +88,7 @@ void DFTU_LCAO::cal_pot_onsite(const Plus_U_Base& dftu,
                 {
                     for (int ipol1 = 0; ipol1 < npol; ipol1++)
                     {
-                        const int mu = pv->global2local_row(iatlnmipol2iwt[iat][L][0][m1][ipol1]);
+                        const int mu = pv->global2local_row(dftu.occmat().corr_iwt(iat, L, m1, ipol1));
                         if (mu < 0)
                         {
                             continue;
@@ -101,7 +99,7 @@ void DFTU_LCAO::cal_pot_onsite(const Plus_U_Base& dftu,
                             for (int ipol2 = 0; ipol2 < npol; ipol2++)
                             {
                                 const int nu
-                                    = pv->global2local_col(iatlnmipol2iwt[iat][L][0][m2][ipol2]);
+                                    = pv->global2local_col(dftu.occmat().corr_iwt(iat, L, m2, ipol2));
                                 if (nu < 0)
                                 {
                                     continue;

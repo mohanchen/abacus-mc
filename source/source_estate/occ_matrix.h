@@ -67,6 +67,11 @@ class OccupationMatrix
     const std::vector<std::vector<std::vector<ModuleBase::matrix>>>& data_save() const { return occ_save_; }
 
     // --- lookup table ---
+    /// global orbital index of the correlated orbital (n=0) of atom iat
+    int corr_iwt(int iat, int l, int m, int ipol) const
+    {
+        return iatlnmipol2iwt_[iat][l][0][m][ipol];
+    }
     int iwt(int iat, int l, int n, int m, int ipol) const
     {
         return iatlnmipol2iwt_[iat][l][n][m][ipol];

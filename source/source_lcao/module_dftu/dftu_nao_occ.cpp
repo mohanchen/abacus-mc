@@ -263,15 +263,13 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
                               int spin)
 {
     const int npol = occmat.npol();
-    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
-        = occmat.iatlnmipol2iwt();
     ModuleBase::matrix& occ = occmat.mat(iat, l, spin);
     const int two_l_plus_one = 2 * l + 1;
     for (int m0 = 0; m0 < two_l_plus_one; m0++)
     {
         for (int ipol0 = 0; ipol0 < npol; ipol0++)
         {
-            const int iwt0 = iatlnmipol2iwt[iat][l][0][m0][ipol0];
+            const int iwt0 = occmat.corr_iwt(iat, l, m0, ipol0);
             const int mu = pv.global2local_row(iwt0);
             const int mu_prime = pv.global2local_col(iwt0);
 
@@ -279,7 +277,7 @@ void accumulate_occ_channel_k(OccupationMatrix& occmat,
             {
                 for (int ipol1 = 0; ipol1 < npol; ipol1++)
                 {
-                    const int iwt1 = iatlnmipol2iwt[iat][l][0][m1][ipol1];
+                    const int iwt1 = occmat.corr_iwt(iat, l, m1, ipol1);
                     const int nu = pv.global2local_col(iwt1);
                     const int nu_prime = pv.global2local_row(iwt1);
 
@@ -318,15 +316,13 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
                                   int spin)
 {
     const int npol = occmat.npol();
-    const std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>& iatlnmipol2iwt
-        = occmat.iatlnmipol2iwt();
     ModuleBase::matrix& occ_is = occmat.mat(iat, l, spin);
     const int two_l_plus_one = 2 * l + 1;
     for (int m0 = 0; m0 < two_l_plus_one; m0++)
     {
         for (int ipol0 = 0; ipol0 < npol; ipol0++)
         {
-            const int iwt0 = iatlnmipol2iwt[iat][l][0][m0][ipol0];
+            const int iwt0 = occmat.corr_iwt(iat, l, m0, ipol0);
             const int mu = pv.global2local_row(iwt0);
             const int mu_prime = pv.global2local_col(iwt0);
 
@@ -334,7 +330,7 @@ void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
             {
                 for (int ipol1 = 0; ipol1 < npol; ipol1++)
                 {
-                    const int iwt1 = iatlnmipol2iwt[iat][l][0][m1][ipol1];
+                    const int iwt1 = occmat.corr_iwt(iat, l, m1, ipol1);
                     const int nu = pv.global2local_col(iwt1);
                     const int nu_prime = pv.global2local_row(iwt1);
 
