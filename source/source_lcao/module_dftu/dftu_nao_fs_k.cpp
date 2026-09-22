@@ -172,6 +172,12 @@ void cal_force_k(const DftuFsEnv& env,
     {
         DFTU_LCAO::folding_matrix_k(fold_ctx, fsr, ik, dim + 1, 0, &dSm_k[0], kvec_d);
 
+        // DFT+U force at k-point: F_dim = Tr[dS_k/dR_dim * (DM_k * V_onsite)]
+        // rho_pot_onsite = DM_k * V_onsite is a non-symmetric complex matrix.
+        // Two different contractions are needed:
+        //   diag   contribution: dS/dR * rho^C  (conjugate transpose)
+        //   onsite contribution: dS/dR * rho^N  (no transpose)
+
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
                 transC,
@@ -314,6 +320,15 @@ void cal_force_gamma(const DftuFsEnv& env,
     {
         double* tmp_ptr = dsloc[dim];
 
+        // DFT+U force: F_dim = Tr[dS/dR_dim * (DM * V_onsite)]
+        // where rho_pot_onsite = DM * V_onsite is generally NOT symmetric
+        // (product of two symmetric matrices). Two different contractions
+        // are needed:
+        //   diag   contribution: dS/dR * rho^T  (row-indexed trace)
+        //   onsite contribution: dS/dR * rho^N  (no transpose)
+        // This mirrors cal_force_k, which uses rho^C and rho^N for the
+        // complex case.
+
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
                 transT,
@@ -340,7 +355,7 @@ void cal_force_gamma(const DftuFsEnv& env,
 
 #ifdef __MPI
         ScalapackConnector::gemm(transN,
-                transT,
+                transN,
                 nlocal,
                 nlocal,
                 nlocal,
