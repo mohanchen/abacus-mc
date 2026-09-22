@@ -36,53 +36,6 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const int nspin,
                  const std::string& ks_solver);
 
-/// @brief Accumulate one (iat, l, spin) channel of the occupation matrix
-///        from the complex S*DM product srho for the multi-k case.
-void accumulate_occ_channel_k(OccupationMatrix& occmat,
-                              const Parallel_Orbitals& pv,
-                              const std::complex<double>* srho,
-                              int iat,
-                              int l,
-                              int spin);
-
-/// @brief Accumulate one (iat, l, spin) channel of the occupation matrix
-///        from the real S*DM product srho for the gamma-only case.
-void accumulate_occ_channel_gamma(OccupationMatrix& occmat,
-                                  const Parallel_Orbitals& pv,
-                                  const double* srho,
-                                  int iat,
-                                  int l,
-                                  int spin);
-
-/// @brief MPI Allreduce each (iat, l) channel of occmat across all ranks
-///        and symmetrize it (Hermitian average) per the nspin convention:
-///        nspin=1 mirrors spin-0 into spin-1; nspin=2 symmetrizes each spin;
-///        nspin=4 symmetrizes the single Pauli block.
-void reduce_and_symmetrize_occ_k(OccupationMatrix& occmat,
-                                 const UnitCell& ucell,
-                                 const std::vector<int>& l_channel);
-
-/// @brief Walk the (it, ia, l) atom mesh for one k-point and accumulate
-///        each qualifying channel of occmat from the complex S*DM product
-///        srho.
-void accumulate_occ_k_for_ik(OccupationMatrix& occmat,
-                             const UnitCell& ucell,
-                             const Parallel_Orbitals& pv,
-                             const std::complex<double>* srho,
-                             int spin,
-                             const std::vector<int>& l_channel);
-
-/// @brief Process one (it, ia, l, spin) block of the gamma-only
-///        occupation matrix: accumulate from the real S*DM product srho,
-///        MPI-Allreduce across ranks, then symmetrize per the nspin
-///        convention.
-void process_occ_channel_gamma(OccupationMatrix& occmat,
-                               const UnitCell& ucell,
-                               const Parallel_Orbitals& pv,
-                               const double* srho,
-                               int spin,
-                               const std::vector<int>& l_channel);
-
 // calculate the local occupation number matrix (k-point version)
 void cal_occ_mat_k(const Parallel_Orbitals* pv,
                    const UnitCell& ucell,
