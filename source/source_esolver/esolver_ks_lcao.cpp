@@ -28,6 +28,7 @@
 #include "source_io/module_ctrl/ctrl_scf_lcao.h" // use ctrl_scf_lcao()
 #include "source_io/module_output/print_info.h"
 #include "source_lcao/rho_tau_lcao.h" // mohan add 20251024
+#include "source_lcao/module_rt/td_info.h" // TD_info for init_dm config
 #include "source_lcao/lcao_set.h" // mohan add 20251111
 #include "source_psi/setup_psi.h" // use Setup_Psi for deallocate_psi
 
@@ -392,7 +393,13 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(UnitCell& ucell, const int istep, const 
 		}
 #endif
 		module_dm::init_dm<TK>(ucell, this->pelec, this->dmat, this->psi, this->chr, iter, exx_two_level_step,
-			{PARAM.inp.esolver_type, PARAM.inp.td_stype, PARAM.inp.nspin, PARAM.inp.nelec});
+			{PARAM.inp.esolver_type, PARAM.inp.td_stype, PARAM.inp.nspin, PARAM.inp.nelec,
+			 (PARAM.inp.td_stype == 2 && PARAM.inp.esolver_type != "tddft")
+				 ? &TD_info::td_vel_op->get_phase_hybrid()
+				 : nullptr,
+			 (PARAM.inp.td_stype == 2 && PARAM.inp.esolver_type != "tddft") ? TD_info::cart_At
+																		  : ModuleBase::Vector3<double>(),
+			 &LCAO_domain::dm2rho});
 	}
 
 #ifdef __EXX

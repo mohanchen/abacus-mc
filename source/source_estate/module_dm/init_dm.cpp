@@ -2,8 +2,6 @@
 #include "source_estate/module_dm/cal_dm_psi.h"
 #include "source_estate/elecstate_tools.h"
 #include "source_cell/cal_ux.h"
-#include "source_lcao/rho_tau_lcao.h" // mohan add 2025-11-12
-#include "source_lcao/module_rt/td_info.h"
 
 template <typename TK>
 void module_dm::init_dm(UnitCell& ucell,
@@ -26,15 +24,15 @@ void module_dm::init_dm(UnitCell& ucell,
         module_dm::cal_dm_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
         if (cfg.esolver_type != "tddft" && cfg.td_stype == 2)
         {
-            dmat.dm->cal_DMR_td(TD_info::td_vel_op->get_phase_hybrid(), TD_info::cart_At, -1);
+            dmat.dm->cal_DMR_td(*cfg.td_phase_hybrid, cfg.td_cart_At, -1);
         }
         else
         {
             dmat.dm->cal_DMR(-1);
         }
 
-        // mohan add 2025-11-12, use density matrix to calculate the charge density
-        LCAO_domain::dm2rho(dmat.dm->get_DMR_vector(), cfg.nspin, &chr, cfg.nelec, ucell.omega, false);
+        // use density matrix to calculate the charge density
+        cfg.dm2rho_func(dmat.dm->get_DMR_vector(), cfg.nspin, &chr, cfg.nelec, ucell.omega, false);
 
         unitcell::cal_ux(ucell, cfg.nspin);
 
