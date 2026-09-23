@@ -340,7 +340,7 @@ class DensityMatrix
      * @brief HContainer for density matrix in real space for grid parallelization
      * same size semantics as _DMR
      */
-    std::vector<hamilt::HContainer<TR>*> _DMR_grid;
+    std::vector<hamilt::HContainer<TR>*> dmr_grid;
 
     /**
      * @brief density matrix in k space, which is a vector[ik]
