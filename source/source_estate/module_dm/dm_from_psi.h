@@ -22,7 +22,7 @@ namespace module_dm
 void dm_from_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<double>& wfc,
-                module_dm::DensityMatrix<double, double>& DM);
+                DensityMatrix<double, double>& DM);
 
 /**
  * @brief Calculate the k-point density matrix from wavefunctions for the multi-k case
@@ -45,7 +45,7 @@ template <typename TR>
 void dm_from_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<std::complex<double>>& wfc,
-                module_dm::DensityMatrix<std::complex<double>, TR>& DM);
+                DensityMatrix<std::complex<double>, TR>& DM);
 
 /**
  * @brief Calculate one k-point block of the density matrix (Gamma-only case)

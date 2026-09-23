@@ -13,7 +13,7 @@ namespace module_dm
 {
 
 template <typename TK, typename TR_in, typename TR_out>
-void DensityMatrix_Tools::cal_dmr_full(
+void cal_dmr_full(
     const DensityMatrix<TK, TR_in>& dm,
     hamilt::HContainer<TR_out>* dmR_out,
     const int ik_in)
@@ -23,7 +23,7 @@ void DensityMatrix_Tools::cal_dmr_full(
     // validate ik_in: either -1 (all k-points) or a valid index
     if (ik_in < -1 || ik_in >= dm._nk)
     {
-        ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr_full",
+        ModuleBase::WARNING_QUIT("module_dm::cal_dmr_full",
                                  "ik_in out of range: must be -1 (all k) or 0 <= ik_in < nk");
     }
 
@@ -98,7 +98,7 @@ void DensityMatrix<std::complex<double>, double>::cal_dmr_full(
     hamilt::HContainer<std::complex<double>>* dmR_out,
     const int ik_in) const
 {
-    DensityMatrix_Tools::cal_dmr_full(*this, dmR_out, ik_in);
+    module_dm::cal_dmr_full(*this, dmR_out, ik_in);
 }
 
 } // namespace module_dm

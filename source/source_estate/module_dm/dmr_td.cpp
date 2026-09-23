@@ -11,7 +11,7 @@ namespace module_dm
 {
 
 template <typename TK, typename TR_in, typename TR_out>
-void DensityMatrix_Tools::cal_dmr_td(
+void cal_dmr_td(
     DensityMatrix<TK, TR_in>& dm,
     std::vector<hamilt::HContainer<TR_out>*>& dmR_out,
     const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
@@ -24,61 +24,12 @@ void DensityMatrix_Tools::cal_dmr_td(
     // validate ik_in: either -1 (all k-points) or a valid index
     if (ik_in < -1 || ik_in >= dm._nk)
     {
-        ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr_td",
+        ModuleBase::WARNING_QUIT("module_dm::cal_dmr_td",
                                  "ik_in out of range: must be -1 (all k) or 0 <= ik_in < nk");
     }
 
     ModuleBase::timer::start("DensityMatrix", "cal_dmr_td");
-    const int ld_hk = dm.pv->nrow;
-    for (int is = 1; is <= dm.spin_mult; ++is)
-    {
-        const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
-        hamilt::HContainer<TR_out>* const dmr_spin = dmR_out[is - 1];
-        dmr_spin->set_zero();
-
-        if (dm.nspin != 1 && dm.nspin != 2 && dm.nspin != 4)
-        {
-            ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr_td",
-                                     "nspin must be 1, 2 or 4");
-        }
-
-        // accumulate kphase * DMK into DMR blocks; for nspin=4 (SOC) each orbital
-        // corresponds to a 2x2 spin block, so rows/cols step by 2 (physical spin
-        // dimension), and each block is transformed to Pauli components
-        // (rho_0, rho_x, rho_y, rho_z)
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-        for (int i = 0; i < dmr_spin->size_atom_pairs(); ++i)
-        {
-            hamilt::AtomPair<TR_out>& atom_pair = dmr_spin->get_atom_pair(i);
-            const DmrBlock block = get_dmr_block(dm.pv, atom_pair.get_atom_i(), atom_pair.get_atom_j());
-
-            // precompute k-phase factors (including hybrid-gauge phase) and collect DMR block pointers
-            std::vector<std::vector<TK>> kphase_vec;
-            std::vector<TR_out*> dmr_mats;
-            build_kphase(atom_pair, dm._kvec_d, dm._nk, phase_hybrid, kphase_vec, dmr_mats);
-
-            if (dm.nspin == 1 || dm.nspin == 2)
-            {
-                // nspin=1/2: DMR_ij(R) += Re[ e^{ik·R} * DMK_ij(k) ]
-                // (sum over ik when ik_in < 0, single ik when ik_in >= 0)
-                add_dmr_real(dm, block, ik_begin, kphase_vec, ld_hk, ik_in, dmr_mats);
-            }
-            else
-            {
-                // nspin==4 (SOC): first accumulate S_ij(R) = sum_k e^{ik·R} * DMK_ij(k),
-                // then for each 2x2 spin block (upup, updown, downup, downdown) transform to
-                // Pauli components via xyz_to_updown:
-                //   rho_0 = rho_upup + rho_downdown
-                //   rho_x = rho_updown + rho_downup
-                //   rho_y = Im(rho_updown) - Im(rho_downup)   (sign for conjugated stored DM)
-                //   rho_z = rho_upup - rho_downdown
-                add_dmr_soc(dm, block, ik_begin, kphase_vec, ld_hk, ik_in,
-                            atom_pair.get_col_size(), dmr_mats);
-            }
-        }
-    }
+    accumulate_dmr(dm, dmR_out, phase_hybrid, ik_in, "module_dm::cal_dmr_td");
     dm._dmr_ready = true;
     ModuleBase::timer::end("DensityMatrix", "cal_dmr_td");
 }
@@ -97,7 +48,7 @@ void DensityMatrix<std::complex<double>, double>::cal_dmr_td(
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
-    DensityMatrix_Tools::cal_dmr_td(*this, this->dmr, phase_hybrid, At, ik_in);
+    module_dm::cal_dmr_td(*this, this->dmr, phase_hybrid, At, ik_in);
 }
 
 template <>
@@ -106,7 +57,7 @@ void DensityMatrix<std::complex<double>, std::complex<double>>::cal_dmr_td(
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
-    DensityMatrix_Tools::cal_dmr_td(*this, this->dmr, phase_hybrid, At, ik_in);
+    module_dm::cal_dmr_td(*this, this->dmr, phase_hybrid, At, ik_in);
 }
 
 } // namespace module_dm

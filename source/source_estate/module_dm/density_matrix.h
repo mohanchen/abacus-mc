@@ -42,9 +42,7 @@ struct ShiftRealComplex<std::complex<double>>
  */
     template <typename TK, typename TR> class DensityMatrix;
 
-// DensityMatrix<complex<double>,TR>::cal_dmr() is illegal in C++, so DensityMatrix_Tools is used instead.
-namespace DensityMatrix_Tools
-{
+// DensityMatrix<complex<double>,TR>::cal_dmr() is illegal in C++, so module_dm is used instead.
     template <typename TK, typename TR_in, typename TR_out>
     extern void cal_dmr(
         DensityMatrix<TK, TR_in> &dm,
@@ -64,6 +62,19 @@ namespace DensityMatrix_Tools
         const DensityMatrix<TK, TR_in> &dm,
         hamilt::HContainer<TR_out>* dmR_out,
         const int ik_in);
+
+    /**
+     * @brief shared inner loop of cal_dmr / cal_dmr_td: for each spin channel,
+     * zero the DMR HContainer and accumulate kphase * DMK into DMR blocks.
+     * Pass an empty phase_hybrid map for the non-TD (cal_dmr) case.
+     */
+    template <typename TK, typename TR_in, typename TR_out>
+    extern void accumulate_dmr(
+        DensityMatrix<TK, TR_in> &dm,
+        std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
+        const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+        const int ik_in,
+        const char* func_name);
 
     template <typename TR>
     extern void exp_mul_dmk(const std::complex<double> kphase,
@@ -155,13 +166,6 @@ namespace DensityMatrix_Tools
                             const int ik_in,
                             const int col_stride,
                             std::vector<TR*>& dmr_mats);
-
-}
-
-} // namespace module_dm
-
-namespace module_dm
-{
 
 template <typename TK, typename TR>
 class DensityMatrix
@@ -467,32 +471,38 @@ class DensityMatrix
     std::vector<TR> dmr_origin;
     std::vector<TR> dmr_tmp;
 
-    friend void DensityMatrix_Tools::cal_dmr<TK, TR>(
+    friend void module_dm::cal_dmr<TK, TR>(
         DensityMatrix<TK, TR>& dm,
         std::vector<hamilt::HContainer<TR>*>& dmR_out,
         const int ik_in);
-    friend void DensityMatrix_Tools::cal_dmr_td<TK, TR>(
+    friend void module_dm::cal_dmr_td<TK, TR>(
         DensityMatrix<TK, TR>& dm,
         std::vector<hamilt::HContainer<TR>*>& dmR_out,
         const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
         const ModuleBase::Vector3<double> At,
         const int ik_in);
-    friend void DensityMatrix_Tools::cal_dmr_full<TK, TR>(
+    friend void module_dm::cal_dmr_full<TK, TR>(
         const DensityMatrix<TK, TR>& dm,
         hamilt::HContainer<std::complex<double>>* dmR_out,
         const int ik_in);
-    friend void DensityMatrix_Tools::add_dmr_real<TK, TR>(
+    friend void module_dm::accumulate_dmr<TK, TR>(
+        DensityMatrix<TK, TR>& dm,
+        std::vector<hamilt::HContainer<TR>*>& dmR_out,
+        const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+        const int ik_in,
+        const char* func_name);
+    friend void module_dm::add_dmr_real<TK, TR>(
         const DensityMatrix<TK, TR>& dm,
-        const DensityMatrix_Tools::DmrBlock& block,
+        const DmrBlock& block,
         const int ik_begin,
         const std::vector<std::vector<TK>>& kphase_vec,
         const int ld_hk,
         const int ik_in,
         std::vector<TR*>& dmr_mats);
 
-    friend void DensityMatrix_Tools::add_dmr_soc<TK, TR>(
+    friend void module_dm::add_dmr_soc<TK, TR>(
         const DensityMatrix<TK, TR>& dm,
-        const DensityMatrix_Tools::DmrBlock& block,
+        const DmrBlock& block,
         const int ik_begin,
         const std::vector<std::vector<TK>>& kphase_vec,
         const int ld_hk,

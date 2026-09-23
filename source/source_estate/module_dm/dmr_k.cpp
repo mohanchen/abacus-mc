@@ -10,32 +10,16 @@
 namespace module_dm
 {
 
-// calculate DMR from DMK using blas for multi-k calculation
+// shared inner loop of cal_dmr / cal_dmr_td: accumulate kphase * DMK into DMR blocks
 template <typename TK, typename TR_in, typename TR_out>
-void DensityMatrix_Tools::cal_dmr(
+void accumulate_dmr(
     DensityMatrix<TK, TR_in>& dm,
     std::vector<hamilt::HContainer<TR_out>*>& dmR_out,
-    const int ik_in)
+    const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+    const int ik_in,
+    const char* func_name)
 {
-    ModuleBase::TITLE("DensityMatrix", "cal_dmr");
-    ModuleBase::timer::start("DensityMatrix", "cal_dmr");
-
-    // To check whether DMR has been initialized
-    if (dmR_out.size() != dm.spin_mult)
-    {
-        ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr",
-                                 "DMR has not been initialized: dmR_out.size() != spin_mult!");
-    }
-
-    // validate ik_in: either -1 (all k-points) or a valid index
-    if (ik_in < -1 || ik_in >= dm._nk)
-    {
-        ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr",
-                                 "ik_in out of range: must be -1 (all k) or 0 <= ik_in < nk");
-    }
-
     const int ld_hk = dm.pv->nrow;
-    const std::map<ModuleBase::Vector3<int>, std::complex<double>> no_hybrid_phase;
     for (int is = 1; is <= dm.spin_mult; ++is)
     {
         const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
@@ -45,8 +29,7 @@ void DensityMatrix_Tools::cal_dmr(
 
         if (dm.nspin != 1 && dm.nspin != 2 && dm.nspin != 4)
         {
-            ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr",
-                                     "nspin must be 1, 2 or 4");
+            ModuleBase::WARNING_QUIT(func_name, "nspin must be 1, 2 or 4");
         }
 
         // accumulate kphase * DMK into DMR blocks; for nspin=4 (SOC) each orbital
@@ -64,7 +47,7 @@ void DensityMatrix_Tools::cal_dmr(
             // precompute k-phase factors and collect DMR block pointers
             std::vector<std::vector<TK>> kphase_vec;
             std::vector<TR_out*> dmr_mats;
-            build_kphase(atom_pair, dm._kvec_d, dm._nk, no_hybrid_phase, kphase_vec, dmr_mats);
+            build_kphase(atom_pair, dm._kvec_d, dm._nk, phase_hybrid, kphase_vec, dmr_mats);
 
             if (dm.nspin == 1 || dm.nspin == 2)
             {
@@ -72,7 +55,7 @@ void DensityMatrix_Tools::cal_dmr(
                 // (sum over ik when ik_in < 0, single ik when ik_in >= 0)
                 add_dmr_real(dm, block, ik_begin, kphase_vec, ld_hk, ik_in, dmr_mats);
             }
-            else
+            else if (dm.nspin == 4)
             {
                 // nspin==4 (SOC): first accumulate S_ij(R) = sum_k e^{ik·R} * DMK_ij(k),
                 // then for each 2x2 spin block (upup, updown, downup, downdown) transform to
@@ -84,8 +67,40 @@ void DensityMatrix_Tools::cal_dmr(
                 add_dmr_soc(dm, block, ik_begin, kphase_vec, ld_hk, ik_in,
                             atom_pair.get_col_size(), dmr_mats);
             }
+            else
+            {
+                ModuleBase::WARNING_QUIT(func_name, "nspin must be 1, 2 or 4");
+            }
         }
     }
+}
+
+// calculate DMR from DMK using blas for multi-k calculation
+template <typename TK, typename TR_in, typename TR_out>
+void cal_dmr(
+    DensityMatrix<TK, TR_in>& dm,
+    std::vector<hamilt::HContainer<TR_out>*>& dmR_out,
+    const int ik_in)
+{
+    ModuleBase::TITLE("DensityMatrix", "cal_dmr");
+    ModuleBase::timer::start("DensityMatrix", "cal_dmr");
+
+    // To check whether DMR has been initialized
+    if (dmR_out.size() != dm.spin_mult)
+    {
+        ModuleBase::WARNING_QUIT("module_dm::cal_dmr",
+                                 "DMR has not been initialized: dmR_out.size() != spin_mult!");
+    }
+
+    // validate ik_in: either -1 (all k-points) or a valid index
+    if (ik_in < -1 || ik_in >= dm._nk)
+    {
+        ModuleBase::WARNING_QUIT("module_dm::cal_dmr",
+                                 "ik_in out of range: must be -1 (all k) or 0 <= ik_in < nk");
+    }
+
+    const std::map<ModuleBase::Vector3<int>, std::complex<double>> no_hybrid_phase;
+    accumulate_dmr(dm, dmR_out, no_hybrid_phase, ik_in, "module_dm::cal_dmr");
     dm._dmr_ready = true;
     ModuleBase::timer::end("DensityMatrix", "cal_dmr");
 }
@@ -93,13 +108,13 @@ void DensityMatrix_Tools::cal_dmr(
 template <>
 void DensityMatrix<std::complex<double>, double>::cal_dmr(const int ik_in)
 {
-    DensityMatrix_Tools::cal_dmr(*this, this->dmr, ik_in);
+    module_dm::cal_dmr(*this, this->dmr, ik_in);
 }
 
 template <>
 void DensityMatrix<std::complex<double>, std::complex<double>>::cal_dmr(const int ik_in)
 {
-    DensityMatrix_Tools::cal_dmr(*this, this->dmr, ik_in);
+    module_dm::cal_dmr(*this, this->dmr, ik_in);
 }
 
 } // namespace module_dm

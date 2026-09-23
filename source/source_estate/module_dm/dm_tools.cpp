@@ -11,7 +11,7 @@ namespace module_dm
 {
 
 template <>
-void DensityMatrix_Tools::exp_mul_dmk<double>(
+void exp_mul_dmk<double>(
     const std::complex<double> kphase,
     const std::vector<std::complex<double>>& dmk_row,
     double* dmr_mat)
@@ -24,7 +24,7 @@ void DensityMatrix_Tools::exp_mul_dmk<double>(
 }
 
 template <>
-void DensityMatrix_Tools::exp_mul_dmk<std::complex<double>>(
+void exp_mul_dmk<std::complex<double>>(
     const std::complex<double> kphase,
     const std::vector<std::complex<double>>& dmk_row,
     std::complex<double>* dmr_mat)
@@ -33,7 +33,7 @@ void DensityMatrix_Tools::exp_mul_dmk<std::complex<double>>(
 }
 
 template <>
-void DensityMatrix_Tools::xyz_to_updown<double>(
+void xyz_to_updown<double>(
     const std::complex<double> spin_block[4],
     const int icol,
     const int spin_stride[4],
@@ -51,7 +51,7 @@ void DensityMatrix_Tools::xyz_to_updown<double>(
 }
 
 template <>
-void DensityMatrix_Tools::xyz_to_updown<std::complex<double>>(
+void xyz_to_updown<std::complex<double>>(
     const std::complex<double> spin_block[4],
     const int icol,
     const int spin_stride[4],
@@ -64,7 +64,7 @@ void DensityMatrix_Tools::xyz_to_updown<std::complex<double>>(
     dmr_mat[icol + spin_stride[3]] = spin_block[0] - spin_block[3];  // rho_z = (rho_upup - rho_downdown)
 }
 
-DensityMatrix_Tools::DmrBlock DensityMatrix_Tools::get_dmr_block(
+DmrBlock get_dmr_block(
     const Parallel_Orbitals* pv,
     const int iat1,
     const int iat2)
@@ -79,7 +79,7 @@ DensityMatrix_Tools::DmrBlock DensityMatrix_Tools::get_dmr_block(
 }
 
 template <typename TK, typename TR>
-void DensityMatrix_Tools::build_kphase(
+void build_kphase(
     hamilt::AtomPair<TR>& atom_pair,
     const std::vector<ModuleBase::Vector3<double>>& kvec_d,
     const int nk,
@@ -119,7 +119,7 @@ void DensityMatrix_Tools::build_kphase(
 }
 
 template <typename TK>
-void DensityMatrix_Tools::transpose_dmk_block(
+void transpose_dmk_block(
     const TK* dmk_col_major,
     const int ld_hk,
     const DmrBlock& block,
@@ -135,7 +135,7 @@ void DensityMatrix_Tools::transpose_dmk_block(
 }
 
 template <typename TK, typename TR>
-void DensityMatrix_Tools::add_dmr_real(
+void add_dmr_real(
     const DensityMatrix<TK, TR>& dm,
     const DmrBlock& block,
     const int ik_begin,
@@ -172,7 +172,7 @@ void DensityMatrix_Tools::add_dmr_real(
 }
 
 template <typename TK, typename TR>
-void DensityMatrix_Tools::add_dmr_soc(
+void add_dmr_soc(
     const DensityMatrix<TK, TR>& dm,
     const DmrBlock& block,
     const int ik_begin,
@@ -256,7 +256,7 @@ void DensityMatrix_Tools::add_dmr_soc(
 }
 
 // explicit instantiations for build_kphase
-template void DensityMatrix_Tools::build_kphase<std::complex<double>, double>(
+template void build_kphase<std::complex<double>, double>(
     hamilt::AtomPair<double>&,
     const std::vector<ModuleBase::Vector3<double>>&,
     const int,
@@ -264,7 +264,7 @@ template void DensityMatrix_Tools::build_kphase<std::complex<double>, double>(
     std::vector<std::vector<std::complex<double>>>&,
     std::vector<double*>&);
 
-template void DensityMatrix_Tools::build_kphase<std::complex<double>, std::complex<double>>(
+template void build_kphase<std::complex<double>, std::complex<double>>(
     hamilt::AtomPair<std::complex<double>>&,
     const std::vector<ModuleBase::Vector3<double>>&,
     const int,
@@ -273,14 +273,14 @@ template void DensityMatrix_Tools::build_kphase<std::complex<double>, std::compl
     std::vector<std::complex<double>*>&);
 
 // explicit instantiations for transpose_dmk_block
-template void DensityMatrix_Tools::transpose_dmk_block<std::complex<double>>(
+template void transpose_dmk_block<std::complex<double>>(
     const std::complex<double>*,
     const int,
     const DmrBlock&,
     std::complex<double>*);
 
 // explicit instantiations for add_dmr_real
-template void DensityMatrix_Tools::add_dmr_real<std::complex<double>, double>(
+template void add_dmr_real<std::complex<double>, double>(
     const DensityMatrix<std::complex<double>, double>&,
     const DmrBlock&,
     const int,
@@ -289,7 +289,7 @@ template void DensityMatrix_Tools::add_dmr_real<std::complex<double>, double>(
     const int,
     std::vector<double*>&);
 
-template void DensityMatrix_Tools::add_dmr_real<std::complex<double>, std::complex<double>>(
+template void add_dmr_real<std::complex<double>, std::complex<double>>(
     const DensityMatrix<std::complex<double>, std::complex<double>>&,
     const DmrBlock&,
     const int,
@@ -299,7 +299,7 @@ template void DensityMatrix_Tools::add_dmr_real<std::complex<double>, std::compl
     std::vector<std::complex<double>*>&);
 
 // explicit instantiations for add_dmr_soc
-template void DensityMatrix_Tools::add_dmr_soc<std::complex<double>, double>(
+template void add_dmr_soc<std::complex<double>, double>(
     const DensityMatrix<std::complex<double>, double>&,
     const DmrBlock&,
     const int,
@@ -309,7 +309,7 @@ template void DensityMatrix_Tools::add_dmr_soc<std::complex<double>, double>(
     const int,
     std::vector<double*>&);
 
-template void DensityMatrix_Tools::add_dmr_soc<std::complex<double>, std::complex<double>>(
+template void add_dmr_soc<std::complex<double>, std::complex<double>>(
     const DensityMatrix<std::complex<double>, std::complex<double>>&,
     const DmrBlock&,
     const int,

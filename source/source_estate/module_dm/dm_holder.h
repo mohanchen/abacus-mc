@@ -21,7 +21,7 @@ class Setup_DM
         }
     }
 
-    module_dm::DensityMatrix<TK, double>* dm = nullptr;
+    DensityMatrix<TK, double>* dm = nullptr;
 };
 
 } // namespace module_dm
