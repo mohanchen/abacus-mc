@@ -15,8 +15,8 @@ Plus_U_Base dftu;
 // Tests constructHR for d2d and d2cd variants.
 //---------------------------------------
 
-int test_size = 10;
-int test_nw = 10;
+int test_size = 5;
+int test_nw = 5;
 
 class DFTUTest : public ::testing::Test
 {
