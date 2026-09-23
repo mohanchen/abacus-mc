@@ -105,7 +105,7 @@ TEST_F(DMTest, DMInit1)
     std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
     std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
     module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, nks);
-    // initialize this->_DMR
+    // initialize this->dmr
     Grid_Driver gd(0,0);
     DM.init_dmr(&gd, &ucell);
     // compare

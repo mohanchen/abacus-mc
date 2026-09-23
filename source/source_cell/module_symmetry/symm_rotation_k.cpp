@@ -126,7 +126,7 @@ namespace ModuleSymmetry
         ModuleBase::timer::start("Symmetry_rotation_k", "restore_dm");
         std::vector<std::vector<std::complex<double>>> dm_k_full;
         int nspin0 = this->nspin_ == 2 ? 2 : 1;
-        // (k-point pools, KPAR>1) dm_k_ibz (module_dm::DensityMatrix::_DMK) only ever holds
+        // (k-point pools, KPAR>1) dm_k_ibz (module_dm::DensityMatrix::dmk) only ever holds
         // the irreducible k-points owned by THIS pool (_nk = kv.get_nks()/nspin, see
         // allocate_dm.cpp), never the global set -- so nk here must be the local count, and
         // kv.kstars (which is global, identical on every pool) must be indexed via the

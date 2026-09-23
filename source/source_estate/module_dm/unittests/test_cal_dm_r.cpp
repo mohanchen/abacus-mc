@@ -117,7 +117,7 @@ TEST_F(DMTest, cal_dmr_full)
     kv->kvec_d.resize(nks);
     // construct DM
     module_dm::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks());
-    // set this->_DMK
+    // set this->dmk
     for (int is = 1; is <= nspin; is++)
     {
         for (int ik = 0; ik < kv->get_nks(); ik++)
@@ -133,7 +133,7 @@ TEST_F(DMTest, cal_dmr_full)
     }
     // initialize dmR_full
     hamilt::HContainer<std::complex<double>> dmR_full(ucell, paraV);
-    // calculate this->_DMR
+    // calculate this->dmr
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
     DM.cal_dmr_full(&dmR_full, -1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
@@ -181,7 +181,7 @@ TEST_F(DMTest, cal_DMR_blas_double)
     kv->kvec_d.resize(nks);
     // construct DM
     module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
-    // set this->_DMK
+    // set this->dmk
     for (int is = 1; is <= nspin; is++)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
@@ -195,7 +195,7 @@ TEST_F(DMTest, cal_DMR_blas_double)
             }
         }
     }
-    // initialize this->_DMR
+    // initialize this->dmr
     Grid_Driver gd(0, 0);
     DM.init_dmr(&gd, &ucell);
     // set Gamma-only
@@ -203,7 +203,7 @@ TEST_F(DMTest, cal_DMR_blas_double)
     {
         DM.get_dmr_ptr(is)->fix_gamma();
     }
-    // calculate this->_DMR
+    // calculate this->dmr
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
     DM.cal_dmr(-1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
@@ -252,7 +252,7 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     kv->kvec_d[3].x = 0.5;
     // construct DM
     module_dm::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
-    // set this->_DMK
+    // set this->dmk
     for (int is = 1; is <= nspin; is++)
     {
         for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
@@ -266,10 +266,10 @@ TEST_F(DMTest, cal_DMR_blas_complex)
             }
         }
     }
-    // initialize this->_DMR
+    // initialize this->dmr
     Grid_Driver gd(0, 0);
     DM.init_dmr(&gd, &ucell);
-    // calculate this->_DMR
+    // calculate this->dmr
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
     DM.cal_dmr(-1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
