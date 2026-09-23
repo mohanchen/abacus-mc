@@ -73,8 +73,8 @@ void DensityMatrix<double, double>::cal_dmr(const int ik_in)
             }
         }
     }
-    ModuleBase::timer::end("DensityMatrix", "cal_dmr");
     this->_dmr_ready = true;
+    ModuleBase::timer::end("DensityMatrix", "cal_dmr");
 }
 
 } // namespace module_dm

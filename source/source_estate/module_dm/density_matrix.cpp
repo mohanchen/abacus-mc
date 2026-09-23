@@ -73,13 +73,9 @@ template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::switch_dmr(const int mode)
 {
     ModuleBase::TITLE("DensityMatrix", "switch_dmr");
-    if (this->spin_mult != 2)
+    ModuleBase::timer::start("DensityMatrix", "switch_dmr");
+    if (this->spin_mult == 2)
     {
-        return;
-    }
-    else
-    {
-        ModuleBase::timer::start("DensityMatrix", "switch_dmr");
         switch(mode)
         {
         case 0:
@@ -140,8 +136,8 @@ void DensityMatrix<TK, TR>::switch_dmr(const int mode)
         default:
             ModuleBase::WARNING_QUIT("density_matrix.cpp", "Unknown mode in switch_dmr");
         }
-        ModuleBase::timer::end("DensityMatrix", "switch_dmr");
     }
+    ModuleBase::timer::end("DensityMatrix", "switch_dmr");
 }
 
 
