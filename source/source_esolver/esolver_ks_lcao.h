@@ -10,7 +10,7 @@
 #include "source_lcao/setup_deepks.h" // for deepks, mohan add 20251008
 #include "source_lcao/setup_exx.h" // for exx, mohan add 20251008
 #include "source_lcao/module_rdmft/rdmft.h" // rdmft
-#include "source_lcao/setup_dm.h" // mohan add 2025-10-30
+#include "source_lcao/allocate_dm.h" // mohan add 2025-10-30
 
 #include <memory>
 #include <complex>
@@ -76,7 +76,7 @@ class ESolver_KS_LCAO : public ESolver_KS
     TwoCenterBundle two_center_bundle_;
 
     //! Add density matrix class, mohan add 2025-10-30
-    LCAO_domain::Setup_DM<TK> dmat;
+    module_dm::Setup_DM<TK> dmat;
 
 
     // For deepks method, mohan add 2025-10-08

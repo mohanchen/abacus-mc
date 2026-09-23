@@ -55,7 +55,7 @@ if(ENABLE_LCAO)
         setup_nonlocal.cpp
         setup_exx.cpp
         setup_deepks.cpp
-        setup_dm.cpp
+        allocate_dm.cpp
         rho_tau_lcao.cpp
         center2orb.cpp
         center2orb_orb11.cpp

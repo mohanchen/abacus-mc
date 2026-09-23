@@ -9,7 +9,7 @@
 #include "td_info.h"
 template <>
 void cal_foverlap_rt(ModuleBase::matrix& foverlap,
-                     const LCAO_domain::Setup_DM<std::complex<double>>& dmat,
+                     const module_dm::Setup_DM<std::complex<double>>& dmat,
                      hamilt::Hamilt<std::complex<double>>* p_hamilt,
                      const K_Vectors& kv,
                      Parallel_Orbitals& pv,
@@ -263,7 +263,7 @@ void cal_foverlap_rt(ModuleBase::matrix& foverlap,
 }
 template <>
 void cal_foverlap_rt(ModuleBase::matrix& foverlap,
-                     const LCAO_domain::Setup_DM<double>& dmat,
+                     const module_dm::Setup_DM<double>& dmat,
                      hamilt::Hamilt<double>* p_hamilt,
                      const K_Vectors& kv,
                      Parallel_Orbitals& pv,

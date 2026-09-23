@@ -17,7 +17,7 @@
 #include "force_stress_arrays.h"
 #include "source_lcao/setup_exx.h" // for exx, mohan add 20251008
 #include "source_lcao/setup_deepks.h" // for deepks, mohan add 20251010
-#include "source_lcao/setup_dm.h" // mohan add 2025-11-03
+#include "source_lcao/allocate_dm.h" // mohan add 2025-11-03
 #include "source_pw/module_pwdft/dftu_base.h" // mohan add 2025-11-07
 #include "source_hamilt/hamilt.h"
 #include "source_hamilt/module_xc/exx_info.h"
@@ -107,7 +107,7 @@ class Force_Stress_LCAO
                         const Grid_Driver& gd,
                         Parallel_Orbitals& pv,
                         const elecstate::ElecState* pelec,
-                        LCAO_domain::Setup_DM<T> &dmat, // mohan add 2025-11-03
+                        module_dm::Setup_DM<T> &dmat, // mohan add 2025-11-03
                         const psi::Psi<T>* psi,
                         const TwoCenterBundle& two_center_bundle,
                         const LCAO_Orbitals& orb,
@@ -139,7 +139,7 @@ class Force_Stress_LCAO
                          const Grid_Driver& gd,
                          Parallel_Orbitals& pv,
                          const elecstate::ElecState* pelec,
-                         LCAO_domain::Setup_DM<T>& dmat,
+                         module_dm::Setup_DM<T>& dmat,
                          const psi::Psi<T>* psi,
                          const TwoCenterBundle& two_center_bundle,
                          const LCAO_Orbitals& orb,

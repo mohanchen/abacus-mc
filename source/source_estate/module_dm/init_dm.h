@@ -11,7 +11,7 @@
 #include "source_estate/elecstate.h"// use ElecState
 #include "source_psi/psi.h" // use electronic wave functions
 #include "source_estate/module_charge/charge.h" // use charge
-#include "source_estate/module_dm/setup_dm.h" // define Setup_DM
+#include "source_estate/module_dm/dm_holder.h" // define Setup_DM
 #include "source_hamilt/module_hcontainer/hcontainer.h"
 
 namespace module_dm

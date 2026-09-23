@@ -16,7 +16,7 @@ void LCAO_domain::set_psi_occ_dm_chg(
 		psi::Psi<TK>* &psi, // coefficients of NAO basis
 		const Parallel_Orbitals &pv, // parallel scheme of NAO basis
 		elecstate::ElecState* pelec, // eigen values and weights
-		LCAO_domain::Setup_DM<TK> &dmat, // density matrix 
+		module_dm::Setup_DM<TK> &dmat, // density matrix 
 		Charge &chr, // charge density 
 		const Input_para &inp) // input parameters
 {
@@ -124,7 +124,7 @@ template <typename TK>
 void LCAO_domain::init_dm_from_file(
     const std::string& readin_dir,
     const int nspin,
-    LCAO_domain::Setup_DM<TK>& dmat,
+    module_dm::Setup_DM<TK>& dmat,
     const UnitCell& ucell,
     const Parallel_Orbitals* pv)
 {
@@ -150,7 +150,7 @@ template <typename TK>
 void LCAO_domain::init_chg_dm(
     const std::string& readin_dir,
     const int nspin,
-    LCAO_domain::Setup_DM<TK>& dmat,
+    module_dm::Setup_DM<TK>& dmat,
     const UnitCell& ucell,
     const Parallel_Orbitals* pv,
     Charge* chr)
@@ -265,7 +265,7 @@ template void LCAO_domain::set_psi_occ_dm_chg<double>(
 		psi::Psi<double>* &psi, // coefficients of NAO basis
 		const Parallel_Orbitals &pv, // parallel scheme of NAO basis
 		elecstate::ElecState* pelec, // eigen values and weights
-		LCAO_domain::Setup_DM<double> &dmat, // density matrix 
+		module_dm::Setup_DM<double> &dmat, // density matrix 
 		Charge &chr, // charge density 
 		const Input_para &inp);
 
@@ -274,7 +274,7 @@ template void LCAO_domain::set_psi_occ_dm_chg<std::complex<double>>(
 		psi::Psi<std::complex<double>>* &psi, // coefficients of NAO basis
 		const Parallel_Orbitals &pv, // parallel scheme of NAO basis
 		elecstate::ElecState* pelec, // eigen values and weights
-		LCAO_domain::Setup_DM<std::complex<double>> &dmat, // density matrix 
+		module_dm::Setup_DM<std::complex<double>> &dmat, // density matrix 
 		Charge &chr, // charge density 
 		const Input_para &inp);
 
@@ -315,27 +315,27 @@ template void LCAO_domain::set_pot<std::complex<double>>(
 template void LCAO_domain::init_dm_from_file<double>(
     const std::string& readin_dir,
     const int nspin,
-    LCAO_domain::Setup_DM<double>& dmat,
+    module_dm::Setup_DM<double>& dmat,
     const UnitCell& ucell,
     const Parallel_Orbitals* pv);
 template void LCAO_domain::init_dm_from_file<std::complex<double>>(
     const std::string& readin_dir,
     const int nspin,
-    LCAO_domain::Setup_DM<std::complex<double>>& dmat,
+    module_dm::Setup_DM<std::complex<double>>& dmat,
     const UnitCell& ucell,
     const Parallel_Orbitals* pv);
 
 template void LCAO_domain::init_chg_dm<double>(
     const std::string& readin_dir,
     const int nspin,
-    LCAO_domain::Setup_DM<double>& dmat,
+    module_dm::Setup_DM<double>& dmat,
     const UnitCell& ucell,
     const Parallel_Orbitals* pv,
     Charge* chr);
 template void LCAO_domain::init_chg_dm<std::complex<double>>(
     const std::string& readin_dir,
     const int nspin,
-    LCAO_domain::Setup_DM<std::complex<double>>& dmat,
+    module_dm::Setup_DM<std::complex<double>>& dmat,
     const UnitCell& ucell,
     const Parallel_Orbitals* pv,
     Charge* chr);

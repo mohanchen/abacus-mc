@@ -1,4 +1,4 @@
-#include "source_lcao/setup_dm.h"
+#include "source_lcao/allocate_dm.h"
 #include "source_base/timer.h"
 #include "source_cell/klist.h"
 #include "source_basis/module_ao/parallel_orbitals.h"

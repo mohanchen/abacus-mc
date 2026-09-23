@@ -778,7 +778,7 @@ OBJS_LCAO=evolve_elec.o\
       lcao_init_basis.o\
       setup_exx.o\
       setup_deepks.o\
-      setup_dm.o\
+      allocate_dm.o\
       rho_tau_lcao.o\
       center2orb.o\
       center2orb_orb11.o\

@@ -340,7 +340,7 @@ TEST_F(DMTest, cal_DMR_blas_complex)
 
 // Regression test for the SOC/noncollinear (global nspin==4) cal_DMR path.
 //
-// Background: in a real SOC run setup_dm.cpp constructs the DensityMatrix with
+// Background: in a real SOC run allocate_dm.cpp constructs the DensityMatrix with
 //   spin_mult = 1   (the 2x2 spin block is stored as ONE doubled matrix),
 // while the GLOBAL physical nspin is 4. cal_DMR must still take the
 // spin-resolved (Pauli) branch, which folds each 2x2 complex spin block into

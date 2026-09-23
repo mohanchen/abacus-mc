@@ -1,5 +1,5 @@
-#ifndef MODULE_DM_SETUP_DM_H
-#define MODULE_DM_SETUP_DM_H
+#ifndef MODULE_DM_DM_HOLDER_H
+#define MODULE_DM_DM_HOLDER_H
 
 #include "source_estate/module_dm/density_matrix.h"
 

@@ -3,7 +3,7 @@
 
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_cell/klist.h"
-#include "source_estate/module_dm/setup_dm.h"
+#include "source_estate/module_dm/dm_holder.h"
 #include "source_hamilt/hamilt.h"
 
 namespace module_dm

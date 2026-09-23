@@ -21,7 +21,7 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
         const Input_para &inp,              // input
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
-        const LCAO_domain::Setup_DM<TK> &dmat, // mohan add 2025-11-02
+        const module_dm::Setup_DM<TK> &dmat, // mohan add 2025-11-02
 		Parallel_Orbitals &pv,              // orbital info
         Parallel_Grid &pgrid,               // grid info
 		Grid_Driver &gd,                    // search for adjacent atoms
@@ -153,7 +153,7 @@ template void ctrl_runner_lcao<double, double>(UnitCell& ucell,      // unitcell
         const Input_para &inp,              // input
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
-        const LCAO_domain::Setup_DM<double> &dmat, // mohan add 2025-11-02
+        const module_dm::Setup_DM<double> &dmat, // mohan add 2025-11-02
 		Parallel_Orbitals &pv,              // orbital info
         Parallel_Grid &pgrid,               // grid info
 		Grid_Driver &gd,                    // search for adjacent atoms
@@ -175,7 +175,7 @@ template void ctrl_runner_lcao<std::complex<double>, double>(UnitCell& ucell,   
         const Input_para &inp,              // input
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
-        const LCAO_domain::Setup_DM<std::complex<double>> &dmat, // mohan add 2025-11-02
+        const module_dm::Setup_DM<std::complex<double>> &dmat, // mohan add 2025-11-02
 		Parallel_Orbitals &pv,              // orbital info
         Parallel_Grid &pgrid,               // grid info
 		Grid_Driver &gd,                    // search for adjacent atoms
@@ -197,7 +197,7 @@ template void ctrl_runner_lcao<std::complex<double>, std::complex<double>>(UnitC
         const Input_para &inp,              // input
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
-        const LCAO_domain::Setup_DM<std::complex<double>> &dmat, // mohan add 2025-11-02
+        const module_dm::Setup_DM<std::complex<double>> &dmat, // mohan add 2025-11-02
 		Parallel_Orbitals &pv,              // orbital info
         Parallel_Grid &pgrid,               // grid info
 		Grid_Driver &gd,                    // search for adjacent atoms
