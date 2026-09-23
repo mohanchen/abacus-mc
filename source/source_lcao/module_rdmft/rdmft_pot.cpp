@@ -165,7 +165,7 @@ void RDMFT<TK, TR>::cal_V_XC(const UnitCell& ucell)
     // double DM_XC_minus_DMtest = 0.0;
     // for(int ik=0; ik<nk_total; ++ik)
     // {
-    //     TK* dmk_pointer = DM_test.get_DMK_pointer(ik);
+    //     TK* dmk_pointer = DM_test.get_dmk_ptr(ik);
     //     for(int iloc=0; iloc<ParaV->nloc; ++iloc)
     //     {
     //         double test = std::abs(DM_XC[ik][iloc] - dmk_pointer[iloc]);

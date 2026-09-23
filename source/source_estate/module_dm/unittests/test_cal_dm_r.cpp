@@ -126,7 +126,7 @@ TEST_F(DMTest, cal_dmr_full)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    DM.set_DMK(is, ik, i, j, std::complex<double>(0.77, 0.77));
+                    DM.set_dmk(is, ik, i, j, std::complex<double>(0.77, 0.77));
                 }
             }
         }
@@ -190,7 +190,7 @@ TEST_F(DMTest, cal_DMR_blas_double)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    DM.set_DMK(is, ik, i, j, 0.77);
+                    DM.set_dmk(is, ik, i, j, 0.77);
                 }
             }
         }
@@ -261,7 +261,7 @@ TEST_F(DMTest, cal_DMR_blas_complex)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    DM.set_DMK(is, ik, i, j, is * 0.77 * (ik + 1));
+                    DM.set_dmk(is, ik, i, j, is * 0.77 * (ik + 1));
                 }
             }
         }
@@ -402,7 +402,7 @@ TEST_F(DMTest, cal_DMR_soc_pauli_branch)
             const std::complex<double> dmk_value = same_spin
                                                        ? std::complex<double>(a, b)
                                                        : std::complex<double>(0.0, 0.0);
-            DM.set_DMK(1, 0, i, j, dmk_value);
+            DM.set_dmk(1, 0, i, j, dmk_value);
         }
     }
 

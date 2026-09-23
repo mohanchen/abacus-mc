@@ -79,7 +79,7 @@ namespace LR
 #endif
                     // LR_Util::print_tensor<T>(dm_trans_2d[0], "DMtrans(k=0)", &pmat_in);
                     // tensor to vector, then set DMK
-                    for (int ik = 0;ik < nk;++ik) { this->DM_trans->set_DMK_pointer(ik, dm_trans_2d[ik].data<T>()); }
+                    for (int ik = 0;ik < nk;++ik) { this->DM_trans->set_dmk_ptr(ik, dm_trans_2d[ik].data<T>()); }
                 };
         }
         ~HamiltULR()

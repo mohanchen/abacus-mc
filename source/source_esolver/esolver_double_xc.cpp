@@ -383,9 +383,9 @@ void ESolver_DoubleXC<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int
             for (int ik = 0; ik < nks; ik++)
             {
                 // mohan update 2025-11-03
-                this->dmat_base.dm->set_DMK_pointer(ik, this->dmat.dm->get_DMK_pointer(ik));
-                //                _pes_lcao_base->get_DM()->set_DMK_pointer(ik,
-                //                _pes_lcao->get_DM()->get_DMK_pointer(ik));
+                this->dmat_base.dm->set_dmk_ptr(ik, this->dmat.dm->get_dmk_ptr(ik));
+                //                _pes_lcao_base->get_DM()->set_dmk_ptr(ik,
+                //                _pes_lcao->get_DM()->get_dmk_ptr(ik));
             }
             this->dmat_base.dm->cal_dmr(-1);
             //            _pes_lcao_base->get_DM()->cal_dmr(-1);

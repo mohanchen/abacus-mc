@@ -42,7 +42,7 @@ void assign_dmk_ptr<double>(
     std::vector<std::vector<double>>*& dmk_d,
     std::vector<std::vector<std::complex<double>>>*& dmk_c
 ) {
-    std::vector<std::vector<double>>& dmk_tmp = dm->get_DMK_vector();
+    std::vector<std::vector<double>>& dmk_tmp = dm->get_dmk_vec();
     dmk_d = &dmk_tmp;
     dmk_c = nullptr;
 }
@@ -53,7 +53,7 @@ void assign_dmk_ptr<std::complex<double>>(
     std::vector<std::vector<double>>*& dmk_d,
     std::vector<std::vector<std::complex<double>>>*& dmk_c
 ) {
-    std::vector<std::vector<std::complex<double>>>& dmk_tmp = dm->get_DMK_vector();
+    std::vector<std::vector<std::complex<double>>>& dmk_tmp = dm->get_dmk_vec();
     dmk_c = &dmk_tmp;
     dmk_d = nullptr;
 }

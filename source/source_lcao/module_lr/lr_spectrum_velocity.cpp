@@ -118,7 +118,7 @@ namespace LR
                 {
                     std::vector<std::complex<double>> vk(pmat.get_local_size(), 0.0);
                     hamilt::folding_HR(*vR.get_current_term_pointer(i), vk.data(), kv.kvec_d[ik], pmat.get_row_size(), 1);
-                    trans_dipole[i] += std::inner_product(vk.begin(), vk.end(), DM_trans.get_DMK_pointer(is * nk + ik), std::complex<double>(0., 0.)) * fac;
+                    trans_dipole[i] += std::inner_product(vk.begin(), vk.end(), DM_trans.get_dmk_ptr(is * nk + ik), std::complex<double>(0., 0.)) * fac;
                 }
             }   // end for spin_x, only matter in open-shell system
             trans_dipole[i] *= static_cast<double>(this->nk);  // nk is divided inside DM_trans, now recover it

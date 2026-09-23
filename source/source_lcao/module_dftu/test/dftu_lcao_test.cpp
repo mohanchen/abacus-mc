@@ -150,7 +150,7 @@ TEST_F(DFTUTest, constructHRd2d)
     {
         for (int j = 0; j < paraV->ncol; j++)
         {
-            dm.set_DMK(1, 0, i, j, factor);
+            dm.set_dmk(1, 0, i, j, factor);
         }
     }
     dm.cal_dmr(-1);
@@ -229,7 +229,7 @@ TEST_F(DFTUTest, constructHRd2cd)
         {
             for (int j = 0; j < paraV->ncol; j++)
             {
-                dm.set_DMK(is, 0, i, j, std::complex<double>(factor, 0.0));
+                dm.set_dmk(is, 0, i, j, std::complex<double>(factor, 0.0));
             }
         }
     }

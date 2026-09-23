@@ -214,9 +214,9 @@ void Exx_LRI_Interface<T, Tdata>::exx_eachiterinit(const int istep,
             auto cal = [this, &ucell,&kv, &flag_restart](const module_dm::DensityMatrix<T, double>& dm_in)
             {
                 if (this->exx_spacegroup_symmetry)
-                    { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm_in.get_DMK_vector(), *dm_in.get_paraV_pointer()), flag_restart); }
+                    { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm_in.get_dmk_vec(), *dm_in.get_paraV_pointer()), flag_restart); }
                 else
-                    { this->mix_DMk_2D.mix(dm_in.get_DMK_vector(), flag_restart); }
+                    { this->mix_DMk_2D.mix(dm_in.get_dmk_vec(), flag_restart); }
                 const std::vector<std::map<TA, std::map<TAC, RI::Tensor<Tdata>>>> Ds =
                     RI_2D_Comm::split_m2D_ktoR<Tdata>(
                         ucell,
@@ -425,9 +425,9 @@ bool Exx_LRI_Interface<T, Tdata>::exx_after_converge(
             const bool flag_restart = (this->two_level_step == 0 && PARAM.inp.init_wfc != "file") ? true : false;
 
             if(this->exx_spacegroup_symmetry)
-                { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm.get_DMK_vector(), *dm.get_paraV_pointer()), flag_restart); }
+                { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm.get_dmk_vec(), *dm.get_paraV_pointer()), flag_restart); }
             else
-                { this->mix_DMk_2D.mix(dm.get_DMK_vector(), flag_restart); }
+                { this->mix_DMk_2D.mix(dm.get_dmk_vec(), flag_restart); }
             const std::vector<std::map<TA, std::map<TAC, RI::Tensor<Tdata>>>> Ds =
                 RI_2D_Comm::split_m2D_ktoR<Tdata>(
                     ucell,

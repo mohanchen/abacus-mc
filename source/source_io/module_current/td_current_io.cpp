@@ -232,7 +232,7 @@ void ModuleIO::write_current_eachk(const UnitCell& ucell,
     // init DMR
     tmp_dm.init_dmr(ra, &ucell);
 
-    int nks = tmp_dm.get_DMK_nks() / nspin_dm;
+    int nks = tmp_dm.get_dmk_nks() / nspin_dm;
     double current_total[3] = {0.0, 0.0, 0.0};
     for (int is = 1; is <= nspin_dm; ++is)
     {

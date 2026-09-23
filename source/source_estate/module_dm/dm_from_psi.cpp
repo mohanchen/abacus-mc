@@ -274,7 +274,7 @@ void dm_from_psi(const Parallel_Orbitals* ParaV,
 
     for (int ik = 0; ik < wfc.get_nk(); ++ik)
     {
-        double* dmk_pointer = DM.get_DMK_pointer(ik);
+        double* dmk_pointer = DM.get_dmk_ptr(ik);
         dmk_from_psi_impl(ParaV, wg, ik, wfc, dmk_pointer, wg_wfc);
     }
     ModuleBase::timer::end("elecstate", "dm_from_psi");
@@ -298,7 +298,7 @@ void dm_from_psi(const Parallel_Orbitals* ParaV,
 
     for (int ik = 0; ik < wfc.get_nk(); ++ik)
     {
-        std::complex<double>* dmk_pointer = DM.get_DMK_pointer(ik);
+        std::complex<double>* dmk_pointer = DM.get_dmk_ptr(ik);
         dmk_from_psi_impl(ParaV, wg, ik, wfc, dmk_pointer, wg_wfc);
     }
 

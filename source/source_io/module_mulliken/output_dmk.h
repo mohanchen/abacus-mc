@@ -15,7 +15,7 @@ class Output_DMK
 		    int nspin, 
 		    int nks);
 
-    TK* get_DMK(int ik);
+    TK* get_dmk(int ik);
 
   private:
     module_dm::DensityMatrix<TK, double>* p_DM_ = nullptr;

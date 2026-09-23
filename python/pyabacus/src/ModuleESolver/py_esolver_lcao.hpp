@@ -236,7 +236,7 @@ public:
     void set_DMK_data(int ik, const TK* data);
 
     /// Get DM(k) for specific k-point
-    py::array_t<TK> get_DMK(int ik) const;
+    py::array_t<TK> get_dmk(int ik) const;
 
     /// Get all DM(k) matrices
     std::vector<py::array_t<TK>> get_DMK_all() const;

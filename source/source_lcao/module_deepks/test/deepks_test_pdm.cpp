@@ -67,7 +67,7 @@ void test_deepks<T>::set_p_elec_DM()
 
     for (int ik = 0; ik < nk; ik++)
     {
-        p_elec_DM->set_DMK_pointer(ik, dm_new[ik].data());
+        p_elec_DM->set_dmk_ptr(ik, dm_new[ik].data());
     }
     p_elec_DM->cal_dmr(-1);
 }
@@ -80,7 +80,7 @@ void test_deepks<T>::check_pdm()
     this->set_p_elec_DM();
     this->ld.init_dmr(ucell, ORB, ParaO, Test_Deepks::GridD);
     DeePKS_domain::update_dmr(kv.kvec_d,
-                              p_elec_DM->get_DMK_vector(),
+                              p_elec_DM->get_dmk_vec(),
                               ucell,
                               ORB,
                               ParaO,

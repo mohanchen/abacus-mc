@@ -50,7 +50,7 @@ void ElecStateLCAO<double>::dm2rho(std::vector<double*> pexsi_DM,
 
     for (int is = 0; is < nspin; is++)
     {
-        dm->set_DMK_pointer(is, pexsi_DM[is]);
+        dm->set_dmk_ptr(is, pexsi_DM[is]);
     }
     dm->cal_dmr(-1);
 

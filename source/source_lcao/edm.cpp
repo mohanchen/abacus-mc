@@ -34,7 +34,7 @@ module_dm::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
         // auto pes = dynamic_cast<const elecstate::ElecStateLCAO<double>*>(pelec);
         for (int ik = 0; ik < nspin; ik++)
         {
-            edm.set_DMK_pointer(ik, dm.edm_pexsi[ik]);
+            edm.set_dmk_ptr(ik, dm.edm_pexsi[ik]);
         }
         
     }
@@ -95,7 +95,7 @@ module_dm::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
 #endif
         for (int ik = 0; ik < kv.get_nks(); ++ik)
         {
-            edm.set_DMK_pointer(ik, dm.edmk[ik].c);
+            edm.set_dmk_ptr(ik, dm.edmk[ik].c);
         }
     }
     else

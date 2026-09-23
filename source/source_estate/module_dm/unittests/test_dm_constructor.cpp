@@ -97,9 +97,9 @@ TEST_F(DMTest, DMConstructor_GammaOnly)
     int nspin = 2;
     module_dm::DensityMatrix<double, double> DM(paraV, nspin);
     // compare
-    EXPECT_EQ(DM.get_DMK_size(), nspin);
-    EXPECT_EQ(DM.get_DMK_nrow(), paraV->nrow);
-    EXPECT_EQ(DM.get_DMK_ncol(), paraV->ncol);
+    EXPECT_EQ(DM.get_dmk_size(), nspin);
+    EXPECT_EQ(DM.get_dmk_nrow(), paraV->nrow);
+    EXPECT_EQ(DM.get_dmk_ncol(), paraV->ncol);
 }
 
 TEST_F(DMTest, DMConstructor_nspin1)
@@ -117,9 +117,9 @@ TEST_F(DMTest, DMConstructor_nspin1)
     int nspin = 1;
     module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, nks);
     // compare
-    EXPECT_EQ(DM.get_DMK_nks(), kv->get_nks());
-    EXPECT_EQ(DM.get_DMK_nrow(), paraV->nrow);
-    EXPECT_EQ(DM.get_DMK_ncol(), paraV->ncol);
+    EXPECT_EQ(DM.get_dmk_nks(), kv->get_nks());
+    EXPECT_EQ(DM.get_dmk_nrow(), paraV->nrow);
+    EXPECT_EQ(DM.get_dmk_ncol(), paraV->ncol);
 
     // set elements of DMK
     for (int is = 1; is <= nspin; is++)
@@ -130,7 +130,7 @@ TEST_F(DMTest, DMConstructor_nspin1)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    DM.set_DMK(is, ik, i, j, is + ik * i + j);
+                    DM.set_dmk(is, ik, i, j, is + ik * i + j);
                 }
             }
         }
@@ -144,18 +144,18 @@ TEST_F(DMTest, DMConstructor_nspin1)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    EXPECT_EQ(DM.get_DMK(is, ik, i, j), is + ik * i + j);
+                    EXPECT_EQ(DM.get_dmk(is, ik, i, j), is + ik * i + j);
                 }
             }
         }
     }
-    // test for get_DMK_pointer
+    // test for get_dmk_ptr
     for (int is = 1; is <= nspin; is++)
     {
         int ik_begin = (is - 1) * kv->get_nks() / nspin;
         for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
         {
-            double* ptr = DM.get_DMK_pointer(ik + ik_begin);
+            double* ptr = DM.get_dmk_ptr(ik + ik_begin);
             for (int i = 0; i < paraV->nrow; i++)
             {
                 for (int j = 0; j < paraV->ncol; j++)
@@ -186,9 +186,9 @@ TEST_F(DMTest, DMConstructor_nspin2)
     std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
     module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
     // compare
-    EXPECT_EQ(DM.get_DMK_nks(), kv->get_nks());
-    EXPECT_EQ(DM.get_DMK_nrow(), paraV->nrow);
-    EXPECT_EQ(DM.get_DMK_ncol(), paraV->ncol);
+    EXPECT_EQ(DM.get_dmk_nks(), kv->get_nks());
+    EXPECT_EQ(DM.get_dmk_nrow(), paraV->nrow);
+    EXPECT_EQ(DM.get_dmk_ncol(), paraV->ncol);
 
     // set elements of DMK
     for (int is = 1; is <= nspin; is++)
@@ -199,7 +199,7 @@ TEST_F(DMTest, DMConstructor_nspin2)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    DM.set_DMK(is, ik, i, j, ik * i + j);
+                    DM.set_dmk(is, ik, i, j, ik * i + j);
                 }
             }
         }
@@ -211,18 +211,18 @@ TEST_F(DMTest, DMConstructor_nspin2)
         {
             for (int j = 0; j < paraV->ncol; j++)
             {
-                EXPECT_EQ(DM.get_DMK(1, ik, i, j), ik * i + j);
-                EXPECT_EQ(DM.get_DMK(1, ik, i, j), DM.get_DMK(2, ik, i, j));
+                EXPECT_EQ(DM.get_dmk(1, ik, i, j), ik * i + j);
+                EXPECT_EQ(DM.get_dmk(1, ik, i, j), DM.get_dmk(2, ik, i, j));
             }
         }
     }
-    // test for get_DMK_pointer
+    // test for get_dmk_ptr
     for (int is = 1; is <= nspin; is++)
     {
         int ik_begin = (is - 1) * kv->get_nks() / nspin;
         for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
         {
-            double* ptr = DM.get_DMK_pointer(ik + ik_begin);
+            double* ptr = DM.get_dmk_ptr(ik + ik_begin);
             for (int i = 0; i < paraV->nrow; i++)
             {
                 for (int j = 0; j < paraV->ncol; j++)

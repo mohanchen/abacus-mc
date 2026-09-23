@@ -78,7 +78,7 @@ HamiltBSE<T>::HamiltBSE(const int& nspin,
     if (!this->bse_ri_hartree && this->ri_hartree_benchmark == "none")
     {
         this->DM_trans = LR_Util::make_unique<module_dm::DensityMatrix<T, T>>(&pmat, 1/*nspin*/, kv_in.kvec_d, nk);
-        this->DM_trans->set_DMK_zero();
+        this->DM_trans->set_dmk_zero();
         LR_Util::initialize_DMR(*this->DM_trans, this->pmat, this->ucell, this->gd, this->orb_cutoff);
     }
     if (this->bse_mem_save) { assert(this->bse_continue == 0 && this->bse_ri_hartree); }
@@ -505,7 +505,7 @@ void HamiltBSE<T>::cal_V_by_grid(bool is_A)
                     BSE_Util::cal_dm_trans_onebase_blas(psi_is, ik2, naos, imo1, imo2, (T)1.0 / (T)nk);
     #endif
                 // LR_Util::print_tensor<T>(dm_trans_2d, "dm_trans_2d", &pmat);
-                this->DM_trans->set_DMK_pointer(ik2, dm_trans_2d.data<T>());
+                this->DM_trans->set_dmk_ptr(ik2, dm_trans_2d.data<T>());
                 // 3. D(k)→D(R)
                 this->DM_trans->cal_dmr(ik2);
                 // LR_Util::print_DMR(*DM_trans, ucell.nat, "DMR");

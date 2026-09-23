@@ -50,7 +50,7 @@ void edm_tddft_lapack(Parallel_Orbitals& pv,
     for (int ik = 0; ik < kv.get_nks(); ++ik)
     {
         p_hamilt->updateHk(ik);
-        std::complex<double>* tmp_dmk_local = dmat.dm->get_DMK_pointer(ik);
+        std::complex<double>* tmp_dmk_local = dmat.dm->get_dmk_ptr(ik);
         ModuleBase::ComplexMatrix& tmp_edmk = dmat.dm->edmk[ik];
 
 #ifdef __MPI

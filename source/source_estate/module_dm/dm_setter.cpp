@@ -17,7 +17,7 @@ namespace module_dm
 
 // set DMK using a pointer
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::set_DMK_pointer(const int ik, TK* DMK_in)
+void DensityMatrix<TK, TR>::set_dmk_ptr(const int ik, TK* DMK_in)
 {
 #ifdef __DEBUG
     assert(ik < this->_nk * this->spin_mult);
@@ -27,7 +27,7 @@ void DensityMatrix<TK, TR>::set_DMK_pointer(const int ik, TK* DMK_in)
 
 // set dmk element
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::set_DMK(const int ispin, const int ik, const int i, const int j, const TK value)
+void DensityMatrix<TK, TR>::set_dmk(const int ispin, const int ik, const int i, const int j, const TK value)
 {
 #ifdef __DEBUG
     assert(ispin > 0 && ispin <= this->spin_mult);
@@ -39,7 +39,7 @@ void DensityMatrix<TK, TR>::set_DMK(const int ispin, const int ik, const int i, 
 
 // set dmk element
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::set_DMK_zero()
+void DensityMatrix<TK, TR>::set_dmk_zero()
 {
     for (int ik = 0; ik < spin_mult * _nk; ik++)
     {

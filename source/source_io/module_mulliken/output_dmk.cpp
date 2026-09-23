@@ -10,9 +10,9 @@ Output_DMK<TK>::Output_DMK(module_dm::DensityMatrix<TK, double>* p_DM, Parallel_
 }
 
 template <typename TK>
-TK* Output_DMK<TK>::get_DMK(int ik)
+TK* Output_DMK<TK>::get_dmk(int ik)
 {
-    return p_DM_->get_DMK_vector()[ik].data();
+    return p_DM_->get_dmk_vec()[ik].data();
 }
 
 template class Output_DMK<double>;

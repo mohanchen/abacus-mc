@@ -43,7 +43,7 @@ void cal_foverlap_rt(ModuleBase::matrix& foverlap,
     {
         p_hamilt->updateHk(ik);
         // get dmk
-        std::complex<double>* tmp_dmk = dmat.dm->get_DMK_pointer(ik);
+        std::complex<double>* tmp_dmk = dmat.dm->get_dmk_ptr(ik);
 
         ModuleBase::GlobalFunc::ZEROS(Htmp, nloc);
         ModuleBase::GlobalFunc::ZEROS(Sinv, nloc);

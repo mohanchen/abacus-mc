@@ -35,7 +35,7 @@ void PulayForceStress::cal_pulay_fs(
 				double sum = 0.0;
 				for (int is = 0; is < nspin; ++is) 
 				{ 
-					sum += dm.get_DMK(is + 1, 0, nu, mu); 
+					sum += dm.get_dmk(is + 1, 0, nu, mu); 
 				}
 				if (isforce)
 				{
