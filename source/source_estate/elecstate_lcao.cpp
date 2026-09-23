@@ -32,7 +32,7 @@ double ElecStateLCAO<std::complex<double>>::get_spin_constrain_energy()
 
 template <>
 void ElecStateLCAO<double>::dm2rho(std::vector<double*> pexsi_DM, 
-		std::vector<double*> pexsi_EDM,
+		std::vector<double*> edm_pexsi,
 		module_dm::DensityMatrix<double, double>* dm,
 		const double omega)
 {
@@ -45,7 +45,7 @@ void ElecStateLCAO<double>::dm2rho(std::vector<double*> pexsi_DM,
     }
 
 #ifdef __PEXSI
-    dm->pexsi_EDM = pexsi_EDM;
+    dm->edm_pexsi = edm_pexsi;
 #endif
 
     for (int is = 0; is < nspin; is++)
@@ -79,7 +79,7 @@ void ElecStateLCAO<double>::dm2rho(std::vector<double*> pexsi_DM,
 
 template <>
 void ElecStateLCAO<std::complex<double>>::dm2rho(std::vector<std::complex<double>*> pexsi_DM,
-		std::vector<std::complex<double>*> pexsi_EDM,
+		std::vector<std::complex<double>*> edm_pexsi,
 		module_dm::DensityMatrix<std::complex<double>, double>* dm,
 		const double omega)
 {

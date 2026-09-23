@@ -316,7 +316,7 @@ class DensityMatrix
      * @brief EDM storage for PEXSI
      * used in MD calculation
      */
-    std::vector<TK*> pexsi_EDM;
+    std::vector<TK*> edm_pexsi;
 #endif
 
   private:
