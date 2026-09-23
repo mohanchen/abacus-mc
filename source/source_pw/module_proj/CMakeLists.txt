@@ -14,6 +14,9 @@
 list(APPEND objects
     radial_proj.cpp
     onsite_proj_print.cpp
+    onsite_proj.cpp
+    onsite_proj_init.cpp
+    onsite_proj_overlap.cpp
     onsite_proj_tools.cpp
     onsite_proj_tools_becp.cpp
     onsite_proj_tools_dbecp.cpp

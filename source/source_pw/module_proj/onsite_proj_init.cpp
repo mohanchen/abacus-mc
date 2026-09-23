@@ -5,7 +5,7 @@
 #include <map>
 #include <tuple>
 
-#include "source_pw/module_pwdft/onsite_proj.h"
+#include "source_pw/module_proj/onsite_proj.h"
 #include "source_pw/module_proj/onsite_proj_print.h"
 #include "source_base/projgen.h"
 #include "source_base/kernels/math_kernel_op.h"
