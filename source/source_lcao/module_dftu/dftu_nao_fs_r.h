@@ -67,6 +67,10 @@ namespace DFTU_LCAO
  * and real-space type (TR). The template wrapper cal_fs_nao_r only validates
  * the density matrix and forwards arguments here.
  *
+ * @note Hard to unit-test: requires TwoCenterIntegrator (numerical orbital
+ * radial integration) to build nlm via build_nlm. The inner function
+ * acc_fs_pairs is directly testable with a mock nlm_tot; build_nlm is not.
+ *
  * @param ucell       [in] unit cell
  * @param dftu        [in] DFT+U base object (occupation matrix, U values)
  * @param intor       [in] two-center integrator for <phi|chi> and gradients

@@ -37,6 +37,11 @@ void cal_occ_mat(const Parallel_Orbitals* pv,
                  const std::string& ks_solver);
 
 // calculate the local occupation number matrix (k-point version)
+//
+// @note Hard to unit-test: requires a full wavefunction (Psi), two-center
+// integrator, and PSI-to-2D distribution (p2s_dist) to build srho.
+// Consider extracting the srho computation into an injectable interface
+// if unit-test coverage is needed.
 void cal_occ_mat_k(const Parallel_Orbitals* pv,
                    const UnitCell& ucell,
                    const std::vector<std::vector<std::complex<double>>>& dm_k,
@@ -48,6 +53,10 @@ void cal_occ_mat_k(const Parallel_Orbitals* pv,
                    const std::string& ks_solver);
 
 // calculate the local occupation number matrix (gamma-point version)
+//
+// @note Hard to unit-test: requires a full wavefunction (Psi) and
+// two-center integrator to build srho. Consider extracting the srho
+// computation into an injectable interface if unit-test coverage is needed.
 void cal_occ_mat_gamma(const Parallel_Orbitals* pv,
                        const UnitCell& ucell,
                        const std::vector<std::vector<double>>& dm_gamma,

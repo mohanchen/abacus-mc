@@ -1,23 +1,49 @@
+abacus_disable_feature_definitions(__MPI)
+abacus_disable_feature_definitions(__EXX)
 abacus_disable_feature_definitions(__CUDA)
+abacus_disable_feature_definitions(__UT_USE_CUDA)
+abacus_disable_feature_definitions(__UT_USE_ROCM)
+abacus_disable_feature_definitions(__ROCM)
+abacus_disable_feature_definitions(__MLALGO)
+abacus_disable_feature_definitions(_OPENMP)
+
+if (ENABLE_MPI)
 
 AddTest(
-  TARGET dftu_core_test
+  TARGET MODULE_DFTU_pots
   LIBS base device
-  SOURCES dftu_core_test.cpp
+  SOURCES test_dftu_nao_pots.cpp
 )
 
 AddTest(
-  TARGET dftu_operator_test
+  TARGET MODULE_DFTU_energy
   LIBS base device
-  SOURCES dftu_operator_test.cpp
+  SOURCES test_dftu_nao_energy.cpp
 )
 
-if(ENABLE_LCAO AND ENABLE_MPI)
 AddTest(
-  TARGET dftu_lcao_test
+  TARGET MODULE_DFTU_op_legacy
+  LIBS base device
+  SOURCES test_dftu_nao_op_legacy.cpp
+)
+
+AddTest(
+  TARGET MODULE_DFTU_for_r
+  LIBS base device
+  SOURCES test_dftu_nao_for_r.cpp
+)
+
+AddTest(
+  TARGET MODULE_DFTU_str_r
+  LIBS base device
+  SOURCES test_dftu_nao_str_r.cpp
+)
+
+if(ENABLE_LCAO)
+AddTest(
+  TARGET MODULE_DFTU_op
   LIBS parameter psi base device container symmetry
-  SOURCES dftu_lcao_test.cpp ../dftu_nao_op.cpp ../dftu_nao_adj.cpp ../dftu_nao_pots.cpp ../dftu_nao_fs_r.cpp ../dftu_nao_for_r.cpp ../dftu_nao_str_r.cpp
-  ../../../source_estate/module_dm/density_matrix.cpp
+  SOURCES test_dftu_nao_op.cpp ../dftu_nao_op.cpp ../dftu_nao_adj.cpp ../dftu_nao_pots.cpp ../dftu_nao_fs_r.cpp ../dftu_nao_for_r.cpp ../dftu_nao_str_r.cpp  ../../../source_estate/module_dm/density_matrix.cpp
   ../../../source_estate/module_dm/density_matrix_io.cpp
   ../../../source_pw/module_pwdft/dftu_base.cpp
   ../../../source_pw/module_pwdft/dftu_base_io.cpp
@@ -32,10 +58,13 @@ AddTest(
   ../../../source_basis/module_ao/orb_atomic_lm.cpp
   ../../module_operator_lcao/test/tmp_mocks.cpp
   ../../../source_hamilt/operator.cpp
+  # This test calls MPI_Init in main() and drives ScaLAPACK distribution,
+  # so it must keep __MPI even though this directory disables it.
+  KEEP_FEATURE_DEFINITIONS __MPI
 )
 
 AddTest(
-  TARGET dftu_nao_ijr_test
+  TARGET MODULE_DFTU_ijr
   LIBS parameter psi base device container
   SOURCES test_dftu_nao_ijr.cpp
   ../../../source_hamilt/module_hcontainer/func_folding.cpp
@@ -46,5 +75,8 @@ AddTest(
   ../../../source_basis/module_ao/orb_atomic_lm.cpp
   ../../module_operator_lcao/test/tmp_mocks.cpp
   ../../../source_hamilt/operator.cpp
+  KEEP_FEATURE_DEFINITIONS __MPI
 )
+endif()
+
 endif()
