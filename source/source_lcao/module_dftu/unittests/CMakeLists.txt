@@ -51,6 +51,15 @@ AddTest(
   SOURCES test_dftu_nao_fs_r.cpp ../dftu_nao_fs_reduce.cpp
 )
 
+AddTest(
+  TARGET MODULE_DFTU_fs_accum
+  LIBS base device
+  SOURCES test_dftu_nao_fs_accum.cpp ../../../source_basis/module_ao/parallel_orbitals.cpp
+  # This test uses Parallel_2D::set_serial which is a real implementation
+  # in parallel_2d.cpp; keep __MPI so the serial path links correctly.
+  KEEP_FEATURE_DEFINITIONS __MPI
+)
+
 if(ENABLE_LCAO)
 AddTest(
   TARGET MODULE_DFTU_op
