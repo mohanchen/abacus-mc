@@ -13,60 +13,11 @@ template<typename T, typename Device>
 void projectors::OnsiteProjector<T, Device>::tabulate_atomic(const int ik, const char grad)
 {
     ModuleBase::timer::start("OnsiteProj", "tabulate_atomic");
-    // assert(grad == 'n' || grad == 'x' || grad == 'y' || grad == 'z');
-    // grad = 'n' means no gradient, grad = 'x' means gradient along x, etc.
-
-    // STAGE 1 - calculate the <G+k|p> for the given G+k vector
-    // CACHE 1 - if cache the tab_, <G+k|p> can be reused for SCF and RELAX calculation
-    // [in] pw_basis, ik, omega, tpiba, irow2it
+    // The actual tabulation of <G+k|alpha_i> (STAGE 1 + STAGE 2) is performed by
+    // Onsite_Proj_tools; this member only records the k-point dimensions.
     this->ik_ = ik;
     this->npw_ = pw_basis_->npwk[ik];
     this->npwx_ = pw_basis_->npwk_max;
-    // std::vector<ModuleBase::Vector3<double>> q(this->npw_);
-    // for(int ig = 0; ig < this->npw_; ++ig)
-    // {
-    //     q[ig] = pw_basis_->getgpluskcar(ik, ig); // get the G+k vector, G+k will change during CELL-RELAX
-    // }
-    // const int nrow = irow2it_.size();
-    // std::vector<std::complex<double>> tab_(nrow*this->npw_);
-    // // convention used here: 'l': <p|G+k>, 'r': <G+k|p>
-    // // denote q=G+k, <r|q> = exp(iqr), the routine Fourier Transform written as F(q) = <q|f>
-    // // what is calculated is <p|q> here
-    // rp_.sbtft(q, tab_, 'l', this->ucell->omega, this->ucell->tpiba);
-
-    // STAGE 2 - make_atomic: multiply e^iqtau and extend the <G+k|p> to <G+k|pi> for each atom
-    // CACHE 2 - if cache the tab_atomic_, <G+k|p> can be reused for SCF calculation
-    // [in] it2ia, itiaiprojm2irow, tab_, npw, sf
-    // for(int irow = 0; irow < nrow; ++irow)
-    // {
-    //     const int it = irow2it_[irow];
-    //     const int iproj = irow2iproj_[irow];
-    //     const int m = irow2m_[irow];
-    //     for(int ia = 0; ia < na[it]; ++ia)
-    //     {
-    //         // why Structure_Factor needs the FULL pw_basis???
-    //         std::complex<double>* sk = this->sf_->get_sk(ik, it, ia, pw_basis_); // exp(-iqtau)
-    //         // Note: idea on extending the param list of get_sk
-    //         // the get_sk should have an extra param 'grad' to calculate the gradient of S(q), which
-    //         // is actually very simple to be
-    //         // d(S(q))/dq = -i S(q) * tau, for one direction it is just -i S(q) * tau_x (if x is the direction)
-    //         const int irow_out = itiaiprojm2irow_.at(std::make_tuple(it, ia, iproj, m));
-    //         for(int ig = 0; ig < this->npw_; ++ig)
-    //         {
-    //             std::complex<double> deriv = (grad == 'n')? 1.0: ModuleBase::NEG_IMAG_UNIT; // because sk is exp(-iqtau)
-    //             deriv = (grad == 'n')? 1.0: (grad == 'x')? deriv * q[ig].x: (grad == 'y')? deriv * q[ig].y: deriv * q[ig].z;
-    //             // there must be something twisted in ABACUS
-    //             // because the tab_ is <p|G+k>, but the sk is exp(-iqtau). How can it get the
-    //             // correct result?
-    //             this->tab_atomic_[irow_out*this->npw_ + ig] = sk[ig] * tab_[irow*this->npw_ + ig] * deriv;
-    //         }
-    //         delete[] sk;
-    //     }
-    // }
-    // q.clear();
-    // q.shrink_to_fit();    // release memory
-    // tab_.clear();
-    // tab_.shrink_to_fit(); // release memory
     ModuleBase::timer::end("OnsiteProj", "tabulate_atomic");
 }
 
