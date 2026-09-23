@@ -1,4 +1,4 @@
-#include "cal_edm_tddft.h"
+#include "edm_tddft.h"
 
 #include "source_base/module_container/ATen/core/tensor.h" // For ct::Tensor
 #include "source_base/module_container/ATen/kernels/blas.h"
@@ -13,13 +13,13 @@
 namespace module_dm
 {
 // use the original formula (Hamiltonian matrix) to calculate energy density matrix
-void cal_edm_tddft(Parallel_Orbitals& pv,
+void edm_tddft(Parallel_Orbitals& pv,
                    Setup_DM<std::complex<double>>& dmat,
                    K_Vectors& kv,
                    hamilt::Hamilt<std::complex<double>>* p_hamilt)
 {
-    ModuleBase::TITLE("elecstate", "cal_edm_tddft");
-    ModuleBase::timer::start("TD_Efficiency", "cal_edm_tddft");
+    ModuleBase::TITLE("elecstate", "edm_tddft");
+    ModuleBase::timer::start("TD_Efficiency", "edm_tddft");
 
     const int nlocal = pv.nrow;
     assert(nlocal >= 0);
@@ -257,8 +257,8 @@ void cal_edm_tddft(Parallel_Orbitals& pv,
 #endif
     } // end ik
 
-    ModuleBase::timer::end("TD_Efficiency", "cal_edm_tddft");
+    ModuleBase::timer::end("TD_Efficiency", "edm_tddft");
     return;
-} // cal_edm_tddft
+} // edm_tddft
 
 } // namespace module_dm

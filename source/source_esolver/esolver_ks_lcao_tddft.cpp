@@ -16,7 +16,7 @@
 #include "source_estate/module_charge/chg_atomic.h"
 #include "source_estate/module_charge/chg_symm.h"
 #include "source_estate/module_dm/dm_from_psi.h"
-#include "source_estate/module_dm/cal_edm_tddft.h"
+#include "source_estate/module_dm/edm_tddft.h"
 #include "source_estate/module_pot/h_tddft_pw.h"
 #include "source_estate/module_pot/potential_new.h"
 #include "source_estate/module_pot/td_field_manager.h"
@@ -443,14 +443,14 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::iter_finish(UnitCell& ucell,
     {
         if (use_tensor && use_lapack)
         {
-            module_dm::cal_edm_tddft_tensor_lapack<Device>(this->pv,
+            module_dm::edm_tddft_lapack<Device>(this->pv,
                                                            this->dmat,
                                                            this->kv,
                                                            static_cast<hamilt::Hamilt<std::complex<double>>*>(this->p_hamilt));
         }
         else
         {
-            module_dm::cal_edm_tddft(this->pv, this->dmat, this->kv, static_cast<hamilt::Hamilt<std::complex<double>>*>(this->p_hamilt));
+            module_dm::edm_tddft(this->pv, this->dmat, this->kv, static_cast<hamilt::Hamilt<std::complex<double>>*>(this->p_hamilt));
         }
     }
 }

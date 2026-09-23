@@ -1,4 +1,4 @@
-#include "cal_edm_tddft.h"
+#include "edm_tddft.h"
 
 #include "source_base/module_container/ATen/core/tensor.h"
 #include "source_base/module_container/ATen/kernels/blas.h"
@@ -15,13 +15,13 @@ namespace module_dm
 
 // Template function for EDM calculation supporting CPU and GPU
 template <typename Device>
-void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
+void edm_tddft_lapack(Parallel_Orbitals& pv,
                                  Setup_DM<std::complex<double>>& dmat,
                                  K_Vectors& kv,
                                  hamilt::Hamilt<std::complex<double>>* p_hamilt)
 {
-    ModuleBase::TITLE("elecstate", "cal_edm_tddft_tensor_lapack");
-    ModuleBase::timer::start("TD_Efficiency", "cal_edm_tddft");
+    ModuleBase::TITLE("elecstate", "edm_tddft_lapack");
+    ModuleBase::timer::start("TD_Efficiency", "edm_tddft");
 
     const int nlocal = pv.nrow;
     assert(nlocal >= 0);
@@ -265,7 +265,7 @@ void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
             module_rt::distributeMatrix(edm_local_block, edm_global);
         }
 #else
-        ModuleBase::WARNING_QUIT("elecstate::cal_edm_tddft_tensor_lapack", "MPI is required for this function!");
+        ModuleBase::WARNING_QUIT("elecstate::edm_tddft_lapack", "MPI is required for this function!");
 #endif // __MPI
     } // end ik
 
@@ -278,17 +278,17 @@ void cal_edm_tddft_tensor_lapack(Parallel_Orbitals& pv,
     }
 #endif // __CUDA
 
-    ModuleBase::timer::end("TD_Efficiency", "cal_edm_tddft");
+    ModuleBase::timer::end("TD_Efficiency", "edm_tddft");
     return;
-} // cal_edm_tddft_tensor_lapack
+} // edm_tddft_lapack
 
 // Explicit instantiation of template functions
-template void cal_edm_tddft_tensor_lapack<base_device::DEVICE_CPU>(Parallel_Orbitals& pv,
+template void edm_tddft_lapack<base_device::DEVICE_CPU>(Parallel_Orbitals& pv,
                                                                    Setup_DM<std::complex<double>>& dmat,
                                                                    K_Vectors& kv,
                                                                    hamilt::Hamilt<std::complex<double>>* p_hamilt);
 #if ((defined __CUDA) /* || (defined __ROCM) */)
-template void cal_edm_tddft_tensor_lapack<base_device::DEVICE_GPU>(Parallel_Orbitals& pv,
+template void edm_tddft_lapack<base_device::DEVICE_GPU>(Parallel_Orbitals& pv,
                                                                    Setup_DM<std::complex<double>>& dmat,
                                                                    K_Vectors& kv,
                                                                    hamilt::Hamilt<std::complex<double>>* p_hamilt);
