@@ -67,14 +67,85 @@ namespace DensityMatrix_Tools
 
     template <typename TR>
     extern void exp_mul_dmk(const std::complex<double> kphase,
-                                const std::vector<std::complex<double>>& DMK_mat_trans,
-                                TR* target_DMR_mat);
+                                const std::vector<std::complex<double>>& dmk_row,
+                                TR* dmr_mat);
 
     template <typename TR>
-    extern void xyz_to_updown(const std::complex<double> tmp[4],
+    extern void xyz_to_updown(const std::complex<double> spin_block[4],
                                   const int icol,
-                                  const int step_trace[4],
-                                  TR* target_DMR_mat);
+                                  const int spin_stride[4],
+                                  TR* dmr_mat);
+
+    /**
+     * @brief geometry of one atom-pair sub-block within the global DMK matrix
+     * row0/col0: global index of the block's top-left element in the 2D block-cyclic DMK
+     * nrows/ncols: orbital dimensions of the two atoms
+     */
+    struct DmrBlock
+    {
+        int row0;
+        int col0;
+        int nrows;
+        int ncols;
+        int size() const { return nrows * ncols; }
+    };
+
+    /// @brief extract the block geometry for atom pair (iat1, iat2) from the parallel orbitals layout
+    DmrBlock get_dmr_block(const Parallel_Orbitals* pv, const int iat1, const int iat2);
+
+    /**
+     * @brief precompute k-phase factors e^{ikR} and collect DMR block pointers for one atom pair
+     * @param atom_pair the atom pair whose R-vectors and matrices are used
+     * @param kvec_d direct coordinates of k-points
+     * @param nk number of k-points
+     * @param phase_hybrid additional hybrid-gauge phase per R (empty map = no extra phase)
+     * @param kphase_vec output: kphase_vec[ik][iR]
+     * @param dmr_mats output: dmr_mats[iR] points to the DMR block for R-vector iR
+     */
+    template <typename TK, typename TR>
+    extern void build_kphase(hamilt::AtomPair<TR>& atom_pair,
+                             const std::vector<ModuleBase::Vector3<double>>& kvec_d,
+                             const int nk,
+                             const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+                             std::vector<std::vector<TK>>& kphase_vec,
+                             std::vector<TR*>& dmr_mats);
+
+    /// @brief transpose a col-major DMK sub-block into row-major order
+    template <typename TK>
+    extern void transpose_dmk_block(const TK* dmk_col_major,
+                                    const int ld_hk,
+                                    const DmrBlock& block,
+                                    TK* dmk_row);
+
+    /**
+     * @brief nspin=1/2: accumulate Re(kphase * DMK) into DMR blocks
+     * if ik_in >= 0, only that k-point; if ik_in < 0, loop over all k-points
+     */
+    template <typename TK, typename TR>
+    extern void add_dmr_real(const DensityMatrix<TK, TR>& dm,
+                             const DmrBlock& block,
+                             const int ik_begin,
+                             const std::vector<std::vector<TK>>& kphase_vec,
+                             const int ld_hk,
+                             const int ik_in,
+                             std::vector<TR*>& dmr_mats);
+
+    /**
+     * @brief nspin==4 (SOC): accumulate k-phase * DMK into a per-R complex buffer,
+     * then transform 2x2 spin blocks from (upup, updown, downup, downdown) to
+     * (rho_0, rho_x, rho_y, rho_z) via xyz_to_updown.
+     * Each orbital corresponds to a 2x2 spin block, so rows/cols step by 2.
+     * if ik_in >= 0, only that k-point; if ik_in < 0, loop over all k-points
+     */
+    template <typename TK, typename TR>
+    extern void add_dmr_soc(const DensityMatrix<TK, TR>& dm,
+                            const DmrBlock& block,
+                            const int ik_begin,
+                            const std::vector<std::vector<TK>>& kphase_vec,
+                            const int ld_hk,
+                            const int ik_in,
+                            const int col_stride,
+                            std::vector<TR*>& dmr_mats);
 
 }
 
@@ -401,6 +472,24 @@ class DensityMatrix
         const DensityMatrix<TK, TR>& dm,
         hamilt::HContainer<std::complex<double>>* dmR_out,
         const int ik_in);
+    friend void DensityMatrix_Tools::add_dmr_real<TK, TR>(
+        const DensityMatrix<TK, TR>& dm,
+        const DensityMatrix_Tools::DmrBlock& block,
+        const int ik_begin,
+        const std::vector<std::vector<TK>>& kphase_vec,
+        const int ld_hk,
+        const int ik_in,
+        std::vector<TR*>& dmr_mats);
+
+    friend void DensityMatrix_Tools::add_dmr_soc<TK, TR>(
+        const DensityMatrix<TK, TR>& dm,
+        const DensityMatrix_Tools::DmrBlock& block,
+        const int ik_begin,
+        const std::vector<std::vector<TK>>& kphase_vec,
+        const int ld_hk,
+        const int ik_in,
+        const int col_stride,
+        std::vector<TR*>& dmr_mats);
 };
 
 } // namespace module_dm

@@ -12,148 +12,60 @@ namespace module_dm
 
 template <typename TK, typename TR_in, typename TR_out>
 void DensityMatrix_Tools::cal_dmr_td(
-    DensityMatrix<TK, TR_in> &dm,
-    std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
+    DensityMatrix<TK, TR_in>& dm,
+    std::vector<hamilt::HContainer<TR_out>*>& dmR_out,
     const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
     ModuleBase::TITLE("DensityMatrix", "cal_dmr_td");
-    assert(dmR_out.size()==dm.spin_mult && "DMR has not been initialized!");
+    assert(dmR_out.size() == dm.spin_mult && "DMR has not been initialized!");
+
+    // validate ik_in: either -1 (all k-points) or a valid index
+    if (ik_in < -1 || ik_in >= dm._nk)
+    {
+        ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr_td",
+                                 "ik_in out of range: must be -1 (all k) or 0 <= ik_in < nk");
+    }
 
     ModuleBase::timer::start("DensityMatrix", "cal_dmr_td");
     const int ld_hk = dm.pv->nrow;
     for (int is = 1; is <= dm.spin_mult; ++is)
     {
         const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
-        hamilt::HContainer<TR_out>*const target_DMR = dmR_out[is - 1];
-        target_DMR->set_zero();
+        hamilt::HContainer<TR_out>* const dmr_spin = dmR_out[is - 1];
+        dmr_spin->set_zero();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-        for (int i = 0; i < target_DMR->size_atom_pairs(); ++i)
+        for (int i = 0; i < dmr_spin->size_atom_pairs(); ++i)
         {
-            hamilt::AtomPair<TR_out>& target_ap = target_DMR->get_atom_pair(i);
-            const int iat1 = target_ap.get_atom_i();
-            const int iat2 = target_ap.get_atom_j();
-            const int row_ap = dm.pv->atom_begin_row[iat1];
-            const int col_ap = dm.pv->atom_begin_col[iat2];
-            const int row_size = dm.pv->get_nrow_atom(iat1);
-            const int col_size = dm.pv->get_ncol_atom(iat2);
-            const int mat_size = row_size * col_size;
-            const int R_size = target_ap.get_R_size();
-            assert(row_ap != -1 && col_ap != -1 && "Atom-pair not belong this process");
+            hamilt::AtomPair<TR_out>& atom_pair = dmr_spin->get_atom_pair(i);
+            const DmrBlock block = get_dmr_block(dm.pv, atom_pair.get_atom_i(), atom_pair.get_atom_j());
+            const int R_size = atom_pair.get_R_size();
 
-            // calculate kphase and target_mat_ptr
-            std::vector<std::vector<TK>> kphase_vec(dm._nk, std::vector<TK>(R_size));
-            std::vector<TR_out*> target_DMR_mat_vec(R_size);
-            for(int iR = 0; iR < R_size; ++iR)
+            // precompute k-phase factors (including hybrid-gauge phase) and collect DMR block pointers
+            std::vector<std::vector<TK>> kphase_vec;
+            std::vector<TR_out*> dmr_mats;
+            build_kphase(atom_pair, dm._kvec_d, dm._nk, phase_hybrid, kphase_vec, dmr_mats);
+
+            if (dm.nspin == 1 || dm.nspin == 2)
             {
-                const ModuleBase::Vector3<int> R_index = target_ap.get_R_index(iR);
-                hamilt::BaseMatrix<TR_out>*const target_mat = target_ap.find_matrix(R_index);
-#ifdef __DEBUG
-                if (target_mat == nullptr)
-                {
-                    std::cout << "target_mat is nullptr" << std::endl;
-                    continue;
-                }
-#endif
-                target_DMR_mat_vec[iR] = target_mat->get_pointer();
-                for(int ik = 0; ik < dm._nk; ++ik)
-                {
-                    if(ik_in >= 0 && ik_in != ik)
-                    {
-                        continue;
-                    }
-                    // cal k_phase
-                    const ModuleBase::Vector3<double> dR(R_index[0], R_index[1], R_index[2]);
-                    const double arg = (dm._kvec_d[ik] * dR) * ModuleBase::TWO_PI;
-                    double sinp, cosp;
-                    ModuleBase::libm::sincos(arg, &sinp, &cosp);
-                    kphase_vec[ik][iR] = TK(cosp, sinp);
-                    if(!phase_hybrid.empty())
-                    {
-                        //phase for hybrid gauge tddft
-                        kphase_vec[ik][iR] *= phase_hybrid.at(R_index);
-                    }
-                }
+                // nspin=1/2: accumulate Re(kphase * DMK) into DMR blocks
+                add_dmr_real(dm, block, ik_begin, kphase_vec, ld_hk, ik_in, dmr_mats);
             }
-
-            std::vector<TK> DMK_mat_trans(mat_size);
-            std::vector<TK> tmp_DMR( (dm.nspin==4) ? mat_size*R_size : 0);
-            for(int ik = 0; ik < dm._nk; ++ik)
+            else if (dm.nspin == 4)
             {
-                if(ik_in >= 0 && ik_in != ik)
-                {
-                    continue;
-                }
-                const TK*const DMK_mat_ptr
-                    = dm.dmk[ik + ik_begin].data()
-                      + col_ap * dm.pv->nrow + row_ap;
-                for(int icol = 0; icol < col_size; ++icol)
-                {
-                    for(int irow = 0; irow < row_size; ++irow)
-                    {
-                        DMK_mat_trans[irow * col_size + icol] = DMK_mat_ptr[icol * ld_hk + irow];
-                    }
-                }
-
-                // if nspin != 4, fill DMR
-                // if nspin == 4, fill tmp_DMR
-                for(int iR = 0; iR < R_size; ++iR)
-                {
-                    // (kr+i*ki) * (Dr+i*Di) = (kr*Dr-ki*Di) + i*(kr*Di+ki*Dr)
-                    const TK kphase = kphase_vec[ik][iR];
-                    if(dm.nspin != 4)                // only save real kr*Dr-ki*Di
-                {
-                    exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
-                }
-                else if(dm.nspin == 4)
-                {
-                    BlasConnector::axpy(mat_size,
-                                        kphase,
-                                        DMK_mat_trans.data(),
-                                        1,
-                                        &tmp_DMR[iR * mat_size],
-                                        1);
-                }
-                }
+                // nspin=4 (SOC): accumulate k-phase * DMK into a per-R complex buffer,
+                // then transform each 2x2 spin block to Pauli components (rho_0, rho_x, rho_y, rho_z).
+                // Each orbital corresponds to a 2x2 spin block, so rows/cols step by 2 (physical spin dimension).
+                add_dmr_soc(dm, block, ik_begin, kphase_vec, ld_hk, ik_in,
+                            atom_pair.get_col_size(), dmr_mats);
             }
-
-            // if nspin == 4
-            // copy tmp_DMR to fill target_DMR
-            if(dm.nspin == 4)
+            else
             {
-                int step_trace[4]{};
-                constexpr int npol = 2;
-                for (int is = 0; is < npol; is++)
-                {
-                    for (int is2 = 0; is2 < npol; is2++)
-                    {
-                        step_trace[is * npol + is2] = target_ap.get_col_size() * is + is2;
-                    }
-                }
-
-                TK tmp[4]{};
-                for(int iR = 0; iR < R_size; ++iR)
-                {
-                    const TK* tmp_DMR_mat = &tmp_DMR[iR * mat_size];
-                    TR_out* target_DMR_mat = target_DMR_mat_vec[iR];
-                    for (int irow = 0; irow < row_size; irow += 2)
-                    {
-                        for (int icol = 0; icol < col_size; icol += 2)
-                        {
-                            tmp[0] = tmp_DMR_mat[icol + step_trace[0]];
-                            tmp[1] = tmp_DMR_mat[icol + step_trace[1]];
-                            tmp[2] = tmp_DMR_mat[icol + step_trace[2]];
-                            tmp[3] = tmp_DMR_mat[icol + step_trace[3]];
-
-                            xyz_to_updown(tmp, icol, step_trace, target_DMR_mat);
-                        }
-                        tmp_DMR_mat += col_size * 2;
-                        target_DMR_mat += col_size * 2;
-                    }
-                }
+                ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr_td",
+                                         "nspin must be 1, 2 or 4");
             }
         }
     }
