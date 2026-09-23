@@ -175,7 +175,7 @@ void DensityMatrix<std::complex<double>, double>::cal_DMR_td(
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR_td(*this, this->_DMR, phase_hybrid, At, ik_in);
+    DensityMatrix_Tools::cal_DMR_td(*this, this->dmr, phase_hybrid, At, ik_in);
 }
 
 template <>
@@ -184,7 +184,7 @@ void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR_td(
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR_td(*this, this->_DMR, phase_hybrid, At, ik_in);
+    DensityMatrix_Tools::cal_DMR_td(*this, this->dmr, phase_hybrid, At, ik_in);
 }
 
 } // namespace module_dm

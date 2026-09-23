@@ -52,14 +52,14 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
         tmp_DMR->fix_gamma();
     }
     tmp_DMR->allocate(nullptr, true);
-    this->_DMR.push_back(tmp_DMR.release());
+    this->dmr.push_back(tmp_DMR.release());
     // add another DMR if nspin==2
     if (this->spin_mult == 2)
     {
-        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
-        this->_DMR.push_back(tmp_DMR1.release());
+        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->dmr[0]));
+        this->dmr.push_back(tmp_DMR1.release());
     }
-    ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
+    ModuleBase::Memory::record("DensityMatrix::DMR", this->dmr.size() * this->dmr[0]->get_memory_size());
 }
 
 /// initialize density matrix DMR from UnitCell and RA (mainly used in UnitTest)
@@ -99,14 +99,14 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
         tmp_DMR->fix_gamma();
     }
     tmp_DMR->allocate(nullptr, true);
-    this->_DMR.push_back(tmp_DMR.release());
+    this->dmr.push_back(tmp_DMR.release());
     // add another DMR if nspin==2
     if (this->spin_mult == 2)
     {
-        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
-        this->_DMR.push_back(tmp_DMR1.release());
+        std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->dmr[0]));
+        this->dmr.push_back(tmp_DMR1.release());
     }
-    ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
+    ModuleBase::Memory::record("DensityMatrix::DMR", this->dmr.size() * this->dmr[0]->get_memory_size());
 }
 
 // initialize density matrix DMR from another HContainer (mainly used)
@@ -121,9 +121,9 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TR>& DMR_in)
         std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(DMR_in));
         // zero.out
         tmp_DMR->set_zero();
-        this->_DMR.push_back(tmp_DMR.release());
+        this->dmr.push_back(tmp_DMR.release());
     }
-    ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
+    ModuleBase::Memory::record("DensityMatrix::DMR", this->dmr.size() * this->dmr[0]->get_memory_size());
 }
 
 template <typename TK, typename TR>
@@ -149,14 +149,14 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TRShift>& DMR_in)
             }
         }
         tmp_DMR->allocate(nullptr, true);
-        this->_DMR.push_back(tmp_DMR.release());
+        this->dmr.push_back(tmp_DMR.release());
         if (this->spin_mult == 2)
         {
-            std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
-            this->_DMR.push_back(tmp_DMR1.release());
+            std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->dmr[0]));
+            this->dmr.push_back(tmp_DMR1.release());
         }
     }
-    ModuleBase::Memory::record("DensityMatrix::DMR", this->_DMR.size() * this->_DMR[0]->get_memory_size());
+    ModuleBase::Memory::record("DensityMatrix::DMR", this->dmr.size() * this->dmr[0]->get_memory_size());
 }
 
 // T of HContainer can be double or std::complex<double>

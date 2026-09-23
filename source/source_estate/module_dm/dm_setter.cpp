@@ -53,13 +53,13 @@ void DensityMatrix<TK, TR>::save_DMR()
     ModuleBase::TITLE("DensityMatrix", "save_DMR");
     ModuleBase::timer::start("DensityMatrix", "save_DMR");
 
-    const int nnr = this->_DMR[0]->get_nnr();
+    const int nnr = this->dmr[0]->get_nnr();
     // allocate if dmr_save is empty
     if (dmr_save.size() == 0)
     {
-        dmr_save.resize(this->_DMR.size());
+        dmr_save.resize(this->dmr.size());
     }
-    // resize if dmr_save[is].size is not equal to _DMR.size
+    // resize if dmr_save[is].size is not equal to dmr.size
     for (int is = 0; is < dmr_save.size(); is++)
     {
         if (dmr_save[is].size() != nnr)
@@ -67,10 +67,10 @@ void DensityMatrix<TK, TR>::save_DMR()
             dmr_save[is].resize(nnr);
         }
     }
-    // save _DMR to dmr_save
-    for (int is = 0; is < this->_DMR.size(); is++)
+    // save dmr to dmr_save
+    for (int is = 0; is < this->dmr.size(); is++)
     {
-        TR* DMR_pointer = this->_DMR[is]->get_wrapper();
+        TR* DMR_pointer = this->dmr[is]->get_wrapper();
         TR* DMR_save_pointer = dmr_save[is].data();
         // copy DMR_pointer into DMR_save_pointer over [0, nnr); the
         // destination is fully overwritten, so prior zeroing is a dead

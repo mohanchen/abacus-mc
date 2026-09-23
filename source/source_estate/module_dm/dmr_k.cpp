@@ -171,13 +171,13 @@ void DensityMatrix_Tools::cal_DMR(
 template <>
 void DensityMatrix<std::complex<double>, double>::cal_DMR(const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR(*this, this->_DMR, ik_in);
+    DensityMatrix_Tools::cal_DMR(*this, this->dmr, ik_in);
 }
 
 template <>
 void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR(const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR(*this, this->_DMR, ik_in);
+    DensityMatrix_Tools::cal_DMR(*this, this->dmr, ik_in);
 }
 
 } // namespace module_dm

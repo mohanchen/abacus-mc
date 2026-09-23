@@ -216,11 +216,11 @@ class DensityMatrix
      */
     const std::vector<hamilt::HContainer<TR>*>& get_DMR_vector() const
     {
-        return this->_DMR;
+        return this->dmr;
     }
     std::vector<hamilt::HContainer<TR>*>& get_DMR_vector()
     {
-        return this->_DMR;
+        return this->dmr;
     }
 
     const std::vector<std::vector<TR>>& get_DMR_save() const
@@ -305,7 +305,7 @@ class DensityMatrix
     void switch_dmr(const int mode);
 
     /**
-     * @brief save _DMR into dmr_save
+     * @brief save dmr into dmr_save
      */
     void save_DMR();
     
@@ -321,7 +321,7 @@ class DensityMatrix
 
   private:
     /**
-     * @brief delete all HContainer objects in _DMR and clear the vector
+     * @brief delete all HContainer objects in dmr and clear the vector
      */
     void clear_DMR();
 
@@ -330,15 +330,15 @@ class DensityMatrix
      * vector.size() = 1 for non-polarization and SOC
      * vector.size() = 2 for spin-polarization
      */
-    std::vector<hamilt::HContainer<TR>*> _DMR;
+    std::vector<hamilt::HContainer<TR>*> dmr;
     std::vector<std::vector<TR>> dmr_save;
 
-    /// @brief whether _DMR holds a density matrix calculated from DMK (reset by init_DMR, set by cal_DMR)
+    /// @brief whether dmr holds a density matrix calculated from DMK (reset by init_DMR, set by cal_DMR)
     bool _dmr_ready = false;
 
     /**
      * @brief HContainer for density matrix in real space for grid parallelization
-     * same size semantics as _DMR
+     * same size semantics as dmr
      */
     std::vector<hamilt::HContainer<TR>*> dmr_grid;
 
