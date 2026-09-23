@@ -13,6 +13,7 @@
 
 list(APPEND objects
     radial_proj.cpp
+    onsite_proj_print.cpp
 )
 
 add_library(
