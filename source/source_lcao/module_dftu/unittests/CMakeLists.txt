@@ -52,6 +52,18 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_DFTU_fs_reduce
+  LIBS base device
+  SOURCES test_dftu_nao_fs_reduce.cpp ../dftu_nao_fs_reduce.cpp
+)
+
+AddTest(
+  TARGET MODULE_DFTU_fs_k
+  LIBS base device
+  SOURCES test_dftu_nao_fs_k.cpp
+)
+
+AddTest(
   TARGET MODULE_DFTU_fs_accum
   LIBS base device
   SOURCES test_dftu_nao_fs_accum.cpp ../../../source_basis/module_ao/parallel_orbitals.cpp
