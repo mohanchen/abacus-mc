@@ -117,4 +117,21 @@ void DensityMatrix<std::complex<double>, std::complex<double>>::cal_dmr(const in
     module_dm::cal_dmr(*this, this->dmr, ik_in);
 }
 
+// explicit instantiations for accumulate_dmr (used by both cal_dmr here and
+// cal_dmr_td in dmr_td.cpp; without these the TD instantiations are missing
+// at link time)
+template void accumulate_dmr<std::complex<double>, double, double>(
+    DensityMatrix<std::complex<double>, double>&,
+    std::vector<hamilt::HContainer<double>*>&,
+    const std::map<ModuleBase::Vector3<int>, std::complex<double>>&,
+    const int,
+    const char*);
+
+template void accumulate_dmr<std::complex<double>, std::complex<double>, std::complex<double>>(
+    DensityMatrix<std::complex<double>, std::complex<double>>&,
+    std::vector<hamilt::HContainer<std::complex<double>>*>&,
+    const std::map<ModuleBase::Vector3<int>, std::complex<double>>&,
+    const int,
+    const char*);
+
 } // namespace module_dm
