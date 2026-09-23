@@ -3,7 +3,7 @@
 #include <cmath>
 #include <numeric>
 #include <map>
-#include "source_pw/module_pwdft/radial_proj.h"
+#include "source_pw/module_proj/radial_proj.h"
 #include "source_base/constants.h"
 #include "source_base/matrix.h"
 #include "source_base/math_ylmreal.h"

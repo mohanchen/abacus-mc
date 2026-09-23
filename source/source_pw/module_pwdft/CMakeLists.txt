@@ -59,7 +59,6 @@ list(APPEND objects
     fs_nonlocal_tools_stress.cpp
     fs_nonlocal_tools_force.cpp
     fs_kin_tools.cpp
-    radial_proj.cpp
     onsite_proj.cpp
     onsite_proj_init.cpp
     onsite_proj_overlap.cpp

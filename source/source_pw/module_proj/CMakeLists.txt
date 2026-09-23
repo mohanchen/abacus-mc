@@ -12,7 +12,7 @@
 #   of Onsite_Proj_tools so this reverse dependency can be removed.
 
 list(APPEND objects
-    module_proj_placeholder.cpp
+    radial_proj.cpp
 )
 
 add_library(

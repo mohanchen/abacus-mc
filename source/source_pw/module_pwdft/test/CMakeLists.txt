@@ -25,7 +25,7 @@ AddTest(
 AddTest(
 	TARGET MODULE_PW_radial_proj_test
 	LIBS parameter  base device
-	SOURCES radial_proj_test.cpp ../radial_proj.cpp
+	SOURCES radial_proj_test.cpp ../../module_proj/radial_proj.cpp
 )
 
 AddTest(
