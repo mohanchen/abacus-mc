@@ -7,7 +7,7 @@
 #include "source_base/timer.h"
 #include "source_base/tool_threading.h"
 #include "source_base/vector3.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_estate/module_pot/h_tddft_pw.h"
 #include "source_lcao/lcao_domain.h"
 #include "source_io/module_parameter/parameter.h"
@@ -50,13 +50,13 @@ void ModuleIO::write_current(const UnitCell& ucell,
     }
     double omega=ucell.omega;
     // construct a DensityMatrix object
-    // Since the function cal_dm_psi do not suport DMR in complex type, I replace it with two DMR in double type. Should
+    // Since the function dm_from_psi do not suport DMR in complex type, I replace it with two DMR in double type. Should
     // be refactored in the future.
     const int nspin0 = PARAM.inp.nspin;
     const int nspin_dm = std::map<int, int>({ {1,1},{2,2},{4,1} })[nspin0];
     module_dm::DensityMatrix<std::complex<double>, std::complex<double>> tmp_dm(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
     // calculate DMK
-    module_dm::cal_dm_psi(pv, pelec->wg, psi[0], tmp_dm);
+    module_dm::dm_from_psi(pv, pelec->wg, psi[0], tmp_dm);
 
     // init DMR
     tmp_dm.init_DMR(ra, &ucell);
@@ -217,7 +217,7 @@ void ModuleIO::write_current_eachk(const UnitCell& ucell,
     }
     double omega=ucell.omega;
     // construct a DensityMatrix object
-    // Since the function cal_dm_psi do not suport DMR in complex type, 
+    // Since the function dm_from_psi do not suport DMR in complex type, 
     // I replace it with two DMR in double type.
     // Should be refactored in the future.
 
@@ -227,7 +227,7 @@ void ModuleIO::write_current_eachk(const UnitCell& ucell,
     //module_dm::DensityMatrix<std::complex<double>, double> DM_real(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
     //module_dm::DensityMatrix<std::complex<double>, double> DM_imag(pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm);
     // calculate DMK
-    module_dm::cal_dm_psi(pv, pelec->wg, psi[0], tmp_dm);
+    module_dm::dm_from_psi(pv, pelec->wg, psi[0], tmp_dm);
 
     // init DMR
     tmp_dm.init_DMR(ra, &ucell);

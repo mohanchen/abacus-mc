@@ -1,5 +1,5 @@
-#ifndef CAL_DM_PSI_H
-#define CAL_DM_PSI_H
+#ifndef DM_FROM_PSI_H
+#define DM_FROM_PSI_H
 
 #include "density_matrix.h"
 #include "source_base/matrix.h"
@@ -19,7 +19,7 @@ namespace module_dm
  * @param wfc wavefunction coefficients, shape (nk, nbands_local, nbasis_local)
  * @param DM output density matrix, one block per k-point
  */
-void cal_dm_psi(const Parallel_Orbitals* ParaV,
+void dm_from_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<double>& wfc,
                 module_dm::DensityMatrix<double, double>& DM);
@@ -42,7 +42,7 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
  * @param DM output density matrix, one block per k-point
  */
 template <typename TR>
-void cal_dm_psi(const Parallel_Orbitals* ParaV,
+void dm_from_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<std::complex<double>>& wfc,
                 module_dm::DensityMatrix<std::complex<double>, TR>& DM);
@@ -50,9 +50,9 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
 /**
  * @brief Calculate one k-point block of the density matrix (Gamma-only case)
  *
- * Single-k-point worker behind cal_dm_psi(); exposed for callers that own the
+ * Single-k-point worker behind dm_from_psi(); exposed for callers that own the
  * output storage themselves. The conjugation/weighting contract is the same as
- * cal_dm_psi(), the caller only provides the output slot.
+ * dm_from_psi(), the caller only provides the output slot.
  *
  * @param ParaV 2D block-cyclic distribution descriptor of the orbitals
  * @param wg band weights, wg(ik, ib_global) for the global band index
@@ -61,7 +61,7 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
  * @param dmk_out output block, distributed according to ParaV->desc (serial
  *                builds: a dense nbasis_local x nbasis_local column-major matrix)
  */
-void cal_dmk_psi(const Parallel_Orbitals* ParaV,
+void dmk_from_psi(const Parallel_Orbitals* ParaV,
                  const ModuleBase::matrix& wg,
                  const int ik,
                  const psi::Psi<double>& wfc,
@@ -70,7 +70,7 @@ void cal_dmk_psi(const Parallel_Orbitals* ParaV,
 /**
  * @brief Calculate one k-point block of the density matrix (multi-k case)
  *
- * Single-k-point worker behind cal_dm_psi(), using the conj-first convention
+ * Single-k-point worker behind dm_from_psi(), using the conj-first convention
  * dmk(iw1, iw2) = sum_ib wg(ik, ib) * conj(wfc(ib, iw1)) * wfc(ib, iw2).
  *
  * @param ParaV 2D block-cyclic distribution descriptor of the orbitals
@@ -80,7 +80,7 @@ void cal_dmk_psi(const Parallel_Orbitals* ParaV,
  * @param dmk_out output block, distributed according to ParaV->desc (serial
  *                builds: a dense nbasis_local x nbasis_local column-major matrix)
  */
-void cal_dmk_psi(const Parallel_Orbitals* ParaV,
+void dmk_from_psi(const Parallel_Orbitals* ParaV,
                  const ModuleBase::matrix& wg,
                  const int ik,
                  const psi::Psi<std::complex<double>>& wfc,

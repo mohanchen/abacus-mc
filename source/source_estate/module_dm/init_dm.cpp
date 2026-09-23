@@ -1,5 +1,5 @@
 #include "source_estate/module_dm/init_dm.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_estate/elecstate_tools.h"
 #include "source_cell/cal_ux.h"
 
@@ -21,7 +21,7 @@ void module_dm::init_dm(UnitCell& ucell,
 
         elecstate::calEBand(pelec->ekb, pelec->wg, pelec->f_en);
 
-        module_dm::cal_dm_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
+        module_dm::dm_from_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
         if (cfg.esolver_type != "tddft" && cfg.td_stype == 2)
         {
             dmat.dm->cal_DMR_td(*cfg.td_phase_hybrid, cfg.td_cart_At, -1);

@@ -15,7 +15,7 @@
 #include "source_estate/elecstate_tools.h"
 #include "source_estate/module_charge/chg_atomic.h"
 #include "source_estate/module_charge/chg_symm.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_estate/module_dm/cal_edm_tddft.h"
 #include "source_estate/module_pot/h_tddft_pw.h"
 #include "source_estate/module_pot/potential_new.h"
@@ -618,7 +618,7 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::weight_dm_rho(const UnitCell& ucell)
     // Calculate Eband energy
     elecstate::calEBand(this->pelec->ekb, this->pelec->wg, this->pelec->f_en);
 
-    module_dm::cal_dm_psi(this->dmat.dm->get_paraV_pointer(), this->pelec->wg, this->psi[0], *this->dmat.dm);
+    module_dm::dm_from_psi(this->dmat.dm->get_paraV_pointer(), this->pelec->wg, this->psi[0], *this->dmat.dm);
     if (this->inp_->td_stype == 2)
     {
         this->dmat.dm->cal_DMR_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);

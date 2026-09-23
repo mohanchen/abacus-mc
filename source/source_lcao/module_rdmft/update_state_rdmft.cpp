@@ -5,7 +5,7 @@
 
 #include "rdmft.h"
 #include "source_lcao/module_rdmft/rdmft_tools.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_estate/module_charge/chg_symm.h"
 #include "source_hamilt/module_gint/gint_interface.h"
@@ -98,7 +98,7 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
     {
         // calculate DMK and DMR
         module_dm::DensityMatrix<TK, double> DM_gamma_only(ParaV, nspin);
-        module_dm::cal_dm_psi(ParaV, wg, wfc, DM_gamma_only);
+        module_dm::dm_from_psi(ParaV, wg, wfc, DM_gamma_only);
         DM_gamma_only.init_DMR(this->gd, &ucell);
         DM_gamma_only.cal_DMR(-1);
 
@@ -119,7 +119,7 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
     {
         // calculate DMK and DMR
         module_dm::DensityMatrix<TK, double> DM(ParaV, nspin, kv->kvec_d, nk_total);
-        module_dm::cal_dm_psi(ParaV, wg, wfc, DM);
+        module_dm::dm_from_psi(ParaV, wg, wfc, DM);
         DM.init_DMR(this->gd, &ucell);
         DM.cal_DMR(-1);
 

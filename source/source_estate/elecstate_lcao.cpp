@@ -1,7 +1,7 @@
 #include "source_estate/elecstate_lcao.h"
 #include "source_estate/cal_dm.h"
 #include "source_base/timer.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_hamilt/module_xc/xc_functional.h"
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 #include "source_io/module_parameter/parameter.h"

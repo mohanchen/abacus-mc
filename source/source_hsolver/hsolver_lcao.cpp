@@ -31,7 +31,7 @@
 #include "source_base/memory_recorder.h"
 #include "source_base/timer.h"
 #include "source_estate/elecstate_lcao.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_hsolver/parallel_k2d.h"
 
@@ -98,7 +98,7 @@ void HSolverLCAO<TK>::solve(HSMatrix<TK>& hs,
                                      pes->skip_weights);
 
         elecstate::calEBand(pes->ekb, pes->wg, pes->f_en);
-        module_dm::cal_dm_psi(dm.get_paraV_pointer(), pes->wg, psi, dm);
+        module_dm::dm_from_psi(dm.get_paraV_pointer(), pes->wg, psi, dm);
         dm.cal_DMR(-1);
 
         if (!skip_charge)

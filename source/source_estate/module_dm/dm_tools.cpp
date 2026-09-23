@@ -48,7 +48,7 @@ void DensityMatrix_Tools::func_xyz_to_updown<double>(
 {
     target_DMR_mat[icol + step_trace[0]] = tmp[0].real() + tmp[3].real();  // rho_0 = (rho_upup + rho_downdown).real()
     target_DMR_mat[icol + step_trace[1]] = tmp[1].real() + tmp[2].real();  // rho_x = (rho_updown + rho_downup).real()
-    // rho_y: the stored DM block is the complex conjugate of the physical 1-RDM P (cal_dm_psi builds
+    // rho_y: the stored DM block is the complex conjugate of the physical 1-RDM P (dm_from_psi builds
     // DM_{ab}=sum conj(c_a) c_b = conj(P), so tmp[1]=DM_{ud}=conj(P_{ud})). Extracting m_y from the
     // CONJUGATED block therefore carries the opposite sign of the bare-textbook formula; m_x/m_z read
     // Re() and are conjugation-invariant. Using the bare formula (PR #7664) sign-flips m_y and quenches

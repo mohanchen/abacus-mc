@@ -6,7 +6,7 @@
 #include "rdmft.h"
 #include "source_lcao/module_rdmft/rdmft_tools.h"
 #include "source_psi/psi.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 
 #ifdef __EXX
 #include "source_lcao/module_ri/ri_2d_comm.h"
@@ -26,13 +26,13 @@ template <typename TK, typename TR>
 void RDMFT<TK, TR>::get_DM_XC(std::vector< std::vector<TK> >& DM_XC)
 {
     // get the special DM_XC used in constructing V_exx_XC.
-    // wk_fun_occNum holds wk*g(eta); cal_dmk_psi applies the conjugation
+    // wk_fun_occNum holds wk*g(eta); dmk_from_psi applies the conjugation
     // and the band weighting internally (g(eta) is used with symbol = 0,
     // where occNum_func is the identity, so wk_fun_occNum is the weight itself).
     for(int ik=0; ik<wfc.get_nk(); ++ik)
     {
         TK* DM_Kpointer = DM_XC[ik].data();
-        module_dm::cal_dmk_psi(ParaV, wk_fun_occNum, ik, wfc, DM_Kpointer);
+        module_dm::dmk_from_psi(ParaV, wk_fun_occNum, ik, wfc, DM_Kpointer);
     }
 }
 
@@ -156,7 +156,7 @@ void RDMFT<TK, TR>::cal_V_XC(const UnitCell& ucell)
     // DM_XC_pass = DM_XC;
 
     // module_dm::DensityMatrix<TK, double> DM_test(ParaV, nspin, kv->kvec_d, nk_total);
-    // module_dm::cal_dm_psi(ParaV, wg, wfc, DM_test);
+    // module_dm::dm_from_psi(ParaV, wg, wfc, DM_test);
     // DM_test.init_DMR(this->gd, this->ucell);
     // DM_test.cal_DMR(-1);
 

@@ -2,7 +2,7 @@
 
 #include "cal_dos.h"
 #include "../module_output/cube_io.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_hamilt/module_gint/gint_interface.h"
 #include "source_base/module_device/memory_op.h"
 
@@ -55,7 +55,7 @@ void Cal_ldos<T>::cal_ldos_lcao(
                                                     kv.kvec_d,
                                                     kv.get_nks() / nspin_dm);
 
-        module_dm::cal_dm_psi(dmat.dm->get_paraV_pointer(), weight, psi, dm_ldos);
+        module_dm::dm_from_psi(dmat.dm->get_paraV_pointer(), weight, psi, dm_ldos);
         dm_ldos.init_DMR(&grid_driver, &ucell);
         dm_ldos.cal_DMR(-1);
 

@@ -204,7 +204,7 @@ ModuleSymmetry::SpinRotation::Su2 block_from_pauli(double r0, double mx, double 
 {
     return {cd(r0 + mz, 0.0), cd(mx, -my), cd(mx, my), cd(r0 - mz, 0.0)};
 }
-// The runtime stores the DM conj-first (DM = conj(P), cal_dm_psi); this is what func_xyz_to_updown
+// The runtime stores the DM conj-first (DM = conj(P), dm_from_psi); this is what func_xyz_to_updown
 // actually consumes. Given a physical block P, the stored block is its element-wise conjugate.
 ModuleSymmetry::SpinRotation::Su2 stored_dm_from_phys(const ModuleSymmetry::SpinRotation::Su2& P)
 {

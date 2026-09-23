@@ -1,5 +1,5 @@
 #include "edm.h"
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_estate/elecstate_lcao.h"
 #include "source_base/memory_recorder.h"
 #include "source_io/module_parameter/parameter.h"
@@ -41,7 +41,7 @@ module_dm::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
     else
 #endif
     {
-        module_dm::cal_dm_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
+        module_dm::dm_from_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
     }
     edm.init_DMR(ra, &ucell);
     edm.cal_DMR(-1);
@@ -100,8 +100,8 @@ module_dm::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
     }
     else
     {
-        // cal_dm_psi
-        module_dm::cal_dm_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
+        // dm_from_psi
+        module_dm::dm_from_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
     }
 
     // cal_dm_2d

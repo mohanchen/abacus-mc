@@ -15,7 +15,7 @@
  *
  * Why this test exists (regression for the #7664 nspin=4 m_y sign flip):
  *   ABACUS builds the k-space DM as  DM_{ab} = sum_n w_n conj(c_{n,a}) c_{n,b}
- *   (cal_dm_psi.cpp: the conj() is applied to the FIRST index a). Hence the
+ *   (dm_from_psi.cpp: the conj() is applied to the FIRST index a). Hence the
  *   stored DM block is the complex conjugate of the physical 1-RDM P:
  *       DM_{up,dn} = conj(c_up) c_dn = conj(P_{up,dn}).
  *   Since m_x, m_z read Re() (conjugation-invariant) but m_y reads Im(),
@@ -25,7 +25,7 @@
  *   flips m_y for in-plane moments and quenches non-collinear order
  *   (e.g. Mn3Sn 120-degree AFM). This test pins m_y down.
  *
- * The helper build_DM_block_as_cal_dm_psi() MUST mirror cal_dm_psi.cpp. If
+ * The helper build_DM_block_as_dm_from_psi() MUST mirror dm_from_psi.cpp. If
  * that convention is ever changed (e.g. the "upstream" fix that makes the DM
  * hold the physical P), update the helper in the SAME commit so this test
  * keeps asserting the physical invariant.
@@ -45,10 +45,10 @@ void spinor_from_direction(const double mhat[3], cd c[2])
     c[1] = std::sin(0.5 * th) * cd(std::cos(ph), std::sin(ph));
 }
 
-// Build the 4 spinor-block DM elements EXACTLY as cal_dm_psi.cpp stores them:
+// Build the 4 spinor-block DM elements EXACTLY as dm_from_psi.cpp stores them:
 //   DM_{a,b} = sum_occ w * conj(c_a) * c_b     (conj on the first index)
 // layout tmp = {uu, ud, du, dd}
-void build_DM_block_as_cal_dm_psi(const cd c[2], double w, cd tmp[4])
+void build_DM_block_as_dm_from_psi(const cd c[2], double w, cd tmp[4])
 {
     tmp[0] = w * std::conj(c[0]) * c[0]; // uu
     tmp[1] = w * std::conj(c[0]) * c[1]; // ud
@@ -89,7 +89,7 @@ TEST(SocMagnetizationRoundtrip, ExtractRecoversPhysicalMagnetization)
         physical_m(c, m_ref); // the TRUE magnetization encoded in the state
 
         cd tmp[4];
-        build_DM_block_as_cal_dm_psi(c, 1.0, tmp);
+        build_DM_block_as_dm_from_psi(c, 1.0, tmp);
 
         // 2x2 output buffer (row-major), func writes rho0/x/y/z into step_trace slots at icol=0
         double out[4] = {0, 0, 0, 0};
@@ -125,7 +125,7 @@ TEST(SocMagnetizationRoundtrip, ComplexSpecializationRecoversPhysicalMagnetizati
         physical_m(c, m_ref);
 
         cd tmp[4];
-        build_DM_block_as_cal_dm_psi(c, 1.0, tmp);
+        build_DM_block_as_dm_from_psi(c, 1.0, tmp);
 
         cd out[4] = {cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0)};
         module_dm::DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(tmp, 0, step_trace, out);

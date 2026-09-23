@@ -70,7 +70,7 @@ if(ENABLE_LCAO)
       module_dm/dmr_init.cpp
       module_dm/dm_setter.cpp
       module_dm/dm_getter.cpp
-      module_dm/cal_dm_psi.cpp
+      module_dm/dm_from_psi.cpp
       module_dm/cal_edm_tddft.cpp
       module_dm/cal_edm_tddft_lapack.cpp
   )

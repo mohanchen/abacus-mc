@@ -1,7 +1,7 @@
 #ifndef CAL_DM_H
 #define CAL_DM_H
 
-#include "source_estate/module_dm/cal_dm_psi.h"
+#include "source_estate/module_dm/dm_from_psi.h"
 #include "source_base/timer.h"
 #include "source_base/matrix.h"
 #include "source_base/complexmatrix.h"
@@ -10,7 +10,7 @@ namespace elecstate
 {
 
 // for gamma_only(double case) and multi-k(complex<double> case)
-// Thin adapter over module_dm::cal_dmk_psi for callers that own the DM blocks as
+// Thin adapter over module_dm::dmk_from_psi for callers that own the DM blocks as
 // ModuleBase::matrix / ModuleBase::ComplexMatrix storage (e.g. DeePKS bandgap terms).
 inline void cal_dm(const Parallel_Orbitals* ParaV, const ModuleBase::matrix& wg, const psi::Psi<double>& wfc, std::vector<ModuleBase::matrix>& dm)
 {
@@ -20,7 +20,7 @@ inline void cal_dm(const Parallel_Orbitals* ParaV, const ModuleBase::matrix& wg,
     for (int ik = 0; ik < wfc.get_nk(); ++ik)
     {
         dm[ik].create(ParaV->ncol, ParaV->nrow);
-        module_dm::cal_dmk_psi(ParaV, wg, ik, wfc, dm[ik].c);
+        module_dm::dmk_from_psi(ParaV, wg, ik, wfc, dm[ik].c);
     }
     ModuleBase::timer::end("elecstate","cal_dm");
 }
@@ -33,7 +33,7 @@ inline void cal_dm(const Parallel_Orbitals* ParaV, const ModuleBase::matrix& wg,
     for (int ik = 0; ik < wfc.get_nk(); ++ik)
     {
         dm[ik].create(ParaV->ncol, ParaV->nrow);
-        module_dm::cal_dmk_psi(ParaV, wg, ik, wfc, dm[ik].c);
+        module_dm::dmk_from_psi(ParaV, wg, ik, wfc, dm[ik].c);
     }
 
     ModuleBase::timer::end("elecstate","cal_dm");

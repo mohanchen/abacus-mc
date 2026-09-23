@@ -11,7 +11,7 @@
  ***********************************************/
 
 /**
- * This unit test cal_dmk_psi
+ * This unit test dmk_from_psi
  */
 
 // test_size is the number of atoms in the unitcell
@@ -94,7 +94,7 @@ class DMTest : public testing::Test
 #endif
 };
 
-TEST_F(DMTest, cal_dmk_psi_nspin1)
+TEST_F(DMTest, dmk_from_psi_nspin1)
 {
     // initalize a kvectors
     K_Vectors* kv = nullptr;

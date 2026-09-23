@@ -1,4 +1,4 @@
-#include "cal_dm_psi.h"
+#include "dm_from_psi.h"
 
 #include <cassert>
 #include <complex>
@@ -113,7 +113,7 @@ void gemm_dm(const psi::Psi<double>& psi1,
              const int* desc_psi,
              const int* desc_dm)
 {
-    ModuleBase::timer::start("cal_dmk_psi", "pdgemm");
+    ModuleBase::timer::start("dmk_from_psi", "pdgemm");
     const double one_float = 1.0;
     const double zero_float = 0.0;
     const int one_int = 1;
@@ -140,7 +140,7 @@ void gemm_dm(const psi::Psi<double>& psi1,
                              one_int,
                              one_int,
                              desc_dm);
-    ModuleBase::timer::end("cal_dmk_psi", "pdgemm");
+    ModuleBase::timer::end("dmk_from_psi", "pdgemm");
 }
 
 void gemm_dm(const psi::Psi<std::complex<double>>& psi1,
@@ -149,7 +149,7 @@ void gemm_dm(const psi::Psi<std::complex<double>>& psi1,
              const int* desc_psi,
              const int* desc_dm)
 {
-    ModuleBase::timer::start("cal_dmk_psi", "pzgemm");
+    ModuleBase::timer::start("dmk_from_psi", "pzgemm");
     const std::complex<double> one_complex = {1.0, 0.0};
     const std::complex<double> zero_complex = {0.0, 0.0};
     const int one_int = 1;
@@ -176,7 +176,7 @@ void gemm_dm(const psi::Psi<std::complex<double>>& psi1,
                              one_int,
                              one_int,
                              desc_dm);
-    ModuleBase::timer::end("cal_dmk_psi", "pzgemm");
+    ModuleBase::timer::end("dmk_from_psi", "pzgemm");
 }
 #else
 /**
@@ -239,7 +239,7 @@ void gemm_dm(const psi::Psi<std::complex<double>>& psi1,
  * @param wg_wfc reusable scratch buffer, shape (1, nbands_local, nbasis_local)
  */
 template <typename TK>
-void cal_dmk_psi_impl(const Parallel_Orbitals* ParaV,
+void dmk_from_psi_impl(const Parallel_Orbitals* ParaV,
                       const ModuleBase::matrix& wg,
                       const int ik,
                       const psi::Psi<TK>& wfc,
@@ -257,14 +257,14 @@ void cal_dmk_psi_impl(const Parallel_Orbitals* ParaV,
 } // namespace
 
 // for Gamma-Only case where DMK is double
-void cal_dm_psi(const Parallel_Orbitals* ParaV,
+void dm_from_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<double>& wfc,
                 module_dm::DensityMatrix<double, double>& DM)
 {
     assert(ParaV != nullptr);
-    ModuleBase::TITLE("elecstate", "cal_dm_psi");
-    ModuleBase::timer::start("elecstate", "cal_dm_psi");
+    ModuleBase::TITLE("elecstate", "dm_from_psi");
+    ModuleBase::timer::start("elecstate", "dm_from_psi");
 
     const int nbands_local = wfc.get_nbands();
     const int nbasis_local = wfc.get_nbasis();
@@ -275,20 +275,20 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
     for (int ik = 0; ik < wfc.get_nk(); ++ik)
     {
         double* dmk_pointer = DM.get_DMK_pointer(ik);
-        cal_dmk_psi_impl(ParaV, wg, ik, wfc, dmk_pointer, wg_wfc);
+        dmk_from_psi_impl(ParaV, wg, ik, wfc, dmk_pointer, wg_wfc);
     }
-    ModuleBase::timer::end("elecstate", "cal_dm_psi");
+    ModuleBase::timer::end("elecstate", "dm_from_psi");
 }
 
 template <typename TR>
-void cal_dm_psi(const Parallel_Orbitals* ParaV,
+void dm_from_psi(const Parallel_Orbitals* ParaV,
                 const ModuleBase::matrix& wg,
                 const psi::Psi<std::complex<double>>& wfc,
                 module_dm::DensityMatrix<std::complex<double>, TR>& DM)
 {
     assert(ParaV != nullptr);
-    ModuleBase::TITLE("elecstate", "cal_dm_psi");
-    ModuleBase::timer::start("elecstate", "cal_dm_psi");
+    ModuleBase::TITLE("elecstate", "dm_from_psi");
+    ModuleBase::timer::start("elecstate", "dm_from_psi");
 
     const int nbands_local = wfc.get_nbands();
     const int nbasis_local = wfc.get_nbasis();
@@ -299,13 +299,13 @@ void cal_dm_psi(const Parallel_Orbitals* ParaV,
     for (int ik = 0; ik < wfc.get_nk(); ++ik)
     {
         std::complex<double>* dmk_pointer = DM.get_DMK_pointer(ik);
-        cal_dmk_psi_impl(ParaV, wg, ik, wfc, dmk_pointer, wg_wfc);
+        dmk_from_psi_impl(ParaV, wg, ik, wfc, dmk_pointer, wg_wfc);
     }
 
-    ModuleBase::timer::end("elecstate", "cal_dm_psi");
+    ModuleBase::timer::end("elecstate", "dm_from_psi");
 }
 
-void cal_dmk_psi(const Parallel_Orbitals* ParaV,
+void dmk_from_psi(const Parallel_Orbitals* ParaV,
                  const ModuleBase::matrix& wg,
                  const int ik,
                  const psi::Psi<double>& wfc,
@@ -316,10 +316,10 @@ void cal_dmk_psi(const Parallel_Orbitals* ParaV,
     assert(ik >= 0 && ik < wfc.get_nk());
 
     psi::Psi<double> wg_wfc(1, wfc.get_nbands(), wfc.get_nbasis(), wfc.get_nbasis(), true);
-    cal_dmk_psi_impl(ParaV, wg, ik, wfc, dmk_out, wg_wfc);
+    dmk_from_psi_impl(ParaV, wg, ik, wfc, dmk_out, wg_wfc);
 }
 
-void cal_dmk_psi(const Parallel_Orbitals* ParaV,
+void dmk_from_psi(const Parallel_Orbitals* ParaV,
                  const ModuleBase::matrix& wg,
                  const int ik,
                  const psi::Psi<std::complex<double>>& wfc,
@@ -334,14 +334,14 @@ void cal_dmk_psi(const Parallel_Orbitals* ParaV,
                                           wfc.get_nbasis(),
                                           wfc.get_nbasis(),
                                           true);
-    cal_dmk_psi_impl(ParaV, wg, ik, wfc, dmk_out, wg_wfc);
+    dmk_from_psi_impl(ParaV, wg, ik, wfc, dmk_out, wg_wfc);
 }
 
-template void cal_dm_psi(const Parallel_Orbitals* ParaV,
+template void dm_from_psi(const Parallel_Orbitals* ParaV,
                          const ModuleBase::matrix& wg,
                          const psi::Psi<std::complex<double>>& wfc,
                          module_dm::DensityMatrix<std::complex<double>, std::complex<double>>& DM);
-template void cal_dm_psi(const Parallel_Orbitals* ParaV,
+template void dm_from_psi(const Parallel_Orbitals* ParaV,
                          const ModuleBase::matrix& wg,
                          const psi::Psi<std::complex<double>>& wfc,
                          module_dm::DensityMatrix<std::complex<double>, double>& DM);
