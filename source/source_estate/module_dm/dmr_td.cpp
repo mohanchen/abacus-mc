@@ -35,6 +35,17 @@ void DensityMatrix_Tools::cal_dmr_td(
         const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
         hamilt::HContainer<TR_out>* const dmr_spin = dmR_out[is - 1];
         dmr_spin->set_zero();
+
+        if (dm.nspin != 1 && dm.nspin != 2 && dm.nspin != 4)
+        {
+            ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr_td",
+                                     "nspin must be 1, 2 or 4");
+        }
+
+        // accumulate kphase * DMK into DMR blocks; for nspin=4 (SOC) each orbital
+        // corresponds to a 2x2 spin block, so rows/cols step by 2 (physical spin
+        // dimension), and each block is transformed to Pauli components
+        // (rho_0, rho_x, rho_y, rho_z)
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -42,7 +53,6 @@ void DensityMatrix_Tools::cal_dmr_td(
         {
             hamilt::AtomPair<TR_out>& atom_pair = dmr_spin->get_atom_pair(i);
             const DmrBlock block = get_dmr_block(dm.pv, atom_pair.get_atom_i(), atom_pair.get_atom_j());
-            const int R_size = atom_pair.get_R_size();
 
             // precompute k-phase factors (including hybrid-gauge phase) and collect DMR block pointers
             std::vector<std::vector<TK>> kphase_vec;
@@ -51,26 +61,26 @@ void DensityMatrix_Tools::cal_dmr_td(
 
             if (dm.nspin == 1 || dm.nspin == 2)
             {
-                // nspin=1/2: accumulate Re(kphase * DMK) into DMR blocks
+                // nspin=1/2: DMR_ij(R) += Re[ e^{ik·R} * DMK_ij(k) ]
+                // (sum over ik when ik_in < 0, single ik when ik_in >= 0)
                 add_dmr_real(dm, block, ik_begin, kphase_vec, ld_hk, ik_in, dmr_mats);
-            }
-            else if (dm.nspin == 4)
-            {
-                // nspin=4 (SOC): accumulate k-phase * DMK into a per-R complex buffer,
-                // then transform each 2x2 spin block to Pauli components (rho_0, rho_x, rho_y, rho_z).
-                // Each orbital corresponds to a 2x2 spin block, so rows/cols step by 2 (physical spin dimension).
-                add_dmr_soc(dm, block, ik_begin, kphase_vec, ld_hk, ik_in,
-                            atom_pair.get_col_size(), dmr_mats);
             }
             else
             {
-                ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr_td",
-                                         "nspin must be 1, 2 or 4");
+                // nspin==4 (SOC): first accumulate S_ij(R) = sum_k e^{ik·R} * DMK_ij(k),
+                // then for each 2x2 spin block (upup, updown, downup, downdown) transform to
+                // Pauli components via xyz_to_updown:
+                //   rho_0 = rho_upup + rho_downdown
+                //   rho_x = rho_updown + rho_downup
+                //   rho_y = Im(rho_updown) - Im(rho_downup)   (sign for conjugated stored DM)
+                //   rho_z = rho_upup - rho_downdown
+                add_dmr_soc(dm, block, ik_begin, kphase_vec, ld_hk, ik_in,
+                            atom_pair.get_col_size(), dmr_mats);
             }
         }
     }
-    ModuleBase::timer::end("DensityMatrix", "cal_dmr_td");
     dm._dmr_ready = true;
+    ModuleBase::timer::end("DensityMatrix", "cal_dmr_td");
 }
 
 template <>

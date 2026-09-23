@@ -119,7 +119,9 @@ namespace DensityMatrix_Tools
 
     /**
      * @brief nspin=1/2: accumulate Re(kphase * DMK) into DMR blocks
-     * if ik_in >= 0, only that k-point; if ik_in < 0, loop over all k-points
+     *
+     * Formula: DMR_ij(R) += Re[ e^{ik·R} * DMK_ij(k) ]
+     * If ik_in >= 0, only that k-point contributes; if ik_in < 0, sum over all k-points.
      */
     template <typename TK, typename TR>
     extern void add_dmr_real(const DensityMatrix<TK, TR>& dm,
@@ -134,8 +136,15 @@ namespace DensityMatrix_Tools
      * @brief nspin==4 (SOC): accumulate k-phase * DMK into a per-R complex buffer,
      * then transform 2x2 spin blocks from (upup, updown, downup, downdown) to
      * (rho_0, rho_x, rho_y, rho_z) via xyz_to_updown.
+     *
+     * Formula:
+     *   S_ij(R) = sum_k e^{ik·R} * DMK_ij(k)
+     *   rho_0 = rho_upup + rho_downdown
+     *   rho_x = rho_updown + rho_downup
+     *   rho_y = Im(rho_updown) - Im(rho_downup)   (sign for conjugated stored DM)
+     *   rho_z = rho_upup - rho_downdown
      * Each orbital corresponds to a 2x2 spin block, so rows/cols step by 2.
-     * if ik_in >= 0, only that k-point; if ik_in < 0, loop over all k-points
+     * If ik_in >= 0, only that k-point contributes; if ik_in < 0, sum over all k-points.
      */
     template <typename TK, typename TR>
     extern void add_dmr_soc(const DensityMatrix<TK, TR>& dm,

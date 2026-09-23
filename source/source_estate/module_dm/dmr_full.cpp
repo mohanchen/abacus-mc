@@ -47,6 +47,8 @@ void DensityMatrix_Tools::cal_dmr_full(
         build_kphase(atom_pair, dm._kvec_d, dm._nk, no_hybrid_phase, kphase_vec, dmr_mats);
 
         // transpose DMK block to row-major, then axpy into each R-vector block
+        // DMR_ij(R) += e^{ik·R} * DMK_ij(k)
+        // (sum over ik when ik_in < 0, single ik when ik_in >= 0)
         std::vector<TK> dmk_row(block.size());
         if (ik_in >= 0)
         {
