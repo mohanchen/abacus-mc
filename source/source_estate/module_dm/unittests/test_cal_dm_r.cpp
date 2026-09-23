@@ -341,22 +341,22 @@ TEST_F(DMTest, cal_DMR_blas_complex)
 // Regression test for the SOC/noncollinear (global nspin==4) cal_DMR path.
 //
 // Background: in a real SOC run setup_dm.cpp constructs the DensityMatrix with
-//   nspin_dm = 1   (the 2x2 spin block is stored as ONE doubled matrix),
+//   spin_mult = 1   (the 2x2 spin block is stored as ONE doubled matrix),
 // while the GLOBAL physical nspin is 4. cal_DMR must still take the
 // spin-resolved (Pauli) branch, which folds each 2x2 complex spin block into
 // (rho_0, rho_x, rho_y, rho_z) via func_xyz_to_updown(). That branch used to be
 // selected by the global PARAM.inp.nspin==4; a refactor (commit dcad8913d)
-// switched the condition to dm._nspin==4, which is never true in SOC
-// (_nspin==1), silently dropping the rho_x/y/z spin channels and producing a
+// switched the condition to dm.spin_mult==4, which is never true in SOC
+// (spin_mult==1), silently dropping the rho_x/y/z spin channels and producing a
 // wrong charge density (tests/03_NAO_multik/*spin4* failed by ~41 eV).
 //
-// This test reproduces the real SOC construction (nspin_dm=1, nspin_global=4)
+// This test reproduces the real SOC construction (spin_mult=1, nspin=4)
 // and fills the spin-diagonal DMK entries (uu, dd) with (a + i b), leaving the
 // spin off-diagonal entries (ud, du) zero. It then checks that cal_DMR selects
 // the Pauli branch:
 //   * correct (Pauli) branch : rho_0 = (uu+dd).real() = 2a, rho_z = (uu-dd).real() = 0
 //   * wrong   (real-project) : every element = a  (imaginary part b dropped)
-// With the pre-fix condition (_nspin==4 never taken) this test FAILS because
+// With the pre-fix condition (spin_mult==4 never taken) this test FAILS because
 // rho_0 would come out as a instead of 2a.
 TEST_F(DMTest, cal_DMR_soc_pauli_branch)
 {

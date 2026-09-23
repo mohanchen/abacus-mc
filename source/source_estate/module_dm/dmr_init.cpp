@@ -54,7 +54,7 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
     tmp_DMR->allocate(nullptr, true);
     this->_DMR.push_back(tmp_DMR.release());
     // add another DMR if nspin==2
-    if (this->_nspin == 2)
+    if (this->spin_mult == 2)
     {
         std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
         this->_DMR.push_back(tmp_DMR1.release());
@@ -101,7 +101,7 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
     tmp_DMR->allocate(nullptr, true);
     this->_DMR.push_back(tmp_DMR.release());
     // add another DMR if nspin==2
-    if (this->_nspin == 2)
+    if (this->spin_mult == 2)
     {
         std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
         this->_DMR.push_back(tmp_DMR1.release());
@@ -116,7 +116,7 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TR>& DMR_in)
     ModuleBase::TITLE("DensityMatrix", "init_DMR");
     this->clear_DMR();
     // set up a HContainer using another one
-    for (int is = 0; is < this->_nspin; ++is) // loop over spin
+    for (int is = 0; is < this->spin_mult; ++is) // loop over spin
     {
         std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(DMR_in));
         // zero.out
@@ -150,7 +150,7 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TRShift>& DMR_in)
         }
         tmp_DMR->allocate(nullptr, true);
         this->_DMR.push_back(tmp_DMR.release());
-        if (this->_nspin == 2)
+        if (this->spin_mult == 2)
         {
             std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR1(new hamilt::HContainer<TR>(*this->_DMR[0]));
             this->_DMR.push_back(tmp_DMR1.release());

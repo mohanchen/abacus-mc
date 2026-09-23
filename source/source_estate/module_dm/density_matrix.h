@@ -76,28 +76,29 @@ class DensityMatrix
     /**
      * @brief Constructor of class DensityMatrix for multi-k calculation
      * @param pv pointer of Parallel_Orbitals object
-     * @param nspin number of spin of the density matrix, set by user according to global nspin
-     *  (usually {nspin_global -> nspin_dm} = {1->1, 2->2, 4->1}, but sometimes 2->1 like in LR-TDDFT)
+     * @param spin_mult spin multiplicity used to size the DM: 1 for input nspin 1 or 4
+     *  (non-collinear k points are not doubled), 2 for input nspin 2 (LSDA up/down).
+     *  This is NOT the physical nspin (1/2/4); it matches K_Vectors::spin_mult.
      * @param kvec_d direct coordinates of kpoints
-     * @param nk number of k-points, not always equal to K_Vectors::get_nks()/nspin_dm.
+     * @param nk number of k-points, not always equal to K_Vectors::get_nks()/spin_mult.
      *               it will be set to kvec_d.size() if the value is invalid
-     * @param nspin_global the global physical nspin from INPUT (1/2/4); defaults to nspin for
+     * @param nspin the global physical nspin from INPUT (1/2/4); defaults to spin_mult for
      *               non-SOC cases where they coincide. Pass 4 explicitly for SOC/noncollinear
      *               calculations so that cal_DMR selects the spin-resolved (Pauli) branch.
      */
     DensityMatrix(const Parallel_Orbitals* pv,
-            const int nspin, 
-            const std::vector<ModuleBase::Vector3<double>>& kvec_d, 
+            const int spin_mult,
+            const std::vector<ModuleBase::Vector3<double>>& kvec_d,
             const int nk,
-            const int nspin_global = 0);
+            const int nspin = 0);
 
     /**
      * @brief Constructor of class DensityMatrix for gamma-only calculation, where kvector is not required
      * @param pv pointer of Parallel_Orbitals object
-     * @param nspin number of spin of the density matrix, set by user according to global nspin
-     * @param nspin_global the global physical nspin from INPUT (1/2/4); defaults to nspin.
+     * @param spin_mult spin multiplicity of the density matrix (1 or 2); NOT the physical nspin
+     * @param nspin the global physical nspin from INPUT (1/2/4); defaults to spin_mult.
      */
-    DensityMatrix(const Parallel_Orbitals* pv, const int nspin, const int nspin_global = 0);
+    DensityMatrix(const Parallel_Orbitals* pv, const int spin_mult, const int nspin = 0);
 
     /**
      * @brief initialize density matrix DMR from UnitCell
@@ -322,8 +323,8 @@ class DensityMatrix
 
     /**
      * @brief density matrix in k space, which is a vector[ik]
-     * DMK should be a [_nspin][_nk][i][j] matrix,
-     * whose size is _nspin * _nk * pv->get_nrow() * pv->get_ncol()
+     * DMK should be a [spin_mult][_nk][i][j] matrix,
+     * whose size is spin_mult * _nk * pv->get_nrow() * pv->get_ncol()
      */
     // std::vector<ModuleBase::ComplexMatrix> _DMK;
     std::vector<std::vector<TK>> _DMK;
@@ -339,20 +340,20 @@ class DensityMatrix
     const Parallel_Orbitals* pv = nullptr;
 
     /**
-     * @brief spin-polarization index (1 - none spin and SOC ; 2 - spin polarization)
-     * Attention: this is not as same as GlovalV::NSPIN
-     * _nspin means the number of isolated spin-polarization states
+     * @brief spin multiplicity used to size the density matrix (1 - none spin and SOC ;
+     * 2 - spin polarization). This is NOT the physical nspin (1/2/4); it matches
+     * K_Vectors::spin_mult.
      */
-    int _nspin = 1;
+    int spin_mult = 1;
 
     /**
      * @brief the global physical nspin from INPUT (1/2/4).
-     * For SOC/noncollinear (global nspin==4) the density matrix is stored with _nspin==1
+     * For SOC/noncollinear (nspin==4) the density matrix is stored with spin_mult==1
      * (a single 2x2 spin-block matrix), but cal_DMR/cal_DMR_td must still take the
-     * spin-resolved (Pauli) branch. _nspin cannot distinguish this, so keep the global
-     * value here. Equals _nspin for non-SOC cases.
+     * spin-resolved (Pauli) branch. spin_mult cannot distinguish this, so keep the
+     * global value here. Equals spin_mult for non-SOC cases.
      */
-    int _nspin_global = 1;
+    int nspin = 1;
 
     /**
      * @brief real number of k-points

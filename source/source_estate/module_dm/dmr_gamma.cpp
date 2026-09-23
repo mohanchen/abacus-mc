@@ -18,11 +18,11 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
     assert(ik_in == -1 || ik_in == 0);
     assert(this->_nk == 1);
 
-    assert(this->_DMR.size()==this->_nspin && "DMR has not been initialized!");
+    assert(this->_DMR.size()==this->spin_mult && "DMR has not been initialized!");
 
     ModuleBase::timer::start("DensityMatrix", "cal_DMR");
     const int ld_hk = this->pv->nrow;
-    for (int is = 1; is <= this->_nspin; ++is)
+    for (int is = 1; is <= this->spin_mult; ++is)
     {
         const int ik_begin = this->_nk * (is - 1); // jump this->_nk for spin_down if nspin==2
         hamilt::HContainer<TR>*const target_DMR = this->_DMR[is - 1];

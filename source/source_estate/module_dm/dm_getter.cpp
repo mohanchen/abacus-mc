@@ -18,11 +18,11 @@ namespace module_dm
 template <typename TK, typename TR>
 hamilt::HContainer<TR>* DensityMatrix<TK, TR>::get_DMR_pointer(const int ispin) const
 {
-    if (ispin <= 0 || ispin > this->_nspin)
+    if (ispin <= 0 || ispin > this->spin_mult)
     {
         throw std::out_of_range("DensityMatrix::get_DMR_pointer: DMR spin index is out of range");
     }
-    if (this->_DMR.size() != static_cast<std::size_t>(this->_nspin))
+    if (this->_DMR.size() != static_cast<std::size_t>(this->spin_mult))
     {
         throw std::logic_error("DensityMatrix::get_DMR_pointer: DMR has not been initialized");
     }
@@ -34,7 +34,7 @@ template <typename TK, typename TR>
 TK* DensityMatrix<TK, TR>::get_DMK_pointer(const int ik) const
 {
 #ifdef __DEBUG
-    assert(ik < this->_nk * this->_nspin);
+    assert(ik < this->_nk * this->spin_mult);
 #endif
     return const_cast<TK*>(this->_DMK[ik].data());
 }
@@ -44,7 +44,7 @@ template <typename TK, typename TR>
 TK DensityMatrix<TK, TR>::get_DMK(const int ispin, const int ik, const int i, const int j) const
 {
 #ifdef __DEBUG
-    assert(ispin > 0 && ispin <= this->_nspin);
+    assert(ispin > 0 && ispin <= this->spin_mult);
 #endif
     // consider transpose col=>row
     return this->_DMK[ik + this->_nk * (ispin - 1)][i * this->pv->nrow + j];
@@ -55,9 +55,9 @@ template <typename TK, typename TR>
 int DensityMatrix<TK, TR>::get_DMK_nks() const
 {
 #ifdef __DEBUG
-    assert(this->_DMK.size() == _nk * _nspin);
+    assert(this->_DMK.size() == _nk * spin_mult);
 #endif
-    return _nk * _nspin;
+    return _nk * spin_mult;
 }
 
 template <typename TK, typename TR>

@@ -36,15 +36,15 @@ void DensityMatrix<TK, TR>::clear_DMR()
 
 template <typename TK, typename TR>
 DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in,
-                                     const int nspin,
+                                     const int spin_mult,
                                      const std::vector<ModuleBase::Vector3<double>>& kvec_d,
                                      const int nk,
-                                     const int nspin_global)
-    : pv(paraV_in), _nspin(nspin), _nspin_global(nspin_global > 0 ? nspin_global : nspin),
+                                     const int nspin)
+    : pv(paraV_in), spin_mult(spin_mult), nspin(nspin > 0 ? nspin : spin_mult),
       _kvec_d(kvec_d), _nk((nk > 0 && nk <= _kvec_d.size()) ? nk : _kvec_d.size())
 {
     ModuleBase::TITLE("DensityMatrix", "resize_DMK");
-    const int nks = _nk * _nspin;
+    const int nks = _nk * this->spin_mult;
     this->_DMK.resize(nks);
     for (int ik = 0; ik < nks; ik++)
     {
@@ -54,13 +54,13 @@ DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in,
 }
 
 template <typename TK, typename TR>
-DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in, const int nspin, const int nspin_global)
-    : pv(paraV_in), _nspin(nspin), _nspin_global(nspin_global > 0 ? nspin_global : nspin),
+DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in, const int spin_mult, const int nspin)
+    : pv(paraV_in), spin_mult(spin_mult), nspin(nspin > 0 ? nspin : spin_mult),
       _kvec_d({ModuleBase::Vector3<double>(0, 0, 0)}), _nk(1)
 {
     ModuleBase::TITLE("DensityMatrix", "resize_gamma");
-    this->_DMK.resize(_nspin);
-    for (int ik = 0; ik < this->_nspin; ik++)
+    this->_DMK.resize(this->spin_mult);
+    for (int ik = 0; ik < this->spin_mult; ik++)
     {
         this->_DMK[ik].resize(this->pv->get_row_size() * this->pv->get_col_size());
     }
@@ -73,7 +73,7 @@ template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::switch_dmr(const int mode)
 {
     ModuleBase::TITLE("DensityMatrix", "switch_dmr");
-    if (this->_nspin != 2)
+    if (this->spin_mult != 2)
     {
         return;
     }

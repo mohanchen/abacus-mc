@@ -21,14 +21,14 @@ void DensityMatrix_Tools::cal_DMR(
     ModuleBase::timer::start("DensityMatrix", "cal_DMR");
 
     // To check whether DMR has been initialized
-    if (dmR_out.size() != dm._nspin)
+    if (dmR_out.size() != dm.spin_mult)
     {
         ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_DMR",
-                                 "DMR has not been initialized: dmR_out.size() != nspin!");
+                                 "DMR has not been initialized: dmR_out.size() != spin_mult!");
     }
 
     const int ld_hk = dm.pv->nrow;
-    for (int is = 1; is <= dm._nspin; ++is)
+    for (int is = 1; is <= dm.spin_mult; ++is)
     {
         const int ik_begin = dm._nk * (is - 1); // jump dm._nk for spin_down if nspin==2
         hamilt::HContainer<TR_out>*const target_DMR = dmR_out[is - 1];
@@ -83,7 +83,7 @@ void DensityMatrix_Tools::cal_DMR(
             }
 
             std::vector<TK> DMK_mat_trans(mat_size);
-            std::vector<TK> tmp_DMR( (dm._nspin_global==4) ? mat_size*R_size : 0);
+            std::vector<TK> tmp_DMR( (dm.nspin==4) ? mat_size*R_size : 0);
             for(int ik = 0; ik < dm._nk; ++ik)
             {
                 if(ik_in >= 0 && ik_in != ik)
@@ -108,11 +108,11 @@ void DensityMatrix_Tools::cal_DMR(
                 {
                     // (kr+i*ki) * (Dr+i*Di) = (kr*Dr-ki*Di) + i*(kr*Di+ki*Dr)
                     const TK kphase = kphase_vec[ik][iR];
-                    if(dm._nspin_global != 4)                // only save real kr*Dr-ki*Di
+                    if(dm.nspin != 4)                // only save real kr*Dr-ki*Di
                 {
                     func_exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
                 }
-                else if(dm._nspin_global == 4)
+                else if(dm.nspin == 4)
                 {
                     BlasConnector::axpy(mat_size,
                                         kphase,
@@ -126,7 +126,7 @@ void DensityMatrix_Tools::cal_DMR(
 
             // if nspin == 4
             // copy tmp_DMR to fill target_DMR
-            if(dm._nspin_global == 4)
+            if(dm.nspin == 4)
             {
                 // step_trace ={0, 1, local_col, local_col+1} for NSPIN=4
                 int step_trace[4]{};
