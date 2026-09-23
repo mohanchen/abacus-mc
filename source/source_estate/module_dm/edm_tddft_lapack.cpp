@@ -25,7 +25,7 @@ void edm_tddft_lapack(Parallel_Orbitals& pv,
 
     const int nlocal = pv.nrow;
     assert(nlocal >= 0);
-    dmat.dm->EDMK.resize(kv.get_nks());
+    dmat.dm->edmk.resize(kv.get_nks());
 
     // ct_device_type = ct::DeviceType::CpuDevice or ct::DeviceType::GpuDevice
     ct::DeviceType ct_device_type = ct::DeviceTypeToEnum<Device>::value;
@@ -51,7 +51,7 @@ void edm_tddft_lapack(Parallel_Orbitals& pv,
     {
         p_hamilt->updateHk(ik);
         std::complex<double>* tmp_dmk_local = dmat.dm->get_DMK_pointer(ik);
-        ModuleBase::ComplexMatrix& tmp_edmk = dmat.dm->EDMK[ik];
+        ModuleBase::ComplexMatrix& tmp_edmk = dmat.dm->edmk[ik];
 
 #ifdef __MPI
         int myid = 0;

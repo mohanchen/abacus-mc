@@ -88,14 +88,14 @@ module_dm::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
     }
 
     // use the original formula (Hamiltonian matrix) to calculate energy density matrix
-    if (dm.EDMK.size())
+    if (dm.edmk.size())
     {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)
 #endif
         for (int ik = 0; ik < kv.get_nks(); ++ik)
         {
-            edm.set_DMK_pointer(ik, dm.EDMK[ik].c);
+            edm.set_DMK_pointer(ik, dm.edmk[ik].c);
         }
     }
     else

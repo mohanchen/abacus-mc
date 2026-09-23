@@ -24,13 +24,13 @@ void edm_tddft(Parallel_Orbitals& pv,
     const int nlocal = pv.nrow;
     assert(nlocal >= 0);
 
-    dmat.dm->EDMK.resize(kv.get_nks());
+    dmat.dm->edmk.resize(kv.get_nks());
 
     for (int ik = 0; ik < kv.get_nks(); ++ik)
     {
         p_hamilt->updateHk(ik);
         std::complex<double>* tmp_dmk = dmat.dm->get_DMK_pointer(ik);
-        ModuleBase::ComplexMatrix& tmp_edmk = dmat.dm->EDMK[ik];
+        ModuleBase::ComplexMatrix& tmp_edmk = dmat.dm->edmk[ik];
 
 #ifdef __MPI
         const int nloc = pv.nloc;

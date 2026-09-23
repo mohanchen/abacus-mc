@@ -309,7 +309,7 @@ class DensityMatrix
      */
     void save_DMR();
     
-    std::vector<ModuleBase::ComplexMatrix> EDMK; // for TD-DFT
+    std::vector<ModuleBase::ComplexMatrix> edmk; // for TD-DFT
 
 #ifdef __PEXSI
     /**
