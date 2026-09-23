@@ -301,7 +301,7 @@ OBJS_ELECSTAT_LCAO=elecstate_lcao.o\
       dm_tools.o\
       dm_from_psi.o\
       edm_tddft.o\
-      cal_edm_tddft_lapack.o\
+      edm_tddft_lapack.o\
 
 OBJS_ESOLVER=esolver_factory.o\
     esolver_ks.o\
