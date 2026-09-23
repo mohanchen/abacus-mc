@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "dm_shift.h"
 #include "source_base/vector3.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_cell/record_adj.h"
@@ -14,6 +13,28 @@
 
 namespace module_dm
 {
+/**
+ * @brief map a real/complex type to the opposite one
+ * ShiftRealComplex<double>::type = std::complex<double>
+ * ShiftRealComplex<std::complex<double>>::type = double
+ */
+template <typename T> struct ShiftRealComplex
+{
+    using type = void;
+};
+
+template <>
+struct ShiftRealComplex<double>
+{
+    using type = std::complex<double>;
+};
+
+template <>
+struct ShiftRealComplex<std::complex<double>>
+{
+    using type = double;
+};
+
 /**
  * @brief DensityMatrix Class
  * <TK,TR> = <double,double> for Gamma-only calculation
