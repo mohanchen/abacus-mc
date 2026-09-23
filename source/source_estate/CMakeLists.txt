@@ -60,7 +60,7 @@ list(APPEND objects
 if(ENABLE_LCAO)
   list(APPEND objects
       elecstate_lcao.cpp
-      module_dm/init_dm.cpp
+      module_dm/dm_routine.cpp
       module_dm/density_matrix.cpp
       module_dm/dmr_gamma.cpp
       module_dm/dm_tools.cpp

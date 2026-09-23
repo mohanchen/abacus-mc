@@ -289,7 +289,7 @@ OBJS_ELECSTAT=elecstate.o\
     occ_mixer.o
 
 OBJS_ELECSTAT_LCAO=elecstate_lcao.o\
-      init_dm.o\
+      dm_routine.o\
       density_matrix.o\
       dmr_init.o\
       dm_setter.o\

@@ -1,5 +1,5 @@
-#ifndef INIT_DM_H
-#define INIT_DM_H
+#ifndef DM_ROUTINE_H
+#define DM_ROUTINE_H
 
 #include <complex>
 #include <functional>
