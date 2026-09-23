@@ -63,13 +63,13 @@ void test_deepks<T>::set_p_elec_DM()
         this->p_elec_DM
             = new module_dm::DensityMatrix<T, double>(&ParaO, this->nspin, kv.kvec_d, kv.get_nkstot() / this->nspin);
     }
-    p_elec_DM->init_DMR(&Test_Deepks::GridD, &ucell);
+    p_elec_DM->init_dmr(&Test_Deepks::GridD, &ucell);
 
     for (int ik = 0; ik < nk; ik++)
     {
         p_elec_DM->set_DMK_pointer(ik, dm_new[ik].data());
     }
-    p_elec_DM->cal_DMR(-1);
+    p_elec_DM->cal_dmr(-1);
 }
 
 template <typename T>
@@ -78,7 +78,7 @@ void test_deepks<T>::check_pdm()
     this->read_dm(kv.get_nkstot());
     this->set_dm_new();
     this->set_p_elec_DM();
-    this->ld.init_DMR(ucell, ORB, ParaO, Test_Deepks::GridD);
+    this->ld.init_dmr(ucell, ORB, ParaO, Test_Deepks::GridD);
     DeePKS_domain::update_dmr(kv.kvec_d,
                               p_elec_DM->get_DMK_vector(),
                               ucell,

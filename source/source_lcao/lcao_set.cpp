@@ -133,7 +133,7 @@ void LCAO_domain::init_dm_from_file(
     for (int is = 0; is < nspin_dm; ++is)
     {
         const std::string dmfile = readin_dir + "/dmrs" + std::to_string(is + 1) + "_nao.csr";
-        hamilt::HContainer<double>* dm_container = dmat.dm->get_DMR_vector()[is];
+        hamilt::HContainer<double>* dm_container = dmat.dm->get_dmr_vec()[is];
         hamilt::Read_HContainer<double> reader_dm(
             dm_container,
             dmfile,
@@ -162,7 +162,7 @@ void LCAO_domain::init_chg_dm(
 
     // Step 2: Convert density matrix to charge density
     // skip_normalize=true here (loaded DM is already normalized), so omega is unused.
-    LCAO_domain::dm2rho(dmat.dm->get_DMR_vector(), nspin, chr, PARAM.inp.nelec, ucell.omega, true);
+    LCAO_domain::dm2rho(dmat.dm->get_dmr_vec(), nspin, chr, PARAM.inp.nelec, ucell.omega, true);
 
     return;
 }

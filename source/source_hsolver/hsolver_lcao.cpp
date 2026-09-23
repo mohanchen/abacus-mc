@@ -99,14 +99,14 @@ void HSolverLCAO<TK>::solve(HSMatrix<TK>& hs,
 
         elecstate::calEBand(pes->ekb, pes->wg, pes->f_en);
         module_dm::dm_from_psi(dm.get_paraV_pointer(), pes->wg, psi, dm);
-        dm.cal_DMR(-1);
+        dm.cal_dmr(-1);
 
         if (!skip_charge)
         {
             // compute charge density from density matrix, mohan update 20251024
             // delegate to ElecStateLCAO to keep the source_lcao dependency out of
             // source_hsolver (mirrors the pexsi branch below and the PW psiToRho path)
-            dynamic_cast<elecstate::ElecStateLCAO<TK>*>(pes)->dmToRho(dm.get_DMR_vector(), nspin, &chr, omega);
+            dynamic_cast<elecstate::ElecStateLCAO<TK>*>(pes)->dmToRho(dm.get_dmr_vec(), nspin, &chr, omega);
         }
         else
         {

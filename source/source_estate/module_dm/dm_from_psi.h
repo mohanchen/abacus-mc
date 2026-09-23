@@ -31,7 +31,7 @@ void dm_from_psi(const Parallel_Orbitals* ParaV,
  *     dmk(iw1, iw2) = sum_ib wg(ik, ib) * conj(wfc(ib, iw1)) * wfc(ib, iw2).
  * The conjugation is applied to the FIRST basis index ("conj-first" storage):
  * the stored block is the transpose of the physical one-body density matrix
- * P = C diag(wg) C^H. cal_DMR(), SOC magnetization and Mulliken analysis all
+ * P = C diag(wg) C^H. cal_dmr(), SOC magnetization and Mulliken analysis all
  * rely on this convention, see dm_tools.cpp and
  * unittests/test_soc_magnetization_roundtrip.cpp.
  *

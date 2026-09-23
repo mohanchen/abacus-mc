@@ -145,7 +145,7 @@ TEST_F(DFTUTest, constructHRd2d)
     // build a solver-like density matrix: uniform DMK gives uniform DMR (= factor) at Gamma point
     const double factor = 1.0 / test_nw / test_nw / test_size / test_size;
     module_dm::DensityMatrix<double, double> dm(paraV, 1);
-    dm.init_DMR(*HR);
+    dm.init_dmr(*HR);
     for (int i = 0; i < paraV->nrow; i++)
     {
         for (int j = 0; j < paraV->ncol; j++)
@@ -153,7 +153,7 @@ TEST_F(DFTUTest, constructHRd2d)
             dm.set_DMK(1, 0, i, j, factor);
         }
     }
-    dm.cal_DMR(-1);
+    dm.cal_dmr(-1);
     // reset HR
     for (int i = 0; i < HR->get_nnr(); i++)
     {
@@ -222,7 +222,7 @@ TEST_F(DFTUTest, constructHRd2cd)
     const double factor = 0.5 / test_nw / test_nw / test_size / test_size;
     std::vector<ModuleBase::Vector3<double>> kvec_d_dm(1, ModuleBase::Vector3<double>(0.0, 0.0, 0.0));
     module_dm::DensityMatrix<std::complex<double>, double> dm(paraV, 2, kvec_d_dm, 1);
-    dm.init_DMR(*HR);
+    dm.init_dmr(*HR);
     for (int is = 1; is <= 2; ++is)
     {
         for (int i = 0; i < paraV->nrow; i++)
@@ -233,7 +233,7 @@ TEST_F(DFTUTest, constructHRd2cd)
             }
         }
     }
-    dm.cal_DMR(-1);
+    dm.cal_dmr(-1);
     // reset HR
     for (int i = 0; i < HR->get_nnr(); i++)
     {

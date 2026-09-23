@@ -189,11 +189,11 @@ void ESolver_DoubleXC<TK, TR>::before_scf(UnitCell& ucell, const int istep)
     XC_Functional::set_xc_type(ucell.atoms[0].ncpp.xc_func);
 
     // DMR should be same size with Hamiltonian(R)
-    this->dmat_base.dm->init_DMR(*(dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(this->p_hamilt_base)->getHR()));
+    this->dmat_base.dm->init_dmr(*(dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(this->p_hamilt_base)->getHR()));
 
     if (istep > 0)
     {
-        this->dmat_base.dm->cal_DMR(-1);
+        this->dmat_base.dm->cal_dmr(-1);
     }
 
     ModuleBase::timer::end("ESolver_DoubleXC", "before_scf");
@@ -387,8 +387,8 @@ void ESolver_DoubleXC<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int
                 //                _pes_lcao_base->get_DM()->set_DMK_pointer(ik,
                 //                _pes_lcao->get_DM()->get_DMK_pointer(ik));
             }
-            this->dmat_base.dm->cal_DMR(-1);
-            //            _pes_lcao_base->get_DM()->cal_DMR(-1);
+            this->dmat_base.dm->cal_dmr(-1);
+            //            _pes_lcao_base->get_DM()->cal_dmr(-1);
             _pes_lcao_base->ekb = _pes_lcao->ekb;
             _pes_lcao_base->wg = _pes_lcao->wg;
         }

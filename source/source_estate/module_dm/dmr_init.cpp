@@ -16,10 +16,10 @@ namespace module_dm
 
 // initialize density matrix DMR from UnitCell (mainly used in UnitTest)
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell* ucell)
+void DensityMatrix<TK, TR>::init_dmr(const Grid_Driver* GridD_in, const UnitCell* ucell)
 {
-    ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    this->clear_DMR();
+    ModuleBase::TITLE("DensityMatrix", "init_dmr");
+    this->clear_dmr();
     // construct a new DMR
     std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->pv));
     // set up a HContainer
@@ -64,10 +64,10 @@ void DensityMatrix<TK, TR>::init_DMR(const Grid_Driver* GridD_in, const UnitCell
 
 /// initialize density matrix DMR from UnitCell and RA (mainly used in UnitTest)
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
+void DensityMatrix<TK, TR>::init_dmr(Record_adj& ra, const UnitCell* ucell)
 {
-    ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    this->clear_DMR();
+    ModuleBase::TITLE("DensityMatrix", "init_dmr");
+    this->clear_dmr();
     // construct a new DMR
     std::unique_ptr<hamilt::HContainer<TR>> tmp_DMR(new hamilt::HContainer<TR>(this->pv));
     // set up a HContainer
@@ -111,10 +111,10 @@ void DensityMatrix<TK, TR>::init_DMR(Record_adj& ra, const UnitCell* ucell)
 
 // initialize density matrix DMR from another HContainer (mainly used)
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TR>& DMR_in)
+void DensityMatrix<TK, TR>::init_dmr(const hamilt::HContainer<TR>& DMR_in)
 {
-    ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    this->clear_DMR();
+    ModuleBase::TITLE("DensityMatrix", "init_dmr");
+    this->clear_dmr();
     // set up a HContainer using another one
     for (int is = 0; is < this->spin_mult; ++is) // loop over spin
     {
@@ -127,10 +127,10 @@ void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TR>& DMR_in)
 }
 
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::init_DMR(const hamilt::HContainer<TRShift>& DMR_in)
+void DensityMatrix<TK, TR>::init_dmr(const hamilt::HContainer<TRShift>& DMR_in)
 {
-    ModuleBase::TITLE("DensityMatrix", "init_DMR");
-    this->clear_DMR();
+    ModuleBase::TITLE("DensityMatrix", "init_dmr");
+    this->clear_dmr();
     // set up a HContainer using another one
     int size_ap = DMR_in.size_atom_pairs();
     if (size_ap > 0)

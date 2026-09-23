@@ -43,8 +43,8 @@ module_dm::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
     {
         module_dm::dm_from_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
     }
-    edm.init_DMR(ra, &ucell);
-    edm.cal_DMR(-1);
+    edm.init_dmr(ra, &ucell);
+    edm.cal_dmr(-1);
     return edm;
 }
 
@@ -63,7 +63,7 @@ module_dm::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
 
     // construct a DensityMatrix object
     // Pass the global physical nspin so that for SOC/noncollinear (nspin==4,
-    // nspin_dm==1) cal_DMR selects the spin-resolved (Pauli) branch; otherwise
+    // nspin_dm==1) cal_dmr selects the spin-resolved (Pauli) branch; otherwise
     // the overlap force/stress would use the real-projected (wrong) DMR.
     const int nspin_dm = nspin == 2 ? 2 : 1;
     module_dm::DensityMatrix<std::complex<double>, double> edm(&pv, nspin_dm, kv.kvec_d, kv.get_nks() / nspin_dm,
@@ -105,7 +105,7 @@ module_dm::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
     }
 
     // cal_dm_2d
-    edm.init_DMR(ra, &ucell);
-    edm.cal_DMR(-1);
+    edm.init_dmr(ra, &ucell);
+    edm.cal_dmr(-1);
     return edm;
 }

@@ -32,7 +32,7 @@ void module_dm::init_dm(UnitCell& ucell,
         }
 
         // use density matrix to calculate the charge density
-        cfg.dm2rho_func(dmat.dm->get_DMR_vector(), cfg.nspin, &chr, cfg.nelec, ucell.omega, false);
+        cfg.dm2rho_func(dmat.dm->get_dmr_vec(), cfg.nspin, &chr, cfg.nelec, ucell.omega, false);
 
         unitcell::cal_ux(ucell, cfg.nspin);
 

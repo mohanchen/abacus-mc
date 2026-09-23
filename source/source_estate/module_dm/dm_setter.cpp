@@ -48,10 +48,10 @@ void DensityMatrix<TK, TR>::set_DMK_zero()
 }
 
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::save_DMR()
+void DensityMatrix<TK, TR>::save_dmr()
 {
-    ModuleBase::TITLE("DensityMatrix", "save_DMR");
-    ModuleBase::timer::start("DensityMatrix", "save_DMR");
+    ModuleBase::TITLE("DensityMatrix", "save_dmr");
+    ModuleBase::timer::start("DensityMatrix", "save_dmr");
 
     const int nnr = this->dmr[0]->get_nnr();
     // allocate if dmr_save is empty
@@ -78,7 +78,7 @@ void DensityMatrix<TK, TR>::save_DMR()
         std::copy(DMR_pointer, DMR_pointer + nnr, DMR_save_pointer);
     }
 
-    ModuleBase::timer::end("DensityMatrix", "save_DMR");
+    ModuleBase::timer::end("DensityMatrix", "save_dmr");
 }
 
 // T of HContainer can be double or std::complex<double>

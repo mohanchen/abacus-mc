@@ -16,15 +16,15 @@ namespace module_dm
 
 // get dmr pointer
 template <typename TK, typename TR>
-hamilt::HContainer<TR>* DensityMatrix<TK, TR>::get_DMR_pointer(const int ispin) const
+hamilt::HContainer<TR>* DensityMatrix<TK, TR>::get_dmr_ptr(const int ispin) const
 {
     if (ispin <= 0 || ispin > this->spin_mult)
     {
-        throw std::out_of_range("DensityMatrix::get_DMR_pointer: DMR spin index is out of range");
+        throw std::out_of_range("DensityMatrix::get_dmr_ptr: DMR spin index is out of range");
     }
     if (this->dmr.size() != static_cast<std::size_t>(this->spin_mult))
     {
-        throw std::logic_error("DensityMatrix::get_DMR_pointer: DMR has not been initialized");
+        throw std::logic_error("DensityMatrix::get_dmr_ptr: DMR has not been initialized");
     }
     return this->dmr[ispin - 1];
 }

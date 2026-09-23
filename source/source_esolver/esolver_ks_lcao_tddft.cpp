@@ -151,11 +151,11 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::runner(BaseCell& basecell, const int ist
 
     if (this->inp_->td_stype == 2)
     {
-        this->dmat.dm->cal_DMR_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);
+        this->dmat.dm->cal_dmr_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);
     }
     else
     {
-        this->dmat.dm->cal_DMR(-1);
+        this->dmat.dm->cal_dmr(-1);
     }
     ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "INIT SCF");
 
@@ -621,15 +621,15 @@ void ESolver_KS_LCAO_TDDFT<TR, Device>::weight_dm_rho(const UnitCell& ucell)
     module_dm::dm_from_psi(this->dmat.dm->get_paraV_pointer(), this->pelec->wg, this->psi[0], *this->dmat.dm);
     if (this->inp_->td_stype == 2)
     {
-        this->dmat.dm->cal_DMR_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);
+        this->dmat.dm->cal_dmr_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);
     }
     else
     {
-        this->dmat.dm->cal_DMR(-1);
+        this->dmat.dm->cal_dmr(-1);
     }
 
     // get the real-space charge density, mohan add 2025-10-24
-    LCAO_domain::dm2rho(this->dmat.dm->get_DMR_vector(), this->inp_->nspin, &this->chr, this->inp_->nelec, ucell.omega, false);
+    LCAO_domain::dm2rho(this->dmat.dm->get_dmr_vec(), this->inp_->nspin, &this->chr, this->inp_->nelec, ucell.omega, false);
 }
 
 template class ESolver_KS_LCAO_TDDFT<double, base_device::DEVICE_CPU>;

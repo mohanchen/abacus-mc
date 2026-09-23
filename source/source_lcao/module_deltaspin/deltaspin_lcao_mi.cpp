@@ -47,7 +47,7 @@ void cal_mi_lcao(ScState& state,
     ModuleBase::timer::start("spinconstrain::SpinConstrain", "cal_mi_lcao");
     // Reset Mi before calculation
     state.zero_Mi();
-    const hamilt::HContainer<double>* dmr = dm->get_DMR_pointer(1);
+    const hamilt::HContainer<double>* dmr = dm->get_dmr_ptr(1);
     std::vector<double> moments;
     if (state.nspin_ == 2)
     {

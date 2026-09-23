@@ -40,7 +40,7 @@ namespace LR
             ModuleBase::TITLE("HamiltULR", "HamiltULR");
             this->DM_trans = LR_Util::make_unique<module_dm::DensityMatrix<T, T>>(&pmat_in, 1, kv_in.kvec_d, nk);
             LR_Util::initialize_DMR(*this->DM_trans, pmat_in, ucell_in, gd_in, orb_cutoff);
-            // this->DM_trans->init_DMR(&gd_in, &ucell_in); // too large due to not restricted by orb_cutoff
+            // this->DM_trans->init_dmr(&gd_in, &ucell_in); // too large due to not restricted by orb_cutoff
             this->ops.resize(4);
 
             this->ops[0] = new OperatorLRDiag<T>(eig_ks.c, pX_in[0], nk, nocc[0], nvirt[0]);

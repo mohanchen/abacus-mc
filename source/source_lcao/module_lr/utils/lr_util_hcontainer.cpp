@@ -6,12 +6,12 @@ namespace LR_Util
         const int& nat,
         const char& type)
     {
-        assert(DMR.get_DMR_vector().size() == DMR_real.get_DMR_vector().size());
+        assert(DMR.get_dmr_vec().size() == DMR_real.get_dmr_vec().size());
         bool get_imag = (type == 'I' || type == 'i');
-        for (int is = 0;is < DMR.get_DMR_vector().size();++is)
+        for (int is = 0;is < DMR.get_dmr_vec().size();++is)
         {
-            auto dr = DMR.get_DMR_vector()[is]; //get_DMR_pointer() has bug when is=0
-            auto dr_real = DMR_real.get_DMR_vector()[is];
+            auto dr = DMR.get_dmr_vec()[is]; //get_dmr_ptr() has bug when is=0
+            auto dr_real = DMR_real.get_dmr_vec()[is];
             assert(dr != nullptr);
             assert(dr_real != nullptr);
             for (int ia = 0;ia < nat;ia++) {

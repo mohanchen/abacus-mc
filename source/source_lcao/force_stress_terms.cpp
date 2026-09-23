@@ -251,7 +251,7 @@ void cal_dftu_fs(UnitCell& ucell,
             std::vector<const hamilt::HContainer<double>*> dmR_tmp(nspin_dm, nullptr);
             for (int is = 0; is < nspin_dm; ++is)
             {
-                dmR_tmp[is] = dmat.dm->get_DMR_pointer(is + 1);
+                dmR_tmp[is] = dmat.dm->get_dmr_ptr(is + 1);
             }
 
             DFTU_LCAO::cal_fs_nao_r(&ucell, &dftu,

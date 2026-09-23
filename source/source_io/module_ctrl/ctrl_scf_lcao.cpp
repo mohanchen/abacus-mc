@@ -180,7 +180,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     {
         const int precision = inp.out_dmr[1];
 
-        ModuleIO::write_dmr(dm->get_DMR_vector(), &ucell, precision, pv, out_app_flag, 
+        ModuleIO::write_dmr(dm->get_dmr_vec(), &ucell, precision, pv, out_app_flag, 
 			ucell.get_iat2iwt(), ucell.nat, istep);
     }
 
@@ -303,7 +303,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
 
     if (inp.out_dm_npz)
     {
-        const std::vector<hamilt::HContainer<double>*>& dmr_vec = dm->get_DMR_vector();
+        const std::vector<hamilt::HContainer<double>*>& dmr_vec = dm->get_dmr_vec();
         for (int ispin = 0; ispin < dmr_vec.size(); ++ispin)
         {
             std::string zipname
@@ -401,7 +401,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
             // The Veff Hellmann-Feynman terms need these (V^H sums spins, V^XC is spin-resolved).
             for (int is = 1; is <= PARAM.inp.nspin; ++is)
             {
-                dh_params.dmR.push_back(dm->get_DMR_pointer(is));
+                dh_params.dmR.push_back(dm->get_dmr_ptr(is));
             }
         }
 #ifdef __EXX
@@ -621,7 +621,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     // mohan add 2025-10-24
     //    if (inp.out_elf[0] > 0)
     //	{
-    //		LCAO_domain::dm2tau(pelec->DM->get_DMR_vector(), inp.nspin, pelec->charge);
+    //		LCAO_domain::dm2tau(pelec->DM->get_dmr_vec(), inp.nspin, pelec->charge);
     //	}
 
 #ifdef __EXX

@@ -91,7 +91,7 @@ class DMTest : public testing::Test
 #endif
 };
 
-TEST_F(DMTest, cal_DMR_full)
+TEST_F(DMTest, cal_dmr_full)
 {
     // get my rank of this process
     int my_rank = 0;
@@ -135,7 +135,7 @@ TEST_F(DMTest, cal_DMR_full)
     hamilt::HContainer<std::complex<double>> dmR_full(ucell, paraV);
     // calculate this->_DMR
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-    DM.cal_DMR_full(&dmR_full, -1);
+    DM.cal_dmr_full(&dmR_full, -1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time
         = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
@@ -197,25 +197,25 @@ TEST_F(DMTest, cal_DMR_blas_double)
     }
     // initialize this->_DMR
     Grid_Driver gd(0, 0);
-    DM.init_DMR(&gd, &ucell);
+    DM.init_dmr(&gd, &ucell);
     // set Gamma-only
     for (int is = 1; is <= nspin; is++)
     {
-        DM.get_DMR_pointer(is)->fix_gamma();
+        DM.get_dmr_ptr(is)->fix_gamma();
     }
     // calculate this->_DMR
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-    DM.cal_DMR(-1);
+    DM.cal_dmr(-1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time
         = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
     std::cout << "my rank: " << my_rank << " elapsed time blas: " << elapsed_time.count() << std::endl;
     // compare the result
-    for (int i = 0; i < DM.get_DMR_pointer(1)->size_atom_pairs(); i++)
+    for (int i = 0; i < DM.get_dmr_ptr(1)->size_atom_pairs(); i++)
     {
-        double* ptr1 = DM.get_DMR_pointer(1)->get_atom_pair(i).get_HR_values(0, 0, 0).get_pointer();
+        double* ptr1 = DM.get_dmr_ptr(1)->get_atom_pair(i).get_HR_values(0, 0, 0).get_pointer();
         //
-        for (int j = 0; j < DM.get_DMR_pointer(1)->get_atom_pair(i).get_size(); j++)
+        for (int j = 0; j < DM.get_dmr_ptr(1)->get_atom_pair(i).get_size(); j++)
         {
             // std::cout << "my rank: " << my_rank << " i: " << i << " j: " << j << " value: " << ptr1[j] << std::endl;
             EXPECT_NEAR(ptr1[j], 0.77, 1e-10);
@@ -268,31 +268,31 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     }
     // initialize this->_DMR
     Grid_Driver gd(0, 0);
-    DM.init_DMR(&gd, &ucell);
+    DM.init_dmr(&gd, &ucell);
     // calculate this->_DMR
     std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
-    DM.cal_DMR(-1);
+    DM.cal_dmr(-1);
     std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time
         = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
     std::cout << "my rank: " << my_rank << " elapsed time blas: " << elapsed_time.count() << std::endl;
     // compare the result for spin-up
-    for (int i = 0; i < DM.get_DMR_pointer(1)->size_atom_pairs(); i++)
+    for (int i = 0; i < DM.get_dmr_ptr(1)->size_atom_pairs(); i++)
     {
-        double* ptr1 = DM.get_DMR_pointer(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
+        double* ptr1 = DM.get_dmr_ptr(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
         //
-        for (int j = 0; j < DM.get_DMR_pointer(1)->get_atom_pair(i).get_size(); j++)
+        for (int j = 0; j < DM.get_dmr_ptr(1)->get_atom_pair(i).get_size(); j++)
         {
             // std::cout << "my rank: " << my_rank << " i: " << i << " j: " << j << " value: " << ptr1[j] << std::endl;
             EXPECT_NEAR(ptr1[j], -0.77, 1e-10);
         }
     }
     // compare the result for spin-down
-    for (int i = 0; i < DM.get_DMR_pointer(2)->size_atom_pairs(); i++)
+    for (int i = 0; i < DM.get_dmr_ptr(2)->size_atom_pairs(); i++)
     {
-        double* ptr1 = DM.get_DMR_pointer(2)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
+        double* ptr1 = DM.get_dmr_ptr(2)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
         //
-        for (int j = 0; j < DM.get_DMR_pointer(2)->get_atom_pair(i).get_size(); j++)
+        for (int j = 0; j < DM.get_dmr_ptr(2)->get_atom_pair(i).get_size(); j++)
         {
             // std::cout << "my rank: " << my_rank << " i: " << i << " j: " << j << " value: " << ptr1[j] << std::endl;
             EXPECT_NEAR(ptr1[j], -0.77 * 2, 1e-10);
@@ -301,11 +301,11 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     // calculate DMR_total
     DM.switch_dmr(1);
     // compare the result for spin-up after sum
-    for (int i = 0; i < DM.get_DMR_pointer(1)->size_atom_pairs(); i++)
+    for (int i = 0; i < DM.get_dmr_ptr(1)->size_atom_pairs(); i++)
     {
-        double* ptr1 = DM.get_DMR_pointer(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
+        double* ptr1 = DM.get_dmr_ptr(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
         //
-        for (int j = 0; j < DM.get_DMR_pointer(1)->get_atom_pair(i).get_size(); j++)
+        for (int j = 0; j < DM.get_dmr_ptr(1)->get_atom_pair(i).get_size(); j++)
         {
             //std::cout << "my rank: " << my_rank << " i: " << i << " j: " << j << " value: " << ptr1[j] << std::endl;
             EXPECT_NEAR(ptr1[j], -0.77 * 3, 1e-10);
@@ -313,11 +313,11 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     }
     // restore to normal DMR 
     DM.switch_dmr(0);
-    for (int i = 0; i < DM.get_DMR_pointer(1)->size_atom_pairs(); i++)
+    for (int i = 0; i < DM.get_dmr_ptr(1)->size_atom_pairs(); i++)
     {
-        double* ptr1 = DM.get_DMR_pointer(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
+        double* ptr1 = DM.get_dmr_ptr(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
         //
-        for (int j = 0; j < DM.get_DMR_pointer(1)->get_atom_pair(i).get_size(); j++)
+        for (int j = 0; j < DM.get_dmr_ptr(1)->get_atom_pair(i).get_size(); j++)
         {
             //std::cout << "my rank: " << my_rank << " i: " << i << " j: " << j << " value: " << ptr1[j] << std::endl;
             EXPECT_NEAR(ptr1[j], -0.77, 1e-10);
@@ -325,11 +325,11 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     }
     // calculate DMR_differenct
     DM.switch_dmr(2);
-    for (int i = 0; i < DM.get_DMR_pointer(1)->size_atom_pairs(); i++)
+    for (int i = 0; i < DM.get_dmr_ptr(1)->size_atom_pairs(); i++)
     {
-        double* ptr1 = DM.get_DMR_pointer(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
+        double* ptr1 = DM.get_dmr_ptr(1)->get_atom_pair(i).get_HR_values(1, 1, 1).get_pointer();
         //
-        for (int j = 0; j < DM.get_DMR_pointer(1)->get_atom_pair(i).get_size(); j++)
+        for (int j = 0; j < DM.get_dmr_ptr(1)->get_atom_pair(i).get_size(); j++)
         {
             //std::cout << "my rank: " << my_rank << " i: " << i << " j: " << j << " value: " << ptr1[j] << std::endl;
             EXPECT_NEAR(ptr1[j], 0.77, 1e-10);
@@ -338,11 +338,11 @@ TEST_F(DMTest, cal_DMR_blas_complex)
     delete kv;
 }
 
-// Regression test for the SOC/noncollinear (global nspin==4) cal_DMR path.
+// Regression test for the SOC/noncollinear (global nspin==4) cal_dmr path.
 //
 // Background: in a real SOC run allocate_dm.cpp constructs the DensityMatrix with
 //   spin_mult = 1   (the 2x2 spin block is stored as ONE doubled matrix),
-// while the GLOBAL physical nspin is 4. cal_DMR must still take the
+// while the GLOBAL physical nspin is 4. cal_dmr must still take the
 // spin-resolved (Pauli) branch, which folds each 2x2 complex spin block into
 // (rho_0, rho_x, rho_y, rho_z) via xyz_to_updown(). That branch used to be
 // selected by the global PARAM.inp.nspin==4; a refactor (commit dcad8913d)
@@ -352,7 +352,7 @@ TEST_F(DMTest, cal_DMR_blas_complex)
 //
 // This test reproduces the real SOC construction (spin_mult=1, nspin=4)
 // and fills the spin-diagonal DMK entries (uu, dd) with (a + i b), leaving the
-// spin off-diagonal entries (ud, du) zero. It then checks that cal_DMR selects
+// spin off-diagonal entries (ud, du) zero. It then checks that cal_dmr selects
 // the Pauli branch:
 //   * correct (Pauli) branch : rho_0 = (uu+dd).real() = 2a, rho_z = (uu-dd).real() = 0
 //   * wrong   (real-project) : every element = a  (imaginary part b dropped)
@@ -408,14 +408,14 @@ TEST_F(DMTest, cal_DMR_soc_pauli_branch)
 
     // build the real-space DMR
     Grid_Driver gd(0, 0);
-    DM.init_DMR(&gd, &ucell);
+    DM.init_dmr(&gd, &ucell);
     // Gamma-only: reduce R vectors to (0, 0, 0), as cal_DMR_blas_double does
-    DM.get_DMR_pointer(1)->fix_gamma();
-    DM.cal_DMR(-1);
+    DM.get_dmr_ptr(1)->fix_gamma();
+    DM.cal_dmr(-1);
 
     // check the Gamma (R = 0) block: rho_0 must be 2a (Pauli), NOT a (real projection);
     // rho_x = rho_y = rho_z = 0 for uu == dd and zero spin off-diagonals.
-    hamilt::HContainer<double>* dmr = DM.get_DMR_pointer(1);
+    hamilt::HContainer<double>* dmr = DM.get_dmr_ptr(1);
     for (int i = 0; i < dmr->size_atom_pairs(); i++)
     {
         hamilt::AtomPair<double>& ap = dmr->get_atom_pair(i);
@@ -433,7 +433,7 @@ TEST_F(DMTest, cal_DMR_soc_pauli_branch)
                 const double rho_y = blk[col_size];     // step_trace[2]
                 const double rho_z = blk[col_size + 1]; // step_trace[3]
                 EXPECT_NEAR(rho_0, 2.0 * a, 1e-10)
-                    << "rho_0 wrong: cal_DMR did NOT take the SOC Pauli branch (nspin_global==4)";
+                    << "rho_0 wrong: cal_dmr did NOT take the SOC Pauli branch (nspin_global==4)";
                 EXPECT_NEAR(rho_x, 0.0, 1e-10);
                 EXPECT_NEAR(rho_y, 0.0, 1e-10);
                 EXPECT_NEAR(rho_z, 0.0, 1e-10);

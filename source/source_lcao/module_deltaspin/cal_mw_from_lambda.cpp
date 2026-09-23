@@ -135,7 +135,7 @@ void spinconstrain::SpinConstrain<std::complex<double>>::cal_mw_from_lambda(
         hsolver_t.solve(hs, psi_t[0], this->pelec, *this->dm_, *this->pelec->charge, this->state_.nspin_, this->pelec->charge->rhopw->omega, true);
         // Note: although update_lambda() modifies lambda in-place above,
         // solve() unconditionally recomputes DM and DMR (via dm_from_psi +
-        // cal_DMR) from the psi obtained by diagonalizing with the new
+        // cal_dmr) from the psi obtained by diagonalizing with the new
         // lambda. Therefore the DMR used inside cal_mi_lcao() is consistent
         // with the updated lambda and is NOT stale.
         this->cal_mi_lcao(i_step);

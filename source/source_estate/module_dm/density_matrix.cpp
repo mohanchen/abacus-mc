@@ -20,11 +20,11 @@ namespace module_dm
 template <typename TK, typename TR>
 DensityMatrix<TK, TR>::~DensityMatrix()
 {
-    this->clear_DMR();
+    this->clear_dmr();
 }
 
 template <typename TK, typename TR>
-void DensityMatrix<TK, TR>::clear_DMR()
+void DensityMatrix<TK, TR>::clear_dmr()
 {
     for (hamilt::HContainer<TR>*& it: this->dmr)
     {

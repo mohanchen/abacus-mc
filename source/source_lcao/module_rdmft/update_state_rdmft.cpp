@@ -99,14 +99,14 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
         // calculate DMK and DMR
         module_dm::DensityMatrix<TK, double> DM_gamma_only(ParaV, nspin);
         module_dm::dm_from_psi(ParaV, wg, wfc, DM_gamma_only);
-        DM_gamma_only.init_DMR(this->gd, &ucell);
-        DM_gamma_only.cal_DMR(-1);
+        DM_gamma_only.init_dmr(this->gd, &ucell);
+        DM_gamma_only.cal_dmr(-1);
 
         for (int is = 0; is < nspin; is++)
         {
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
-        ModuleGint::cal_gint_rho(DM_gamma_only.get_DMR_vector(), nspin, charge->rho);
+        ModuleGint::cal_gint_rho(DM_gamma_only.get_dmr_vec(), nspin, charge->rho);
 
         if (XC_Functional::get_ked_flag())
         {
@@ -120,15 +120,15 @@ void RDMFT<TK, TR>::update_charge(UnitCell& ucell)
         // calculate DMK and DMR
         module_dm::DensityMatrix<TK, double> DM(ParaV, nspin, kv->kvec_d, nk_total);
         module_dm::dm_from_psi(ParaV, wg, wfc, DM);
-        DM.init_DMR(this->gd, &ucell);
-        DM.cal_DMR(-1);
+        DM.init_dmr(this->gd, &ucell);
+        DM.cal_dmr(-1);
 
         for (int is = 0; is < nspin; is++)
         {
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
 
-        ModuleGint::cal_gint_rho(DM.get_DMR_vector(), nspin, charge->rho);
+        ModuleGint::cal_gint_rho(DM.get_dmr_vec(), nspin, charge->rho);
 
         if (XC_Functional::get_ked_flag())
         {

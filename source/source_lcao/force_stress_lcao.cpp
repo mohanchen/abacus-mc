@@ -257,8 +257,8 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
             edm.switch_dmr(1);
         }
 
-        const hamilt::HContainer<double>* dmR = dmat.dm->get_DMR_pointer(1);
-        const hamilt::HContainer<double>* edmR = edm.get_DMR_pointer(1);
+        const hamilt::HContainer<double>* dmR = dmat.dm->get_dmr_ptr(1);
+        const hamilt::HContainer<double>* edmR = edm.get_dmr_ptr(1);
 
         // Calculate kinetic force/stress (uses DM)
         if (cfg.t_in_h)
@@ -315,7 +315,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
             hamilt::EKinetic<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_ekinetic(
                 nullptr, kv.kvec_d, nullptr, &ucell, orb.cutoffs(), &gd,
                 two_center_bundle.kinetic_orb.get());
-            tmp_ekinetic.cal_force_stress(isforce, isstress, dmat.dm->get_DMR_pointer(1), parts.ftvnl_dphi,
+            tmp_ekinetic.cal_force_stress(isforce, isstress, dmat.dm->get_dmr_ptr(1), parts.ftvnl_dphi,
                                           sparts.stvnl_dphi);
         }
 
@@ -323,15 +323,15 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         hamilt::Overlap<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_overlap(
             nullptr, kv.kvec_d, nullptr, nullptr, &ucell, orb.cutoffs(), &gd,
             two_center_bundle.overlap_orb.get());
-        tmp_overlap.cal_force_stress(isforce, isstress, edm.get_DMR_pointer(1), parts.foverlap, sparts.soverlap);
+        tmp_overlap.cal_force_stress(isforce, isstress, edm.get_dmr_ptr(1), parts.foverlap, sparts.soverlap);
 
         // For nspin=4 (non-collinear), need complex DMR
         // Create temporary complex DMR for DM
-        hamilt::HContainer<std::complex<double>> tmp_dmr(dmat.dm->get_DMR_pointer(1)->get_paraV());
-        std::vector<int> ijrs = dmat.dm->get_DMR_pointer(1)->get_ijr_info();
+        hamilt::HContainer<std::complex<double>> tmp_dmr(dmat.dm->get_dmr_ptr(1)->get_paraV());
+        std::vector<int> ijrs = dmat.dm->get_dmr_ptr(1)->get_ijr_info();
         tmp_dmr.insert_ijrs(&ijrs);
         tmp_dmr.allocate();
-        dmat.dm->cal_DMR_full(&tmp_dmr, -1);
+        dmat.dm->cal_dmr_full(&tmp_dmr, -1);
         // Nonlocal force/stress from the temporary complex DMR
         hamilt::Nonlocal<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>> tmp_nonlocal(
             nullptr, kv.kvec_d, nullptr, &ucell, orb.cutoffs(), &gd,
@@ -368,7 +368,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         {
             dmat.dm->switch_dmr(2);
         }
-        const hamilt::HContainer<double>* dmr = dmat.dm->get_DMR_pointer(1);
+        const hamilt::HContainer<double>* dmr = dmat.dm->get_dmr_ptr(1);
         tmp_dspin.cal_force_stress(isforce, isstress, dmr, parts.force_dspin, sparts.stress_dspin);
         if (cfg.nspin == 2)
         {

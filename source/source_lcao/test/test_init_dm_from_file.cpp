@@ -133,7 +133,7 @@ class InitDMFileTest : public testing::Test
             }
         }
         tmp_HR.allocate(nullptr, true);
-        dm->init_DMR(tmp_HR);
+        dm->init_dmr(tmp_HR);
         return dm;
     }
 };
@@ -144,9 +144,9 @@ TEST_F(InitDMFileTest, Nspin1_ReadSingleFile)
     write_test_csr("./test_dm_dir/dmrs1_nao.csr", 1.0, 0, 1);
 
     auto* dm = create_dm(1);
-    ASSERT_EQ(dm->get_DMR_vector().size(), 1);
+    ASSERT_EQ(dm->get_dmr_vec().size(), 1);
 
-    hamilt::HContainer<double>* dmr0 = dm->get_DMR_vector()[0];
+    hamilt::HContainer<double>* dmr0 = dm->get_dmr_vec()[0];
     hamilt::Read_HContainer<double> reader(dmr0, "./test_dm_dir/dmrs1_nao.csr", nlocal, &ucell, 0);
     reader.read();
 
@@ -177,15 +177,15 @@ TEST_F(InitDMFileTest, Nspin2_ReadTwoFiles)
     write_test_csr("./test_dm_dir/dmrs2_nao.csr", 0.5, 1, 2);  // spin-down
 
     auto* dm = create_dm(2);
-    ASSERT_EQ(dm->get_DMR_vector().size(), 2);
+    ASSERT_EQ(dm->get_dmr_vec().size(), 2);
 
     // Read spin-up
-    hamilt::HContainer<double>* dmr0 = dm->get_DMR_vector()[0];
+    hamilt::HContainer<double>* dmr0 = dm->get_dmr_vec()[0];
     hamilt::Read_HContainer<double> reader0(dmr0, "./test_dm_dir/dmrs1_nao.csr", nlocal, &ucell, 0);
     reader0.read();
 
     // Read spin-down
-    hamilt::HContainer<double>* dmr1 = dm->get_DMR_vector()[1];
+    hamilt::HContainer<double>* dmr1 = dm->get_dmr_vec()[1];
     hamilt::Read_HContainer<double> reader1(dmr1, "./test_dm_dir/dmrs2_nao.csr", nlocal, &ucell, 0);
     reader1.read();
 
@@ -220,17 +220,17 @@ TEST_F(InitDMFileTest, Nspin2_ReadTwoFiles)
 TEST_F(InitDMFileTest, Nspin2_DMRVectorSize)
 {
     auto* dm = create_dm(2);
-    EXPECT_EQ(dm->get_DMR_vector().size(), 2);
-    EXPECT_NE(dm->get_DMR_vector()[0], nullptr);
-    EXPECT_NE(dm->get_DMR_vector()[1], nullptr);
+    EXPECT_EQ(dm->get_dmr_vec().size(), 2);
+    EXPECT_NE(dm->get_dmr_vec()[0], nullptr);
+    EXPECT_NE(dm->get_dmr_vec()[1], nullptr);
     delete dm;
 }
 
 TEST_F(InitDMFileTest, Nspin1_DMRVectorSize)
 {
     auto* dm = create_dm(1);
-    EXPECT_EQ(dm->get_DMR_vector().size(), 1);
-    EXPECT_NE(dm->get_DMR_vector()[0], nullptr);
+    EXPECT_EQ(dm->get_dmr_vec().size(), 1);
+    EXPECT_NE(dm->get_dmr_vec()[0], nullptr);
     delete dm;
 }
 

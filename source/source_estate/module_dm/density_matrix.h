@@ -126,21 +126,21 @@ class DensityMatrix
      * @param GridD_in pointer of Grid_Driver object (used to find ajacent atoms)
      * @param ucell pointer of UnitCell object
      */
-    void init_DMR(const Grid_Driver* GridD_in, const UnitCell* ucell);
+    void init_dmr(const Grid_Driver* GridD_in, const UnitCell* ucell);
 
     /**
      * @brief initialize density matrix DMR from UnitCell and RA
      * @param ra pointer of Record_adj object (used to find ajacent atoms)
      * @param ucell pointer of UnitCell object
      */
-    void init_DMR(Record_adj& ra, const UnitCell* ucell);
+    void init_dmr(Record_adj& ra, const UnitCell* ucell);
 
     /**
      * @brief initialize density matrix DMR from another HContainer
      * now only support HContainer<double>
      * @param _DMR_in pointer of another HContainer object
      */
-    void init_DMR(const hamilt::HContainer<TR>& _DMR_in);
+    void init_dmr(const hamilt::HContainer<TR>& _DMR_in);
 
     /// @brief initialize density matrix DMR from another HContainer
     /// this is a temprory function for NSPIN=4 case 
@@ -148,7 +148,7 @@ class DensityMatrix
     /// would be refactor in the future
     /// @param _DMR_in 
     // the old input type ``:HContainer<complex<double>` causes redefination error if TR = complex<double>
-    void init_DMR(const hamilt::HContainer<TRShift>& _DMR_in);
+    void init_dmr(const hamilt::HContainer<TRShift>& _DMR_in);
 
     /**
      * @brief set dmk element directly
@@ -196,11 +196,11 @@ class DensityMatrix
      * @param ispin spin index (1 - spin up (support SOC) or 2 - spin down)
      * @return HContainer<TR>* pointer of DMR
      */
-    hamilt::HContainer<TR>* get_DMR_pointer(const int ispin) const;
+    hamilt::HContainer<TR>* get_dmr_ptr(const int ispin) const;
 
     /**
      * @brief check whether the stored DMR is a valid density matrix calculated from DMK
-     * init_DMR() resets the flag and cal_dmr()/cal_dmr_td() set it, so a freshly
+     * init_dmr() resets the flag and cal_dmr()/cal_dmr_td() set it, so a freshly
      * allocated, zeroed or file-read DMR is reported as not ready until the first
      * wavefunction-derived calculation
      * @return true if DMR is ready for Hamiltonian construction
@@ -214,20 +214,20 @@ class DensityMatrix
      * @brief get pointer vector of DMR
      * @return HContainer<TR>* vector of DMR
      */
-    const std::vector<hamilt::HContainer<TR>*>& get_DMR_vector() const
+    const std::vector<hamilt::HContainer<TR>*>& get_dmr_vec() const
     {
         return this->dmr;
     }
-    std::vector<hamilt::HContainer<TR>*>& get_DMR_vector()
+    std::vector<hamilt::HContainer<TR>*>& get_dmr_vec()
     {
         return this->dmr;
     }
 
-    const std::vector<std::vector<TR>>& get_DMR_save() const
+    const std::vector<std::vector<TR>>& get_dmr_save() const
     {
         return this->dmr_save;
     }
-    std::vector<std::vector<TR>>& get_DMR_save()
+    std::vector<std::vector<TR>>& get_dmr_save()
     {
         return this->dmr_save;
     }
@@ -307,7 +307,7 @@ class DensityMatrix
     /**
      * @brief save dmr into dmr_save
      */
-    void save_DMR();
+    void save_dmr();
     
     std::vector<ModuleBase::ComplexMatrix> edmk; // for TD-DFT
 
@@ -323,7 +323,7 @@ class DensityMatrix
     /**
      * @brief delete all HContainer objects in dmr and clear the vector
      */
-    void clear_DMR();
+    void clear_dmr();
 
     /**
      * @brief HContainer for density matrix in real space for 2D parallelization
@@ -333,7 +333,7 @@ class DensityMatrix
     std::vector<hamilt::HContainer<TR>*> dmr;
     std::vector<std::vector<TR>> dmr_save;
 
-    /// @brief whether dmr holds a density matrix calculated from DMK (reset by init_DMR, set by cal_dmr)
+    /// @brief whether dmr holds a density matrix calculated from DMK (reset by init_dmr, set by cal_dmr)
     bool _dmr_ready = false;
 
     /**

@@ -59,15 +59,15 @@ void ModuleIO::write_current(const UnitCell& ucell,
     module_dm::dm_from_psi(pv, pelec->wg, psi[0], tmp_dm);
 
     // init DMR
-    tmp_dm.init_DMR(ra, &ucell);
+    tmp_dm.init_dmr(ra, &ucell);
 
     if(PARAM.inp.td_stype!=2)
     {
-        tmp_dm.cal_DMR(-1);
+        tmp_dm.cal_dmr(-1);
     }
     else
     {
-        tmp_dm.cal_DMR_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);
+        tmp_dm.cal_dmr_td(td_p->get_phase_hybrid(), TD_info::cart_At, -1);
     }
     //DM_real.sum_DMR_spin();
     //DM_imag.sum_DMR_spin();
@@ -111,7 +111,7 @@ void ModuleIO::write_current(const UnitCell& ucell,
                 //std::cout<< "iat1: " << iat1 << " iat2: " << iat2 << " Rx: " << Rx << " Ry: " << Ry << " Rz:" << Rz << std::endl;
                 //  get BaseMatrix
                 hamilt::BaseMatrix<std::complex<double>>* tmp_matrix
-                    = tmp_dm.get_DMR_pointer(1)->find_matrix(iat1, iat2, Rx, Ry, Rz);
+                    = tmp_dm.get_dmr_ptr(1)->find_matrix(iat1, iat2, Rx, Ry, Rz);
                 // refactor
                 hamilt::BaseMatrix<std::complex<double>>* tmp_m_rvx
                     = current_term[0]->find_matrix(iat1, iat2, Rx, Ry, Rz);
@@ -230,7 +230,7 @@ void ModuleIO::write_current_eachk(const UnitCell& ucell,
     module_dm::dm_from_psi(pv, pelec->wg, psi[0], tmp_dm);
 
     // init DMR
-    tmp_dm.init_DMR(ra, &ucell);
+    tmp_dm.init_dmr(ra, &ucell);
 
     int nks = tmp_dm.get_DMK_nks() / nspin_dm;
     double current_total[3] = {0.0, 0.0, 0.0};
@@ -240,11 +240,11 @@ void ModuleIO::write_current_eachk(const UnitCell& ucell,
         {
             if(PARAM.inp.td_stype!=2)
             {
-                tmp_dm.cal_DMR(ik);
+                tmp_dm.cal_dmr(ik);
             }
             else
             {
-                tmp_dm.cal_DMR_td(td_p->get_phase_hybrid(),TD_info::cart_At,ik);
+                tmp_dm.cal_dmr_td(td_p->get_phase_hybrid(),TD_info::cart_At,ik);
             }
             
             // check later
@@ -289,7 +289,7 @@ void ModuleIO::write_current_eachk(const UnitCell& ucell,
                         //std::cout<< "iat1: " << iat1 << " iat2: " << iat2 << " Rx: " << Rx << " Ry: " << Ry << " Rz:" << Rz << std::endl;
                         //  get BaseMatrix
                         hamilt::BaseMatrix<std::complex<double>>* tmp_matrix
-                            = tmp_dm.get_DMR_pointer(is)->find_matrix(iat1, iat2, Rx, Ry, Rz);
+                            = tmp_dm.get_dmr_ptr(is)->find_matrix(iat1, iat2, Rx, Ry, Rz);
                         // refactor
                         hamilt::BaseMatrix<std::complex<double>>* tmp_m_rvx
                             = current_term[0]->find_matrix(iat1, iat2, Rx, Ry, Rz);

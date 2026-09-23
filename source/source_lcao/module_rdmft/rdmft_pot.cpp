@@ -157,8 +157,8 @@ void RDMFT<TK, TR>::cal_V_XC(const UnitCell& ucell)
 
     // module_dm::DensityMatrix<TK, double> DM_test(ParaV, nspin, kv->kvec_d, nk_total);
     // module_dm::dm_from_psi(ParaV, wg, wfc, DM_test);
-    // DM_test.init_DMR(this->gd, this->ucell);
-    // DM_test.cal_DMR(-1);
+    // DM_test.init_dmr(this->gd, this->ucell);
+    // DM_test.cal_dmr(-1);
 
     // // compare DM_XC and DM get in update_charge(or ABACUS)
     // std::cout << "\n\ntest DM_XC - DM in ABACUS: \n" << std::endl;

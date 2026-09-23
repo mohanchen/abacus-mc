@@ -35,7 +35,7 @@ namespace LR_Util
     {
         std::cout << label << "\n";
         int is = 0;
-        for (auto& dr : DMR.get_DMR_vector())
+        for (auto& dr : DMR.get_dmr_vec())
             print_HR(*dr, nat, "DMR[" + std::to_string(is++) + "]", threshold);
     }
     void get_DMR_real_imag_part(const module_dm::DensityMatrix<std::complex<double>, std::complex<double>>& DMR,
@@ -86,7 +86,7 @@ namespace LR_Util
     {
         hamilt::HContainer<TR> hR_tmp(&pmat);
         initialize_HR<T, TR>(hR_tmp, ucell, gd, orb_cutoff);
-        dm.init_DMR(hR_tmp);
+        dm.init_dmr(hR_tmp);
     }
 
     /// $\sum_{uvR} H1_{uv}(R) H2_{uv}(R)$

@@ -56,8 +56,8 @@ void Cal_ldos<T>::cal_ldos_lcao(
                                                     kv.get_nks() / nspin_dm);
 
         module_dm::dm_from_psi(dmat.dm->get_paraV_pointer(), weight, psi, dm_ldos);
-        dm_ldos.init_DMR(&grid_driver, &ucell);
-        dm_ldos.cal_DMR(-1);
+        dm_ldos.init_dmr(&grid_driver, &ucell);
+        dm_ldos.cal_dmr(-1);
 
         // allocate ldos space
         std::vector<double> ldos_space(PARAM.inp.nspin * chr.nrxx);
@@ -68,7 +68,7 @@ void Cal_ldos<T>::cal_ldos_lcao(
         }
 
     // calculate ldos
-        ModuleGint::cal_gint_rho(dm_ldos.get_DMR_vector(), PARAM.inp.nspin, ldos);
+        ModuleGint::cal_gint_rho(dm_ldos.get_dmr_vec(), PARAM.inp.nspin, ldos);
 
         // I'm not sure whether ldos should be output for each spin or not
         // ldos[0] += ldos[1] for nspin_dm == 2
