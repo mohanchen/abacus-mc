@@ -21,7 +21,10 @@ void edm_tddft(Parallel_Orbitals& pv,
     ModuleBase::TITLE("elecstate", "edm_tddft");
     ModuleBase::timer::start("TD_Efficiency", "edm_tddft");
 
-    const int nlocal = pv.nrow;
+    // Scalapack getrf/getri/gemm/geadd below take the GLOBAL matrix
+    // dimension; pv.nrow is only the per-process local row count and
+    // would truncate the operations to a submatrix of the full matrix.
+    const int nlocal = pv.get_global_row_size();
     assert(nlocal >= 0);
 
     dmat.dm->edmk.resize(kv.get_nks());
