@@ -344,7 +344,7 @@ TEST_F(DMTest, cal_DMR_blas_complex)
 //   spin_mult = 1   (the 2x2 spin block is stored as ONE doubled matrix),
 // while the GLOBAL physical nspin is 4. cal_DMR must still take the
 // spin-resolved (Pauli) branch, which folds each 2x2 complex spin block into
-// (rho_0, rho_x, rho_y, rho_z) via func_xyz_to_updown(). That branch used to be
+// (rho_0, rho_x, rho_y, rho_z) via xyz_to_updown(). That branch used to be
 // selected by the global PARAM.inp.nspin==4; a refactor (commit dcad8913d)
 // switched the condition to dm.spin_mult==4, which is never true in SOC
 // (spin_mult==1), silently dropping the rho_x/y/z spin channels and producing a

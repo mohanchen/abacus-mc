@@ -11,7 +11,7 @@
  * Physical invariant (must hold regardless of internal sign conventions):
  *   the magnetization <sigma> of the occupied one-electron state that is
  *   encoded in the density matrix must be recovered, with the CORRECT SIGN
- *   in ALL THREE cartesian components, by func_xyz_to_updown().
+ *   in ALL THREE cartesian components, by xyz_to_updown().
  *
  * Why this test exists (regression for the #7664 nspin=4 m_y sign flip):
  *   ABACUS builds the k-space DM as  DM_{ab} = sum_n w_n conj(c_{n,a}) c_{n,b}
@@ -19,7 +19,7 @@
  *   stored DM block is the complex conjugate of the physical 1-RDM P:
  *       DM_{up,dn} = conj(c_up) c_dn = conj(P_{up,dn}).
  *   Since m_x, m_z read Re() (conjugation-invariant) but m_y reads Im(),
- *   ONLY m_y is sensitive to this conjugation. func_xyz_to_updown() must be
+ *   ONLY m_y is sensitive to this conjugation. xyz_to_updown() must be
  *   consistent with that stored convention. PR #7664 set the m_y extraction
  *   to the "bare" textbook formula (valid for P, not for conj(P)), which
  *   flips m_y for in-plane moments and quenches non-collinear order
@@ -93,7 +93,7 @@ TEST(SocMagnetizationRoundtrip, ExtractRecoversPhysicalMagnetization)
 
         // 2x2 output buffer (row-major), func writes rho0/x/y/z into step_trace slots at icol=0
         double out[4] = {0, 0, 0, 0};
-        module_dm::DensityMatrix_Tools::func_xyz_to_updown<double>(tmp, 0, step_trace, out);
+        module_dm::DensityMatrix_Tools::xyz_to_updown<double>(tmp, 0, step_trace, out);
 
         const double mx = out[step_trace[1]];
         const double my = out[step_trace[2]];
@@ -128,7 +128,7 @@ TEST(SocMagnetizationRoundtrip, ComplexSpecializationRecoversPhysicalMagnetizati
         build_DM_block_as_dm_from_psi(c, 1.0, tmp);
 
         cd out[4] = {cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0)};
-        module_dm::DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(tmp, 0, step_trace, out);
+        module_dm::DensityMatrix_Tools::xyz_to_updown<std::complex<double>>(tmp, 0, step_trace, out);
 
         EXPECT_NEAR(out[step_trace[1]].real(), m_ref[0], 1e-10) << "m_x";
         EXPECT_NEAR(out[step_trace[2]].real(), m_ref[1], 1e-10) << "m_y (complex specialization)";

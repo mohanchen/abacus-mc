@@ -9,9 +9,9 @@ namespace module_dm
 
 // calculate DMR from DMK using blas for gamma-only calculation
 template <>
-void DensityMatrix<double, double>::cal_DMR(const int ik_in)
+void DensityMatrix<double, double>::cal_dmr(const int ik_in)
 {
-    ModuleBase::TITLE("DensityMatrix", "cal_DMR");
+    ModuleBase::TITLE("DensityMatrix", "cal_dmr");
     using TK = double;
     using TR = double;
 
@@ -20,7 +20,7 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
 
     assert(this->dmr.size()==this->spin_mult && "DMR has not been initialized!");
 
-    ModuleBase::timer::start("DensityMatrix", "cal_DMR");
+    ModuleBase::timer::start("DensityMatrix", "cal_dmr");
     const int ld_hk = this->pv->nrow;
     for (int is = 1; is <= this->spin_mult; ++is)
     {
@@ -73,7 +73,7 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
             }
         }
     }
-    ModuleBase::timer::end("DensityMatrix", "cal_DMR");
+    ModuleBase::timer::end("DensityMatrix", "cal_dmr");
     this->_dmr_ready = true;
 }
 

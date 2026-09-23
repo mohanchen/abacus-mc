@@ -24,11 +24,11 @@ void module_dm::init_dm(UnitCell& ucell,
         module_dm::dm_from_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
         if (cfg.esolver_type != "tddft" && cfg.td_stype == 2)
         {
-            dmat.dm->cal_DMR_td(*cfg.td_phase_hybrid, cfg.td_cart_At, -1);
+            dmat.dm->cal_dmr_td(*cfg.td_phase_hybrid, cfg.td_cart_At, -1);
         }
         else
         {
-            dmat.dm->cal_DMR(-1);
+            dmat.dm->cal_dmr(-1);
         }
 
         // use density matrix to calculate the charge density

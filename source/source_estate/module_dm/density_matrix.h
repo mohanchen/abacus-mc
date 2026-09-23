@@ -42,17 +42,17 @@ struct ShiftRealComplex<std::complex<double>>
  */
     template <typename TK, typename TR> class DensityMatrix;
 
-// DensityMatrix<complex<double>,TR>::cal_DMR() is illegal in C++, so DensityMatrix_Tools is used instead.
+// DensityMatrix<complex<double>,TR>::cal_dmr() is illegal in C++, so DensityMatrix_Tools is used instead.
 namespace DensityMatrix_Tools
 {
     template <typename TK, typename TR_in, typename TR_out>
-    extern void cal_DMR(
+    extern void cal_dmr(
         DensityMatrix<TK, TR_in> &dm,
         std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
         const int ik_in);
 
     template <typename TK, typename TR_in, typename TR_out>
-    extern void cal_DMR_td(
+    extern void cal_dmr_td(
         DensityMatrix<TK, TR_in> &dm,
         std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
         const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
@@ -60,18 +60,18 @@ namespace DensityMatrix_Tools
         const int ik_in);
 
     template <typename TK, typename TR_in, typename TR_out>
-    extern void cal_DMR_full(
+    extern void cal_dmr_full(
         const DensityMatrix<TK, TR_in> &dm,
         hamilt::HContainer<TR_out>* dmR_out,
         const int ik_in);
 
     template <typename TR>
-    extern void func_exp_mul_dmk(const std::complex<double> kphase,
+    extern void exp_mul_dmk(const std::complex<double> kphase,
                                 const std::vector<std::complex<double>>& DMK_mat_trans,
                                 TR* target_DMR_mat);
 
     template <typename TR>
-    extern void func_xyz_to_updown(const std::complex<double> tmp[4],
+    extern void xyz_to_updown(const std::complex<double> tmp[4],
                                   const int icol,
                                   const int step_trace[4],
                                   TR* target_DMR_mat);
@@ -105,7 +105,7 @@ class DensityMatrix
      *               it will be set to kvec_d.size() if the value is invalid
      * @param nspin the global physical nspin from INPUT (1/2/4); defaults to spin_mult for
      *               non-SOC cases where they coincide. Pass 4 explicitly for SOC/noncollinear
-     *               calculations so that cal_DMR selects the spin-resolved (Pauli) branch.
+     *               calculations so that cal_dmr selects the spin-resolved (Pauli) branch.
      */
     DensityMatrix(const Parallel_Orbitals* pv,
             const int spin_mult,
@@ -200,7 +200,7 @@ class DensityMatrix
 
     /**
      * @brief check whether the stored DMR is a valid density matrix calculated from DMK
-     * init_DMR() resets the flag and cal_DMR()/cal_DMR_td() set it, so a freshly
+     * init_DMR() resets the flag and cal_dmr()/cal_dmr_td() set it, so a freshly
      * allocated, zeroed or file-read DMR is reported as not ready until the first
      * wavefunction-derived calculation
      * @return true if DMR is ready for Hamiltonian construction
@@ -276,7 +276,7 @@ class DensityMatrix
      * if ik_in < 0, calculate all k-points
      * if ik_in >= 0, calculate only one k-point without summing over k-points
      */
-    void cal_DMR(const int ik_in);
+    void cal_dmr(const int ik_in);
 
     /**
      * @brief calculate density matrix DMR with additional vector potential phase, used for hybrid gauge tddft
@@ -284,7 +284,7 @@ class DensityMatrix
      * if ik_in < 0, calculate all k-points
      * if ik_in >= 0, calculate only one k-point
      */
-    void cal_DMR_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
+    void cal_dmr_td(const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
                     const ModuleBase::Vector3<double> At,
                     const int ik_in);
 
@@ -296,7 +296,7 @@ class DensityMatrix
      * if ik_in < 0, calculate all k-points
      * if ik_in >= 0, calculate only one k-point
      */
-    void cal_DMR_full(hamilt::HContainer<std::complex<double>>* dmR_out, const int ik_in) const;
+    void cal_dmr_full(hamilt::HContainer<std::complex<double>>* dmR_out, const int ik_in) const;
 
     /**
      * @brief (Only nspin=2) switch DMR to total density matrix or magnetization density matrix
@@ -333,7 +333,7 @@ class DensityMatrix
     std::vector<hamilt::HContainer<TR>*> dmr;
     std::vector<std::vector<TR>> dmr_save;
 
-    /// @brief whether dmr holds a density matrix calculated from DMK (reset by init_DMR, set by cal_DMR)
+    /// @brief whether dmr holds a density matrix calculated from DMK (reset by init_DMR, set by cal_dmr)
     bool _dmr_ready = false;
 
     /**
@@ -370,7 +370,7 @@ class DensityMatrix
     /**
      * @brief the global physical nspin from INPUT (1/2/4).
      * For SOC/noncollinear (nspin==4) the density matrix is stored with spin_mult==1
-     * (a single 2x2 spin-block matrix), but cal_DMR/cal_DMR_td must still take the
+     * (a single 2x2 spin-block matrix), but cal_dmr/cal_dmr_td must still take the
      * spin-resolved (Pauli) branch. spin_mult cannot distinguish this, so keep the
      * global value here. Equals spin_mult for non-SOC cases.
      */
@@ -387,17 +387,17 @@ class DensityMatrix
     std::vector<TR> dmr_origin;
     std::vector<TR> dmr_tmp;
 
-    friend void DensityMatrix_Tools::cal_DMR<TK, TR>(
+    friend void DensityMatrix_Tools::cal_dmr<TK, TR>(
         DensityMatrix<TK, TR>& dm,
         std::vector<hamilt::HContainer<TR>*>& dmR_out,
         const int ik_in);
-    friend void DensityMatrix_Tools::cal_DMR_td<TK, TR>(
+    friend void DensityMatrix_Tools::cal_dmr_td<TK, TR>(
         DensityMatrix<TK, TR>& dm,
         std::vector<hamilt::HContainer<TR>*>& dmR_out,
         const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
         const ModuleBase::Vector3<double> At,
         const int ik_in);
-    friend void DensityMatrix_Tools::cal_DMR_full<TK, TR>(
+    friend void DensityMatrix_Tools::cal_dmr_full<TK, TR>(
         const DensityMatrix<TK, TR>& dm,
         hamilt::HContainer<std::complex<double>>* dmR_out,
         const int ik_in);

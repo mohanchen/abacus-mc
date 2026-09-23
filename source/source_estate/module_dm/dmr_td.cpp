@@ -11,17 +11,17 @@ namespace module_dm
 {
 
 template <typename TK, typename TR_in, typename TR_out>
-void DensityMatrix_Tools::cal_DMR_td(
+void DensityMatrix_Tools::cal_dmr_td(
     DensityMatrix<TK, TR_in> &dm,
     std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
     const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
-    ModuleBase::TITLE("DensityMatrix", "cal_DMR_td");
+    ModuleBase::TITLE("DensityMatrix", "cal_dmr_td");
     assert(dmR_out.size()==dm.spin_mult && "DMR has not been initialized!");
 
-    ModuleBase::timer::start("DensityMatrix", "cal_DMR_td");
+    ModuleBase::timer::start("DensityMatrix", "cal_dmr_td");
     const int ld_hk = dm.pv->nrow;
     for (int is = 1; is <= dm.spin_mult; ++is)
     {
@@ -106,7 +106,7 @@ void DensityMatrix_Tools::cal_DMR_td(
                     const TK kphase = kphase_vec[ik][iR];
                     if(dm.nspin != 4)                // only save real kr*Dr-ki*Di
                 {
-                    func_exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
+                    exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
                 }
                 else if(dm.nspin == 4)
                 {
@@ -148,7 +148,7 @@ void DensityMatrix_Tools::cal_DMR_td(
                             tmp[2] = tmp_DMR_mat[icol + step_trace[2]];
                             tmp[3] = tmp_DMR_mat[icol + step_trace[3]];
 
-                            func_xyz_to_updown(tmp, icol, step_trace, target_DMR_mat);
+                            xyz_to_updown(tmp, icol, step_trace, target_DMR_mat);
                         }
                         tmp_DMR_mat += col_size * 2;
                         target_DMR_mat += col_size * 2;
@@ -157,12 +157,12 @@ void DensityMatrix_Tools::cal_DMR_td(
             }
         }
     }
-    ModuleBase::timer::end("DensityMatrix", "cal_DMR_td");
+    ModuleBase::timer::end("DensityMatrix", "cal_dmr_td");
     dm._dmr_ready = true;
 }
 
 template <>
-void DensityMatrix<double, double>::cal_DMR_td(
+void DensityMatrix<double, double>::cal_dmr_td(
     const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
     const ModuleBase::Vector3<double> At,
     const int ik_in)
@@ -170,21 +170,21 @@ void DensityMatrix<double, double>::cal_DMR_td(
     return;
 }
 template <>
-void DensityMatrix<std::complex<double>, double>::cal_DMR_td(
+void DensityMatrix<std::complex<double>, double>::cal_dmr_td(
     const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR_td(*this, this->dmr, phase_hybrid, At, ik_in);
+    DensityMatrix_Tools::cal_dmr_td(*this, this->dmr, phase_hybrid, At, ik_in);
 }
 
 template <>
-void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR_td(
+void DensityMatrix<std::complex<double>, std::complex<double>>::cal_dmr_td(
     const std::map<ModuleBase::Vector3<int>, std::complex<double>>& phase_hybrid,
     const ModuleBase::Vector3<double> At,
     const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR_td(*this, this->dmr, phase_hybrid, At, ik_in);
+    DensityMatrix_Tools::cal_dmr_td(*this, this->dmr, phase_hybrid, At, ik_in);
 }
 
 } // namespace module_dm

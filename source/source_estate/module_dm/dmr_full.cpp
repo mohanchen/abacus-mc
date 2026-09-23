@@ -11,14 +11,14 @@ namespace module_dm
 {
 
 template <typename TK, typename TR_in, typename TR_out>
-void DensityMatrix_Tools::cal_DMR_full(
+void DensityMatrix_Tools::cal_dmr_full(
     const DensityMatrix<TK, TR_in> &dm,
     hamilt::HContainer<TR_out>* dmR_out,
     const int ik_in)
 {
-    ModuleBase::TITLE("DensityMatrix", "cal_DMR_full");
+    ModuleBase::TITLE("DensityMatrix", "cal_dmr_full");
 
-    ModuleBase::timer::start("DensityMatrix", "cal_DMR_full");
+    ModuleBase::timer::start("DensityMatrix", "cal_dmr_full");
     const int ld_hk = dm.pv->nrow;
     hamilt::HContainer<TR_out>* target_DMR = dmR_out;
     target_DMR->set_zero();
@@ -98,21 +98,21 @@ void DensityMatrix_Tools::cal_DMR_full(
             }
         }
     }
-    ModuleBase::timer::end("DensityMatrix", "cal_DMR_full");
+    ModuleBase::timer::end("DensityMatrix", "cal_dmr_full");
 }
 
 template <>
-void DensityMatrix<double, double>::cal_DMR_full(
+void DensityMatrix<double, double>::cal_dmr_full(
     hamilt::HContainer<std::complex<double>>* dmR_out,
     const int ik_in) const
 {
 }
 template <>
-void DensityMatrix<std::complex<double>, double>::cal_DMR_full(
+void DensityMatrix<std::complex<double>, double>::cal_dmr_full(
     hamilt::HContainer<std::complex<double>>* dmR_out,
     const int ik_in) const
 {
-    DensityMatrix_Tools::cal_DMR_full(*this, dmR_out, ik_in);
+    DensityMatrix_Tools::cal_dmr_full(*this, dmR_out, ik_in);
 }
 
 } // namespace module_dm

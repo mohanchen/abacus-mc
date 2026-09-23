@@ -12,18 +12,18 @@ namespace module_dm
 
 // calculate DMR from DMK using blas for multi-k calculation
 template <typename TK, typename TR_in, typename TR_out>
-void DensityMatrix_Tools::cal_DMR(
+void DensityMatrix_Tools::cal_dmr(
     DensityMatrix<TK, TR_in> &dm,
     std::vector<hamilt::HContainer<TR_out>*> &dmR_out,
     const int ik_in)
 {
-    ModuleBase::TITLE("DensityMatrix", "cal_DMR");
-    ModuleBase::timer::start("DensityMatrix", "cal_DMR");
+    ModuleBase::TITLE("DensityMatrix", "cal_dmr");
+    ModuleBase::timer::start("DensityMatrix", "cal_dmr");
 
     // To check whether DMR has been initialized
     if (dmR_out.size() != dm.spin_mult)
     {
-        ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_DMR",
+        ModuleBase::WARNING_QUIT("DensityMatrix_Tools::cal_dmr",
                                  "DMR has not been initialized: dmR_out.size() != spin_mult!");
     }
 
@@ -110,7 +110,7 @@ void DensityMatrix_Tools::cal_DMR(
                     const TK kphase = kphase_vec[ik][iR];
                     if(dm.nspin != 4)                // only save real kr*Dr-ki*Di
                 {
-                    func_exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
+                    exp_mul_dmk(kphase, DMK_mat_trans, target_DMR_mat_vec[iR]);
                 }
                 else if(dm.nspin == 4)
                 {
@@ -155,7 +155,7 @@ void DensityMatrix_Tools::cal_DMR(
                             tmp[3] = tmp_DMR_mat[icol + step_trace[3]];
 
                             // transfer to Pauli matrix, save them back to the target_DMR_mat
-                            func_xyz_to_updown(tmp, icol, step_trace, target_DMR_mat);
+                            xyz_to_updown(tmp, icol, step_trace, target_DMR_mat);
                         }
                         tmp_DMR_mat += col_size * 2;
                         target_DMR_mat += col_size * 2;
@@ -164,20 +164,20 @@ void DensityMatrix_Tools::cal_DMR(
             }
         }
     }
-    ModuleBase::timer::end("DensityMatrix", "cal_DMR");
+    ModuleBase::timer::end("DensityMatrix", "cal_dmr");
     dm._dmr_ready = true;
 }
 
 template <>
-void DensityMatrix<std::complex<double>, double>::cal_DMR(const int ik_in)
+void DensityMatrix<std::complex<double>, double>::cal_dmr(const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR(*this, this->dmr, ik_in);
+    DensityMatrix_Tools::cal_dmr(*this, this->dmr, ik_in);
 }
 
 template <>
-void DensityMatrix<std::complex<double>, std::complex<double>>::cal_DMR(const int ik_in)
+void DensityMatrix<std::complex<double>, std::complex<double>>::cal_dmr(const int ik_in)
 {
-    DensityMatrix_Tools::cal_DMR(*this, this->dmr, ik_in);
+    DensityMatrix_Tools::cal_dmr(*this, this->dmr, ik_in);
 }
 
 } // namespace module_dm

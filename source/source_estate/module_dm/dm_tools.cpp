@@ -11,7 +11,7 @@ namespace module_dm
 {
 
 template <>
-void DensityMatrix_Tools::func_exp_mul_dmk<double>(
+void DensityMatrix_Tools::exp_mul_dmk<double>(
     const std::complex<double> kphase,
     const std::vector<std::complex<double>>& DMK_mat_trans,
     double* target_DMR_mat)
@@ -26,7 +26,7 @@ void DensityMatrix_Tools::func_exp_mul_dmk<double>(
 }
 
 template <>
-void DensityMatrix_Tools::func_exp_mul_dmk<std::complex<double>>(
+void DensityMatrix_Tools::exp_mul_dmk<std::complex<double>>(
     const std::complex<double> kphase,
     const std::vector<std::complex<double>>& DMK_mat_trans,
     std::complex<double>* target_DMR_mat)
@@ -40,7 +40,7 @@ void DensityMatrix_Tools::func_exp_mul_dmk<std::complex<double>>(
 }
 
 template <>
-void DensityMatrix_Tools::func_xyz_to_updown<double>(
+void DensityMatrix_Tools::xyz_to_updown<double>(
     const std::complex<double> tmp[4],
     const int icol,
     const int step_trace[4],
@@ -58,7 +58,7 @@ void DensityMatrix_Tools::func_xyz_to_updown<double>(
 }
 
 template <>
-void DensityMatrix_Tools::func_xyz_to_updown<std::complex<double>>(
+void DensityMatrix_Tools::xyz_to_updown<std::complex<double>>(
     const std::complex<double> tmp[4],
     const int icol,
     const int step_trace[4],
