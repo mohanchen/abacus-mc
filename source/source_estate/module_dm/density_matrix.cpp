@@ -84,56 +84,56 @@ void DensityMatrix<TK, TR>::switch_dmr(const int mode)
         {
         case 0:
             // switch to original density matrix
-            if (!this->dmr_tmp_.empty() && this->dmr_origin_.size() != 0)
+            if (!this->dmr_tmp.empty() && this->dmr_origin.size() != 0)
             {
-                this->_DMR[0]->allocate(this->dmr_origin_.data(), false);
-                this->dmr_tmp_.clear();
+                this->_DMR[0]->allocate(this->dmr_origin.data(), false);
+                this->dmr_tmp.clear();
             }
             // else: do nothing
             break;
         case 1:
             // switch to total magnetization density matrix, dmr_up + dmr_down
-            if(this->dmr_tmp_.empty())
+            if(this->dmr_tmp.empty())
             {
                 const size_t size = this->_DMR[0]->get_nnr();
-                this->dmr_tmp_.resize(size);
-                this->dmr_origin_.resize(size);
+                this->dmr_tmp.resize(size);
+                this->dmr_origin.resize(size);
                 for (int i = 0; i < size; ++i)
                 {
-                    this->dmr_origin_[i] = this->_DMR[0]->get_wrapper()[i];
-                    this->dmr_tmp_[i] = this->dmr_origin_[i] + this->_DMR[1]->get_wrapper()[i];
+                    this->dmr_origin[i] = this->_DMR[0]->get_wrapper()[i];
+                    this->dmr_tmp[i] = this->dmr_origin[i] + this->_DMR[1]->get_wrapper()[i];
                 }
-                this->_DMR[0]->allocate(this->dmr_tmp_.data(), false);
+                this->_DMR[0]->allocate(this->dmr_tmp.data(), false);
             }
             else
             {
                 const size_t size = this->_DMR[0]->get_nnr();
                 for (int i = 0; i < size; ++i)
                 {
-                    this->dmr_tmp_[i] = this->dmr_origin_[i] + this->_DMR[1]->get_wrapper()[i];
+                    this->dmr_tmp[i] = this->dmr_origin[i] + this->_DMR[1]->get_wrapper()[i];
                 }
             }
             break;
         case 2:
             // switch to magnetization density matrix, dmr_up - dmr_down
-            if(this->dmr_tmp_.empty())
+            if(this->dmr_tmp.empty())
             {
                 const size_t size = this->_DMR[0]->get_nnr();
-                this->dmr_tmp_.resize(size);
-                this->dmr_origin_.resize(size);
+                this->dmr_tmp.resize(size);
+                this->dmr_origin.resize(size);
                 for (int i = 0; i < size; ++i)
                 {
-                    this->dmr_origin_[i] = this->_DMR[0]->get_wrapper()[i];
-                    this->dmr_tmp_[i] = this->dmr_origin_[i] - this->_DMR[1]->get_wrapper()[i];
+                    this->dmr_origin[i] = this->_DMR[0]->get_wrapper()[i];
+                    this->dmr_tmp[i] = this->dmr_origin[i] - this->_DMR[1]->get_wrapper()[i];
                 }
-                this->_DMR[0]->allocate(this->dmr_tmp_.data(), false);
+                this->_DMR[0]->allocate(this->dmr_tmp.data(), false);
             }
             else
             {
                 const size_t size = this->_DMR[0]->get_nnr();
                 for (int i = 0; i < size; ++i)
                 {
-                    this->dmr_tmp_[i] = this->dmr_origin_[i] - this->_DMR[1]->get_wrapper()[i];
+                    this->dmr_tmp[i] = this->dmr_origin[i] - this->_DMR[1]->get_wrapper()[i];
                 }
             }
             break;

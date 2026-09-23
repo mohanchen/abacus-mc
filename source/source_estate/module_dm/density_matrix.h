@@ -384,8 +384,8 @@ class DensityMatrix
     int _nk = 0;
 
     /// temporary pointers for switch DMR, only used with nspin=2
-    std::vector<TR> dmr_origin_;
-    std::vector<TR> dmr_tmp_;
+    std::vector<TR> dmr_origin;
+    std::vector<TR> dmr_tmp;
 
     friend void DensityMatrix_Tools::cal_DMR<TK, TR>(
         DensityMatrix<TK, TR>& dm,
