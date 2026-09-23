@@ -88,7 +88,7 @@ void DensityMatrix_Tools::cal_DMR_td(
                     continue;
                 }
                 const TK*const DMK_mat_ptr
-                    = dm._DMK[ik + ik_begin].data()
+                    = dm.dmk[ik + ik_begin].data()
                       + col_ap * dm.pv->nrow + row_ap;
                 for(int icol = 0; icol < col_size; ++icol)
                 {

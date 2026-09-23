@@ -92,7 +92,7 @@ void DensityMatrix_Tools::cal_DMR(
                 }
                 // copy column-major DMK to row-major DMK_mat_trans (for the purpose of computational efficiency)
                 const TK*const DMK_mat_ptr
-                    = dm._DMK[ik + ik_begin].data()
+                    = dm.dmk[ik + ik_begin].data()
                       + col_ap * dm.pv->nrow + row_ap;
                 for(int icol = 0; icol < col_size; ++icol)
                 {

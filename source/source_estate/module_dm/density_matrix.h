@@ -151,7 +151,7 @@ class DensityMatrix
     void init_DMR(const hamilt::HContainer<TRShift>& _DMR_in);
 
     /**
-     * @brief set _DMK element directly
+     * @brief set dmk element directly
      * @param ispin spin index (1 - spin up (support SOC) or 2 - spin down)
      * @param ik k-point index
      * @param i row index
@@ -161,7 +161,7 @@ class DensityMatrix
     void set_DMK(const int ispin, const int ik, const int i, const int j, const TK value);
 
     /**
-     * @brief set _DMK element to zero
+     * @brief set dmk element to zero
     */
     void set_DMK_zero();
     
@@ -234,7 +234,7 @@ class DensityMatrix
 
     /**
      * @brief get pointer of DMK
-     * @param ik k-point index, which is the index of _DMK
+     * @param ik k-point index, which is the index of dmk
      * @return TK* pointer of DMK
      */
     TK* get_DMK_pointer(const int ik) const;
@@ -244,15 +244,15 @@ class DensityMatrix
     */
     const std::vector<std::vector<TK>>& get_DMK_vector() const
     {
-        return this->_DMK;
+        return this->dmk;
     }
     std::vector<std::vector<TK>>& get_DMK_vector()
     {
-        return this->_DMK;
+        return this->dmk;
     }
 
     /**
-     * @brief set _DMK using a input TK* pointer
+     * @brief set dmk using a input TK* pointer
      * please make sure the size of TK* is correct
     */
     void set_DMK_pointer(const int ik, TK* DMK_in);
@@ -347,8 +347,8 @@ class DensityMatrix
      * DMK should be a [spin_mult][_nk][i][j] matrix,
      * whose size is spin_mult * _nk * pv->get_nrow() * pv->get_ncol()
      */
-    // std::vector<ModuleBase::ComplexMatrix> _DMK;
-    std::vector<std::vector<TK>> _DMK;
+    // std::vector<ModuleBase::ComplexMatrix> dmk;
+    std::vector<std::vector<TK>> dmk;
 
     /**
      * @brief K_Vectors object, which is used to get k-point information

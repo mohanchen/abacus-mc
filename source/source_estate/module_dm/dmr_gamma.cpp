@@ -56,7 +56,7 @@ void DensityMatrix<double, double>::cal_DMR(const int ik_in)
             constexpr TK kphase = 1;
             // transpose DMK col=>row
             const TK* DMK_mat_ptr
-                = this->_DMK[0 + ik_begin].data()
+                = this->dmk[0 + ik_begin].data()
                   + col_ap * this->pv->nrow + row_ap;
             // set DMR element
             TR* target_DMR_ptr = target_mat->get_pointer();

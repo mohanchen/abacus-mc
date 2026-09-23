@@ -45,12 +45,12 @@ DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in,
 {
     ModuleBase::TITLE("DensityMatrix", "resize_DMK");
     const int nks = _nk * this->spin_mult;
-    this->_DMK.resize(nks);
+    this->dmk.resize(nks);
     for (int ik = 0; ik < nks; ik++)
     {
-        this->_DMK[ik].resize(this->pv->get_row_size() * this->pv->get_col_size());
+        this->dmk[ik].resize(this->pv->get_row_size() * this->pv->get_col_size());
     }
-    ModuleBase::Memory::record("DensityMatrix::DMK", this->_DMK.size() * this->_DMK[0].size() * sizeof(TK));
+    ModuleBase::Memory::record("DensityMatrix::DMK", this->dmk.size() * this->dmk[0].size() * sizeof(TK));
 }
 
 template <typename TK, typename TR>
@@ -59,12 +59,12 @@ DensityMatrix<TK, TR>::DensityMatrix(const Parallel_Orbitals* paraV_in, const in
       _kvec_d({ModuleBase::Vector3<double>(0, 0, 0)}), _nk(1)
 {
     ModuleBase::TITLE("DensityMatrix", "resize_gamma");
-    this->_DMK.resize(this->spin_mult);
+    this->dmk.resize(this->spin_mult);
     for (int ik = 0; ik < this->spin_mult; ik++)
     {
-        this->_DMK[ik].resize(this->pv->get_row_size() * this->pv->get_col_size());
+        this->dmk[ik].resize(this->pv->get_row_size() * this->pv->get_col_size());
     }
-    ModuleBase::Memory::record("DensityMatrix::DMK", this->_DMK.size() * this->_DMK[0].size() * sizeof(TK));
+    ModuleBase::Memory::record("DensityMatrix::DMK", this->dmk.size() * this->dmk[0].size() * sizeof(TK));
 }
 
 

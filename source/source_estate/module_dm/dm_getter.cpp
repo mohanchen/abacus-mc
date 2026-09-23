@@ -29,14 +29,14 @@ hamilt::HContainer<TR>* DensityMatrix<TK, TR>::get_DMR_pointer(const int ispin) 
     return this->dmr[ispin - 1];
 }
 
-// get _DMK[ik] pointer
+// get dmk[ik] pointer
 template <typename TK, typename TR>
 TK* DensityMatrix<TK, TR>::get_DMK_pointer(const int ik) const
 {
 #ifdef __DEBUG
     assert(ik < this->_nk * this->spin_mult);
 #endif
-    return const_cast<TK*>(this->_DMK[ik].data());
+    return const_cast<TK*>(this->dmk[ik].data());
 }
 
 // get a matrix element of density matrix dm(k)
@@ -47,15 +47,15 @@ TK DensityMatrix<TK, TR>::get_DMK(const int ispin, const int ik, const int i, co
     assert(ispin > 0 && ispin <= this->spin_mult);
 #endif
     // consider transpose col=>row
-    return this->_DMK[ik + this->_nk * (ispin - 1)][i * this->pv->nrow + j];
+    return this->dmk[ik + this->_nk * (ispin - 1)][i * this->pv->nrow + j];
 }
 
-// get _DMK nks, nrow, ncol
+// get dmk nks, nrow, ncol
 template <typename TK, typename TR>
 int DensityMatrix<TK, TR>::get_DMK_nks() const
 {
 #ifdef __DEBUG
-    assert(this->_DMK.size() == _nk * spin_mult);
+    assert(this->dmk.size() == _nk * spin_mult);
 #endif
     return _nk * spin_mult;
 }
@@ -64,16 +64,16 @@ template <typename TK, typename TR>
 int DensityMatrix<TK, TR>::get_DMK_size() const
 {
 #ifdef __DEBUG
-    assert(this->_DMK.size() != 0);
+    assert(this->dmk.size() != 0);
 #endif
-    return this->_DMK.size();
+    return this->dmk.size();
 }
 
 template <typename TK, typename TR>
 int DensityMatrix<TK, TR>::get_DMK_nrow() const
 {
 #ifdef __DEBUG
-    assert(this->_DMK.size() != 0);
+    assert(this->dmk.size() != 0);
 #endif
     return this->pv->nrow;
 }
@@ -82,7 +82,7 @@ template <typename TK, typename TR>
 int DensityMatrix<TK, TR>::get_DMK_ncol() const
 {
 #ifdef __DEBUG
-    assert(this->_DMK.size() != 0);
+    assert(this->dmk.size() != 0);
 #endif
     return this->pv->ncol;
 }

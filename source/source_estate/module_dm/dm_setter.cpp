@@ -22,10 +22,10 @@ void DensityMatrix<TK, TR>::set_DMK_pointer(const int ik, TK* DMK_in)
 #ifdef __DEBUG
     assert(ik < this->_nk * this->spin_mult);
 #endif
-    this->_DMK[ik].assign(DMK_in, DMK_in + this->pv->nrow * this->pv->ncol);
+    this->dmk[ik].assign(DMK_in, DMK_in + this->pv->nrow * this->pv->ncol);
 }
 
-// set _DMK element
+// set dmk element
 template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::set_DMK(const int ispin, const int ik, const int i, const int j, const TK value)
 {
@@ -34,16 +34,16 @@ void DensityMatrix<TK, TR>::set_DMK(const int ispin, const int ik, const int i, 
     assert(ik >= 0 && ik < this->_nk);
 #endif
     // consider transpose col=>row
-    this->_DMK[ik + this->_nk * (ispin - 1)][i * this->pv->nrow + j] = value;
+    this->dmk[ik + this->_nk * (ispin - 1)][i * this->pv->nrow + j] = value;
 }
 
-// set _DMK element
+// set dmk element
 template <typename TK, typename TR>
 void DensityMatrix<TK, TR>::set_DMK_zero()
 {
     for (int ik = 0; ik < spin_mult * _nk; ik++)
     {
-        std::fill(this->_DMK[ik].begin(), this->_DMK[ik].end(), TK{});
+        std::fill(this->dmk[ik].begin(), this->dmk[ik].end(), TK{});
     }
 }
 
