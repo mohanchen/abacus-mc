@@ -225,11 +225,11 @@ class DensityMatrix
 
     const std::vector<std::vector<TR>>& get_DMR_save() const
     {
-        return this->_DMR_save;
+        return this->dmr_save;
     }
     std::vector<std::vector<TR>>& get_DMR_save()
     {
-        return this->_DMR_save;
+        return this->dmr_save;
     }
 
     /**
@@ -305,7 +305,7 @@ class DensityMatrix
     void switch_dmr(const int mode);
 
     /**
-     * @brief save _DMR into _DMR_save
+     * @brief save _DMR into dmr_save
      */
     void save_DMR();
     
@@ -331,7 +331,7 @@ class DensityMatrix
      * vector.size() = 2 for spin-polarization
      */
     std::vector<hamilt::HContainer<TR>*> _DMR;
-    std::vector<std::vector<TR>> _DMR_save;
+    std::vector<std::vector<TR>> dmr_save;
 
     /// @brief whether _DMR holds a density matrix calculated from DMK (reset by init_DMR, set by cal_DMR)
     bool _dmr_ready = false;
