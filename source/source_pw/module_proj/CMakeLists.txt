@@ -14,6 +14,11 @@
 list(APPEND objects
     radial_proj.cpp
     onsite_proj_print.cpp
+    onsite_proj_tools.cpp
+    onsite_proj_tools_becp.cpp
+    onsite_proj_tools_dbecp.cpp
+    onsite_proj_tools_force.cpp
+    onsite_proj_tools_stress.cpp
 )
 
 add_library(

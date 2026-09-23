@@ -6,7 +6,7 @@
 #include "source_basis/module_pw/pw_basis_k.h"
 #include "source_pw/module_proj/radial_proj.h"
 #include "source_psi/psi.h"
-#include "source_pw/module_pwdft/onsite_proj_tools.h"
+#include "source_pw/module_proj/onsite_proj_tools.h"
 #include "source_pw/module_pwdft/dftu_base.h"
 
 #include <string>
