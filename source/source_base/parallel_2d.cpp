@@ -130,6 +130,16 @@ void Parallel_2D::_init_proc_grid(const MPI_Comm comm, const bool mode)
     Cblacs_gridinfo(blacs_ctxt, &dim0, &dim1, &coord[0], &coord[1]);
 }
 
+void Parallel_2D::release_blacs_grid()
+{
+    if (owns_blacs_ctxt_ && blacs_ctxt >= 0)
+    {
+        Cblacs_gridexit(blacs_ctxt);
+        blacs_ctxt = -1;
+        owns_blacs_ctxt_ = false;
+    }
+}
+
 void Parallel_2D::_set_dist_info(const int mg, const int ng, const int nb)
 {
     this->nb = nb;
@@ -179,16 +189,6 @@ int Parallel_2D::set(const int mg, const int ng, const int nb, const int blacs_c
     Cblacs_gridinfo(blacs_ctxt, &dim0, &dim1, &coord[0], &coord[1]);
     _set_dist_info(mg, ng, nb);
     return nrow == 0 || ncol == 0;
-}
-
-void Parallel_2D::release_blacs_grid()
-{
-    if (owns_blacs_ctxt_ && blacs_ctxt >= 0)
-    {
-        Cblacs_gridexit(blacs_ctxt);
-        blacs_ctxt = -1;
-        owns_blacs_ctxt_ = false;
-    }
 }
 #endif
 
