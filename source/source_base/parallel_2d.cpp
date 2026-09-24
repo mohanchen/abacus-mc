@@ -5,6 +5,50 @@
 
 #include <cassert>
 #include <numeric>
+#include <utility>
+
+Parallel_2D::~Parallel_2D()
+{
+#ifdef __MPI
+    release_blacs_grid();
+#endif
+}
+
+Parallel_2D::Parallel_2D(Parallel_2D&& rhs) noexcept
+{
+    *this = std::move(rhs);
+}
+
+Parallel_2D& Parallel_2D::operator=(Parallel_2D&& rhs) noexcept
+{
+    if (this != &rhs)
+    {
+#ifdef __MPI
+        release_blacs_grid();
+        owns_blacs_ctxt_ = rhs.owns_blacs_ctxt_;
+        rhs.owns_blacs_ctxt_ = false;
+        rhs.blacs_ctxt = -1;
+#endif
+        nrow = rhs.nrow;
+        ncol = rhs.ncol;
+        nloc = rhs.nloc;
+        nb = rhs.nb;
+        dim0 = rhs.dim0;
+        dim1 = rhs.dim1;
+        coord[0] = rhs.coord[0];
+        coord[1] = rhs.coord[1];
+        is_serial = rhs.is_serial;
+        global2local_row_ = std::move(rhs.global2local_row_);
+        global2local_col_ = std::move(rhs.global2local_col_);
+        local2global_row_ = std::move(rhs.local2global_row_);
+        local2global_col_ = std::move(rhs.local2global_col_);
+#ifdef __MPI
+        blacs_ctxt = rhs.blacs_ctxt;
+        std::copy(rhs.desc, rhs.desc + 9, desc);
+#endif
+    }
+    return *this;
+}
 
 bool Parallel_2D::in_this_processor(const std::size_t iw1_all, const std::size_t iw2_all) const
 {
@@ -120,17 +164,31 @@ void Parallel_2D::_set_dist_info(const int mg, const int ng, const int nb)
 
 int Parallel_2D::init(const int mg, const int ng, const int nb, const MPI_Comm comm, const bool mode)
 {
+    release_blacs_grid();
     _init_proc_grid(comm, mode);
+    owns_blacs_ctxt_ = true;
     _set_dist_info(mg, ng, nb);
     return nrow == 0 || ncol == 0;
 }
 
 int Parallel_2D::set(const int mg, const int ng, const int nb, const int blacs_ctxt)
 {
+    release_blacs_grid();
     this->blacs_ctxt = blacs_ctxt;
+    owns_blacs_ctxt_ = false;
     Cblacs_gridinfo(blacs_ctxt, &dim0, &dim1, &coord[0], &coord[1]);
     _set_dist_info(mg, ng, nb);
     return nrow == 0 || ncol == 0;
+}
+
+void Parallel_2D::release_blacs_grid()
+{
+    if (owns_blacs_ctxt_ && blacs_ctxt >= 0)
+    {
+        Cblacs_gridexit(blacs_ctxt);
+        blacs_ctxt = -1;
+        owns_blacs_ctxt_ = false;
+    }
 }
 #endif
 
@@ -152,6 +210,6 @@ void Parallel_2D::set_serial(const int mg, const int ng)
     global2local_col_ = local2global_col_;
     is_serial = true;
 #ifdef __MPI
-    blacs_ctxt = -1;
+    release_blacs_grid();
 #endif
 }
