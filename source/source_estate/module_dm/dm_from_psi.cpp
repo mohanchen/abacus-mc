@@ -103,9 +103,9 @@ void fill_weighted_wfc(const Parallel_Orbitals* ParaV,
  * its transpose. Using 'N' on the pre-conjugated wg_wfc and 'T' on wfc yields
  *     dmk(iw1, iw2) = sum_ib wg_wfc(ib, iw1) * wfc(ib, iw2),
  * i.e. the conjugation lives on the first index. 'C' must not be substituted
- * for 'T': it would also change the GEMM dimension (the operand column count
- * nbands would become the output row count) and put the conjugation on the
- * second index, producing the transpose of the stored conj-first DM block.
+ * for 'T': 'T' and 'C' give identical operand dimensions, but 'C' additionally
+ * conjugates the transposed operand, moving the conjugation to the second
+ * index and producing the transpose of the stored conj-first DM block.
  */
 void gemm_dm(const psi::Psi<double>& psi1,
              const psi::Psi<double>& psi2,
