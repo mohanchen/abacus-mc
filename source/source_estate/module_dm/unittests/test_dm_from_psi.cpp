@@ -5,12 +5,13 @@
 #include "source_estate/module_dm/density_matrix.h"
 #include "source_hamilt/module_hcontainer/hcontainer.h"
 #include "source_cell/klist.h"
+
 /************************************************
  *  unit test of DensityMatrix constructor
  ***********************************************/
 
 /**
- * This unit test construct a DensityMatrix object
+ * This unit test dmk_from_psi
  */
 
 // test_size is the number of atoms in the unitcell
@@ -39,7 +40,7 @@ class DMTest : public testing::Test
         ucell.atoms = new Atom[ucell.ntype];
         ucell.iat2it = new int[ucell.nat];
         ucell.iat2ia = new int[ucell.nat];
-        ucell.atoms[0].tau.resize(ucell.nat);
+        ucell.atoms[0].tau = new ModuleBase::Vector3<double>[ucell.nat];
         ucell.itia2iat.create(ucell.ntype, ucell.nat);
         for (int iat = 0; iat < ucell.nat; iat++)
         {
@@ -50,9 +51,9 @@ class DMTest : public testing::Test
         }
         ucell.atoms[0].na = test_size;
         ucell.atoms[0].nw = test_nw;
-        ucell.atoms[0].iw2l.resize(test_nw);
-        ucell.atoms[0].iw2m.resize(test_nw);
-        ucell.atoms[0].iw2n.resize(test_nw);
+        ucell.atoms[0].iw2l = new int[test_nw];
+        ucell.atoms[0].iw2m = new int[test_nw];
+        ucell.atoms[0].iw2n = new int[test_nw];
         for (int iw = 0; iw < test_nw; ++iw)
         {
             ucell.atoms[0].iw2l[iw] = 0;
@@ -68,6 +69,10 @@ class DMTest : public testing::Test
     void TearDown()
     {
         delete paraV;
+        delete[] ucell.atoms[0].tau;
+        delete[] ucell.atoms[0].iw2l;
+        delete[] ucell.atoms[0].iw2m;
+        delete[] ucell.atoms[0].iw2n;
         delete[] ucell.atoms;
     }
 
@@ -89,20 +94,7 @@ class DMTest : public testing::Test
 #endif
 };
 
-TEST_F(DMTest, DMConstructor_GammaOnly)
-{
-    // construct DM
-    std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
-    std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
-    int nspin = 2;
-    elecstate::DensityMatrix<double, double> DM(paraV, nspin);
-    // compare
-    EXPECT_EQ(DM.get_DMK_size(), nspin);
-    EXPECT_EQ(DM.get_DMK_nrow(), paraV->nrow);
-    EXPECT_EQ(DM.get_DMK_ncol(), paraV->ncol);
-}
-
-TEST_F(DMTest, DMConstructor_nspin1)
+TEST_F(DMTest, dmk_from_psi_nspin1)
 {
     // initalize a kvectors
     K_Vectors* kv = nullptr;
@@ -115,11 +107,11 @@ TEST_F(DMTest, DMConstructor_nspin1)
     std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
     std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
     int nspin = 1;
-    elecstate::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, nks);
+    module_dm::DensityMatrix<double, double> DM(kv, paraV, nspin);
     // compare
-    EXPECT_EQ(DM.get_DMK_nks(), kv->get_nks());
-    EXPECT_EQ(DM.get_DMK_nrow(), paraV->nrow);
-    EXPECT_EQ(DM.get_DMK_ncol(), paraV->ncol);
+    EXPECT_EQ(DM.get_dmk_nks(), kv->get_nks());
+    EXPECT_EQ(DM.get_dmk_nrow(), paraV->nrow);
+    EXPECT_EQ(DM.get_dmk_ncol(), paraV->ncol);
 
     // set elements of DMK
     for (int is = 1; is <= nspin; is++)
@@ -130,7 +122,7 @@ TEST_F(DMTest, DMConstructor_nspin1)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    DM.set_DMK(is, ik, i, j, is + ik * i + j);
+                    DM.set_dmk(is, ik, i, j, is + ik * i + j);
                 }
             }
         }
@@ -144,91 +136,24 @@ TEST_F(DMTest, DMConstructor_nspin1)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
-                    EXPECT_EQ(DM.get_DMK(is, ik, i, j), is + ik * i + j);
+                    EXPECT_EQ(DM.get_dmk(is, ik, i, j), is + ik * i + j);
                 }
             }
         }
     }
-    // test for get_DMK_pointer
+    // test for get_dmk_ptr
     for (int is = 1; is <= nspin; is++)
     {
         int ik_begin = (is - 1) * kv->get_nks() / nspin;
         for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
         {
-            double* ptr = DM.get_DMK_pointer(ik + ik_begin);
+            double* ptr = DM.get_dmk_ptr(ik + ik_begin);
             for (int i = 0; i < paraV->nrow; i++)
             {
                 for (int j = 0; j < paraV->ncol; j++)
                 {
                     // std::cout << ptr[i*paraV->ncol+j] << " ";
                     EXPECT_EQ(ptr[i * paraV->ncol + j], is + ik * i + j);
-                }
-            }
-        }
-    }
-    // delete kv
-    delete kv;
-}
-
-TEST_F(DMTest, DMConstructor_nspin2)
-{
-    // initalize a kvectors
-    K_Vectors* kv = nullptr;
-    int nspin = 2;
-    int nks = 4; // since nspin = 2
-    kv = new K_Vectors;
-    kv->set_nks(nks);
-    kv->kvec_d.resize(nks);
-    kv->kvec_d[1].x = 0.5;
-    kv->kvec_d[3].x = 0.5;
-    // construct DM
-    std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
-    std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
-    elecstate::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
-    // compare
-    EXPECT_EQ(DM.get_DMK_nks(), kv->get_nks());
-    EXPECT_EQ(DM.get_DMK_nrow(), paraV->nrow);
-    EXPECT_EQ(DM.get_DMK_ncol(), paraV->ncol);
-
-    // set elements of DMK
-    for (int is = 1; is <= nspin; is++)
-    {
-        for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
-        {
-            for (int i = 0; i < paraV->nrow; i++)
-            {
-                for (int j = 0; j < paraV->ncol; j++)
-                {
-                    DM.set_DMK(is, ik, i, j, ik * i + j);
-                }
-            }
-        }
-    }
-    // compare
-    for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
-    {
-        for (int i = 0; i < paraV->nrow; i++)
-        {
-            for (int j = 0; j < paraV->ncol; j++)
-            {
-                EXPECT_EQ(DM.get_DMK(1, ik, i, j), ik * i + j);
-                EXPECT_EQ(DM.get_DMK(1, ik, i, j), DM.get_DMK(2, ik, i, j));
-            }
-        }
-    }
-    // test for get_DMK_pointer
-    for (int is = 1; is <= nspin; is++)
-    {
-        int ik_begin = (is - 1) * kv->get_nks() / nspin;
-        for (int ik = 0; ik < kv->get_nks() / nspin; ik++)
-        {
-            double* ptr = DM.get_DMK_pointer(ik + ik_begin);
-            for (int i = 0; i < paraV->nrow; i++)
-            {
-                for (int j = 0; j < paraV->ncol; j++)
-                {
-                    // std::cout << ptr[i*paraV->ncol+j] << " ";
-                    EXPECT_EQ(ptr[i * paraV->ncol + j], ik * i + j);
                 }
             }
         }

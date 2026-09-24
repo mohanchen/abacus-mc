@@ -104,16 +104,16 @@ TEST_F(DMTest, DMInit1)
     // construct DM
     std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
     std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
-    elecstate::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, nks);
-    // initialize this->_DMR
+    module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, nks);
+    // initialize this->dmr
     Grid_Driver gd(0,0);
-    DM.init_DMR(&gd, &ucell);
+    DM.init_dmr(&gd, &ucell);
     // compare
-    EXPECT_EQ(DM.get_DMR_pointer(1)->size_atom_pairs(), test_size * test_size);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_atom_i(), 2);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_atom_j(), 2);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
+    EXPECT_EQ(DM.get_dmr_ptr(1)->size_atom_pairs(), test_size * test_size);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_atom_i(), 2);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_atom_j(), 2);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
     delete kv;
 }
 
@@ -131,7 +131,7 @@ TEST_F(DMTest, DMInit2)
     // construct DM
     std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
     std::cout << "nrow: " << paraV->nrow << "    ncol:" << paraV->ncol << std::endl;
-    elecstate::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, nks);
+    module_dm::DensityMatrix<double, double> DM(paraV, nspin, kv->kvec_d, nks);
     // initialize Record_adj using Grid_Driver
     Grid_Driver gd(0,0);
     Record_adj ra;
@@ -167,13 +167,13 @@ TEST_F(DMTest, DMInit2)
             rec[4] = I2;
         }
     }
-    DM.init_DMR(ra, &ucell);
+    DM.init_dmr(ra, &ucell);
     // compare
-    EXPECT_EQ(DM.get_DMR_pointer(1)->size_atom_pairs(), test_size * test_size);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_atom_i(), 2);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_atom_j(), 2);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
+    EXPECT_EQ(DM.get_dmr_ptr(1)->size_atom_pairs(), test_size * test_size);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_atom_i(), 2);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_atom_j(), 2);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
     // release memory
     delete kv;
 }
@@ -191,19 +191,19 @@ TEST_F(DMTest, DMInit3)
     kv->kvec_d[1].x = 0.5;
     kv->kvec_d[3].x = 0.5;
     // construct a DM
-    elecstate::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
+    module_dm::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
     Grid_Driver gd(0, 0);
-    DM.init_DMR(&gd, &ucell);
+    DM.init_dmr(&gd, &ucell);
     std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
     // construct another DM
-    elecstate::DensityMatrix<std::complex<double>, double> DM1(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
-    DM1.init_DMR(*DM.get_DMR_pointer(1));
+    module_dm::DensityMatrix<std::complex<double>, double> DM1(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
+    DM1.init_dmr(*DM.get_dmr_ptr(1));
     // compare
-    EXPECT_EQ(DM1.get_DMR_pointer(2)->size_atom_pairs(), test_size * test_size);
-    EXPECT_EQ(DM1.get_DMR_pointer(2)->get_atom_pair(2, 2).get_atom_i(), 2);
-    EXPECT_EQ(DM1.get_DMR_pointer(1)->get_atom_pair(2, 2).get_atom_j(), 2);
-    EXPECT_EQ(DM1.get_DMR_pointer(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
-    EXPECT_EQ(DM1.get_DMR_pointer(2)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
+    EXPECT_EQ(DM1.get_dmr_ptr(2)->size_atom_pairs(), test_size * test_size);
+    EXPECT_EQ(DM1.get_dmr_ptr(2)->get_atom_pair(2, 2).get_atom_i(), 2);
+    EXPECT_EQ(DM1.get_dmr_ptr(1)->get_atom_pair(2, 2).get_atom_j(), 2);
+    EXPECT_EQ(DM1.get_dmr_ptr(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
+    EXPECT_EQ(DM1.get_dmr_ptr(2)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
     //
     delete kv;
 }
@@ -249,20 +249,20 @@ TEST_F(DMTest, DMInit4)
         }
     }
     // construct a DM from this HContainer
-    elecstate::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
-    DM.init_DMR(*tmp_DMR);
+    module_dm::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
+    DM.init_dmr(*tmp_DMR);
     std::cout << "dim0: " << paraV->dim0 << "    dim1:" << paraV->dim1 << std::endl;
     // compare
-    EXPECT_EQ(DM.get_DMR_pointer(2)->size_atom_pairs(), test_size * test_size);
-    EXPECT_EQ(DM.get_DMR_pointer(2)->get_atom_pair(2, 2).get_atom_i(), 2);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_atom_j(), 2);
-    EXPECT_EQ(DM.get_DMR_pointer(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
-    EXPECT_EQ(DM.get_DMR_pointer(2)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
+    EXPECT_EQ(DM.get_dmr_ptr(2)->size_atom_pairs(), test_size * test_size);
+    EXPECT_EQ(DM.get_dmr_ptr(2)->get_atom_pair(2, 2).get_atom_i(), 2);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_atom_j(), 2);
+    EXPECT_EQ(DM.get_dmr_ptr(1)->get_atom_pair(2, 2).get_row_size(), paraV->get_nrow_atom(2));
+    EXPECT_EQ(DM.get_dmr_ptr(2)->get_atom_pair(2, 2).get_col_size(), paraV->get_ncol_atom(2));
     //
     delete kv;
 }
 
-// test for save_DMR
+// test for save_dmr
 TEST_F(DMTest, saveDMR)
 {
     // initalize a kvectors
@@ -275,22 +275,22 @@ TEST_F(DMTest, saveDMR)
     kv->kvec_d[1].x = 0.5;
     kv->kvec_d[3].x = 0.5;
     // construct a DM
-    elecstate::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
+    module_dm::DensityMatrix<std::complex<double>, double> DM(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
     Grid_Driver gd(0, 0);
-    DM.init_DMR(&gd, &ucell);
+    DM.init_dmr(&gd, &ucell);
     // construct another DM
-    elecstate::DensityMatrix<std::complex<double>, double> DM_test(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
-    DM_test.init_DMR(*DM.get_DMR_pointer(1));
-    DM_test.save_DMR();
-    EXPECT_EQ(DM_test.get_DMR_pointer(1)->get_nnr(), DM.get_DMR_pointer(1)->get_nnr());
-    EXPECT_EQ(DM_test.get_DMR_pointer(1)->get_nnr(), DM_test.get_DMR_save()[0].size());
+    module_dm::DensityMatrix<std::complex<double>, double> DM_test(paraV, nspin, kv->kvec_d, kv->get_nks() / nspin);
+    DM_test.init_dmr(*DM.get_dmr_ptr(1));
+    DM_test.save_dmr();
+    EXPECT_EQ(DM_test.get_dmr_ptr(1)->get_nnr(), DM.get_dmr_ptr(1)->get_nnr());
+    EXPECT_EQ(DM_test.get_dmr_ptr(1)->get_nnr(), DM_test.get_dmr_save()[0].size());
     // add a new AtomPair, act as a relaxation
     hamilt::AtomPair<double> tmp_ap(9, 9, 1, 0, 0, paraV);
-    DM_test.get_DMR_pointer(1)->insert_pair(tmp_ap);
-    DM_test.get_DMR_pointer(1)->allocate();
+    DM_test.get_dmr_ptr(1)->insert_pair(tmp_ap);
+    DM_test.get_dmr_ptr(1)->allocate();
     // update DMR_save
-    DM_test.save_DMR();
-    EXPECT_EQ(DM_test.get_DMR_pointer(1)->get_nnr(), DM_test.get_DMR_save()[0].size());
+    DM_test.save_dmr();
+    EXPECT_EQ(DM_test.get_dmr_ptr(1)->get_nnr(), DM_test.get_dmr_save()[0].size());
     // delete 
     delete kv;   
 }

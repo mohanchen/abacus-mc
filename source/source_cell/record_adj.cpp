@@ -241,5 +241,3 @@ void Record_adj::fill_info(const UnitCell& ucell,
         } // end ad
     } // end iat
 }
-
-
