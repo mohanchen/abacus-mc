@@ -349,11 +349,6 @@ class DensityMatrix
         return this->pv;
     }
 
-    const std::vector<ModuleBase::Vector3<double>>& get_kvec_d() const
-    {
-        return this->_kvec_d;
-    }
-
     /**
      * @brief calculate density matrix DMR from dm(k) using blas::axpy
      * @param ik_in
