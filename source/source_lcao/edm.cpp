@@ -41,7 +41,7 @@ module_dm::DensityMatrix<double, double> CalEDM<double>::cal_edm(const elecstate
     else
 #endif
     {
-        module_dm::dm_from_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
+        module_dm::dm_from_psi(&pv, wg_ekb, psi, edm);
     }
     edm.init_dmr(ra, &ucell);
     edm.cal_dmr(-1);
@@ -101,7 +101,7 @@ module_dm::DensityMatrix<std::complex<double>, double> CalEDM<std::complex<doubl
     else
     {
         // dm_from_psi
-        module_dm::dm_from_psi(edm.get_paraV_pointer(), wg_ekb, psi, edm);
+        module_dm::dm_from_psi(&pv, wg_ekb, psi, edm);
     }
 
     // cal_dm_2d

@@ -57,10 +57,10 @@ void ctrl_iter_lcao(UnitCell& ucell, // unit cell *
         if (cal_exx)
         {
             real_number ?
-              exx_nao.exd->exx_iter_finish(kv, ucell, *p_hamilt, *pelec, &dm, 
-                *p_chgmix, scf_ene_thr, iter, istep, conv_esolver) :
+              exx_nao.exd->exx_iter_finish(kv, ucell, *p_hamilt, *pelec, &dm,
+                pv, *p_chgmix, scf_ene_thr, iter, istep, conv_esolver) :
               exx_nao.exc->exx_iter_finish(kv, ucell, *p_hamilt, *pelec, &dm,
-                *p_chgmix, scf_ene_thr, iter, istep, conv_esolver);
+                pv, *p_chgmix, scf_ene_thr, iter, istep, conv_esolver);
         }
     }
 #endif

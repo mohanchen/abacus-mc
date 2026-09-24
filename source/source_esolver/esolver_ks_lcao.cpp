@@ -404,7 +404,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(UnitCell& ucell, const int istep, const 
 		? TD_info::cart_At
 		: ModuleBase::Vector3<double>();
 	init_dm_cfg.dm2rho_func = &LCAO_domain::dm2rho;
-	module_dm::init_dm<TK>(ucell, this->pelec, this->dmat, this->psi, this->chr, iter, exx_two_level_step, init_dm_cfg);
+	module_dm::init_dm<TK>(ucell, this->pelec, this->dmat, this->psi, this->chr, this->pv, iter, exx_two_level_step, init_dm_cfg);
 	}
 
 #ifdef __EXX
@@ -413,11 +413,11 @@ void ESolver_KS_LCAO<TK, TR>::iter_init(UnitCell& ucell, const int istep, const 
     {
         if (exx_info_.info_ri.real_number)
         {
-            this->exx_nao.exd->exx_eachiterinit(istep, ucell, *this->dmat.dm, this->kv, iter);
+            this->exx_nao.exd->exx_eachiterinit(istep, ucell, *this->dmat.dm, this->kv, this->pv, iter);
         }
         else
         {
-            this->exx_nao.exc->exx_eachiterinit(istep, ucell, *this->dmat.dm, this->kv, iter);
+            this->exx_nao.exc->exx_eachiterinit(istep, ucell, *this->dmat.dm, this->kv, this->pv, iter);
         }
     }
 #endif

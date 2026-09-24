@@ -98,7 +98,7 @@ void HSolverLCAO<TK>::solve(HSMatrix<TK>& hs,
                                      pes->skip_weights);
 
         elecstate::calEBand(pes->ekb, pes->wg, pes->f_en);
-        module_dm::dm_from_psi(dm.get_paraV_pointer(), pes->wg, psi, dm);
+        module_dm::dm_from_psi(this->ParaV, pes->wg, psi, dm);
         dm.cal_dmr(-1);
 
         if (!skip_charge)

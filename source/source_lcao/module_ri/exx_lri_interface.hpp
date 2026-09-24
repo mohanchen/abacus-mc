@@ -180,6 +180,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_eachiterinit(const int istep,
                                                    const UnitCell& ucell,
                                                    const module_dm::DensityMatrix<T, double>& dm,
                                                    const K_Vectors& kv,
+                                                   const Parallel_Orbitals& pv,
                                                    const int& iter)
 {
     ModuleBase::TITLE("Exx_LRI_Interface","exx_eachiterinit");
@@ -211,10 +212,10 @@ void Exx_LRI_Interface<T, Tdata>::exx_eachiterinit(const int istep,
                 this->mix_DMk_2D.set_mixing(this->p_chgmix_->get_mixing());
             }
 
-            auto cal = [this, &ucell,&kv, &flag_restart](const module_dm::DensityMatrix<T, double>& dm_in)
+            auto cal = [this, &ucell,&kv, &pv, &flag_restart](const module_dm::DensityMatrix<T, double>& dm_in)
             {
                 if (this->exx_spacegroup_symmetry)
-                    { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm_in.get_dmk_vec(), *dm_in.get_paraV_pointer()), flag_restart); }
+                    { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm_in.get_dmk_vec(), pv), flag_restart); }
                 else
                     { this->mix_DMk_2D.mix(dm_in.get_dmk_vec(), flag_restart); }
                 const std::vector<std::map<TA, std::map<TAC, RI::Tensor<Tdata>>>> Ds =
@@ -222,13 +223,13 @@ void Exx_LRI_Interface<T, Tdata>::exx_eachiterinit(const int istep,
                         ucell,
                         *this->exx_ptr->p_kv,
                         this->mix_DMk_2D.get_DMk_out(),
-                        *dm_in.get_paraV_pointer(),
+                        pv,
                         PARAM.inp.nspin,
                         this->exx_spacegroup_symmetry);
                 if(this->exx_spacegroup_symmetry && this->exx_ptr->info.exx_symmetry_realspace)
-                    { this->cal_exx_elec(Ds, ucell,*dm_in.get_paraV_pointer(), &this->symrot_); }
+                    { this->cal_exx_elec(Ds, ucell, pv, &this->symrot_); }
                 else
-                    { this->cal_exx_elec(Ds, ucell,*dm_in.get_paraV_pointer()); }
+                    { this->cal_exx_elec(Ds, ucell, pv); }
             };
 
             if(istep > 0 && flag_restart)
@@ -277,6 +278,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_iter_finish(const K_Vectors& kv,
 		hamilt::Hamilt<T>& hamilt,
 		elecstate::ElecState& elec,
 		module_dm::DensityMatrix<T,double>* dm, // mohan add 2025-11-04
+		const Parallel_Orbitals& pv,
 		Charge_Mixing& chgmix,
 		const double& scf_ene_thr,
 		int& iter,
@@ -332,6 +334,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_iter_finish(const K_Vectors& kv,
             hamilt,
             *dm,
             kv,
+            pv,
             PARAM.inp.nspin,
             iter,
             istep,
@@ -361,6 +364,7 @@ bool Exx_LRI_Interface<T, Tdata>::exx_after_converge(
     hamilt::Hamilt<T>& hamilt,
     const module_dm::DensityMatrix<T, double>& dm,
     const K_Vectors& kv,
+    const Parallel_Orbitals& pv,
     const int& nspin,
     int& iter,
     const int& istep,
@@ -425,7 +429,7 @@ bool Exx_LRI_Interface<T, Tdata>::exx_after_converge(
             const bool flag_restart = (this->two_level_step == 0 && PARAM.inp.init_wfc != "file") ? true : false;
 
             if(this->exx_spacegroup_symmetry)
-                { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm.get_dmk_vec(), *dm.get_paraV_pointer()), flag_restart); }
+                { this->mix_DMk_2D.mix(symrot_.restore_dm(kv, dm.get_dmk_vec(), pv), flag_restart); }
             else
                 { this->mix_DMk_2D.mix(dm.get_dmk_vec(), flag_restart); }
             const std::vector<std::map<TA, std::map<TAC, RI::Tensor<Tdata>>>> Ds =
@@ -433,13 +437,13 @@ bool Exx_LRI_Interface<T, Tdata>::exx_after_converge(
                     ucell,
                     *this->exx_ptr->p_kv,
                     this->mix_DMk_2D.get_DMk_out(),
-                    *dm.get_paraV_pointer(),
+                    pv,
                     nspin,
                     this->exx_spacegroup_symmetry);
             if(this->exx_spacegroup_symmetry && this->exx_ptr->info.exx_symmetry_realspace)
-                { this->cal_exx_elec(Ds, ucell, *dm.get_paraV_pointer(), &this->symrot_); }
+                { this->cal_exx_elec(Ds, ucell, pv, &this->symrot_); }
             else
-                { this->cal_exx_elec(Ds, ucell, *dm.get_paraV_pointer()); }    // restore DM but not Hexx
+                { this->cal_exx_elec(Ds, ucell, pv); }    // restore DM but not Hexx
 
             iter = 0;
             this->two_level_step++;

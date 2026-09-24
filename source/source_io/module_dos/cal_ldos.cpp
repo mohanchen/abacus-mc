@@ -22,6 +22,7 @@ void Cal_ldos<T>::cal_ldos_lcao(
         const ModuleBase::matrix &wg, // mohan add 2025-11-02
 		const psi::Psi<T>& psi,
 		const Parallel_Grid& pgrid,
+		const Parallel_Orbitals& pv,
 		const Grid_Driver& grid_driver,
 		const UnitCell& ucell)
 {
@@ -50,12 +51,12 @@ void Cal_ldos<T>::cal_ldos_lcao(
 
         // calculate dm-like for ldos
         const int nspin_dm = PARAM.inp.nspin == 2 ? 2 : 1;
-        module_dm::DensityMatrix<T, double> dm_ldos(dmat.dm->get_paraV_pointer(),
+        module_dm::DensityMatrix<T, double> dm_ldos(&pv,
                                                     nspin_dm,
                                                     kv.kvec_d,
                                                     kv.get_nks() / nspin_dm);
 
-        module_dm::dm_from_psi(dmat.dm->get_paraV_pointer(), weight, psi, dm_ldos);
+        module_dm::dm_from_psi(&pv, weight, psi, dm_ldos);
         dm_ldos.init_dmr(&grid_driver, &ucell);
         dm_ldos.cal_dmr(-1);
 

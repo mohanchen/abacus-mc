@@ -50,8 +50,8 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
 	// 2) out ldos
 	if (inp.out_ldos[0])
     {
-        ModuleIO::Cal_ldos<TK>::cal_ldos_lcao(pelec->eferm, chr, dmat, kv, 
-          pelec->ekb, pelec->wg, psi[0], pgrid, gd, ucell);
+        ModuleIO::Cal_ldos<TK>::cal_ldos_lcao(pelec->eferm, chr, dmat, kv,
+          pelec->ekb, pelec->wg, psi[0], pgrid, pv, gd, ucell);
     }
 
     // 3) print out exchange-correlation potential

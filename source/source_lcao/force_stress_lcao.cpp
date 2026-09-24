@@ -302,7 +302,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
 
         // Calculate local potential force/stress (vl_dphi)
         // This uses grid integration, not operator-based method
-        edm_cal.ParaV = dmat.dm->get_paraV_pointer();
+        edm_cal.ParaV = &pv;
         PulayForceStress::cal_pulay_fs(parts.fvl_dphi, sparts.svl_dphi, *dmat.dm, ucell, pelec->pot,
                                        isforce, isstress, false /*reset dm to gint*/);
     }
@@ -339,7 +339,7 @@ void Force_Stress_LCAO<T>::cal_operator_fs(UnitCell& ucell,
         tmp_nonlocal.cal_force_stress(isforce, isstress, &tmp_dmr, parts.fvnl_dbeta, sparts.svnl_dbeta);
 
         // Local-potential (vl_dphi) Pulay term via grid integration
-        edm_cal.ParaV = dmat.dm->get_paraV_pointer();
+        edm_cal.ParaV = &pv;
         PulayForceStress::cal_pulay_fs(parts.fvl_dphi, sparts.svl_dphi, *dmat.dm, ucell, pelec->pot,
                                        isforce, isstress, false);
     }

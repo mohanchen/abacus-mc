@@ -111,6 +111,7 @@ public:
                           const UnitCell& ucell,
                           const module_dm::DensityMatrix<T, double>& dm/**< double should be Tdata if complex-PBE-DM is supported*/,
                           const K_Vectors& kv,
+                          const Parallel_Orbitals& pv,
                           const int& iter);
 
     /// @brief in hamilt2rho: calculate Hexx and Eexx
@@ -122,6 +123,7 @@ public:
                          hamilt::Hamilt<T>& hamilt,
 						 elecstate::ElecState& elec,
 						 module_dm::DensityMatrix<T,double>* dm, // mohan add 2025-11-04
+						 const Parallel_Orbitals& pv,
                          Charge_Mixing& chgmix,
                          const double& scf_ene_thr,
                          int& iter,
@@ -132,6 +134,7 @@ public:
                             hamilt::Hamilt<T>& hamilt,
                             const module_dm::DensityMatrix<T, double>& dm/**< double should be Tdata if complex-PBE-DM is supported*/,
                             const K_Vectors& kv,
+                            const Parallel_Orbitals& pv,
                             const int& nspin,
                             int& iter,
                             const int& istep,

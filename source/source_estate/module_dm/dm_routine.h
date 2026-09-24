@@ -13,6 +13,7 @@
 #include "source_estate/module_charge/charge.h" // use charge
 #include "source_estate/module_dm/dm_holder.h" // define Setup_DM
 #include "source_hamilt/module_hcontainer/hcontainer.h"
+#include "source_basis/module_ao/parallel_orbitals.h"
 
 namespace module_dm
 {
@@ -38,6 +39,7 @@ void init_dm(UnitCell& ucell,
         Setup_DM<TK> &dmat,
         psi::Psi<TK>* psi,
         Charge &chr,
+        const Parallel_Orbitals& pv,
         const int iter,
         const int exx_two_level_step,
         const Init_DM_Config& cfg);

@@ -9,6 +9,7 @@ void module_dm::init_dm(UnitCell& ucell,
         module_dm::Setup_DM<TK> &dmat,
         psi::Psi<TK>* psi,
         Charge &chr,
+        const Parallel_Orbitals& pv,
         const int iter,
         const int exx_two_level_step,
         const Init_DM_Config& cfg)
@@ -21,7 +22,7 @@ void module_dm::init_dm(UnitCell& ucell,
 
         elecstate::calEBand(pelec->ekb, pelec->wg, pelec->f_en);
 
-        module_dm::dm_from_psi(dmat.dm->get_paraV_pointer(), pelec->wg, *psi, *dmat.dm);
+        module_dm::dm_from_psi(&pv, pelec->wg, *psi, *dmat.dm);
         if (cfg.esolver_type != "tddft" && cfg.td_stype == 2)
         {
             dmat.dm->cal_dmr_td(*cfg.td_phase_hybrid, cfg.td_cart_At, -1);
@@ -52,6 +53,7 @@ template void module_dm::init_dm<double>(UnitCell& ucell,
         module_dm::Setup_DM<double> &dmat,
         psi::Psi<double>* psi,
         Charge &chr,
+        const Parallel_Orbitals& pv,
         const int iter,
         const int exx_two_level_step,
         const Init_DM_Config& cfg);
@@ -61,6 +63,7 @@ template void module_dm::init_dm<std::complex<double>>(UnitCell& ucell,
         module_dm::Setup_DM<std::complex<double>> &dmat,
         psi::Psi<std::complex<double>>* psi,
         Charge &chr,
+        const Parallel_Orbitals& pv,
         const int iter,
         const int exx_two_level_step,
         const Init_DM_Config& cfg);

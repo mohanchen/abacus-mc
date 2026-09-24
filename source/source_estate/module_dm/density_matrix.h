@@ -342,14 +342,6 @@ class DensityMatrix
     void set_dmk_ptr(const int ik, TK* DMK_in);
 
     /**
-     * @brief get pointer of paraV
-     */
-    const Parallel_Orbitals* get_paraV_pointer() const
-    {
-        return this->pv;
-    }
-
-    /**
      * @brief calculate density matrix DMR from dm(k) using blas::axpy
      * @param ik_in
      * if ik_in < 0, calculate all k-points
