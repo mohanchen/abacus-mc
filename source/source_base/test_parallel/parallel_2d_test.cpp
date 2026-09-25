@@ -167,6 +167,28 @@ TEST_F(test_para2d, SetWithOwnCtxt)
     }
 }
 
+TEST_F(test_para2d, SetSerialClearsBorrowedCtxt)
+{
+    // Switching to serial mode must drop any reference to a BLACS grid,
+    // including a borrowed one: release_blacs_grid() is a no-op for
+    // borrowers, so without an explicit reset the serial object would keep
+    // a handle that dangles once the owner destroys the grid.
+    Parallel_2D owner;
+    owner.init(sizes[0].first, sizes[0].second, 1, MPI_COMM_WORLD);
+
+    Parallel_2D borrower;
+    borrower.set(sizes[0].first, sizes[0].second, 1, owner.blacs_ctxt);
+    EXPECT_EQ(borrower.blacs_ctxt, owner.blacs_ctxt);
+
+    borrower.set_serial(3, 4);
+    EXPECT_EQ(borrower.blacs_ctxt, -1);
+    EXPECT_EQ(borrower.comm(), MPI_COMM_NULL);
+
+    // the owner's grid must be unaffected by the borrower's mode switch
+    EXPECT_GE(owner.blacs_ctxt, 0);
+    EXPECT_NE(owner.comm(), MPI_COMM_NULL);
+}
+
 TEST_F(test_para2d, SerialLayoutInMpiBuild)
 {
     Parallel_2D p2d;

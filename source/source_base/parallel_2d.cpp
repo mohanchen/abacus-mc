@@ -219,5 +219,10 @@ void Parallel_2D::set_serial(const int mg, const int ng)
     is_serial = true;
 #ifdef __MPI
     release_blacs_grid();
+    // A serial layout must not reference any BLACS grid: for borrowers
+    // release_blacs_grid() is a no-op, so clear the handle explicitly;
+    // otherwise the object keeps a reference to the old grid, which also
+    // dangles once the owner destroys it.
+    blacs_ctxt = -1;
 #endif
 }
