@@ -29,47 +29,8 @@ void projectors::OnsiteProjector<T, Device>::overlap_proj_psi(
                     const int ld_psi)
 {
     ModuleBase::timer::start("OnsiteProj", "overlap");
-    // STAGE 3 - cal_becp
-    // CACHE 3 - it is no use to cache becp, it will change in each SCF iteration
-    // [in] psi, tab_atomic_, npw, becp, ik
-//     const char transa = 'C';
-//     const char transb = 'N';
-//     const int ldb = this->npwx_;
-//     const int ldc = this->tot_nproj;
-//     const std::complex<double> alpha = 1.0;
-//     const std::complex<double> beta = 0.0;
-//     if(this->becp == nullptr || this->size_becp < npm*ldc)
-//     {
-//         delete[] this->becp;
-//         this->becp = new std::complex<double>[npm*ldc];
-//         this->size_becp = npm*ldc;
-//     }
-//     setmem_complex_op()(ctx, this->becp, 0.0, this->size_becp);
-//     gemm_op()(
-//         this->ctx,
-//         transa,                 // const char transa
-//         transb,                 // const char transb
-//         ldc,                    // const int m
-//         npm,                    // const int n
-//         this->npw_,             // const int k
-//         &alpha,                 // const std::complex<double> alpha
-//         this->tab_atomic_,      // const std::complex<double>* a
-//         this->npw_,             // const int lda
-//         ppsi,                   // const std::complex<double>* b
-//         ldb,                    // const int ldb
-//         &beta,                  // const std::complex<double> beta
-//         becp,                   // std::complex<double>* c
-//         ldc);                   // const int ldc
-// #ifdef __MPI
-//     Parallel_Reduce::reduce_pool(becp, size_becp);
-// #endif
-
     // notes on refactor for DCU calculation
     // the npm here is nbands(occ) * npol, for calling cal_becp, the npol should be divided.
-    // std::cout << "npm: " << npm << std::endl;
-    // std::cout << "at " << __FILE__ << ": " << __LINE__ << " output tot_nproj: " << this->tot_nproj << std::endl;
-    // std::cout << "at " << __FILE__ << ": " << __LINE__ << " output npm: " << npm << std::endl;
-    // std::cout << "at " << __FILE__ << ": " << __LINE__ << " ik_: " << ik_ << std::endl;
     int npol = this->ucell->get_npol();
     if(this->becp == nullptr || this->size_becp < npm*this->tot_nproj)
     {
@@ -112,7 +73,6 @@ void projectors::OnsiteProjector<T, Device>::cal_occupations(
         {
             this->tabulate_atomic(ik);
         }
-        // std::cout << __FILE__ << ":" << __LINE__ << " nbands = " << nbands << std::endl;
         this->overlap_proj_psi(nbands * npol, psi_in->get_pointer());
         // proj(nbands*npol , nkb) holds <alpha_{iprj}|Psi_{k,i}>.
         // nspin=2 (npol=1): the spin-up and spin-down channels are separate
