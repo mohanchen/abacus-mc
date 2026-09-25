@@ -23,7 +23,8 @@ namespace ModuleIO
 			const double& emax,
 			const double& emin,
 			const double& dos_edelta_ev,
-			const double& bcoeff);
+			const double& bcoeff,
+			const int istep);
 
 	void print_tdos_multik(
 			const ModuleBase::matrix* pdos,

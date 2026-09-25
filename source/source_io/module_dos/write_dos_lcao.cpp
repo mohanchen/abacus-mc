@@ -86,7 +86,8 @@ void write_dos_lcao(
 				emax,
 				emin,
 				dos_edelta_ev,
-				bcoeff);
+				bcoeff,
+				istep);
     }
 
     ofs_running << " #DOS CALCULATION ENDS# " << std::endl;
