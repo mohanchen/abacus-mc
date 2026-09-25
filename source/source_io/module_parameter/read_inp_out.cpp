@@ -341,17 +341,11 @@ Also controled by out_freq_ion and out_app_flag.
             }
         };
         item.check_value = [](const Input_Item& item, const Parameter& para) {
-            if (para.input.out_dos == 3 && para.input.symmetry == "1")
+            if (para.input.out_dos == 3)
             {
                 ModuleBase::WARNING_QUIT("ReadInput",
-                                         "symmetry can't be used for out_dos==3(Fermi Surface "
-                                         "Plotting) by now.");
-            }
-            if (para.input.basis_type == "pw" && para.input.out_dos == 3)
-            {
-                ModuleBase::WARNING_QUIT("ReadInput",
-                                         "Fermi Surface Plotting not "
-                                         "implemented for plane wave now.");
+                                         "out_dos = 3 (Fermi surface output) has been removed. "
+                                         "Please use out_dos = 1 for DOS output.");
             }
         };
         this->add_item(item);

@@ -1,6 +1,5 @@
 #include "write_dos_pw.h"
 #include "cal_dos.h"
-#include "../module_energy/nscf_fermi_surf.h"
 #include "source_base/parallel_reduce.h"
 #include "source_io/module_parameter/parameter.h"
 
@@ -73,16 +72,6 @@ void ModuleIO::write_dos_pw(
     if (PARAM.inp.out_dos == 2)
     {
         ModuleBase::WARNING_QUIT("ModuleIO::write_dos_pw","PW basis do not support PDOS calculations yet.");
-    }
-
-    if(PARAM.inp.out_dos == 3)
-    {
-        for (int is = 0; is < nspin0; is++)
-        {
-            std::stringstream ss3;
-            ss3 << PARAM.globalv.global_out_dir << "fermi" << is << ".bxsf";
-            nscf_fermi_surface(ss3.str(), nbands, energy_fermi.ef, kv, ucell, ekb);
-        }
     }
 
     ofs_running << " #DOS CALCULATION ENDS# " << std::endl;

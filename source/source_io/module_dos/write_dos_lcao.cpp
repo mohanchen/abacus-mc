@@ -2,7 +2,6 @@
 #include "cal_dos.h"
 #include "cal_pdos_gamma.h"
 #include "cal_pdos_multik.h"
-#include "source_io/module_energy/nscf_fermi_surf.h"
 #include "source_io/module_parameter/parameter.h"
 
 namespace ModuleIO
@@ -88,16 +87,6 @@ void write_dos_lcao(
 				emin,
 				dos_edelta_ev,
 				bcoeff);
-    }
-
-    if(PARAM.inp.out_dos == 3)
-    {
-        for (int is = 0; is < nspin0; is++)
-        {
-            std::stringstream ss3;
-            ss3 << PARAM.globalv.global_out_dir << "fermi" << is << ".bxsf";
-            nscf_fermi_surface(ss3.str(), nbands, energy_fermi.ef, kv, ucell, ekb);
-        }
     }
 
     ofs_running << " #DOS CALCULATION ENDS# " << std::endl;
