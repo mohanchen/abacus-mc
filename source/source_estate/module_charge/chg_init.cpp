@@ -58,14 +58,12 @@ struct ReadCfg
  * @param chr [inout] Charge object supplying the rho/rhog buffers
  * @param rhopw [in] plane-wave basis for file decoding and Fourier transforms
  * @param cfg [in] file-reading configuration (suffix, dir, rank, logs)
- * @param read_error [out] whether rho reading failed
  */
 void read_rho_file(Charge& chr,
                    const ModulePW::PW_Basis& rhopw,
                    const UnitCell& ucell,
                    const Parallel_Grid& pgrid,
-                   const ReadCfg& cfg,
-                   bool& read_error)
+                   const ReadCfg& cfg)
 {
     const int nspin = chr.nspin;
     std::complex<double>** const rhog = chr.rhog;
@@ -107,45 +105,13 @@ void read_rho_file(Charge& chr,
                 ssc << readin_dir << "chgs" << is + 1 << ".cube";
             }
 
-            if (ModuleIO::read_vdata_palgrid(pgrid,
-                                             rank,
-                                             ofs_running,
-                                             ssc.str(),
-                                             rho[is],
-                                             ucell.nat))
-            {
-                ofs_running << " Read electron density from file: " << ssc.str() << std::endl;
-            }
-            else if (is > 0)    // nspin=2 or 4
-            {
-                if (is == 1)    // failed at the second spin
-                {
-                    std::cout << " Incomplete electron density file." << std::endl;
-                    read_error = true;
-                    break;
-                }
-                else if (is == 2)   // read 2 files when nspin=4
-                {
-                    ofs_running << " Didn't read in the electron density but would rearrange it later. "
-                                << std::endl;
-                }
-                else if (is == 3)   // read 2 files when nspin=4
-                {
-                    ofs_running << " rearrange electron density " << std::endl;
-                    for (int ir = 0; ir < rhopw.nrxx; ir++)
-                    {
-                        rho[3][ir] = rho[0][ir] - rho[1][ir];
-                        rho[0][ir] = rho[0][ir] + rho[1][ir];
-                        rho[1][ir] = 0.0;
-                        rho[2][ir] = 0.0;
-                    }
-                }
-            }
-            else
-            {
-                read_error = true;
-                break;
-            }
+            ModuleIO::read_vdata_palgrid(pgrid,
+                                         rank,
+                                         ofs_running,
+                                         ssc.str(),
+                                         rho[is],
+                                         ucell.nat);
+            ofs_running << " Read electron density from file: " << ssc.str() << std::endl;
         }
     }
 }
@@ -157,19 +123,13 @@ void read_rho_file(Charge& chr,
  *
  * @param chr [inout] Charge object supplying the kin_r buffer
  * @param rhopw [in] plane-wave basis for file decoding and Fourier transforms
- * @param suffix [in] restart file prefix
- * @param readin_dir [in] directory to read from
- * @param rank [in] this processor's rank for palgrid reads
- * @param ofs_running [inout] running log stream
- * @param ofs_warning [inout] warning log stream
- * @param read_kin_error [out] whether kinetic-density reading failed
+ * @param cfg [in] file-reading configuration (suffix, dir, rank, logs)
  */
 void read_kin_file(Charge& chr,
                    const ModulePW::PW_Basis& rhopw,
                    const UnitCell& ucell,
                    const Parallel_Grid& pgrid,
-                   const ReadCfg& cfg,
-                   bool& read_kin_error)
+                   const ReadCfg& cfg)
 {
     const int nspin = chr.nspin;
     double** const kin_r = chr.kin_r;
@@ -205,26 +165,13 @@ void read_kin_file(Charge& chr,
             std::stringstream ssc;
             ssc << readin_dir << "SPIN" << is + 1 << "_TAU.cube";
             // mohan update 2012-02-10, sunliang update 2023-03-09
-            if (ModuleIO::read_vdata_palgrid(
-                    pgrid,
-                    rank,
-                    ofs_running,
-                    ssc.str(),
-                    kin_r[is],
-                    ucell.nat))
-            {
-                ofs_running << " Read in the kinetic energy density: " << ssc.str() << std::endl;
-            }
-            else
-            {
-                read_kin_error = true;
-                std::cout << " WARNING: \"init_chg\" is enabled but ABACUS failed to read kinetic energy "
-                             "density from file.\n"
-                             " Please check if there is SPINX_TAU.cube (X=1,...) or "
-                             "{suffix}-TAU-DENSITY.restart in the directory.\n"
-                          << std::endl;
-                break;
-            }
+            ModuleIO::read_vdata_palgrid(pgrid,
+                                         rank,
+                                         ofs_running,
+                                         ssc.str(),
+                                         kin_r[is],
+                                         ucell.nat);
+            ofs_running << " Read in the kinetic energy density: " << ssc.str() << std::endl;
         }
     }
 }
@@ -239,8 +186,6 @@ void read_kin_file(Charge& chr,
  * @param omega [in] unit-cell volume
  * @param init_chg [in] INPUT.init_chg
  * @param meta_gga [in] whether the functional is meta-GGA (tau TF-init needed)
- * @param read_error [in] whether rho reading failed
- * @param read_kin_error [in] whether kinetic-density reading failed
  */
 void init_rho_atomic_and_tau(Charge& chr,
                              const ModulePW::PW_Basis& rhopw,
@@ -249,30 +194,20 @@ void init_rho_atomic_and_tau(Charge& chr,
                              const double& omega,
                              const std::string& init_chg,
                              const bool meta_gga,
-                             const bool read_error,
-                             const bool read_kin_error,
                              const AtomicRhoCfg& atomic_rho_cfg)
 {
     const int nspin = chr.nspin;
 
-    if (init_chg == "atomic" || read_error)
+    if (init_chg == "atomic")
     {
-        if (read_error)
-        {
-            std::cout << " Charge::init_rho: use atomic initialization instead." << std::endl;
-        }
         module_charge::atomic_rho(nspin, omega, chr.rho, strucFac, ucell, &rhopw, atomic_rho_cfg);
     }
 
     // initial tau = 3/5 rho^2/3, Thomas-Fermi
     if (meta_gga)
     {
-        if (init_chg == "atomic" || read_kin_error)
+        if (init_chg == "atomic")
         {
-            if (read_kin_error)
-            {
-                std::cout << " Charge::init_rho: init kinetic energy density from rho." << std::endl;
-            }
             const double fact = (3.0 / 5.0) * pow(3.0 * ModuleBase::PI * ModuleBase::PI, 2.0 / 3.0);
             for (int is = 0; is < nspin; ++is)
             {
@@ -322,15 +257,13 @@ void load_rho_from_restart(Charge& chr,
                 // try to load from the output of `out_chg`
                 std::stringstream ssc;
                 ssc << readin_dir << "chgs" << is + 1 << ".cube";
-                if (ModuleIO::read_vdata_palgrid(pgrid,
-                                                 rank,
-                                                 ofs_running,
-                                                 ssc.str(),
-                                                 chr.rho[is],
-                                                 ucell.nat))
-                {
-                    ofs_running << " Read in electron density: " << ssc.str() << std::endl;
-                }
+                ModuleIO::read_vdata_palgrid(pgrid,
+                                             rank,
+                                             ofs_running,
+                                             ssc.str(),
+                                             chr.rho[is],
+                                             ucell.nat);
+                ofs_running << " Read in electron density: " << ssc.str() << std::endl;
             }
         }
         restart.info_load.load_charge_finish = true;
@@ -369,44 +302,17 @@ void init_rho(Charge& chr,
     const std::string& readin_dir = cfg.global_readin_dir;
     const int rank = (cfg.esolver_type == "sdft" ? GlobalV::RANK_IN_BPGROUP : GlobalV::MY_RANK);
 
-    bool read_error = false;
-    bool read_kin_error = false;
     // Capture before the local ReadCfg (also named cfg) shadows the argument.
     const bool meta_gga = cfg.meta_gga;
     if (init_chg == "file" || init_chg == "auto")
     {
         ReadCfg cfg{suffix, readin_dir, rank,
                     GlobalV::ofs_running, GlobalV::ofs_warning};
-        read_rho_file(chr, rhopw, ucell, pgrid, cfg, read_error);
+        read_rho_file(chr, rhopw, ucell, pgrid, cfg);
 
-        if (read_error)
-        {
-            const std::string warn_msg
-                = " WARNING: \"init_chg\" is enabled but ABACUS failed to read\n charge density from file.\n"
-                  " Please check if there is chg.cube (for nspin=1) or"
-                  " chgsx.cube (x=1,2,etc.) or\n"
-                  " {suffix}-CHARGE-DENSITY.restart in the "
-                  "directory.\n";
-            std::cout << warn_msg;
-            if (init_chg == "file")
-            {
-                ModuleBase::WARNING_QUIT("Charge::init_rho",
-                                         "Failed to read in charge density from file.\n For initializing atomic "
-                                         "charge in calculations,\n please set init_chg to atomic in INPUT.");
-            }
-        }
-
-        // If the charge density is not read in, then the kinetic energy density is not read in either
         if (meta_gga)
         {
-            if (!read_error)
-            {
-                read_kin_file(chr, rhopw, ucell, pgrid, cfg, read_kin_error);
-            }
-            else
-            {
-                read_kin_error = true;
-            }
+            read_kin_file(chr, rhopw, ucell, pgrid, cfg);
         }
     }
 
@@ -417,8 +323,7 @@ void init_rho(Charge& chr,
         cfg.domag_z,
         GlobalV::ofs_warning};
     init_rho_atomic_and_tau(chr, rhopw, ucell, strucFac, ucell.omega,
-                            init_chg, cfg.meta_gga, read_error, read_kin_error,
-                            atomic_rho_cfg);
+                            init_chg, cfg.meta_gga, atomic_rho_cfg);
 
     load_rho_from_restart(chr, rhopw, ucell, pgrid, GlobalC::restart,
                           readin_dir, rank, GlobalV::ofs_running);

@@ -30,7 +30,7 @@ Magnetism::~Magnetism()
  *     - returns false for a truncated file (missing grid data)
  *     - returns false for invalid (zero) grid dimensions
  *   - read_vdata_palgrid()
- *     - propagates the failure instead of reading invalid data
+ *     - aborts the run instead of reading invalid data or hanging other ranks
  */
 
 struct ReadCubeInvalidTest : public ::testing::Test
@@ -143,6 +143,8 @@ TEST_F(ReadCubeInvalidTest, ReadVdataPalgridFails)
     Parallel_Grid pgrid(nx, ny, nz, nz, nrxx, nz, 1);
     std::ofstream ofs_running("unittest_read_cube.log");
 
-    EXPECT_FALSE(ModuleIO::read_vdata_palgrid(pgrid, 0, ofs_running, fn, data.data(), 1));
+    // read_vdata_palgrid now aborts the run on a malformed cube file so that
+    // no rank is left waiting in the grid distribution below.
+    EXPECT_DEATH(ModuleIO::read_vdata_palgrid(pgrid, 0, ofs_running, fn, data.data(), 1), "");
     std::remove(fn.c_str());
 }

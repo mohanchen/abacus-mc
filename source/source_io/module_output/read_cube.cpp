@@ -15,16 +15,18 @@ bool ModuleIO::read_vdata_palgrid(
 {
     ModuleBase::TITLE("ModuleIO", "read_vdata_palgrid");
 
-    // check if the file exists
+    // Only the root rank parses the file. On failure it must abort the whole
+    // run instead of returning: the other ranks enter pgrid.bcast() below and
+    // would block in MPI_Recv waiting for data that never comes.
     std::ifstream ifs(fn.c_str());
-    if (!ifs)
+    if (my_rank == 0)
     {
-        std::string tmp_warning_info = "!!! Couldn't find the file: " + fn;
-        ofs_running << tmp_warning_info << std::endl;
-        return false;
-    }
-    else
-    {
+        if (!ifs)
+        {
+            ofs_running << " !!! Couldn't find the file: " << fn << std::endl;
+            ModuleBase::WARNING_QUIT("ModuleIO::read_vdata_palgrid",
+                                     "couldn't find the cube file: " + fn);
+        }
         ofs_running << " Find the file " << fn << " , try to read it." << std::endl;
     }
 
@@ -57,7 +59,8 @@ bool ModuleIO::read_vdata_palgrid(
                                  dx, dy, dz, atom_type, atom_charge, atom_pos, data_read))
         {
             ofs_running << " !!! Failed to parse the cube file: " << fn << std::endl;
-            return false;
+            ModuleBase::WARNING_QUIT("ModuleIO::read_vdata_palgrid",
+                                     "failed to parse the cube file: " + fn);
         }
 
         // if mismatch, trilinear interpolate
