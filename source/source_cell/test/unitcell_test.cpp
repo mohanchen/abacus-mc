@@ -825,11 +825,11 @@ TEST_F(UcellTest, PrintSTRU)
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
     EXPECT_THAT(str, testing::HasSubstr("Cartesian"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
-    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("1 #number of atoms"));
     EXPECT_THAT(str, testing::HasSubstr("        1.0000000000        1.0000000000        1.0000000000 m 1 1 1"));
     EXPECT_THAT(str, testing::HasSubstr("H #label"));
-    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("2 #number of atoms"));
     EXPECT_THAT(str, testing::HasSubstr("        1.5000000000        1.5000000000        1.5000000000 m 0 0 0"));
     EXPECT_THAT(str, testing::HasSubstr("        0.5000000000        0.5000000000        0.5000000000 m 0 0 1"));
@@ -856,20 +856,20 @@ TEST_F(UcellTest, PrintSTRU)
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
     EXPECT_THAT(str, testing::HasSubstr("Direct"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
-    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("1 #number of atoms"));
     EXPECT_THAT(str,
                 testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 v        "
-                                   "0.1000000000        0.1000000000        0.1000000000"));
+                                   "0.1000000000        0.1000000000        0.1000000000 mag  0.0000"));
     EXPECT_THAT(str, testing::HasSubstr("H #label"));
-    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("2 #number of atoms"));
     EXPECT_THAT(str,
                 testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 v        "
-                                   "0.1000000000        0.1000000000        0.1000000000"));
+                                   "0.1000000000        0.1000000000        0.1000000000 mag  0.0000"));
     EXPECT_THAT(str,
                 testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 v        "
-                                   "0.1000000000        0.1000000000        0.1000000000"));
+                                   "0.1000000000        0.1000000000        0.1000000000 mag  0.0000"));
     str.clear();
     ifs.close();
     remove("C1H2_STRU");
@@ -903,17 +903,89 @@ TEST_F(UcellTest, PrintSTRU)
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
     EXPECT_THAT(str, testing::HasSubstr("Direct"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
-    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("1 #number of atoms"));
     EXPECT_THAT(str,
                 testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  0.5000"));
     EXPECT_THAT(str, testing::HasSubstr("H #label"));
-    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism"));
+    EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("2 #number of atoms"));
     EXPECT_THAT(str,
                 testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  0.4000"));
     EXPECT_THAT(str,
                 testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  0.3000"));
+    ifs.close();
+    remove("C1H2_STRU");
+
+    /**
+     * CASE: nspin2|Direct|no vel|no mag|no orb|no dpks_desc|rank0
+     * with non-zero initial magnetic moments set on atoms
+     */
+    ucell->atoms[0].mag[0] = 1.5;   // C
+    ucell->atoms[1].mag[0] = -0.5;  // H1
+    ucell->atoms[1].mag[1] = 2.0;   // H2
+    unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
+                            fn, "", 2, true, false, false, false, false, 0);
+    ifs.open("C1H2_STRU");
+    str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
+    EXPECT_THAT(str, testing::HasSubstr("C #label"));
+    EXPECT_THAT(str, testing::HasSubstr("1.5000   #magnetism (default, overridden by per-atom mag below)"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  1.5000"));
+    EXPECT_THAT(str, testing::HasSubstr("H #label"));
+    EXPECT_THAT(str, testing::HasSubstr("-0.5000   #magnetism (default, overridden by per-atom mag below)"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  -0.5000"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  2.0000"));
+    str.clear();
+    ifs.close();
+    remove("C1H2_STRU");
+
+    /**
+     * CASE: nspin4|Direct|no vel|no mag|no orb|no dpks_desc|rank0
+     * with initial magnetic moments set on atoms
+     */
+    ucell->atoms[0].m_loc_[0].set(1.0, 0.0, 0.0);   // C
+    ucell->atoms[1].m_loc_[0].set(0.0, 1.0, 0.0);   // H1
+    ucell->atoms[1].m_loc_[1].set(0.0, 0.0, 1.0);   // H2
+    unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
+                            fn, "", 4, true, false, false, false, false, 0);
+    ifs.open("C1H2_STRU");
+    str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
+    EXPECT_THAT(str, testing::HasSubstr("C #label"));
+    EXPECT_THAT(str, testing::HasSubstr("1.0000   #magnetism (default, overridden by per-atom mag below)"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  1.0000  0.0000  0.0000"));
+    EXPECT_THAT(str, testing::HasSubstr("H #label"));
+    EXPECT_THAT(str, testing::HasSubstr("1.0000   #magnetism (default, overridden by per-atom mag below)"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  0.0000  1.0000  0.0000"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  0.0000  0.0000  1.0000"));
+    str.clear();
+    ifs.close();
+    remove("C1H2_STRU");
+
+    /**
+     * CASE: nspin4|Direct|no vel|mag|no orb|no dpks_desc|rank0
+     * with Mulliken magnetic moments
+     */
+    ucell->atom_mulliken = {{-1, 0.5, 0.1, 0.2}, {-1, 0.4, 0.3, 0.4}, {-1, 0.3, 0.5, 0.6}};
+    unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
+                            fn, "", 4, true, false, true, false, false, 0);
+    ifs.open("C1H2_STRU");
+    str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
+    EXPECT_THAT(str, testing::HasSubstr("C #label"));
+    EXPECT_THAT(str, testing::HasSubstr("1.0000   #magnetism (default, overridden by per-atom mag below)"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  0.5000  0.1000  0.2000"));
+    EXPECT_THAT(str, testing::HasSubstr("H #label"));
+    EXPECT_THAT(str, testing::HasSubstr("1.0000   #magnetism (default, overridden by per-atom mag below)"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  0.4000  0.3000  0.4000"));
+    EXPECT_THAT(str,
+                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  0.3000  0.5000  0.6000"));
     ifs.close();
     remove("C1H2_STRU");
 }

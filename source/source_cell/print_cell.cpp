@@ -151,7 +151,18 @@ namespace unitcell
         for(int it = 0; it < ucell.ntype; it++)
         {
             str += "\n" + ucell.atoms[it].label + " #label\n";
-            str += FmtCore::format("%-8.4f #magnetism\n", ucell.magnet.start_mag[it]);
+            // Output real initial magnetism: for nspin=2 use mag[0], for nspin=4 use norm of m_loc_[0]
+            double start_mag = ucell.magnet.start_mag[it];
+            if (atoms[it].na > 0) {
+                if (nspin == 2) {
+                    start_mag = atoms[it].mag[0];
+                } else if (nspin == 4) {
+                    start_mag = std::sqrt(std::pow(atoms[it].m_loc_[0].x, 2)
+                                        + std::pow(atoms[it].m_loc_[0].y, 2)
+                                        + std::pow(atoms[it].m_loc_[0].z, 2));
+                }
+            }
+            str += FmtCore::format("%-8.4f #magnetism (default, overridden by per-atom mag below)\n", start_mag);
             str += FmtCore::format("%d #number of atoms\n", atoms[it].na);
             for(int ia = 0; ia < atoms[it].na; ia++)
             {
@@ -165,16 +176,27 @@ namespace unitcell
                 {
                     str += FmtCore::format(" v%20.10f%20.10f%20.10f", atoms[it].vel[ia].x, atoms[it].vel[ia].y, atoms[it].vel[ia].z);
                 }
-                if (nspin == 2 && magmom) // output magnetic information
+                if (nspin == 2) // output magnetic information
                 {
-                    str += FmtCore::format(" mag%8.4f", ucell.atom_mulliken[nat_][1]);
+                    if (magmom && !ucell.atom_mulliken.empty()) {
+                        str += FmtCore::format(" mag%8.4f", ucell.atom_mulliken[nat_][1]);
+                    } else {
+                        str += FmtCore::format(" mag%8.4f", atoms[it].mag[ia]);
+                    }
                 }
-                else if (nspin == 4 && magmom) // output magnetic information
+                else if (nspin == 4) // output magnetic information
                 {
-                    str += FmtCore::format(" mag%8.4f%8.4f%8.4f", 
-                                            ucell.atom_mulliken[nat_][1], 
-                                            ucell.atom_mulliken[nat_][2], 
-                                            ucell.atom_mulliken[nat_][3]);
+                    if (magmom && !ucell.atom_mulliken.empty()) {
+                        str += FmtCore::format(" mag%8.4f%8.4f%8.4f",
+                                                ucell.atom_mulliken[nat_][1],
+                                                ucell.atom_mulliken[nat_][2],
+                                                ucell.atom_mulliken[nat_][3]);
+                    } else {
+                        str += FmtCore::format(" mag%8.4f%8.4f%8.4f",
+                                                atoms[it].m_loc_[ia].x,
+                                                atoms[it].m_loc_[ia].y,
+                                                atoms[it].m_loc_[ia].z);
+                    }
                 }
                 str += "\n";
                 nat_++;
