@@ -91,3 +91,18 @@ TEST_F(BinstreamTest, array)
 
 	wwfc.open("wfc", "w");
 }
+
+TEST_F(BinstreamTest, WriteToUnopenedFile)
+{
+	Binstream ofs;
+	testing::internal::CaptureStdout();
+	EXPECT_EXIT(ofs << 42, ::testing::ExitedWithCode(1), "");
+	std::string output = testing::internal::GetCapturedStdout();
+	EXPECT_THAT(output, testing::HasSubstr("Error in Binstream"));
+
+	int a[3] = {1, 2, 3};
+	testing::internal::CaptureStdout();
+	EXPECT_EXIT(ofs.write(a, 3), ::testing::ExitedWithCode(1), "");
+	output = testing::internal::GetCapturedStdout();
+	EXPECT_THAT(output, testing::HasSubstr("Error in Binstream"));
+}

@@ -59,7 +59,17 @@ template<class T>
 Binstream& Binstream:: operator<<(const T& data)
 {
     const int size=sizeof(T);
-    fwrite(&data,size,1,this->fileptr);
+    if(this->fileptr==NULL)
+    {
+        std::cout<<"Error in Binstream: cannot write to an unopened file."<<std::endl;
+        exit(1);
+    }
+    size_t ch = fwrite(&data,size,1,this->fileptr);
+    if(ch<1)
+    {
+        std::cout<<"Error in Binstream: Some data didn't be written."<<std::endl;
+        exit(1);
+    }
     return *this;
 }
 
@@ -83,7 +93,17 @@ template<class T>
 Binstream& Binstream::write(const T* data, const int n)
 {
 	const int size=sizeof(T);
-    fwrite(data,size,n,this->fileptr);
+    if(this->fileptr==NULL)
+    {
+        std::cout<<"Error in Binstream: cannot write to an unopened file."<<std::endl;
+        exit(1);
+    }
+    size_t ch = fwrite(data,size,n,this->fileptr);
+    if(ch<static_cast<size_t>(n))
+    {
+        std::cout<<"Error in Binstream: Some dynamic memory didn't be written."<<std::endl;
+        exit(1);
+    }
     return *this;
 }
 
