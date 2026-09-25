@@ -51,14 +51,6 @@ namespace projectors
                     const std::complex<double>* ppsi,
                     const int ld_psi = 0
                     );
-        void read_abacus_orb(std::ifstream& ifs,
-                            std::string& elem,
-                            double& ecut,
-                            int& nr,
-                            double& dr,
-                            std::vector<int>& nzeta,
-                            std::vector<std::vector<double>>& radials,
-                            const int rank = 0);
         /// @brief static access to this class instance
         static OnsiteProjector<T, Device>* get_instance();
         void init(const std::string& orbital_dir,
