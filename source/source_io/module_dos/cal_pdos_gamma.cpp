@@ -29,19 +29,18 @@ void ModuleIO::cal_pdos(
     assert(emax>=emin);
     assert(dos_edelta_ev>0.0);
 
-    const int npoints = static_cast<int>(std::floor((emax - emin) / dos_edelta_ev));
+    const int npoints = static_cast<int>(std::floor((emax - emin) / dos_edelta_ev)) + 1;
     const int nlocal = PARAM.globalv.nlocal;
 
-    // PDOS calculated from each processor
-    ModuleBase::matrix* pdosk = new ModuleBase::matrix[nspin0];
-
+    // PDOS calculated locally on each processor
+    std::vector<ModuleBase::matrix> pdosk(nspin0);
     for (int is = 0; is < nspin0; ++is)
     {
         pdosk[is].create(nlocal, npoints, true);
     }
 
-    // PDOS after MPI_reduce
-    ModuleBase::matrix* pdos = new ModuleBase::matrix[nspin0];
+    // PDOS after MPI reduction
+    std::vector<ModuleBase::matrix> pdos(nspin0);
     for (int is = 0; is < nspin0; ++is)
     {
         pdos[is].create(nlocal, npoints, true);
@@ -50,9 +49,8 @@ void ModuleIO::cal_pdos(
     const double a = bcoeff;
     const double b = sqrt(ModuleBase::TWO_PI) * a;
 
-    std::complex<double>* waveg = new std::complex<double>[nlocal];
-
-    double* gauss = new double[npoints];
+    std::vector<std::complex<double>> waveg(nlocal);
+    std::vector<double> gauss(npoints);
 
     for (int is = 0; is < nspin0; ++is)
     {
@@ -64,10 +62,7 @@ void ModuleIO::cal_pdos(
         const double* ppsi = psi->get_pointer();
         for (int i = 0; i < nbands; ++i)
         {
-            ModuleBase::GlobalFunc::ZEROS(waveg, nlocal);
-
-            // Gauss smearing for each point
-            ModuleBase::GlobalFunc::ZEROS(gauss, npoints);
+            // Gauss smearing for each energy point
             for (int n = 0; n < npoints; ++n)
             {
                 double en = emin + n * dos_edelta_ev;
@@ -84,7 +79,6 @@ void ModuleIO::cal_pdos(
             const int one_int = 1;
 
             const double* sk = dynamic_cast<const hamilt::HamiltLCAO<double, double>*>(p_ham)->getSk();
-            //const double* sk = nullptr;
 
 #ifdef __MPI
             const char T_char = 'T';
@@ -108,6 +102,20 @@ void ModuleIO::cal_pdos(
                     &nb,
                     pv.desc,
                     &one_int);
+#else
+            // Serial fallback: mulk = S^T * psi (column i of the wavefunction)
+            const char T_char = 'T';
+            BlasConnector::gemv(T_char,
+                                nlocal,
+                                nlocal,
+                                one_float,
+                                sk,
+                                nlocal,
+                                ppsi + static_cast<size_t>(i) * nlocal,
+                                one_int,
+                                zero_float,
+                                mulk[0].c,
+                                one_int);
 #endif
 
             for (int j = 0; j < nlocal; ++j)
@@ -119,30 +127,26 @@ void ModuleIO::cal_pdos(
                     const int ic = pv.global2local_col(i);
                     waveg[j] = mulk[0](ic, ir) * psi[0](ic, ir);
                     const double x = waveg[j].real();
-                    BlasConnector::axpy(npoints, x, gauss, 1, pdosk[is].c + j * pdosk[is].nc, 1);
+                    BlasConnector::axpy(npoints, x, gauss.data(), 1, pdosk[is].c + j * pdosk[is].nc, 1);
                 }
             }
         } // ib
 
+        // reduce the local results into pdos[is] on rank 0
+        const int num = nlocal * npoints;
 #ifdef __MPI
-        // reduce the results into pdos[is].c
-        const int num = PARAM.globalv.nlocal * npoints;
         MPI_Reduce(pdosk[is].c, pdos[is].c, num, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+#else
+        std::copy(pdosk[is].c, pdosk[is].c + num, pdos[is].c);
 #endif
     } // is
 
-    delete[] pdosk;
-    delete[] waveg;
-    delete[] gauss;
-
     if (GlobalV::MY_RANK == 0)
     {
-        print_tdos_gamma(pdos, nlocal, npoints, emin, dos_edelta_ev);
-        print_pdos_gamma(ucell, pdos, nlocal, npoints, emin, dos_edelta_ev);
+        print_tdos_gamma(pdos.data(), nlocal, npoints, emin, dos_edelta_ev);
+        print_pdos_gamma(ucell, pdos.data(), nlocal, npoints, emin, dos_edelta_ev);
         ModuleIO::write_orb_info(&ucell);
     }
-
-	delete[] pdos;
 }
 
 
