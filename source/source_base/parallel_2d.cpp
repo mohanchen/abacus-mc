@@ -183,6 +183,14 @@ int Parallel_2D::init(const int mg, const int ng, const int nb, const MPI_Comm c
 
 int Parallel_2D::set(const int mg, const int ng, const int nb, const int blacs_ctxt)
 {
+    // Reusing the context owned by this object must not destroy the grid or
+    // drop ownership; otherwise the grid about to be reused is released.
+    if (blacs_ctxt == this->blacs_ctxt && owns_blacs_ctxt_)
+    {
+        Cblacs_gridinfo(blacs_ctxt, &dim0, &dim1, &coord[0], &coord[1]);
+        _set_dist_info(mg, ng, nb);
+        return nrow == 0 || ncol == 0;
+    }
     release_blacs_grid();
     this->blacs_ctxt = blacs_ctxt;
     owns_blacs_ctxt_ = false;
