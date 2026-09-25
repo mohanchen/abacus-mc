@@ -24,14 +24,14 @@ class overlap_R:
         self.orb.build(orb_file_num, orb_file_list, 'o')
 
         # Standardize the orbital grid
-        rmax = self.orb.rcut_max * 2.0
+        rmax = self.orb.rcut_max() * 2.0
         dr = 0.01
         nr = int(rmax/dr) + 1
         self.orb.set_uniform_grid(True, nr, rmax, 'i', True)
 
         # Print basic orbital information
         ntype = self.orb.ntype
-        lmax = self.orb.lmax
+        lmax = self.orb.lmax()
 
         # Initialize the integrator
         self.S_intor = nao.TwoCenterIntegrator()
@@ -54,7 +54,7 @@ class overlap_R:
         count_atom = 0
         for it, element in enumerate(unique_elements):
             for ia in range(element_counts[element]):
-                for iL in range(self.orb.lmax_(it)+1):
+                for iL in range(self.orb.lmax(it)+1):
                     for iN in range(self.orb.nzeta(it, iL)):
                         for im in range(2*iL+1):
                             self.iw2it[count] = it
@@ -71,7 +71,7 @@ class overlap_R:
                 count_atom = count_atom + 1
 
     def cal_R_direct_coor(self):
-        rcut=self.orb.rcut_max*np.ones(len(self.atom_positions_c),dtype=float)
+        rcut=self.orb.rcut_max()*np.ones(len(self.atom_positions_c),dtype=float)
         print(rcut)
         Ncell = NeighbourCell(self.lattice_vector, self.atom_positions_c, self.atom_positions_ct, rcut)
         self.R_direct_coor = np.array(Ncell.check_interaction_neighbours())
