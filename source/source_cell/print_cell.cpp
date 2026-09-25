@@ -99,7 +99,8 @@ namespace unitcell
                          const bool& magmom,
                          const bool& orb,
                          const bool& dpks_desc,
-                         const int& iproc)
+                         const int& iproc,
+                         const ModuleBase::matrix& force)
     {
         ModuleBase::TITLE("UnitCell","print_stru_file");
         if (iproc != 0)
@@ -147,7 +148,12 @@ namespace unitcell
         str += "\nATOMIC_POSITIONS\n";
         const std::string scale = direct? "Direct": "Cartesian";
         int nat_ = 0; // counter iat, for printing out Mulliken magmom who is indexed by iat
-        str += scale + "\n";
+        // If force is provided, output positions in Angstrom and forces in eV/Angstrom
+        const bool has_force = (force.nr == ucell.nat && force.nc == 3);
+        const std::string unit_note = has_force? "  # positions in Angstrom, forces in eV/Angstrom\n" : "\n";
+        str += scale + unit_note;
+        const double pos_conv = has_force? ModuleBase::BOHR_TO_A : 1.0; // Bohr to Angstrom
+        const double force_conv = ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A; // Ry/Bohr to eV/Angstrom
         for(int it = 0; it < ucell.ntype; it++)
         {
             str += "\n" + ucell.atoms[it].label + " #label\n";
@@ -170,11 +176,18 @@ namespace unitcell
                 const double& x = direct? atoms[it].taud[ia].x: atoms[it].tau[ia].x;
                 const double& y = direct? atoms[it].taud[ia].y: atoms[it].tau[ia].y;
                 const double& z = direct? atoms[it].taud[ia].z: atoms[it].tau[ia].z;
-                str += FmtCore::format("%20.10f%20.10f%20.10f", x, y, z);
+                str += FmtCore::format("%20.10f%20.10f%20.10f", x*pos_conv, y*pos_conv, z*pos_conv);
                 str += FmtCore::format(" m%2d%2d%2d", atoms[it].mbl[ia].x, atoms[it].mbl[ia].y, atoms[it].mbl[ia].z);
                 if (vel) // output velocity
                 {
                     str += FmtCore::format(" v%20.10f%20.10f%20.10f", atoms[it].vel[ia].x, atoms[it].vel[ia].y, atoms[it].vel[ia].z);
+                }
+                if (has_force) // output force
+                {
+                    str += FmtCore::format(" f%20.10f%20.10f%20.10f",
+                                           force(nat_, 0)*force_conv,
+                                           force(nat_, 1)*force_conv,
+                                           force(nat_, 2)*force_conv);
                 }
                 if (nspin == 2) // output magnetic information
                 {

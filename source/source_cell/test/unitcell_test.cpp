@@ -809,7 +809,7 @@ TEST_F(UcellTest, PrintSTRU)
      *
      */
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                              fn, "", 1, false, false, false, false, false, 0);
+                              fn, "", 1, false, false, false, false, false, 0, ModuleBase::matrix());
     std::ifstream ifs;
     ifs.open("C1H2_STRU");
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
@@ -841,7 +841,7 @@ TEST_F(UcellTest, PrintSTRU)
      *
      */
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                            fn, "", 2, true, true, false, false, false, 0);
+                            fn, "", 2, true, true, false, false, false, 0, ModuleBase::matrix());
     ifs.open("C1H2_STRU");
     str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_SPECIES"));
@@ -883,7 +883,7 @@ TEST_F(UcellTest, PrintSTRU)
     ucell->atom_mulliken
         = {{-1, 0.5}, {-1, 0.4}, {-1, 0.3}}; // first index is iat, the second is components, starts seems from 1
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                            fn, "", 2, true, false, true, true, true, 0);
+                            fn, "", 2, true, false, true, true, true, 0, ModuleBase::matrix());
     ifs.open("C1H2_STRU");
     str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_SPECIES"));
@@ -925,7 +925,7 @@ TEST_F(UcellTest, PrintSTRU)
     ucell->atoms[1].mag[0] = -0.5;  // H1
     ucell->atoms[1].mag[1] = 2.0;   // H2
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                            fn, "", 2, true, false, false, false, false, 0);
+                            fn, "", 2, true, false, false, false, false, 0, ModuleBase::matrix());
     ifs.open("C1H2_STRU");
     str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
@@ -950,7 +950,7 @@ TEST_F(UcellTest, PrintSTRU)
     ucell->atoms[1].m_loc_[0].set(0.0, 1.0, 0.0);   // H1
     ucell->atoms[1].m_loc_[1].set(0.0, 0.0, 1.0);   // H2
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                            fn, "", 4, true, false, false, false, false, 0);
+                            fn, "", 4, true, false, false, false, false, 0, ModuleBase::matrix());
     ifs.open("C1H2_STRU");
     str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
@@ -973,7 +973,7 @@ TEST_F(UcellTest, PrintSTRU)
      */
     ucell->atom_mulliken = {{-1, 0.5, 0.1, 0.2}, {-1, 0.4, 0.3, 0.4}, {-1, 0.3, 0.5, 0.6}};
     unitcell::print_stru_file(*ucell,ucell->atoms,ucell->latvec,
-                            fn, "", 4, true, false, true, false, false, 0);
+                            fn, "", 4, true, false, true, false, false, 0, ModuleBase::matrix());
     ifs.open("C1H2_STRU");
     str = {(std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>()};
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
