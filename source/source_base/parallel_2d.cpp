@@ -27,6 +27,7 @@ Parallel_2D& Parallel_2D::operator=(Parallel_2D&& rhs) noexcept
         release_blacs_grid();
         owns_blacs_ctxt_ = rhs.owns_blacs_ctxt_;
         rhs.owns_blacs_ctxt_ = false;
+        blacs_ctxt = rhs.blacs_ctxt;
         rhs.blacs_ctxt = -1;
 #endif
         nrow = rhs.nrow;
@@ -43,7 +44,6 @@ Parallel_2D& Parallel_2D::operator=(Parallel_2D&& rhs) noexcept
         local2global_row_ = std::move(rhs.local2global_row_);
         local2global_col_ = std::move(rhs.local2global_col_);
 #ifdef __MPI
-        blacs_ctxt = rhs.blacs_ctxt;
         std::copy(rhs.desc, rhs.desc + 9, desc);
 #endif
     }
