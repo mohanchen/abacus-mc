@@ -26,9 +26,9 @@ void Parallel_K2D<TK>::set_para_env(int nks,
                    this->RANK_IN_POOL,
                    &this->POOL_WORLD_K2D);
 #endif
-    this->Pkpoints = std::make_unique<Parallel_Kpoints>();
-    this->P2D_global = std::make_unique<Parallel_2D>();
-    this->P2D_pool = std::make_unique<Parallel_2D>();
+    this->Pkpoints.reset(new Parallel_Kpoints());
+    this->P2D_global.reset(new Parallel_2D());
+    this->P2D_pool.reset(new Parallel_2D());
     this->Pkpoints
         ->kinfo(nks, kpar, this->MY_POOL, this->RANK_IN_POOL, nproc, nspin);
     this->P2D_global->init(nw, nw, nb2d, MPI_COMM_WORLD);
