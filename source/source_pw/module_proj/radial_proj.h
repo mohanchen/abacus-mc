@@ -14,6 +14,7 @@
 #include "source_base/vector3.h"
 #include "source_base/cubic_spline.h"
 #include "source_base/matrix.h"
+#include "source_base/realarray.h"
 #include <memory>
 #include <vector>
 #include <complex>

@@ -1,4 +1,5 @@
 #include <sstream>
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <numeric>
