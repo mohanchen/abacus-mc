@@ -73,22 +73,20 @@ void write_dos_lcao(
 	}
 
 
-    if (PARAM.inp.out_dos == 2)
-    {
-		cal_pdos(psi,
-				p_ham,
-				pv,
-				ucell,
-				kv,
-				nspin0,
-				nbands,
-				ekb,
-				emax,
-				emin,
-				dos_edelta_ev,
-				bcoeff,
-				istep);
-    }
+    // out_dos >= 1: always compute PDOS alongside DOS (LCAO only)
+    cal_pdos(psi,
+            p_ham,
+            pv,
+            ucell,
+            kv,
+            nspin0,
+            nbands,
+            ekb,
+            emax,
+            emin,
+            dos_edelta_ev,
+            bcoeff,
+            istep);
 
     ofs_running << " #DOS CALCULATION ENDS# " << std::endl;
 
