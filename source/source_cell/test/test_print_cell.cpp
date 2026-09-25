@@ -56,19 +56,23 @@ TEST_F(PrintCellTest, PrintSTRU_nspin1)
     EXPECT_THAT(str, testing::HasSubstr("C  12.0000 C.upf upf201"));
     EXPECT_THAT(str, testing::HasSubstr("H   1.0000 H.upf upf201"));
     EXPECT_THAT(str, testing::HasSubstr("LATTICE_CONSTANT"));
-    EXPECT_THAT(str, testing::HasSubstr("1.8897261255"));
-    EXPECT_THAT(str, testing::HasSubstr("LATTICE_VECTORS"));
+    // lat0 is always printed as one Angstrom in Bohr
+    EXPECT_THAT(str, testing::HasSubstr(
+        "1.8897261255  # in Bohr (= 1 Angstrom); lattice vectors below are in Angstrom"));
+    EXPECT_THAT(str, testing::HasSubstr("LATTICE_VECTORS  # in Angstrom"));
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
-    EXPECT_THAT(str, testing::HasSubstr("Cartesian"));
+    // Cartesian (direct=false) is always emitted as Cartesian_angstrom
+    EXPECT_THAT(str, testing::HasSubstr("Cartesian_angstrom  # positions in Angstrom"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
     EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("1 #number of atoms"));
-    EXPECT_THAT(str, testing::HasSubstr("        1.0000000000        1.0000000000        1.0000000000 m 1 1 1"));
+    // single-space separated coordinates
+    EXPECT_THAT(str, testing::HasSubstr("1.0000000000 1.0000000000 1.0000000000 m 1 1 1"));
     EXPECT_THAT(str, testing::HasSubstr("H #label"));
     EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str, testing::HasSubstr("2 #number of atoms"));
-    EXPECT_THAT(str, testing::HasSubstr("        1.5000000000        1.5000000000        1.5000000000 m 0 0 0"));
-    EXPECT_THAT(str, testing::HasSubstr("        0.5000000000        0.5000000000        0.5000000000 m 0 0 1"));
+    EXPECT_THAT(str, testing::HasSubstr("1.5000000000 1.5000000000 1.5000000000 m 0 0 0"));
+    EXPECT_THAT(str, testing::HasSubstr("0.5000000000 0.5000000000 0.5000000000 m 0 0 1"));
     // No force output when force matrix is empty
     EXPECT_THAT(str, testing::Not(testing::HasSubstr(" f ")));
     ifs.close();
@@ -87,19 +91,17 @@ TEST_F(PrintCellTest, PrintSTRU_nspin2_no_force)
     ifs.open(fn);
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     EXPECT_THAT(str, testing::HasSubstr("ATOMIC_POSITIONS"));
-    EXPECT_THAT(str, testing::HasSubstr("Direct"));
+    // direct=true without forces keeps fractional coordinates
+    EXPECT_THAT(str, testing::HasSubstr("Direct\n"));
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
     EXPECT_THAT(str, testing::HasSubstr("0.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 v        "
-                                   "0.1000000000        0.1000000000        0.1000000000 mag  0.0000"));
+                testing::HasSubstr("0.1000000000 0.1000000000 0.1000000000 m 1 1 1 v 0.1000000000 0.1000000000 0.1000000000 mag  0.0000"));
     EXPECT_THAT(str, testing::HasSubstr("H #label"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 v        "
-                                   "0.1000000000        0.1000000000        0.1000000000 mag  0.0000"));
+                testing::HasSubstr("0.1500000000 0.1500000000 0.1500000000 m 0 0 0 v 0.1000000000 0.1000000000 0.1000000000 mag  0.0000"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 v        "
-                                   "0.1000000000        0.1000000000        0.1000000000 mag  0.0000"));
+                testing::HasSubstr("0.0500000000 0.0500000000 0.0500000000 m 0 0 1 v 0.1000000000 0.1000000000 0.1000000000 mag  0.0000"));
     // No force output when force matrix is empty
     EXPECT_THAT(str, testing::Not(testing::HasSubstr(" f ")));
     ifs.close();
@@ -123,13 +125,13 @@ TEST_F(PrintCellTest, PrintSTRU_nspin2_with_mag)
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
     EXPECT_THAT(str, testing::HasSubstr("1.5000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  1.5000"));
+                testing::HasSubstr("0.1000000000 0.1000000000 0.1000000000 m 1 1 1 mag  1.5000"));
     EXPECT_THAT(str, testing::HasSubstr("H #label"));
     EXPECT_THAT(str, testing::HasSubstr("-0.5000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  -0.5000"));
+                testing::HasSubstr("0.1500000000 0.1500000000 0.1500000000 m 0 0 0 mag  -0.5000"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  2.0000"));
+                testing::HasSubstr("0.0500000000 0.0500000000 0.0500000000 m 0 0 1 mag  2.0000"));
     ifs.close();
     remove(fn.c_str());
 }
@@ -155,11 +157,11 @@ TEST_F(PrintCellTest, PrintSTRU_nspin2_mulliken)
     EXPECT_THAT(str, testing::HasSubstr("NUMERICAL_DESCRIPTOR"));
     EXPECT_THAT(str, testing::HasSubstr("__unittest_numerical_descriptor__"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  0.5000"));
+                testing::HasSubstr("0.1000000000 0.1000000000 0.1000000000 m 1 1 1 mag  0.5000"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  0.4000"));
+                testing::HasSubstr("0.1500000000 0.1500000000 0.1500000000 m 0 0 0 mag  0.4000"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  0.3000"));
+                testing::HasSubstr("0.0500000000 0.0500000000 0.0500000000 m 0 0 1 mag  0.3000"));
     ifs.close();
     remove(fn.c_str());
 }
@@ -181,13 +183,13 @@ TEST_F(PrintCellTest, PrintSTRU_nspin4_initial_mag)
     EXPECT_THAT(str, testing::HasSubstr("C #label"));
     EXPECT_THAT(str, testing::HasSubstr("1.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  1.0000  0.0000  0.0000"));
+                testing::HasSubstr("0.1000000000 0.1000000000 0.1000000000 m 1 1 1 mag  1.0000  0.0000  0.0000"));
     EXPECT_THAT(str, testing::HasSubstr("H #label"));
     EXPECT_THAT(str, testing::HasSubstr("1.0000   #magnetism (default, overridden by per-atom mag below)"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  0.0000  1.0000  0.0000"));
+                testing::HasSubstr("0.1500000000 0.1500000000 0.1500000000 m 0 0 0 mag  0.0000  1.0000  0.0000"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  0.0000  0.0000  1.0000"));
+                testing::HasSubstr("0.0500000000 0.0500000000 0.0500000000 m 0 0 1 mag  0.0000  0.0000  1.0000"));
     ifs.close();
     remove(fn.c_str());
 }
@@ -205,11 +207,11 @@ TEST_F(PrintCellTest, PrintSTRU_nspin4_mulliken)
     ifs.open(fn);
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1000000000        0.1000000000        0.1000000000 m 1 1 1 mag  0.5000  0.1000  0.2000"));
+                testing::HasSubstr("0.1000000000 0.1000000000 0.1000000000 m 1 1 1 mag  0.5000  0.1000  0.2000"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.1500000000        0.1500000000        0.1500000000 m 0 0 0 mag  0.4000  0.3000  0.4000"));
+                testing::HasSubstr("0.1500000000 0.1500000000 0.1500000000 m 0 0 0 mag  0.4000  0.3000  0.4000"));
     EXPECT_THAT(str,
-                testing::HasSubstr("        0.0500000000        0.0500000000        0.0500000000 m 0 0 1 mag  0.3000  0.5000  0.6000"));
+                testing::HasSubstr("0.0500000000 0.0500000000 0.0500000000 m 0 0 1 mag  0.3000  0.5000  0.6000"));
     ifs.close();
     remove(fn.c_str());
 }
@@ -232,7 +234,7 @@ TEST_F(PrintCellTest, PrintSTRU_with_force)
     ifs.open(fn);
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
-    // Check coordinate type and unit note
+    // With forces fractional coordinates are replaced by Cartesian_angstrom
     EXPECT_THAT(str, testing::HasSubstr("Cartesian_angstrom  # positions in Angstrom, forces in eV/Angstrom"));
 
     // Internal Cartesian tau is in units of lat0 (Bohr); expected Angstrom = tau * lat0 * BOHR_TO_A
@@ -242,16 +244,16 @@ TEST_F(PrintCellTest, PrintSTRU_with_force)
 
     auto fmt3 = [](double a, double b, double c) {
         char buf[128];
-        std::snprintf(buf, sizeof(buf), "%20.10f%20.10f%20.10f", a, b, c);
+        std::snprintf(buf, sizeof(buf), "%.10f %.10f %.10f", a, b, c);
         return std::string(buf);
     };
     auto fmtf = [](double a, double b, double c) {
         char buf[128];
-        std::snprintf(buf, sizeof(buf), " f%20.10f%20.10f%20.10f", a, b, c);
+        std::snprintf(buf, sizeof(buf), " f %.10f %.10f %.10f", a, b, c);
         return std::string(buf);
     };
 
-    // C (iat=0): tau (1,1,1) in lat0 units, m 1 1 1
+    // C (iat=0): m 1 1 1
     EXPECT_THAT(str, testing::HasSubstr(
         fmt3(ucell->atoms[0].tau[0].x * pos_conv,
              ucell->atoms[0].tau[0].y * pos_conv,
