@@ -201,7 +201,7 @@ namespace unitcell
                 }
                 if (has_force) // output force
                 {
-                    str += FmtCore::format(" f %.10f %.10f %.10f",
+                    str += FmtCore::format(" f %.6f %.6f %.6f",
                                            force(nat_, 0)*force_conv,
                                            force(nat_, 1)*force_conv,
                                            force(nat_, 2)*force_conv);

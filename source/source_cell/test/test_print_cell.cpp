@@ -249,7 +249,7 @@ TEST_F(PrintCellTest, PrintSTRU_with_force)
     };
     auto fmtf = [](double a, double b, double c) {
         char buf[128];
-        std::snprintf(buf, sizeof(buf), " f %.10f %.10f %.10f", a, b, c);
+        std::snprintf(buf, sizeof(buf), " f %.6f %.6f %.6f", a, b, c);
         return std::string(buf);
     };
 
