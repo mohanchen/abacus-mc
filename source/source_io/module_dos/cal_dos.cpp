@@ -155,11 +155,11 @@ bool ModuleIO::cal_dos(const int& is,  // index for spin
     if (GlobalV::MY_RANK == 0)
     {
         ofs_dos << npoints << " # number of points" << std::endl;
-        ofs_dos << "#" << std::setw(14) << "energy" 
-                 << std::setw(15) << "elec_states" 
-                 << std::setw(15) << "sum_states" 
-                 << std::setw(15) << "states_smear" 
-                 << std::setw(15) << "sum_states" << std::endl;
+        ofs_dos << "#" << std::setw(14) << "energy(eV)"
+                 << std::setw(15) << "dos(1/eV)"
+                 << std::setw(15) << "dos_int"
+                 << std::setw(15) << "dos_smear(1/eV)"
+                 << std::setw(15) << "dos_smear_int" << std::endl;
     }
 
     std::vector<double> e_mod(npoints, 0.0); 
