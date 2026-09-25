@@ -142,11 +142,11 @@ namespace unitcell
         const double lat0_angstrom = 1.0 / ModuleBase::BOHR_TO_A;
         str += "\nLATTICE_CONSTANT\n"
              + FmtCore::format("%-.10f", lat0_angstrom)
-             + "  # in Bohr (= 1 Angstrom); lattice vectors below are in Angstrom\n";
+             + " # in Bohr (= 1 Angstrom); lattice vectors below are in Angstrom\n";
         // LATTICE_VECTORS: internal vectors are dimensionless multiples of ucell.lat0;
         // multiply by ucell.lat0 * BOHR_TO_A to get the physical vectors in Angstrom.
         const double lat_scale = ucell.lat0 * ModuleBase::BOHR_TO_A;
-        str += "\nLATTICE_VECTORS  # in Angstrom\n";
+        str += "\nLATTICE_VECTORS # in Angstrom\n";
         str += FmtCore::format("%.16f %.16f %.16f\n",
                                latvec.e11 * lat_scale, latvec.e12 * lat_scale, latvec.e13 * lat_scale);
         str += FmtCore::format("%.16f %.16f %.16f\n",
@@ -164,8 +164,8 @@ namespace unitcell
         std::string unit_note = "\n";
         if (use_cartesian)
         {
-            unit_note = has_force ? "  # positions in Angstrom, forces in eV/Angstrom\n"
-                                  : "  # positions in Angstrom\n";
+            unit_note = has_force ? " # positions in Angstrom, forces in eV/Angstrom\n"
+                                  : " # positions in Angstrom\n";
         }
         str += scale + unit_note;
         // Internal Cartesian tau is in units of lat0 (Bohr); convert to Angstrom.
@@ -185,7 +185,7 @@ namespace unitcell
                                         + std::pow(atoms[it].m_loc_[0].z, 2));
                 }
             }
-            str += FmtCore::format("%-8.4f #magnetism (default, overridden by per-atom mag below)\n", start_mag);
+            str += FmtCore::format("%.4f #magnetism (default, overridden by per-atom mag below)\n", start_mag);
             str += FmtCore::format("%d #number of atoms\n", atoms[it].na);
             for(int ia = 0; ia < atoms[it].na; ia++)
             {
@@ -209,20 +209,20 @@ namespace unitcell
                 if (nspin == 2) // output magnetic information
                 {
                     if (magmom && !ucell.atom_mulliken.empty()) {
-                        str += FmtCore::format(" mag%8.4f", ucell.atom_mulliken[nat_][1]);
+                        str += FmtCore::format(" mag %.4f", ucell.atom_mulliken[nat_][1]);
                     } else {
-                        str += FmtCore::format(" mag%8.4f", atoms[it].mag[ia]);
+                        str += FmtCore::format(" mag %.4f", atoms[it].mag[ia]);
                     }
                 }
                 else if (nspin == 4) // output magnetic information
                 {
                     if (magmom && !ucell.atom_mulliken.empty()) {
-                        str += FmtCore::format(" mag%8.4f%8.4f%8.4f",
+                        str += FmtCore::format(" mag %.4f %.4f %.4f",
                                                 ucell.atom_mulliken[nat_][1],
                                                 ucell.atom_mulliken[nat_][2],
                                                 ucell.atom_mulliken[nat_][3]);
                     } else {
-                        str += FmtCore::format(" mag%8.4f%8.4f%8.4f",
+                        str += FmtCore::format(" mag %.4f %.4f %.4f",
                                                 atoms[it].m_loc_[ia].x,
                                                 atoms[it].m_loc_[ia].y,
                                                 atoms[it].m_loc_[ia].z);
