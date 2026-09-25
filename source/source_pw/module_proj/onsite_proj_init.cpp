@@ -155,10 +155,9 @@ void projectors::OnsiteProjector<T, Device>::init(const std::string& orbital_dir
         // CACHE 0 - if cache the irow2it, irow2iproj, irow2m, itiaiprojm2irow, <G+k|p> can be reused for
         //           SCF, RELAX and CELL-RELAX calculation
         // [in] rgrid, projs, lproj, it2ia, it2iproj, nq, dq
-        RadialProjection::RadialProjector::_build_backward_map(it2iproj, lproj, irow2it_, irow2iproj_, irow2m_);
-        RadialProjection::RadialProjector::_build_forward_map(it2ia, it2iproj, lproj, itiaiprojm2irow_);
-        //rp_._build_sbt_tab(rgrid, projs, lproj, nq, dq);
-        rp_._build_sbt_tab(nproj, rgrid, projs, lproj, nq, dq, ucell_in->omega, psi.get_npol(), tab, nhtol);
+        RadialProjection::build_backward_map(it2iproj, lproj, irow2it_, irow2iproj_, irow2m_);
+        RadialProjection::build_forward_map(it2ia, it2iproj, lproj, itiaiprojm2irow_);
+        RadialProjection::build_sbt_tab(nproj, rgrid, projs, lproj, nq, dq, ucell_in->omega, psi.get_npol(), tab, nhtol);
         // For being compatible with present cal_force and cal_stress framework
         // uncomment the following code block if you want to use the Onsite_Proj_tools
         if(this->tab_atomic_ == nullptr)

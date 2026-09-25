@@ -34,5 +34,6 @@ if(ENABLE_COVERAGE)
   add_coverage(module_proj)
 endif()
 
-# Note: no test/ subdirectory yet. It will be added together with the first
-# migrated test (radial_proj_test) when the corresponding sources move in.
+if(BUILD_TESTING)
+  add_subdirectory(unittests)
+endif()
