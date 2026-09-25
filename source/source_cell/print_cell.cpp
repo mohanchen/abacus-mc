@@ -146,13 +146,15 @@ namespace unitcell
         str += FmtCore::format("%24.16f%24.16f%24.16f\n", latvec.e31, latvec.e32, latvec.e33);
         // ATOMIC_POSITIONS
         str += "\nATOMIC_POSITIONS\n";
-        const std::string scale = direct? "Direct": "Cartesian";
         int nat_ = 0; // counter iat, for printing out Mulliken magmom who is indexed by iat
         // If force is provided, output positions in Angstrom and forces in eV/Angstrom
         const bool has_force = (force.nr == ucell.nat && force.nc == 3);
-        const std::string unit_note = has_force? "  # positions in Angstrom, forces in eV/Angstrom\n" : "\n";
+        const std::string scale = has_force ? "Cartesian_angstrom" : (direct ? "Direct" : "Cartesian");
+        const std::string unit_note = has_force ? "  # positions in Angstrom, forces in eV/Angstrom\n" : "\n";
         str += scale + unit_note;
-        const double pos_conv = has_force? ModuleBase::BOHR_TO_A : 1.0; // Bohr to Angstrom
+        // Internal Cartesian tau is in units of lat0 (Bohr); convert to Angstrom when force is output.
+        const double pos_conv = has_force ? ucell.lat0 * ModuleBase::BOHR_TO_A : 1.0;
+        const bool use_cartesian = has_force || !direct;
         const double force_conv = ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A; // Ry/Bohr to eV/Angstrom
         for(int it = 0; it < ucell.ntype; it++)
         {
@@ -173,9 +175,9 @@ namespace unitcell
             for(int ia = 0; ia < atoms[it].na; ia++)
             {
                 // output position
-                const double& x = direct? atoms[it].taud[ia].x: atoms[it].tau[ia].x;
-                const double& y = direct? atoms[it].taud[ia].y: atoms[it].tau[ia].y;
-                const double& z = direct? atoms[it].taud[ia].z: atoms[it].tau[ia].z;
+                const double& x = use_cartesian ? atoms[it].tau[ia].x : atoms[it].taud[ia].x;
+                const double& y = use_cartesian ? atoms[it].tau[ia].y : atoms[it].taud[ia].y;
+                const double& z = use_cartesian ? atoms[it].tau[ia].z : atoms[it].taud[ia].z;
                 str += FmtCore::format("%20.10f%20.10f%20.10f", x*pos_conv, y*pos_conv, z*pos_conv);
                 str += FmtCore::format(" m%2d%2d%2d", atoms[it].mbl[ia].x, atoms[it].mbl[ia].y, atoms[it].mbl[ia].z);
                 if (vel) // output velocity

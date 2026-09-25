@@ -8,6 +8,7 @@
 #include "atom_spec.h"
 #include "source_cell/strumeta.h"
 #include "source_cell/unitcell.h"
+#include "source_base/matrix.h"
 
 class MDCell;
 
