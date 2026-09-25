@@ -26,21 +26,6 @@ namespace ModuleIO
 			const double& bcoeff,
 			const int istep);
 
-	void print_tdos_multik(
-			const ModuleBase::matrix* pdos,
-			const int nlocal,
-			const int npoints,
-			const double& emin,
-			const double& dos_edelta_ev);
-
-	void print_pdos_multik(
-			const UnitCell& ucell,
-			const ModuleBase::matrix* pdos,
-			const int nlocal,
-			const int npoints,
-			const double& emin,
-			const double& dos_edelta_ev);
-
 }
 
 #endif 
