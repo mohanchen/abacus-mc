@@ -42,14 +42,13 @@ void Relax_Driver::relax_driver(
     // so the loop exits after one iteration
     double etot = 0.0;
     ModuleBase::matrix stress(3, 3);
+    ModuleBase::matrix force(ucell.nat, 3);
 
     while (steps[0] < inp.relax_nmax)
     {
-        ModuleBase::matrix force(ucell.nat, 3);
-
         this->iter_info(steps, inp);
         this->esolve(steps[0], p_esolver, ucell, inp, force, stress, etot);
-        this->stru_out(steps[0], ucell, inp, etot, stress);
+        this->stru_out(steps[0], ucell, inp, etot, stress, force);
         bool converged = this->relax_step(steps, p_esolver, ucell, inp, force, stress, etot, ofs_running);
         this->json_out(p_esolver, ucell, inp, force, stress);
 
@@ -68,7 +67,7 @@ void Relax_Driver::relax_driver(
         ++steps[0];
     }
 
-    this->final_out(steps[0], ucell, inp, etot, stress);
+    this->final_out(steps[0], ucell, inp, etot, stress, force);
 
     ModuleBase::timer::end("Relax_Driver", "relax_driver");
     return;
@@ -172,7 +171,7 @@ bool Relax_Driver::relax_step(std::vector<int>& steps,
     return converged;
 }
 
-void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress)
+void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force)
 {
     // out_stru is effective for scf/nscf/relax/cell-relax (md writes STRU_MD_* via md_restartfreq)
     if (inp.calculation != "relax" && inp.calculation != "cell-relax"
@@ -240,7 +239,8 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
                                   inp.out_mul,
                                   need_orb,
                                   deepks_setorb,
-                                  GlobalV::MY_RANK);
+                                  GlobalV::MY_RANK,
+                                  force);
         }
         else if (inp.out_stru == 2)
         {
@@ -268,7 +268,8 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
                                   inp.out_mul,
                                   need_orb,
                                   deepks_setorb,
-                                  GlobalV::MY_RANK);
+                                  GlobalV::MY_RANK,
+                                  force);
         }
         else if (inp.out_stru == 2)
         {
@@ -298,7 +299,7 @@ void Relax_Driver::json_out(ModuleESolver::ESolver* p_esolver, UnitCell& ucell, 
 #endif
 }
 
-void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress)
+void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force)
 {
     // Structure final output is effective for scf/nscf/relax/cell-relax;
     // relax-specific screen messages remain guarded below.
@@ -351,7 +352,8 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
                                       inp.out_mul,
                                       need_orb,
                                       deepks_setorb,
-                                      GlobalV::MY_RANK);
+                                      GlobalV::MY_RANK,
+                                      force);
         }
         else if (inp.out_stru == 2)
         {
