@@ -99,12 +99,18 @@ void ModuleIO::write_pdos_text(
                             }
                         }
 
+                        // zero out negligible values
+                        if (std::abs(pdos_val) < 1e-6)
+                        {
+                            pdos_val = 0.0;
+                        }
+
                         ofs << std::setw(12) << std::fixed << std::setprecision(6) << en
                             << std::setw(6) << iat + 1
                             << std::setw(8) << ucell.atoms[it].label
                             << std::setw(3) << L
                             << std::setw(3) << m
-                            << std::setw(16) << std::scientific << std::setprecision(6) << pdos_val
+                            << std::setw(12) << std::fixed << std::setprecision(6) << pdos_val
                             << std::endl;
                     }
                 }
