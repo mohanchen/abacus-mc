@@ -82,12 +82,12 @@ Run the program, and you will see a file named doss1g1_nao.txt in the output dir
 
 Along with the DOS files, we also produce the projected density of states (PDOS) in files named pdoss{spin}g{geom}_{basis}.txt (e.g., pdoss1g1_nao.txt).
 
-The PDOS file uses a plain-text long-table format with columns: energy(eV), atom (1-based atom index), species, l (angular momentum), z (zeta index), m (magnetic quantum number), pdos(1/eV).
+The PDOS file uses a plain-text long-table format with columns: energy(eV), atom (1-based atom index), species, l (angular momentum), m (magnetic quantum number), pdos(1/eV). Zeta components are summed for each (atom, l, m).
 
 ```
-# energy(eV)  atom  species  l  z  m  pdos(1/eV)
-     -5.50311     1       Si  0  1  0   1.234568e-03
-     -5.50311     1       Si  0  1  1   2.345679e-03
+# energy(eV)  atom  species  l  m  pdos(1/eV)
+     -5.50311     1       Si  0  0   1.234568e-03
+     -5.50311     1       Si  0  1   2.345679e-03
      ...
 ```
 
