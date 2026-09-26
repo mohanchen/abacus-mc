@@ -39,11 +39,12 @@ void ModuleIO::write_pdos_text(
         std::ofstream ofs(ss.str().c_str());
 
         // Build a header that shows the exact m ordering for each l block
+        // iw2m stores m as 0..2l, so columns are ordered m=0,1,2,...
         ofs << "# energy(eV)  atom  species  pdos(1/eV), columns ordered by (l, m):" << std::endl;
         ofs << "#  l=0: m=0" << std::endl;
-        ofs << "#  l=1: m=-1, 0, 1" << std::endl;
-        ofs << "#  l=2: m=-2, -1, 0, 1, 2" << std::endl;
-        ofs << "#  l=3: m=-3, -2, -1, 0, 1, 2, 3" << std::endl;
+        ofs << "#  l=1: m=0, 1, 2" << std::endl;
+        ofs << "#  l=2: m=0, 1, 2, 3, 4" << std::endl;
+        ofs << "#  l=3: m=0, 1, 2, 3, 4, 5, 6" << std::endl;
 
         for (int iat = 0; iat < ucell.nat; ++iat)
         {
@@ -54,16 +55,17 @@ void ModuleIO::write_pdos_text(
             const int max_l = atom->nwl;
 
             // collect all (l, m) for this atom, ordered s,p,d,f
+            // iw2m stores m as 0..2l (non-negative), so loop m = 0..2*L
             struct OrbInfo
             {
                 int l;
-                int m;
+                int m; // 0..2l
             };
             std::vector<OrbInfo> orb_list;
 
             for (int L = 0; L <= max_l; ++L)
             {
-                for (int m = -L; m <= L; ++m)
+                for (int m = 0; m <= 2 * L; ++m)
                 {
                     for (int j = 0; j < atom->nw; ++j)
                     {
