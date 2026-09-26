@@ -132,7 +132,8 @@ void LCAO_domain::init_dm_from_file(
     const int nspin_dm = (nspin == 2) ? 2 : 1;
     for (int is = 0; is < nspin_dm; ++is)
     {
-        const std::string dmfile = readin_dir + "/dmrs" + std::to_string(is + 1) + "_nao.csr";
+        // readin_dir is normalized by to_dir() and always ends with '/'
+        const std::string dmfile = readin_dir + "dmrs" + std::to_string(is + 1) + "_nao.csr";
         // EXX-specific: add rank guard because OperatorEXX is constructed on all MPI ranks,
         // unlike most other places where ofs_running is only written on rank 0
         if (GlobalV::MY_RANK == 0)

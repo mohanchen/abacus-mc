@@ -233,8 +233,9 @@ OperatorEXX<OperatorLCAO<TK, TR>>::OperatorEXX(HS_Matrix_K<TK>* hsk_in,
             std::vector<hamilt::HContainer<double>*> dmR_vec(nspin_dm);
             for (int is = 0; is < nspin_dm; ++is)
             {
+                // global_readin_dir is normalized by to_dir() and always ends with '/'
                 const std::string dmfile
-                    = PARAM.globalv.global_readin_dir + "/dmrs" + std::to_string(is + 1) + "_nao.csr";
+                    = PARAM.globalv.global_readin_dir + "dmrs" + std::to_string(is + 1) + "_nao.csr";
                 // EXX-specific: add rank guard because OperatorEXX is constructed on all MPI ranks,
                 // unlike most other places where ofs_running is only written on rank 0
                 if (GlobalV::MY_RANK == 0)
