@@ -3,7 +3,6 @@
 #include "source_base/global_function.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_lcao/module_rt/td_info.h"
 #include "single_r_io.h"
 

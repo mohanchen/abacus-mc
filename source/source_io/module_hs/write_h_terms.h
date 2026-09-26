@@ -48,6 +48,8 @@ struct WriteHParams
     std::string calculation;
     std::string global_out_dir;
     std::string global_matrix_dir;
+    std::string ks_solver;
+    int drank = 0;
 #ifdef __EXX
     // The gamma-only (TK==double) exx interfaces used by write_h_exx. 
     // Deliberately NOT templated on TK, because it would force WriteHParams, WriteDHParams and

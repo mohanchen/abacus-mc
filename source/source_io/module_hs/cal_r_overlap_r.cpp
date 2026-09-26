@@ -7,7 +7,6 @@
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_cell/nonlocal_info_base.h"
 
 cal_r_overlap_R::cal_r_overlap_R()

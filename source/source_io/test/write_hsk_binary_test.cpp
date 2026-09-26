@@ -106,7 +106,7 @@ TEST(WriteHskBinary, WritesGammaUpperTriangle)
     }
     const std::vector<double> local = distribute_matrix(pv, global, dim);
 
-    ModuleIO::save_mat(0, local.data(), dim, true, 8, true, false, filename, pv, test_rank);
+    ModuleIO::save_mat(0, local.data(), dim, true, 8, true, false, filename, pv, test_rank, "cg");
 
     if (test_rank == 0)
     {
@@ -136,7 +136,7 @@ TEST(WriteHskBinary, WritesComplexUpperTriangleWithMpiReduction)
     }
     const std::vector<std::complex<double>> local = distribute_matrix(pv, global, dim);
 
-    ModuleIO::save_mat(0, local.data(), dim, true, 8, true, false, filename, pv, test_rank);
+    ModuleIO::save_mat(0, local.data(), dim, true, 8, true, false, filename, pv, test_rank, "cg");
 
     if (test_rank == 0)
     {
@@ -167,8 +167,8 @@ TEST(WriteHskBinary, AppendsCompleteRecordsAndCanOverwrite)
     const std::vector<double> second_local = distribute_matrix(pv, second, dim);
     const std::vector<double> replacement_local = distribute_matrix(pv, replacement, dim);
 
-    ModuleIO::save_mat(0, first_local.data(), dim, true, 8, true, true, filename, pv, test_rank);
-    ModuleIO::save_mat(1, second_local.data(), dim, true, 8, true, true, filename, pv, test_rank);
+    ModuleIO::save_mat(0, first_local.data(), dim, true, 8, true, true, filename, pv, test_rank, "cg");
+    ModuleIO::save_mat(1, second_local.data(), dim, true, 8, true, true, filename, pv, test_rank, "cg");
 
     if (test_rank == 0)
     {
@@ -182,7 +182,7 @@ TEST(WriteHskBinary, AppendsCompleteRecordsAndCanOverwrite)
 #ifdef __MPI
     MPI_Barrier(DIAG_WORLD);
 #endif
-    ModuleIO::save_mat(2, replacement_local.data(), dim, true, 8, true, false, filename, pv, test_rank);
+    ModuleIO::save_mat(2, replacement_local.data(), dim, true, 8, true, false, filename, pv, test_rank, "cg");
 
     if (test_rank == 0)
     {

@@ -112,7 +112,9 @@ static void write_hk_common(hamilt::HContainer<double>& hR,
                             const int nlocal,
                             const bool gamma_only,
                             const std::string& global_out_dir,
-                            const bool out_app_flag)
+                            const bool out_app_flag,
+                            const std::string& ks_solver,
+                            const int drank)
 {
     const int nspin_k = (nspin == 2 ? 2 : 1);
     const int nks = kv.get_nks() / nspin_k;
@@ -145,7 +147,8 @@ static void write_hk_common(hamilt::HContainer<double>& hR,
                            out_app_flag,
                            fname,
                            pv,
-                           GlobalV::DRANK);
+                           drank,
+                           ks_solver);
     }
 }
 
@@ -183,7 +186,7 @@ void write_h_t(WriteHParams& params)
         tmp_ekinetic.contributeHR();
 
         write_hk_common(hR_tmp, "tk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag);
+                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
 
         if (also_hR)
         {
@@ -234,7 +237,7 @@ void write_h_vnl(WriteHParams& params)
         tmp_nonlocal.contributeHR();
 
         write_hk_common(hR_tmp, "vnlk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag);
+                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
 
         if (also_hR)
         {
@@ -280,7 +283,7 @@ void write_h_vl(WriteHParams& params)
         ModuleGint::cal_gint_vl(v_local, &hR_tmp);
 
         write_hk_common(hR_tmp, "vlk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag);
+                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
 
         if (also_hR)
         {
@@ -329,7 +332,7 @@ void write_h_vh(WriteHParams& params)
         ModuleGint::cal_gint_vl(&v_h(ispin, 0), &hR_tmp);
 
         write_hk_common(hR_tmp, "vhk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag);
+                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
 
         if (also_hR)
         {
@@ -386,7 +389,7 @@ void write_h_vxc(WriteHParams& params)
         ModuleGint::cal_gint_vl(&v_xc(ispin, 0), &hR_tmp);
 
         write_hk_common(hR_tmp, "vxck", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag);
+                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
 
         if (also_hR)
         {
@@ -418,6 +421,8 @@ static void write_h_exx_impl(const UnitCell& ucell,
                              const std::string& global_matrix_dir,
                              const std::string& calculation,
                              const bool out_app_flag,
+                             const std::string& ks_solver,
+                             const int drank,
                              const Exx_Info& exx_info)
 {
     const auto& Hexxs = ex->get_Hexxs(); // vector over spin of map<iat, map<(jat,R), Tensor>>
@@ -433,7 +438,7 @@ static void write_h_exx_impl(const UnitCell& ucell,
         RI_2D_Comm::add_HexxR(ispin, alpha, Hexxs, pv, npol, hR_tmp, nullptr);
 
         write_hk_common(hR_tmp, "vexxk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag);
+                        nlocal, gamma_only, global_out_dir, out_app_flag, ks_solver, drank);
 
         if (also_hR)
         {
@@ -468,7 +473,7 @@ void write_h_exx(WriteHParams& params, const Exx_Info& exx_info)
             write_h_exx_impl(ucell, pv, params.exd, kv, nspin, istep, append, iat2iwt, nat, also_hR,
                              params.npol, params.nlocal, params.gamma_only_local,
                              params.global_out_dir, params.global_matrix_dir,
-                             params.calculation, params.out_app_flag, exx_info);
+                             params.calculation, params.out_app_flag, params.ks_solver, params.drank, exx_info);
         }
     }
     else
@@ -478,7 +483,7 @@ void write_h_exx(WriteHParams& params, const Exx_Info& exx_info)
             write_h_exx_impl(ucell, pv, params.exc, kv, nspin, istep, append, iat2iwt, nat, also_hR,
                              params.npol, params.nlocal, params.gamma_only_local,
                              params.global_out_dir, params.global_matrix_dir,
-                             params.calculation, params.out_app_flag, exx_info);
+                             params.calculation, params.out_app_flag, params.ks_solver, params.drank, exx_info);
         }
     }
 

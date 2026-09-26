@@ -3,7 +3,6 @@
 #include "source_base/module_out/sparse_matrix.h"
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_lcao/lcao_hs_arrays.h"
 #include "source_lcao/spar_dh.h"
 #include "source_lcao/spar_hsr.h"
