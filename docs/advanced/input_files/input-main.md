@@ -2511,7 +2511,7 @@
 
 - **Type**: Real
 - **Description**: The step size in writing Density of States (DOS)
-- **Default**: 0.01
+- **Default**: 0.03
 - **Unit**: eV
 
 ### dos_sigma

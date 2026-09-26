@@ -3882,7 +3882,7 @@ parameters:
     type: Real
     description: |
       The step size in writing Density of States (DOS)
-    default_value: "0.01"
+    default_value: "0.03"
     unit: eV
     availability: ""
   - name: dos_sigma
