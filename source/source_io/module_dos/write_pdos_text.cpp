@@ -38,7 +38,12 @@ void ModuleIO::write_pdos_text(
 
         std::ofstream ofs(ss.str().c_str());
 
-        ofs << "# energy(eV)  atom  species  pdos(s,py,pz,px,dxy,dyz,dz2,dxz,dx2,f..., 1/eV)" << std::endl;
+        // Build a header that shows the exact m ordering for each l block
+        ofs << "# energy(eV)  atom  species  pdos(1/eV), columns ordered by (l, m):" << std::endl;
+        ofs << "#  l=0: m=0" << std::endl;
+        ofs << "#  l=1: m=-1, 0, 1" << std::endl;
+        ofs << "#  l=2: m=-2, -1, 0, 1, 2" << std::endl;
+        ofs << "#  l=3: m=-3, -2, -1, 0, 1, 2, 3" << std::endl;
 
         for (int iat = 0; iat < ucell.nat; ++iat)
         {
