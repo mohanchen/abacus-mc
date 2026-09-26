@@ -38,10 +38,10 @@ protected:
 TEST_F(DosPWTest,Dos1)
 {
 	//is,fa,fa1,de_ev,emax_ev,emin_ev,bcoeff,nks,nkstot,nbands
-	DosPrepare dosp = DosPrepare(0,"doss1_pw.txt",0.005,18,-6,0.07,36,36,8);
+	DosPrepare dosp = DosPrepare(0,"doss1_pw.txt",0.005,18,-6,0.07,dos_test_data::nks,dos_test_data::nkstot,dos_test_data::nbands);
 	dosp.set_isk();
-	dosp.read_wk();
-	dosp.read_istate_info();
+	dosp.set_wk();
+	dosp.set_istate_info();
 	EXPECT_EQ(dosp.is,0);
 	double dos_scale = 0.01;
 	kv->set_nks(dosp.nks);
@@ -103,8 +103,8 @@ TEST_F(DosPWTest,Dos1)
 		ifs.open("dos.txt");
 		std::string str((std::istreambuf_iterator<char>(ifs)),std::istreambuf_iterator<char>());
 		EXPECT_THAT(str, testing::HasSubstr("4801 # number of points"));
-		EXPECT_THAT(str, testing::HasSubstr("   -4.600000    0.250000    0.281250       1.425152       0.159819"));
-		EXPECT_THAT(str, testing::HasSubstr("   18.000000    0.000000   16.000000       0.000000      16.000000"));
+		EXPECT_THAT(str, testing::HasSubstr("   -4.995000    0.500000    0.500000"));
+		EXPECT_THAT(str, testing::HasSubstr("   18.000000    0.000000    8.000000"));
 		ifs.close();
 		remove("dos.txt");
 #ifdef __MPI
@@ -116,10 +116,10 @@ TEST_F(DosPWTest,Dos1)
 TEST_F(DosPWTest,Dos2)
 {
     //is,fa,fa1,de_ev,emax_ev,emin_ev,bcoeff,nks,nkstot,nbands
-	DosPrepare dosp = DosPrepare(0,"doss1_pw.txt",0.005,18,-6,0.07,36,36,8);
+	DosPrepare dosp = DosPrepare(0,"doss1_pw.txt",0.005,18,-6,0.07,dos_test_data::nks,dos_test_data::nkstot,dos_test_data::nbands);
 	dosp.set_isk();
-	dosp.read_wk();
-	dosp.read_istate_info();
+	dosp.set_wk();
+	dosp.set_istate_info();
 	EXPECT_EQ(dosp.is,0);
 	double dos_scale = 0.01;
 	kv->set_nks(dosp.nks);
@@ -180,9 +180,9 @@ TEST_F(DosPWTest,Dos2)
 		std::ifstream ifs;
 		ifs.open("dos.txt");
 		std::string str1((std::istreambuf_iterator<char>(ifs)),std::istreambuf_iterator<char>());
-		EXPECT_THAT(str1, testing::HasSubstr("4532 # number of points"));
-		EXPECT_THAT(str1, testing::HasSubstr("   -5.388110    0.031250    0.031250"));
-		EXPECT_THAT(str1, testing::HasSubstr("    3.071890    0.187500    5.468750"));
+		EXPECT_THAT(str1, testing::HasSubstr("2526 # number of points"));
+		EXPECT_THAT(str1, testing::HasSubstr("   -4.997500    0.500000    0.500000"));
+		EXPECT_THAT(str1, testing::HasSubstr("    7.567500    0.000000    8.000000"));
 		ifs.close();
 		remove("dos.txt");
 #ifdef __MPI
