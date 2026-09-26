@@ -437,6 +437,15 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         h_params.append = out_app_flag;
         h_params.iat2iwt = ucell.get_iat2iwt();
         h_params.nat = ucell.nat;
+        h_params.nlocal = PARAM.globalv.nlocal;
+        h_params.gamma_only_local = gamma_only;
+        h_params.npol = PARAM.globalv.npol;
+        h_params.domag = PARAM.globalv.domag;
+        h_params.domag_z = PARAM.globalv.domag_z;
+        h_params.out_app_flag = out_app_flag;
+        h_params.calculation = inp.calculation;
+        h_params.global_out_dir = global_out_dir;
+        h_params.global_matrix_dir = PARAM.globalv.global_matrix_dir;
         if (inp.out_mat_h_t[0])
         {
             ModuleIO::write_h_t(h_params);
