@@ -3,6 +3,7 @@
 #include "source_base/global_variable.h"
 #include "source_io/module_parameter/parameter.h"
 
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -36,7 +37,7 @@ void ModuleIO::write_pdos_text(
 
         std::ofstream ofs(ss.str().c_str());
 
-        ofs << "# energy(eV)  atom  species  l  m  pdos(1/eV)" << std::endl;
+        ofs << "# energy(eV)  atom  species  l  pdos(m=-l..l, 1/eV)" << std::endl;
 
         for (int iat = 0; iat < ucell.nat; ++iat)
         {
@@ -45,37 +46,37 @@ void ModuleIO::write_pdos_text(
             const Atom* atom = &ucell.atoms[it];
             const int s0 = ucell.itiaiw2iwt(it, ia, 0);
 
-            // iterate over unique (l, m) pairs, summing over zeta
-            // atom->iw2l, iw2n, iw2m are indexed by orbital j
-            // For each (l, m), collect all zeta contributions
             const int max_l = atom->nwl;
             for (int L = 0; L <= max_l; ++L)
             {
-                // count how many zeta for this l
-                int nzeta = 0;
+                // check if any orbital with this l exists
+                bool has_l = false;
                 for (int j = 0; j < atom->nw; ++j)
                 {
                     if (atom->iw2l[j] == L)
                     {
-                        const int n = atom->iw2n[j];
-                        if (n + 1 > nzeta)
-                        {
-                            nzeta = n + 1;
-                        }
+                        has_l = true;
+                        break;
                     }
                 }
-                if (nzeta == 0)
+                if (!has_l)
                 {
                     continue;
                 }
 
-                // for each m value
                 const int nm = 2 * L + 1;
-                for (int m = -L; m <= L; ++m)
+                for (int n = 0; n < npoints; ++n)
                 {
-                    for (int n = 0; n < npoints; ++n)
+                    const double en = emin + n * dos_edelta_ev;
+
+                    ofs << std::setw(12) << std::fixed << std::setprecision(6) << en
+                        << "  " << std::setw(3) << iat + 1
+                        << "  " << std::setw(4) << ucell.atoms[it].label
+                        << "  " << L;
+
+                    // output pdos for each m = -L..L
+                    for (int m = -L; m <= L; ++m)
                     {
-                        const double en = emin + n * dos_edelta_ev;
                         double pdos_val = 0.0;
 
                         // sum over all zeta for this (l, m)
@@ -89,7 +90,6 @@ void ModuleIO::write_pdos_text(
 
                             if (nspin == 4)
                             {
-                                // sum the two spinor components
                                 const int w0 = w - s0;
                                 pdos_val += pdos[0](s0 + 2 * w0, n) + pdos[0](s0 + 2 * w0 + 1, n);
                             }
@@ -105,14 +105,9 @@ void ModuleIO::write_pdos_text(
                             pdos_val = 0.0;
                         }
 
-                        ofs << std::setw(12) << std::fixed << std::setprecision(6) << en
-                            << std::setw(6) << iat + 1
-                            << std::setw(8) << ucell.atoms[it].label
-                            << std::setw(3) << L
-                            << std::setw(3) << m
-                            << std::setw(12) << std::fixed << std::setprecision(6) << pdos_val
-                            << std::endl;
+                        ofs << "  " << std::setw(8) << std::fixed << std::setprecision(6) << pdos_val;
                     }
+                    ofs << std::endl;
                 }
             }
         }
