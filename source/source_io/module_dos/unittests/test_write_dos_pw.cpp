@@ -7,10 +7,6 @@
 #include "./for_testing_klist.h"
 #include "./dos_test.h"
 
-#define private public
-#include "source_io/module_parameter/parameter.h"
-#undef private
-
 /************************************************
  *  unit test of write_dos_pw
  ***********************************************/
@@ -48,11 +44,6 @@ TEST_F(DosPWTest,Dos1)
 	dosp.read_istate_info();
 	EXPECT_EQ(dosp.is,0);
 	double dos_scale = 0.01;
-	PARAM.input.nspin = 1;
-	PARAM.input.dos_emax_ev = dosp.emax_ev;
-	PARAM.sys.dos_setemax = true;
-	PARAM.input.dos_emin_ev = dosp.emin_ev;
-	PARAM.sys.dos_setemin = true;
 	kv->set_nks(dosp.nks);
 	kv->set_nkstot(dosp.nkstot);
 	kv->isk.reserve(kv->get_nks());
@@ -62,7 +53,6 @@ TEST_F(DosPWTest,Dos1)
 		kv->isk[ik] = dosp.isk[ik];
 		kv->wk[ik] = dosp.wk[ik];
 	}
-	PARAM.input.nbands = dosp.nbands;
 
     // initialize the Fermi energy
     elecstate::Efermi fermi_energy;
@@ -73,6 +63,8 @@ TEST_F(DosPWTest,Dos1)
 
     const int nspin = 1;
     const int out_dos = 1;
+    const bool dos_setemax = true;
+    const bool dos_setemin = true;
     const bool two_fermi = false;
     const bool out_app_flag = false;
     const int bndpar = 1;
@@ -83,7 +75,7 @@ TEST_F(DosPWTest,Dos1)
             dosp.ekb,
 			dosp.wg,
 			*kv,
-			PARAM.inp.nbands,
+			dosp.nbands,
             -1, // istep_in
 			fermi_energy,
 			dosp.de_ev,
@@ -91,10 +83,10 @@ TEST_F(DosPWTest,Dos1)
 			dosp.bcoeff,
 			nspin,
 			out_dos,
-			PARAM.sys.dos_setemax,
-			PARAM.input.dos_emax_ev,
-			PARAM.sys.dos_setemin,
-			PARAM.input.dos_emin_ev,
+			dos_setemax,
+			dosp.emax_ev,
+			dos_setemin,
+			dosp.emin_ev,
 			two_fermi,
 			out_app_flag,
 			bndpar,
@@ -130,11 +122,6 @@ TEST_F(DosPWTest,Dos2)
 	dosp.read_istate_info();
 	EXPECT_EQ(dosp.is,0);
 	double dos_scale = 0.01;
-	PARAM.input.nspin = 1;
-	PARAM.input.dos_emax_ev = dosp.emax_ev;
-	PARAM.sys.dos_setemax = false;
-	PARAM.input.dos_emin_ev = dosp.emin_ev;
-	PARAM.sys.dos_setemin = false;
 	kv->set_nks(dosp.nks);
 	kv->set_nkstot(dosp.nkstot);
 	kv->isk.reserve(kv->get_nks());
@@ -144,7 +131,6 @@ TEST_F(DosPWTest,Dos2)
 		kv->isk[ik] = dosp.isk[ik];
 		kv->wk[ik] = dosp.wk[ik];
 	}
-	PARAM.input.nbands = dosp.nbands;
 
     // initialize the Fermi energy
     elecstate::Efermi fermi_energy;
@@ -159,13 +145,15 @@ TEST_F(DosPWTest,Dos2)
     const bool out_app_flag = false;
     const int bndpar = 1;
     const std::string global_out_dir = "./";
+    const bool dos_setemax = false;
+    const bool dos_setemin = false;
 
 	ModuleIO::write_dos_pw(
 			ucell,
 			dosp.ekb,
 			dosp.wg,
 			*kv,
-			PARAM.inp.nbands,
+			dosp.nbands,
 			-1, // istep_in
             fermi_energy,
 			dosp.de_ev,
@@ -173,10 +161,10 @@ TEST_F(DosPWTest,Dos2)
 			dosp.bcoeff,
 			nspin,
 			out_dos,
-			PARAM.sys.dos_setemax,
-			PARAM.input.dos_emax_ev,
-			PARAM.sys.dos_setemin,
-			PARAM.input.dos_emin_ev,
+			dos_setemax,
+			dosp.emax_ev,
+			dos_setemin,
+			dosp.emin_ev,
 			two_fermi,
 			out_app_flag,
 			bndpar,
