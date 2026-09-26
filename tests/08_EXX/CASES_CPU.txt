@@ -21,3 +21,4 @@
 56_GO_RPA_OUTPUT
 57_KP_RPA_SHRINK
 58_KP_LR_BSE
+nscf_hse_multik
