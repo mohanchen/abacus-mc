@@ -106,8 +106,18 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
         cal_r_overlap_R r_matrix;
         r_matrix.binary = options.binary;
         r_matrix.sparse_threshold = options.sparse_threshold;
-        r_matrix.init(ucell, pv, orb);
-        r_matrix.out_rR(ucell, grid, istep, options.r_precision);
+        const bool cal_force = PARAM.inp.cal_force;
+        r_matrix.init(ucell, pv, orb, cal_force, nlocal);
+        r_matrix.out_rR(ucell,
+                        grid,
+                        istep,
+                        options.r_precision,
+                        global_out_dir,
+                        global_matrix_dir,
+                        calculation,
+                        out_app_flag,
+                        nlocal,
+                        npol);
     }
 
     return;
