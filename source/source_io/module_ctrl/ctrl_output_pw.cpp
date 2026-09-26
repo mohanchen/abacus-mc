@@ -153,6 +153,16 @@ void ModuleIO::ctrl_scf_pw(const int istep,
                                    inp.dos_edelta_ev,
                                    inp.dos_scale,
                                    inp.dos_sigma,
+                                   inp.nspin,
+                                   inp.out_dos,
+                                   PARAM.globalv.dos_setemax,
+                                   inp.dos_emax_ev,
+                                   PARAM.globalv.dos_setemin,
+                                   inp.dos_emin_ev,
+                                   PARAM.globalv.two_fermi,
+                                   inp.out_app_flag,
+                                   inp.bndpar,
+                                   PARAM.globalv.global_out_dir,
                                    GlobalV::ofs_running);
         }
     }

@@ -2,7 +2,6 @@
 #include "cal_dos.h"
 #include "cal_pdos_gamma.h"
 #include "cal_pdos_multik.h"
-#include "source_io/module_parameter/parameter.h"
 
 namespace ModuleIO
 {
@@ -23,11 +22,19 @@ void write_dos_lcao(
         const double& bcoeff,
         const bool out_app_flag,
         const int istep,
+        const int nspin,
+        const bool dos_setemax,
+        const double dos_emax_ev,
+        const bool dos_setemin,
+        const double dos_emin_ev,
+        const bool two_fermi,
+        const int bndpar,
+        const std::string& global_out_dir,
         std::ofstream &ofs_running)
 {
     ModuleBase::TITLE("ModuleIO", "write_dos_lcao");
     
-    const int nspin0 = (PARAM.inp.nspin == 2) ? 2 : 1;
+    const int nspin0 = (nspin == 2) ? 2 : 1;
 
     double emax = 0.0;
     double emin = 0.0;
@@ -40,14 +47,19 @@ void write_dos_lcao(
 			dos_edelta_ev,
 			dos_scale,
 			emax,
-			emin);
+			emin,
+			dos_setemax,
+			dos_emax_ev,
+			dos_setemin,
+			dos_emin_ev,
+			two_fermi);
 
     // output the DOS file.
     for (int is = 0; is < nspin0; ++is)
     {
         std::stringstream ss;
 
-        ss << PARAM.globalv.global_out_dir << "doss" << is + 1;
+        ss << global_out_dir << "doss" << is + 1;
 
 		if(istep>=0)
 		{
@@ -69,7 +81,9 @@ void write_dos_lcao(
 				nbands,
 				ekb,
 				wg,
-				istep);
+				istep,
+				out_app_flag,
+				bndpar);
 	}
 
 
@@ -109,6 +123,14 @@ template void write_dos_lcao(
         const double& bcoeff,
         const bool out_app_flag,
         const int istep,
+        const int nspin,
+        const bool dos_setemax,
+        const double dos_emax_ev,
+        const bool dos_setemin,
+        const double dos_emin_ev,
+        const bool two_fermi,
+        const int bndpar,
+        const std::string& global_out_dir,
         std::ofstream &ofs_running);
 
 
@@ -127,6 +149,14 @@ template void write_dos_lcao(
         const double& bcoeff,
         const bool out_app_flag,
         const int istep,
+        const int nspin,
+        const bool dos_setemax,
+        const double dos_emax_ev,
+        const bool dos_setemin,
+        const double dos_emin_ev,
+        const bool two_fermi,
+        const int bndpar,
+        const std::string& global_out_dir,
         std::ofstream &ofs_running);
 
 }

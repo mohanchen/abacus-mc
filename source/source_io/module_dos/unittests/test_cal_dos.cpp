@@ -36,6 +36,8 @@ TEST_F(DosTest,Dos)
 	EXPECT_EQ(dosp.is,0);
 
     const int istep = 1;
+    const bool out_app_flag = false;
+    const int bndpar = 1;
 	ModuleIO::cal_dos(dosp.is,
 			dosp.fa,
 			dosp.de_ev,
@@ -49,7 +51,9 @@ TEST_F(DosTest,Dos)
 			dosp.nbands,
 			dosp.ekb,
 			dosp.wg,
-			istep);
+			istep,
+			out_app_flag,
+			bndpar);
 
 #ifdef __MPI
 	if(GlobalV::MY_RANK==0)
@@ -82,6 +86,8 @@ TEST_F(DosTest,DosW1)
 	GlobalV::ofs_warning.open("warning1.log");
 
     const int istep = 1;
+    const bool out_app_flag = false;
+    const int bndpar = 1;
 	EXPECT_NO_THROW(ModuleIO::cal_dos(dosp.is,
 			dosp.fa,
 			dosp.de_ev,
@@ -95,7 +101,9 @@ TEST_F(DosTest,DosW1)
 			dosp.nbands,
 			dosp.ekb,
 			dosp.wg,
-            istep));
+			istep,
+			out_app_flag,
+			bndpar));
 	GlobalV::ofs_warning.close();
 #ifdef __MPI
 	if(GlobalV::MY_RANK==0)
@@ -125,6 +133,8 @@ TEST_F(DosTest,DosW2)
 	GlobalV::ofs_warning.open("warning2.log");
 
     const int istep = 1;
+    const bool out_app_flag = false;
+    const int bndpar = 1;
 	EXPECT_NO_THROW(ModuleIO::cal_dos(dosp.is,
 			dosp.fa,
 			dosp.de_ev,
@@ -138,7 +148,9 @@ TEST_F(DosTest,DosW2)
 			dosp.nbands,
 			dosp.ekb,
 			dosp.wg,
-			istep));
+			istep,
+			out_app_flag,
+			bndpar));
 
 	GlobalV::ofs_warning.close();
 #ifdef __MPI

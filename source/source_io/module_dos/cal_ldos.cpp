@@ -217,7 +217,12 @@ void ldos_mode_pw(const elecstate::ElecStatePW<std::complex<double>>* pelec,
                 PARAM.inp.dos_edelta_ev,
                 PARAM.inp.dos_scale,
                 emax,
-                emin);
+                emin,
+                PARAM.globalv.dos_setemax,
+                PARAM.inp.dos_emax_ev,
+                PARAM.globalv.dos_setemin,
+                PARAM.inp.dos_emin_ev,
+                PARAM.globalv.two_fermi);
 
     const int ndata = static_cast<int>((emax - emin) / PARAM.inp.dos_edelta_ev) + 1;
     const double sigma = sqrt(2.0) * PARAM.inp.dos_sigma;

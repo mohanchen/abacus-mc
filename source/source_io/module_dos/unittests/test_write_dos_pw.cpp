@@ -68,8 +68,15 @@ TEST_F(DosPWTest,Dos1)
     elecstate::Efermi fermi_energy;
 
 	std::ofstream ofs("write_dos_pw.log");
-    
+
     UnitCell ucell;
+
+    const int nspin = 1;
+    const int out_dos = 1;
+    const bool two_fermi = false;
+    const bool out_app_flag = false;
+    const int bndpar = 1;
+    const std::string global_out_dir = "./";
 
 	ModuleIO::write_dos_pw(
             ucell, // this should be unitcell, 2025-04-12
@@ -82,6 +89,16 @@ TEST_F(DosPWTest,Dos1)
 			dosp.de_ev,
 			dos_scale,
 			dosp.bcoeff,
+			nspin,
+			out_dos,
+			PARAM.sys.dos_setemax,
+			PARAM.input.dos_emax_ev,
+			PARAM.sys.dos_setemin,
+			PARAM.input.dos_emin_ev,
+			two_fermi,
+			out_app_flag,
+			bndpar,
+			global_out_dir,
 			ofs);
     ofs.close();
     remove("write_dos_pw.log");
@@ -136,6 +153,13 @@ TEST_F(DosPWTest,Dos2)
 
     UnitCell ucell;
 
+    const int nspin = 1;
+    const int out_dos = 1;
+    const bool two_fermi = false;
+    const bool out_app_flag = false;
+    const int bndpar = 1;
+    const std::string global_out_dir = "./";
+
 	ModuleIO::write_dos_pw(
 			ucell,
 			dosp.ekb,
@@ -147,6 +171,16 @@ TEST_F(DosPWTest,Dos2)
 			dosp.de_ev,
 			dos_scale,
 			dosp.bcoeff,
+			nspin,
+			out_dos,
+			PARAM.sys.dos_setemax,
+			PARAM.input.dos_emax_ev,
+			PARAM.sys.dos_setemin,
+			PARAM.input.dos_emin_ev,
+			two_fermi,
+			out_app_flag,
+			bndpar,
+			global_out_dir,
             ofs);
     ofs.close();
     remove("write_dos_pw.log");
