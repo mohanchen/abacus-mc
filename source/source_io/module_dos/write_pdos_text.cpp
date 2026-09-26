@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <vector>
 
 void ModuleIO::write_pdos_text(
         const UnitCell& ucell,
@@ -37,7 +38,7 @@ void ModuleIO::write_pdos_text(
 
         std::ofstream ofs(ss.str().c_str());
 
-        ofs << "# energy(eV)  atom  species  l  pdos(m=-l..l, 1/eV)" << std::endl;
+        ofs << "# energy(eV)  atom  species  pdos(s,py,pz,px,dxy,dyz,dz2,dxz,dx2,f..., 1/eV)" << std::endl;
 
         for (int iat = 0; iat < ucell.nat; ++iat)
         {
@@ -45,70 +46,74 @@ void ModuleIO::write_pdos_text(
             const int it = ucell.iat2it[iat];
             const Atom* atom = &ucell.atoms[it];
             const int s0 = ucell.itiaiw2iwt(it, ia, 0);
-
             const int max_l = atom->nwl;
+
+            // collect all (l, m) for this atom, ordered s,p,d,f
+            struct OrbInfo
+            {
+                int l;
+                int m;
+            };
+            std::vector<OrbInfo> orb_list;
+
             for (int L = 0; L <= max_l; ++L)
             {
-                // check if any orbital with this l exists
-                bool has_l = false;
-                for (int j = 0; j < atom->nw; ++j)
+                for (int m = -L; m <= L; ++m)
                 {
-                    if (atom->iw2l[j] == L)
+                    for (int j = 0; j < atom->nw; ++j)
                     {
-                        has_l = true;
-                        break;
+                        if (atom->iw2l[j] == L && atom->iw2m[j] == m)
+                        {
+                            orb_list.push_back({L, m});
+                            break;
+                        }
                     }
                 }
-                if (!has_l)
+            }
+
+            for (int n = 0; n < npoints; ++n)
+            {
+                const double en = emin + n * dos_edelta_ev;
+
+                ofs << std::setw(12) << std::fixed << std::setprecision(6) << en
+                    << "  " << std::setw(3) << iat + 1
+                    << "  " << std::setw(4) << ucell.atoms[it].label;
+
+                for (size_t io = 0; io < orb_list.size(); ++io)
                 {
-                    continue;
-                }
+                    const int L = orb_list[io].l;
+                    const int m = orb_list[io].m;
+                    double pdos_val = 0.0;
 
-                const int nm = 2 * L + 1;
-                for (int n = 0; n < npoints; ++n)
-                {
-                    const double en = emin + n * dos_edelta_ev;
-
-                    ofs << std::setw(12) << std::fixed << std::setprecision(6) << en
-                        << "  " << std::setw(3) << iat + 1
-                        << "  " << std::setw(4) << ucell.atoms[it].label
-                        << "  " << L;
-
-                    // output pdos for each m = -L..L
-                    for (int m = -L; m <= L; ++m)
+                    // sum over all zeta for this (l, m)
+                    for (int j = 0; j < atom->nw; ++j)
                     {
-                        double pdos_val = 0.0;
-
-                        // sum over all zeta for this (l, m)
-                        for (int j = 0; j < atom->nw; ++j)
+                        if (atom->iw2l[j] != L || atom->iw2m[j] != m)
                         {
-                            if (atom->iw2l[j] != L || atom->iw2m[j] != m)
-                            {
-                                continue;
-                            }
-                            const int w = ucell.itiaiw2iwt(it, ia, j);
-
-                            if (nspin == 4)
-                            {
-                                const int w0 = w - s0;
-                                pdos_val += pdos[0](s0 + 2 * w0, n) + pdos[0](s0 + 2 * w0 + 1, n);
-                            }
-                            else
-                            {
-                                pdos_val += pdos[is](w, n);
-                            }
+                            continue;
                         }
+                        const int w = ucell.itiaiw2iwt(it, ia, j);
 
-                        // zero out negligible values
-                        if (std::abs(pdos_val) < 1e-6)
+                        if (nspin == 4)
                         {
-                            pdos_val = 0.0;
+                            const int w0 = w - s0;
+                            pdos_val += pdos[0](s0 + 2 * w0, n) + pdos[0](s0 + 2 * w0 + 1, n);
                         }
-
-                        ofs << "  " << std::setw(8) << std::fixed << std::setprecision(6) << pdos_val;
+                        else
+                        {
+                            pdos_val += pdos[is](w, n);
+                        }
                     }
-                    ofs << std::endl;
+
+                    // zero out negligible values
+                    if (std::abs(pdos_val) < 1e-6)
+                    {
+                        pdos_val = 0.0;
+                    }
+
+                    ofs << "  " << std::setw(8) << std::fixed << std::setprecision(6) << pdos_val;
                 }
+                ofs << std::endl;
             }
         }
 
