@@ -61,7 +61,7 @@ protected:
         // Cleanup code here, if needed
     }
 
-    const std::string forb_ = "../../../../tests/PP_ORB/Si_gga_8au_100Ry_2s2p1d.orb";
+    const std::string forb_ = "../../../../../tests/PP_ORB/Si_gga_8au_100Ry_2s2p1d.orb";
 
     std::unique_ptr<TwoCenterIntegrator> calculator_;
     std::unique_ptr<RadialCollection> orb_;
