@@ -1,6 +1,5 @@
 #include "cal_pdos_multik.h"
 #include "write_pdos_text.h"
-#include "source_io/module_parameter/parameter.h" // use PARAM
 #include "source_base/parallel_reduce.h"
 #include "source_base/module_external/blas_connector.h"
 #include "source_base/module_external/scalapack_connector.h"
@@ -22,7 +21,10 @@ void ModuleIO::cal_pdos(
 		const double& emin,
 		const double& dos_edelta_ev,
 		const double& bcoeff,
-		const int istep)
+		const int istep,
+		const int nlocal,
+		const int nspin,
+		const std::string& global_out_dir)
 {
     ModuleBase::TITLE("ModuleIO", "cal_pdos_multik");
 
@@ -34,7 +36,6 @@ void ModuleIO::cal_pdos(
     (void)istep;
 
     const int npoints = static_cast<int>(std::floor((emax - emin) / dos_edelta_ev)) + 1;
-    const int nlocal = PARAM.globalv.nlocal;
 
     // PDOS calculated locally on each processor
     std::vector<ModuleBase::matrix> pdosk(nspin0);
@@ -73,7 +74,7 @@ void ModuleIO::cal_pdos(
                 // collumn-major matrix
                 const int hk_type = 1;
 
-                if (PARAM.inp.nspin == 4)
+                if (nspin == 4)
                 {
                     dynamic_cast<hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>*>(p_ham)
                         ->updateSk(ik, hk_type);
@@ -122,8 +123,8 @@ void ModuleIO::cal_pdos(
                     const double zero_float[2] = {0.0, 0.0};
                     const char T_char = 'T';
                     pzgemv_(&T_char,
-                            &PARAM.globalv.nlocal,
-                            &PARAM.globalv.nlocal,
+                            &nlocal,
+                            &nlocal,
                             &one_float[0],
                             sk,
                             &one_int,
@@ -187,8 +188,8 @@ void ModuleIO::cal_pdos(
 
     if (GlobalV::MY_RANK == 0)
     {
-        write_pdos_text(ucell, pdos.data(), PARAM.inp.nspin, nlocal, npoints,
-                        emin, dos_edelta_ev, PARAM.globalv.global_out_dir, "nao", istep);
+        write_pdos_text(ucell, pdos.data(), nspin, nlocal, npoints,
+                        emin, dos_edelta_ev, global_out_dir, "nao", istep);
         ModuleIO::write_orb_info(&ucell);
     }
 }

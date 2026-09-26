@@ -23,6 +23,7 @@ void write_dos_lcao(
         const bool out_app_flag,
         const int istep,
         const int nspin,
+        const int nlocal,
         const bool dos_setemax,
         const double dos_emax_ev,
         const bool dos_setemin,
@@ -100,7 +101,10 @@ void write_dos_lcao(
             emin,
             dos_edelta_ev,
             bcoeff,
-            istep);
+            istep,
+            nlocal,
+            nspin,
+            global_out_dir);
 
     ofs_running << " #DOS CALCULATION ENDS# " << std::endl;
 
@@ -124,6 +128,7 @@ template void write_dos_lcao(
         const bool out_app_flag,
         const int istep,
         const int nspin,
+        const int nlocal,
         const bool dos_setemax,
         const double dos_emax_ev,
         const bool dos_setemin,
@@ -150,6 +155,7 @@ template void write_dos_lcao(
         const bool out_app_flag,
         const int istep,
         const int nspin,
+        const int nlocal,
         const bool dos_setemax,
         const double dos_emax_ev,
         const bool dos_setemin,

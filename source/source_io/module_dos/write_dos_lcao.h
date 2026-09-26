@@ -31,6 +31,7 @@ namespace ModuleIO
         const bool out_app_flag,
         const int istep,
         const int nspin,
+        const int nlocal,
         const bool dos_setemax,
         const double dos_emax_ev,
         const bool dos_setemin,
