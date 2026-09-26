@@ -41,11 +41,7 @@ void ModuleIO::write_pdos_text(
         // iw2m stores m as 0..2l, mapping to physical m values:
         // 0->0, 1->+1, 2->-1, 3->+2, 4->-2, 5->+3, 6->-3
         // So columns are ordered: s, p(m=0,+1,-1), d(m=0,+1,-1,+2,-2), f(...)
-        ofs << "# energy(eV)  atom  species  pdos(1/eV), columns ordered by (l, m):" << std::endl;
-        ofs << "#  s: m=0" << std::endl;
-        ofs << "#  p: m=0, +1, -1" << std::endl;
-        ofs << "#  d: m=0, +1, -1, +2, -2" << std::endl;
-        ofs << "#  f: m=0, +1, -1, +2, -2, +3, -3" << std::endl;
+        ofs << "# energy(eV)  atom  species  pdos(1/eV), columns: s(m=0) p(m=0,+1,-1) d(m=0,+1,-1,+2,-2) f(m=0,+1,-1,+2,-2,+3,-3)" << std::endl;
 
         for (int iat = 0; iat < ucell.nat; ++iat)
         {
