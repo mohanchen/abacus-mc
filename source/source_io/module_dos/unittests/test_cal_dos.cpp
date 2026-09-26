@@ -1,12 +1,12 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "source_io/module_dos/cal_dos.h"
+#include "../cal_dos.h"
 #include "source_base/global_variable.h"
 #include <string>
 #ifdef __MPI
 #include "mpi.h"
 #endif
-#include "dos_test.h"
+#include "./dos_test.h"
 
 /************************************************
  *  unit test of ca_dos

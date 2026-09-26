@@ -1,11 +1,11 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "source_io/module_dos/write_dos_pw.h"
+#include "../write_dos_pw.h"
 #ifdef __MPI
 #include "mpi.h"
 #endif
-#include "for_testing_klist.h"
-#include "dos_test.h"
+#include "./for_testing_klist.h"
+#include "./dos_test.h"
 
 #define private public
 #include "source_io/module_parameter/parameter.h"
