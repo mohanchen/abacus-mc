@@ -239,7 +239,6 @@ void ESolver_GetS::runner(BaseCell& basecell, const int istep)
                              gd, // mohan add 2024-04-06
                              two_center_bundle_,
                              orb_,
-                             kv,
                              binary,
                              sparse_threshold,
                              this->inp_->out_mat_ds[1],

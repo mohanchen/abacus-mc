@@ -689,7 +689,6 @@ void cal_r_overlap_R::out_rR(const UnitCell& ucell,
     }
 
     // calculate rR matrix
-    ModuleBase::Vector3<double> tau1, tau2, dtau;
     ModuleBase::Vector3<double> origin_point(0.0, 0.0, 0.0);
     double factor = sqrt(ModuleBase::FOUR_PI / 3.0);
     int output_R_number = 0;

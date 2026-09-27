@@ -31,6 +31,8 @@
  * https://my.feishu.cn/wiki/D0enwcUKfiJgtSkJ5scc9Dagntc
  */
 
+namespace
+{
 // L+ylm = sqrt((l-m)(l+m+1))ylm+1, return the sqrt((l-m)(l+m+1))
 double _lambda_plus(const int l, const int m)
 {
@@ -43,8 +45,9 @@ double _lambda_minus(const int l, const int m)
     return std::sqrt((l + m) * (l - m + 1)); // NOTE: complex spherical harmonics
 }
 
-const std::complex<double> i = {0., 1.};
-const double invsqrt2 = std::sqrt(2) * 0.5;
+const std::complex<double> kImag = {0., 1.};
+const double kInvSqrt2 = std::sqrt(2) * 0.5;
+} // namespace
 
 std::complex<double> ModuleIO::cal_LzijR(
     const std::unique_ptr<TwoCenterIntegrator>& calculator,
@@ -57,7 +60,7 @@ std::complex<double> ModuleIO::cal_LzijR(
     }
     double val_ = 0;
     calculator->calculate(it, il, iz, mi, jt, jl, jz, -mj, vR, &val_);
-    return i * static_cast<double>(mj) * val_;
+    return kImag * static_cast<double>(mj) * val_;
 }
 
 std::complex<double> ModuleIO::cal_LxijR(
@@ -78,20 +81,20 @@ std::complex<double> ModuleIO::cal_LxijR(
         if (std::fabs(lmbdm) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm-1), vR, &valm);
         }
-        return i * 0.5 * (lmbdp * valp + lmbdm * valm);
+        return kImag * 0.5 * (lmbdp * valp + lmbdm * valm);
     }
     if (jm == 1) {
         if (std::fabs(lmbdp) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -2, vR, &valp);
         }
-        return i * 0.5 * lmbdp * valp;
+        return kImag * 0.5 * lmbdp * valp;
     }
     if (jm == 0) {
         const double lmbd = _lambda_plus(jl, 0); // std::sqrt(jl*(jl+1))
         if (std::fabs(lmbd) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -1, vR, &valp);
         }
-        return i * invsqrt2 * lmbd * valp;
+        return kImag * kInvSqrt2 * lmbd * valp;
     }
     if (jm == -1) {
         if (std::fabs(lmbdp) > 1e-12) {
@@ -100,7 +103,7 @@ std::complex<double> ModuleIO::cal_LxijR(
         if (std::fabs(lmbdm) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 2, vR, &valm);
         }
-        return -i * 0.5 * (std::sqrt(2) * lmbdp * valp + lmbdm * valm);
+        return -kImag * 0.5 * (std::sqrt(2) * lmbdp * valp + lmbdm * valm);
     }
     else {
         assert(jm < -1); // defensive check
@@ -110,7 +113,7 @@ std::complex<double> ModuleIO::cal_LxijR(
         if (std::fabs(lmbdm) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm-1), vR, &valm);
         }
-        return -i * 0.5 * (lmbdp * valp + lmbdm * valm);
+        return -kImag * 0.5 * (lmbdp * valp + lmbdm * valm);
     }
 }
 
@@ -132,7 +135,7 @@ std::complex<double> ModuleIO::cal_LyijR(
         if (std::fabs(lmbdm) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm-1, vR, &valm);
         }
-        return -i * 0.5 * (lmbdp * valp - lmbdm * valm);
+        return -kImag * 0.5 * (lmbdp * valp - lmbdm * valm);
     }
     if (jm == 1) {
         if (std::fabs(lmbdp) > 1e-12) {
@@ -141,20 +144,20 @@ std::complex<double> ModuleIO::cal_LyijR(
         if (std::fabs(lmbdm) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 0, vR, &valm);
         }
-        return -i * 0.5 * (lmbdp * valp - std::sqrt(2) * lmbdm * valm);
+        return -kImag * 0.5 * (lmbdp * valp - std::sqrt(2) * lmbdm * valm);
     }
     if (jm == 0) {
         const double lmbd = _lambda_plus(jl, 0); // std::sqrt(l*(l+1))
         if (std::fabs(lmbd) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 1, vR, &valp);
         }
-        return -i * invsqrt2 * lmbd * valp;
+        return -kImag * kInvSqrt2 * lmbd * valp;
     }
     if (jm == -1) {
         if (std::fabs(lmbdm) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -2, vR, &valm);
         }
-        return -i * 0.5 * lmbdm * valm;
+        return -kImag * 0.5 * lmbdm * valm;
     }
     else {
         assert(jm < -1); // defensive check
@@ -164,7 +167,7 @@ std::complex<double> ModuleIO::cal_LyijR(
         if (std::fabs(lmbdm) > 1e-12) {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm-1, vR, &valm);
         }
-        return i * 0.5 * (lmbdp * valp - lmbdm * valm);
+        return kImag * 0.5 * (lmbdp * valp - lmbdm * valm);
     }
 }
 

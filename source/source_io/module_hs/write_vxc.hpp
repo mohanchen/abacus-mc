@@ -18,7 +18,6 @@ namespace ModuleIO
 
 inline void set_para2d_MO(const Parallel_Orbitals& pv, const int nbands, Parallel_2D& p2d)
 {
-    std::ofstream ofs;
 #ifdef __MPI
     p2d.set(nbands, nbands, pv.nb, pv.blacs_ctxt);
 #else

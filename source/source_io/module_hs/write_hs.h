@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-//#include "source_base/global_function.h"
-//#include "source_base/global_variable.h"
 #include "source_base/parallel_comm.h"          // use DIAG_WORLD
 #include "source_basis/module_ao/parallel_orbitals.h" // use Parallel_Orbitals
 #include "source_hamilt/hamilt.h"
