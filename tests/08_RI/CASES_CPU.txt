@@ -11,7 +11,6 @@ scf_hf_multik
 scf_pbe0_multik
 scf_out_xc_multik
 scf_campbeh_gamma
-lr_tddft_pbe0_gamma
 scf_hse_soc_symm_multik
 lr_tddft_lda_gamma
 lr_tddft_pbe_gamma
