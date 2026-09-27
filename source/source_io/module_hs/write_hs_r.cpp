@@ -162,7 +162,6 @@ void ModuleIO::output_SR(Parallel_Orbitals& pv,
     options.precision = precision;
     options.istep = istep;
     options.reduce = true;
-    options.temp_dir = global_out_dir;
     options.calculation = calculation;
     options.out_app_flag = out_app_flag;
 
@@ -235,7 +234,6 @@ void ModuleIO::output_TR(const int istep,
     options.precision = precision;
     options.istep = istep;
     options.reduce = true;
-    options.temp_dir = global_out_dir;
     options.calculation = calculation;
     options.out_app_flag = out_app_flag;
 

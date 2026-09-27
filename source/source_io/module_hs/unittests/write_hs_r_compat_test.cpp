@@ -654,7 +654,6 @@ TEST(WriteHsRCompatibility, LegacySparseHeaderKeepsStepStyle)
     options.binary = false;
     options.istep = 0;
     options.reduce = false;
-    options.temp_dir = "./";
     ModuleIO::save_sparse(sparse_matrix, all_R_coor, pv, options);
 
     const std::string output = read_file(filename);
@@ -692,7 +691,6 @@ TEST(WriteHsRCompatibility, LegacySparseTextCountsOnlyValuesAboveThreshold)
     options.binary = false;
     options.istep = 2;
     options.reduce = false;
-    options.temp_dir = "./";
     ModuleIO::save_sparse(sparse_matrix, all_R_coor, pv, options);
 
     const std::vector<std::string> lines = read_lines(filename);
@@ -758,7 +756,6 @@ TEST(WriteHsRCompatibility, LegacySparseBinaryHeaderWritesConcreteStep)
     options.binary = true;
     options.istep = 3;
     options.reduce = false;
-    options.temp_dir = "./";
     ModuleIO::save_sparse(sparse_matrix, all_R_coor, pv, options);
 
     const std::vector<int> header_and_r = read_binary_ints(filename, 7);
@@ -793,7 +790,6 @@ TEST(WriteHsRCompatibility, LegacySparseBinaryCountsOnlyValuesAboveThreshold)
     options.binary = true;
     options.istep = 4;
     options.reduce = false;
-    options.temp_dir = "./";
     ModuleIO::save_sparse(sparse_matrix, all_R_coor, pv, options);
 
     std::ifstream ifs(filename.c_str(), std::ios::binary);

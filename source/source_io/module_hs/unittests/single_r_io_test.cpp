@@ -68,7 +68,6 @@ TEST(ModuleIOTest, OutputSingleR)
     options.threshold = sparse_threshold;
     options.binary = binary;
     options.reduce = true;
-    options.temp_dir = "./";
 
     // Call function under test
     ModuleIO::output_single_R(ofs, XR, pv, options);
@@ -137,7 +136,6 @@ TEST(ModuleIOTest, OutputSingleRComplexKeepsHighPrecision)
     options.threshold = 1e-12;
     options.binary = false;
     options.reduce = false;
-    options.temp_dir = "./";
 
     ModuleIO::output_single_R(ofs, XR, pv, options);
     ofs.close();
@@ -167,7 +165,6 @@ TEST(ModuleIOTest, OutputSingleRUsesConfiguredPrecision)
     options.binary = false;
     options.precision = 8;
     options.reduce = false;
-    options.temp_dir = "./";
 
     ModuleIO::output_single_R(ofs, XR, pv, options);
     ofs.close();
@@ -192,7 +189,6 @@ void write_out_of_range_sparse_column(const char* filename)
     options.threshold = 1e-12;
     options.binary = false;
     options.reduce = false;
-    options.temp_dir = "/tmp/";
     ModuleIO::output_single_R(ofs, XR, pv, options);
 }
 

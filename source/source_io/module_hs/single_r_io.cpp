@@ -7,7 +7,6 @@
 #include <cstdio>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <vector>
 
 inline void write_data(std::ofstream& ofs, const double& data, const int precision)
@@ -37,28 +36,7 @@ void ModuleIO::output_single_R(std::ofstream& ofs,
     indptr.reserve(nlocal + 1);
     indptr.push_back(0);
 
-    std::stringstream tem1;
-    tem1 << options.temp_dir << std::to_string(GlobalV::DRANK)
-         << "temp_sparse_indices.dat";
-    std::ofstream ofs_tem1;
-    std::ifstream ifs_tem1;
-
-    if (!options.reduce || GlobalV::DRANK == 0)
-    {
-        if (options.binary)
-        {
-            ofs_tem1.open(tem1.str().c_str(), std::ios::binary);
-        }
-        else
-        {
-            ofs_tem1.open(tem1.str().c_str());
-        }
-        if (!ofs_tem1.is_open())
-        {
-            ModuleBase::WARNING_QUIT("ModuleIO::output_single_R",
-                                     "Cannot open temporary sparse index file: " + tem1.str());
-        }
-    }
+    std::vector<int> col_indices;
 
     std::vector<T> line(nlocal);
     for(int row = 0; row < nlocal; ++row)
@@ -98,16 +76,13 @@ void ModuleIO::output_single_R(std::ofstream& ofs,
                     if (options.binary)
                     {
                         ofs.write(reinterpret_cast<char*>(&line[col]), sizeof(T));
-                        ofs_tem1.write(reinterpret_cast<char *>(&col), sizeof(int));
                     }
                     else
                     {
                         write_data(ofs, line[col], options.precision);
-                        ofs_tem1 << " " << col;
                     }
-
+                    col_indices.push_back(col);
                     nonzeros_count++;
-
                 }
 
             }
@@ -120,15 +95,10 @@ void ModuleIO::output_single_R(std::ofstream& ofs,
     {
         if (options.binary)
         {
-            ofs_tem1.close();
-            ifs_tem1.open(tem1.str().c_str(), std::ios::binary);
-            if (!ifs_tem1.is_open())
+            for (int col : col_indices)
             {
-                ModuleBase::WARNING_QUIT("ModuleIO::output_single_R",
-                                         "Cannot read temporary sparse index file: " + tem1.str());
+                ofs.write(reinterpret_cast<char*>(&col), sizeof(int));
             }
-            ofs << ifs_tem1.rdbuf();
-            ifs_tem1.close();
             for (auto &i : indptr)
             {
                 ofs.write(reinterpret_cast<char *>(&i), sizeof(long long));
@@ -137,24 +107,17 @@ void ModuleIO::output_single_R(std::ofstream& ofs,
         else
         {
             ofs << std::endl;
-            ofs_tem1 << std::endl;
-            ofs_tem1.close();
-            ifs_tem1.open(tem1.str().c_str());
-            if (!ifs_tem1.is_open())
+            for (int col : col_indices)
             {
-                ModuleBase::WARNING_QUIT("ModuleIO::output_single_R",
-                                         "Cannot read temporary sparse index file: " + tem1.str());
+                ofs << " " << col;
             }
-            ofs << ifs_tem1.rdbuf();
-            ifs_tem1.close();
+            ofs << std::endl;
             for (auto &i : indptr)
             {
                 ofs << " " << i;
             }
             ofs << std::endl;
         }
-
-        std::remove(tem1.str().c_str());
     }
 }
 

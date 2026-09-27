@@ -149,7 +149,6 @@ void write_Vxc_R(const int nspin,
         options.binary = false;
         options.istep = -1;
         options.reduce = true;
-        options.temp_dir = global_out_dir;
         ModuleIO::save_sparse(cal_HR_sparse(vxcs_R_ao[is], sparse_thr),
                               all_R_coor,
                               *pv,

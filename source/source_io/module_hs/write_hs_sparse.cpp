@@ -157,7 +157,6 @@ void ModuleIO::save_dH_sparse(const int& istep,
     single_R_options.binary = binary;
     single_R_options.precision = precision;
     single_R_options.reduce = true;
-    single_R_options.temp_dir = global_out_dir;
     single_R_options.calculation = calculation;
     single_R_options.out_app_flag = out_app_flag;
 

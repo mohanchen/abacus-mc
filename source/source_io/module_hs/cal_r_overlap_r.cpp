@@ -698,7 +698,6 @@ void cal_r_overlap_R::out_rR(const UnitCell& ucell,
     single_R_options.binary = binary;
     single_R_options.precision = precision;
     single_R_options.reduce = true;
-    single_R_options.temp_dir = global_out_dir;
 
     std::stringstream tem1;
     tem1 << global_out_dir << "tmp-rr.csr";

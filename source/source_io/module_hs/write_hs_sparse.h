@@ -28,7 +28,6 @@ struct SparseWriteOptions
     int precision = 16;
     int istep = -1;
     bool reduce = true;
-    std::string temp_dir;
     // Runtime flags that decide file-open mode (append on md restart).
     // Must be provided explicitly by the caller instead of reading PARAM.
     std::string calculation;
