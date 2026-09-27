@@ -1,7 +1,4 @@
 INPUT_PARAMETERS
-
-
-
 # general information
 calculation       md
 esolver_type      tddft
@@ -35,7 +32,7 @@ gamma_only        0
 
 
 # electronic structure calculations
-ecutwfc           20
+ecutwfc           5
 scf_nmax          50
 scf_thr           1e-6
 ks_solver         scalapack_gvx
