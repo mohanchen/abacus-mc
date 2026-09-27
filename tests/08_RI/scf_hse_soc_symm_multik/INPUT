@@ -8,7 +8,7 @@ basis_type        lcao
 gamma_only        0
 
 ecutwfc           5
-scf_thr           1e-2
+scf_thr           1e-7
 
 smearing_method   gaussian
 smearing_sigma    0.02
@@ -18,7 +18,7 @@ mixing_beta       0.15
 symmetry          1
 symmetry_prec     1e-5
 
-nspin              4
+nspin             4
 lspinorb          1
 cal_force         1
 cal_stress        1
