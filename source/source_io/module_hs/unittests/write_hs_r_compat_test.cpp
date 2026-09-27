@@ -11,7 +11,7 @@
 #include "source_io/module_hs/output_mat_sparse.h"
 #include "source_io/module_hs/rr_sparse_writer.h"
 #include "source_io/module_hs/hsr_writer.h"
-#include "source_io/module_hs/hs_r_legacy.h"
+#include "source_io/module_hs/hsr_legacy.h"
 #include "source_io/module_hs/dhs_sparse_writer.h"
 #include "source_io/module_hs/hs_sparse_io.h"
 #include "source_base/module_out/csr_reader.h"

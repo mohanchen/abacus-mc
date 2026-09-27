@@ -91,7 +91,7 @@ if(ENABLE_LCAO)
       module_hs/dhs_sparse_writer.cpp
       module_hs/hsk_writer.cpp
       module_hs/hsr_writer.cpp
-      module_hs/hs_r_legacy.cpp
+      module_hs/hsr_legacy.cpp
       module_hs/hterm_writer.cpp
       module_hs/single_r_io.cpp
       module_hs/rr_sparse_writer.cpp

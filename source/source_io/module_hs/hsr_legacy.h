@@ -1,5 +1,5 @@
-#ifndef HS_R_LEGACY_H
-#define HS_R_LEGACY_H
+#ifndef HSR_LEGACY_H
+#define HSR_LEGACY_H
 
 #include "source_base/matrix.h"
 #include "source_basis/module_ao/parallel_orbitals.h"

@@ -735,7 +735,7 @@ OBJS_IO_LCAO=module_hs/pos_op_mat.o\
       module_hs/single_r_io.o\
       module_hs/hsk_writer.o\
       module_hs/hsr_writer.o\
-      module_hs/hs_r_legacy.o\
+      module_hs/hsr_legacy.o\
       module_dm/write_dmr.o\
       module_mulliken/output_mulliken.o\
       module_mulliken/output_sk.o\

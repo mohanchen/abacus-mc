@@ -1,4 +1,4 @@
-#include "hs_r_legacy.h"
+#include "hsr_legacy.h"
 
 #include "source_base/timer.h"
 #include "source_lcao/lcao_hs_arrays.h"

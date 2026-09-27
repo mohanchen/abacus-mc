@@ -50,7 +50,7 @@ AddTest(
   SOURCES
   write_hs_r_compat_test.cpp
   ../hsr_writer.cpp
-  ../hs_r_legacy.cpp
+  ../hsr_legacy.cpp
   ../hs_sparse_io.cpp
   ../dhs_sparse_writer.cpp
   ../single_r_io.cpp
