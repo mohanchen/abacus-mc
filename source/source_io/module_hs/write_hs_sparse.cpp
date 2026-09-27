@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <fstream>
+#include <sstream>
 #include <vector>
 
 namespace
@@ -162,18 +164,24 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
     auto& all_R_coor_ptr = HS_Arrays.all_R_coor;
     auto& output_R_coor_ptr = HS_Arrays.output_R_coor;
-    auto& dHRx_sparse_ptr = HS_Arrays.dHRx_sparse;
-    auto& dHRx_soc_sparse_ptr = HS_Arrays.dHRx_soc_sparse;
-    auto& dHRy_sparse_ptr = HS_Arrays.dHRy_sparse;
-    auto& dHRy_soc_sparse_ptr = HS_Arrays.dHRy_soc_sparse;
-    auto& dHRz_sparse_ptr = HS_Arrays.dHRz_sparse;
-    auto& dHRz_soc_sparse_ptr = HS_Arrays.dHRz_soc_sparse;
+
+    // The three Cartesian derivative components (x, y, z) share identical
+    // file handling; only the label and the sparse matrices differ.
+    struct Component
+    {
+        char axis;                                              // 'x' / 'y' / 'z'
+        SparseRMatrix<double>* sparse;                          // nspin != 4 (array of 2)
+        SparseRMatrix<std::complex<double>>* soc_sparse;        // nspin == 4
+        std::vector<long long> nonzero_num[2];
+        std::stringstream fname[2];
+        std::ofstream ofs[2];
+    };
+    Component comps[3] = {{'x', HS_Arrays.dHRx_sparse, &HS_Arrays.dHRx_soc_sparse, {}, {}, {}},
+                          {'y', HS_Arrays.dHRy_sparse, &HS_Arrays.dHRy_soc_sparse, {}, {}, {}},
+                          {'z', HS_Arrays.dHRz_sparse, &HS_Arrays.dHRz_soc_sparse, {}, {}, {}}};
 
     const int total_R_num = static_cast<int>(all_R_coor_ptr.size());
     int output_R_number = 0;
-    std::vector<long long> dHx_nonzero_num[2];
-    std::vector<long long> dHy_nonzero_num[2];
-    std::vector<long long> dHz_nonzero_num[2];
     int step = istep;
 
     int spin_loop = 1;
@@ -181,30 +189,30 @@ void ModuleIO::save_dH_sparse(const int& istep,
         spin_loop = 2;
     }
 
-    if (nspin != 4)
+    for (auto& comp: comps)
     {
-        for (int ispin = 0; ispin < spin_loop; ++ispin)
+        if (nspin != 4)
         {
-            dHx_nonzero_num[ispin] = count_nonzeros_by_R(dHRx_sparse_ptr[ispin], all_R_coor_ptr, sparse_thr, true);
-            dHy_nonzero_num[ispin] = count_nonzeros_by_R(dHRy_sparse_ptr[ispin], all_R_coor_ptr, sparse_thr, true);
-            dHz_nonzero_num[ispin] = count_nonzeros_by_R(dHRz_sparse_ptr[ispin], all_R_coor_ptr, sparse_thr, true);
+            for (int ispin = 0; ispin < spin_loop; ++ispin)
+            {
+                comp.nonzero_num[ispin] = count_nonzeros_by_R(comp.sparse[ispin], all_R_coor_ptr, sparse_thr, true);
+            }
         }
-    }
-    else
-    {
-        dHx_nonzero_num[0] = count_nonzeros_by_R(dHRx_soc_sparse_ptr, all_R_coor_ptr, sparse_thr, true);
-        dHy_nonzero_num[0] = count_nonzeros_by_R(dHRy_soc_sparse_ptr, all_R_coor_ptr, sparse_thr, true);
-        dHz_nonzero_num[0] = count_nonzeros_by_R(dHRz_soc_sparse_ptr, all_R_coor_ptr, sparse_thr, true);
+        else
+        {
+            comp.nonzero_num[0] = count_nonzeros_by_R(*comp.soc_sparse, all_R_coor_ptr, sparse_thr, true);
+        }
     }
 
     const auto has_output_R = [&](const int index) {
-        for (int ispin = 0; ispin < spin_loop; ++ispin)
+        for (const auto& comp: comps)
         {
-            if (dHx_nonzero_num[ispin][index] != 0
-                || dHy_nonzero_num[ispin][index] != 0
-                || dHz_nonzero_num[ispin][index] != 0)
+            for (int ispin = 0; ispin < spin_loop; ++ispin)
             {
-                return true;
+                if (comp.nonzero_num[ispin][index] != 0)
+                {
+                    return true;
+                }
             }
         }
         return false;
@@ -218,125 +226,63 @@ void ModuleIO::save_dH_sparse(const int& istep,
         }
     }
 
-    std::stringstream sshx[2];
-    std::stringstream sshy[2];
-    std::stringstream sshz[2];
-
     const bool md_no_append = (calculation == "md") && !out_app_flag;
-	if (md_no_append)
-	{
-		sshx[0] << global_matrix_dir
-			<< "d"<<fileflag<<"rxs1g" << step << "_nao.csr";
-		sshx[1] << global_matrix_dir
-			<< "d"<<fileflag<<"rxs2g" << step << "_nao.csr";
-		sshy[0] << global_matrix_dir
-			<< "d"<<fileflag<<"rys1g" << step << "_nao.csr";
-		sshy[1] << global_matrix_dir
-			<< "d"<<fileflag<<"rys2g" << step << "_nao.csr";
-		sshz[0] << global_matrix_dir
-			<< "d"<<fileflag<<"rzs1g" << step << "_nao.csr";
-		sshz[1] << global_matrix_dir
-			<< "d"<<fileflag<<"rzs2g" << step << "_nao.csr";
-	}
-	else
-	{
-		sshx[0] << global_out_dir << "d"<<fileflag<<"rxs1_nao.csr";
-        sshx[1] << global_out_dir << "d"<<fileflag<<"rxs2_nao.csr";
-        sshy[0] << global_out_dir << "d"<<fileflag<<"rys1_nao.csr";
-        sshy[1] << global_out_dir << "d"<<fileflag<<"rys2_nao.csr";
-        sshz[0] << global_out_dir << "d"<<fileflag<<"rzs1_nao.csr";
-        sshz[1] << global_out_dir << "d"<<fileflag<<"rzs2_nao.csr";
-    }
-    std::ofstream g1x[2];
-    std::ofstream g1y[2];
-    std::ofstream g1z[2];
-
-	if (GlobalV::DRANK == 0) 
-	{
-		if (binary) // binary format
-		{
-			for (int ispin = 0; ispin < spin_loop; ++ispin)
-			{
-				const bool open_in_append = (calculation == "md") && out_app_flag && step;
-				if (open_in_append)
-				{
-					g1x[ispin].open(sshx[ispin].str().c_str(),
-                                    std::ios::binary | std::ios::app);
-                    g1y[ispin].open(sshy[ispin].str().c_str(),
-                                    std::ios::binary | std::ios::app);
-                    g1z[ispin].open(sshz[ispin].str().c_str(),
-                                    std::ios::binary | std::ios::app);
-				} 
-				else 
-				{
-                    g1x[ispin].open(sshx[ispin].str().c_str(),std::ios::binary);
-                    g1y[ispin].open(sshy[ispin].str().c_str(),std::ios::binary);
-                    g1z[ispin].open(sshz[ispin].str().c_str(),std::ios::binary);
-                }
-                check_output_file_open(g1x[ispin], sshx[ispin].str(), "ModuleIO::save_dH_sparse");
-                check_output_file_open(g1y[ispin], sshy[ispin].str(), "ModuleIO::save_dH_sparse");
-                check_output_file_open(g1z[ispin], sshz[ispin].str(), "ModuleIO::save_dH_sparse");
-
-                g1x[ispin].write(reinterpret_cast<char*>(&step), sizeof(int));
-                g1x[ispin].write(reinterpret_cast<char*>(const_cast<int*>(&nlocal)),
-                                 sizeof(int));
-                g1x[ispin].write(reinterpret_cast<char*>(&output_R_number),
-                                 sizeof(int));
-
-                g1y[ispin].write(reinterpret_cast<char*>(&step), sizeof(int));
-                g1y[ispin].write(reinterpret_cast<char*>(const_cast<int*>(&nlocal)),
-                                 sizeof(int));
-                g1y[ispin].write(reinterpret_cast<char*>(&output_R_number),
-                                 sizeof(int));
-
-                g1z[ispin].write(reinterpret_cast<char*>(&step), sizeof(int));
-                g1z[ispin].write(reinterpret_cast<char*>(const_cast<int*>(&nlocal)),
-                                 sizeof(int));
-                g1z[ispin].write(reinterpret_cast<char*>(&output_R_number),
-                                 sizeof(int));
+    for (auto& comp: comps)
+    {
+        for (int ispin = 0; ispin < 2; ++ispin)
+        {
+            if (md_no_append)
+            {
+                comp.fname[ispin] << global_matrix_dir
+                                  << "d" << fileflag << "r" << comp.axis
+                                  << "s" << (ispin + 1) << "g" << step << "_nao.csr";
             }
-		} 
-		else 
-		{
-			for (int ispin = 0; ispin < spin_loop; ++ispin)
-			{
-				const bool open_in_append = (calculation == "md") && out_app_flag && step;
-				if (open_in_append)
-				{
-					g1x[ispin].open(sshx[ispin].str().c_str(), std::ios::app);
-                    g1y[ispin].open(sshy[ispin].str().c_str(), std::ios::app);
-                    g1z[ispin].open(sshz[ispin].str().c_str(), std::ios::app);
-				}
-				else 
-				{
-					GlobalV::ofs_running << " dH/dRx data are in file: " << sshx[ispin].str() << std::endl;
-					GlobalV::ofs_running << " dH/dRy data are in file: " << sshy[ispin].str() << std::endl;
-					GlobalV::ofs_running << " dH/dRz data are in file: " << sshz[ispin].str() << std::endl;
-                    g1x[ispin].open(sshx[ispin].str().c_str());
-                    g1y[ispin].open(sshy[ispin].str().c_str());
-                    g1z[ispin].open(sshz[ispin].str().c_str());
+            else
+            {
+                comp.fname[ispin] << global_out_dir
+                                  << "d" << fileflag << "r" << comp.axis
+                                  << "s" << (ispin + 1) << "_nao.csr";
+            }
+        }
+    }
+
+    if (GlobalV::DRANK == 0)
+    {
+        const bool open_in_append = (calculation == "md") && out_app_flag && step;
+        for (auto& comp: comps)
+        {
+            const std::string label = std::string("dH") + comp.axis;
+            for (int ispin = 0; ispin < spin_loop; ++ispin)
+            {
+                std::ios_base::openmode mode = std::ios::out;
+                if (binary)
+                {
+                    mode |= std::ios::binary;
                 }
-                check_output_file_open(g1x[ispin], sshx[ispin].str(), "ModuleIO::save_dH_sparse");
-                check_output_file_open(g1y[ispin], sshy[ispin].str(), "ModuleIO::save_dH_sparse");
-                check_output_file_open(g1z[ispin], sshz[ispin].str(), "ModuleIO::save_dH_sparse");
+                if (open_in_append)
+                {
+                    mode |= std::ios::app;
+                }
+                else if (!binary)
+                {
+                    GlobalV::ofs_running << " " << label << " data are in file: "
+                                         << comp.fname[ispin].str() << std::endl;
+                }
+                comp.ofs[ispin].open(comp.fname[ispin].str().c_str(), mode);
+                check_output_file_open(comp.ofs[ispin], comp.fname[ispin].str(), "ModuleIO::save_dH_sparse");
 
-                g1x[ispin] << "STEP: " << step << std::endl;
-                g1x[ispin] << "Matrix Dimension of dHx(R): " << nlocal
-                           << std::endl;
-                g1x[ispin] << "Matrix number of dHx(R): " << output_R_number
-                           << std::endl;
-
-                g1y[ispin] << "STEP: " << step << std::endl;
-                g1y[ispin] << "Matrix Dimension of dHy(R): " << nlocal
-                           << std::endl;
-                g1y[ispin] << "Matrix number of dHy(R): " << output_R_number
-                           << std::endl;
-
-                g1z[ispin] << "STEP: " << step << std::endl;
-                g1z[ispin] << "Matrix Dimension of dHz(R): " << nlocal
-                           << std::endl;
-                g1z[ispin] << "Matrix number of dHz(R): " << output_R_number
-                           << std::endl;
+                if (binary)
+                {
+                    comp.ofs[ispin].write(reinterpret_cast<char*>(&step), sizeof(int));
+                    comp.ofs[ispin].write(reinterpret_cast<char*>(const_cast<int*>(&nlocal)), sizeof(int));
+                    comp.ofs[ispin].write(reinterpret_cast<char*>(&output_R_number), sizeof(int));
+                }
+                else
+                {
+                    comp.ofs[ispin] << "STEP: " << step << std::endl;
+                    comp.ofs[ispin] << "Matrix Dimension of " << label << "(R): " << nlocal << std::endl;
+                    comp.ofs[ispin] << "Matrix number of " << label << "(R): " << output_R_number << std::endl;
+                }
             }
         }
     }
@@ -358,88 +304,32 @@ void ModuleIO::save_dH_sparse(const int& istep,
         output_R_coor_ptr.insert(R_coor);
 
         if (GlobalV::DRANK == 0) {
-            if (binary) {
+            for (auto& comp: comps)
+            {
                 for (int ispin = 0; ispin < spin_loop; ++ispin) {
-                    const int dHx_count = static_cast<int>(dHx_nonzero_num[ispin][count]);
-                    const int dHy_count = static_cast<int>(dHy_nonzero_num[ispin][count]);
-                    const int dHz_count = static_cast<int>(dHz_nonzero_num[ispin][count]);
-                    g1x[ispin].write(reinterpret_cast<char*>(&dRx),
-                                     sizeof(int));
-                    g1x[ispin].write(reinterpret_cast<char*>(&dRy),
-                                     sizeof(int));
-                    g1x[ispin].write(reinterpret_cast<char*>(&dRz),
-                                     sizeof(int));
-                    g1x[ispin].write(reinterpret_cast<const char*>(&dHx_count),
-                                     sizeof(int));
-
-                    g1y[ispin].write(reinterpret_cast<char*>(&dRx),
-                                     sizeof(int));
-                    g1y[ispin].write(reinterpret_cast<char*>(&dRy),
-                                     sizeof(int));
-                    g1y[ispin].write(reinterpret_cast<char*>(&dRz),
-                                     sizeof(int));
-                    g1y[ispin].write(reinterpret_cast<const char*>(&dHy_count),
-                                     sizeof(int));
-
-                    g1z[ispin].write(reinterpret_cast<char*>(&dRx),
-                                     sizeof(int));
-                    g1z[ispin].write(reinterpret_cast<char*>(&dRy),
-                                     sizeof(int));
-                    g1z[ispin].write(reinterpret_cast<char*>(&dRz),
-                                     sizeof(int));
-                    g1z[ispin].write(reinterpret_cast<const char*>(&dHz_count),
-                                     sizeof(int));
-                }
-            } else {
-                for (int ispin = 0; ispin < spin_loop; ++ispin) {
-                    g1x[ispin] << dRx << " " << dRy << " " << dRz << " "
-                               << dHx_nonzero_num[ispin][count] << std::endl;
-                    g1y[ispin] << dRx << " " << dRy << " " << dRz << " "
-                               << dHy_nonzero_num[ispin][count] << std::endl;
-                    g1z[ispin] << dRx << " " << dRy << " " << dRz << " "
-                               << dHz_nonzero_num[ispin][count] << std::endl;
+                    if (binary) {
+                        const int comp_count = static_cast<int>(comp.nonzero_num[ispin][count]);
+                        comp.ofs[ispin].write(reinterpret_cast<char*>(&dRx), sizeof(int));
+                        comp.ofs[ispin].write(reinterpret_cast<char*>(&dRy), sizeof(int));
+                        comp.ofs[ispin].write(reinterpret_cast<char*>(&dRz), sizeof(int));
+                        comp.ofs[ispin].write(reinterpret_cast<const char*>(&comp_count), sizeof(int));
+                    } else {
+                        comp.ofs[ispin] << dRx << " " << dRy << " " << dRz << " "
+                                        << comp.nonzero_num[ispin][count] << std::endl;
+                    }
                 }
             }
         }
 
         for (int ispin = 0; ispin < spin_loop; ++ispin) {
-            if (dHx_nonzero_num[ispin][count] > 0) {
-                if (nspin != 4) {
-                    output_single_R(g1x[ispin],
-                                    dHRx_sparse_ptr[ispin][R_coor],
-                                    pv,
-                                    single_R_options);
-                } else {
-                    output_single_R(g1x[ispin],
-                                    dHRx_soc_sparse_ptr[R_coor],
-                                    pv,
-                                    single_R_options);
-                }
-            }
-            if (dHy_nonzero_num[ispin][count] > 0) {
-                if (nspin != 4) {
-                    output_single_R(g1y[ispin],
-                                    dHRy_sparse_ptr[ispin][R_coor],
-                                    pv,
-                                    single_R_options);
-                } else {
-                    output_single_R(g1y[ispin],
-                                    dHRy_soc_sparse_ptr[R_coor],
-                                    pv,
-                                    single_R_options);
-                }
-            }
-            if (dHz_nonzero_num[ispin][count] > 0) {
-                if (nspin != 4) {
-                    output_single_R(g1z[ispin],
-                                    dHRz_sparse_ptr[ispin][R_coor],
-                                    pv,
-                                    single_R_options);
-                } else {
-                    output_single_R(g1z[ispin],
-                                    dHRz_soc_sparse_ptr[R_coor],
-                                    pv,
-                                    single_R_options);
+            for (auto& comp: comps)
+            {
+                if (comp.nonzero_num[ispin][count] > 0) {
+                    if (nspin != 4) {
+                        output_single_R(comp.ofs[ispin], comp.sparse[ispin][R_coor], pv, single_R_options);
+                    } else {
+                        output_single_R(comp.ofs[ispin], (*comp.soc_sparse)[R_coor], pv, single_R_options);
+                    }
                 }
             }
         }
@@ -448,14 +338,11 @@ void ModuleIO::save_dH_sparse(const int& istep,
     }
 
     if (GlobalV::DRANK == 0) {
-        for (int ispin = 0; ispin < spin_loop; ++ispin) {
-            g1x[ispin].close();
-        }
-        for (int ispin = 0; ispin < spin_loop; ++ispin) {
-            g1y[ispin].close();
-        }
-        for (int ispin = 0; ispin < spin_loop; ++ispin) {
-            g1z[ispin].close();
+        for (auto& comp: comps)
+        {
+            for (int ispin = 0; ispin < spin_loop; ++ispin) {
+                comp.ofs[ispin].close();
+            }
         }
     }
 
