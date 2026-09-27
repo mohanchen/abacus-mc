@@ -11,6 +11,57 @@
 #include <fstream>
 #include <iomanip>
 #include <type_traits>
+#include <vector>
+
+namespace
+{
+// Gather row i of a distributed 2D-block square matrix into a dense row.
+// Under MPI, each rank fills the columns it owns locally; the caller then
+// reduces across ranks so rank 0 holds the complete row. Without MPI the
+// matrix is local and the whole row is read directly.
+template <typename T>
+void gather_row(const T* mat,
+                const int dim,
+                const int i,
+                const bool tri,
+                const Parallel_2D& pv,
+                const std::string& ks_solver,
+                std::vector<T>& line)
+{
+#ifdef __MPI
+    std::fill(line.begin(), line.end(), T(0));
+    const int ir = pv.global2local_row(i);
+    if (ir >= 0)
+    {
+        // data collection
+        for (int j = (tri ? i : 0); j < dim; ++j)
+        {
+            const int ic = pv.global2local_col(j);
+            if (ic >= 0)
+            {
+                int iic = 0;
+                if (ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(ks_solver))
+                {
+                    iic = ir + ic * pv.nrow;
+                }
+                else
+                {
+                    iic = ir * pv.ncol + ic;
+                }
+                line[tri ? j - i : j] = mat[iic];
+            }
+        }
+    }
+#else
+    (void)pv;
+    (void)ks_solver;
+    for (int j = (tri ? i : 0); j < dim; ++j)
+    {
+        line[tri ? j - i : j] = mat[i * dim + j];
+    }
+#endif
+}
+} // namespace
 
 // output a square matrix
 template <typename T>
@@ -35,12 +86,11 @@ void ModuleIO::save_mat(const int istep,
     // write .dat file
     if (bit)
     {
-// write .dat file with MPI
-#ifdef __MPI
         FILE* out_matrix = nullptr;
-
+#ifdef __MPI
         if (drank == 0)
         {
+#endif
             const char* mode = (app && istep > 0) ? "ab" : "wb";
             out_matrix = fopen(filename.c_str(), mode);
             if (out_matrix == nullptr)
@@ -48,41 +98,21 @@ void ModuleIO::save_mat(const int istep,
                 ModuleBase::WARNING_QUIT("ModuleIO::save_mat", "Cannot open matrix file: " + filename);
             }
             fwrite(&dim, sizeof(int), 1, out_matrix);
+#ifdef __MPI
         }
+#endif
 
-        int ir=0;
-        int ic=0;
+        std::vector<T> line(tri ? dim : dim);
         for (int i = 0; i < dim; ++i)
         {
-            T* line = new T[tri ? dim - i : dim];
-            ModuleBase::GlobalFunc::ZEROS(line, tri ? dim - i : dim);
+            const int line_len = tri ? dim - i : dim;
+            line.resize(line_len);
+            gather_row(mat, dim, i, tri, pv, ks_solver, line);
 
-            ir = pv.global2local_row(i);
-            if (ir >= 0)
-            {
-                // data collection
-                for (int j = (tri ? i : 0); j < dim; ++j)
-                {
-                    ic = pv.global2local_col(j);
-                    if (ic >= 0)
-                    {
-                        int iic;
-                        if (ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(ks_solver))
-                        {
-                            iic = ir + ic * pv.nrow;
-                        }
-                        else
-                        {
-                            iic = ir * pv.ncol + ic;
-                        }
-                        line[tri ? j - i : j] = mat[iic];
-                    }
-                }
-            }
-
+#ifdef __MPI
             if (reduce)
             {
-                Parallel_Reduce::reduce_all(line, tri ? dim - i : dim);
+                Parallel_Reduce::reduce_all(line.data(), line_len);
             }
 
             if (drank == 0)
@@ -92,33 +122,22 @@ void ModuleIO::save_mat(const int istep,
                     fwrite(&line[tri ? j - i : j], sizeof(T), 1, out_matrix);
                 }
             }
-            delete[] line;
 
             MPI_Barrier(DIAG_WORLD);
+#else
+            for (int j = (tri ? i : 0); j < dim; ++j)
+            {
+                fwrite(&line[tri ? j - i : j], sizeof(T), 1, out_matrix);
+            }
+#endif
         }
 
+#ifdef __MPI
         if (drank == 0)
         {
             fclose(out_matrix);
         }
-// write .dat file without MPI
 #else
-        const char* mode = (app && istep > 0) ? "ab" : "wb";
-        FILE* out_matrix = fopen(filename.c_str(), mode);
-        if (out_matrix == nullptr)
-        {
-            ModuleBase::WARNING_QUIT("ModuleIO::save_mat", "Cannot open matrix file: " + filename);
-        }
-
-        fwrite(&dim, sizeof(int), 1, out_matrix);
-
-        for (int i = 0; i < dim; i++)
-        {
-            for (int j = (tri ? i : 0); j < dim; j++)
-            {
-                fwrite(&mat[i * dim + j], sizeof(T), 1, out_matrix);
-            }
-        }
         fclose(out_matrix);
 #endif
     } // end writing .dat file
@@ -151,39 +170,16 @@ void ModuleIO::save_mat(const int istep,
 
         }
 
-        int ir=0;
-        int ic=0;
+        std::vector<T> line(tri ? dim : dim);
         for (int i = 0; i < dim; i++)
         {
-            T* line = new T[tri ? dim - i : dim];
-            ModuleBase::GlobalFunc::ZEROS(line, tri ? dim - i : dim);
-
-            ir = pv.global2local_row(i);
-            if (ir >= 0)
-            {
-                // data collection
-                for (int j = (tri ? i : 0); j < dim; ++j)
-                {
-                    ic = pv.global2local_col(j);
-                    if (ic >= 0)
-                    {
-                        int iic=0;
-                        if (ModuleBase::GlobalFunc::IS_COLUMN_MAJOR_KS_SOLVER(ks_solver))
-                        {
-                            iic = ir + ic * pv.nrow;
-                        }
-                        else
-                        {
-                            iic = ir * pv.ncol + ic;
-                        }
-                        line[tri ? j - i : j] = mat[iic];
-                    }
-                }
-            }
+            const int line_len = tri ? dim - i : dim;
+            line.resize(line_len);
+            gather_row(mat, dim, i, tri, pv, ks_solver, line);
 
             if (reduce)
             {
-                Parallel_Reduce::reduce_all(line, tri ? dim - i : dim);
+                Parallel_Reduce::reduce_all(line.data(), line_len);
             }
 
             if (drank == 0)
@@ -204,7 +200,6 @@ void ModuleIO::save_mat(const int istep,
                 }
                 out_matrix << std::endl;
             }
-            delete[] line;
         }
 
         if (drank == 0)
@@ -227,11 +222,13 @@ void ModuleIO::save_mat(const int istep,
 
         out_matrix << dim;
         out_matrix << std::setprecision(precision);
+        std::vector<T> line(dim);
         for (int i = 0; i < dim; i++)
         {
+            gather_row(mat, dim, i, tri, pv, ks_solver, line);
             for (int j = (tri ? i : 0); j < dim; j++)
             {
-                out_matrix << " " << mat[i * dim + j];
+                out_matrix << " " << line[tri ? j - i : j];
             }
             out_matrix << std::endl;
         }
