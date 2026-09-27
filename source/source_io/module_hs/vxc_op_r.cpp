@@ -1,6 +1,6 @@
 #include "vxc_op_r.h"
 
-#include "source_io/module_hs/write_hs_sparse.h"
+#include "source_io/module_hs/hs_sparse_io.h"
 #include "source_base/module_out/filename.h"
 
 namespace ModuleIO

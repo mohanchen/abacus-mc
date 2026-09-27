@@ -1,8 +1,8 @@
-#ifndef WRITE_HS_SPARSE_H
-#define WRITE_HS_SPARSE_H
+#ifndef HS_SPARSE_IO_H
+#define HS_SPARSE_IO_H
 
 #include "source_basis/module_ao/parallel_orbitals.h"
-#include "source_lcao/lcao_hs_arrays.h"
+#include "source_lcao/module_ri/abfs_vector3_order.h"
 
 #include <cstddef>
 #include <map>
@@ -33,20 +33,6 @@ struct SparseWriteOptions
     std::string calculation;
     bool out_app_flag = false;
 };
-
-void save_dH_sparse(const int& istep,
-                    const Parallel_Orbitals& pv,
-                    LCAO_HS_Arrays& HS_Arrays,
-                    const double& sparse_thr,
-                    const bool& binary,
-                    const std::string& fileflag,
-                    const int precision,
-                    const std::string& global_out_dir,
-                    const std::string& global_matrix_dir,
-                    const std::string& calculation,
-                    const bool out_app_flag,
-                    const int nspin,
-                    const int nlocal);
 
 template <typename Tdata>
 void save_sparse(const SparseRMatrix<Tdata>& smat,

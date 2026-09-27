@@ -5,7 +5,8 @@
 #include "source_lcao/spar_dh.h"
 #include "source_lcao/spar_hsr.h"
 #include "source_lcao/spar_st.h"
-#include "write_hs_sparse.h"
+#include "dhs_sparse_writer.h"
+#include "hs_sparse_io.h"
 
 #include <complex>
 #include <fstream>

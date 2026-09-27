@@ -1,7 +1,7 @@
 #ifndef SINGLE_R_IO_H
 #define SINGLE_R_IO_H
 
-#include "write_hs_sparse.h"
+#include "hs_sparse_io.h"
 
 #include <fstream>
 

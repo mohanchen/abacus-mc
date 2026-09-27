@@ -87,11 +87,12 @@ if(ENABLE_LCAO)
   list(APPEND objects_advanced	   
       module_unk/unk_overlap_lcao.cpp
       module_hs/hs_dense_io.cpp
+      module_hs/hs_sparse_io.cpp
+      module_hs/dhs_sparse_writer.cpp
       module_hs/hsk_writer.cpp
       module_hs/hsr_writer.cpp
       module_hs/hs_r_legacy.cpp
       module_hs/write_h_terms.cpp
-      module_hs/write_hs_sparse.cpp
       module_hs/single_r_io.cpp
       module_hs/rr_sparse_writer.cpp
       module_hs/pos_op_basis.cpp

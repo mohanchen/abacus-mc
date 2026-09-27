@@ -51,7 +51,8 @@ AddTest(
   write_hs_r_compat_test.cpp
   ../hsr_writer.cpp
   ../hs_r_legacy.cpp
-  ../write_hs_sparse.cpp
+  ../hs_sparse_io.cpp
+  ../dhs_sparse_writer.cpp
   ../single_r_io.cpp
   ../rr_sparse_writer.cpp
   ../../module_dm/write_dmr.cpp
