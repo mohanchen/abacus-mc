@@ -231,6 +231,15 @@ void ESolver_GetS::runner(BaseCell& basecell, const int istep)
     if (this->inp_->out_mat_ds[0])
     {
         LCAO_HS_Arrays HS_Arrays; // store sparse arrays
+        ModuleIO::MatROutputOptions mat_R_options;
+        mat_R_options.binary = binary;
+        mat_R_options.sparse_threshold = sparse_threshold;
+        mat_R_options.precision = this->inp_->out_mat_ds[1];
+        mat_R_options.global_out_dir = PARAM.globalv.global_out_dir;
+        mat_R_options.global_matrix_dir = PARAM.globalv.global_matrix_dir;
+        mat_R_options.calculation = PARAM.inp.calculation;
+        mat_R_options.out_app_flag = PARAM.inp.out_app_flag;
+        mat_R_options.nspin = PARAM.inp.nspin;
         //! Print out sparse matrix
         ModuleIO::output_dSR(istep,
                              ucell,
@@ -239,14 +248,7 @@ void ESolver_GetS::runner(BaseCell& basecell, const int istep)
                              gd, // mohan add 2024-04-06
                              two_center_bundle_,
                              orb_,
-                             binary,
-                             sparse_threshold,
-                             this->inp_->out_mat_ds[1],
-                             PARAM.globalv.global_out_dir,
-                             PARAM.globalv.global_matrix_dir,
-                             PARAM.inp.calculation,
-                             PARAM.inp.out_app_flag,
-                             PARAM.inp.nspin,
+                             mat_R_options,
                              PARAM.globalv.gamma_only_local,
                              PARAM.globalv.npol,
                              PARAM.globalv.nlocal);

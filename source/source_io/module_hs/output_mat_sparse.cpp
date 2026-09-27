@@ -30,10 +30,20 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
     const int npol = PARAM.globalv.npol;
     const int nlocal = PARAM.globalv.nlocal;
 
+    MatROutputOptions mat_R_options;
+    mat_R_options.binary = options.binary;
+    mat_R_options.sparse_threshold = options.sparse_threshold;
+    mat_R_options.global_out_dir = global_out_dir;
+    mat_R_options.global_matrix_dir = global_matrix_dir;
+    mat_R_options.calculation = calculation;
+    mat_R_options.out_app_flag = out_app_flag;
+    mat_R_options.nspin = nspin;
+
     //! generate a file containing the kinetic energy matrix
     if (options.out_mat_t)
     {
         const std::string tr_filename = "trs1_nao.csr";
+        mat_R_options.precision = options.t_precision;
         output_TR(istep,
                   ucell,
                   pv,
@@ -42,19 +52,13 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
                   two_center_bundle,
                   orb,
                   tr_filename,
-                  options.binary,
-                  options.sparse_threshold,
-                  options.t_precision,
-                  global_out_dir,
-                  global_matrix_dir,
-                  calculation,
-                  out_app_flag,
-                  nspin);
+                  mat_R_options);
     }
 
     //! generate a file containing the derivatives of the Hamiltonian matrix (in Ry/Bohr)
     if (options.out_mat_dh)
     {
+        mat_R_options.precision = options.dh_precision;
         output_dHR(istep,
                    v_eff,
                    ucell,
@@ -63,14 +67,7 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
                    grid,
                    two_center_bundle,
                    orb,
-                   options.binary,
-                   options.sparse_threshold,
-                   options.dh_precision,
-                   global_out_dir,
-                   global_matrix_dir,
-                   calculation,
-                   out_app_flag,
-                   nspin,
+                   mat_R_options,
                    gamma_only_local,
                    npol,
                    nlocal);
@@ -78,6 +75,7 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
     //! generate a file containing the derivatives of the overlap matrix (in Ry/Bohr)
     if (options.out_mat_ds)
     {
+        mat_R_options.precision = options.ds_precision;
         output_dSR(istep,
                    ucell,
                    pv,
@@ -85,14 +83,7 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
                    grid,
                    two_center_bundle,
                    orb,
-                   options.binary,
-                   options.sparse_threshold,
-                   options.ds_precision,
-                   global_out_dir,
-                   global_matrix_dir,
-                   calculation,
-                   out_app_flag,
-                   nspin,
+                   mat_R_options,
                    gamma_only_local,
                    npol,
                    nlocal);

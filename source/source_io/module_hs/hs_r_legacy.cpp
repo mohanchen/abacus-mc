@@ -25,14 +25,7 @@ void ModuleIO::output_dSR(const int& istep,
                           const Grid_Driver& grid, // mohan add 2024-04-06
                           const TwoCenterBundle& two_center_bundle,
                           const LCAO_Orbitals& orb,
-                          const bool& binary,
-                          const double& sparse_thr,
-                          const int precision,
-                          const std::string& global_out_dir,
-                          const std::string& global_matrix_dir,
-                          const std::string& calculation,
-                          const bool out_app_flag,
-                          const int nspin,
+                          const MatROutputOptions& options,
                           const bool gamma_only_local,
                           const int npol,
                           const int nlocal)
@@ -40,16 +33,17 @@ void ModuleIO::output_dSR(const int& istep,
     ModuleBase::TITLE("ModuleIO", "output_dSR");
     ModuleBase::timer::start("ModuleIO", "output_dSR");
 
-    sparse_format::cal_dS(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, sparse_thr,
-                          gamma_only_local, nspin, npol);
+    sparse_format::cal_dS(ucell, pv, HS_Arrays, grid, two_center_bundle, orb,
+                          options.sparse_threshold, gamma_only_local, options.nspin, npol);
 
     // mohan update 2024-04-01
     const std::string fileflag_s = "s";
-    ModuleIO::save_dH_sparse(istep, pv, HS_Arrays, sparse_thr, binary, fileflag_s, precision,
-                             global_out_dir, global_matrix_dir, calculation, out_app_flag,
-                             nspin, nlocal);
+    ModuleIO::save_dH_sparse(istep, pv, HS_Arrays, options.sparse_threshold, options.binary,
+                             fileflag_s, options.precision, options.global_out_dir,
+                             options.global_matrix_dir, options.calculation, options.out_app_flag,
+                             options.nspin, nlocal);
 
-    sparse_format::destroy_dH_R_sparse(HS_Arrays, nspin);
+    sparse_format::destroy_dH_R_sparse(HS_Arrays, options.nspin);
 
     ModuleBase::timer::end("ModuleIO", "output_dSR");
     return;
@@ -63,14 +57,7 @@ void ModuleIO::output_dHR(const int& istep,
                           const Grid_Driver& grid, // mohan add 2024-04-06
                           const TwoCenterBundle& two_center_bundle,
                           const LCAO_Orbitals& orb,
-                          const bool& binary,
-                          const double& sparse_thr,
-                          const int precision,
-                          const std::string& global_out_dir,
-                          const std::string& global_matrix_dir,
-                          const std::string& calculation,
-                          const bool out_app_flag,
-                          const int nspin,
+                          const MatROutputOptions& options,
                           const bool gamma_only_local,
                           const int npol,
                           const int nlocal)
@@ -78,35 +65,30 @@ void ModuleIO::output_dHR(const int& istep,
     ModuleBase::TITLE("ModuleIO", "output_dHR");
     ModuleBase::timer::start("ModuleIO", "output_dHR");
 
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " |                         #Print out dH/dR#                          |" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-
-    if (nspin == 1 || nspin == 4)
+    if (options.nspin == 1 || options.nspin == 4)
     {
         // mohan add 2024-04-01
         const int cspin = 0;
 
-        sparse_format::cal_dH(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, cspin, sparse_thr, v_eff,
-                              gamma_only_local, nspin, npol);
+        sparse_format::cal_dH(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, cspin,
+                              options.sparse_threshold, v_eff, gamma_only_local, options.nspin, npol);
     }
-    else if (nspin == 2)
+    else if (options.nspin == 2)
     {
         for (int cspin = 0; cspin < 2; cspin++)
         {
-            sparse_format::cal_dH(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, cspin, sparse_thr, v_eff,
-                                  gamma_only_local, nspin, npol);
+            sparse_format::cal_dH(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, cspin,
+                                  options.sparse_threshold, v_eff, gamma_only_local, options.nspin, npol);
         }
     }
     // mohan update 2024-04-01
     const std::string fileflag_h = "h";
-    ModuleIO::save_dH_sparse(istep, pv, HS_Arrays, sparse_thr, binary, fileflag_h, precision,
-                             global_out_dir, global_matrix_dir, calculation, out_app_flag,
-                             nspin, nlocal);
+    ModuleIO::save_dH_sparse(istep, pv, HS_Arrays, options.sparse_threshold, options.binary,
+                             fileflag_h, options.precision, options.global_out_dir,
+                             options.global_matrix_dir, options.calculation, options.out_app_flag,
+                             options.nspin, nlocal);
 
-    sparse_format::destroy_dH_R_sparse(HS_Arrays, nspin);
+    sparse_format::destroy_dH_R_sparse(HS_Arrays, options.nspin);
 
     ModuleBase::timer::end("ModuleIO", "output_dHR");
     return;
@@ -129,13 +111,6 @@ void ModuleIO::output_SR(Parallel_Orbitals& pv,
     ModuleBase::TITLE("ModuleIO", "output_SR");
     ModuleBase::timer::start("ModuleIO", "output_SR");
 
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " |                 #Print out overlap matrix S(R)#                    |" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-
-    std::cout << " Overlap matrix file is in " << SR_filename << std::endl;
     GlobalV::ofs_running << " Overlap matrix file is in " << SR_filename << std::endl;
 
     LCAO_HS_Arrays HS_Arrays;
@@ -189,53 +164,40 @@ void ModuleIO::output_TR(const int istep,
                          const TwoCenterBundle& two_center_bundle,
                          const LCAO_Orbitals& orb,
                          const std::string& TR_filename,
-                         const bool& binary,
-                         const double& sparse_thr,
-                         const int precision,
-                         const std::string& global_out_dir,
-                         const std::string& global_matrix_dir,
-                         const std::string& calculation,
-                         const bool out_app_flag,
-                         const int nspin)
+                         const MatROutputOptions& options)
 {
     ModuleBase::TITLE("ModuleIO", "output_TR");
     ModuleBase::timer::start("ModuleIO", "output_TR");
 
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " |           #Print out kinetic energy term matrix T(R)#              |" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-
     std::stringstream sst;
-    const bool md_no_append = (calculation == "md") && !out_app_flag;
+    const bool md_no_append = (options.calculation == "md") && !options.out_app_flag;
     if (md_no_append)
     {
-        sst << global_matrix_dir << TR_filename << "g" << istep;
+        sst << options.global_matrix_dir << TR_filename << "g" << istep;
         GlobalV::ofs_running << " T(R) data are in file: " << sst.str() << std::endl;
     }
     else
     {
-        sst << global_out_dir << TR_filename;
+        sst << options.global_out_dir << TR_filename;
         GlobalV::ofs_running << " T(R) data are in file: " << sst.str() << std::endl;
     }
 
-    sparse_format::cal_TR(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, sparse_thr);
-    ModuleIO::SparseWriteOptions options;
-    options.filename = sst.str();
-    options.label = "T";
-    options.threshold = sparse_thr;
-    options.binary = binary;
-    options.precision = precision;
-    options.istep = istep;
-    options.reduce = true;
-    options.calculation = calculation;
-    options.out_app_flag = out_app_flag;
+    sparse_format::cal_TR(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, options.sparse_threshold);
+    ModuleIO::SparseWriteOptions sparse_options;
+    sparse_options.filename = sst.str();
+    sparse_options.label = "T";
+    sparse_options.threshold = options.sparse_threshold;
+    sparse_options.binary = options.binary;
+    sparse_options.precision = options.precision;
+    sparse_options.istep = istep;
+    sparse_options.reduce = true;
+    sparse_options.calculation = options.calculation;
+    sparse_options.out_app_flag = options.out_app_flag;
 
     ModuleIO::save_sparse(HS_Arrays.TR_sparse,
                           HS_Arrays.all_R_coor,
                           pv,
-                          options);
+                          sparse_options);
 
     sparse_format::destroy_T_R_sparse(HS_Arrays);
 
