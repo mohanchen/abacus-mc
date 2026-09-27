@@ -3,6 +3,9 @@
 #include "source_base/module_out/sparse_matrix.h"
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
+#include "source_cell/ucell_io.h"
+#include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
+#include "source_hamilt/module_hcontainer/output_hcontainer.h"
 #include "source_lcao/lcao_hs_arrays.h"
 #include "source_lcao/spar_dh.h"
 #include "source_lcao/spar_hsr.h"
@@ -270,10 +273,6 @@ template void ModuleIO::output_SR<std::complex<double>>(Parallel_Orbitals& pv,
                                                         const std::string& calculation,
                                                         const bool out_app_flag,
                                                         const int nspin);
-
-#include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
-#include "source_hamilt/module_hcontainer/output_hcontainer.h"
-#include "source_cell/ucell_io.h"
 
 std::string ModuleIO::hsr_gen_fname(const std::string& prefix,
                                      const int ispin,
