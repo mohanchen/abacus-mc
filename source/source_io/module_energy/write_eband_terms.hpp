@@ -1,7 +1,7 @@
 #ifndef WRITE_EBAND_TERMS_HPP
 #define WRITE_EBAND_TERMS_HPP
  
-#include "source_io/module_hs/write_vxc.hpp"
+#include "source_io/module_hs/vxc_op_mat.h"
 #include "source_hamilt/module_xc/exx_info.h"
 #include "source_lcao/module_operator_lcao/ekinetic.h"
 #include "source_lcao/module_operator_lcao/nonlocal.h"
@@ -30,8 +30,8 @@ void write_eband_terms(const int nspin,
                        const Exx_Info& exx_info
 #ifdef __EXX
                        ,
-                       std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>* Hexxd = nullptr,
-                       std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>* Hexxc = nullptr
+                       std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>* Hexxd,
+                       std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>* Hexxc
 #endif
 )
     {

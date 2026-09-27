@@ -1,27 +1,22 @@
-#ifndef __WRITE_VXC_R_H_
-#define __WRITE_VXC_R_H_
+#include "vxc_op_r.h"
+
 #include "source_io/module_hs/write_hs_sparse.h"
-#include "source_lcao/module_dftu/dftu_nao_op_legacy.h"
-#include "source_lcao/module_operator_lcao/veff_lcao.h"
-#include "source_lcao/spar_hsr.h"
-#ifdef __EXX
-#include "source_lcao/module_operator_lcao/op_exx_lcao.h"
-#include "source_lcao/module_ri/ri_2d_comm.h"
-#endif
+#include "source_base/module_out/filename.h"
 
 namespace ModuleIO
 {
+
+/// @brief Helper to calculate sparse HR representation
 template <typename T>
-std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, T>>> cal_HR_sparse(const hamilt::HContainer<T>& hR,
-                                                                                        const double sparse_thr)
+std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, T>>> cal_HR_sparse(
+    const hamilt::HContainer<T>& hR,
+    const double sparse_thr)
 {
     std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, T>>> target;
     sparse_format::cal_HContainer<T>(*hR.get_paraV(), sparse_thr, hR, target);
     return target;
 }
 
-/// @brief  write the Vxc matrix in KS orbital representation, usefull for GW calculation
-/// including terms: local/semi-local XC, EXX, DFTU
 template <typename TK, typename TR>
 void write_Vxc_R(const int nspin,
                  const Parallel_Orbitals* pv,
@@ -41,19 +36,17 @@ void write_Vxc_R(const int nspin,
                  bool real_number
 #ifdef __EXX
                  ,
-                 const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>* const Hexxd,
-                 const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>* const Hexxc
+                 const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>* Hexxd,
+                 const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>* Hexxc
 #endif
                  ,
-                 const double sparse_thr = 1e-10)
+                 const double sparse_thr)
 {
     ModuleBase::TITLE("ModuleIO", "write_Vxc_R");
+
     // 1. real-space xc potential
-    // ModuleBase::matrix vr_xc(nspin, chg.nrxx);
     double etxc = 0.0;
     double vtxc = 0.0;
-    // elecstate::PotXC* potxc(&rho_basis, &etxc, vtxc, nullptr);
-    // potxc.cal_v_eff(&chg, &ucell, vr_xc);
     elecstate::Potential potxc(&rhod_basis, &rho_basis, &ucell, &vloc, &sf, &solvent, &etxc, &vtxc);
     std::vector<std::string> compnents_list = {"xc"};
     potxc.pot_register(compnents_list);
@@ -62,7 +55,7 @@ void write_Vxc_R(const int nspin,
     // 2. allocate H(R)
     // (the number of hR: 1 for nspin=1, 4; 2 for nspin=2)
     int nspin0 = (nspin == 2) ? 2 : 1;
-    std::vector<hamilt::HContainer<TR>> vxcs_R_ao(nspin0, hamilt::HContainer<TR>(ucell, pv)); // call move constructor
+    std::vector<hamilt::HContainer<TR>> vxcs_R_ao(nspin0, hamilt::HContainer<TR>(ucell, pv));
 #ifdef __EXX
     std::array<int, 3> Rs_period = {kv.nmp[0], kv.nmp[1], kv.nmp[2]};
     const auto cell_nearest = hamilt::init_cell_nearest(ucell, Rs_period);
@@ -118,25 +111,6 @@ void write_Vxc_R(const int nspin,
 #endif
     }
 
-    // test: fold Vxc(R) and check whether it is equal to Vxc(k)
-    // for (int ik = 0; ik < kv.get_nks(); ++ik)
-    // {
-    //     vxc_k_ao.set_zero_hk();
-    //     dynamic_cast<hamilt::OperatorLCAO<TK, TR>*>(vxcs_op_ao[kv.isk[ik]])->contributeHk(ik);
-
-    //     // output Vxc(k) (test)
-    //     const TK* const hk = vxc_k_ao.get_hk();
-    //     std::cout << "ik=" << ik << ", Vxc(K): " << std::endl;
-    //     for (int i = 0; i < pv->get_row_size(); i++)
-    //     {
-    //         for (int j = 0; j < pv->get_col_size(); j++)
-    //         {
-    //             std::cout << hk[j * pv->get_row_size() + i] << " ";
-    //         }
-    //         std::cout << std::endl;
-    //     }
-    // }
-
     // 4. write Vxc(R) in csr format
     for (int is = 0; is < nspin0; ++is)
     {
@@ -155,5 +129,39 @@ void write_Vxc_R(const int nspin,
                               options);
     }
 }
-} // namespace ModuleIO
+
+// Explicit template instantiations
+template void write_Vxc_R<double, double>(
+    const int, const Parallel_Orbitals*, const UnitCell&, Structure_Factor&, surchem&,
+    const ModulePW::PW_Basis&, const ModulePW::PW_Basis&, const ModuleBase::matrix&,
+    const Charge&, const K_Vectors&, const std::vector<double>&, Grid_Driver&,
+    const std::string&, bool, double, bool
+#ifdef __EXX
+    , const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>*,
+    const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>*
 #endif
+    , const double);
+
+template void write_Vxc_R<std::complex<double>, double>(
+    const int, const Parallel_Orbitals*, const UnitCell&, Structure_Factor&, surchem&,
+    const ModulePW::PW_Basis&, const ModulePW::PW_Basis&, const ModuleBase::matrix&,
+    const Charge&, const K_Vectors&, const std::vector<double>&, Grid_Driver&,
+    const std::string&, bool, double, bool
+#ifdef __EXX
+    , const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>*,
+    const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>*
+#endif
+    , const double);
+
+template void write_Vxc_R<std::complex<double>, std::complex<double>>(
+    const int, const Parallel_Orbitals*, const UnitCell&, Structure_Factor&, surchem&,
+    const ModulePW::PW_Basis&, const ModulePW::PW_Basis&, const ModuleBase::matrix&,
+    const Charge&, const K_Vectors&, const std::vector<double>&, Grid_Driver&,
+    const std::string&, bool, double, bool
+#ifdef __EXX
+    , const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>*,
+    const std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>*
+#endif
+    , const double);
+
+} // namespace ModuleIO

@@ -95,6 +95,10 @@ if(ENABLE_LCAO)
       module_hs/pos_op_calc.cpp
       module_hs/pos_op_writer.cpp
       module_hs/pos_op_mat.cpp
+      module_hs/vxc_op_tools.cpp
+      module_hs/vxc_op_mat.cpp
+      module_hs/vxc_op_r.cpp
+      module_hs/vxc_op_lip.cpp
       module_hs/output_mat_sparse.cpp
       module_ctrl/ctrl_scf_lcao.cpp
       module_ctrl/ctrl_runner_lcao.cpp

@@ -29,7 +29,7 @@
 #include <ATen/kernels/lapack.h>
 #include <sys/time.h>
 #ifdef __LCAO
-#include "source_io/module_hs/write_vxc_lip.hpp"
+#include "source_io/module_hs/vxc_op_lip.h"
 #endif
 
 namespace ModuleESolver
@@ -284,7 +284,7 @@ namespace ModuleESolver
             bool cal_exx = false;
             double hybrid_alpha = 0.0;
 #endif
-            ModuleIO::write_Vxc(this->inp_->nspin,
+            ModuleIO::write_Vxc_LIP(this->inp_->nspin,
                                 PARAM.globalv.nlocal,
                                 GlobalV::DRANK,
                                 *this->stp.template get_psi_t<T, base_device::DEVICE_CPU>(),
