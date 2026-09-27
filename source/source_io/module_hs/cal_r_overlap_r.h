@@ -83,16 +83,6 @@ class cal_r_overlap_R
                 const bool out_app_flag,
                 const int nlocal,
                 const int npol);
-    void out_rR_other(const UnitCell& ucell,
-                      const int& istep,
-                      const std::set<Abfs::Vector3_Order<int>>& output_R_coor,
-                      const int precision,
-                      const std::string& global_out_dir,
-                      const std::string& global_matrix_dir,
-                      const std::string& calculation,
-                      const bool out_app_flag,
-                      const int nlocal,
-                      const int npol);
 
   private:
     void initialize_orb_table(const UnitCell& ucell, const LCAO_Orbitals& orb);

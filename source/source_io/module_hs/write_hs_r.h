@@ -152,23 +152,6 @@ void write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
                const int istep,
                const std::string& global_out_dir);
 
-/// Write real-space matrix in CSR format (generic interface).
-template <typename TR>
-void write_matrix_r(const std::string& matrix_label,
-                    const std::string& description,
-                    const std::vector<hamilt::HContainer<TR>*>& matrices,
-                    const UnitCell* ucell,
-                    const int precision,
-                    const Parallel_2D& paraV,
-                    const bool append,
-                    const int* iat2iwt,
-                    const int nat,
-                    const int istep,
-                    const std::string& global_out_dir,
-                    const std::string& global_matrix_dir,
-                    const std::string& calculation,
-                    const bool out_app_flag);
-
 } // namespace ModuleIO
 
 #endif
