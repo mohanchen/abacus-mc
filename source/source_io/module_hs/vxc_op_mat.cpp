@@ -65,8 +65,9 @@ void write_Vxc(const int nspin,
     std::vector<std::unique_ptr<hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>>> vxcs_op_ao(nspin0);
     for (int is = 0; is < nspin0; ++is)
     {
-        vxcs_op_ao[is] = std::make_unique<hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>>(
-            &vxc_k_ao, kv.kvec_d, potxc.get(), &vxcs_R_ao[is], &ucell, orb_cutoff, &gd, nspin);
+        vxcs_op_ao[is] = std::unique_ptr<hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>>(
+            new hamilt::Veff<hamilt::OperatorLCAO<TK, TR>>(
+                &vxc_k_ao, kv.kvec_d, potxc.get(), &vxcs_R_ao[is], &ucell, orb_cutoff, &gd, nspin));
         vxcs_op_ao[is]->set_current_spin(is);
         vxcs_op_ao[is]->contributeHR();
     }

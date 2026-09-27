@@ -157,8 +157,9 @@ void write_Vxc_LIP(int nspin,
     for (int ik = 0; ik < kv.get_nks(); ++ik)
     {
         // 2.1 local xc
-        vxcs_op_pw = std::make_unique<hamilt::Veff<hamilt::OperatorPW<T>>>(kv.isk.data(),
-            potxc->get_veff_smooth_data<FPTYPE>(), potxc->get_veff_smooth().nr, potxc->get_veff_smooth().nc, &wfc_basis);
+        vxcs_op_pw = std::unique_ptr<hamilt::Veff<hamilt::OperatorPW<T>>>(
+            new hamilt::Veff<hamilt::OperatorPW<T>>(kv.isk.data(),
+                potxc->get_veff_smooth_data<FPTYPE>(), potxc->get_veff_smooth().nr, potxc->get_veff_smooth().nc, &wfc_basis));
         vxcs_op_pw->init(ik);   // set k-point index
         psi_pw.fix_k(ik);
         hpsi_localxc.fix_k(ik);

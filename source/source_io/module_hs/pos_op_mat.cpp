@@ -18,11 +18,11 @@ void cal_r_overlap_R::init(const UnitCell& ucell,
                            const bool cal_force,
                            const int nlocal)
 {
-    basis_ = std::make_unique<PosOpBasis>();
+    basis_ = std::unique_ptr<PosOpBasis>(new PosOpBasis());
     basis_->build(ucell, orb, cal_force, nlocal);
 
-    calc_ = std::make_unique<PosOpCalc>(*basis_);
-    writer_ = std::make_unique<PosOpWriter>(*basis_, *calc_, pv);
+    calc_ = std::unique_ptr<PosOpCalc>(new PosOpCalc(*basis_));
+    writer_ = std::unique_ptr<PosOpWriter>(new PosOpWriter(*basis_, *calc_, pv));
 }
 
 void cal_r_overlap_R::init_nonlocal(const UnitCell& ucell,
@@ -31,11 +31,11 @@ void cal_r_overlap_R::init_nonlocal(const UnitCell& ucell,
                                     const bool cal_force,
                                     const int nlocal)
 {
-    basis_ = std::make_unique<PosOpBasis>();
+    basis_ = std::unique_ptr<PosOpBasis>(new PosOpBasis());
     basis_->build_nonlocal(ucell, orb, cal_force, nlocal);
 
-    calc_ = std::make_unique<PosOpCalc>(*basis_);
-    writer_ = std::make_unique<PosOpWriter>(*basis_, *calc_, pv);
+    calc_ = std::unique_ptr<PosOpCalc>(new PosOpCalc(*basis_));
+    writer_ = std::unique_ptr<PosOpWriter>(new PosOpWriter(*basis_, *calc_, pv));
 }
 
 ModuleBase::Vector3<double> cal_r_overlap_R::get_psi_r_psi(const ModuleBase::Vector3<double>& R1,
