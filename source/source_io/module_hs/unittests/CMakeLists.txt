@@ -24,11 +24,11 @@ AddTest(
 
 if(ENABLE_LCAO)
 AddTest(
-  TARGET MODULE_IO_cal_plpr_test
+  TARGET MODULE_IO_angmom_op_mat_test
   LIBS parameter base device neighbor
   SOURCES
-  cal_plpr_test.cpp
-  ../cal_plpr.cpp
+  test_angmom_op_mat.cpp
+  ../angmom_op_mat.cpp
   ../../../source_basis/module_ao/orb_atomic_lm.cpp
   ../../../source_basis/module_ao/orb_atomic.cpp
   ../../../source_basis/module_nao/radial_set.cpp

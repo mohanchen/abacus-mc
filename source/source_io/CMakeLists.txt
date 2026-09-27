@@ -80,7 +80,7 @@ if(ENABLE_LCAO)
       module_mulliken/output_dmk.cpp
       module_mulliken/output_mulliken.cpp
       module_ml/io_npz.cpp
-      module_hs/cal_plpr.cpp
+      module_hs/angmom_op_mat.cpp
       module_dhs/write_dh.cpp
       module_dhs/write_dh_terms.cpp
   )

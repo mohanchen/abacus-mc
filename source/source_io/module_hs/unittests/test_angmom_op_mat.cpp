@@ -1,5 +1,5 @@
 /**
- * Unit-test of cal_plpr.cpp
+ * Unit-test of angmom_op_mat.cpp
  * 
  * The representation matrices for Lx, Ly and Lz operators (SO(3) generators).
  * On basis {s}:
@@ -25,7 +25,7 @@
 #include <mpi.h>
 #endif
 
-#include "source_io/module_hs/cal_plpr.h"
+#include "source_io/module_hs/angmom_op_mat.h"
 #include "source_basis/module_nao/two_center_integrator.h"
 #include "source_basis/module_nao/radial_collection.h"
 #include "source_base/sph_bessel_tf.h"

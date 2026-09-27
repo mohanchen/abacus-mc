@@ -713,7 +713,7 @@ OBJS_IO=module_parameter/input_conv.o\
     module_parameter/read_inp_other.o\
     module_parameter/read_inp_out.o\
     module_parameter/read_set_globalv.o\
-    module_hs/cal_plpr.o\
+    module_hs/angmom_op_mat.o\
 
 OBJS_IO_LCAO=module_hs/pos_op_mat.o\
       module_hs/pos_op_basis.o\

@@ -1,5 +1,8 @@
+#ifndef ANGMOM_OP_MAT_H
+#define ANGMOM_OP_MAT_H
+
 /**
- * calculate the <phi_i|Lx/Ly/Lz|phi_j> matrix elements with the ACA (atom-centered 
+ * calculate the <phi_i|Lx/Ly/Lz|phi_j> matrix elements with the ACA (atom-centered
  * approximation), in which the Lx/Ly/Lz are the angular momentum operators, 
  * |phi_i> and |phi_j> are the numerical atomic orbitals (NAOs).
  * 
@@ -253,3 +256,5 @@ namespace ModuleIO
                         const int precision = 10);
     };
 } // namespace ModuleIO
+
+#endif // ANGMOM_OP_MAT_H
