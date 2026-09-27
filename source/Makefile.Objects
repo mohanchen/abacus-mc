@@ -716,6 +716,9 @@ OBJS_IO=module_parameter/input_conv.o\
     module_hs/cal_plpr.o\
 
 OBJS_IO_LCAO=module_hs/cal_r_overlap_r.o\
+      module_hs/pos_op_basis.o\
+      module_hs/pos_op_calc.o\
+      module_hs/pos_op_writer.o\
       module_output/write_orb_info.o\
       module_dos/write_dos_lcao.o\
       module_energy/write_proj_band_lcao.o\

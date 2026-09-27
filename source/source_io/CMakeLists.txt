@@ -91,6 +91,9 @@ if(ENABLE_LCAO)
       module_hs/write_hs_sparse.cpp
       module_hs/single_r_io.cpp
       module_hs/rr_sparse_writer.cpp
+      module_hs/pos_op_basis.cpp
+      module_hs/pos_op_calc.cpp
+      module_hs/pos_op_writer.cpp
       module_hs/cal_r_overlap_r.cpp
       module_hs/output_mat_sparse.cpp
       module_ctrl/ctrl_scf_lcao.cpp

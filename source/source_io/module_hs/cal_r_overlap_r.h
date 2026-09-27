@@ -1,26 +1,22 @@
 #ifndef CAL_R_OVERLAP_R_H
 #define CAL_R_OVERLAP_R_H
 
-#include "source_base/sph_bessel_recursive.h"
 #include "source_base/vector3.h"
-#include "source_base/ylm.h"
-#include "source_basis/module_ao/orb_atomic_lm.h"
-#include "source_basis/module_ao/orb_gaunt_table.h"
-#include "source_basis/module_ao/orb_read.h"
-#include "source_basis/module_ao/parallel_orbitals.h"
-#include "source_cell/module_neighbor/sltk_grid_driver.h"
-#include "source_cell/unitcell.h"
-#include "source_lcao/center2orb_orb11.h"
-#include "source_lcao/center2orb_orb21.h"
-#include "source_lcao/center2orb.h"
-#include "source_lcao/module_ri/abfs_vector3_order.h"
 
-#include <map>
-#include <set>
+#include <memory>
 #include <string>
 #include <vector>
 
+class UnitCell;
+class Parallel_Orbitals;
+class LCAO_Orbitals;
+class Grid_Driver;
+class PosOpBasis;
+class PosOpCalc;
+class PosOpWriter;
+
 // output r_R matrix, added by Jingan
+// Facade that delegates to PosOpBasis / PosOpCalc / PosOpWriter.
 class cal_r_overlap_R
 {
 
@@ -85,39 +81,8 @@ class cal_r_overlap_R
                 const int npol);
 
   private:
-    void initialize_orb_table(const UnitCell& ucell, const LCAO_Orbitals& orb);
-    void construct_orbs_and_orb_r(const UnitCell& ucell,
-                                  const LCAO_Orbitals& orb,
-                                  const bool cal_force,
-                                  const int nlocal);
-    void construct_orbs_and_nonlocal_and_orb_r(const UnitCell& ucell,
-                                               const LCAO_Orbitals& orb,
-                                               const bool cal_force,
-                                               const int nlocal);
-
-    std::vector<int> iw2ia;
-    std::vector<int> iw2iL;
-    std::vector<int> iw2im;
-    std::vector<int> iw2iN;
-    std::vector<int> iw2it;
-
-    ModuleBase::Sph_Bessel_Recursive::D2* psb_ = nullptr;
-    ORB_gaunt_table MGT;
-
-    Numerical_Orbital_Lm orb_r;
-    std::vector<std::vector<std::vector<Numerical_Orbital_Lm>>> orbs;
-    std::vector<std::vector<Numerical_Orbital_Lm>> orbs_nonlocal;
-
-    std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, Center2_Orb::Orb11>>>>>>
-        center2_orb11;
-
-    std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, Center2_Orb::Orb21>>>>>>
-        center2_orb21_r;
-
-    std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, Center2_Orb::Orb11>>>>> center2_orb11_nonlocal;
-
-    std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, std::map<size_t, Center2_Orb::Orb21>>>>> center2_orb21_r_nonlocal;
-
-    const Parallel_Orbitals* ParaV = nullptr;
+    std::unique_ptr<PosOpBasis> basis_;
+    std::unique_ptr<PosOpCalc> calc_;
+    std::unique_ptr<PosOpWriter> writer_;
 };
 #endif

@@ -72,6 +72,9 @@ set(DEEPKS_UNIT_COMMON_SOURCES
     ../../module_operator_lcao/operator_lcao.cpp
     ../../../source_hamilt/operator.cpp
     ../../../source_io/module_hs/cal_r_overlap_r.cpp
+    ../../../source_io/module_hs/pos_op_basis.cpp
+    ../../../source_io/module_hs/pos_op_calc.cpp
+    ../../../source_io/module_hs/pos_op_writer.cpp
     ../../../source_io/module_hs/single_r_io.cpp
     ../../../source_io/module_hs/rr_sparse_writer.cpp
     ../../module_rt/radial_interpolation.cpp

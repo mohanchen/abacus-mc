@@ -1,6 +1,7 @@
 #include "source_lcao/module_rt/snap_psb_half_tddft.h"
 
 #include "source_base/ylm.h"
+#include "source_basis/module_ao/parallel_orbitals.h"
 #include "source_cell/read_pp.h"
 #include "source_cell/unitcell.h"
 #include "source_io/module_hs/cal_r_overlap_r.h"
