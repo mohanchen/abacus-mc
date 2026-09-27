@@ -1,4 +1,4 @@
-#include "write_h_terms.h"
+#include "hterm_writer.h"
 
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
@@ -21,7 +21,10 @@
 #endif
 
 #include <complex>
+#include <functional>
+#include <string>
 #include <tuple>
+#include <vector>
 
 namespace ModuleIO
 {
@@ -152,16 +155,28 @@ static void write_hk_common(hamilt::HContainer<double>& hR,
     }
 }
 
-void write_h_t(WriteHParams& params)
+// Descriptor for one Hamiltonian term: the H(k)/H(R) filename prefixes and the
+// term-specific routine that fills hR_tmp for one spin channel.
+struct HTermSpec
 {
-    ModuleBase::TITLE("ModuleIO", "write_h_t");
-    ModuleBase::timer::start("ModuleIO", "write_h_t");
+    std::string timer_label;
+    std::string k_prefix;
+    std::string r_prefix;
+    std::string r_label;
+    // Fills hR_tmp for spin channel ispin. setup_veff_hcontainer has already
+    // been run when use_veff_layout is true; the builder adds the term values.
+    std::function<void(hamilt::HContainer<double>&, int)> build;
+};
+
+// Shared skeleton for the five non-EXX terms: loop over spin channels, build
+// the term into hR_tmp, always write H(k), and write H(R) only when asked.
+static void write_h_term(WriteHParams& params, const HTermSpec& spec)
+{
+    ModuleBase::TITLE("ModuleIO", spec.timer_label);
+    ModuleBase::timer::start("ModuleIO", spec.timer_label);
 
     const UnitCell& ucell = *params.ucell;
-    const Grid_Driver& gd = *params.gd;
     const Parallel_Orbitals& pv = *params.pv;
-    const TwoCenterBundle& two_center_bundle = *params.two_center_bundle;
-    const LCAO_Orbitals& orb = *params.orb;
     const K_Vectors& kv = *params.kv;
     const int nspin = params.nspin;
     const int istep = params.istep;
@@ -174,201 +189,131 @@ void write_h_t(WriteHParams& params)
     const std::string& global_out_dir = params.global_out_dir;
     const bool out_app_flag = params.out_app_flag;
 
-    const std::vector<double>& orb_cutoff = orb.cutoffs();
     const int nspin_out = (nspin == 2 ? 2 : 1);
 
     for (int ispin = 0; ispin < nspin_out; ispin++)
     {
         hamilt::HContainer<double> hR_tmp(const_cast<Parallel_Orbitals*>(&pv));
+        spec.build(hR_tmp, ispin);
 
-        hamilt::EKinetic<hamilt::OperatorLCAO<double, double>>
-            tmp_ekinetic(nullptr, kv.kvec_d, &hR_tmp, &ucell, orb_cutoff, &gd, two_center_bundle.kinetic_orb.get());
-        tmp_ekinetic.contributeHR();
-
-        write_hk_common(hR_tmp, "tk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
+        write_hk_common(hR_tmp, spec.k_prefix, ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
                         nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
 
         if (also_hR)
         {
-            gather_and_write("t", "T", hR_tmp, ucell, pv, nspin, ispin, istep, append, iat2iwt, nat,
-                             params.calculation, params.out_app_flag, params.global_out_dir, params.global_matrix_dir);
+            gather_and_write(spec.r_prefix, spec.r_label, hR_tmp, ucell, pv, nspin, ispin, istep, append,
+                             iat2iwt, nat, params.calculation, params.out_app_flag,
+                             params.global_out_dir, params.global_matrix_dir);
         }
     }
 
-    ModuleBase::timer::end("ModuleIO", "write_h_t");
+    ModuleBase::timer::end("ModuleIO", spec.timer_label);
+}
+
+void write_h_t(WriteHParams& params)
+{
+    const UnitCell& ucell = *params.ucell;
+    const Grid_Driver& gd = *params.gd;
+    const Parallel_Orbitals& pv = *params.pv;
+    const TwoCenterBundle& two_center_bundle = *params.two_center_bundle;
+    const LCAO_Orbitals& orb = *params.orb;
+    const K_Vectors& kv = *params.kv;
+    const std::vector<double>& orb_cutoff = orb.cutoffs();
+
+    HTermSpec spec;
+    spec.timer_label = "write_h_t";
+    spec.k_prefix = "tk";
+    spec.r_prefix = "t";
+    spec.r_label = "T";
+    spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
+        hamilt::EKinetic<hamilt::OperatorLCAO<double, double>>
+            tmp_ekinetic(nullptr, kv.kvec_d, &hR_tmp, &ucell, orb_cutoff, &gd,
+                         two_center_bundle.kinetic_orb.get());
+        tmp_ekinetic.contributeHR();
+    };
+    write_h_term(params, spec);
 }
 
 void write_h_vnl(WriteHParams& params)
 {
-    ModuleBase::TITLE("ModuleIO", "write_h_vnl");
-    ModuleBase::timer::start("ModuleIO", "write_h_vnl");
-
     const UnitCell& ucell = *params.ucell;
     const Grid_Driver& gd = *params.gd;
-    const Parallel_Orbitals& pv = *params.pv;
     const TwoCenterBundle& two_center_bundle = *params.two_center_bundle;
     const LCAO_Orbitals& orb = *params.orb;
     const K_Vectors& kv = *params.kv;
-    const int nspin = params.nspin;
-    const int istep = params.istep;
-    const bool append = params.append;
-    const int* iat2iwt = params.iat2iwt;
-    const int nat = params.nat;
-    const bool also_hR = params.also_hR;
-    const int nlocal = params.nlocal;
-    const bool gamma_only = params.gamma_only_local;
-    const std::string& global_out_dir = params.global_out_dir;
-    const bool out_app_flag = params.out_app_flag;
-
     const std::vector<double>& orb_cutoff = orb.cutoffs();
-    const int nspin_out = (nspin == 2 ? 2 : 1);
 
-    for (int ispin = 0; ispin < nspin_out; ispin++)
-    {
-        hamilt::HContainer<double> hR_tmp(const_cast<Parallel_Orbitals*>(&pv));
-
-        hamilt::Nonlocal<hamilt::OperatorLCAO<double, double>> tmp_nonlocal(nullptr,
-                                                                            kv.kvec_d,
-                                                                            &hR_tmp,
-                                                                            &ucell,
-                                                                            orb_cutoff,
-                                                                            &gd,
-                                                                            two_center_bundle.overlap_orb_beta.get());
+    HTermSpec spec;
+    spec.timer_label = "write_h_vnl";
+    spec.k_prefix = "vnlk";
+    spec.r_prefix = "vnl";
+    spec.r_label = "V^NL";
+    spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
+        hamilt::Nonlocal<hamilt::OperatorLCAO<double, double>>
+            tmp_nonlocal(nullptr, kv.kvec_d, &hR_tmp, &ucell, orb_cutoff, &gd,
+                         two_center_bundle.overlap_orb_beta.get());
         tmp_nonlocal.contributeHR();
-
-        write_hk_common(hR_tmp, "vnlk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
-
-        if (also_hR)
-        {
-            gather_and_write("vnl", "V^NL", hR_tmp, ucell, pv, nspin, ispin, istep, append, iat2iwt, nat,
-                             params.calculation, params.out_app_flag, params.global_out_dir, params.global_matrix_dir);
-        }
-    }
-
-    ModuleBase::timer::end("ModuleIO", "write_h_vnl");
+    };
+    write_h_term(params, spec);
 }
 
 void write_h_vl(WriteHParams& params)
 {
-    ModuleBase::TITLE("ModuleIO", "write_h_vl");
-    ModuleBase::timer::start("ModuleIO", "write_h_vl");
-
     const UnitCell& ucell = *params.ucell;
     const Grid_Driver& gd = *params.gd;
     const Parallel_Orbitals& pv = *params.pv;
     const LCAO_Orbitals& orb = *params.orb;
     const elecstate::Potential* pot = params.pot;
-    const K_Vectors& kv = *params.kv;
-    const int nspin = params.nspin;
-    const int istep = params.istep;
-    const bool append = params.append;
-    const int* iat2iwt = params.iat2iwt;
-    const int nat = params.nat;
-    const bool also_hR = params.also_hR;
-    const int nlocal = params.nlocal;
-    const bool gamma_only = params.gamma_only_local;
-    const std::string& global_out_dir = params.global_out_dir;
-    const bool out_app_flag = params.out_app_flag;
-
     const std::vector<double>& orb_cutoff = orb.cutoffs();
-    const int nspin_out = (nspin == 2 ? 2 : 1);
 
-    for (int ispin = 0; ispin < nspin_out; ispin++)
-    {
-        hamilt::HContainer<double> hR_tmp(const_cast<Parallel_Orbitals*>(&pv));
+    const double* v_local = pot->get_fixed_v(); // local pp, no Hxc
+
+    HTermSpec spec;
+    spec.timer_label = "write_h_vl";
+    spec.k_prefix = "vlk";
+    spec.r_prefix = "vl";
+    spec.r_label = "V^L";
+    spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-
-        const double* v_local = pot->get_fixed_v(); // local pp, no Hxc
         ModuleGint::cal_gint_vl(v_local, &hR_tmp);
-
-        write_hk_common(hR_tmp, "vlk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
-
-        if (also_hR)
-        {
-            gather_and_write("vl", "V^L", hR_tmp, ucell, pv, nspin, ispin, istep, append, iat2iwt, nat,
-                             params.calculation, params.out_app_flag, params.global_out_dir, params.global_matrix_dir);
-        }
-    }
-
-    ModuleBase::timer::end("ModuleIO", "write_h_vl");
+    };
+    write_h_term(params, spec);
 }
 
 void write_h_vh(WriteHParams& params)
 {
-    ModuleBase::TITLE("ModuleIO", "write_h_vh");
-    ModuleBase::timer::start("ModuleIO", "write_h_vh");
-
     const UnitCell& ucell = *params.ucell;
     const Grid_Driver& gd = *params.gd;
     const Parallel_Orbitals& pv = *params.pv;
     const LCAO_Orbitals& orb = *params.orb;
     const Charge* chg = params.chg;
     const ModulePW::PW_Basis* rho_basis = params.rho_basis;
-    const K_Vectors& kv = *params.kv;
-    const int nspin = params.nspin;
-    const int istep = params.istep;
-    const bool append = params.append;
-    const int* iat2iwt = params.iat2iwt;
-    const int nat = params.nat;
-    const bool also_hR = params.also_hR;
-    const int nlocal = params.nlocal;
-    const bool gamma_only = params.gamma_only_local;
-    const std::string& global_out_dir = params.global_out_dir;
-    const bool out_app_flag = params.out_app_flag;
-
     const std::vector<double>& orb_cutoff = orb.cutoffs();
-    const int nspin_out = (nspin == 2 ? 2 : 1);
 
-    ModuleBase::matrix v_h
-        = elecstate::H_Hartree_pw::v_hartree(ucell, const_cast<ModulePW::PW_Basis*>(rho_basis), nspin, chg->rho);
+    ModuleBase::matrix v_h = elecstate::H_Hartree_pw::v_hartree(
+        ucell, const_cast<ModulePW::PW_Basis*>(rho_basis), params.nspin, chg->rho);
 
-    for (int ispin = 0; ispin < nspin_out; ispin++)
-    {
-        hamilt::HContainer<double> hR_tmp(const_cast<Parallel_Orbitals*>(&pv));
+    HTermSpec spec;
+    spec.timer_label = "write_h_vh";
+    spec.k_prefix = "vhk";
+    spec.r_prefix = "vh";
+    spec.r_label = "V^H";
+    spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-
         ModuleGint::cal_gint_vl(&v_h(ispin, 0), &hR_tmp);
-
-        write_hk_common(hR_tmp, "vhk", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
-
-        if (also_hR)
-        {
-            gather_and_write("vh", "V^H", hR_tmp, ucell, pv, nspin, ispin, istep, append, iat2iwt, nat,
-                             params.calculation, params.out_app_flag, params.global_out_dir, params.global_matrix_dir);
-        }
-    }
-
-    ModuleBase::timer::end("ModuleIO", "write_h_vh");
+    };
+    write_h_term(params, spec);
 }
 
 void write_h_vxc(WriteHParams& params)
 {
-    ModuleBase::TITLE("ModuleIO", "write_h_vxc");
-    ModuleBase::timer::start("ModuleIO", "write_h_vxc");
-
     const UnitCell& ucell = *params.ucell;
     const Grid_Driver& gd = *params.gd;
     const Parallel_Orbitals& pv = *params.pv;
     const LCAO_Orbitals& orb = *params.orb;
     const Charge* chg = params.chg;
     const int nrxx = params.nrxx;
-    const K_Vectors& kv = *params.kv;
-    const int nspin = params.nspin;
-    const int istep = params.istep;
-    const bool append = params.append;
-    const int* iat2iwt = params.iat2iwt;
-    const int nat = params.nat;
-    const bool also_hR = params.also_hR;
-    const int nlocal = params.nlocal;
-    const bool gamma_only = params.gamma_only_local;
-    const std::string& global_out_dir = params.global_out_dir;
-    const bool out_app_flag = params.out_app_flag;
-
     const std::vector<double>& orb_cutoff = orb.cutoffs();
-    const int nspin_out = (nspin == 2 ? 2 : 1);
 
     ModuleBase::matrix v_xc;
     double etxc;
@@ -379,26 +324,20 @@ void write_h_vxc(WriteHParams& params)
 #else
     const double hse_omega = 0.0;
 #endif
-    std::tie(etxc, vtxc, v_xc) = XC_Functional::v_xc(nrxx, chg, &ucell, params.nspin, params.domag, params.domag_z, hybrid_alpha, hse_omega);
+    std::tie(etxc, vtxc, v_xc) = XC_Functional::v_xc(nrxx, chg, &ucell, params.nspin,
+                                                     params.domag, params.domag_z,
+                                                     hybrid_alpha, hse_omega);
 
-    for (int ispin = 0; ispin < nspin_out; ispin++)
-    {
-        hamilt::HContainer<double> hR_tmp(const_cast<Parallel_Orbitals*>(&pv));
+    HTermSpec spec;
+    spec.timer_label = "write_h_vxc";
+    spec.k_prefix = "vxck";
+    spec.r_prefix = "vxc";
+    spec.r_label = "V^XC";
+    spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-
         ModuleGint::cal_gint_vl(&v_xc(ispin, 0), &hR_tmp);
-
-        write_hk_common(hR_tmp, "vxck", ucell, pv, kv, nspin, istep, append, iat2iwt, nat,
-                        nlocal, gamma_only, global_out_dir, out_app_flag, params.ks_solver, params.drank);
-
-        if (also_hR)
-        {
-            gather_and_write("vxc", "V^XC", hR_tmp, ucell, pv, nspin, ispin, istep, append, iat2iwt, nat,
-                             params.calculation, params.out_app_flag, params.global_out_dir, params.global_matrix_dir);
-        }
-    }
-
-    ModuleBase::timer::end("ModuleIO", "write_h_vxc");
+    };
+    write_h_term(params, spec);
 }
 
 #ifdef __EXX

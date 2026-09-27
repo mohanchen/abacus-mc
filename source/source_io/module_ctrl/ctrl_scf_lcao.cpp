@@ -16,7 +16,7 @@
 #include "source_io/module_hs/output_mat_sparse.h"                   // use ModuleIO::output_mat_sparse()
 #include "source_io/module_ml/io_npz.h"                       // use ModuleIO::output_mat_npz()
 #include "source_io/module_dhs/write_dh.h"                    // use ModuleIO::write_dH_components()
-#include "source_io/module_hs/write_h_terms.h"         // use ModuleIO::write_h_*
+#include "source_io/module_hs/hterm_writer.h"         // use ModuleIO::write_h_*
 #include "../module_hs/hsr_writer.h"                               // use ModuleIO::write_hsr()
 #include "../module_mulliken/cal_mag.h"                          // use cal_mag()
 #include "../module_wannier/to_w90_lcao.h"                   // use toW90_LCAO

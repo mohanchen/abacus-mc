@@ -1,5 +1,5 @@
-#ifndef WRITE_H_TERMS_H
-#define WRITE_H_TERMS_H
+#ifndef HTERM_WRITER_H
+#define HTERM_WRITER_H
 
 #include "source_basis/module_nao/two_center_bundle.h"
 #include "source_basis/module_pw/pw_basis.h"
@@ -29,10 +29,10 @@ struct WriteHParams
     const TwoCenterBundle* two_center_bundle = nullptr;
     const LCAO_Orbitals* orb = nullptr;
     const K_Vectors* kv = nullptr;
-    const elecstate::Potential* pot = nullptr;   // used by write_h_vl (local pp only)
-    const Charge* chg = nullptr;                 // used by write_h_vh, write_h_vxc
-    const ModulePW::PW_Basis* rho_basis = nullptr; // used by write_h_vh
-    int nrxx = 0;                                // used by write_h_vxc
+    const elecstate::Potential* pot = nullptr;   // used by the local-pp term only
+    const Charge* chg = nullptr;                 // used by the Hartree / XC terms
+    const ModulePW::PW_Basis* rho_basis = nullptr; // used by the Hartree term
+    int nrxx = 0;                                // used by the XC term
     int nspin = 1;
     int istep = 0;
     bool append = false;
@@ -51,17 +51,20 @@ struct WriteHParams
     std::string ks_solver;
     int drank = 0;
 #ifdef __EXX
-    // The gamma-only (TK==double) exx interfaces used by write_h_exx. 
-    // Deliberately NOT templated on TK, because it would force WriteHParams, WriteDHParams and
-    //      every free function taking them to become templates as well -- a large, purely
-    //      mechanical change for a case nobody needs.
-    // Multi-k + EXX is therefore rejected up front (see write_h_exx)
+    // The gamma-only (TK==double) exx interfaces used by the EXX term.
+    // Deliberately NOT templated on TK, because it would force WriteHParams and
+    //      every free function taking it to become templates as well -- a large,
+    //      purely mechanical change for a case nobody needs.
+    // Multi-k + EXX is therefore rejected up front (see write_h_exx_term)
     // instead of silently producing output with the EXX term missing.
     Exx_LRI_Interface<double, double>* exd = nullptr;
     Exx_LRI_Interface<double, std::complex<double>>* exc = nullptr;
 #endif
 };
 
+// Individual Hamiltonian-term writers. write_h_t/vnl/vl/vh/vxc share a common
+// build -> write H(k) -> optionally write H(R) skeleton (see hterm_writer.cpp);
+// the term-specific part is only how hR_tmp is filled.
 void write_h_t(WriteHParams& params);
 
 void write_h_vnl(WriteHParams& params);
