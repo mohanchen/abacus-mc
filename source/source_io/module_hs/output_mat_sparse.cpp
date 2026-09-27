@@ -1,7 +1,7 @@
 #include "output_mat_sparse.h"
 
 #include "pos_op_mat.h"
-#include "source_io/module_hs/write_hs_r.h"
+#include "source_io/module_hs/hs_r_legacy.h"
 #include "source_io/module_parameter/parameter.h"
 
 namespace ModuleIO

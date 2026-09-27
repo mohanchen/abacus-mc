@@ -6,7 +6,7 @@
 #include "source_estate/elecstate_lcao.h"
 #include "source_estate/param_update.h"
 #include "source_io/module_hs/pos_op_mat.h"
-#include "source_io/module_hs/write_hs_r.h"
+#include "source_io/module_hs/hs_r_legacy.h"
 #include "source_io/module_output/print_info.h"
 #include "source_lcao/lcao_domain.h"
 #include "source_lcao/hamilt_lcao.h"

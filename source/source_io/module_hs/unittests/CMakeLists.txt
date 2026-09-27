@@ -49,7 +49,8 @@ AddTest(
   LIBS parameter base device hcontainer
   SOURCES
   write_hs_r_compat_test.cpp
-  ../write_hs_r.cpp
+  ../hsr_writer.cpp
+  ../hs_r_legacy.cpp
   ../write_hs_sparse.cpp
   ../single_r_io.cpp
   ../rr_sparse_writer.cpp
