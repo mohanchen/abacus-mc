@@ -1,100 +1,16 @@
-#include "write_hs.h"
+#include "hs_dense_io.h"
 
+#include "source_base/parallel_comm.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 #include "source_base/tool_quit.h"
-#include "source_cell/module_neighbor/sltk_grid_driver.h"
-#include "source_base/module_out/filename.h" // use filename_output function
+#include "source_base/global_function.h"
 
-
-template <typename T>
-void ModuleIO::write_hsk(
-        const std::string &global_out_dir,
-        const int nspin,
-        const int nks, 
-        const int nkstot,
-        const std::vector<int> &ik2iktot,
-        const std::vector<int> &isk,
-        hamilt::Hamilt<T>* p_hamilt,
-        const Parallel_Orbitals &pv,
-        const bool gamma_only,
-        const bool out_app_flag,
-        const int istep,
-        const int out_type,
-        const int precision,
-        const int nlocal,
-        const std::string &ks_solver,
-        const int drank,
-        std::ofstream &ofs_running)    
-{
-
-    ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        ">>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    ofs_running << " |                                            "
-        "                        |" << std::endl;
-    ofs_running << " | Write Hamiltonian matrix H(k) or overlap matrix S(k) in numerical  |" << std::endl; 
-    ofs_running << " | atomic orbitals at each k-point.                                   |" << std::endl; 
-    ofs_running << " |                                            "
-        "                        |" << std::endl;
-    ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        ">>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    ofs_running << "\n WRITE H(k) OR S(k)" << std::endl;
-
-    for (int ik = 0; ik < nks; ++ik)
-    {
-        p_hamilt->updateHk(ik);
-        const bool binary = (out_type == 2);
-
-        hamilt::MatrixBlock<T> h_mat;
-        hamilt::MatrixBlock<T> s_mat;
-
-        p_hamilt->matrix(h_mat, s_mat);
-
-        std::string h_fn = ModuleIO::filename_output(global_out_dir,
-                "hk","nao",ik,ik2iktot,nspin,nkstot,
-                out_type,out_app_flag,gamma_only,istep);
-
-        ModuleIO::save_mat(istep,
-                h_mat.p,
-                nlocal,
-                binary,
-                precision,
-                1,
-                out_app_flag,
-                h_fn,
-                pv,
-                drank,
-                ks_solver);
-
-        // mohan note 2025-06-02
-        // for overlap matrix, the two spin channels yield the same matrix
-        // so we only need to print matrix from one spin channel.
-        const int current_spin = isk[ik];
-        if(current_spin == 1)
-        {
-            continue;
-        }
-
-        std::string s_fn = ModuleIO::filename_output(global_out_dir,
-                "sk","nao",ik,ik2iktot,nspin,nkstot,
-                out_type,out_app_flag,gamma_only,istep);
-
-        ofs_running << " The output filename is " << s_fn << std::endl;
-
-        ModuleIO::save_mat(istep,
-                s_mat.p,
-                nlocal,
-                binary,
-                precision,
-                1,
-                out_app_flag,
-                s_fn,
-                pv,
-                drank,
-                ks_solver);
-    } // end ik
-}
-
+#include <complex>
+#include <cstdio>
+#include <fstream>
+#include <iomanip>
+#include <type_traits>
 
 // output a square matrix
 template <typename T>
@@ -164,7 +80,7 @@ void ModuleIO::save_mat(const int istep,
                 }
             }
 
-            if (reduce) 
+            if (reduce)
             {
                 Parallel_Reduce::reduce_all(line, tri ? dim - i : dim);
             }
@@ -181,7 +97,7 @@ void ModuleIO::save_mat(const int istep,
             MPI_Barrier(DIAG_WORLD);
         }
 
-        if (drank == 0) 
+        if (drank == 0)
         {
             fclose(out_matrix);
         }
@@ -213,11 +129,11 @@ void ModuleIO::save_mat(const int istep,
 #ifdef __MPI
         if (drank == 0)
         {
-            if (app && istep > 0) 
+            if (app && istep > 0)
             {
                 out_matrix.open(filename.c_str(), std::ofstream::app);
-            } 
-            else 
+            }
+            else
             {
                 out_matrix.open(filename.c_str());
             }
@@ -226,7 +142,7 @@ void ModuleIO::save_mat(const int istep,
                 ModuleBase::WARNING_QUIT("ModuleIO::save_mat", "Cannot open matrix file: " + filename);
             }
             out_matrix << "#------------------------------------------------------------------------" << std::endl;
-            out_matrix << "# ionic step " << istep+1 << std::endl; // istep starts from 0 
+            out_matrix << "# ionic step " << istep+1 << std::endl; // istep starts from 0
             out_matrix << "# filename " << filename << std::endl;
             out_matrix << "# gamma only " << gamma_only << std::endl;
             out_matrix << "# rows " << dim << std::endl;
@@ -265,7 +181,7 @@ void ModuleIO::save_mat(const int istep,
                 }
             }
 
-            if (reduce) 
+            if (reduce)
             {
                 Parallel_Reduce::reduce_all(line, tri ? dim - i : dim);
             }
@@ -274,7 +190,7 @@ void ModuleIO::save_mat(const int istep,
             {
                 out_matrix << "Row " << i+1 << std::endl;
                 size_t count = 0;
-                for (int j = (tri ? i : 0); j < dim; j++) 
+                for (int j = (tri ? i : 0); j < dim; j++)
                 {
                     out_matrix << " " << line[tri ? j - i : j];
                     ++count;
@@ -291,7 +207,7 @@ void ModuleIO::save_mat(const int istep,
             delete[] line;
         }
 
-        if (drank == 0) 
+        if (drank == 0)
         {
             out_matrix.close();
         }
@@ -325,3 +241,17 @@ void ModuleIO::save_mat(const int istep,
     ModuleBase::timer::end("ModuleIO", "save_mat");
     return;
 }
+
+// Explicit instantiations
+template void ModuleIO::save_mat<double>(const int, const double*, const int, const bool,
+    const int, const bool, const bool, const std::string&, const Parallel_2D&,
+    const int, const std::string&, const bool);
+template void ModuleIO::save_mat<std::complex<double>>(const int, const std::complex<double>*, const int,
+    const bool, const int, const bool, const bool, const std::string&, const Parallel_2D&,
+    const int, const std::string&, const bool);
+template void ModuleIO::save_mat<float>(const int, const float*, const int, const bool,
+    const int, const bool, const bool, const std::string&, const Parallel_2D&,
+    const int, const std::string&, const bool);
+template void ModuleIO::save_mat<std::complex<float>>(const int, const std::complex<float>*, const int,
+    const bool, const int, const bool, const bool, const std::string&, const Parallel_2D&,
+    const int, const std::string&, const bool);

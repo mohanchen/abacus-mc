@@ -2,6 +2,7 @@
 #include "source_hamilt/module_xc/exx_info.h"
 
 #include "source_base/formatter.h"
+#include "source_base/module_out/filename.h"
 #include "source_base/tool_quit.h" // use ModuleBase::WARNING_QUIT
 #include "source_estate/elecstate_lcao.h" // use elecstate::ElecState
 #include "source_hamilt/hamilt.h"         // use Hamilt<T>
@@ -20,7 +21,8 @@
 #include "../module_mulliken/cal_mag.h"                          // use cal_mag()
 #include "../module_wannier/to_w90_lcao.h"                   // use toW90_LCAO
 #include "../module_wannier/to_w90_lcao_pw.h"             // use toW90_LCAO_IN_PW
-#include "../module_hs/write_hs.h"                            // use ModuleIO::write_hsk()
+#include "../module_hs/hs_dense_io.h"                           // use ModuleIO::save_mat()
+#include "../module_hs/hsk_writer.h"                            // use ModuleIO::write_hsk()
 #include "../module_dm/write_dmk.h"                           // use ModuleIO::write_dmk()
 #include "../module_dm/write_dmr.h"                           // use ModuleIO::write_dmr()
 #include "../module_dos/write_dos_lcao.h"                      // use ModuleIO::write_dos_lcao()

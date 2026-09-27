@@ -1,7 +1,7 @@
 AddTest(
   TARGET MODULE_IO_write_hsk_binary_test
   LIBS parameter base device
-  SOURCES write_hsk_binary_test.cpp ../../../source_basis/module_ao/parallel_orbitals.cpp
+  SOURCES write_hsk_binary_test.cpp ../hs_dense_io.cpp ../../../source_basis/module_ao/parallel_orbitals.cpp
 )
 
 add_test(

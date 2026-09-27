@@ -86,6 +86,8 @@ if(ENABLE_LCAO)
   )
   list(APPEND objects_advanced	   
       module_unk/unk_overlap_lcao.cpp
+      module_hs/hs_dense_io.cpp
+      module_hs/hsk_writer.cpp
       module_hs/hsr_writer.cpp
       module_hs/hs_r_legacy.cpp
       module_hs/write_h_terms.cpp

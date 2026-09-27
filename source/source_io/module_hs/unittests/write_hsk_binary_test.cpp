@@ -1,4 +1,7 @@
-#include "source_io/module_hs/write_hs.h"
+#include "source_io/module_hs/hs_dense_io.h"
+
+#include "source_base/parallel_comm.h"          // DIAG_WORLD
+#include "source_basis/module_ao/parallel_orbitals.h"
 
 #include "gtest/gtest.h"
 

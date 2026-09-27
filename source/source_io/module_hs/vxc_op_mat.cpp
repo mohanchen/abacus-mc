@@ -2,7 +2,7 @@
 
 #include "source_base/module_out/filename.h"
 #include "source_base/parallel_reduce.h"
-#include "source_io/module_hs/write_hs.h"
+#include "source_io/module_hs/hs_dense_io.h"
 
 namespace ModuleIO
 {

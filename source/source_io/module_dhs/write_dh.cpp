@@ -2,7 +2,7 @@
 
 #include "source_base/global_function.h"
 #include "source_base/timer.h"
-#include "source_io/module_hs/write_hs.h"
+#include "source_io/module_hs/hs_dense_io.h"
 #include "source_io/module_hs/hsr_writer.h"
 #include "source_cell/ucell_io.h"
 #include "source_io/module_parameter/parameter.h"
