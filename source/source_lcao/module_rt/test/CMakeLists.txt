@@ -56,7 +56,7 @@ AddTest(
           ../../../source_cell/read_pp_upf100.cpp
           ../../../source_cell/read_pp_vwr.cpp
           ../../../source_cell/read_pp_blps.cpp
-          ../../../source_io/module_hs/cal_r_overlap_r.cpp
+          ../../../source_io/module_hs/pos_op_mat.cpp
           ../../../source_io/module_hs/pos_op_basis.cpp
           ../../../source_io/module_hs/pos_op_calc.cpp
           ../../../source_io/module_hs/pos_op_writer.cpp

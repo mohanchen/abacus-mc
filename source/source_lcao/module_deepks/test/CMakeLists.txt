@@ -71,7 +71,7 @@ set(DEEPKS_UNIT_COMMON_SOURCES
     ../../module_operator_lcao/deepks_lcao.cpp
     ../../module_operator_lcao/operator_lcao.cpp
     ../../../source_hamilt/operator.cpp
-    ../../../source_io/module_hs/cal_r_overlap_r.cpp
+    ../../../source_io/module_hs/pos_op_mat.cpp
     ../../../source_io/module_hs/pos_op_basis.cpp
     ../../../source_io/module_hs/pos_op_calc.cpp
     ../../../source_io/module_hs/pos_op_writer.cpp

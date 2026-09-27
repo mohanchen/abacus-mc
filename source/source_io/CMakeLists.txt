@@ -94,7 +94,7 @@ if(ENABLE_LCAO)
       module_hs/pos_op_basis.cpp
       module_hs/pos_op_calc.cpp
       module_hs/pos_op_writer.cpp
-      module_hs/cal_r_overlap_r.cpp
+      module_hs/pos_op_mat.cpp
       module_hs/output_mat_sparse.cpp
       module_ctrl/ctrl_scf_lcao.cpp
       module_ctrl/ctrl_runner_lcao.cpp

@@ -715,7 +715,7 @@ OBJS_IO=module_parameter/input_conv.o\
     module_parameter/read_set_globalv.o\
     module_hs/cal_plpr.o\
 
-OBJS_IO_LCAO=module_hs/cal_r_overlap_r.o\
+OBJS_IO_LCAO=module_hs/pos_op_mat.o\
       module_hs/pos_op_basis.o\
       module_hs/pos_op_calc.o\
       module_hs/pos_op_writer.o\
