@@ -126,12 +126,15 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
                             int iL2 = basis_.get_iw2iL(orb_index_col);
                             int im2 = basis_.get_iw2im(orb_index_col);
 
-                            ModuleBase::Vector3<double> r_distance
-                                = (ucell.atoms[it2].tau[ia2] - ucell.atoms[it1].tau[ia1] + R_car) * ucell.lat0;
+                            // PosOpCalc::pos_matrix expects absolute Cartesian positions
+                            // of both centers and computes the inter-center distance itself.
+                            // The second center is atom ia2 translated by the lattice vector R.
+                            ModuleBase::Vector3<double> tau1_car_ = ucell.atoms[it1].tau[ia1] * ucell.lat0;
+                            ModuleBase::Vector3<double> tau2_car_ = (ucell.atoms[it2].tau[ia2] + R_car) * ucell.lat0;
 
-                            ModuleBase::Vector3<double> temp_prp = calc_.pos_matrix(ucell.atoms[it1].tau[ia1] * ucell.lat0,
+                            ModuleBase::Vector3<double> temp_prp = calc_.pos_matrix(tau1_car_,
                                                                                      it1, iL1, im1, iN1,
-                                                                                     r_distance,
+                                                                                     tau2_car_,
                                                                                      it2, iL2, im2, iN2);
 
                             if (std::abs(temp_prp.x) > sparse_threshold)
