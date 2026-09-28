@@ -1,7 +1,11 @@
 AddTest(
   TARGET MODULE_IO_hsk_writer_test
   LIBS parameter base device
-  SOURCES test_hsk_writer.cpp ../hs_dense_io.cpp ../../../source_basis/module_ao/parallel_orbitals.cpp
+  SOURCES
+  test_hsk_writer.cpp
+  ../hsk_writer.cpp
+  ../hs_dense_io.cpp
+  ../../../source_basis/module_ao/parallel_orbitals.cpp
 )
 
 add_test(
@@ -24,11 +28,21 @@ AddTest(
 
 if(ENABLE_LCAO)
 AddTest(
+  TARGET MODULE_IO_vxc_op_tools_test
+  LIBS parameter base device
+  SOURCES
+  test_vxc_op_tools.cpp
+  ../vxc_op_tools.cpp
+  ../../../source_basis/module_ao/parallel_orbitals.cpp
+)
+
+AddTest(
   TARGET MODULE_IO_hs_dense_io_test
   LIBS parameter
   SOURCES
   test_hs_dense_io.cpp
   ../hs_dense_io.cpp
+  ../../../source_basis/module_ao/parallel_orbitals.cpp
   ../../../source_base/global_variable.cpp
   ../../../source_base/parallel_2d.cpp
   ../../../source_base/parallel_reduce.cpp
@@ -43,6 +57,13 @@ AddTest(
   ../../../source_base/timer.cpp
 )
 
+add_test(
+  NAME MODULE_IO_hs_dense_io_test_parallel
+  COMMAND mpirun -np 2 ./MODULE_IO_hs_dense_io_test
+          --gtest_filter=HsDenseIoSaveMat.BinaryGammaUpperTriangle:HsDenseIoSaveMat.BinaryComplexUpperTriangleMpiReduction:HsDenseIoSaveMat.BinaryAppendCompleteRecordsAndOverwrite
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 AddTest(
   TARGET MODULE_IO_hsr_writer_test
   LIBS parameter base device hcontainer
@@ -52,6 +73,13 @@ AddTest(
   ../../../source_cell/ucell_io.cpp
   ../../../source_basis/module_ao/parallel_orbitals.cpp
   ../../../source_hamilt/module_hcontainer/test/tmp_mocks.cpp
+)
+
+add_test(
+  NAME MODULE_IO_hsr_writer_test_parallel
+  COMMAND mpirun -np 2 ./MODULE_IO_hsr_writer_test
+          --gtest_filter=HsrWriterIo.HContainerBinaryMpiGatherWritesCompleteFiles
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 AddTest(
@@ -77,25 +105,37 @@ AddTest(
 
 AddTest(
   TARGET MODULE_IO_pos_op_csr_test
-  LIBS parameter base device hcontainer
+  LIBS parameter base
   SOURCES
   test_pos_op_csr.cpp
-  ../hsr_writer.cpp
-  ../hsr_legacy.cpp
-  ../hs_sparse_io.cpp
-  ../dhs_sparse_writer.cpp
-  ../lat_r_csr.cpp
   ../pos_op_csr.cpp
-  ../../module_dm/write_dmr.cpp
-  ../../../source_cell/ucell_io.cpp
-  ../../../source_basis/module_ao/parallel_orbitals.cpp
-  ../../../source_hamilt/module_hcontainer/test/tmp_mocks.cpp
 )
 
-add_test(
-  NAME MODULE_IO_pos_op_csr_test_parallel
-  COMMAND mpirun -np 2 ./MODULE_IO_pos_op_csr_test
-          --gtest_filter=WriteHsRCompatibility.HContainerBinaryMpiGatherWritesCompleteFiles
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+AddTest(
+  TARGET MODULE_IO_hs_sparse_io_test
+  LIBS parameter base device
+  SOURCES
+  test_hs_sparse_io.cpp
+  ../hs_sparse_io.cpp
+  ../lat_r_csr.cpp
+  ../../../source_basis/module_ao/parallel_orbitals.cpp
+)
+
+AddTest(
+  TARGET MODULE_IO_dhs_sparse_writer_test
+  LIBS parameter base device
+  SOURCES
+  test_dhs_sparse_writer.cpp
+  ../dhs_sparse_writer.cpp
+  ../hs_sparse_io.cpp
+  ../lat_r_csr.cpp
+  ../../../source_basis/module_ao/parallel_orbitals.cpp
+)
+
+AddTest(
+  TARGET MODULE_IO_output_mat_sparse_test
+  LIBS parameter base
+  SOURCES
+  test_output_mat_sparse.cpp
 )
 endif()
