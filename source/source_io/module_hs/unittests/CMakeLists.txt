@@ -24,6 +24,17 @@ AddTest(
 
 if(ENABLE_LCAO)
 AddTest(
+  TARGET MODULE_IO_hsr_writer_test
+  LIBS parameter base device hcontainer
+  SOURCES
+  test_hsr_writer.cpp
+  ../hsr_writer.cpp
+  ../../../source_cell/ucell_io.cpp
+  ../../../source_basis/module_ao/parallel_orbitals.cpp
+  ../../../source_hamilt/module_hcontainer/test/tmp_mocks.cpp
+)
+
+AddTest(
   TARGET MODULE_IO_angmom_op_mat_test
   LIBS parameter base device neighbor
   SOURCES
