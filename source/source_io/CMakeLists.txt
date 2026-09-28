@@ -93,7 +93,7 @@ if(ENABLE_LCAO)
       module_hs/hsr_writer.cpp
       module_hs/hsr_legacy.cpp
       module_hs/hterm_writer.cpp
-      module_hs/single_r_io.cpp
+      module_hs/lat_r_csr.cpp
       module_hs/rr_sparse_writer.cpp
       module_hs/pos_op_basis.cpp
       module_hs/pos_op_calc.cpp

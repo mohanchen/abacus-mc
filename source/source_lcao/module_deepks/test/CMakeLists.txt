@@ -75,7 +75,7 @@ set(DEEPKS_UNIT_COMMON_SOURCES
     ../../../source_io/module_hs/pos_op_basis.cpp
     ../../../source_io/module_hs/pos_op_calc.cpp
     ../../../source_io/module_hs/pos_op_writer.cpp
-    ../../../source_io/module_hs/single_r_io.cpp
+    ../../../source_io/module_hs/lat_r_csr.cpp
     ../../../source_io/module_hs/rr_sparse_writer.cpp
     ../../module_rt/radial_interpolation.cpp
     ../../module_rt/snap_proj_half_tddft.cpp

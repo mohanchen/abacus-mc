@@ -60,7 +60,7 @@ AddTest(
           ../../../source_io/module_hs/pos_op_basis.cpp
           ../../../source_io/module_hs/pos_op_calc.cpp
           ../../../source_io/module_hs/pos_op_writer.cpp
-          ../../../source_io/module_hs/single_r_io.cpp
+          ../../../source_io/module_hs/lat_r_csr.cpp
           ../../../source_io/module_hs/rr_sparse_writer.cpp
           ../../../source_pw/module_pwdft/soc.cpp
           ${SNAP_PSIBETA_CUDA_TEST_SOURCES}

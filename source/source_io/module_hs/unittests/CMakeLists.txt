@@ -11,9 +11,9 @@ add_test(
 )
 
 AddTest(
-  TARGET MODULE_IO_single_R_test
+  TARGET MODULE_IO_lat_r_csr_test
   LIBS parameter
-  SOURCES single_r_io_test.cpp ../single_r_io.cpp
+  SOURCES test_lat_r_csr.cpp ../lat_r_csr.cpp
 	../../../source_base/global_variable.cpp
 	../../../source_base/parallel_reduce.cpp
 	../../../source_base/parallel_common.cpp
@@ -53,7 +53,7 @@ AddTest(
   ../hsr_legacy.cpp
   ../hs_sparse_io.cpp
   ../dhs_sparse_writer.cpp
-  ../single_r_io.cpp
+  ../lat_r_csr.cpp
   ../rr_sparse_writer.cpp
   ../../module_dm/write_dmr.cpp
   ../../../source_cell/ucell_io.cpp

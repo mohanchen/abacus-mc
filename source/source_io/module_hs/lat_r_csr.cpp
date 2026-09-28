@@ -1,4 +1,4 @@
-#include "single_r_io.h"
+#include "lat_r_csr.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
@@ -20,7 +20,7 @@ inline void write_data(std::ofstream& ofs, const std::complex<double>& data, con
 }
 
 template<typename T>
-void ModuleIO::output_single_R(std::ofstream& ofs,
+void ModuleIO::save_lat_r(std::ofstream& ofs,
     const SparseRBlock<T>& XR,
     const Parallel_Orbitals& pv,
     const SparseWriteOptions& options)
@@ -28,7 +28,7 @@ void ModuleIO::output_single_R(std::ofstream& ofs,
     const int nlocal = pv.get_global_row_size();
     if (nlocal <= 0)
     {
-        ModuleBase::WARNING_QUIT("ModuleIO::output_single_R",
+        ModuleBase::WARNING_QUIT("ModuleIO::save_lat_r",
                                  "Parallel_Orbitals global row size must be positive.");
     }
 
@@ -53,7 +53,7 @@ void ModuleIO::output_single_R(std::ofstream& ofs,
                     if (value.first >= static_cast<size_t>(nlocal))
                     {
                         std::cerr << "Sparse column index out of range." << std::endl;
-                        ModuleBase::WARNING_QUIT("ModuleIO::output_single_R",
+                        ModuleBase::WARNING_QUIT("ModuleIO::save_lat_r",
                                                  "Sparse column index out of range.");
                     }
                     line[value.first] = value.second;
@@ -121,12 +121,12 @@ void ModuleIO::output_single_R(std::ofstream& ofs,
     }
 }
 
-template void ModuleIO::output_single_R<double>(std::ofstream& ofs,
+template void ModuleIO::save_lat_r<double>(std::ofstream& ofs,
     const SparseRBlock<double>& XR,
     const Parallel_Orbitals& pv,
     const SparseWriteOptions& options);
 
-template void ModuleIO::output_single_R<std::complex<double>>(std::ofstream& ofs,
+template void ModuleIO::save_lat_r<std::complex<double>>(std::ofstream& ofs,
     const SparseRBlock<std::complex<double>>& XR,
     const Parallel_Orbitals& pv,
     const SparseWriteOptions& options);

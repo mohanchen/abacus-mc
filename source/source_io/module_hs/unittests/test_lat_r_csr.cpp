@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "source_io/module_hs/single_r_io.h"
+#include "source_io/module_hs/lat_r_csr.h"
 #include "source_base/global_variable.h"
 #include "source_basis/module_ao/parallel_orbitals.h"
 #include <complex>
@@ -9,12 +9,12 @@
 #include <sstream>
 #include <vector>
 /************************************************
- *  unit test of output_single_R
+ *  unit test of save_lat_r
  ***********************************************/
 /**
  * - Tested Functions:
- *   - ModuleIO::output_single_R
- *     - output single R data
+ *   - ModuleIO::save_lat_r
+ *     - write one lattice-R block in CSR format
  */
 Parallel_Orbitals::Parallel_Orbitals()
 {
@@ -46,12 +46,12 @@ int Parallel_2D::get_global_row_size() const
     return this->nrow;
 }
 
-TEST(ModuleIOTest, OutputSingleR)
+TEST(ModuleIOTest, SaveLatR)
 {
     // Create temporary output file
     std::stringstream ofs_filename;
     GlobalV::DRANK=0;
-    ofs_filename << "test_output_single_R_" << GlobalV::DRANK << ".dat";
+    ofs_filename << "test_save_lat_r_" << GlobalV::DRANK << ".dat";
     std::ofstream ofs(ofs_filename.str());
 
     // Define input parameters
@@ -70,12 +70,12 @@ TEST(ModuleIOTest, OutputSingleR)
     options.reduce = true;
 
     // Call function under test
-    ModuleIO::output_single_R(ofs, XR, pv, options);
+    ModuleIO::save_lat_r(ofs, XR, pv, options);
 
     // Close output file and open it for reading
     ofs.close();
     std::ifstream ifs;
-    ifs.open("test_output_single_R_0.dat");
+    ifs.open("test_save_lat_r_0.dat");
     std::string str((std::istreambuf_iterator<char>(ifs)),std::istreambuf_iterator<char>());
     std::istringstream content(str);
     std::string value_line;
@@ -117,12 +117,12 @@ TEST(ModuleIOTest, OutputSingleR)
         indptr.push_back(index);
     }
     EXPECT_THAT(indptr, testing::ElementsAre(0, 2, 4, 4, 6, 6));
-    std::remove("test_output_single_R_0.dat");
+    std::remove("test_save_lat_r_0.dat");
 }
 
-TEST(ModuleIOTest, OutputSingleRComplexKeepsHighPrecision)
+TEST(ModuleIOTest, SaveLatRComplexKeepsHighPrecision)
 {
-    const std::string filename = "test_output_single_R_complex.dat";
+    const std::string filename = "test_save_lat_r_complex.dat";
     std::remove(filename.c_str());
     GlobalV::DRANK = 0;
     std::ofstream ofs(filename);
@@ -137,7 +137,7 @@ TEST(ModuleIOTest, OutputSingleRComplexKeepsHighPrecision)
     options.binary = false;
     options.reduce = false;
 
-    ModuleIO::output_single_R(ofs, XR, pv, options);
+    ModuleIO::save_lat_r(ofs, XR, pv, options);
     ofs.close();
 
     std::ifstream ifs(filename);
@@ -148,9 +148,9 @@ TEST(ModuleIOTest, OutputSingleRComplexKeepsHighPrecision)
     std::remove(filename.c_str());
 }
 
-TEST(ModuleIOTest, OutputSingleRUsesConfiguredPrecision)
+TEST(ModuleIOTest, SaveLatRUsesConfiguredPrecision)
 {
-    const std::string filename = "test_output_single_R_precision.dat";
+    const std::string filename = "test_save_lat_r_precision.dat";
     std::remove(filename.c_str());
     GlobalV::DRANK = 0;
     std::ofstream ofs(filename);
@@ -166,7 +166,7 @@ TEST(ModuleIOTest, OutputSingleRUsesConfiguredPrecision)
     options.precision = 8;
     options.reduce = false;
 
-    ModuleIO::output_single_R(ofs, XR, pv, options);
+    ModuleIO::save_lat_r(ofs, XR, pv, options);
     ofs.close();
 
     std::ifstream ifs(filename);
@@ -189,12 +189,12 @@ void write_out_of_range_sparse_column(const char* filename)
     options.threshold = 1e-12;
     options.binary = false;
     options.reduce = false;
-    ModuleIO::output_single_R(ofs, XR, pv, options);
+    ModuleIO::save_lat_r(ofs, XR, pv, options);
 }
 
-TEST(ModuleIOTest, OutputSingleRRejectsOutOfRangeColumn)
+TEST(ModuleIOTest, SaveLatRRejectsOutOfRangeColumn)
 {
-    const char* filename = "/tmp/test_output_single_R_invalid.dat";
+    const char* filename = "/tmp/test_save_lat_r_invalid.dat";
     std::remove(filename);
     EXPECT_EXIT(
         write_out_of_range_sparse_column(filename),

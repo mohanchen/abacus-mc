@@ -3,7 +3,7 @@
 #include "source_base/global_variable.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
-#include "source_io/module_hs/single_r_io.h"
+#include "source_io/module_hs/lat_r_csr.h"
 #include "source_io/module_hs/rr_sparse_writer.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 
@@ -58,11 +58,11 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
     ModuleBase::Vector3<double> origin_point(0.0, 0.0, 0.0);
     double factor = sqrt(ModuleBase::FOUR_PI / 3.0);
     int output_R_number = 0;
-    ModuleIO::SparseWriteOptions single_R_options;
-    single_R_options.threshold = sparse_threshold;
-    single_R_options.binary = binary;
-    single_R_options.precision = precision;
-    single_R_options.reduce = true;
+    ModuleIO::SparseWriteOptions lat_r_options;
+    lat_r_options.threshold = sparse_threshold;
+    lat_r_options.binary = binary;
+    lat_r_options.precision = precision;
+    lat_r_options.reduce = true;
 
     std::stringstream tem1;
     tem1 << global_out_dir << "tmp-rr.csr";
@@ -202,7 +202,7 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
 
                 if (rR_nonzero_num[direction])
                 {
-                    ModuleIO::output_single_R(ofs_tem1, psi_r_psi_sparse[direction], pv_, single_R_options);
+                    ModuleIO::save_lat_r(ofs_tem1, psi_r_psi_sparse[direction], pv_, lat_r_options);
                 }
                 else
                 {

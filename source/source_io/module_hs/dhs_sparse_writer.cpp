@@ -1,7 +1,7 @@
 #include "dhs_sparse_writer.h"
 
 #include "hs_sparse_io.h"
-#include "single_r_io.h"
+#include "lat_r_csr.h"
 #include "source_base/global_function.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
@@ -75,13 +75,13 @@ void ModuleIO::save_dH_sparse(const int& istep,
                               const int nlocal) {
     ModuleBase::TITLE("ModuleIO", "save_dH_sparse");
     ModuleBase::timer::start("ModuleIO", "save_dH_sparse");
-    SparseWriteOptions single_R_options;
-    single_R_options.threshold = sparse_thr;
-    single_R_options.binary = binary;
-    single_R_options.precision = precision;
-    single_R_options.reduce = true;
-    single_R_options.calculation = calculation;
-    single_R_options.out_app_flag = out_app_flag;
+    SparseWriteOptions lat_r_options;
+    lat_r_options.threshold = sparse_thr;
+    lat_r_options.binary = binary;
+    lat_r_options.precision = precision;
+    lat_r_options.reduce = true;
+    lat_r_options.calculation = calculation;
+    lat_r_options.out_app_flag = out_app_flag;
 
     auto& all_R_coor_ptr = HS_Arrays.all_R_coor;
     auto& output_R_coor_ptr = HS_Arrays.output_R_coor;
@@ -247,9 +247,9 @@ void ModuleIO::save_dH_sparse(const int& istep,
             {
                 if (comp.nonzero_num[ispin][count] > 0) {
                     if (nspin != 4) {
-                        output_single_R(comp.ofs[ispin], comp.sparse[ispin][R_coor], pv, single_R_options);
+                        save_lat_r(comp.ofs[ispin], comp.sparse[ispin][R_coor], pv, lat_r_options);
                     } else {
-                        output_single_R(comp.ofs[ispin], (*comp.soc_sparse)[R_coor], pv, single_R_options);
+                        save_lat_r(comp.ofs[ispin], (*comp.soc_sparse)[R_coor], pv, lat_r_options);
                     }
                 }
             }

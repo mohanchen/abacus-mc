@@ -3,7 +3,7 @@
 #include "source_base/global_function.h"
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
-#include "single_r_io.h"
+#include "lat_r_csr.h"
 
 #include <cmath>
 #include <complex>
@@ -177,12 +177,12 @@ void ModuleIO::save_sparse(
 
         if (smat.count(R_coor))
         {
-            output_single_R(ofs, smat.at(R_coor), pv, options);
+            save_lat_r(ofs, smat.at(R_coor), pv, options);
         }
         else
         {
             SparseRBlock<Tdata> empty_map;
-            output_single_R(ofs, empty_map, pv, options);
+            save_lat_r(ofs, empty_map, pv, options);
         }
         ++count;
     }
