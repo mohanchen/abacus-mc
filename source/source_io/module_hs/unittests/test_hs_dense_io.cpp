@@ -5,7 +5,7 @@
  * save_mat writes a square matrix in text or binary format. When built
  * with __MPI (the project default), save_mat uses MPI collectives and
  * MPI_Barrier. This test provides a main() that calls MPI_Init first
- * (like write_hsk_binary_test.cpp) so the MPI path is safe on a single
+ * (like test_hsk_writer.cpp) so the MPI path is safe on a single
  * rank. With a default-constructed Parallel_2D (all global2local return
  * -1), rank 0 owns no local elements, so the matrix body is all zeros.
  * Tests verify the text header format (step, dimension, gamma flag)

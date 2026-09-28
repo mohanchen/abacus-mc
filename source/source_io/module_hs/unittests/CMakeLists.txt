@@ -1,12 +1,12 @@
 AddTest(
-  TARGET MODULE_IO_write_hsk_binary_test
+  TARGET MODULE_IO_hsk_writer_test
   LIBS parameter base device
-  SOURCES write_hsk_binary_test.cpp ../hs_dense_io.cpp ../../../source_basis/module_ao/parallel_orbitals.cpp
+  SOURCES test_hsk_writer.cpp ../hs_dense_io.cpp ../../../source_basis/module_ao/parallel_orbitals.cpp
 )
 
 add_test(
-  NAME MODULE_IO_write_hsk_binary_test_parallel
-  COMMAND mpirun -np 2 ./MODULE_IO_write_hsk_binary_test
+  NAME MODULE_IO_hsk_writer_test_parallel
+  COMMAND mpirun -np 2 ./MODULE_IO_hsk_writer_test
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -76,10 +76,10 @@ AddTest(
 )
 
 AddTest(
-  TARGET MODULE_IO_write_hs_r_compat_test
+  TARGET MODULE_IO_pos_op_csr_test
   LIBS parameter base device hcontainer
   SOURCES
-  write_hs_r_compat_test.cpp
+  test_pos_op_csr.cpp
   ../hsr_writer.cpp
   ../hsr_legacy.cpp
   ../hs_sparse_io.cpp
@@ -93,8 +93,8 @@ AddTest(
 )
 
 add_test(
-  NAME MODULE_IO_write_hsr_binary_test_parallel
-  COMMAND mpirun -np 2 ./MODULE_IO_write_hs_r_compat_test
+  NAME MODULE_IO_pos_op_csr_test_parallel
+  COMMAND mpirun -np 2 ./MODULE_IO_pos_op_csr_test
           --gtest_filter=WriteHsRCompatibility.HContainerBinaryMpiGatherWritesCompleteFiles
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
