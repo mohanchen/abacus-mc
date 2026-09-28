@@ -4,7 +4,7 @@
 #include "source_base/parallel_reduce.h"
 #include "source_base/timer.h"
 #include "source_io/module_hs/lat_r_csr.h"
-#include "source_io/module_hs/rr_sparse_writer.h"
+#include "source_io/module_hs/pos_op_csr.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 
 #include <cstdio>
@@ -168,7 +168,7 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
 
         Parallel_Reduce::reduce_all(rR_nonzero_num, 3);
 
-        if (ModuleIO::detail::rr_sparse_has_payload(rR_nonzero_num))
+        if (ModuleIO::detail::lat_r_nonempty(rR_nonzero_num))
         {
             output_R_number++;
 
@@ -227,14 +227,14 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
 
         ofs_tem1.close();
         const bool open_in_append = (calculation == "md") && out_app_flag && step;
-        ModuleIO::detail::finalize_rr_sparse_file(ssr.str(),
-                                                  tem1.str(),
-                                                  step,
-                                                  nlocal,
-                                                  output_R_number,
-                                                  binary,
-                                                  open_in_append,
-                                                  "PosOpWriter::out_lat_r");
+        ModuleIO::detail::assemble_csr(ssr.str(),
+                                       tem1.str(),
+                                       step,
+                                       nlocal,
+                                       output_R_number,
+                                       binary,
+                                       open_in_append,
+                                       "PosOpWriter::out_lat_r");
 
         std::remove(tem1.str().c_str());
     }

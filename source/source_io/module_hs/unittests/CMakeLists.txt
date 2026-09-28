@@ -54,7 +54,7 @@ AddTest(
   ../hs_sparse_io.cpp
   ../dhs_sparse_writer.cpp
   ../lat_r_csr.cpp
-  ../rr_sparse_writer.cpp
+  ../pos_op_csr.cpp
   ../../module_dm/write_dmr.cpp
   ../../../source_cell/ucell_io.cpp
   ../../../source_basis/module_ao/parallel_orbitals.cpp

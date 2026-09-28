@@ -9,7 +9,7 @@
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_io/module_dm/write_dmr.h"
 #include "source_io/module_hs/output_mat_sparse.h"
-#include "source_io/module_hs/rr_sparse_writer.h"
+#include "source_io/module_hs/pos_op_csr.h"
 #include "source_io/module_hs/hsr_writer.h"
 #include "source_io/module_hs/hsr_legacy.h"
 #include "source_io/module_hs/dhs_sparse_writer.h"
@@ -946,18 +946,18 @@ TEST(WriteHsRCompatibility, MatSparseOutputOptionsKeepLegacyDefaults)
     EXPECT_FALSE(options.binary);
 }
 
-TEST(WriteHsRCompatibility, RRSparsePayloadDetectorSkipsEmptyBlocks)
+TEST(WriteHsRCompatibility, LatRNonemptySkipsEmptyBlocks)
 {
     int empty_counts[3] = {0, 0, 0};
     int x_only_counts[3] = {1, 0, 0};
     int z_only_counts[3] = {0, 0, 2};
 
-    EXPECT_FALSE(ModuleIO::detail::rr_sparse_has_payload(empty_counts));
-    EXPECT_TRUE(ModuleIO::detail::rr_sparse_has_payload(x_only_counts));
-    EXPECT_TRUE(ModuleIO::detail::rr_sparse_has_payload(z_only_counts));
+    EXPECT_FALSE(ModuleIO::detail::lat_r_nonempty(empty_counts));
+    EXPECT_TRUE(ModuleIO::detail::lat_r_nonempty(x_only_counts));
+    EXPECT_TRUE(ModuleIO::detail::lat_r_nonempty(z_only_counts));
 }
 
-TEST(WriteHsRCompatibility, RRSparseTextFinalizerAllowsZeroBlocks)
+TEST(WriteHsRCompatibility, CsrAssembleTextAllowsZeroBlocks)
 {
     const std::string payload_filename = "rr_empty_payload.tmp";
     const std::string output_filename = "rr_empty.csr";
@@ -967,14 +967,14 @@ TEST(WriteHsRCompatibility, RRSparseTextFinalizerAllowsZeroBlocks)
     std::ofstream payload(payload_filename.c_str());
     payload.close();
 
-    ModuleIO::detail::finalize_rr_sparse_file(output_filename,
-                                              payload_filename,
-                                              9,
-                                              2,
-                                              0,
-                                              false,
-                                              false,
-                                              "WriteHsRCompatibility");
+    ModuleIO::detail::assemble_csr(output_filename,
+                                   payload_filename,
+                                   9,
+                                   2,
+                                   0,
+                                   false,
+                                   false,
+                                   "WriteHsRCompatibility");
 
     const std::vector<std::string> lines = read_lines(output_filename);
     ASSERT_EQ(lines.size(), 3);
@@ -986,7 +986,7 @@ TEST(WriteHsRCompatibility, RRSparseTextFinalizerAllowsZeroBlocks)
     std::remove(output_filename.c_str());
 }
 
-TEST(WriteHsRCompatibility, RRSparseTextFinalizerKeepsSingleDirectionPayload)
+TEST(WriteHsRCompatibility, CsrAssembleTextKeepsSingleDirectionPayload)
 {
     const std::string payload_filename = "rr_single_direction_payload.tmp";
     const std::string output_filename = "rr_single_direction.csr";
@@ -1003,14 +1003,14 @@ TEST(WriteHsRCompatibility, RRSparseTextFinalizerKeepsSingleDirectionPayload)
     payload << "0\n";
     payload.close();
 
-    ModuleIO::detail::finalize_rr_sparse_file(output_filename,
-                                              payload_filename,
-                                              10,
-                                              2,
-                                              1,
-                                              false,
-                                              false,
-                                              "WriteHsRCompatibility");
+    ModuleIO::detail::assemble_csr(output_filename,
+                                   payload_filename,
+                                   10,
+                                   2,
+                                   1,
+                                   false,
+                                   false,
+                                   "WriteHsRCompatibility");
 
     const std::vector<std::string> lines = read_lines(output_filename);
     ASSERT_EQ(lines.size(), 10);
@@ -1027,7 +1027,7 @@ TEST(WriteHsRCompatibility, RRSparseTextFinalizerKeepsSingleDirectionPayload)
     std::remove(output_filename.c_str());
 }
 
-TEST(WriteHsRCompatibility, RRSparseBinaryFinalizerKeepsHeaderAndPayloadOrder)
+TEST(WriteHsRCompatibility, CsrAssembleBinaryKeepsHeaderAndPayloadOrder)
 {
     const std::string payload_filename = "rr_binary_payload.tmp";
     const std::string output_filename = "rr_binary.csr";
@@ -1057,14 +1057,14 @@ TEST(WriteHsRCompatibility, RRSparseBinaryFinalizerKeepsHeaderAndPayloadOrder)
     payload.write(reinterpret_cast<const char*>(&z_count), sizeof(int));
     payload.close();
 
-    ModuleIO::detail::finalize_rr_sparse_file(output_filename,
-                                              payload_filename,
-                                              11,
-                                              2,
-                                              1,
-                                              true,
-                                              false,
-                                              "WriteHsRCompatibility");
+    ModuleIO::detail::assemble_csr(output_filename,
+                                   payload_filename,
+                                   11,
+                                   2,
+                                   1,
+                                   true,
+                                   false,
+                                   "WriteHsRCompatibility");
 
     std::ifstream ifs(output_filename, std::ios::binary);
     ASSERT_TRUE(ifs.is_open());

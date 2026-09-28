@@ -748,7 +748,7 @@ OBJS_IO_LCAO=module_hs/pos_op_mat.o\
       module_dhs/write_dh.o\
       module_dhs/write_dh_terms.o\
       module_hs/hterm_writer.o\
-      module_hs/rr_sparse_writer.o\
+      module_hs/pos_op_csr.o\
       module_hs/vxc_op_r.o\
       module_hs/vxc_op_lip.o\
 
