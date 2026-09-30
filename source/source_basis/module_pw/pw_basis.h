@@ -3,6 +3,8 @@
 
 #include "source_base/macros.h"
 #include "source_base/module_device/memory_op.h"
+#include "source_base/constants.h"
+#include "source_base/global_function.h"
 #include "source_base/matrix.h"
 #include "source_base/matrix3.h"
 #include "source_base/vector3.h"
@@ -449,5 +451,3 @@ protected:
 };
 }
 #endif // PWBASIS_H
-#include "pw_basis_sup.h"
-#include "pw_basis_big.h" //temporary it will be removed
