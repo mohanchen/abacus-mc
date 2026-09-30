@@ -62,11 +62,6 @@ class ReadInput
     bool check_ntype_flag = true; ///< check ntype from STRU file
 
   private:
-    /// @brief TestParameters (declared in parameter.h, defined per test TU)
-    /// drives the private setup routines below from unit tests without
-    /// `#define private public`.
-    friend class TestParameters;
-
     /**
      * @brief read INPUT file of txt format
      *

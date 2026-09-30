@@ -7,7 +7,9 @@
 #include "gtest/gtest.h"
 #include "source_base/tool_quit.h"
 #include "source_io/module_parameter/input_parameter.h"
+#define private public
 #include "source_io/module_parameter/read_input.h"
+#undef private
 #include "source_io/module_parameter/system_parameter.h"
 /************************************************
  *  unit test of read_input_test_item.cpp

@@ -269,7 +269,7 @@ TEST_F(ElecStatePWTest, ConstructorSingle)
 
 TEST_F(ElecStatePWTest, InitRhoDataDouble)
 {
-    XC_Functional::func_type = 3;
+    XC_Functional::set_func_type(3);
     chg->nrxx = 1000;
     elecstate_pw_d = new elecstate::ElecStatePW<std::complex<double>, base_device::DEVICE_CPU>(wfcpw,
                                                                                                chg,
@@ -287,7 +287,7 @@ TEST_F(ElecStatePWTest, InitRhoDataDouble)
 TEST_F(ElecStatePWTest, InitRhoDataSingle)
 {
     TestParameters::input().precision = "single";
-    XC_Functional::func_type = 3;
+    XC_Functional::set_func_type(3);
     chg->nspin = TestParameters::input().nspin;
     chg->nrxx = 1000;
     elecstate_pw_s = new elecstate::ElecStatePW<std::complex<float>, base_device::DEVICE_CPU>(wfcpw,

@@ -17,7 +17,9 @@
  */
 #include "source_io/module_parameter/input_item.h"
 #include "source_io/module_parameter/parameter.h"
+#define private public
 #include "source_io/module_parameter/read_input.h"
+#undef private
 
 /// @brief Friend helper to mutate Parameter private members in unit tests.
 /// @details Parameter grants friend access to TestParameters so the test can

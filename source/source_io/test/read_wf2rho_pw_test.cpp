@@ -34,12 +34,6 @@ class TestParameters
     static System_para& sys() { return PARAM.sys; }
 };
 
-Charge::Charge()
-{
-}
-Charge::~Charge()
-{
-}
 UnitCell::UnitCell()
 {
 }
@@ -241,25 +235,18 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
     //----------------------------------------
     // Initialize charge density
     //----------------------------------------
-    chg.rho = new double*[nspin];
-    chg._space_rho.resize(rhopw->nrxx);
-    chg.rho[0] = chg._space_rho.data();
-    ModuleBase::GlobalFunc::ZEROS(chg.rho[0], rhopw->nrxx);
-    chg.rhopw = rhopw;
-    chg.nrxx = rhopw->nrxx;
+    chg.set_rhopw(rhopw);
+    chg.allocate(nspin, false, false, 0);
     chg.pgrid = &pgrid;
 
     //----------------------------------------
     // set charge_ref
     //----------------------------------------
     Charge chg_ref;
-    chg_ref.rho = new double*[nspin];
-    chg_ref._space_rho.resize(rhopw->nrxx);
-    chg_ref.rho[0] = chg_ref._space_rho.data();
-    ModuleBase::GlobalFunc::ZEROS(chg_ref.rho[0], rhopw->nrxx);
-    std::vector<std::complex<double>> rho_tmp(rhopw->nrxx);
-    chg_ref.nrxx = rhopw->nrxx;
+    chg_ref.set_rhopw(rhopw);
+    chg_ref.allocate(nspin, false, false, 0);
     chg_ref.pgrid = &pgrid;
+    std::vector<std::complex<double>> rho_tmp(rhopw->nrxx);
 
     for (int ik = 0; ik < nks; ++ik)
     {
