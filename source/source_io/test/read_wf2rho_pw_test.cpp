@@ -3,7 +3,6 @@
 
 #undef __LCAO
 
-#define private public
 #include "source_base/module_out/filename.h" // mohan add 2025-05-17
 #include "source_base/parallel_grid.h"
 #include "source_cell/klist.h"
@@ -22,6 +21,18 @@
 #include "source_base/parallel_global.h"
 #include "source_basis/module_pw/test/test_tool.h"
 #endif
+
+/// @brief Friend helper to mutate PARAM private members in unit tests.
+/// @details Parameter grants friend access to TestParameters so the test can
+/// modify input/sys fields without `#define private public`. The class must
+/// stay at global scope to match the friend declaration in parameter.h;
+/// an anonymous-namespace class would not be the friend.
+class TestParameters
+{
+  public:
+    static Input_para& input() { return PARAM.input; }
+    static System_para& sys() { return PARAM.sys; }
+};
 
 Charge::Charge()
 {
@@ -69,14 +80,14 @@ void cal_rhog_symm(const int& spin_now,
 
 void cal_ik2iktot(std::vector<int>& ik2iktot, const int& nks, const int& nkstot)
 {
-    if (PARAM.inp.kpar == 1)
+    if (TestParameters::input().kpar == 1)
     {
         for (int ik = 0; ik < nks; ++ik)
         {
             ik2iktot[ik] = ik;
         }
     }
-    else if (PARAM.inp.kpar == 2)
+    else if (TestParameters::input().kpar == 2)
     {
         if (GlobalV::MY_POOL == 0)
         {
@@ -118,7 +129,7 @@ class ReadWfcRhoTest : public ::testing::Test
         rhopw = new ModulePW::PW_Basis;
         kv = new K_Vectors;
         // output .dat file
-        PARAM.input.out_wfc_pw = 2;
+        TestParameters::input().out_wfc_pw = 2;
 #ifdef __MPI
         MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 #endif
@@ -299,7 +310,7 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
                            npol,
                            GlobalV::RANK_IN_POOL,
                            GlobalV::NPROC_IN_POOL,
-                           PARAM.input.out_wfc_pw,
+                           TestParameters::input().out_wfc_pw,
                            ecutwfc,
                            out_dir,
                            *psi,
@@ -376,12 +387,12 @@ int main(int argc, char** argv)
     setupmpi(argc, argv, GlobalV::NPROC, GlobalV::MY_RANK);
 
     // when kpar == 2, nspin == 2
-    PARAM.input.kpar = (GlobalV::NPROC > 1) ? 2 : 1;
-    GlobalV::KPAR = PARAM.input.kpar;
-    PARAM.input.bndpar = 1;
+    TestParameters::input().kpar = (GlobalV::NPROC > 1) ? 2 : 1;
+    GlobalV::KPAR = TestParameters::input().kpar;
+    TestParameters::input().bndpar = 1;
     Parallel_Global::divide_pools(GlobalV::NPROC,
                                   GlobalV::MY_RANK,
-                                  PARAM.inp.bndpar,
+                                  TestParameters::input().bndpar,
                                   GlobalV::KPAR,
                                   GlobalV::NPROC_IN_BNDGROUP,
                                   GlobalV::RANK_IN_BPGROUP,

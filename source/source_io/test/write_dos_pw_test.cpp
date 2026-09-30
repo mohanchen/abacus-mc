@@ -6,10 +6,19 @@
 #endif
 #include "for_testing_klist.h"
 #include "dos_test.h"
-
-#define private public
 #include "source_io/module_parameter/parameter.h"
-#undef private
+
+/// @brief Friend helper to mutate PARAM private members in unit tests.
+/// @details Parameter grants friend access to TestParameters so the test can
+/// modify input/sys fields without `#define private public`. The class must
+/// stay at global scope to match the friend declaration in parameter.h;
+/// an anonymous-namespace class would not be the friend.
+class TestParameters
+{
+  public:
+    static Input_para& input() { return PARAM.input; }
+    static System_para& sys() { return PARAM.sys; }
+};
 
 /************************************************
  *  unit test of write_dos_pw
@@ -48,11 +57,11 @@ TEST_F(DosPWTest,Dos1)
 	dosp.read_istate_info();
 	EXPECT_EQ(dosp.is,0);
 	double dos_scale = 0.01;
-	PARAM.input.nspin = 1;
-	PARAM.input.dos_emax_ev = dosp.emax_ev;
-	PARAM.sys.dos_setemax = true;
-	PARAM.input.dos_emin_ev = dosp.emin_ev;
-	PARAM.sys.dos_setemin = true;
+	TestParameters::input().nspin = 1;
+	TestParameters::input().dos_emax_ev = dosp.emax_ev;
+	TestParameters::sys().dos_setemax = true;
+	TestParameters::input().dos_emin_ev = dosp.emin_ev;
+	TestParameters::sys().dos_setemin = true;
 	kv->set_nks(dosp.nks);
 	kv->set_nkstot(dosp.nkstot);
 	kv->isk.reserve(kv->get_nks());
@@ -62,13 +71,13 @@ TEST_F(DosPWTest,Dos1)
 		kv->isk[ik] = dosp.isk[ik];
 		kv->wk[ik] = dosp.wk[ik];
 	}
-	PARAM.input.nbands = dosp.nbands;
+	TestParameters::input().nbands = dosp.nbands;
 
     // initialize the Fermi energy
     elecstate::Efermi fermi_energy;
 
 	std::ofstream ofs("write_dos_pw.log");
-    
+
     UnitCell ucell;
 
 	ModuleIO::write_dos_pw(
@@ -107,36 +116,36 @@ TEST_F(DosPWTest,Dos1)
 TEST_F(DosPWTest,Dos2)
 {
     //is,fa,fa1,de_ev,emax_ev,emin_ev,bcoeff,nks,nkstot,nbands
-	DosPrepare dosp = DosPrepare(0,"doss1_pw.txt",0.005,18,-6,0.07,36,36,8);
-	dosp.set_isk();
-	dosp.read_wk();
-	dosp.read_istate_info();
-	EXPECT_EQ(dosp.is,0);
-	double dos_scale = 0.01;
-	PARAM.input.nspin = 1;
-	PARAM.input.dos_emax_ev = dosp.emax_ev;
-	PARAM.sys.dos_setemax = false;
-	PARAM.input.dos_emin_ev = dosp.emin_ev;
-	PARAM.sys.dos_setemin = false;
-	kv->set_nks(dosp.nks);
-	kv->set_nkstot(dosp.nkstot);
-	kv->isk.reserve(kv->get_nks());
-	kv->wk.reserve(kv->get_nks());
-	for(int ik=0; ik<kv->get_nks(); ++ik)
-	{
-		kv->isk[ik] = dosp.isk[ik];
-		kv->wk[ik] = dosp.wk[ik];
-	}
-	PARAM.input.nbands = dosp.nbands;
+    DosPrepare dosp = DosPrepare(0,"doss1_pw.txt",0.005,18,-6,0.07,36,36,8);
+    dosp.set_isk();
+    dosp.read_wk();
+    dosp.read_istate_info();
+    EXPECT_EQ(dosp.is,0);
+    double dos_scale = 0.01;
+    TestParameters::input().nspin = 1;
+    TestParameters::input().dos_emax_ev = dosp.emax_ev;
+    TestParameters::sys().dos_setemax = false;
+    TestParameters::input().dos_emin_ev = dosp.emin_ev;
+    TestParameters::sys().dos_setemin = false;
+    kv->set_nks(dosp.nks);
+    kv->set_nkstot(dosp.nkstot);
+    kv->isk.reserve(kv->get_nks());
+    kv->wk.reserve(kv->get_nks());
+    for(int ik=0; ik<kv->get_nks(); ++ik)
+    {
+        kv->isk[ik] = dosp.isk[ik];
+        kv->wk[ik] = dosp.wk[ik];
+    }
+    TestParameters::input().nbands = dosp.nbands;
 
     // initialize the Fermi energy
     elecstate::Efermi fermi_energy;
 
-	std::ofstream ofs("write_dos_pw.log");
+    std::ofstream ofs("write_dos_pw.log");
 
     UnitCell ucell;
 
-	ModuleIO::write_dos_pw(
+    ModuleIO::write_dos_pw(
 			ucell,
 			dosp.ekb,
 			dosp.wg,
@@ -176,7 +185,7 @@ int main(int argc, char **argv)
 	testing::InitGoogleTest(&argc,argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&GlobalV::NPROC);
 	MPI_Comm_rank(MPI_COMM_WORLD,&GlobalV::MY_RANK);
-    
+
     // only test the second one
     // ::testing::GTEST_FLAG(filter) = "DosPWTest.Dos2";
 
