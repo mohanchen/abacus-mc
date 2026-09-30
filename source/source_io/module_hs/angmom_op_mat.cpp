@@ -47,6 +47,11 @@ double _lambda_minus(const int l, const int m)
 
 const std::complex<double> kImag = {0., 1.};
 const double kInvSqrt2 = std::sqrt(2) * 0.5;
+/// @brief Threshold for judging whether the analytical coefficient
+///        sqrt(l(l+1)-m(m+1)) is exactly zero. Tighter than the output
+///        sparse threshold (1e-10) because this guards an analytical
+///        zero (m at extremal value), not a numerical matrix element.
+constexpr double kCoeffZeroThreshold = 1e-12;
 } // namespace
 
 std::complex<double> ModuleIO::cal_LzijR(
@@ -77,11 +82,11 @@ std::complex<double> ModuleIO::cal_LxijR(
     double valm = 0.;
     if (jm > 1)
     {
-        if (std::fabs(lmbdp) > 1e-12)
+        if (std::fabs(lmbdp) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm+1), vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12)
+        if (std::fabs(lmbdm) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm-1), vR, &valm);
         }
@@ -89,7 +94,7 @@ std::complex<double> ModuleIO::cal_LxijR(
     }
     if (jm == 1)
     {
-        if (std::fabs(lmbdp) > 1e-12)
+        if (std::fabs(lmbdp) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -2, vR, &valp);
         }
@@ -98,7 +103,7 @@ std::complex<double> ModuleIO::cal_LxijR(
     if (jm == 0)
     {
         const double lmbd = _lambda_plus(jl, 0); // std::sqrt(jl*(jl+1))
-        if (std::fabs(lmbd) > 1e-12)
+        if (std::fabs(lmbd) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -1, vR, &valp);
         }
@@ -106,11 +111,11 @@ std::complex<double> ModuleIO::cal_LxijR(
     }
     if (jm == -1)
     {
-        if (std::fabs(lmbdp) > 1e-12)
+        if (std::fabs(lmbdp) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 0, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12)
+        if (std::fabs(lmbdm) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 2, vR, &valm);
         }
@@ -119,11 +124,11 @@ std::complex<double> ModuleIO::cal_LxijR(
     else
     {
         assert(jm < -1); // defensive check
-        if (std::fabs(lmbdp) > 1e-12)
+        if (std::fabs(lmbdp) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm+1), vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12)
+        if (std::fabs(lmbdm) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm-1), vR, &valm);
         }
@@ -144,11 +149,11 @@ std::complex<double> ModuleIO::cal_LyijR(
     double valm = 0.;
     if (jm > 1)
     {
-        if (std::fabs(lmbdp) > 1e-12)
+        if (std::fabs(lmbdp) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm+1, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12)
+        if (std::fabs(lmbdm) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm-1, vR, &valm);
         }
@@ -156,11 +161,11 @@ std::complex<double> ModuleIO::cal_LyijR(
     }
     if (jm == 1)
     {
-        if (std::fabs(lmbdp) > 1e-12)
+        if (std::fabs(lmbdp) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 2, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12)
+        if (std::fabs(lmbdm) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 0, vR, &valm);
         }
@@ -169,7 +174,7 @@ std::complex<double> ModuleIO::cal_LyijR(
     if (jm == 0)
     {
         const double lmbd = _lambda_plus(jl, 0); // std::sqrt(l*(l+1))
-        if (std::fabs(lmbd) > 1e-12)
+        if (std::fabs(lmbd) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 1, vR, &valp);
         }
@@ -177,7 +182,7 @@ std::complex<double> ModuleIO::cal_LyijR(
     }
     if (jm == -1)
     {
-        if (std::fabs(lmbdm) > 1e-12)
+        if (std::fabs(lmbdm) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -2, vR, &valm);
         }
@@ -186,11 +191,11 @@ std::complex<double> ModuleIO::cal_LyijR(
     else
     {
         assert(jm < -1); // defensive check
-        if (std::fabs(lmbdp) > 1e-12)
+        if (std::fabs(lmbdp) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm+1, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12)
+        if (std::fabs(lmbdm) > kCoeffZeroThreshold)
         {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm-1, vR, &valm);
         }
@@ -226,7 +231,7 @@ ModuleIO::AngularMomentumCalculator::AngularMomentumCalculator(
     *ofs_ << " |  This is a post-processing step. The expectation value of operator |" << std::endl;
     *ofs_ << " |  Lx, Ly, Lz (<a|L|b>, in which a and b are ABACUS numerical atomic |" << std::endl;
     *ofs_ << " |  orbitals) will be calculated.                                     |" << std::endl;
-    *ofs_ << " |  The result will be printed to file with name ${suffix}_Lx/y/z.dat |" << std::endl;
+    *ofs_ << " |  The result will be printed to file with name lx/ly/lz_nao.txt   |" << std::endl;
     *ofs_ << " |                                                                    |" << std::endl;
     *ofs_ << " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     *ofs_ << "\n\n\n\n";
@@ -408,7 +413,7 @@ void ModuleIO::AngularMomentumCalculator::calculate(
     
     for (char d : dir)
     {
-        std::string fn = outdir + prefix + "_L" + d + ".dat";
+        std::string fn = outdir + "l" + d + "_nao.txt";
         ofout.open(fn, std::ios::out);
         ofout << title;
         this->kernel(&ofout, ucell, d, precision);
