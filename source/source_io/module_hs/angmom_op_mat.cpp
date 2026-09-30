@@ -55,7 +55,8 @@ std::complex<double> ModuleIO::cal_LzijR(
     const int jt, const int ja, const int jl, const int jz, const int mj,
     const ModuleBase::Vector3<double>& vR)
 {
-    if(mj == 0) {
+    if(mj == 0)
+    {
         return std::complex<double>(0.);
     }
     double val_ = 0;
@@ -74,43 +75,56 @@ std::complex<double> ModuleIO::cal_LxijR(
     // two-center-integral placeholders
     double valp = 0.;
     double valm = 0.;
-    if (jm > 1) {
-        if (std::fabs(lmbdp) > 1e-12) {
+    if (jm > 1)
+    {
+        if (std::fabs(lmbdp) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm+1), vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12) {
+        if (std::fabs(lmbdm) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm-1), vR, &valm);
         }
         return kImag * 0.5 * (lmbdp * valp + lmbdm * valm);
     }
-    if (jm == 1) {
-        if (std::fabs(lmbdp) > 1e-12) {
+    if (jm == 1)
+    {
+        if (std::fabs(lmbdp) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -2, vR, &valp);
         }
         return kImag * 0.5 * lmbdp * valp;
     }
-    if (jm == 0) {
+    if (jm == 0)
+    {
         const double lmbd = _lambda_plus(jl, 0); // std::sqrt(jl*(jl+1))
-        if (std::fabs(lmbd) > 1e-12) {
+        if (std::fabs(lmbd) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -1, vR, &valp);
         }
         return kImag * kInvSqrt2 * lmbd * valp;
     }
-    if (jm == -1) {
-        if (std::fabs(lmbdp) > 1e-12) {
+    if (jm == -1)
+    {
+        if (std::fabs(lmbdp) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 0, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12) {
+        if (std::fabs(lmbdm) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 2, vR, &valm);
         }
         return -kImag * 0.5 * (std::sqrt(2) * lmbdp * valp + lmbdm * valm);
     }
-    else {
+    else
+    {
         assert(jm < -1); // defensive check
-        if (std::fabs(lmbdp) > 1e-12) {
+        if (std::fabs(lmbdp) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm+1), vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12) {
+        if (std::fabs(lmbdm) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -(jm-1), vR, &valm);
         }
         return -kImag * 0.5 * (lmbdp * valp + lmbdm * valm);
@@ -128,43 +142,56 @@ std::complex<double> ModuleIO::cal_LyijR(
     // two-center-integral placeholders
     double valp = 0.;
     double valm = 0.;
-    if (jm > 1) {
-        if (std::fabs(lmbdp) > 1e-12) {
+    if (jm > 1)
+    {
+        if (std::fabs(lmbdp) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm+1, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12) {
+        if (std::fabs(lmbdm) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm-1, vR, &valm);
         }
         return -kImag * 0.5 * (lmbdp * valp - lmbdm * valm);
     }
-    if (jm == 1) {
-        if (std::fabs(lmbdp) > 1e-12) {
+    if (jm == 1)
+    {
+        if (std::fabs(lmbdp) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 2, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12) {
+        if (std::fabs(lmbdm) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 0, vR, &valm);
         }
         return -kImag * 0.5 * (lmbdp * valp - std::sqrt(2) * lmbdm * valm);
     }
-    if (jm == 0) {
+    if (jm == 0)
+    {
         const double lmbd = _lambda_plus(jl, 0); // std::sqrt(l*(l+1))
-        if (std::fabs(lmbd) > 1e-12) {
+        if (std::fabs(lmbd) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, 1, vR, &valp);
         }
         return -kImag * kInvSqrt2 * lmbd * valp;
     }
-    if (jm == -1) {
-        if (std::fabs(lmbdm) > 1e-12) {
+    if (jm == -1)
+    {
+        if (std::fabs(lmbdm) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, -2, vR, &valm);
         }
         return -kImag * 0.5 * lmbdm * valm;
     }
-    else {
+    else
+    {
         assert(jm < -1); // defensive check
-        if (std::fabs(lmbdp) > 1e-12) {
+        if (std::fabs(lmbdp) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm+1, vR, &valp);
         }
-        if (std::fabs(lmbdm) > 1e-12) {
+        if (std::fabs(lmbdm) > 1e-12)
+        {
             calculator->calculate(it, il, iz, im, jt, jl, jz, jm-1, vR, &valm);
         }
         return kImag * 0.5 * (lmbdp * valp - lmbdm * valm);
@@ -205,9 +232,7 @@ ModuleIO::AngularMomentumCalculator::AngularMomentumCalculator(
     *ofs_ << "\n\n\n\n";
 
     int ntype_ = ucell.ntype;
-#ifdef __MPI
     Parallel_Common::bcast_int(ntype_);
-#endif
     std::vector<std::string> forb(ntype_);
     if (rank == 0)
     {
@@ -216,9 +241,7 @@ ModuleIO::AngularMomentumCalculator::AngularMomentumCalculator(
             forb[i] = orbital_dir + ucell.orbital_fn[i];
         }
     }
-#ifdef __MPI
     Parallel_Common::bcast_string(forb.data(), ntype_);
-#endif
     
     this->orb_ = std::unique_ptr<RadialCollection>(new RadialCollection);
     this->orb_->build(ucell.ntype, forb.data(), 'o');

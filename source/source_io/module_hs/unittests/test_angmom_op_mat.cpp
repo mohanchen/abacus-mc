@@ -31,7 +31,10 @@
 #include "source_base/sph_bessel_tf.h"
 #include "source_base/ylm.h"
 
-#define DOUBLETHRESHOLD 1e-12
+namespace
+{
+constexpr double kDoubleThreshold = 1e-12;
+}
 
 class CalpLpRTest : public ::testing::Test
 {
@@ -77,8 +80,8 @@ TEST_F(CalpLpRTest, CalLzijRTest)
     
     // l=0
     out = ModuleIO::cal_LzijR(calculator_, it, ia, il, iz, im, jt, ja, jl, jz, jm, vR);
-    EXPECT_NEAR(out.real(), 0.0, DOUBLETHRESHOLD);
-    EXPECT_NEAR(out.imag(), 0.0, DOUBLETHRESHOLD);
+    EXPECT_NEAR(out.real(), 0.0, kDoubleThreshold);
+    EXPECT_NEAR(out.imag(), 0.0, kDoubleThreshold);
 
     // l=1
     il = 1; jl = 1;
@@ -86,12 +89,12 @@ TEST_F(CalpLpRTest, CalLzijRTest)
     ans[1] = {0.0, -1.0}; ans[3] = {0.0, 1.0};
     int idx = 0;
     const std::vector<int> m = {1, -1, 0}; // px, py, pz
-    for (auto im_: m) {
-        for (auto jm_: m) {
-            im = im_; jm = jm_;
+    for (int i = 0; i < static_cast<int>(m.size()); ++i) {
+        for (int j = 0; j < static_cast<int>(m.size()); ++j) {
+            im = m[i]; jm = m[j];
             out = ModuleIO::cal_LzijR(calculator_, it, ia, il, iz, im, jt, ja, jl, jz, jm, vR);
-            EXPECT_NEAR(out.real(), ans[idx].real(), DOUBLETHRESHOLD);
-            EXPECT_NEAR(out.imag(), ans[idx].imag(), DOUBLETHRESHOLD);
+            EXPECT_NEAR(out.real(), ans[idx].real(), kDoubleThreshold);
+            EXPECT_NEAR(out.imag(), ans[idx].imag(), kDoubleThreshold);
             idx++;
         }
     }
@@ -107,8 +110,8 @@ TEST_F(CalpLpRTest, CalLxijRTest)
 
     // l=0
     out = ModuleIO::cal_LxijR(calculator_, it, ia, il, iz, im, jt, ja, jl, jz, jm, vR);
-    EXPECT_NEAR(out.real(), 0.0, DOUBLETHRESHOLD);
-    EXPECT_NEAR(out.imag(), 0.0, DOUBLETHRESHOLD);
+    EXPECT_NEAR(out.real(), 0.0, kDoubleThreshold);
+    EXPECT_NEAR(out.imag(), 0.0, kDoubleThreshold);
 
     // l=1
     il = 1; jl = 1;
@@ -116,12 +119,12 @@ TEST_F(CalpLpRTest, CalLxijRTest)
     ans[5] = {0.0, 1.0}; ans[7] = {0.0, -1.0};
     int idx = 0;
     const std::vector<int> m = {1, -1, 0}; // px, py, pz
-    for (auto im_: m) {
-        for (auto jm_: m) {
-            im = im_; jm = jm_;
+    for (int i = 0; i < static_cast<int>(m.size()); ++i) {
+        for (int j = 0; j < static_cast<int>(m.size()); ++j) {
+            im = m[i]; jm = m[j];
             out = ModuleIO::cal_LxijR(calculator_, it, ia, il, iz, im, jt, ja, jl, jz, jm, vR);
-            EXPECT_NEAR(out.real(), ans[idx].real(), DOUBLETHRESHOLD);
-            EXPECT_NEAR(out.imag(), ans[idx].imag(), DOUBLETHRESHOLD);
+            EXPECT_NEAR(out.real(), ans[idx].real(), kDoubleThreshold);
+            EXPECT_NEAR(out.imag(), ans[idx].imag(), kDoubleThreshold);
             idx++;
         }
     }
@@ -137,8 +140,8 @@ TEST_F(CalpLpRTest, CalLyijRTest)
 
     // l=0
     out = ModuleIO::cal_LyijR(calculator_, it, ia, il, iz, im, jt, ja, jl, jz, jm, vR);
-    EXPECT_NEAR(out.real(), 0.0, DOUBLETHRESHOLD);
-    EXPECT_NEAR(out.imag(), 0.0, DOUBLETHRESHOLD);
+    EXPECT_NEAR(out.real(), 0.0, kDoubleThreshold);
+    EXPECT_NEAR(out.imag(), 0.0, kDoubleThreshold);
     
     // l=1
     il = 1; jl = 1;
@@ -146,12 +149,12 @@ TEST_F(CalpLpRTest, CalLyijRTest)
     ans[2] = {0.0, -1.0}; ans[6] = {0.0, 1.0};
     int idx = 0;
     const std::vector<int> m = {1, -1, 0}; // px, py, pz
-    for (auto im_: m) {
-        for (auto jm_: m) {
-            im = im_; jm = jm_;
+    for (int i = 0; i < static_cast<int>(m.size()); ++i) {
+        for (int j = 0; j < static_cast<int>(m.size()); ++j) {
+            im = m[i]; jm = m[j];
             out = ModuleIO::cal_LyijR(calculator_, it, ia, il, iz, im, jt, ja, jl, jz, jm, vR);
-            EXPECT_NEAR(out.real(), ans[idx].real(), DOUBLETHRESHOLD);
-            EXPECT_NEAR(out.imag(), ans[idx].imag(), DOUBLETHRESHOLD);
+            EXPECT_NEAR(out.real(), ans[idx].real(), kDoubleThreshold);
+            EXPECT_NEAR(out.imag(), ans[idx].imag(), kDoubleThreshold);
             idx++;
         }
     }
