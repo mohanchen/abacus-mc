@@ -6,6 +6,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "source_base/tool_quit.h"
+#include "source_io/module_parameter/input_parameter.h"
+#include "source_io/module_parameter/read_input.h"
+#include "source_io/module_parameter/system_parameter.h"
 /************************************************
  *  unit test of read_input_test_item.cpp
  ***********************************************/
@@ -15,10 +18,6 @@
  *   - Item_test:
  *     - read in specific values for some items
  */
-#define private public
-#include "source_io/module_parameter/input_item.h"
-#include "source_io/module_parameter/read_input.h"
-#undef private
 
 class InputTest : public testing::Test
 {
@@ -35,50 +34,49 @@ class InputTest : public testing::Test
     }
 };
 ModuleIO::ReadInput readinput(0);
-Parameter param;
+Input_para input;
+System_para sys;
 std::string output = "";
 
 TEST_F(InputTest, Item_test)
 {
     readinput.check_ntype_flag = false;
 
-    { 
-        param.input.suffix = "test";
-        readinput.set_global_dir(param.inp, param.sys);
+    {
+        input.suffix = "test";
+        readinput.set_global_dir(input, sys);
 
-        EXPECT_EQ(param.sys.global_out_dir, "OUT.test/");
-        EXPECT_EQ(param.sys.global_stru_dir, "OUT.test/STRU/");
-        EXPECT_EQ(param.sys.global_matrix_dir, "OUT.test/matrix/");
+        EXPECT_EQ(sys.global_out_dir, "OUT.test/");
+        EXPECT_EQ(sys.global_stru_dir, "OUT.test/STRU/");
+        EXPECT_EQ(sys.global_matrix_dir, "OUT.test/matrix/");
 
-        readinput.set_globalv(param.inp, param.sys);
-    
-        param.input.basis_type = "lcao";
-        param.input.gamma_only = true;
-        param.input.esolver_type = "tddft";
-        param.input.nspin = 2;
-        readinput.set_globalv(param.inp, param.sys);
-        EXPECT_EQ(param.sys.gamma_only_local, 0);
-        
-        param.input.deepks_scf = true;
-        param.input.deepks_out_labels = true;
-        readinput.set_globalv(param.inp, param.sys);
-        EXPECT_EQ(param.sys.deepks_setorb, 1);
+        readinput.set_globalv(input, sys);
 
-        param.input.nspin = 4;
-        param.input.noncolin = true;
-        readinput.set_globalv(param.inp, param.sys);
-        EXPECT_EQ(param.sys.domag, 1);
-        EXPECT_EQ(param.sys.domag_z, 0);
-        EXPECT_EQ(param.sys.npol, 2);
+        input.basis_type = "lcao";
+        input.gamma_only = true;
+        input.esolver_type = "tddft";
+        input.nspin = 2;
+        readinput.set_globalv(input, sys);
+        EXPECT_EQ(sys.gamma_only_local, 0);
 
-        param.input.nspin = 1;
-        param.input.lspinorb = true;
-        param.input.noncolin = false;
-        readinput.set_globalv(param.inp, param.sys);
-        EXPECT_EQ(param.sys.domag, 0);
-        EXPECT_EQ(param.sys.domag_z, 0);
-        EXPECT_EQ(param.sys.npol, 1);
+        input.deepks_scf = true;
+        input.deepks_out_labels = true;
+        readinput.set_globalv(input, sys);
+        EXPECT_EQ(sys.deepks_setorb, 1);
 
-        
+        input.nspin = 4;
+        input.noncolin = true;
+        readinput.set_globalv(input, sys);
+        EXPECT_EQ(sys.domag, 1);
+        EXPECT_EQ(sys.domag_z, 0);
+        EXPECT_EQ(sys.npol, 2);
+
+        input.nspin = 1;
+        input.lspinorb = true;
+        input.noncolin = false;
+        readinput.set_globalv(input, sys);
+        EXPECT_EQ(sys.domag, 0);
+        EXPECT_EQ(sys.domag_z, 0);
+        EXPECT_EQ(sys.npol, 1);
     }
 }
