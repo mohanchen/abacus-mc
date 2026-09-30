@@ -1,6 +1,7 @@
 #include "dhs_sparse_writer.h"
 
 #include "hs_sparse_io.h"
+#include "hs_sparse_io_detail.h"
 #include "lat_r_csr.h"
 #include "source_base/global_function.h"
 #include "source_base/parallel_reduce.h"
@@ -11,54 +12,6 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
-namespace
-{
-template <typename Tdata>
-std::vector<long long> count_nonzeros_by_R(
-    const ModuleIO::SparseRMatrix<Tdata>& smat,
-    const std::set<ModuleIO::RCoordinate>& all_R_coor,
-    const double threshold,
-    const bool reduce)
-{
-    std::vector<long long> nonzero_num(all_R_coor.size(), 0);
-    int count = 0;
-    for (const auto& R_coor: all_R_coor)
-    {
-        const auto iter = smat.find(R_coor);
-        if (iter != smat.end())
-        {
-            for (const auto& row_loop: iter->second)
-            {
-                for (const auto& col_value: row_loop.second)
-                {
-                    if (std::abs(col_value.second) > threshold)
-                    {
-                        ++nonzero_num[count];
-                    }
-                }
-            }
-        }
-        ++count;
-    }
-
-    if (reduce)
-    {
-        Parallel_Reduce::reduce_all(nonzero_num.data(), static_cast<int>(nonzero_num.size()));
-    }
-    return nonzero_num;
-}
-
-void check_output_file_open(const std::ofstream& ofs,
-                            const std::string& filename,
-                            const std::string& context)
-{
-    if (!ofs.is_open())
-    {
-        ModuleBase::WARNING_QUIT(context, "Cannot open sparse matrix file: " + filename);
-    }
-}
-} // namespace
 
 void ModuleIO::save_dH_sparse(const int& istep,
                               const Parallel_Orbitals& pv,
@@ -116,12 +69,12 @@ void ModuleIO::save_dH_sparse(const int& istep,
         {
             for (int ispin = 0; ispin < spin_loop; ++ispin)
             {
-                comp.nonzero_num[ispin] = count_nonzeros_by_R(comp.sparse[ispin], all_R_coor_ptr, sparse_thr, true);
+                comp.nonzero_num[ispin] = detail::count_nonzeros_by_R(comp.sparse[ispin], all_R_coor_ptr, sparse_thr, true);
             }
         }
         else
         {
-            comp.nonzero_num[0] = count_nonzeros_by_R(*comp.soc_sparse, all_R_coor_ptr, sparse_thr, true);
+            comp.nonzero_num[0] = detail::count_nonzeros_by_R(*comp.soc_sparse, all_R_coor_ptr, sparse_thr, true);
         }
     }
 
@@ -190,7 +143,7 @@ void ModuleIO::save_dH_sparse(const int& istep,
                                          << comp.fname[ispin].str() << std::endl;
                 }
                 comp.ofs[ispin].open(comp.fname[ispin].str().c_str(), mode);
-                check_output_file_open(comp.ofs[ispin], comp.fname[ispin].str(), "ModuleIO::save_dH_sparse");
+                detail::check_output_file_open(comp.ofs[ispin], comp.fname[ispin].str(), "ModuleIO::save_dH_sparse");
 
                 if (binary)
                 {
