@@ -105,7 +105,7 @@ AddTest(
 
 AddTest(
   TARGET MODULE_IO_pos_op_csr_test
-  LIBS parameter base
+  LIBS parameter base device
   SOURCES
   test_pos_op_csr.cpp
   ../pos_op_csr.cpp
@@ -134,7 +134,7 @@ AddTest(
 
 AddTest(
   TARGET MODULE_IO_output_mat_sparse_test
-  LIBS parameter base
+  LIBS parameter base device
   SOURCES
   test_output_mat_sparse.cpp
 )

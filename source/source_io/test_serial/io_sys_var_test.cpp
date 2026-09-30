@@ -33,6 +33,24 @@ class InputTest : public testing::Test
         return it;
     }
 };
+
+/// @brief Friend helper to invoke ReadInput private setters in unit tests.
+/// @details ReadInput grants friend access to TestParameters so the test can
+/// drive its private setup routines without `#define private public`. The
+/// class must stay at global scope to match the friend declaration in
+/// read_input.h; an anonymous-namespace class would not be the friend.
+class TestParameters
+{
+  public:
+    static void set_global_dir(ModuleIO::ReadInput& readinput, const Input_para& inp, System_para& sys)
+    {
+        readinput.set_global_dir(inp, sys);
+    }
+    static void set_globalv(ModuleIO::ReadInput& readinput, const Input_para& inp, System_para& sys)
+    {
+        readinput.set_globalv(inp, sys);
+    }
+};
 ModuleIO::ReadInput readinput(0);
 Input_para input;
 System_para sys;
@@ -44,29 +62,29 @@ TEST_F(InputTest, Item_test)
 
     {
         input.suffix = "test";
-        readinput.set_global_dir(input, sys);
+        TestParameters::set_global_dir(readinput, input, sys);
 
         EXPECT_EQ(sys.global_out_dir, "OUT.test/");
         EXPECT_EQ(sys.global_stru_dir, "OUT.test/STRU/");
         EXPECT_EQ(sys.global_matrix_dir, "OUT.test/matrix/");
 
-        readinput.set_globalv(input, sys);
+        TestParameters::set_globalv(readinput, input, sys);
 
         input.basis_type = "lcao";
         input.gamma_only = true;
         input.esolver_type = "tddft";
         input.nspin = 2;
-        readinput.set_globalv(input, sys);
+        TestParameters::set_globalv(readinput, input, sys);
         EXPECT_EQ(sys.gamma_only_local, 0);
 
         input.deepks_scf = true;
         input.deepks_out_labels = true;
-        readinput.set_globalv(input, sys);
+        TestParameters::set_globalv(readinput, input, sys);
         EXPECT_EQ(sys.deepks_setorb, 1);
 
         input.nspin = 4;
         input.noncolin = true;
-        readinput.set_globalv(input, sys);
+        TestParameters::set_globalv(readinput, input, sys);
         EXPECT_EQ(sys.domag, 1);
         EXPECT_EQ(sys.domag_z, 0);
         EXPECT_EQ(sys.npol, 2);
@@ -74,7 +92,7 @@ TEST_F(InputTest, Item_test)
         input.nspin = 1;
         input.lspinorb = true;
         input.noncolin = false;
-        readinput.set_globalv(input, sys);
+        TestParameters::set_globalv(readinput, input, sys);
         EXPECT_EQ(sys.domag, 0);
         EXPECT_EQ(sys.domag_z, 0);
         EXPECT_EQ(sys.npol, 1);
