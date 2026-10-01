@@ -278,10 +278,15 @@ class PDOS(DOS):
         if path.is_file():
             name = path.name
             if name.startswith("pdoss"):
-                # a concrete spin-channel file e.g. pdoss1g1_nao.txt: strip the
-                # trailing "s<spin>" so the prefix becomes ".../pdos"
-                stem = name.split("g")[0].split("_")[0]  # e.g. "pdoss1"
-                prefix = str(path.parent / stem[:-2])  # drop "s1" -> ".../pdos"
+                # A concrete spin-channel file e.g. pdoss1g1_nao.txt: use it
+                # directly as the spin-1 channel and look for the matching
+                # spin-2 file by replacing "s1" with "s2" in the filename.
+                spin1 = str(path)
+                name2 = name.replace("pdoss1", "pdoss2", 1)
+                spin2 = str(path.parent / name2)
+                if spin2 != spin1 and Path(spin2).is_file():
+                    return [spin1, spin2]
+                return [spin1]
             else:
                 # a single arbitrary file; treat as the only spin channel
                 return [str(path)]
