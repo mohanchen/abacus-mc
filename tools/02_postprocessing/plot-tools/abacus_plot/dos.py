@@ -357,7 +357,8 @@ class PDOS(DOS):
             for l in range(nwl + 1):
                 for mcol in range(2 * l + 1):
                     orb = OrderedDict()
-                    orb['index'] = orb_index
+                    # 1-based global orbital index, matching the legacy XML format
+                    orb['index'] = orb_index + 1
                     orb['atom_index'] = iat
                     orb['species'] = species
                     orb['l'] = l
