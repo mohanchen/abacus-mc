@@ -173,7 +173,10 @@ void ModuleIO::output_TR(const int istep,
     const bool md_no_append = (options.calculation == "md") && !options.out_app_flag;
     if (istep >= 0)
     {
-        sst << (md_no_append ? options.global_matrix_dir : options.global_out_dir) << TR_filename << "g" << (istep + 1);
+        // insert the 1-indexed ionic-step suffix right after the "tr" prefix,
+        // i.e. tr_nao.csr -> trg{step+1}_nao.csr (aligned with lxg/rrg naming)
+        const std::string base = TR_filename.substr(0, TR_filename.size() - std::string("_nao.csr").size());
+        sst << (md_no_append ? options.global_matrix_dir : options.global_out_dir) << base << "g" << (istep + 1) << "_nao.csr";
     }
     else
     {
