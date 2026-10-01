@@ -447,6 +447,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         h_params.npol = PARAM.globalv.npol;
         h_params.domag = PARAM.globalv.domag;
         h_params.domag_z = PARAM.globalv.domag_z;
+        h_params.gga_grad = PARAM.inp.gga_grad;
         h_params.out_app_flag = out_app_flag;
         h_params.calculation = inp.calculation;
         h_params.global_out_dir = global_out_dir;

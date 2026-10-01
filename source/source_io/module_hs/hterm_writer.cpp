@@ -326,6 +326,7 @@ void write_h_vxc(WriteHParams& params)
 #endif
     std::tie(etxc, vtxc, v_xc) = XC_Functional::v_xc(nrxx, chg, &ucell, params.nspin,
                                                      params.domag, params.domag_z,
+                                                     params.gga_grad,
                                                      hybrid_alpha, hse_omega);
 
     HTermSpec spec;

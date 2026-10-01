@@ -2424,16 +2424,16 @@ TEST_F(InputTest, OutStru)
     // --- reset_value: user-read value is preserved even for offlist calculation ---
     {
         it->second.str_values = {"1"}; // simulate user-specified out_stru
-        param.input.calculation = "nscf";
-        param.input.out_stru = 1;
+        TestParameters::input(param).calculation = "nscf";
+        TestParameters::input(param).out_stru = 1;
         it->second.reset_value(it->second, param);
-        EXPECT_EQ(param.input.out_stru, 1);
+        EXPECT_EQ(TestParameters::input(param).out_stru, 1);
 
         it->second.str_values = {"2"};
-        param.input.calculation = "get_wf";
-        param.input.out_stru = 2;
+        TestParameters::input(param).calculation = "get_wf";
+        TestParameters::input(param).out_stru = 2;
         it->second.reset_value(it->second, param);
-        EXPECT_EQ(param.input.out_stru, 2);
+        EXPECT_EQ(TestParameters::input(param).out_stru, 2);
 
         // Clean up so later tests are not affected.
         it->second.str_values.clear();

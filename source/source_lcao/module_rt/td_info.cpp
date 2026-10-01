@@ -3,6 +3,7 @@
 #include "source_base/libm/libm.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 #include "source_estate/module_pot/h_tddft_pw.h"
+#include "source_io/module_parameter/parameter.h"
 
 bool TD_info::out_mat_R = false;
 int TD_info::out_current = 0;
