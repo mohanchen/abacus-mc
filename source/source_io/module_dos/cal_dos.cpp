@@ -163,7 +163,7 @@ bool ModuleIO::cal_dos(const int& is,  // index for spin
         ofs_dos << npoints << " # number of points" << std::endl;
         ofs_dos << std::fixed << std::setprecision(6);
         ofs_dos << "#" << std::setw(12) << "energy(eV)"
-                 << std::setw(12) << "dos(1/eV)"
+                 << std::setw(12) << "dos"
                  << std::setw(12) << "dos_int"
                  << std::setw(17) << "dos_smear(1/eV)"
                  << std::setw(15) << "dos_smear_int" << std::endl;
@@ -246,11 +246,11 @@ bool ModuleIO::cal_dos(const int& is,  // index for spin
             }
             sum2 += dos_smear[i] * de_ev;
 
-            ofs_dos << std::setw(12) << ene[i]
-                 << std::setw(12) << dos[i]
-                 << std::setw(12) << sum_elec[i]
-                 << std::setw(15) << dos_smear[i]
-                 << std::setw(15) << sum2 << std::endl;
+            ofs_dos << std::setw(13) << ene[i]
+                 << " " << std::setw(12) << dos[i]
+                 << " " << std::setw(12) << sum_elec[i]
+                 << " " << std::setw(14) << dos_smear[i]
+                 << " " << std::setw(14) << sum2 << std::endl;
         }
     }
 

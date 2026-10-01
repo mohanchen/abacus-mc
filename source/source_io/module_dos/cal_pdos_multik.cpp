@@ -32,9 +32,6 @@ void ModuleIO::cal_pdos(
     assert(emax>=emin);
     assert(dos_edelta_ev>0.0);
 
-    // istep will be used for the text PDOS file name in a later step
-    (void)istep;
-
     const int npoints = static_cast<int>(std::floor((emax - emin) / dos_edelta_ev)) + 1;
 
     // PDOS calculated locally on each processor

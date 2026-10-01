@@ -177,7 +177,11 @@ class TDOS(DOS):
         rows = []
         with open(self.tdosfile) as f:
             for line in f:
-                if line.startswith("#") or not line.split():
+                if line.startswith("#"):
+                    continue
+                # strip inline comments, e.g. "1    # ionic step"
+                line = line.split("#")[0]
+                if not line.split():
                     continue
                 rows.append([float(x) for x in line.split()])
         if not rows:
@@ -291,8 +295,8 @@ class PDOS(DOS):
                 # a single arbitrary file; treat as the only spin channel
                 return [str(path)]
         else:
-            # a directory or a prefix such as ".../pdos"
-            prefix = str(path)
+            # a directory (e.g. OUT.ABACUS) or a prefix such as ".../pdos"
+            prefix = str(path / 'pdos') if path.is_dir() else str(path)
 
         parent = Path(prefix).parent
         base = Path(prefix).name

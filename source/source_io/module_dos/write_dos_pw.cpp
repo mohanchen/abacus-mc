@@ -85,10 +85,5 @@ void ModuleIO::write_dos_pw(
     }
 
 
-    if (out_dos == 2)
-    {
-        ModuleBase::WARNING_QUIT("ModuleIO::write_dos_pw","PW basis do not support PDOS calculations yet.");
-    }
-
     ofs_running << " #DOS CALCULATION ENDS# " << std::endl;
 }

@@ -68,10 +68,10 @@ Gamma
 8 8 8 0 0 0
 ```
 
-Run the program, and you will see a file named doss1g1_nao.txt in the output directory. The columns are: energy(eV), dos(1/eV), dos_int (integrated DOS), dos_smear(1/eV), dos_smear_int (integrated smeared DOS). Plot the file with graphing software, and you'll get the DOS.
+Run the program, and you will see a file named doss1g1_nao.txt in the output directory. The columns are: energy(eV), dos (number of states in each energy bin), dos_int (integrated DOS), dos_smear(1/eV) (Gaussian-smeared DOS), dos_smear_int (integrated smeared DOS). Plot the file with graphing software, and you'll get the DOS.
 
 ```
-#   energy(eV)      dos(1/eV)        dos_int  dos_smear(1/eV)  dos_smear_int
+#   energy(eV)           dos        dos_int  dos_smear(1/eV)  dos_smear_int
       -5.49311       0.0518133       0.0518133       0.0518133       0.0518133
       -5.48311       0.0641955        0.116009       0.0641955        0.116009
       -5.47311       0.0779299        0.193939       0.0779299        0.193939
