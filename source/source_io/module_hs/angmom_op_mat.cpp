@@ -231,7 +231,7 @@ ModuleIO::AngularMomentumCalculator::AngularMomentumCalculator(
     *ofs_ << " |  This is a post-processing step. The expectation value of operator |" << std::endl;
     *ofs_ << " |  Lx, Ly, Lz (<a|L|b>, in which a and b are ABACUS numerical atomic |" << std::endl;
     *ofs_ << " |  orbitals) will be calculated.                                     |" << std::endl;
-    *ofs_ << " |  The result will be printed to file with name lx/ly/lz_nao.txt   |" << std::endl;
+    *ofs_ << " |  The result will be printed to file with name l{x,y,z}[g{step}]_nao.txt |" << std::endl;
     *ofs_ << " |                                                                    |" << std::endl;
     *ofs_ << " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     *ofs_ << "\n\n\n\n";
@@ -388,7 +388,8 @@ void ModuleIO::AngularMomentumCalculator::calculate(
     const std::string& outdir,
     const UnitCell& ucell,
     const int precision,
-    const int rank)
+    const int rank,
+    const int istep)
 {
     if (rank != 0)
     {
@@ -396,6 +397,9 @@ void ModuleIO::AngularMomentumCalculator::calculate(
     }
     std::ofstream ofout;
     const std::string dir = "xyz";
+    /// @brief Filename suffix: if istep >= 0, append "g{istep+1}" (e.g., "g1")
+    ///        to follow the out_freq_ion convention; otherwise no suffix.
+    const std::string step_suffix = (istep >= 0) ? "g" + std::to_string(istep + 1) : "";
     const std::string title = "# it ia il iz im iRx iRy iRz jt ja jl jz jm Re[<a|L|b>] Im[<a|L|b>]\n"
                               "# it: atomtype index of the first atom\n"
                               "# ia: atomic index of the first atom within the atomtype\n"
@@ -413,7 +417,7 @@ void ModuleIO::AngularMomentumCalculator::calculate(
     
     for (char d : dir)
     {
-        std::string fn = outdir + "l" + d + "_nao.txt";
+        std::string fn = outdir + "l" + d + step_suffix + "_nao.txt";
         ofout.open(fn, std::ios::out);
         ofout << title;
         this->kernel(&ofout, ucell, d, precision);
