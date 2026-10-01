@@ -12,7 +12,7 @@
 
 // functions
 #include "../module_unk/berryphase.h"                          // use berryphase
-#include "../module_hs/angmom_op_mat.h"                       // use AngularMomentumCalculator()
+#include "../module_hs/angmom_op_mat.h"                       // use Angmom_op()
 #include "source_io/module_hs/output_mat_sparse.h"                   // use ModuleIO::output_mat_sparse()
 #include "source_io/module_ml/io_npz.h"                       // use ModuleIO::output_mat_npz()
 #include "source_io/module_dhs/write_dh.h"                    // use ModuleIO::write_dH_components()
@@ -537,7 +537,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     //------------------------------------------------------------------
     if (inp.out_mat_l[0])
     {
-        ModuleIO::AngularMomentumCalculator mylcalculator(inp.orbital_dir,
+        ModuleIO::Angmom_op mylcalculator(inp.orbital_dir,
                                                           ucell,
                                                           orb.get_rcutmax_Phi(),
                                                           inp.test_deconstructor,

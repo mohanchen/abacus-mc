@@ -85,7 +85,7 @@ void print_comparison_stats(const char* label, const ComparisonStats& stats)
 
 ComparisonStats compare_zero_vector_potential(const LCAO_Orbitals& orb,
                                               const UnitCell& ucell,
-                                              cal_r_overlap_R& r_calculator,
+                                              Position_op& r_calculator,
                                               const int radial_grid_num,
                                               const int lebedev_grid_points)
 {
@@ -369,7 +369,7 @@ class SnapPsibetaHalfTddftTest : public ::testing::Test
     LCAO_Orbitals orb;
     UnitCell ucell;
     Parallel_Orbitals pv;
-    cal_r_overlap_R r_calculator;
+    Position_op r_calculator;
 };
 
 class SnapPsibetaNonuniformHalfTddftTest : public ::testing::Test
@@ -446,7 +446,7 @@ class SnapPsibetaNonuniformHalfTddftTest : public ::testing::Test
     LCAO_Orbitals orb;
     UnitCell ucell;
     Parallel_Orbitals pv;
-    cal_r_overlap_R r_calculator;
+    Position_op r_calculator;
 };
 } // namespace
 

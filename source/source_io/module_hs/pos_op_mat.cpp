@@ -5,15 +5,15 @@
 #include "pos_op_writer.h"
 #include "source_base/timer.h"
 
-cal_r_overlap_R::cal_r_overlap_R()
+Position_op::Position_op()
 {
 }
 
-cal_r_overlap_R::~cal_r_overlap_R()
+Position_op::~Position_op()
 {
 }
 
-void cal_r_overlap_R::init(const UnitCell& ucell,
+void Position_op::init(const UnitCell& ucell,
                            const Parallel_Orbitals& pv,
                            const LCAO_Orbitals& orb,
                            const bool cal_force,
@@ -26,7 +26,7 @@ void cal_r_overlap_R::init(const UnitCell& ucell,
     writer_ = std::unique_ptr<PosOpWriter>(new PosOpWriter(*basis_, *calc_, pv));
 }
 
-void cal_r_overlap_R::init_nonlocal(const UnitCell& ucell,
+void Position_op::init_nonlocal(const UnitCell& ucell,
                                     const Parallel_Orbitals& pv,
                                     const LCAO_Orbitals& orb,
                                     const bool cal_force,
@@ -39,7 +39,7 @@ void cal_r_overlap_R::init_nonlocal(const UnitCell& ucell,
     writer_ = std::unique_ptr<PosOpWriter>(new PosOpWriter(*basis_, *calc_, pv));
 }
 
-ModuleBase::Vector3<double> cal_r_overlap_R::get_psi_r_psi(const ModuleBase::Vector3<double>& R1,
+ModuleBase::Vector3<double> Position_op::get_psi_r_psi(const ModuleBase::Vector3<double>& R1,
                                                            const int& T1,
                                                            const int& L1,
                                                            const int& m1,
@@ -53,7 +53,7 @@ ModuleBase::Vector3<double> cal_r_overlap_R::get_psi_r_psi(const ModuleBase::Vec
     return calc_->pos_matrix(R1, T1, L1, m1, N1, R2, T2, L2, m2, N2);
 }
 
-ModuleBase::Vector3<double> cal_r_overlap_R::get_psi_r_gradpsi(const ModuleBase::Vector3<double>& R1,
+ModuleBase::Vector3<double> Position_op::get_psi_r_gradpsi(const ModuleBase::Vector3<double>& R1,
                                                                const int& T1,
                                                                const int& L1,
                                                                const int& m1,
@@ -69,7 +69,7 @@ ModuleBase::Vector3<double> cal_r_overlap_R::get_psi_r_gradpsi(const ModuleBase:
     return calc_->pos_grad_matrix(R1, T1, L1, m1, N1, R2, T2, L2, m2, N2, Efield, dR);
 }
 
-void cal_r_overlap_R::get_psi_r_beta(const UnitCell& ucell,
+void Position_op::get_psi_r_beta(const UnitCell& ucell,
                                      std::vector<std::vector<double>>& nlm,
                                      const ModuleBase::Vector3<double>& R1,
                                      const int& T1,
@@ -82,7 +82,7 @@ void cal_r_overlap_R::get_psi_r_beta(const UnitCell& ucell,
     calc_->pos_beta_matrix(ucell, nlm, R1, T1, L1, m1, N1, R2, T2);
 }
 
-void cal_r_overlap_R::out_rR(const UnitCell& ucell,
+void Position_op::out_rR(const UnitCell& ucell,
                              const Grid_Driver& gd,
                              const int& istep,
                              const int precision,
@@ -93,8 +93,8 @@ void cal_r_overlap_R::out_rR(const UnitCell& ucell,
                              const int nlocal,
                              const int npol)
 {
-    ModuleBase::TITLE("cal_r_overlap_R", "out_rR");
-    ModuleBase::timer::start("cal_r_overlap_R", "out_rR");
+    ModuleBase::TITLE("Position_op", "out_rR");
+    ModuleBase::timer::start("Position_op", "out_rR");
 
     writer_->out_lat_r(ucell,
                        gd,
@@ -109,5 +109,5 @@ void cal_r_overlap_R::out_rR(const UnitCell& ucell,
                        sparse_threshold,
                        binary);
 
-    ModuleBase::timer::end("cal_r_overlap_R", "out_rR");
+    ModuleBase::timer::end("Position_op", "out_rR");
 }

@@ -92,7 +92,7 @@ class TD_info
     std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, std::complex<double>>>> HR_sparse_td_vel[2];
 
     //r_calculator
-    cal_r_overlap_R r_calculator;
+    Position_op r_calculator;
 
   private:
     /// @brief lattice vectors, used to calculate the extra phase for hybrid gauge

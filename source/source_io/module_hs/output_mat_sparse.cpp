@@ -92,7 +92,7 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
     // add by jingan for out r_R matrix 2019.8.14
     if (options.out_mat_r)
     {
-        cal_r_overlap_R r_matrix;
+        Position_op r_matrix;
         r_matrix.binary = options.binary;
         r_matrix.sparse_threshold = options.sparse_threshold;
         const bool cal_force = PARAM.inp.cal_force;

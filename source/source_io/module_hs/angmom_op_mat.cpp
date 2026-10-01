@@ -204,7 +204,7 @@ std::complex<double> ModuleIO::cal_LyijR(
     }
 }
 
-ModuleIO::AngularMomentumCalculator::AngularMomentumCalculator(
+ModuleIO::Angmom_op::Angmom_op(
     const std::string& orbital_dir,
     const UnitCell& ucell,
     const double& search_radius,
@@ -292,7 +292,7 @@ ModuleIO::AngularMomentumCalculator::AngularMomentumCalculator(
                          tatom);
 }
 
-void ModuleIO::AngularMomentumCalculator::kernel(
+void ModuleIO::Angmom_op::kernel(
     std::ofstream* ofs,
     const UnitCell& ucell,
     const char dir,
@@ -384,7 +384,7 @@ void ModuleIO::AngularMomentumCalculator::kernel(
     }
 }
 
-void ModuleIO::AngularMomentumCalculator::calculate(
+void ModuleIO::Angmom_op::calculate(
     const std::string& prefix,
     const std::string& outdir,
     const UnitCell& ucell,
@@ -392,12 +392,12 @@ void ModuleIO::AngularMomentumCalculator::calculate(
     const int rank,
     const int istep)
 {
-    ModuleBase::TITLE("AngularMomentumCalculator", "calculate");
-    ModuleBase::timer::start("AngularMomentumCalculator", "calculate");
+    ModuleBase::TITLE("Angmom_op", "calculate");
+    ModuleBase::timer::start("Angmom_op", "calculate");
 
     if (rank != 0)
     {
-        ModuleBase::timer::end("AngularMomentumCalculator", "calculate");
+        ModuleBase::timer::end("Angmom_op", "calculate");
         return;
     }
     std::ofstream ofout;
@@ -428,5 +428,5 @@ void ModuleIO::AngularMomentumCalculator::calculate(
         this->kernel(&ofout, ucell, d, precision);
         ofout.close();
     }
-    ModuleBase::timer::end("AngularMomentumCalculator", "calculate");
+    ModuleBase::timer::end("Angmom_op", "calculate");
 }

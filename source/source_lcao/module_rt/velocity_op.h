@@ -71,7 +71,7 @@ class Velocity_op
 
     /// @brief Store the vector potential for td_ekinetic term
     ModuleBase::Vector3<double> cart_At;
-    static cal_r_overlap_R r_calculator;
+    static Position_op r_calculator;
     static bool init_done;
 };
 

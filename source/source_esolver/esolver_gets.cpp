@@ -212,7 +212,7 @@ void ESolver_GetS::runner(BaseCell& basecell, const int istep)
 
     if (this->inp_->out_mat_r[0])
     {
-        cal_r_overlap_R r_matrix;
+        Position_op r_matrix;
         const bool cal_force = PARAM.inp.cal_force;
         const int nlocal = PARAM.globalv.nlocal;
         r_matrix.init(ucell, pv, orb_, cal_force, nlocal);

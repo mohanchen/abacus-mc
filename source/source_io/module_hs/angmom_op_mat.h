@@ -186,11 +186,11 @@ namespace ModuleIO
     // im and jm are indexes of the magnetic quantum numbers.
     // The output is a complex number, which is the value of the matrix element.
     // Always the matrix is quite large, so direct print to file.
-    class AngularMomentumCalculator
+    class Angmom_op
     {
         public:
             // the default constructor is meaningless
-            AngularMomentumCalculator() = delete;
+            Angmom_op() = delete;
             /**
              * @brief Construct a new Angular Momentum Expectation Calculator object
              * 
@@ -205,7 +205,7 @@ namespace ModuleIO
              * @param gamma_only whether the calculation is gamma-only
              * @param ptr_log pointer to the ofstream object for logging
              */
-            AngularMomentumCalculator(
+            Angmom_op(
                 const std::string& orbital_dir,
                 const UnitCell& ucell,
                 const double& search_radius,
@@ -217,7 +217,7 @@ namespace ModuleIO
                 const bool gamma_only,
                 std::ofstream* ptr_log = nullptr,
                 const int rank = 0);
-            ~AngularMomentumCalculator() = default;
+            ~Angmom_op() = default;
 
             /**
              * @brief Calculate and write <phi_i|Lx/Ly/Lz|phi_j> matrix elements.

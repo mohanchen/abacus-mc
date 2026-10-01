@@ -8,7 +8,7 @@
 #endif
 #include "source_io/module_parameter/parameter.h"
 template <typename TR>
-cal_r_overlap_R Velocity_op<TR>::r_calculator;
+Position_op Velocity_op<TR>::r_calculator;
 template <typename TR>
 bool Velocity_op<TR>::init_done = false;
 template <typename TR>

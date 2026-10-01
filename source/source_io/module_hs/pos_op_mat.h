@@ -17,12 +17,12 @@ class PosOpWriter;
 
 // output r_R matrix, added by Jingan
 // Facade that delegates to PosOpBasis / PosOpCalc / PosOpWriter.
-class cal_r_overlap_R
+class Position_op
 {
 
   public:
-    cal_r_overlap_R();
-    ~cal_r_overlap_R();
+    Position_op();
+    ~Position_op();
 
     double kmesh_times = 4;
     double sparse_threshold = 1e-10;
