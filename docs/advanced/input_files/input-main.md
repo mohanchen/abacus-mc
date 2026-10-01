@@ -2043,7 +2043,7 @@
   - 1: output the density of states (DOS) and projected density of states (PDOS, LCAO only)
    - nspin=1 or 4: doss1g{geom}_{basis}.txt and pdoss1g{geom}_{basis}.txt, where geom is the geometry index when cell changes or ions move while basis is either pw or nao.
    - nspin=2: doss1/doss2 and pdoss1/pdoss2 files for two spin channels.
-  - Note: values 2 and 3 are no longer supported. Setting out_dos to 2 or 3 will raise an error.
+  Note: values 2 and 3 are no longer supported. Setting out_dos to 2 or 3 will raise an error.
 - **Default**: 0
 
 ### out_ldos

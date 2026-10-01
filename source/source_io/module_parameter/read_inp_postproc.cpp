@@ -14,7 +14,7 @@ void ReadInput::item_postprocess()
         item.annotation = "delta energy for dos";
         item.category = "Density of states";
         item.type = "Real";
-        item.description = "The step size in writing Density of States (DOS)";
+        item.description = "The step size in writing Density of States (DOS). The default value was changed from 0.01 to 0.03 eV.";
         item.default_value = "0.03";
         item.unit = "eV";
         read_sync_double(input.dos_edelta_ev);
