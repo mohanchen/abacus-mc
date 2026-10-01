@@ -171,16 +171,15 @@ void ModuleIO::output_TR(const int istep,
 
     std::stringstream sst;
     const bool md_no_append = (options.calculation == "md") && !options.out_app_flag;
-    if (md_no_append)
+    if (istep >= 0)
     {
-        sst << options.global_matrix_dir << TR_filename << "g" << istep;
-        GlobalV::ofs_running << " T(R) data are in file: " << sst.str() << std::endl;
+        sst << (md_no_append ? options.global_matrix_dir : options.global_out_dir) << TR_filename << "g" << (istep + 1);
     }
     else
     {
         sst << options.global_out_dir << TR_filename;
-        GlobalV::ofs_running << " T(R) data are in file: " << sst.str() << std::endl;
     }
+    GlobalV::ofs_running << " T(R) data are in file: " << sst.str() << std::endl;
 
     sparse_format::cal_TR(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, options.sparse_threshold);
     ModuleIO::SparseWriteOptions sparse_options;

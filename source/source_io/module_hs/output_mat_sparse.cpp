@@ -42,7 +42,7 @@ void output_mat_sparse(const MatSparseOutputOptions& options,
     //! generate a file containing the kinetic energy matrix
     if (options.out_mat_t)
     {
-        const std::string tr_filename = "trs1_nao.csr";
+        const std::string tr_filename = "tr_nao.csr";
         mat_R_options.precision = options.t_precision;
         output_TR(istep,
                   ucell,

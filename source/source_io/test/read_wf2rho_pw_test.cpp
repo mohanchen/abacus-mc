@@ -347,8 +347,6 @@ TEST_F(ReadWfcRhoTest, ReadWfcRho)
         // }
     }
 
-    delete[] chg.rho;
-    delete[] chg_ref.rho;
     delete psi;
 
     if (GlobalV::MY_RANK == 0)

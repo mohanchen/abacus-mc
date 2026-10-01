@@ -105,11 +105,11 @@ void ModuleIO::save_dH_sparse(const int& istep,
     {
         for (int ispin = 0; ispin < 2; ++ispin)
         {
-            if (md_no_append)
+            if (step >= 0)
             {
-                comp.fname[ispin] << global_matrix_dir
+                comp.fname[ispin] << (md_no_append ? global_matrix_dir : global_out_dir)
                                   << "d" << fileflag << "r" << comp.axis
-                                  << "s" << (ispin + 1) << "g" << step << "_nao.csr";
+                                  << "s" << (ispin + 1) << "g" << (step + 1) << "_nao.csr";
             }
             else
             {
