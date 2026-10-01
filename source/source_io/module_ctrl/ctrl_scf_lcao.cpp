@@ -415,23 +415,15 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         // mutually exclusive (real vs complex Hexx); write_dH_exx picks by info_ri.real_number.
         setup_exx_dh_params(dh_params, exx_nao, exx_info);
 #endif
-        // BUG (deadlock): with MPI ranks > 1 the Hellmann-Feynman path inside
-        // hamilt::Veff::cal_dH (source_lcao/module_operator_lcao/veff_dh.cpp)
-        // deadlocks. The vl branch issues one collective (PW FFT Alltoallv via
-        // Forces::cal_force_loc) per orbital pair in a loop whose trip count is
-        // rank-dependent, so ranks enter the collectives a different number of
-        // times and wait on each other forever. Until the HF path is made
-        // rank-lockstep, skip the dH output when running on more than one rank.
-        if (GlobalV::NPROC > 1)
-        {
-            ModuleBase::WARNING(
-                "ctrl_scf_lcao",
-                "out_mat_dh is disabled on MPI ranks > 1 (deadlock in Veff::cal_dH); rerun with -np 1 to get dH(R).");
-        }
-        else
-        {
-            ModuleIO::write_dH_components(dh_params, exx_info);
-        }
+        // FIXME (known bug, not addressed in this PR): with MPI ranks > 1 the
+        // Hellmann-Feynman path inside hamilt::Veff::cal_dH
+        // (source_lcao/module_operator_lcao/veff_dh.cpp) may deadlock.
+        // The vl branch issues collectives (PW FFT via Forces::cal_force_loc)
+        // per orbital pair; until that path is made rank-lockstep, multi-rank
+        // out_mat_dh runs can hang. Tracked as a follow-up; do NOT add a
+        // rank-count guard here -- the integration tests (e.g.
+        // tests/02_NAO_Gamma/scf_out_dh) exercise this path with np > 1.
+        ModuleIO::write_dH_components(dh_params, exx_info);
         delete pot_vl;
         delete pot_vh;
         delete pot_vxc;
