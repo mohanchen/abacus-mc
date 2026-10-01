@@ -3939,7 +3939,7 @@ parameters:
     category: Density of states
     type: Real
     description: |
-      The step size in writing Density of States (DOS)
+      The step size in writing Density of States (DOS). The default value was changed from 0.01 to 0.03 eV.
     default_value: "0.03"
     unit: eV
     availability: ""
