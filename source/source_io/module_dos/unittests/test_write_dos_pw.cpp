@@ -46,8 +46,8 @@ TEST_F(DosPWTest,Dos1)
 	double dos_scale = 0.01;
 	kv->set_nks(dosp.nks);
 	kv->set_nkstot(dosp.nkstot);
-	kv->isk.reserve(kv->get_nks());
-	kv->wk.reserve(kv->get_nks());
+	kv->isk.resize(kv->get_nks());
+	kv->wk.resize(kv->get_nks());
 	for(int ik=0; ik<kv->get_nks(); ++ik)
 	{
 		kv->isk[ik] = dosp.isk[ik];
@@ -124,8 +124,8 @@ TEST_F(DosPWTest,Dos2)
 	double dos_scale = 0.01;
 	kv->set_nks(dosp.nks);
 	kv->set_nkstot(dosp.nkstot);
-	kv->isk.reserve(kv->get_nks());
-	kv->wk.reserve(kv->get_nks());
+	kv->isk.resize(kv->get_nks());
+	kv->wk.resize(kv->get_nks());
 	for(int ik=0; ik<kv->get_nks(); ++ik)
 	{
 		kv->isk[ik] = dosp.isk[ik];
