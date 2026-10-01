@@ -335,7 +335,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
 
     if(!PARAM.globalv.gamma_only_local)
     ModuleIO::output_mat_sparse(mat_sparse_options,
-                                istep,
+                                istep_in,
                                 pelec->pot->get_eff_v(),
                                 pv,
                                 two_center_bundle,

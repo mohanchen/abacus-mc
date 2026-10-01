@@ -3,6 +3,7 @@
 #include "pos_op_basis.h"
 #include "pos_op_calc.h"
 #include "pos_op_writer.h"
+#include "source_base/timer.h"
 
 cal_r_overlap_R::cal_r_overlap_R()
 {
@@ -92,6 +93,9 @@ void cal_r_overlap_R::out_rR(const UnitCell& ucell,
                              const int nlocal,
                              const int npol)
 {
+    ModuleBase::TITLE("cal_r_overlap_R", "out_rR");
+    ModuleBase::timer::start("cal_r_overlap_R", "out_rR");
+
     writer_->out_lat_r(ucell,
                        gd,
                        istep,
@@ -104,4 +108,6 @@ void cal_r_overlap_R::out_rR(const UnitCell& ucell,
                        npol,
                        sparse_threshold,
                        binary);
+
+    ModuleBase::timer::end("cal_r_overlap_R", "out_rR");
 }

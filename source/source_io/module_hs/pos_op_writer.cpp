@@ -65,7 +65,7 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
     lat_r_options.reduce = true;
 
     std::stringstream tem1;
-    tem1 << global_out_dir << "tmp-rr.csr";
+    tem1 << global_out_dir << "tmp-rr_nao.txt";
     std::ofstream ofs_tem1;
 
     if (GlobalV::DRANK == 0)
@@ -217,13 +217,13 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
         std::stringstream ssr;
         const bool md_no_append = (calculation == "md") && !out_app_flag;
         if (md_no_append)
-        {
-            ssr << global_matrix_dir << "rrg" << step << ".csr";
-        }
-        else
-        {
-            ssr << global_out_dir << "rr.csr";
-        }
+    {
+        ssr << global_matrix_dir << "rrg" << step << "_nao.txt";
+    }
+    else
+    {
+        ssr << global_out_dir << "rr_nao.txt";
+    }
 
         ofs_tem1.close();
         const bool open_in_append = (calculation == "md") && out_app_flag && step;

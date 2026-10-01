@@ -14,6 +14,7 @@
 #include "source_io/module_hs/angmom_op_mat.h"
 #include "source_base/formatter.h"
 #include "source_base/parallel_common.h"
+#include "source_base/timer.h"
 /**
  * 
  * FIXME: the following part will be transfered to TwoCenterIntegrator soon
@@ -391,8 +392,12 @@ void ModuleIO::AngularMomentumCalculator::calculate(
     const int rank,
     const int istep)
 {
+    ModuleBase::TITLE("AngularMomentumCalculator", "calculate");
+    ModuleBase::timer::start("AngularMomentumCalculator", "calculate");
+
     if (rank != 0)
     {
+        ModuleBase::timer::end("AngularMomentumCalculator", "calculate");
         return;
     }
     std::ofstream ofout;
@@ -423,4 +428,5 @@ void ModuleIO::AngularMomentumCalculator::calculate(
         this->kernel(&ofout, ucell, d, precision);
         ofout.close();
     }
+    ModuleBase::timer::end("AngularMomentumCalculator", "calculate");
 }
