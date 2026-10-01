@@ -56,7 +56,7 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
     const int total_R_num = static_cast<int>(all_R_coor_ptr.size());
     int output_R_number = 0;
-    int step = istep;
+    const int step = std::max(istep, 0);
 
     int spin_loop = 1;
     if (nspin == 2) {
