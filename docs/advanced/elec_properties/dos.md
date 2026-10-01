@@ -9,7 +9,7 @@ We first, do a ground-state energy calculation ***with one additional keyword "[
 out_chg              1
 ```
 
-this will produce the converged charge density, which is contained in the file SPIN1_CHG.cube.
+this will produce the converged charge density, which is contained in the file chg.cube.
 Then, use the same `STRU` file, pseudopotential file and atomic orbital file (and the local density matrix file dm_onsite.txt if DFT+U is used) to do a non-self-consistent calculation. In this example, the potential is constructed from the ground-state charge density from the proceeding calculation. Now the INPUT file is like:
 
 ```
@@ -48,7 +48,7 @@ Some parameters in the INPUT file are explained:
   For LCAO calculations, this parameter will be neglected !
 - init_chg
 
-  the type of starting density. When doing scf calculation, this variable can be set ”atomic”. When doing nscf calculation, the charge density already exists(eg. in SPIN1_CHG.cube), and the variable should be set as ”file”. It means the density will be read from the existing file SPIN1_CHG.cube. For its more information please see the [here](https://abacus-rtd--1282.org.readthedocs.build/en/1282/advanced/input_files/input-main.html#init_chg).
+  the type of starting density. When doing scf calculation, this variable can be set ”atomic”. When doing nscf calculation, the charge density already exists(eg. in chg.cube), and the variable should be set as ”file”. It means the density will be read from the existing file chg.cube. For its more information please see the [here](https://abacus-rtd--1282.org.readthedocs.build/en/1282/advanced/input_files/input-main.html#init_chg).
 - out_dos
 
   output density of state(DOS). The unit of DOS is `(number of states)/(eV * unitcell)`. For its more information please see the [here](https://abacus-rtd--1282.org.readthedocs.build/en/1282/advanced/input_files/input-main.html#out_dos).

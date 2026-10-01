@@ -174,14 +174,38 @@ class TDOS(DOS):
 
         :params tdosfile: string of TDOS data file
         """
-
-        data = np.loadtxt(self.tdosfile)
-        self.nspin = data.shape[1]-1
-        if self.nspin == 1:
-            self.energy, self.dos = np.split(data, self.nspin+1, axis=1)
-        elif self.nspin == 2:
-            self.energy, dos_up, dos_dw = np.split(data, self.nspin+1, axis=1)
+        rows = []
+        with open(self.tdosfile) as f:
+            for line in f:
+                if line.startswith("#") or not line.split():
+                    continue
+                rows.append([float(x) for x in line.split()])
+        if not rows:
+            raise ValueError(f"Empty TDOS file: {self.tdosfile}")
+        # New format has two header lines ("ionic step" / "number of points")
+        # with a single column; data lines have 5 columns per spin channel.
+        # Old format (DOS1_smearing.dat) has only energy + dos columns.
+        ncols = len(rows[-1])
+        data = np.asarray([r for r in rows if len(r) == ncols])
+        if ncols == 2:
+            self.nspin = 1
+            self.energy, self.dos = np.hsplit(data, 2)
+        elif ncols == 3:
+            self.nspin = 2
+            self.energy, dos_up, dos_dw = np.hsplit(data, 3)
             self.dos = np.hstack((dos_up, dos_dw))
+        elif ncols == 5:
+            self.nspin = 1
+            self.energy, self.dos, self.dos_int, self.dos_smear, self.dos_smear_int = np.hsplit(data, 5)
+        elif ncols == 9:
+            self.nspin = 2
+            self.energy, dos_up, dos_dw, dos_int_up, dos_int_dw, smear_up, smear_dw, smear_int_up, smear_int_dw = np.hsplit(data, 9)
+            self.dos = np.hstack((dos_up, dos_dw))
+            self.dos_int = np.hstack((dos_int_up, dos_int_dw))
+            self.dos_smear = np.hstack((smear_up, smear_dw))
+            self.dos_smear_int = np.hstack((smear_int_up, smear_int_dw))
+        else:
+            raise ValueError(f"Unrecognized TDOS format: {ncols} columns")
 
     def _shift_energy(self, efermi: float = 0, shift: bool = False, prec: float = 0.01):
         if shift:
