@@ -85,8 +85,8 @@ scalapack_alt_sha256="a2f0c9180a210bf7ffe126c9cb81099cf337da1a7120ddb4cbe4894eb7
 # =============================================================================
 
 # DFT-D4 dispersion correction
-dftd4_ver="4.2.0"
-dftd4_sha256="467e024071510ad82b862c66c383c2ebc164fc1140e15dfc79f48d2f999fd184"
+dftd4_ver="4.3.0"
+dftd4_sha256="e94c5d021c0a4b4aa9b5587e36fda2f398271dc2dc1abfbe097fdb04022bef35"
 
 # LibTorch (supports dual versions) - main=2.1.2, alt=1.12.1
 libtorch_main_ver="2.1.2"
@@ -139,24 +139,10 @@ load_package_vars() {
             fi
             ;;
         "cmake")
-            # Determine architecture for SHA256 selection
-            local arch_suffix=""
-            if [ "${OPENBLAS_ARCH}" = "arm64" ]; then
-                if [ "$(uname -s)" = "Darwin" ]; then
-                    arch_suffix="_macos"
-                else
-                    arch_suffix="_aarch64"
-                fi
-            else
-                arch_suffix="_x86_64"
-            fi
-            
             if [ "${version_suffix}" = "alt" ]; then
                 cmake_ver="${cmake_alt_ver}"
-                eval "cmake_sha256=\${cmake_alt_sha256${arch_suffix}}"
             else
                 cmake_ver="${cmake_main_ver}"
-                eval "cmake_sha256=\${cmake_main_sha256${arch_suffix}}"
             fi
             ;;
         "openmpi")

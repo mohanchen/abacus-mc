@@ -6,29 +6,29 @@
 #include "source_base/parallel_reduce.h"
 
 void ModuleIO::prepare_dos(std::ofstream& ofs_running,
-		const elecstate::Efermi &energy_fermi,
+        const elecstate::Efermi &energy_fermi,
         const ModuleBase::matrix& ekb,
         const int nks,
         const int nbands,
-		const double& dos_edelta_ev,
-		const double& dos_scale,
-		double &emax,
-		double &emin,
-		const bool dos_setemax,
-		const double dos_emax_ev,
-		const bool dos_setemin,
-		const double dos_emin_ev,
-		const bool two_fermi)
+        const double& dos_edelta_ev,
+        const double& dos_scale,
+        double &emax,
+        double &emin,
+        const bool dos_setemax,
+        const double dos_emax_ev,
+        const bool dos_setemin,
+        const double dos_emin_ev,
+        const bool two_fermi)
 {
-	ofs_running << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-	ofs_running << " |                                                                    |" << std::endl;
+    ofs_running << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+    ofs_running << " |                                                                    |" << std::endl;
     ofs_running << " |               #Calcualte Density of States (DOS)#                  |" << std::endl;                 
-	ofs_running << " | DOS stands for Density of States. It represents the number of      |" << std::endl;
-	ofs_running << " | available electronic states per unit energy range.                 |" << std::endl;
-	ofs_running << " | By analyzing the DOS, we can gain insights into how electrons are  |" << std::endl;
-	ofs_running << " | distributed among different energy levels within the material.     |" << std::endl;
-	ofs_running << " |                                                                    |" << std::endl;
-	ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+    ofs_running << " | DOS stands for Density of States. It represents the number of      |" << std::endl;
+    ofs_running << " | available electronic states per unit energy range.                 |" << std::endl;
+    ofs_running << " | By analyzing the DOS, we can gain insights into how electrons are  |" << std::endl;
+    ofs_running << " | distributed among different energy levels within the material.     |" << std::endl;
+    ofs_running << " |                                                                    |" << std::endl;
+    ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
 
     ofs_running << std::setprecision(6);
 
@@ -93,21 +93,21 @@ void ModuleIO::prepare_dos(std::ofstream& ofs_running,
 }
 
 bool ModuleIO::cal_dos(const int& is,  // index for spin
-		const std::string& fn,   // file name for DOS
-		const double& de_ev,   // delta energy in ev
-		const double& emax_ev, // maximal energy in eV
-		const double& emin_ev, // minimal energy in ev.
-		const double& bcoeff,
-		const int& nks, // number of k points in this pool
-		const int& nkstot, // number of total kpoints
-		const std::vector<double>& wk, // weight of k points
-		const std::vector<int>& isk,   // index of spin for each k-point
-		const int& nbands,             // number of bands
-		const ModuleBase::matrix& ekb, // energy for each k point and each band
-		const ModuleBase::matrix& wg,  // weight of k-points and bands 
+        const std::string& fn,   // file name for DOS
+        const double& de_ev,   // delta energy in ev
+        const double& emax_ev, // maximal energy in eV
+        const double& emin_ev, // minimal energy in ev.
+        const double& bcoeff,
+        const int& nks, // number of k points in this pool
+        const int& nkstot, // number of total kpoints
+        const std::vector<double>& wk, // weight of k points
+        const std::vector<int>& isk,   // index of spin for each k-point
+        const int& nbands,             // number of bands
+        const ModuleBase::matrix& ekb, // energy for each k point and each band
+        const ModuleBase::matrix& wg,  // weight of k-points and bands
         const int istep, // ionic step
-		const bool out_app_flag,
-		const int bndpar)
+        const bool out_app_flag,
+        const int bndpar)
 {
     ModuleBase::TITLE("ModuleIO", "cal_dos");
 
@@ -115,14 +115,14 @@ bool ModuleIO::cal_dos(const int& is,  // index for spin
 
     if (GlobalV::MY_RANK == 0)
     {
-		if(out_app_flag==true)
-		{
-			ofs_dos.open(fn.c_str(), std::ios::app);
-		}
-		else
-		{
-			ofs_dos.open(fn.c_str());
-		}
+        if(out_app_flag==true)
+        {
+            ofs_dos.open(fn.c_str(), std::ios::app);
+        }
+        else
+        {
+            ofs_dos.open(fn.c_str());
+        }
         ofs_dos << istep+1 << "    # ionic step" << std::endl;
     }
 
