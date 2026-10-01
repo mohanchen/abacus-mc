@@ -142,10 +142,12 @@ void ModuleIO::cal_pdos(
                             pv.desc,
                             &one_int);
 #else
-                    // Serial fallback: mulk = S^T * conj(psi) (band i)
+                    // Serial fallback: mulk = S^T * conj(psi) (band i),
+                    // written into column i of mulk to match the pzgemv_ layout above
                     const std::complex<double> one_float(1.0, 0.0);
                     const std::complex<double> zero_float(0.0, 0.0);
                     const char T_char = 'T';
+                    std::complex<double>* mulk_col = mulk[0].c + static_cast<size_t>(i) * pv.nrow;
                     BlasConnector::gemv(T_char,
                                         nlocal,
                                         nlocal,
@@ -155,7 +157,7 @@ void ModuleIO::cal_pdos(
                                         p_dwfc + static_cast<size_t>(i) * nlocal,
                                         one_int,
                                         zero_float,
-                                        mulk[0].c,
+                                        mulk_col,
                                         one_int);
 #endif
 

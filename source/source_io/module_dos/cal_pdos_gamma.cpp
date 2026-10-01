@@ -108,8 +108,10 @@ void ModuleIO::cal_pdos(
                     pv.desc,
                     &one_int);
 #else
-            // Serial fallback: mulk = S^T * psi (column i of the wavefunction)
+            // Serial fallback: mulk = S^T * psi (column i of the wavefunction),
+            // written into column i of mulk to match the pdgemv_ layout above
             const char T_char = 'T';
+            double* mulk_col = mulk[0].c + static_cast<size_t>(i) * pv.nrow;
             BlasConnector::gemv(T_char,
                                 nlocal,
                                 nlocal,
@@ -119,7 +121,7 @@ void ModuleIO::cal_pdos(
                                 ppsi + static_cast<size_t>(i) * nlocal,
                                 one_int,
                                 zero_float,
-                                mulk[0].c,
+                                mulk_col,
                                 one_int);
 #endif
 
