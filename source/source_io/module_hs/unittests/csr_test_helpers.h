@@ -184,16 +184,30 @@ void init_sparse_output_globals()
     GlobalV::DRANK = 0;
 }
 
-void remove_derivative_files(const std::string& fileflag)
+void remove_derivative_files(const std::string& fileflag, int step = -1)
 {
-    const std::vector<std::string> filenames = {
-        "d" + fileflag + "rxs1_nao.csr",
-        "d" + fileflag + "rys1_nao.csr",
-        "d" + fileflag + "rzs1_nao.csr",
-        "d" + fileflag + "rxs2_nao.csr",
-        "d" + fileflag + "rys2_nao.csr",
-        "d" + fileflag + "rzs2_nao.csr",
-    };
+    std::vector<std::string> filenames;
+    if (step >= 0)
+    {
+        const std::string suffix = "g" + std::to_string(step + 1) + "_nao.csr";
+        for (const char axis : {'x', 'y', 'z'})
+        {
+            for (int ispin = 1; ispin <= 2; ++ispin)
+            {
+                filenames.push_back("d" + fileflag + "r" + axis + "s" + std::to_string(ispin) + suffix);
+            }
+        }
+    }
+    else
+    {
+        for (const char axis : {'x', 'y', 'z'})
+        {
+            for (int ispin = 1; ispin <= 2; ++ispin)
+            {
+                filenames.push_back("d" + fileflag + "r" + axis + "s" + std::to_string(ispin) + "_nao.csr");
+            }
+        }
+    }
     for (const std::string& filename: filenames)
     {
         std::remove(filename.c_str());
