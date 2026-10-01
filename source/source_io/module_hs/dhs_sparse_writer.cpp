@@ -147,9 +147,9 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
                 if (binary)
                 {
-                    comp.ofs[ispin].write(reinterpret_cast<char*>(&step), sizeof(int));
-                    comp.ofs[ispin].write(reinterpret_cast<char*>(const_cast<int*>(&nlocal)), sizeof(int));
-                    comp.ofs[ispin].write(reinterpret_cast<char*>(&output_R_number), sizeof(int));
+                    comp.ofs[ispin].write(reinterpret_cast<const char*>(&step), sizeof(int));
+                    comp.ofs[ispin].write(reinterpret_cast<const char*>(&nlocal), sizeof(int));
+                    comp.ofs[ispin].write(reinterpret_cast<const char*>(&output_R_number), sizeof(int));
                 }
                 else
                 {
