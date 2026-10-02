@@ -57,8 +57,7 @@ rules. Read the complete governance document before making or reviewing changes:
       `const int isk = (nspin == 2 && isk_ptr) ? isk_ptr[ik] : 0;`
       followed by `f(..., isk, ...)` over inlining the ternary into the call.
   15. Do not use `#pragma once` in header files; use traditional
-      `#ifndef`/`#define`/`#endif` include guards instead. Guard macros
-      should follow the pattern `ABACUS_<relative_path_from_source>_<ext>`.
+      `#ifndef`/`#define`/`#endif` include guards instead.
 - Use LF line endings for text files. Only `.bat` and `.cmd` files may use CRLF.
 - Keep source file additions deterministic: update the relevant `CMakeLists.txt`
   or explain why the file is generated or included indirectly.

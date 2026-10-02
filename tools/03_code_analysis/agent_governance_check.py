@@ -383,8 +383,7 @@ def check_pragma_once(
                 line.path,
                 line.line,
                 "Adds `#pragma once` to a header file.",
-                "Use traditional `#ifndef`/`#define`/`#endif` include guards instead. "
-                "Guard macros should follow the pattern `ABACUS_<relative_path_from_source>_<ext>`.",
+                "Use traditional `#ifndef`/`#define`/`#endif` include guards instead.",
                 allow_exception=False,
             )
 
