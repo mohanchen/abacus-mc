@@ -240,7 +240,8 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
                                   need_orb,
                                   deepks_setorb,
                                   GlobalV::MY_RANK,
-                                  force);
+                                  force,
+                                  inp.cal_force);
         }
         else if (inp.out_stru == 2)
         {
@@ -269,7 +270,8 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
                                   need_orb,
                                   deepks_setorb,
                                   GlobalV::MY_RANK,
-                                  force);
+                                  force,
+                                  inp.cal_force);
         }
         else if (inp.out_stru == 2)
         {
@@ -353,7 +355,8 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
                                       need_orb,
                                       deepks_setorb,
                                       GlobalV::MY_RANK,
-                                      force);
+                                      force,
+                                      inp.cal_force);
         }
         else if (inp.out_stru == 2)
         {
