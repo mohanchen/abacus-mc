@@ -251,6 +251,8 @@ void PhiOperator::init_atom_pair_idx_()
 namespace ModuleGint
 {
 
+namespace {
+
 // Helper: dispatch a Tin-typed BLAS-GEMM target buffer.
 // For Tin=double, write directly into phi_dm (no scratch).
 // For Tin=float, allocate fp32 scratch and cast at the end.
@@ -276,6 +278,8 @@ inline void phi_mul_dm_finalize_(double* phi_dm, const std::vector<Tin>& scratch
         phi_dm[k] = static_cast<double>(scratch[k]);
     }
 }
+
+} // namespace
 
 template<typename T>
 void PhiOperator::set_phi(T* phi) const
@@ -437,6 +441,8 @@ void PhiOperator::phi_mul_phi(
 
 // Mixed-precision dotc wrapper. Accepts (double, double) or (double, float);
 // when y is fp32 it is upcast into the caller-provided fp64 scratch buffer.
+namespace {
+
 inline double dotc_mixed(int n, const double* x, const double* y,
                          std::vector<double>& /*buf*/)
 {
@@ -450,6 +456,8 @@ inline double dotc_mixed(int n, const double* x, const float* y,
     for (int k = 0; k < n; ++k) { buf[k] = static_cast<double>(y[k]); }
     return BlasConnector::dotc(n, x, 1, buf.data(), 1);
 }
+
+} // namespace
 
 template<typename Tin>
 void PhiOperator::phi_dot_phi(
