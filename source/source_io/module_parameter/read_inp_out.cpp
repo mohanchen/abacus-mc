@@ -1257,7 +1257,7 @@ For binary output, each file uses the same basename as text output with a .dat s
         item.annotation = "output the expectation values of angular momentum operators";
         item.category = "Output information";
         item.type = R"(Boolean \[Integer\](optional))";
-        item.description = "Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named OUT.{suffix}_Lx.dat, OUT.{suffix}_Ly.dat, and OUT.{suffix}_Lz.dat. The second integer controls the precision of the output.";
+        item.description = "Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named lx_nao.txt, ly_nao.txt, and lz_nao.txt (or lxg{step+1}_nao.txt etc. when out_freq_ion is set). The second integer controls the precision of the output.";
         item.default_value = "False 8";
         item.unit = "";
         item.set_availability("basis_type==lcao");
