@@ -1,5 +1,6 @@
 #include "relax_sync.h"
 
+#include "relax_history.h"
 
 #include "source_base/matrix3.h"
 #include "source_base/parallel_common.h"
@@ -16,6 +17,9 @@ void Relax::init_relax(const int nat_in, const Input_para& inp)
     ModuleBase::TITLE("Relax", "init_relax");
 
     inp_ = &inp;
+
+    max_force_history_.clear();
+    max_stress_history_.clear();
 
     // set some initial conditions / constants
     nat = nat_in;
@@ -178,7 +182,8 @@ bool Relax::setup_gradient(const UnitCell& ucell, const ModuleBase::matrix& forc
     }
 
 
-    ofs_running << "\n Largest force is " << max_grad << 
+    max_force_history_.push_back(max_grad);
+    ofs_running << "\n Largest force is " << max_grad <<
              " eV/Angstrom while threshold is " << inp_->force_thr_ev << " eV/Angstrom" << std::endl;
     //=========================================
     // set gradient for cell degrees of freedom
@@ -263,11 +268,23 @@ bool Relax::setup_gradient(const UnitCell& ucell, const ModuleBase::matrix& forc
             force_converged = false;
         }
 
+        max_stress_history_.push_back(largest_grad);
         ofs_running << " Largest stress is " << largest_grad << " kbar while threshold is "                                                    << inp_->stress_thr << " kbar" << std::endl;
     }
 
     if (force_converged)
     {
+        // setup_gradient runs before istep is incremented at the end of
+        // relax_step, so the step that just converged is istep + 1.
+        const int converged_step = istep + 1;
+        const std::string method = inp_->relax_method.empty() ? "unknown" : inp_->relax_method[0];
+        ofs_running << " Relaxation method: " << method << std::endl;
+        ofs_running << " Relaxation converged in " << converged_step << " step(s)." << std::endl;
+        ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(max_force_history_);
+        if (if_cell_moves)
+        {
+            ofs_running << " Largest stress per step (kbar):" << format_relax_history(max_stress_history_);
+        }
         ofs_running << "\n Relaxation is converged!" << std::endl;
     }
     else

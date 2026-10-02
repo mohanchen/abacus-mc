@@ -136,8 +136,9 @@ TEST_F(LatticeChangeCGTest, TestStartSd)
     lc_cg.start(ucell, stress, etot, ofs, etot_info, criteria);
     ofs.close();
 
-    // Check output
-    std::string expected_output = "\n Geometry relaxation is not converged because threshold is 0.5 kbar\n";
+    // Check output: reporting moved to IonCellOptimizer::relax_step;
+    // check_converged prints nothing here anymore.
+    std::string expected_output = "";
     std::ifstream ifs("test_lc_cg_start_sd.log");
     std::string output((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
@@ -171,8 +172,9 @@ TEST_F(LatticeChangeCGTest, TestStartTrialGoto)
     lc_cg.start(ucell, stress, etot, ofs, etot_info, criteria);
     ofs.close();
 
-    // Check output
-    std::string expected_output = "\n Geometry relaxation is not converged because threshold is 0.5 kbar\n";
+    // Check output: reporting moved to IonCellOptimizer::relax_step;
+    // check_converged prints nothing here anymore.
+    std::string expected_output = "";
     std::ifstream ifs("test_lc_cg_start_trial_goto.log");
     std::string output((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
@@ -204,8 +206,9 @@ TEST_F(LatticeChangeCGTest, TestStartTrial)
     lc_cg.start(ucell, stress, etot, ofs, etot_info, criteria);
     ofs.close();
 
-    // Check output
-    std::string expected_output = "\n Geometry relaxation is not converged because threshold is 0.5 kbar\n";
+    // Check output: reporting moved to IonCellOptimizer::relax_step;
+    // check_converged prints nothing here anymore.
+    std::string expected_output = "";
     std::ifstream ifs("test_lc_cg_start_trial.log");
     std::string output((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
@@ -241,8 +244,9 @@ TEST_F(LatticeChangeCGTest, TestStartNoTrialGotoCase1)
     lc_cg.start(ucell, stress, etot, ofs, etot_info, criteria);
     ofs.close();
 
-    // Check output
-    std::string expected_output = "\n Geometry relaxation is not converged because threshold is 0.5 kbar\n";
+    // Check output: reporting moved to IonCellOptimizer::relax_step;
+    // check_converged prints nothing here anymore.
+    std::string expected_output = "";
     std::ifstream ifs("test_lc_cg_start_notrial_goto_case1.log");
     std::string output((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
@@ -281,8 +285,9 @@ TEST_F(LatticeChangeCGTest, TestStartNoTrialGotoCase2)
     lc_cg.start(ucell, stress, etot, ofs, etot_info, criteria);
     ofs.close();
 
-    // Check output
-    std::string expected_output = "\n Geometry relaxation is not converged because threshold is 0.5 kbar\n";
+    // Check output: reporting moved to IonCellOptimizer::relax_step;
+    // check_converged prints nothing here anymore.
+    std::string expected_output = "";
     std::ifstream ifs("test_lc_cg_start_notrial_goto_case2.log");
     std::string output((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
@@ -320,8 +325,9 @@ TEST_F(LatticeChangeCGTest, TestStartNoTrial)
     lc_cg.start(ucell, stress, etot, ofs, etot_info, criteria);
     ofs.close();
 
-    // Check output
-    std::string expected_output = "\n Geometry relaxation is not converged because threshold is 0.5 kbar\n";
+    // Check output: reporting moved to IonCellOptimizer::relax_step;
+    // check_converged prints nothing here anymore.
+    std::string expected_output = "";
     std::ifstream ifs("test_lc_cg_start_notrial.log");
     std::string output((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 

@@ -1,4 +1,5 @@
 #include "relax_driver.h"
+#include "relax_history.h"
 #include "socket_driver.h"
 #include "source_base/formatter.h"
 #include "source_base/global_file.h"
@@ -67,7 +68,7 @@ void Relax_Driver::relax_driver(
         ++steps[0];
     }
 
-    this->final_out(steps[0], ucell, inp, etot, stress, force);
+    this->final_out(steps[0], ucell, inp, etot, stress, force, ofs_running);
 
     ModuleBase::timer::end("Relax_Driver", "relax_driver");
     return;
@@ -299,7 +300,7 @@ void Relax_Driver::json_out(ModuleESolver::ESolver* p_esolver, UnitCell& ucell, 
 #endif
 }
 
-void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force)
+void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force, std::ofstream& ofs_running)
 {
     // Structure final output is effective for scf/nscf/relax/cell-relax;
     // relax-specific screen messages remain guarded below.
@@ -369,6 +370,30 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
     {
         if (is_relax)
         {
+            // Unified not-converged summary for both relaxation paths so ASE and
+            // users can read the method, the actual number of steps taken, and
+            // the per-step force / stress history from the running log.
+            const std::vector<double>& force_hist = inp.uses_simultaneous_relaxation()
+                ? rl.get_max_force_history()
+                : rl_old.get_max_force_history();
+            const std::vector<double>& stress_hist = inp.uses_simultaneous_relaxation()
+                ? rl.get_max_stress_history()
+                : rl_old.get_max_stress_history();
+            const int ionic_steps = static_cast<int>(force_hist.size());
+            const std::string method = inp.relax_method.empty() ? "unknown" : inp.relax_method[0];
+            ofs_running << " Relaxation method: " << method << std::endl;
+            ofs_running << " Relaxation stopped after " << ionic_steps << " ionic step(s) (relax_nmax = "
+                        << inp.relax_nmax << " reached)." << std::endl;
+            if (!force_hist.empty())
+            {
+                ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(force_hist);
+            }
+            if (!stress_hist.empty())
+            {
+                ofs_running << " Largest stress per step (kbar):" << format_relax_history(stress_hist);
+            }
+            ofs_running << " Relaxation is not converged after reaching relax_nmax!" << std::endl;
+
             std::cout << "\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
             std::cout << " Geometry relaxation stops here due to reaching the maximum      " << std::endl;
             std::cout << " relaxation steps. More steps are needed to converge the results " << std::endl;

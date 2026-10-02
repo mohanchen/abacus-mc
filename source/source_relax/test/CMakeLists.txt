@@ -157,3 +157,45 @@ AddTest(
   LIBS parameter base device
   SOURCES ions_move_sd_test.cpp ../ions_move_sd.cpp ../ions_move_basic.cpp ../relax_data.cpp ${cell_source_files}
 )
+
+AddTest(
+  TARGET MODULE_RELAX_relax_history_test
+  SOURCES test_relax_history.cpp
+)
+
+AddTest(
+  TARGET MODULE_RELAX_ions_move_lbfgs_test
+  LIBS parameter base device
+  SOURCES test_ions_move_lbfgs.cpp
+          ../ions_move_lbfgs.cpp
+          ../ions_move_basic.cpp
+          ../matrix_methods.cpp
+          ../relax_data.cpp
+          ../../source_cell/bcast_cell.cpp
+          ../../source_cell/print_cell.cpp
+)
+
+AddTest(
+  TARGET MODULE_RELAX_relax_nsync_test
+  LIBS parameter base device
+  SOURCES test_relax_nsync.cpp
+          ../relax_nsync.cpp
+          ../ions_move_methods.cpp
+          ../ions_move_bfgs.cpp
+          ../ions_move_bfgs2.cpp
+          ../ions_move_cg.cpp
+          ../ions_move_sd.cpp
+          ../ions_move_lbfgs.cpp
+          ../ions_move_basic.cpp
+          ../bfgs_basic.cpp
+          ../cg_base.cpp
+          ../matrix_methods.cpp
+          ../relax_data.cpp
+          ../lat_change_method.cpp
+          ../lattice_change_basic.cpp
+          ../lattice_change_cg.cpp
+          ../../source_cell/cell_tools.cpp
+          mock_remake_cell.cpp
+          ../../source_cell/bcast_cell.cpp
+          ../../source_cell/print_cell.cpp
+)

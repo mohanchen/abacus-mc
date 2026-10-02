@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include <iomanip>
 #include "../relax_sync.h"
 #include "source_cell/unitcell.h"
@@ -349,4 +350,192 @@ TEST_F(Test_RELAX, relax_new)
     {
         EXPECT_NEAR(result_ref[i],result[i],1e-8);
     }
+}
+
+// Drive the simultaneous CG path (relax_sync) to convergence in one step and
+// check the unified summary printed before "Relaxation is converged!".
+TEST(RelaxSyncSummary, ConvergedPrintsSummary)
+{
+    const int nat = 1;
+    Input_para inp;
+    inp.calculation = "relax";
+    inp.relax_method = {"cg", "2"};
+    inp.force_thr = 0.001;   // force_thr_eva ~ 0.0257 eV/Angstrom
+    inp.force_thr_ev = inp.force_thr * 13.6058 / 0.529177;
+
+    UnitCell ucell;
+    ucell.ntype = 1;
+    ucell.nat = nat;
+    ucell.atoms = new Atom[1];
+    ucell.atoms[0].na = nat;
+    ucell.atoms[0].label = "Si";
+    ucell.omega = 1.0;
+    ucell.lat0 = 1.0;
+    ucell.iat2it = new int[nat];
+    ucell.iat2ia = new int[nat];
+    ucell.iat2it[0] = 0;
+    ucell.iat2ia[0] = 0;
+    ucell.atoms[0].mbl.resize(nat);
+    ucell.atoms[0].taud.resize(nat);
+    ucell.atoms[0].tau.resize(nat);
+    ucell.atoms[0].dis.resize(nat);
+    ucell.atoms[0].mag.resize(nat);
+    ucell.atoms[0].vel.resize(nat);
+    ucell.atoms[0].mbl[0] = {1, 1, 1};
+    ucell.atoms[0].taud[0] = {0.0, 0.0, 0.0};
+    ucell.latvec.Identity();
+
+    // Well below the threshold -> converged immediately.
+    ModuleBase::matrix force_in(nat, 3);
+    ModuleBase::matrix stress_in(3, 3);
+    force_in(0, 0) = 1.0e-4;
+
+    Relax rl;
+    rl.init_relax(nat, inp);
+
+    std::ofstream ofs("./running_relax_sync_test.log");
+    const bool done = rl.relax_step(ucell, force_in, stress_in, 0.0, ofs);
+    ofs.close();
+
+    EXPECT_TRUE(done);
+
+    std::ifstream ifs("./running_relax_sync_test.log");
+    const std::string log((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    ifs.close();
+    std::remove("./running_relax_sync_test.log");
+
+    EXPECT_THAT(log, testing::HasSubstr(" Relaxation method: cg"));
+    EXPECT_THAT(log, testing::HasSubstr(" Relaxation converged in 1 step(s)."));
+    EXPECT_THAT(log, testing::HasSubstr(" Largest force per step (eV/Angstrom):"));
+    EXPECT_THAT(log, testing::HasSubstr("\n Relaxation is converged!"));
+
+    delete[] ucell.atoms;
+}
+
+// First step above threshold (not converged), second step below (converged).
+// Locks the converged_step = istep+1 accounting and the per-step history.
+TEST(RelaxSyncSummary, TwoStepConvergence)
+{
+    const int nat = 1;
+    Input_para inp;
+    inp.calculation = "relax";
+    inp.relax_method = {"cg", "2"};
+    inp.force_thr = 0.001;   // force_thr_eva ~ 0.0257 eV/Angstrom
+    inp.force_thr_ev = inp.force_thr * 13.6058 / 0.529177;
+
+    UnitCell ucell;
+    ucell.ntype = 1;
+    ucell.nat = nat;
+    ucell.atoms = new Atom[1];
+    ucell.atoms[0].na = nat;
+    ucell.atoms[0].label = "Si";
+    ucell.omega = 1.0;
+    ucell.lat0 = 1.0;
+    ucell.iat2it = new int[nat];
+    ucell.iat2ia = new int[nat];
+    ucell.iat2it[0] = 0;
+    ucell.iat2ia[0] = 0;
+    ucell.atoms[0].mbl.resize(nat);
+    ucell.atoms[0].taud.resize(nat);
+    ucell.atoms[0].tau.resize(nat);
+    ucell.atoms[0].dis.resize(nat);
+    ucell.atoms[0].mag.resize(nat);
+    ucell.atoms[0].vel.resize(nat);
+    ucell.atoms[0].mbl[0] = {1, 1, 1};
+    ucell.atoms[0].taud[0] = {0.0, 0.0, 0.0};
+    ucell.latvec.Identity();
+
+    ModuleBase::matrix stress_in(3, 3);
+
+    Relax rl;
+    rl.init_relax(nat, inp);
+
+    // Step 1: large force -> not converged.
+    ModuleBase::matrix force_big(nat, 3);
+    force_big(0, 0) = 1.0; // ~25.7 eV/Angstrom, above threshold
+    std::ofstream ofs("./running_relax_sync_test.log");
+    const bool done1 = rl.relax_step(ucell, force_big, stress_in, 0.0, ofs);
+    EXPECT_FALSE(done1);
+
+    // Step 2: small force -> converged.
+    ModuleBase::matrix force_small(nat, 3);
+    force_small(0, 0) = 1.0e-4;
+    const bool done2 = rl.relax_step(ucell, force_small, stress_in, 0.0, ofs);
+    ofs.close();
+    EXPECT_TRUE(done2);
+
+    std::ifstream ifs("./running_relax_sync_test.log");
+    const std::string log((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    ifs.close();
+    std::remove("./running_relax_sync_test.log");
+
+    EXPECT_THAT(log, testing::HasSubstr("\n Relaxation is not converged yet!"));
+    EXPECT_THAT(log, testing::HasSubstr(" Relaxation converged in 2 step(s)."));
+    EXPECT_THAT(log, testing::HasSubstr("\n Relaxation is converged!"));
+
+    // Each relax_step pushes exactly one force entry.
+    ASSERT_EQ(rl.get_max_force_history().size(), 2u);
+
+    delete[] ucell.atoms;
+}
+
+// cell-relax converged: the summary must also carry the stress history line.
+TEST(RelaxSyncSummary, CellRelaxConvergedPrintsStressHistory)
+{
+    const int nat = 1;
+    Input_para inp;
+    inp.calculation = "cell-relax";
+    inp.relax_method = {"cg", "2"};
+    inp.force_thr = 0.001;
+    inp.force_thr_ev = inp.force_thr * 13.6058 / 0.529177;
+    inp.stress_thr = 0.5; // kbar
+
+    UnitCell ucell;
+    ucell.ntype = 1;
+    ucell.nat = nat;
+    ucell.atoms = new Atom[1];
+    ucell.atoms[0].na = nat;
+    ucell.atoms[0].label = "Si";
+    ucell.omega = 1.0;
+    ucell.lat0 = 1.0;
+    ucell.iat2it = new int[nat];
+    ucell.iat2ia = new int[nat];
+    ucell.iat2it[0] = 0;
+    ucell.iat2ia[0] = 0;
+    ucell.atoms[0].mbl.resize(nat);
+    ucell.atoms[0].taud.resize(nat);
+    ucell.atoms[0].tau.resize(nat);
+    ucell.atoms[0].dis.resize(nat);
+    ucell.atoms[0].mag.resize(nat);
+    ucell.atoms[0].vel.resize(nat);
+    ucell.atoms[0].mbl[0] = {1, 1, 1};
+    ucell.atoms[0].taud[0] = {0.0, 0.0, 0.0};
+    ucell.latvec.Identity();
+    ucell.lat_axis_free[0] = 1;
+    ucell.lat_axis_free[1] = 1;
+    ucell.lat_axis_free[2] = 1;
+
+    ModuleBase::matrix force_in(nat, 3);
+    ModuleBase::matrix stress_in(3, 3);
+    force_in(0, 0) = 1.0e-4; // force converged
+    // zero stress -> below stress_thr -> cell converged too
+
+    Relax rl;
+    rl.init_relax(nat, inp);
+
+    std::ofstream ofs("./running_relax_sync_test.log");
+    const bool done = rl.relax_step(ucell, force_in, stress_in, 0.0, ofs);
+    ofs.close();
+    EXPECT_TRUE(done);
+
+    std::ifstream ifs("./running_relax_sync_test.log");
+    const std::string log((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    ifs.close();
+    std::remove("./running_relax_sync_test.log");
+
+    EXPECT_THAT(log, testing::HasSubstr(" Largest stress is "));
+    EXPECT_THAT(log, testing::HasSubstr(" Largest stress per step (kbar):"));
+    EXPECT_THAT(log, testing::HasSubstr("\n Relaxation is converged!"));
+
+    delete[] ucell.atoms;
 }

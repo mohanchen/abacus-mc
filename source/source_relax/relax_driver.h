@@ -125,7 +125,7 @@ class Relax_Driver
      * @param etot Total energy of the final step.
      * @param stress Stress tensor of the final step.
      */
-    void final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force);
+    void final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force, std::ofstream& ofs_running);
 };
 
 #endif
