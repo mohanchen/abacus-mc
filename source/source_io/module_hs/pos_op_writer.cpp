@@ -227,9 +227,10 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
 
         ofs_tem1.close();
         const bool open_in_append = (calculation == "md") && out_app_flag && step >= 0;
+        const int header_step = std::max(step, 0);
         ModuleIO::detail::assemble_csr(ssr.str(),
                                        tem1.str(),
-                                       step,
+                                       header_step,
                                        nlocal,
                                        output_R_number,
                                        binary,

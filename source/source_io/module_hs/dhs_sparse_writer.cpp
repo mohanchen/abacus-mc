@@ -56,7 +56,8 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
     const int total_R_num = static_cast<int>(all_R_coor_ptr.size());
     int output_R_number = 0;
-    const int step = std::max(istep, 0);
+    // Use istep for filename/append decisions; clamp only the header STEP value.
+    const int header_step = std::max(istep, 0);
 
     int spin_loop = 1;
     if (nspin == 2) {
@@ -105,11 +106,11 @@ void ModuleIO::save_dH_sparse(const int& istep,
     {
         for (int ispin = 0; ispin < 2; ++ispin)
         {
-            if (step >= 0)
+            if (istep >= 0)
             {
                 comp.fname[ispin] << (md_no_append ? global_matrix_dir : global_out_dir)
                                   << "d" << fileflag << "r" << comp.axis
-                                  << "s" << (ispin + 1) << "g" << (step + 1) << "_nao.csr";
+                                  << "s" << (ispin + 1) << "g" << (istep + 1) << "_nao.csr";
             }
             else
             {
@@ -122,7 +123,7 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
     if (GlobalV::DRANK == 0)
     {
-        const bool open_in_append = (calculation == "md") && out_app_flag && step;
+        const bool open_in_append = (calculation == "md") && out_app_flag && istep >= 0;
         for (auto& comp: comps)
         {
             const std::string label = std::string("dH") + comp.axis;
@@ -147,13 +148,13 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
                 if (binary)
                 {
-                    comp.ofs[ispin].write(reinterpret_cast<const char*>(&step), sizeof(int));
+                    comp.ofs[ispin].write(reinterpret_cast<const char*>(&header_step), sizeof(int));
                     comp.ofs[ispin].write(reinterpret_cast<const char*>(&nlocal), sizeof(int));
                     comp.ofs[ispin].write(reinterpret_cast<const char*>(&output_R_number), sizeof(int));
                 }
                 else
                 {
-                    comp.ofs[ispin] << "STEP: " << step << std::endl;
+                    comp.ofs[ispin] << "STEP: " << header_step << std::endl;
                     comp.ofs[ispin] << "Matrix Dimension of " << label << "(R): " << nlocal << std::endl;
                     comp.ofs[ispin] << "Matrix number of " << label << "(R): " << output_R_number << std::endl;
                 }
