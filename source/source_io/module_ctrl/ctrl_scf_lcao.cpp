@@ -472,6 +472,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         h_params.global_matrix_dir = PARAM.globalv.global_matrix_dir;
         h_params.ks_solver = PARAM.inp.ks_solver;
         h_params.drank = GlobalV::DRANK;
+        h_params.ofs_running = &GlobalV::ofs_running;
         if (inp.out_mat_h_t[0])
         {
             ModuleIO::write_h_t(h_params);

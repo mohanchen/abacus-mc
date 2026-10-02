@@ -67,6 +67,7 @@ static void setup_veff_hcontainer(hamilt::HContainer<double>& hR,
 
 static void gather_and_write(const std::string& prefix,
                              const std::string& label,
+                             const std::string& term_name,
                              hamilt::HContainer<double>& hR,
                              const UnitCell& ucell,
                              const Parallel_Orbitals& pv,
@@ -79,7 +80,8 @@ static void gather_and_write(const std::string& prefix,
                              const std::string& calculation,
                              const bool out_app_flag,
                              const std::string& global_out_dir,
-                             const std::string& global_matrix_dir)
+                             const std::string& global_matrix_dir,
+                             std::ofstream* ofs_running)
 {
     const int nbasis = hR.get_nbasis();
 #ifdef __MPI
@@ -101,6 +103,11 @@ static void gather_and_write(const std::string& prefix,
 #else
         write_hcontainer_csr(fname, &ucell, 8, &hR, istep, ispin, nspin, label, "", no_efermi);
 #endif
+        if (ofs_running != nullptr)
+        {
+            *ofs_running << " Write H(R) (" << term_name << " term) matrix in NAO basis to file: " << fname
+                         << std::endl;
+        }
     }
 }
 
@@ -165,6 +172,7 @@ struct HTermSpec
     std::string k_prefix;
     std::string r_prefix;
     std::string r_label;
+    std::string term_name;
     // Fills hR_tmp for spin channel ispin. setup_veff_hcontainer has already
     // been run when use_veff_layout is true; the builder adds the term values.
     std::function<void(hamilt::HContainer<double>&, int)> build;
@@ -203,9 +211,9 @@ static void write_h_term(WriteHParams& params, const HTermSpec& spec)
 
         if (also_hR)
         {
-            gather_and_write(spec.r_prefix, spec.r_label, hR_tmp, ucell, pv, nspin, ispin, istep, append,
-                             iat2iwt, nat, params.calculation, params.out_app_flag,
-                             params.global_out_dir, params.global_matrix_dir);
+            gather_and_write(spec.r_prefix, spec.r_label, spec.term_name, hR_tmp, ucell, pv, nspin, ispin,
+                             istep, append, iat2iwt, nat, params.calculation, params.out_app_flag,
+                             params.global_out_dir, params.global_matrix_dir, params.ofs_running);
         }
     }
 
@@ -227,6 +235,7 @@ void write_h_t(WriteHParams& params)
     spec.k_prefix = "tk";
     spec.r_prefix = "t";
     spec.r_label = "T";
+    spec.term_name = "kinetic";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
         hamilt::EKinetic<hamilt::OperatorLCAO<double, double>>
             tmp_ekinetic(nullptr, kv.kvec_d, &hR_tmp, &ucell, orb_cutoff, &gd,
@@ -250,6 +259,7 @@ void write_h_vnl(WriteHParams& params)
     spec.k_prefix = "vnlk";
     spec.r_prefix = "vnl";
     spec.r_label = "V^NL";
+    spec.term_name = "nonlocal";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
         hamilt::Nonlocal<hamilt::OperatorLCAO<double, double>>
             tmp_nonlocal(nullptr, kv.kvec_d, &hR_tmp, &ucell, orb_cutoff, &gd,
@@ -275,6 +285,7 @@ void write_h_vl(WriteHParams& params)
     spec.k_prefix = "vlk";
     spec.r_prefix = "vl";
     spec.r_label = "V^L";
+    spec.term_name = "local";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
         ModuleGint::cal_gint_vl(v_local, &hR_tmp);
@@ -300,6 +311,7 @@ void write_h_vh(WriteHParams& params)
     spec.k_prefix = "vhk";
     spec.r_prefix = "vh";
     spec.r_label = "V^H";
+    spec.term_name = "hartree";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
         ModuleGint::cal_gint_vl(&v_h(ispin, 0), &hR_tmp);
@@ -336,6 +348,7 @@ void write_h_vxc(WriteHParams& params)
     spec.k_prefix = "vxck";
     spec.r_prefix = "vxc";
     spec.r_label = "V^XC";
+    spec.term_name = "xc";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
         ModuleGint::cal_gint_vl(&v_xc(ispin, 0), &hR_tmp);
@@ -365,7 +378,8 @@ static void write_h_exx_impl(const UnitCell& ucell,
                              const bool out_app_flag,
                              const std::string& ks_solver,
                              const int drank,
-                             const Exx_Info& exx_info)
+                             const Exx_Info& exx_info,
+                             std::ofstream* ofs_running)
 {
     const auto& Hexxs = ex->get_Hexxs(); // vector over spin of map<iat, map<(jat,R), Tensor>>
     const int nspin_out = (nspin == 2 ? 2 : 1);
@@ -384,8 +398,9 @@ static void write_h_exx_impl(const UnitCell& ucell,
 
         if (also_hR)
         {
-            gather_and_write("vexx", "V^EXX", hR_tmp, ucell, pv, nspin, ispin, istep, append, iat2iwt, nat,
-                             calculation, out_app_flag, global_out_dir, global_matrix_dir);
+            gather_and_write("vexx", "V^EXX", "exx", hR_tmp, ucell, pv, nspin, ispin, istep, append,
+                             iat2iwt, nat, calculation, out_app_flag, global_out_dir, global_matrix_dir,
+                             ofs_running);
         }
     }
 }
@@ -415,7 +430,8 @@ void write_h_exx(WriteHParams& params, const Exx_Info& exx_info)
             write_h_exx_impl(ucell, pv, params.exd, kv, nspin, istep, append, iat2iwt, nat, also_hR,
                              params.npol, params.nlocal, params.gamma_only_local,
                              params.global_out_dir, params.global_matrix_dir,
-                             params.calculation, params.out_app_flag, params.ks_solver, params.drank, exx_info);
+                             params.calculation, params.out_app_flag, params.ks_solver, params.drank, exx_info,
+                             params.ofs_running);
         }
     }
     else
@@ -425,7 +441,8 @@ void write_h_exx(WriteHParams& params, const Exx_Info& exx_info)
             write_h_exx_impl(ucell, pv, params.exc, kv, nspin, istep, append, iat2iwt, nat, also_hR,
                              params.npol, params.nlocal, params.gamma_only_local,
                              params.global_out_dir, params.global_matrix_dir,
-                             params.calculation, params.out_app_flag, params.ks_solver, params.drank, exx_info);
+                             params.calculation, params.out_app_flag, params.ks_solver, params.drank, exx_info,
+                             params.ofs_running);
         }
     }
 
