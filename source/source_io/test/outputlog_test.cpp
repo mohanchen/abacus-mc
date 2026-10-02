@@ -161,7 +161,7 @@ TEST(OutputEfermiTest, TestSingleFermi) {
     std::string file_content = ss.str();
     ifs_running.close();
 
-    EXPECT_THAT(file_content, testing::HasSubstr("E_Fermi = "));
+    EXPECT_THAT(file_content, testing::HasSubstr("#FERMI ENERGY# "));
     EXPECT_THAT(file_content, testing::HasSubstr("eV"));
     // 0.4 Ry * 13.605698 eV/Ry = 5.4422792 eV
     EXPECT_THAT(file_content, testing::HasSubstr("5.4422792"));
@@ -185,7 +185,7 @@ TEST(OutputEfermiTest, TestTwoFermi) {
     std::string file_content = ss.str();
     ifs_running.close();
 
-    EXPECT_THAT(file_content, testing::HasSubstr("E_Fermi = "));
+    EXPECT_THAT(file_content, testing::HasSubstr("#FERMI ENERGY# "));
     EXPECT_THAT(file_content, testing::HasSubstr("two fermi energies (up, down)"));
     // 0.3 Ry * 13.605698 eV/Ry = 4.0817094 eV
     EXPECT_THAT(file_content, testing::HasSubstr("4.0817094"));

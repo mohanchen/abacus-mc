@@ -61,14 +61,14 @@ void output_efermi(const bool &convergence, const elecstate::Efermi& eferm, std:
     {
         if (eferm.two_efermi)
         {
-            ofs_running << " E_Fermi = "
+            ofs_running << " #FERMI ENERGY# "
                         << std::setprecision(11) << eferm.ef_up * ModuleBase::Ry_to_eV
                         << " " << eferm.ef_dw * ModuleBase::Ry_to_eV
                         << " eV    # two fermi energies (up, down)" << std::endl;
         }
         else
         {
-            ofs_running << " E_Fermi = "
+            ofs_running << " #FERMI ENERGY# "
                         << std::setprecision(11) << eferm.ef * ModuleBase::Ry_to_eV
                         << " eV" << std::endl;
         }
