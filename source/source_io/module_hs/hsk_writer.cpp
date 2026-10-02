@@ -1,9 +1,6 @@
 #include "hsk_writer.h"
-
 #include "hs_dense_io.h"
-
 #include "source_base/module_out/filename.h" // use filename_output function
-
 #include <complex>
 
 template <typename T>

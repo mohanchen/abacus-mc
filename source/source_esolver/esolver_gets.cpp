@@ -218,7 +218,7 @@ void ESolver_GetS::runner(BaseCell& basecell, const int istep)
         r_matrix.init(ucell, pv, orb_, cal_force, nlocal);
         r_matrix.out_rR(ucell,
                         gd,
-                        istep,
+                        -1, // get_s has no ionic step; use -1 for no step suffix
                         this->inp_->out_mat_r[1],
                         PARAM.globalv.global_out_dir,
                         PARAM.globalv.global_matrix_dir,

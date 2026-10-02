@@ -2335,7 +2335,7 @@
 
 - **Type**: Boolean \[Integer\](optional)
 - **Availability**: *[`basis_type`](#basis_type)==lcao*
-- **Description**: Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named OUT.{suffix}_Lx.dat, OUT.{suffix}_Ly.dat, and OUT.{suffix}_Lz.dat. The second integer controls the precision of the output.
+- **Description**: Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named lx_nao.txt, ly_nao.txt, and lz_nao.txt (or lxg{step+1}_nao.txt etc. when out_freq_ion is set). The second integer controls the precision of the output.
 - **Default**: False 8
 
 ### out_xc_r

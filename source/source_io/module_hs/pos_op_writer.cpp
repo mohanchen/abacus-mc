@@ -226,7 +226,7 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
         }
 
         ofs_tem1.close();
-        const bool open_in_append = (calculation == "md") && out_app_flag && step;
+        const bool open_in_append = (calculation == "md") && out_app_flag && step >= 0;
         ModuleIO::detail::assemble_csr(ssr.str(),
                                        tem1.str(),
                                        step,
