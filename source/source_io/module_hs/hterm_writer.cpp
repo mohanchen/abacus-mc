@@ -105,7 +105,8 @@ static void gather_and_write(const std::string& prefix,
 #endif
         if (ofs_running != nullptr)
         {
-            *ofs_running << " Write H(R) (" << term_name << " term) matrix in NAO basis to file: " << fname
+            const std::string spin_tag = (nspin == 2) ? (ispin == 0 ? " (spin up  )" : " (spin down)") : "";
+            *ofs_running << " Write H(R) (" << term_name << " term)" << spin_tag << " matrix in NAO basis to file: " << fname
                          << std::endl;
         }
     }

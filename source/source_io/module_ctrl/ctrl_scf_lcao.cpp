@@ -192,7 +192,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         const int precision = inp.out_dmr[1];
 
         ModuleIO::write_dmr(dm->get_dmr_vec(), &ucell, precision, pv, out_app_flag, 
-			ucell.get_iat2iwt(), ucell.nat, istep);
+			ucell.get_iat2iwt(), ucell.nat, istep, GlobalV::ofs_running);
     }
 
     //------------------------------------------------------------------
@@ -207,7 +207,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         }
         const int precision = inp.out_dmk[1];
 
-        ModuleIO::write_dmk(dm->get_dmk_vec(), kv, precision, efermis, &(ucell), pv, global_out_dir, istep);
+        ModuleIO::write_dmk(dm->get_dmk_vec(), kv, precision, efermis, &(ucell), pv, global_out_dir, istep, GlobalV::ofs_running);
     }
 
     //------------------------------------------------------------------
@@ -548,6 +548,11 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                pv,
                                GlobalV::DRANK,
                                PARAM.inp.ks_solver);
+
+            if (GlobalV::DRANK == 0)
+            {
+                GlobalV::ofs_running << " Write T(k) matrix in NAO basis to file: " << t_fn << std::endl;
+            }
         }
 
         delete ekinetic;

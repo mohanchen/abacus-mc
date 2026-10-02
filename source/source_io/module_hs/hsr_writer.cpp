@@ -330,7 +330,8 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
                 write_hcontainer_csr(
                     fname, ucell, precision, &hr_serial, istep, ispin, nspin, "H", representation_note, efermi_eV);
             }
-            ofs_running << " Write H(R) matrix in NAO basis to file: " << fname << std::endl;
+            ofs_running << " Write H(R)" << ((nspin == 2) ? (ispin == 0 ? " (spin up  )" : " (spin down)") : "")
+                        << " matrix in NAO basis to file: " << fname << std::endl;
         }
     }
 
