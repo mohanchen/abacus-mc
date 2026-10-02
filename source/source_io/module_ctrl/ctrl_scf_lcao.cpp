@@ -411,6 +411,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         dh_params.istep = istep;
         dh_params.gamma_only = gamma_only;
         dh_params.append = out_app_flag;
+        dh_params.ofs_running = &GlobalV::ofs_running;
         if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 2)
         {
             // per-spin DM (1-indexed): nspin=1 -> {spin0}, nspin=2 -> {spin-up, spin-down}.

@@ -26,6 +26,7 @@ void write_dh_perI(WriteDHParams& params,
     const std::string& rprefix,
     const std::string& kprefix,
     const std::string& label,
+    const std::string& term_name,
     std::array<std::vector<hamilt::HContainer<double>*>, 3>& g,
     const std::vector<int>& atom_filter)
 {
@@ -87,6 +88,11 @@ void write_dh_perI(WriteDHParams& params,
                 ModuleIO::write_hcontainer_csr(
                     fr, &ucell, 8, hR, params.istep, ispin, nspin, label, "", no_efermi);
 #endif
+                if (params.ofs_running != nullptr)
+                {
+                    *params.ofs_running << " Write dH/dR (" << term_name << " term) matrix in NAO basis to file: "
+                                        << fr << std::endl;
+                }
             }
             }
 
