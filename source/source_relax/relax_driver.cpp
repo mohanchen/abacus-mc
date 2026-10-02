@@ -44,12 +44,22 @@ void Relax_Driver::relax_driver(
     ModuleBase::matrix stress(3, 3);
     ModuleBase::matrix force(ucell.nat, 3);
 
+    // Track whether the current geometry has been evaluated by esolve().
+    // After relax_step() proposes a new geometry, it is not evaluated until
+    // the next esolve() call; if we exit the loop early, force/stress are stale.
+    bool geometry_evaluated = false;
+
     while (steps[0] < inp.relax_nmax)
     {
         this->iter_info(steps, inp);
         this->esolve(steps[0], p_esolver, ucell, inp, force, stress, etot);
+        geometry_evaluated = true;
         this->stru_out(steps[0], ucell, inp, etot, stress, force);
         bool converged = this->relax_step(steps, p_esolver, ucell, inp, force, stress, etot, ofs_running);
+        if (!converged)
+        {
+            geometry_evaluated = false;
+        }
         this->json_out(p_esolver, ucell, inp, force, stress);
 
         // Check stop conditions
@@ -67,7 +77,7 @@ void Relax_Driver::relax_driver(
         ++steps[0];
     }
 
-    this->final_out(steps[0], ucell, inp, etot, stress, force);
+    this->final_out(steps[0], ucell, inp, etot, stress, force, geometry_evaluated);
 
     ModuleBase::timer::end("Relax_Driver", "relax_driver");
     return;
@@ -283,7 +293,13 @@ void Relax_Driver::json_out(ModuleESolver::ESolver* p_esolver, UnitCell& ucell, 
 #endif
 }
 
-void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force)
+void Relax_Driver::final_out(const int istep,
+                             UnitCell& ucell,
+                             const Input_para& inp,
+                             const double etot,
+                             const ModuleBase::matrix& stress,
+                             const ModuleBase::matrix& force,
+                             const bool geometry_evaluated)
 {
     // Structure final output is effective for scf/nscf/relax/cell-relax;
     // relax-specific screen messages remain guarded below.
@@ -299,7 +315,7 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
         const bool deepks_setorb = PARAM.globalv.deepks_setorb;
 
         // Build header comment for STRU_FINAL
-        const std::string header = build_stru_header(istep, etot, stress, inp, true, true);
+        const std::string header = build_stru_header(istep, etot, stress, inp, true, geometry_evaluated);
 
         if (inp.out_stru == 1)
         {
@@ -307,6 +323,10 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
             need_orb = need_orb && inp.init_wfc.substr(0, 3) == "nao";
             need_orb = need_orb || inp.basis_type == "lcao";
             need_orb = need_orb || inp.basis_type == "lcao_in_pw";
+
+            // Only write forces when they were actually computed and belong
+            // to the geometry being written.
+            const bool write_force = inp.cal_force && geometry_evaluated;
 
             unitcell::print_stru_file(ucell,
                                       ucell.atoms,
@@ -321,7 +341,7 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
                                       deepks_setorb,
                                       GlobalV::MY_RANK,
                                       force,
-                                      inp.cal_force);
+                                      write_force);
         }
         else if (inp.out_stru == 2)
         {

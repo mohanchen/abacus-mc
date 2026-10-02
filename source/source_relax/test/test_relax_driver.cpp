@@ -102,3 +102,21 @@ TEST_F(RelaxDriverHeaderTest, GeometryNotEvaluated)
     EXPECT_THAT(header, testing::HasSubstr("# NOTE: geometry proposed by optimizer but not evaluated"));
     EXPECT_THAT(header, testing::Not(testing::HasSubstr("Forces not computed")));
 }
+
+TEST_F(RelaxDriverHeaderTest, PreviewFinalHeaders)
+{
+    inp.cal_force = true;
+    inp.cal_stress = true;
+
+    const std::string header_ok = Relax_Driver::build_stru_header(4, etot, stress, inp, true, true);
+    const std::string header_bad = Relax_Driver::build_stru_header(4, etot, stress, inp, true, false);
+
+    std::cout << "\n========== STRU_FINAL header (converged, geometry evaluated) ==========\n"
+              << header_ok
+              << "\n========== STRU_FINAL header (early exit, geometry NOT evaluated) ==========\n"
+              << header_bad
+              << std::endl;
+
+    EXPECT_THAT(header_ok, testing::HasSubstr("# RELAX STEP 5 (FINAL), Energy:"));
+    EXPECT_THAT(header_bad, testing::HasSubstr("# RELAX STEP 5 (FINAL), Energy:"));
+}
