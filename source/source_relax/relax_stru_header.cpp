@@ -24,8 +24,9 @@ std::string Relax_Driver::build_stru_header(const int istep,
                                           final_tag,
                                           etot * ModuleBase::Ry_to_eV);
 
-    // stress in kbar: Ry/Bohr^3 -> kbar, always 3 lines for downstream parsers.
-    // N/A marks uncomputed stress; the reason is appended on the first line.
+    // stress in kbar: Ry/Bohr^3 -> kbar, always exactly 3 lines for
+    // downstream parsers. N/A marks uncomputed stress; no inline comment is
+    // appended so that every stress line has the same token count.
     const double stress_transform = ModuleBase::RYDBERG_SI
                                     / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI)
                                     * 1.0e-8;
@@ -42,21 +43,36 @@ std::string Relax_Driver::build_stru_header(const int istep,
     }
     else
     {
-        const char* reason = !inp.cal_stress ? " (N/A = not computed, cal_stress=0)"
-                                             : " (N/A = proposed geometry not evaluated)";
-        header += std::string("# Stress (kbar): N/A N/A N/A") + reason + "\n"
+        header += "# Stress (kbar): N/A N/A N/A\n"
                   "# Stress (kbar): N/A N/A N/A\n"
                   "# Stress (kbar): N/A N/A N/A\n";
     }
 
+    // Line 7: single NOTE line describing the state of stress/forces/geometry.
+    // Keeping the header at exactly 7 lines makes it easy for downstream
+    // parsers to skip a fixed-size comment block.
+    std::string note;
     if (!geometry_evaluated)
     {
-        header += "# NOTE: geometry proposed by optimizer but not evaluated; forces omitted, energy above belongs to the last evaluated geometry\n";
+        note = "# NOTE: geometry proposed by optimizer but not evaluated; stress N/A; forces omitted; energy above belongs to the last evaluated geometry";
+    }
+    else if (!inp.cal_stress && !inp.cal_force)
+    {
+        note = "# NOTE: stress not computed (cal_stress=0); forces not computed (cal_force=0); per-atom f fields omitted intentionally";
+    }
+    else if (!inp.cal_stress)
+    {
+        note = "# NOTE: stress not computed (cal_stress=0)";
     }
     else if (!inp.cal_force)
     {
-        header += "# Forces not computed (cal_force=0); per-atom f fields omitted intentionally\n";
+        note = "# NOTE: forces not computed (cal_force=0); per-atom f fields omitted intentionally";
     }
+    else
+    {
+        note = "# NOTE: stress and forces computed for this geometry";
+    }
+    header += note + "\n";
 
     return header;
 }
