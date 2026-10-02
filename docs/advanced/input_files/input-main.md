@@ -2176,7 +2176,7 @@
 
 - **Type**: Boolean \[Integer\](optional)
 - **Availability**: *[`basis_type`](#basis_type)==lcao and [`gamma_only`](#gamma_only)==0*
-- **Description**: Generate files containing the kinetic energy matrix. The optional second parameter controls text output precision. The format will be the same as the Hamiltonian matrix and overlap matrix as mentioned in out_hsr. The name of the files will be trs1_nao.csr and so on. Also controled by out_freq_ion and out_app_flag.
+- **Description**: Generate files containing the kinetic energy matrix. The optional second parameter controls text output precision. The format will be the same as the Hamiltonian matrix and overlap matrix as mentioned in out_hsr. The name of the files will be tr_nao.csr and so on. Also controled by out_freq_ion and out_app_flag.
 
   > Note: In the 3.10-LTS version, the file name is data-TR-sparse_SPIN0.csr.
 - **Default**: False 8
@@ -2336,7 +2336,7 @@
 
 - **Type**: Boolean \[Integer\](optional)
 - **Availability**: *[`basis_type`](#basis_type)==lcao*
-- **Description**: Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named OUT.{suffix}_Lx.dat, OUT.{suffix}_Ly.dat, and OUT.{suffix}_Lz.dat. The second integer controls the precision of the output.
+- **Description**: Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named lx_nao.txt, ly_nao.txt, and lz_nao.txt (or lxg{step+1}_nao.txt etc. when out_freq_ion is set). The second integer controls the precision of the output.
 - **Default**: False 8
 
 ### out_xc_r
