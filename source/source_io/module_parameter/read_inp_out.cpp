@@ -753,7 +753,7 @@ For binary output, each file uses the same basename as text output with a .dat s
         item.annotation = "output T(R) matrix";
         item.category = "Output information";
         item.type = R"(Boolean \[Integer\](optional))";
-        item.description = "Generate files containing the kinetic energy matrix. The optional second parameter controls text output precision. The format will be the same as the Hamiltonian matrix and overlap matrix as mentioned in out_hsr. The name of the files will be trs1_nao.csr and so on. Also controled by out_freq_ion and out_app_flag."
+        item.description = "Generate files containing the kinetic energy matrix. The optional second parameter controls text output precision. The format will be the same as the Hamiltonian matrix and overlap matrix as mentioned in out_hsr. The name of the files will be tr_nao.csr and so on. Also controled by out_freq_ion and out_app_flag."
                           "\n\n[NOTE] In the 3.10-LTS version, the file name is data-TR-sparse_SPIN0.csr.";
         item.default_value = "False 8";
         item.unit = "Ry";
@@ -1256,7 +1256,7 @@ For binary output, each file uses the same basename as text output with a .dat s
         item.annotation = "output the expectation values of angular momentum operators";
         item.category = "Output information";
         item.type = R"(Boolean \[Integer\](optional))";
-        item.description = "Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named OUT.{suffix}_Lx.dat, OUT.{suffix}_Ly.dat, and OUT.{suffix}_Lz.dat. The second integer controls the precision of the output.";
+        item.description = "Whether to print the expectation value of the angular momentum operator , , and in the basis of the localized atomic orbitals. The files are named lx_nao.txt, ly_nao.txt, and lz_nao.txt (or lxg{step+1}_nao.txt etc. when out_freq_ion is set). The second integer controls the precision of the output.";
         item.default_value = "False 8";
         item.unit = "";
         item.set_availability("basis_type==lcao");
