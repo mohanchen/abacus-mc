@@ -1,23 +1,41 @@
 #ifndef WRITE_EBAND_TERMS_H
 #define WRITE_EBAND_TERMS_H
 
+#include "source_base/matrix.h"
 #include "source_psi/psi.h"
-#include "source_cell/unitcell.h"
-#include "source_cell/klist.h"
-#include "source_estate/module_pot/potential_new.h"
-#include "source_hamilt/module_xc/exx_info.h"
-#include "source_basis/module_nao/two_center_bundle.h"
-#include "source_basis/module_ao/parallel_orbitals.h"
 
+#include <array>
 #include <complex>
 #include <map>
+#include <utility>
 #include <vector>
 
-#ifdef __EXX
-#include "source_lcao/module_operator_lcao/op_exx_lcao.h"
-#endif
-
 class Grid_Driver;
+class Parallel_Orbitals;
+class UnitCell;
+class Structure_Factor;
+class surchem;
+class Charge;
+class K_Vectors;
+class TwoCenterBundle;
+struct Exx_Info;
+
+namespace ModulePW
+{
+class PW_Basis;
+}
+
+#ifdef __EXX
+namespace hamilt
+{
+using TAC = std::pair<int, std::array<int, 3>>;
+}
+namespace RI
+{
+template <typename T>
+class Tensor;
+}
+#endif
 
 namespace ModuleIO
 {

@@ -6,6 +6,22 @@
 #include "source_lcao/module_operator_lcao/nonlocal.h"
 #include "source_cell/module_neighbor/sltk_grid_driver.h"
 
+#include "source_psi/psi.h"
+#include "source_cell/unitcell.h"
+#include "source_cell/klist.h"
+#include "source_estate/module_pot/potential_new.h"
+#include "source_hamilt/module_xc/exx_info.h"
+#include "source_basis/module_nao/two_center_bundle.h"
+#include "source_basis/module_ao/parallel_orbitals.h"
+#include "source_estate/module_charge/charge.h"
+#include "source_pw/module_pwdft/stru_fac.h"
+#include "source_hamilt/module_surchem/surchem.h"
+#include "source_basis/module_pw/pw_basis.h"
+
+#ifdef __EXX
+#include "source_lcao/module_operator_lcao/op_exx_lcao.h"
+#endif
+
 namespace ModuleIO
 {
 template <typename TK, typename TR>
