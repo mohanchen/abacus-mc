@@ -78,12 +78,14 @@ void write_dh_perI(WriteDHParams& params,
 #endif
             {
                 std::string fr = r_dir + ModuleIO::dhr_gen_fname(rprefix + tag, ispin, params.append, params.istep);
+                // dH/dR is not a Hamiltonian: no Fermi energy annotation in the header
+                const double no_efermi = 0.0;
 #ifdef __MPI
                 ModuleIO::write_hcontainer_csr(
-                    fr, &ucell, 8, &hR_s, params.istep, ispin, nspin, label, "");
+                    fr, &ucell, 8, &hR_s, params.istep, ispin, nspin, label, "", no_efermi);
 #else
                 ModuleIO::write_hcontainer_csr(
-                    fr, &ucell, 8, hR, params.istep, ispin, nspin, label, "");
+                    fr, &ucell, 8, hR, params.istep, ispin, nspin, label, "", no_efermi);
 #endif
             }
             }
