@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ABACUS_SOURCE_HAMILT_MODULE_GINT_PHI_OPERATOR_H
+#define ABACUS_SOURCE_HAMILT_MODULE_GINT_PHI_OPERATOR_H
+
 
 #include <memory>
 #include <vector>
@@ -171,3 +173,6 @@ class PhiOperator
 };
 
 } // namespace ModuleGint
+
+
+#endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_PHI_OPERATOR_H

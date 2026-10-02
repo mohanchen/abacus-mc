@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ABACUS_SOURCE_IO_MODULE_RESTART_RESTART_EXX_CSR_H
+#define ABACUS_SOURCE_IO_MODULE_RESTART_RESTART_EXX_CSR_H
+
 #include "source_cell/unitcell.h"
 #include "source_lcao/module_ri/ri_util.h"
 #include "source_lcao/module_ri/abfs_vector3_order.h"
@@ -38,3 +40,5 @@ std::map<Abfs::Vector3_Order<int>, std::map<size_t, std::map<size_t, Tdata>>> ca
     const std::map<int, std::map<TAC, RI::Tensor<Tdata>>>& Hexxs,
     const UnitCell& ucell);
 } // namespace ModuleIO
+
+#endif // ABACUS_SOURCE_IO_MODULE_RESTART_RESTART_EXX_CSR_H
