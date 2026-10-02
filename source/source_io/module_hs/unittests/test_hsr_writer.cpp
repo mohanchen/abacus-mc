@@ -167,7 +167,7 @@ TEST(HsrWriterIo, HContainerCsrHeaderKeepsCurrentFormat)
     EXPECT_THAT(output, testing::HasSubstr(" --- Ionic Step 1 ---\n"));
     EXPECT_THAT(output, testing::HasSubstr(" # print H matrix in real space H(R)\n"));
     EXPECT_THAT(output, testing::HasSubstr(" 1 # number of spin directions\n"));
-    EXPECT_THAT(output, testing::HasSubstr(" 1 # spin index, E_Fermi = 5.432100 eV\n"));
+    EXPECT_THAT(output, testing::HasSubstr(" 1 # spin index, E_Fermi = 5.4321 eV\n"));
     EXPECT_THAT(output, testing::HasSubstr(" 2 # number of localized basis\n"));
     EXPECT_THAT(output, testing::HasSubstr(" 1 # number of Bravais lattice vector R\n"));
     EXPECT_THAT(output, testing::HasSubstr(" user_defined_lattice\n"));
@@ -247,9 +247,6 @@ TEST(HsrWriterIo, HContainerCsrAppendKeepsCurrentStepSections)
 
 TEST(HsrWriterIo, HContainerCsrHeaderCarriesPerChannelFermi)
 {
-    const std::string filename = "write_hs_r_header_fermi.csr";
-    std::remove(filename.c_str());
-
     UnitCell ucell;
     init_unitcell(ucell);
     Parallel_Orbitals pv;
@@ -258,17 +255,23 @@ TEST(HsrWriterIo, HContainerCsrHeaderCarriesPerChannelFermi)
     double values[4] = {1.0, 0.0, 0.5, 2.0};
     fill_matrix(matrix, pv, values);
 
-    // Each spin channel file carries its own Fermi energy
+    // Each spin channel is written to its own file (write mode, istep=0)
     const double efermi_up_eV = 5.4321;
     const double efermi_dw_eV = 3.2109;
-    ModuleIO::write_hcontainer_csr(filename, &ucell, 5, &matrix, 0, 0, 2, "H", "", efermi_up_eV);
-    ModuleIO::write_hcontainer_csr(filename, &ucell, 5, &matrix, 0, 1, 2, "H", "", efermi_dw_eV);
+    const std::string filename_up = "write_hs_r_header_fermi_up.csr";
+    const std::string filename_dw = "write_hs_r_header_fermi_dw.csr";
+    std::remove(filename_up.c_str());
+    std::remove(filename_dw.c_str());
+    ModuleIO::write_hcontainer_csr(filename_up, &ucell, 5, &matrix, 0, 0, 2, "H", "", efermi_up_eV);
+    ModuleIO::write_hcontainer_csr(filename_dw, &ucell, 5, &matrix, 0, 1, 2, "H", "", efermi_dw_eV);
 
-    const std::string output = read_file(filename);
-    EXPECT_THAT(output, testing::HasSubstr(" 1 # spin index, E_Fermi = 5.432100 eV\n"));
-    EXPECT_THAT(output, testing::HasSubstr(" 2 # spin index, E_Fermi = 3.210900 eV\n"));
+    const std::string output_up = read_file(filename_up);
+    const std::string output_dw = read_file(filename_dw);
+    EXPECT_THAT(output_up, testing::HasSubstr(" 1 # spin index, E_Fermi = 5.4321 eV\n"));
+    EXPECT_THAT(output_dw, testing::HasSubstr(" 2 # spin index, E_Fermi = 3.2109 eV\n"));
 
-    std::remove(filename.c_str());
+    std::remove(filename_up.c_str());
+    std::remove(filename_dw.c_str());
 }
 
 // ---------------------------------------------------------------------------
