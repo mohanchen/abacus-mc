@@ -823,6 +823,7 @@ OBJS_LCAO=evolve_elec.o\
 
 OBJS_MODULE_RI=conv_coulomb_pot_k.o\
       exx_abfs_jle.o\
+      module_restart/restart_exx_csr.o\
       exx_abfs_io.o\
       exx_abfs_ctor_orbs.o\
       abfs_construct_pca.o\

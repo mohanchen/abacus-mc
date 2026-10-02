@@ -109,6 +109,11 @@ if(ENABLE_LCAO)
       module_ctrl/ctrl_runner_lcao.cpp
       module_ctrl/ctrl_iter_lcao.cpp
   )
+  if(ENABLE_LIBRI)
+    list(APPEND objects
+      module_restart/restart_exx_csr.cpp
+    )
+  endif()
 endif()
 
 add_library(
