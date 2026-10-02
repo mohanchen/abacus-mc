@@ -174,5 +174,4 @@ class PhiOperator
 
 } // namespace ModuleGint
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_PHI_OPERATOR_H

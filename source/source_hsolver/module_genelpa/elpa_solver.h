@@ -113,5 +113,4 @@ class ELPA_Solver
     void timer(int myid, const char function[], const char step[], double& t0);
 };
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_ELPA_SOLVER_H

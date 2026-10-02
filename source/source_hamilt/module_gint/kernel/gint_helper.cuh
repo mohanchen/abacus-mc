@@ -87,6 +87,4 @@ template <> struct gemm_vec_traits<double>
     }
 };
 
-
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_KERNEL_GINT_HELPER_CUH

@@ -97,5 +97,4 @@ container::Tensor cal_dm_trans_onebase_blas(
 
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_BSE_BSE_UTIL_H

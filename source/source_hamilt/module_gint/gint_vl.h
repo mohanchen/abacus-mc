@@ -38,5 +38,4 @@ class Gint_vl : public Gint
 
 }
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_GINT_VL_H

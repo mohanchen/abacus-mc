@@ -91,5 +91,4 @@ namespace LR
     };
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_OPERATOR_CASIDA_OPERATOR_LR_HXC_H

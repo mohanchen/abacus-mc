@@ -11,5 +11,4 @@ namespace ModuleGint
     using ModuleBase::grad_rl_sph_harm;
 }
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_KERNEL_SPH_CUH

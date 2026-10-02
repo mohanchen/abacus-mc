@@ -44,5 +44,4 @@ namespace PulayForceStress
     }
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_PULAY_FS_GINT_H

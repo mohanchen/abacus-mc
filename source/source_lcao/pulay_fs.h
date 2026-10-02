@@ -59,5 +59,4 @@ namespace PulayForceStress
 #include "pulay_fs_temp.h"
 #include "pulay_fs_gint.h"
 
-
 #endif // ABACUS_SOURCE_LCAO_PULAY_FS_H

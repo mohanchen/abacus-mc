@@ -47,5 +47,4 @@ void solve_tda(const std::vector<T>& A,
 
 #include "hamilt_bse_solver.hpp"
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_BSE_HAMILT_BSE_SOLVER_H

@@ -117,5 +117,4 @@ void write_lri_R_max_norm(const TLRI<T>& tensors, const UnitCell& ucell, const s
 
 } // namespace LR_IO
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_UTILS_LR_IO_H

@@ -6,5 +6,4 @@
 
 void validate_elpa_complex_kernel(int kernel, int set_status, MPI_Comm comm);
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_ELPA_RUNTIME_CHECK_H

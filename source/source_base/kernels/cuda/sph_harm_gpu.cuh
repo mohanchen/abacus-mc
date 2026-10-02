@@ -398,5 +398,4 @@ __device__ static void grad_rl_sph_harm(
 
 } // namespace ModuleBase
 
-
 #endif // ABACUS_SOURCE_BASE_KERNELS_CUDA_SPH_HARM_GPU_CUH

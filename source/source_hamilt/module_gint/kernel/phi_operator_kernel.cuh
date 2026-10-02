@@ -373,5 +373,4 @@ __global__ void phi_dot_dphi_r_kernel(
 
 }
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_KERNEL_PHI_OPERATOR_KERNEL_CUH

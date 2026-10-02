@@ -75,6 +75,4 @@ namespace LR
     };
 }
 
-
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_POTENTIALS_XC_KERNEL_H

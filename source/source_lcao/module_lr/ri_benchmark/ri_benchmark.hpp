@@ -417,5 +417,4 @@ namespace RI_Benchmark
     }
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_RI_BENCHMARK_RI_BENCHMARK_HPP

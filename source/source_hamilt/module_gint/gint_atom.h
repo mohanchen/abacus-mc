@@ -136,5 +136,4 @@ class GintAtom
 
 } // namespace ModuleGint
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_GINT_ATOM_H

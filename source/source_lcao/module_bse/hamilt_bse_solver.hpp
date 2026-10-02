@@ -90,5 +90,4 @@ void solve_tda(const std::vector<T>& A,
 }
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_BSE_HAMILT_BSE_SOLVER_HPP

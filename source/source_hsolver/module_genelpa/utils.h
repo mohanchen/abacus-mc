@@ -35,5 +35,4 @@ void saveLocalMatrix(const char filePrefix[], int narows, int nacols, std::compl
 // and save to one completed matrix file
 void saveMatrix(const char FileName[], int nFull, std::complex<double>* a, int* desca, int blacs_ctxt);
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_UTILS_H

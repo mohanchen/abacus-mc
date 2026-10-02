@@ -41,5 +41,4 @@ void pztrmm_(char* side , char* uplo , char* transa , char* diag , int* m , int*
              double _Complex* alpha ,  double _Complex* a , int* ia , int* ja , int* desca ,
                                        double _Complex* b , int* ib , int* jb , int* descb );
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_PBLAS_H

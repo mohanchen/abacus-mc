@@ -151,5 +151,4 @@ namespace ModuleSymmetry
     };
 }
 
-
 #endif // ABACUS_SOURCE_CELL_MODULE_SYMMETRY_IRREDUCIBLE_SECTOR_H

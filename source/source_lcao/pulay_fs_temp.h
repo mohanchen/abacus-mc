@@ -135,5 +135,4 @@ namespace PulayForceStress
     }
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_PULAY_FS_TEMP_H

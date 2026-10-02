@@ -56,5 +56,4 @@ namespace ModuleESolver
 
 }
 
-
 #endif // ABACUS_SOURCE_ESOLVER_ESOLVER_LR_LCAO_BSE_H

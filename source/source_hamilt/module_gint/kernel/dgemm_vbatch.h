@@ -39,5 +39,4 @@ void gemm_tn_vbatch(
     int batchCount, cudaStream_t stream,
     const T* alpha = nullptr);
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_KERNEL_DGEMM_VBATCH_H

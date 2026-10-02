@@ -40,5 +40,4 @@ class Gint_env_k : public Gint
 
 } // namespace ModuleGint
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_GINT_ENV_K_H

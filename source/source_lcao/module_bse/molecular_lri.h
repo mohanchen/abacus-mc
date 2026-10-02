@@ -180,5 +180,4 @@ protected:
 #include "molecular_lri.hpp"
 #include "molecular_lri_comm.hpp"
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_BSE_MOLECULAR_LRI_H

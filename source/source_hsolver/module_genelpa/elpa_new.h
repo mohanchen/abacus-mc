@@ -43,5 +43,4 @@ extern "C"
 
 #endif
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_ELPA_NEW_H

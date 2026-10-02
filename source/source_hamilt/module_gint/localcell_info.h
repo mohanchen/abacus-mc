@@ -127,5 +127,4 @@ class LocalCellInfo
 
 } // namespace ModuleGint
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_LOCALCELL_INFO_H

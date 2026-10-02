@@ -13,5 +13,4 @@ void pdgemr2d_(int *M, int *N, double *A, int *IA, int *JA, int *DESCA,
 void pzgemr2d_(int *M, int *N, double _Complex *A, int *IA, int *JA, int *DESCA, 
                double _Complex *B, int *IB, int *JB, int *DESCB, int *ICTXT);
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_SCALAPACK_H

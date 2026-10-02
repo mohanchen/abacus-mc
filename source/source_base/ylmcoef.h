@@ -57,5 +57,4 @@ static constexpr double ylmcoef[YLMCOEF_SIZE] = {
 
 } // namespace ModuleBase
 
-
 #endif // ABACUS_SOURCE_BASE_YLMCOEF_H

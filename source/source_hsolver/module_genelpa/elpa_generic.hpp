@@ -445,5 +445,4 @@ inline void elpa_invert_triangular(elpa_t handle, std::complex<float>  *a, int *
 }
 #endif
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_ELPA_GENERIC_HPP

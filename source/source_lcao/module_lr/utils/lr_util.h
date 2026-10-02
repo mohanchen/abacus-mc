@@ -172,5 +172,4 @@ namespace LR_Util
 }
 #include "lr_util.hpp"
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_UTILS_LR_UTIL_H

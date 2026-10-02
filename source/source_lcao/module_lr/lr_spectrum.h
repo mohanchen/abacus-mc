@@ -114,5 +114,4 @@ namespace LR
     };
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_LR_SPECTRUM_H

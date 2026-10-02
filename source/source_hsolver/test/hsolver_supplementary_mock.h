@@ -90,5 +90,4 @@ void Potential::cal_fixed_v(double* vl_pseudo)
 
 #include "source_cell/klist.h"
 
-
 #endif // ABACUS_SOURCE_HSOLVER_TEST_HSOLVER_SUPPLEMENTARY_MOCK_H

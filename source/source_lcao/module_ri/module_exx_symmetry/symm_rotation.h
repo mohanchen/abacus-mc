@@ -129,5 +129,4 @@ namespace ModuleSymmetry
 #include "symm_rotation_r.hpp"
 #include "symm_rotation_r_hcontainer.hpp"
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_RI_MODULE_EXX_SYMMETRY_SYMM_ROTATION_H

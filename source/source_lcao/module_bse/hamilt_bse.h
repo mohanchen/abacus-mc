@@ -137,5 +137,4 @@ private:
 };
 } // namespace BSE
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_BSE_HAMILT_BSE_H

@@ -182,5 +182,4 @@ namespace LR
     }
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_HSOLVER_LRTD_HPP

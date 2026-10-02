@@ -147,5 +147,4 @@ namespace ModuleESolver
     };
 }
 
-
 #endif // ABACUS_SOURCE_ESOLVER_ESOLVER_LR_LCAO_TDDFT_H

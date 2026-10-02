@@ -26,5 +26,4 @@ void Czgerv2d(int icontxt, int m, int n, std::complex<double> *a, int lda, int r
 //void Cdgamx2d(int icontxt, int scope, int top, int m, int n,
 //              double *a, int lda, int *ra, int *ca, int rcflag, int rdest, int cdest);
 
-
 #endif // ABACUS_SOURCE_HSOLVER_MODULE_GENELPA_CBLACS_H

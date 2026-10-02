@@ -54,5 +54,4 @@ namespace LR
 
 } // namespace LR
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_POTENTIALS_POT_HXC_LRTD_H

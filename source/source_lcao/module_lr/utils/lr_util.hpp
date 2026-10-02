@@ -586,5 +586,4 @@ namespace LR_Util
 
 }
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_UTILS_LR_UTIL_HPP

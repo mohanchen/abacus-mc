@@ -32,5 +32,4 @@ class RI_kRlist
 
 } // namespace LR_IO
 
-
 #endif // ABACUS_SOURCE_LCAO_MODULE_LR_UTILS_LR_IO_KRLIST_H

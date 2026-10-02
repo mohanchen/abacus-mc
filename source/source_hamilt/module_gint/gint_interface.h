@@ -86,5 +86,4 @@ void cal_dvlocal_R_sparse(
 
 } // namespace ModuleGint
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_GINT_INTERFACE_H

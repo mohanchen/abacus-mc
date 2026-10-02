@@ -34,5 +34,4 @@ namespace ModuleGint
     void wfc_2d_to_gint(const T* wfc_2d, int nbands, int nlocal, const Parallel_Orbitals& pv, T* wfc_grid, const GintInfo& gint_info);
 }
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_GINT_COMMON_H

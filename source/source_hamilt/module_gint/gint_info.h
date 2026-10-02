@@ -164,5 +164,4 @@ class GintInfo
 
 } // namespace ModuleGint
 
-
 #endif // ABACUS_SOURCE_HAMILT_MODULE_GINT_GINT_INFO_H
