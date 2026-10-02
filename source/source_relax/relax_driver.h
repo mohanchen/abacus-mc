@@ -40,6 +40,27 @@ class Relax_Driver
             const Input_para& inp,
             std::ofstream& ofs_running);
 
+    /**
+     * @brief Build the header comment for STRU output files.
+     *
+     * @param istep Current/final iteration step (0-based; printed as istep+1).
+     * @param etot Total energy in Ry.
+     * @param stress Stress matrix in Ry/Bohr^3.
+     * @param inp Input parameters (cal_force, cal_stress).
+     * @param is_final true for "(FINAL)" suffix.
+     * @param geometry_evaluated false when the current geometry has been
+     *        proposed by the optimizer but not yet evaluated; forces and
+     *        stress are then marked N/A/omitted.
+     * @return Header string including version, timestamp, energy, stress
+     *         block and force note.
+     */
+    static std::string build_stru_header(const int istep,
+                                         const double etot,
+                                         const ModuleBase::matrix& stress,
+                                         const Input_para& inp,
+                                         const bool is_final,
+                                         const bool geometry_evaluated);
+
   private:
     /// New relaxation optimizer (Relax class)
     Relax rl;

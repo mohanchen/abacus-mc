@@ -194,25 +194,7 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
     const bool deepks_setorb = PARAM.globalv.deepks_setorb;
 
     // Build header comment with version, timestamp, energy and stress
-    std::time_t now = std::time(nullptr);
-    char time_buf[64];
-    std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-    std::string header = FmtCore::format("# ABACUS version: %s\n# Written at %s\n# RELAX STEP %d, Energy: %.8f eV\n",
-                                          VERSION,
-                                          time_buf,
-                                          istep + 1,
-                                          etot * ModuleBase::Ry_to_eV);
-    // stress in kbar: Ry/Bohr^3 -> kbar, 3 rows
-    const double stress_transform = ModuleBase::RYDBERG_SI
-                                    / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI)
-                                    * 1.0e-8;
-    for (int i = 0; i < 3; i++)
-    {
-        header += FmtCore::format("# Stress (kbar): %.6f %.6f %.6f\n",
-                                  stress(i, 0) * stress_transform,
-                                  stress(i, 1) * stress_transform,
-                                  stress(i, 2) * stress_transform);
-    }
+    const std::string header = build_stru_header(istep, etot, stress, inp, false, true);
 
     bool need_orb = inp.basis_type == "pw";
     need_orb = need_orb && inp.init_wfc.substr(0, 3) == "nao";
@@ -317,24 +299,7 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
         const bool deepks_setorb = PARAM.globalv.deepks_setorb;
 
         // Build header comment for STRU_FINAL
-        std::time_t now = std::time(nullptr);
-        char time_buf[64];
-        std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-        std::string header = FmtCore::format("# ABACUS version: %s\n# Written at %s\n# RELAX STEP %d (FINAL), Energy: %.8f eV\n",
-                                              VERSION,
-                                              time_buf,
-                                              istep + 1,
-                                              etot * ModuleBase::Ry_to_eV);
-        const double stress_transform = ModuleBase::RYDBERG_SI
-                                        / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI)
-                                        * 1.0e-8;
-        for (int i = 0; i < 3; i++)
-        {
-            header += FmtCore::format("# Stress (kbar): %.6f %.6f %.6f\n",
-                                      stress(i, 0) * stress_transform,
-                                      stress(i, 1) * stress_transform,
-                                      stress(i, 2) * stress_transform);
-        }
+        const std::string header = build_stru_header(istep, etot, stress, inp, true, true);
 
         if (inp.out_stru == 1)
         {
