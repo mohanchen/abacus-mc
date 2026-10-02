@@ -747,6 +747,7 @@ OBJS_IO_LCAO=module_hs/pos_op_mat.o\
       module_output/write_orb_info.o\
       module_dos/write_dos_lcao.o\
       module_energy/write_proj_band_lcao.o\
+      module_energy/write_eband_terms.o\
       module_energy/write_eig_occ.o\
       module_chgpot/get_pchg_lcao.o\
       module_wf/get_wf_lcao.o\

@@ -105,6 +105,7 @@ if(ENABLE_LCAO)
       module_hs/vxc_op_r.cpp
       module_hs/vxc_op_lip.cpp
       module_hs/output_mat_sparse.cpp
+      module_energy/write_eband_terms.cpp
       module_ctrl/ctrl_scf_lcao.cpp
       module_ctrl/ctrl_runner_lcao.cpp
       module_ctrl/ctrl_iter_lcao.cpp

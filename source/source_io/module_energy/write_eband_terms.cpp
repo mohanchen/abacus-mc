@@ -1,11 +1,10 @@
-#ifndef WRITE_EBAND_TERMS_HPP
-#define WRITE_EBAND_TERMS_HPP
- 
+#include "write_eband_terms.h"
+
 #include "source_io/module_hs/vxc_op_mat.h"
-#include "source_hamilt/module_xc/exx_info.h"
+#include "source_io/module_parameter/parameter.h"
 #include "source_lcao/module_operator_lcao/ekinetic.h"
 #include "source_lcao/module_operator_lcao/nonlocal.h"
-#include "source_basis/module_nao/two_center_bundle.h"
+#include "source_cell/module_neighbor/sltk_grid_driver.h"
 
 namespace ModuleIO
 {
@@ -37,7 +36,7 @@ void write_eband_terms(const int nspin,
     {
         // 0. prepare
         const int& nbands = wg.nc;
-        const int& nspin0 = (nspin == 2) ? 2 : 1;
+        const int nspin0 = (nspin == 2) ? 2 : 1;
         double etxc = 0.0;
         double vtxc = 0.0;
 
@@ -45,11 +44,11 @@ void write_eband_terms(const int nspin,
 
         set_para2d_MO(*pv, nbands, p2d);
 
-        auto if_gamma_fix = [](hamilt::HContainer<TR>& hR) 
+        auto if_gamma_fix = [](hamilt::HContainer<TR>& hR)
         {
-            if (std::is_same<TK, double>::value) 
-            { 
-                hR.fix_gamma(); 
+            if (std::is_same<TK, double>::value)
+            {
+                hR.fix_gamma();
             }
         };
 
@@ -63,9 +62,9 @@ void write_eband_terms(const int nspin,
         auto all_k_all_band_energy = [&wg, &all_band_energy](const std::vector<std::vector<double>>& e_orb)->double
         {
             double e = 0;
-            for (int ik = 0; ik < e_orb.size(); ++ik) 
-            { 
-                e += all_band_energy(ik, e_orb[ik]); 
+            for (int ik = 0; ik < e_orb.size(); ++ik)
+            {
+                e += all_band_energy(ik, e_orb[ik]);
             }
             return e;
         };
@@ -107,13 +106,13 @@ void write_eband_terms(const int nspin,
             std::vector<std::vector<double>> e_orb_pp_local;
 
             hamilt::Veff<hamilt::OperatorLCAO<TK, TR>> v_pp_local_op(
-                    &v_pp_local_k_ao, 
-                    kv.kvec_d, 
-                    &pot_local, 
-                    &v_pp_local_R_ao, 
-                    &ucell, 
-                    orb_cutoff, 
-                    &gd, 
+                    &v_pp_local_k_ao,
+                    kv.kvec_d,
+                    &pot_local,
+                    &v_pp_local_R_ao,
+                    &ucell,
+                    orb_cutoff,
+                    &gd,
                     nspin);
 
             v_pp_local_op.contributeHR();
@@ -215,5 +214,39 @@ void write_eband_terms(const int nspin,
             );
         }
     }
-}
+
+// Explicit template instantiations
+template void write_eband_terms<double, double>(
+    const int, const int, const int, const Parallel_Orbitals*, const psi::Psi<double>&,
+    const UnitCell&, Structure_Factor&, surchem&, const ModulePW::PW_Basis&, const ModulePW::PW_Basis&,
+    const ModuleBase::matrix&, const Charge&, const K_Vectors&, const ModuleBase::matrix&, Grid_Driver&,
+    const std::vector<double>&, const TwoCenterBundle&, const Exx_Info&
+#ifdef __EXX
+    , std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>*,
+    std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>*
 #endif
+);
+
+template void write_eband_terms<std::complex<double>, double>(
+    const int, const int, const int, const Parallel_Orbitals*, const psi::Psi<std::complex<double>>&,
+    const UnitCell&, Structure_Factor&, surchem&, const ModulePW::PW_Basis&, const ModulePW::PW_Basis&,
+    const ModuleBase::matrix&, const Charge&, const K_Vectors&, const ModuleBase::matrix&, Grid_Driver&,
+    const std::vector<double>&, const TwoCenterBundle&, const Exx_Info&
+#ifdef __EXX
+    , std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>*,
+    std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>*
+#endif
+);
+
+template void write_eband_terms<std::complex<double>, std::complex<double>>(
+    const int, const int, const int, const Parallel_Orbitals*, const psi::Psi<std::complex<double>>&,
+    const UnitCell&, Structure_Factor&, surchem&, const ModulePW::PW_Basis&, const ModulePW::PW_Basis&,
+    const ModuleBase::matrix&, const Charge&, const K_Vectors&, const ModuleBase::matrix&, Grid_Driver&,
+    const std::vector<double>&, const TwoCenterBundle&, const Exx_Info&
+#ifdef __EXX
+    , std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<double>>>>*,
+    std::vector<std::map<int, std::map<hamilt::TAC, RI::Tensor<std::complex<double>>>>>*
+#endif
+);
+
+} // namespace ModuleIO
