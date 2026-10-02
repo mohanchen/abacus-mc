@@ -178,6 +178,7 @@ OBJS_BASE=assoc_laguerre.o\
     ylm.o\
     opt_cg.o\
     opt_dcsrch.o\
+    opt_tn.o\
     cubic_spline.o\
     sph_bessel_tf.o\
     mixing_data.o\
@@ -274,6 +275,7 @@ OBJS_ELECSTAT=elecstate.o\
     gatefield.o\
     potential_new.o\
     potential_types.o\
+    pot_surchem.o\
     pot_sep.o\
     pot_local.o\
     h_hartree_pw.o\
