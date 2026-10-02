@@ -292,7 +292,8 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
 
         ModuleIO::write_hsr(hr_vec, sr, &ucell, inp.out_hsr[0], precision, pv,
                             out_app_flag, gamma_only, ucell.get_iat2iwt(), ucell.nat, istep,
-                            PARAM.globalv.global_out_dir, pelec->eferm);
+                            PARAM.globalv.global_out_dir, pelec->eferm,
+                            GlobalV::ofs_running);
     }
 
     //------------------------------------------------------------------

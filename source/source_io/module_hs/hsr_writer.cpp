@@ -287,7 +287,8 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
                           const int nat,
                           const int istep,
                           const std::string& global_out_dir,
-                          const elecstate::Efermi& eferm)
+                          const elecstate::Efermi& eferm,
+                          std::ofstream& ofs_running)
 {
     if (out_type != 1 && out_type != 2)
     {
@@ -329,6 +330,7 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
                 write_hcontainer_csr(
                     fname, ucell, precision, &hr_serial, istep, ispin, nspin, "H", representation_note, efermi_eV);
             }
+            ofs_running << " Write H(R) matrix in NAO basis to file: " << fname << std::endl;
         }
     }
 
@@ -359,6 +361,7 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
                 write_hcontainer_csr(
                     fname, ucell, precision, &sr_serial, istep, 0, 1, "S", representation_note, 0.0);
             }
+            ofs_running << " Write S(R) matrix in NAO basis to file: " << fname << std::endl;
         }
     }
 }
@@ -381,10 +384,10 @@ template void ModuleIO::write_hsr<double>(
     const hamilt::HContainer<double>*,
     const UnitCell*, const int, const int, const Parallel_2D&,
     const bool, const bool, const int*, const int, const int,
-    const std::string&, const elecstate::Efermi&);
+    const std::string&, const elecstate::Efermi&, std::ofstream&);
 template void ModuleIO::write_hsr<std::complex<double>>(
     const std::vector<hamilt::HContainer<std::complex<double>>*>&,
     const hamilt::HContainer<std::complex<double>>*,
     const UnitCell*, const int, const int, const Parallel_2D&,
     const bool, const bool, const int*, const int, const int,
-    const std::string&, const elecstate::Efermi&);
+    const std::string&, const elecstate::Efermi&, std::ofstream&);

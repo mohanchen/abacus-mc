@@ -159,12 +159,6 @@ void write_dH_components(WriteDHParams& params, const Exx_Info& exx_info)
     }
 #endif
 
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " |                 #Print out dH/dR components#                       |" << std::endl;
-    GlobalV::ofs_running << " |                                                                    |" << std::endl;
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-
     if (PARAM.inp.out_mat_dh[0])
     {
         write_dH_sum(params, exx_info);

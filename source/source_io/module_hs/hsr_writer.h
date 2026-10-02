@@ -83,7 +83,8 @@ void write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
                const int nat,
                const int istep,
                const std::string& global_out_dir,
-               const elecstate::Efermi& eferm);
+               const elecstate::Efermi& eferm,
+               std::ofstream& ofs_running);
 
 } // namespace ModuleIO
 
