@@ -170,6 +170,4 @@ class PhiOperator
     std::vector<std::pair<int, int>> atom_pair_range_;
 };
 
-}
-
-#include "phi_operator.hpp"
+} // namespace ModuleGint
