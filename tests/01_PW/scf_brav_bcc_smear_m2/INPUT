@@ -2,7 +2,6 @@ INPUT_PARAMETERS
 #Parameters	(System)
 suffix            autotest
 
-nbands            4
 stru_file         STRU
 kpoint_file       KPT
 pseudo_dir        ../../PP_ORB
