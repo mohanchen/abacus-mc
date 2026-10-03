@@ -42,7 +42,6 @@ scf_out_chg_tau
 038_PW_NC_GGA_GRAD2
 scf_Al100_kspace3
 040_PW_FX_smear
-044_PW_MV_smear
 045_PW_BD_chgmix
 046_PW_KK_chgmix
 047_PW_PK_chgmix
@@ -125,7 +124,7 @@ scf_brav_hex_smear_mp
 808_PW_LT_so
 809_PW_LT_baco
 810_PW_LT_fco
-811_PW_LT_bco
+scf_brav_bco_smear_mv
 812_PW_LT_sm
 813_PW_LT_bacm
 814_PW_LT_triclinic
