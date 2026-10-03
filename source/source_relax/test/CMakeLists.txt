@@ -48,6 +48,17 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_RELAX_matrix_methods_test
+  SOURCES test_matrix_methods.cpp ../matrix_methods.cpp
+)
+
+AddTest(
+  TARGET MODULE_RELAX_cg_base_test
+  LIBS parameter
+  SOURCES test_cg_base.cpp ../cg_base.cpp ../../source_base/global_variable.cpp ../../source_base/global_file.cpp ../../source_base/global_function.cpp ../../source_base/timer.cpp ../../source_base/tool_quit.cpp ../../source_base/tool_title.cpp
+)
+
+AddTest(
   TARGET MODULE_RELAX_relax_sync_test
   SOURCES  test_relax_sync.cpp ../relax_sync.cpp ../line_search.cpp ../relax_data.cpp ../../source_base/tool_quit.cpp ../../source_base/global_variable.cpp ../../source_base/global_file.cpp ../../source_base/timer.cpp
     ../../source_base/matrix3.cpp ../../source_base/intarray.cpp ../../source_base/tool_title.cpp
