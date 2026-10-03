@@ -42,14 +42,14 @@ AddTest(
 set_tests_properties(MODULE_RELAX_socket_driver_test PROPERTIES TIMEOUT 15)
 
 AddTest(
-  TARGET MODULE_RELAX_relax_new_line_search
+  TARGET MODULE_RELAX_line_search_test
   LIBS parameter
-  SOURCES line_search_test.cpp ../line_search.cpp ../../source_base/global_variable.cpp ../../source_base/global_file.cpp ../../source_base/global_function.cpp ../../source_base/timer.cpp ../../source_base/tool_quit.cpp
+  SOURCES test_line_search.cpp ../line_search.cpp ../../source_base/global_variable.cpp ../../source_base/global_file.cpp ../../source_base/global_function.cpp ../../source_base/timer.cpp ../../source_base/tool_quit.cpp
 )
 
 AddTest(
-  TARGET MODULE_RELAX_relax_new_relax
-  SOURCES  relax_test.cpp ../relax_sync.cpp ../line_search.cpp ../relax_data.cpp ../../source_base/tool_quit.cpp ../../source_base/global_variable.cpp ../../source_base/global_file.cpp ../../source_base/timer.cpp
+  TARGET MODULE_RELAX_relax_sync_test
+  SOURCES  test_relax_sync.cpp ../relax_sync.cpp ../line_search.cpp ../relax_data.cpp ../../source_base/tool_quit.cpp ../../source_base/global_variable.cpp ../../source_base/global_file.cpp ../../source_base/timer.cpp
     ../../source_base/matrix3.cpp ../../source_base/intarray.cpp ../../source_base/tool_title.cpp
     ../../source_base/global_function.cpp ../../source_base/matrix.cpp
     ../../source_base/complexarray.cpp ../../source_base/realarray.cpp
@@ -66,19 +66,19 @@ list(APPEND cell_source_files
 AddTest(
   TARGET MODULE_RELAX_lat_change_method_test
   LIBS parameter base device
-  SOURCES lat_change_method_test.cpp ../lat_change_method.cpp ../lattice_change_basic.cpp ../relax_data.cpp mock_remake_cell.cpp
+  SOURCES test_lat_change_method.cpp ../lat_change_method.cpp ../lattice_change_basic.cpp ../relax_data.cpp mock_remake_cell.cpp
 )
 
 AddTest(
   TARGET MODULE_RELAX_lattice_change_basic_test
   LIBS parameter base device
-  SOURCES lattice_change_basic_test.cpp ../lattice_change_basic.cpp ../relax_data.cpp mock_remake_cell.cpp
+  SOURCES test_lattice_change_basic.cpp ../lattice_change_basic.cpp ../relax_data.cpp mock_remake_cell.cpp
 )
 
 AddTest(
   TARGET MODULE_RELAX_lattice_change_cg_test
   LIBS parameter base device
-  SOURCES lattice_change_cg_test.cpp
+  SOURCES test_lattice_change_cg.cpp
           ../lattice_change_cg.cpp
           ../lattice_change_basic.cpp
           ../cg_base.cpp
@@ -90,40 +90,40 @@ AddTest(
 AddTest(
   TARGET MODULE_RELAX_bfgs_basic_test
   LIBS parameter base device symmetry
-  SOURCES bfgs_basic_test.cpp ../bfgs_basic.cpp ../relax_data.cpp ../ions_move_basic.cpp
-          
+  SOURCES test_bfgs_basic.cpp ../bfgs_basic.cpp ../relax_data.cpp ../ions_move_basic.cpp
+
           ${cell_source_files}
 )
 
 
 AddTest(
-  TARGET MODULE_RELAX_bfgs_test
+  TARGET MODULE_RELAX_ions_move_bfgs2_test
   LIBS parameter base device
-  SOURCES bfgs_test.cpp ../ions_move_bfgs2.cpp ../ions_move_basic.cpp ../matrix_methods.cpp ../relax_data.cpp ${cell_source_files}
+  SOURCES test_ions_move_bfgs2.cpp ../ions_move_bfgs2.cpp ../ions_move_basic.cpp ../matrix_methods.cpp ../relax_data.cpp ${cell_source_files}
 )
 
 AddTest(
   TARGET MODULE_RELAX_ions_move_basic_test
   LIBS parameter base device
-  SOURCES ions_move_basic_test.cpp ../ions_move_basic.cpp ../relax_data.cpp ${cell_source_files}
+  SOURCES test_ions_move_basic.cpp ../ions_move_basic.cpp ../relax_data.cpp ${cell_source_files}
 )
 
 AddTest(
   TARGET MODULE_RELAX_ions_move_bfgs_test
   LIBS parameter base device
-  SOURCES ions_move_bfgs_test.cpp 
-          ../ions_move_bfgs.cpp 
-          ../ions_move_basic.cpp 
+  SOURCES test_ions_move_bfgs.cpp
+          ../ions_move_bfgs.cpp
+          ../ions_move_basic.cpp
           ../bfgs_basic.cpp
           ../relax_data.cpp
-          
+
           ${cell_source_files}
 )
 
 AddTest(
   TARGET MODULE_RELAX_ions_move_methods_test
   LIBS parameter base device
-  SOURCES ions_move_methods_test.cpp
+  SOURCES test_ions_move_methods.cpp
           ../ions_move_methods.cpp
           ../ions_move_bfgs.cpp
           ../ions_move_bfgs2.cpp
@@ -143,7 +143,7 @@ AddTest(
 AddTest(
   TARGET MODULE_RELAX_ions_move_cg_test
   LIBS parameter base device
-  SOURCES ions_move_cg_test.cpp 
+  SOURCES test_ions_move_cg.cpp 
           ../ions_move_cg.cpp 
           ../cg_base.cpp
           ../ions_move_basic.cpp
@@ -155,7 +155,7 @@ AddTest(
 AddTest(
   TARGET MODULE_RELAX_ions_move_sd_test
   LIBS parameter base device
-  SOURCES ions_move_sd_test.cpp ../ions_move_sd.cpp ../ions_move_basic.cpp ../relax_data.cpp ${cell_source_files}
+  SOURCES test_ions_move_sd.cpp ../ions_move_sd.cpp ../ions_move_basic.cpp ../relax_data.cpp ${cell_source_files}
 )
 
 AddTest(
