@@ -86,10 +86,16 @@ bool IonCellOptimizer::relax_step(const int& istep,
     ucell.ionic_position_updated = false;
     ucell.cell_parameter_updated = false;
 
+    // relax_nmax == 0 is a valid dry-run mode: no relaxation step may run, and
+    // it must not be reported as a failed relaxation (mirrors the dry-run
+    // branch of Relax_Driver::final_out). Terminate immediately and silently.
+    if (inp_->relax_nmax == 0)
+    {
+        return true;
+    }
+
     // Check if we've reached the maximum number of iterations.
-    // relax_nmax == 0 is a valid dry-run mode: no relaxation step was ever
-    // taken, so it must not be reported as a failed relaxation.
-    if (istep == inp_->relax_nmax && inp_->relax_nmax > 0)
+    if (istep == inp_->relax_nmax)
     {
         // This step never ran cal_movement, so no force was recorded for it;
         // the actual number of ionic steps taken is the history length.

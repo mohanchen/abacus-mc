@@ -8,6 +8,7 @@
 #include "source_io/module_parameter/parameter.h"
 #include "source_relax/ions_move_basic.h"
 #include "source_relax/ions_move_lbfgs.h"
+#include "source_relax/relax_criteria.h"
 
 /************************************************
  *  unit tests of class Ions_Move_LBFGS
@@ -120,10 +121,6 @@ class TestParameters
         PARAM.input.out_level = out_level;
         PARAM.input.relax_bfgs_rmax = relax_bfgs_rmax;
     }
-    static void set_force_thr_ev(const double force_thr_ev)
-    {
-        PARAM.input.force_thr_ev = force_thr_ev;
-    }
 };
 
 class IonsMoveLBFGSTest : public ::testing::Test
@@ -143,39 +140,39 @@ class IonsMoveLBFGSTest : public ::testing::Test
 // Ions_Move_Basic::largest_grad filled for the running-log report.
 TEST_F(IonsMoveLBFGSTest, RelaxStepConverged)
 {
-    TestParameters::set_force_thr_ev(1.0); // eV/Angstrom
-
     UnitCell ucell;
     ModuleBase::matrix force(natom, 3);
     force(0, 0) = 1.0e-4; // Ry/Bohr, ~0.005 eV/Angstrom
     const double etot = 0.0;
     std::ofstream ofs("lbfgs_converged.log");
+    Relax_Criteria criteria;
+    criteria.force_thr_ev = 1.0; // eV/Angstrom
 
-    const bool converged = lbfgs.relax_step(force, ucell, etot, ofs);
+    const bool converged = lbfgs.relax_step(force, ucell, etot, ofs, criteria);
     ofs.close();
     std::remove("lbfgs_converged.log");
 
     EXPECT_TRUE(converged);
     EXPECT_NEAR(Ions_Move_Basic::largest_grad, 1.0e-4, 1e-12); // Ry/Bohr, lat0 = 1
-    EXPECT_LT(Ions_Move_Basic::largest_grad * ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A, PARAM.inp.force_thr_ev);
+    EXPECT_LT(Ions_Move_Basic::largest_grad * ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A, criteria.force_thr_ev);
 }
 
 // A force above force_thr_ev must be reported as not converged.
 TEST_F(IonsMoveLBFGSTest, RelaxStepNotConverged)
 {
-    TestParameters::set_force_thr_ev(1.0); // eV/Angstrom
-
     UnitCell ucell;
     ModuleBase::matrix force(natom, 3);
     force(0, 0) = 0.1; // Ry/Bohr, ~51.4 eV/Angstrom
     const double etot = 0.0;
     std::ofstream ofs("lbfgs_not_converged.log");
+    Relax_Criteria criteria;
+    criteria.force_thr_ev = 1.0; // eV/Angstrom
 
-    const bool converged = lbfgs.relax_step(force, ucell, etot, ofs);
+    const bool converged = lbfgs.relax_step(force, ucell, etot, ofs, criteria);
     ofs.close();
     std::remove("lbfgs_not_converged.log");
 
     EXPECT_FALSE(converged);
     EXPECT_NEAR(Ions_Move_Basic::largest_grad, 0.1, 1e-12);
-    EXPECT_GT(Ions_Move_Basic::largest_grad * ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A, PARAM.inp.force_thr_ev);
+    EXPECT_GT(Ions_Move_Basic::largest_grad * ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A, criteria.force_thr_ev);
 }

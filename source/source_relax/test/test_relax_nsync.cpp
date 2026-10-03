@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -177,6 +178,15 @@ class IonCellOptimizerTest : public ::testing::Test
         ucell.lat_axis_free[0] = 1;
         ucell.lat_axis_free[1] = 1;
         ucell.lat_axis_free[2] = 1;
+        // The mock UnitCell leaves iat2it/iat2ia null; the L-BFGS update loop
+        // dereferences them from the second iteration on, so give the single
+        // atom a valid type/index. Ownership passes to UnitCell's internal
+        // Statistics member, whose destructor releases them -- do NOT delete
+        // them here.
+        ucell.iat2it = new int[natom];
+        ucell.iat2ia = new int[natom];
+        ucell.iat2it[0] = 0;
+        ucell.iat2ia[0] = 0;
     }
 
     std::string read_log()
