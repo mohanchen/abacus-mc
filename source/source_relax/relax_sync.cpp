@@ -115,76 +115,13 @@ bool Relax::setup_gradient(const UnitCell& ucell, const ModuleBase::matrix& forc
 
     // indicating whether force & stress are converged
     bool force_converged = true;
-    double max_grad = 0.0;
 
     //=========================================
     // set gradient for ions degrees of freedom
     //=========================================
 
-    grad_ion.zero_out();
-    ModuleBase::matrix force_eva = force * (ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A); // convert to eV/Angstrom
+    const double max_grad = setup_ion_gradient(ucell, force, force_converged, ofs_running);
 
-    int iat = 0;
-    for (int it = 0; it < ucell.ntype; it++)
-    {
-        Atom* atom = &ucell.atoms[it];
-        for (int ia = 0; ia < ucell.atoms[it].na; ia++)
-        {
-            double force2 = 0.0;
-            if (atom->mbl[ia].x == 1)
-            {
-                grad_ion(iat, 0) = force_eva(iat, 0);
-                if (std::abs(force_eva(iat, 0)) > max_grad)
-                {
-                    max_grad = std::abs(force_eva(iat, 0));
-                }
-            }
-            if (atom->mbl[ia].y == 1)
-            {
-                grad_ion(iat, 1) = force_eva(iat, 1);
-                if (std::abs(force_eva(iat, 1)) > max_grad)
-                {
-                    max_grad = std::abs(force_eva(iat, 1));
-                }
-            }
-            if (atom->mbl[ia].z == 1)
-            {
-                grad_ion(iat, 2) = force_eva(iat, 2);
-                if (std::abs(force_eva(iat, 2)) > max_grad)
-                {
-                    max_grad = std::abs(force_eva(iat, 2));
-                }
-            }
-            ++iat;
-        }
-    }
-    assert(iat == nat);
-
-    if (max_grad > force_thr_eva)
-    {
-        force_converged = false;
-    }
-    if (inp_->out_level == "ie")
-    {
-        if (if_cell_moves)
-        {
-            const double omega_ang = ucell.omega * pow(ModuleBase::BOHR_TO_A, 3);
-            const double omega_diff = omega_ang - omega_p;
-            const double omega_ratio = (std::abs(omega_p) > 0.0) ? omega_diff / omega_p * 100.0 : 0.0;
-            std::cout << " CELL VOLUME (Angstroms^3)   : " << omega_ang << std::endl;
-            std::cout << " VOLUME DIFF (Angstroms^3)   : " << omega_diff << std::endl;
-            std::cout << " VOLUME RATIO (%)            : " << omega_ratio << std::endl;
-            omega_p = omega_ang;
-        }
-        std::cout << " ETOT DIFF (eV)              : " << etot - etot_p << std::endl;
-        std::cout << " LARGEST GRAD (eV/Angstrom)  : " << max_grad << std::endl;
-        etot_p = etot;
-    }
-
-
-    max_force_history_.push_back(max_grad);
-    ofs_running << "\n Largest force is " << max_grad <<
-             " eV/Angstrom while threshold is " << inp_->force_thr_ev << " eV/Angstrom" << std::endl;
     //=========================================
     // set gradient for cell degrees of freedom
     //=========================================
@@ -293,6 +230,76 @@ bool Relax::setup_gradient(const UnitCell& ucell, const ModuleBase::matrix& forc
     }
 
     return force_converged;
+}
+
+double Relax::setup_ion_gradient(const UnitCell& ucell, const ModuleBase::matrix& force,
+                                 bool& force_converged, std::ofstream& ofs_running)
+{
+    grad_ion.zero_out();
+    ModuleBase::matrix force_eva = force * (ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A); // convert to eV/Angstrom
+
+    double max_grad = 0.0;
+    int iat = 0;
+    for (int it = 0; it < ucell.ntype; it++)
+    {
+        Atom* atom = &ucell.atoms[it];
+        for (int ia = 0; ia < ucell.atoms[it].na; ia++)
+        {
+            if (atom->mbl[ia].x == 1)
+            {
+                grad_ion(iat, 0) = force_eva(iat, 0);
+                if (std::abs(force_eva(iat, 0)) > max_grad)
+                {
+                    max_grad = std::abs(force_eva(iat, 0));
+                }
+            }
+            if (atom->mbl[ia].y == 1)
+            {
+                grad_ion(iat, 1) = force_eva(iat, 1);
+                if (std::abs(force_eva(iat, 1)) > max_grad)
+                {
+                    max_grad = std::abs(force_eva(iat, 1));
+                }
+            }
+            if (atom->mbl[ia].z == 1)
+            {
+                grad_ion(iat, 2) = force_eva(iat, 2);
+                if (std::abs(force_eva(iat, 2)) > max_grad)
+                {
+                    max_grad = std::abs(force_eva(iat, 2));
+                }
+            }
+            ++iat;
+        }
+    }
+    assert(iat == nat);
+
+    if (max_grad > force_thr_eva)
+    {
+        force_converged = false;
+    }
+    if (inp_->out_level == "ie")
+    {
+        if (if_cell_moves)
+        {
+            const double omega_ang = ucell.omega * pow(ModuleBase::BOHR_TO_A, 3);
+            const double omega_diff = omega_ang - omega_p;
+            const double omega_ratio = (std::abs(omega_p) > 0.0) ? omega_diff / omega_p * 100.0 : 0.0;
+            std::cout << " CELL VOLUME (Angstroms^3)   : " << omega_ang << std::endl;
+            std::cout << " VOLUME DIFF (Angstroms^3)   : " << omega_diff << std::endl;
+            std::cout << " VOLUME RATIO (%)            : " << omega_ratio << std::endl;
+            omega_p = omega_ang;
+        }
+        std::cout << " ETOT DIFF (eV)              : " << etot - etot_p << std::endl;
+        std::cout << " LARGEST GRAD (eV/Angstrom)  : " << max_grad << std::endl;
+        etot_p = etot;
+    }
+
+
+    max_force_history_.push_back(max_grad);
+    ofs_running << "\n Largest force is " << max_grad <<
+             " eV/Angstrom while threshold is " << inp_->force_thr_ev << " eV/Angstrom" << std::endl;
+    return max_grad;
 }
 
 void Relax::calculate_gamma()

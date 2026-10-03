@@ -35,6 +35,13 @@ class Relax
     // based on threshold in force & stress
     bool setup_gradient(const UnitCell& ucell, const ModuleBase::matrix& force, const ModuleBase::matrix& stress, std::ofstream& ofs_running);
 
+    // Compute the ionic gradient from the force (in eV/Angstrom), honoring
+    // per-atom move flags, and return the largest component. Records the value
+    // in the force history and the running log, prints the optional out_level
+    // diagnostics, and updates force_converged.
+    double setup_ion_gradient(const UnitCell& ucell, const ModuleBase::matrix& force,
+                              bool& force_converged, std::ofstream& ofs_running);
+
     // check whether previous line search is done
     bool check_line_search();
 
