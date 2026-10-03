@@ -552,77 +552,103 @@ void Relax::move_cell_ions(UnitCell& ucell, const bool is_new_dir, std::ofstream
 
     if (if_cell_moves)
     {
-        // imo matrix3 class is not a very clever way to store 3*3 matrix ...
-        ModuleBase::Matrix3 sr_dr_cell;
-        auto cp_mat_to_mat3 = [&sr_dr_cell, this]() -> void {
-            sr_dr_cell.e11 = search_dr_cell(0, 0);
-            sr_dr_cell.e12 = search_dr_cell(0, 1);
-            sr_dr_cell.e13 = search_dr_cell(0, 2);
-            sr_dr_cell.e21 = search_dr_cell(1, 0);
-            sr_dr_cell.e22 = search_dr_cell(1, 1);
-            sr_dr_cell.e23 = search_dr_cell(1, 2);
-            sr_dr_cell.e31 = search_dr_cell(2, 0);
-            sr_dr_cell.e32 = search_dr_cell(2, 1);
-            sr_dr_cell.e33 = search_dr_cell(2, 2);
-        };
-        cp_mat_to_mat3();
-
-        if (ModuleSymmetry::Symmetry::symm_flag && ucell.symm.nrotk > 0)
-        {
-            search_dr_cell = sr_dr_cell.Transpose().to_matrix();
-            ucell.symm.symmetrize_mat3(search_dr_cell, ucell.lat);
-            cp_mat_to_mat3();
-            sr_dr_cell = sr_dr_cell.Transpose();
-        }
-
-        // The logic here is as follows: a line search is a continuation
-        // in the new direction; but ucell.latvec now is already
-        // different from when the current CG step starts;
-        // as a result, we need to save latvec at the beginning of
-        // each CG step
-        if (is_new_dir)
-        {
-            latvec_save = ucell.latvec;
-        }
-
-        ModuleBase::Matrix3 move_cell = latvec_save * sr_dr_cell;
-
-        // should be close to 0, but set again to avoid numerical issues
-        if (ucell.lat_axis_free[0] == 0)
-        {
-            move_cell.e11 = 0;
-            move_cell.e12 = 0;
-            move_cell.e13 = 0;
-        }
-        if (ucell.lat_axis_free[1] == 0)
-        {
-            move_cell.e21 = 0;
-            move_cell.e22 = 0;
-            move_cell.e23 = 0;
-        }
-        if (ucell.lat_axis_free[2] == 0)
-        {
-            move_cell.e31 = 0;
-            move_cell.e32 = 0;
-            move_cell.e33 = 0;
-        }
-        ucell.latvec += move_cell * (step_size * fac * fac_stress);
-
-        if (inp_->fixed_axes == "volume")
-        {
-            double omega_new = std::abs(ucell.latvec.Det()) * pow(ucell.lat0, 3);
-            ucell.latvec *= pow(ucell.omega / omega_new, 1.0 / 3.0);
-        }
-        if (inp_->fixed_ibrav)
-        {
-            unitcell::remake_cell(ucell.lat);
-        }
+        update_lattice(ucell, fac, is_new_dir);
     }
 
     // =================================================================
     // Step 2 & 3 : update direct & Cartesian atomic positions
     // =================================================================
 
+    update_ion_positions(ucell, fac, ofs_running);
+
+    // =================================================================
+    // Step 4 : update G,GT and other stuff
+    // =================================================================
+
+    // =================================================================
+    // Step 6 : prepare something for next SCF
+    // =================================================================
+    // I have a strong feeling that this part should be
+    // at the beginning of the next step (namely 'beforescf'),
+    // but before we have a better organized Esolver
+    // I do not want to change it
+    if (if_cell_moves)
+    {
+        update_reciprocal_cell(ucell, ofs_running);
+    }
+}
+
+void Relax::update_lattice(UnitCell& ucell, double fac, bool is_new_dir)
+{
+    // imo matrix3 class is not a very clever way to store 3*3 matrix ...
+    ModuleBase::Matrix3 sr_dr_cell;
+    auto cp_mat_to_mat3 = [&sr_dr_cell, this]() -> void {
+        sr_dr_cell.e11 = search_dr_cell(0, 0);
+        sr_dr_cell.e12 = search_dr_cell(0, 1);
+        sr_dr_cell.e13 = search_dr_cell(0, 2);
+        sr_dr_cell.e21 = search_dr_cell(1, 0);
+        sr_dr_cell.e22 = search_dr_cell(1, 1);
+        sr_dr_cell.e23 = search_dr_cell(1, 2);
+        sr_dr_cell.e31 = search_dr_cell(2, 0);
+        sr_dr_cell.e32 = search_dr_cell(2, 1);
+        sr_dr_cell.e33 = search_dr_cell(2, 2);
+    };
+    cp_mat_to_mat3();
+
+    if (ModuleSymmetry::Symmetry::symm_flag && ucell.symm.nrotk > 0)
+    {
+        search_dr_cell = sr_dr_cell.Transpose().to_matrix();
+        ucell.symm.symmetrize_mat3(search_dr_cell, ucell.lat);
+        cp_mat_to_mat3();
+        sr_dr_cell = sr_dr_cell.Transpose();
+    }
+
+    // The logic here is as follows: a line search is a continuation
+    // in the new direction; but ucell.latvec now is already
+    // different from when the current CG step starts;
+    // as a result, we need to save latvec at the beginning of
+    // each CG step
+    if (is_new_dir)
+    {
+        latvec_save = ucell.latvec;
+    }
+
+    ModuleBase::Matrix3 move_cell = latvec_save * sr_dr_cell;
+
+    // should be close to 0, but set again to avoid numerical issues
+    if (ucell.lat_axis_free[0] == 0)
+    {
+        move_cell.e11 = 0;
+        move_cell.e12 = 0;
+        move_cell.e13 = 0;
+    }
+    if (ucell.lat_axis_free[1] == 0)
+    {
+        move_cell.e21 = 0;
+        move_cell.e22 = 0;
+        move_cell.e23 = 0;
+    }
+    if (ucell.lat_axis_free[2] == 0)
+    {
+        move_cell.e31 = 0;
+        move_cell.e32 = 0;
+        move_cell.e33 = 0;
+    }
+    ucell.latvec += move_cell * (step_size * fac * fac_stress);
+
+    if (inp_->fixed_axes == "volume")
+    {
+        double omega_new = std::abs(ucell.latvec.Det()) * pow(ucell.lat0, 3);
+        ucell.latvec *= pow(ucell.omega / omega_new, 1.0 / 3.0);
+    }
+    if (inp_->fixed_ibrav)
+    {
+        unitcell::remake_cell(ucell.lat);
+    }
+}
+
+void Relax::update_ion_positions(UnitCell& ucell, double fac, std::ofstream& ofs_running)
+{
     // Calculating displacement in Cartesian coordinate (in Angstrom)
     std::vector<double> move_ion(nat * 3, 0.0);
 
@@ -666,65 +692,52 @@ void Relax::move_cell_ions(UnitCell& ucell, const bool is_new_dir, std::ofstream
 
     // Print the structure file.
     unitcell::print_tau(ucell.atoms,ucell.Coordinate,ucell.ntype,ucell.lat0,ofs_running);
+}
 
-    // =================================================================
-    // Step 4 : update G,GT and other stuff
-    // =================================================================
-
-    if (if_cell_moves)
-    {
-        ucell.a1.x = ucell.latvec.e11;
-        ucell.a1.y = ucell.latvec.e12;
-        ucell.a1.z = ucell.latvec.e13;
-        ucell.a2.x = ucell.latvec.e21;
-        ucell.a2.y = ucell.latvec.e22;
-        ucell.a2.z = ucell.latvec.e23;
-        ucell.a3.x = ucell.latvec.e31;
-        ucell.a3.y = ucell.latvec.e32;
-        ucell.a3.z = ucell.latvec.e33;
+void Relax::update_reciprocal_cell(UnitCell& ucell, std::ofstream& ofs_running)
+{
+    ucell.a1.x = ucell.latvec.e11;
+    ucell.a1.y = ucell.latvec.e12;
+    ucell.a1.z = ucell.latvec.e13;
+    ucell.a2.x = ucell.latvec.e21;
+    ucell.a2.y = ucell.latvec.e22;
+    ucell.a2.z = ucell.latvec.e23;
+    ucell.a3.x = ucell.latvec.e31;
+    ucell.a3.y = ucell.latvec.e32;
+    ucell.a3.z = ucell.latvec.e33;
 
 #ifdef __MPI
-        // distribute lattice vectors.
-        Parallel_Common::bcast_double(ucell.latvec.e11);
-        Parallel_Common::bcast_double(ucell.latvec.e12);
-        Parallel_Common::bcast_double(ucell.latvec.e13);
-        Parallel_Common::bcast_double(ucell.latvec.e21);
-        Parallel_Common::bcast_double(ucell.latvec.e22);
-        Parallel_Common::bcast_double(ucell.latvec.e23);
-        Parallel_Common::bcast_double(ucell.latvec.e31);
-        Parallel_Common::bcast_double(ucell.latvec.e32);
-        Parallel_Common::bcast_double(ucell.latvec.e33);
+    // distribute lattice vectors.
+    Parallel_Common::bcast_double(ucell.latvec.e11);
+    Parallel_Common::bcast_double(ucell.latvec.e12);
+    Parallel_Common::bcast_double(ucell.latvec.e13);
+    Parallel_Common::bcast_double(ucell.latvec.e21);
+    Parallel_Common::bcast_double(ucell.latvec.e22);
+    Parallel_Common::bcast_double(ucell.latvec.e23);
+    Parallel_Common::bcast_double(ucell.latvec.e31);
+    Parallel_Common::bcast_double(ucell.latvec.e32);
+    Parallel_Common::bcast_double(ucell.latvec.e33);
 
-        // distribute lattice vectors.
-        Parallel_Common::bcast_double(ucell.a1.x);
-        Parallel_Common::bcast_double(ucell.a1.y);
-        Parallel_Common::bcast_double(ucell.a1.z);
-        Parallel_Common::bcast_double(ucell.a2.x);
-        Parallel_Common::bcast_double(ucell.a2.y);
-        Parallel_Common::bcast_double(ucell.a2.z);
-        Parallel_Common::bcast_double(ucell.a3.x);
-        Parallel_Common::bcast_double(ucell.a3.y);
-        Parallel_Common::bcast_double(ucell.a3.z);
+    // distribute lattice vectors.
+    Parallel_Common::bcast_double(ucell.a1.x);
+    Parallel_Common::bcast_double(ucell.a1.y);
+    Parallel_Common::bcast_double(ucell.a1.z);
+    Parallel_Common::bcast_double(ucell.a2.x);
+    Parallel_Common::bcast_double(ucell.a2.y);
+    Parallel_Common::bcast_double(ucell.a2.z);
+    Parallel_Common::bcast_double(ucell.a3.x);
+    Parallel_Common::bcast_double(ucell.a3.y);
+    Parallel_Common::bcast_double(ucell.a3.z);
 #endif
 
-        ucell.omega = std::abs(ucell.latvec.Det()) * ucell.lat0 * ucell.lat0 * ucell.lat0;
+    ucell.omega = std::abs(ucell.latvec.Det()) * ucell.lat0 * ucell.lat0 * ucell.lat0;
 
-        ucell.GT = ucell.latvec.Inverse();
-        ucell.G = ucell.GT.Transpose();
-        ucell.GGT = ucell.G * ucell.GT;
-        ucell.invGGT = ucell.GGT.Inverse();
-    }
+    ucell.GT = ucell.latvec.Inverse();
+    ucell.G = ucell.GT.Transpose();
+    ucell.GGT = ucell.G * ucell.GT;
+    ucell.invGGT = ucell.GGT.Inverse();
 
-    // =================================================================
-    // Step 6 : prepare something for next SCF
-    // =================================================================
-    // I have a strong feeling that this part should be
-    // at the beginning of the next step (namely 'beforescf'),
-    // but before we have a better organized Esolver
-    // I do not want to change it
-    if (if_cell_moves)
-    {
-        unitcell::setup_cell_after_vc(ucell, ofs_running, inp_->nspin);
-        ModuleBase::GlobalFunc::DONE(ofs_running, "SETUP UNITCELL");
-    }
+    // prepare something for next SCF
+    unitcell::setup_cell_after_vc(ucell, ofs_running, inp_->nspin);
+    ModuleBase::GlobalFunc::DONE(ofs_running, "SETUP UNITCELL");
 }
