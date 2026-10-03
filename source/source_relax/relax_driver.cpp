@@ -366,7 +366,9 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
         }
     }
 
-    if (istep == inp.relax_nmax)
+    // relax_nmax == 0 is a valid dry-run mode: no relaxation step was ever
+    // taken, so it must not be reported as a failed relaxation.
+    if (istep == inp.relax_nmax && inp.relax_nmax > 0)
     {
         if (is_relax)
         {
@@ -400,7 +402,7 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
             std::cout << " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
         }
     }
-    else
+    else if (inp.relax_nmax > 0)
     {
         if (is_relax)
         {

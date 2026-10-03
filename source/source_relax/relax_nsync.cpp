@@ -5,9 +5,26 @@
 #include "source_cell/cell_tools.h"
 #include "source_cell/update_cell.h"
 
+void IonCellOptimizer::print_converged_summary(const int istep,
+                                               const bool with_stress,
+                                               std::ofstream& ofs_running) const
+{
+    ofs_running << " Relaxation method: " << inp_->relax_method[0] << std::endl;
+    ofs_running << " Relaxation converged in " << istep << " step(s)." << std::endl;
+    if (!max_force_history_.empty())
+    {
+        ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(max_force_history_);
+    }
+    if (with_stress && !max_stress_history_.empty())
+    {
+        ofs_running << " Largest stress per step (kbar):" << format_relax_history(max_stress_history_);
+    }
+    ofs_running << "\n Relaxation is converged!" << std::endl;
+}
+
 /**
  * @brief Initialize relaxation algorithms based on calculation type.
- * 
+ *
  * Allocates memory and initializes the appropriate relaxation methods:
  * - For "relax" calculation: only initializes Ions_Move_Methods
  * - For "cell-relax" calculation: initializes both Ions_Move_Methods and 
@@ -69,8 +86,10 @@ bool IonCellOptimizer::relax_step(const int& istep,
     ucell.ionic_position_updated = false;
     ucell.cell_parameter_updated = false;
 
-    // Check if we've reached the maximum number of iterations
-    if (istep == inp_->relax_nmax)
+    // Check if we've reached the maximum number of iterations.
+    // relax_nmax == 0 is a valid dry-run mode: no relaxation step was ever
+    // taken, so it must not be reported as a failed relaxation.
+    if (istep == inp_->relax_nmax && inp_->relax_nmax > 0)
     {
         // This step never ran cal_movement, so no force was recorded for it;
         // the actual number of ionic steps taken is the history length.
@@ -142,11 +161,15 @@ bool IonCellOptimizer::relax_step(const int& istep,
         }
         else if (!is_cell_relax)
         {
-            ofs_running << " Relaxation method: " << inp_->relax_method[0] << std::endl;
-            ofs_running << " Relaxation converged in " << istep << " step(s)." << std::endl;
-            ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(max_force_history_);
-            ofs_running << "\n Relaxation is converged!" << std::endl;
+            print_converged_summary(istep, false, ofs_running);
             return true; // converged
+        }
+        // When the lattice is fully fixed (e.g. fixed_axes = abc), there is no
+        // cell step to run; the atomic convergence above is the final result.
+        else if (!need_cell_relax)
+        {
+            print_converged_summary(istep, false, ofs_running);
+            return true; // converged, ions relaxed with a fixed lattice
         }
         // Otherwise, continue to cell relaxation
     }
@@ -180,11 +203,7 @@ bool IonCellOptimizer::relax_step(const int& istep,
                     << " kbar while threshold is " << inp_->stress_thr << " kbar" << std::endl;
         if (converged)
         {
-            ofs_running << " Relaxation method: " << inp_->relax_method[0] << std::endl;
-            ofs_running << " Relaxation converged in " << istep << " step(s)." << std::endl;
-            ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(max_force_history_);
-            ofs_running << " Largest stress per step (kbar):" << format_relax_history(max_stress_history_);
-            ofs_running << "\n Relaxation is converged!" << std::endl;
+            print_converged_summary(istep, true, ofs_running);
         }
         else
         {

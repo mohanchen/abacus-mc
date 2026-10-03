@@ -349,3 +349,92 @@ TEST_F(IonCellOptimizerTest, CellRelaxForceHistoryNotClearedAcrossCellChange)
     EXPECT_FALSE(done2);
     EXPECT_EQ(optimizer.get_max_force_history().size(), 2u);
 }
+
+// Regression test for the review on PR #8067: relax_nmax = 0 is a valid
+// dry-run mode. The not-converged branch must stay silent so the running log
+// never contains "Relaxation is not converged after reaching relax_nmax!".
+TEST_F(IonCellOptimizerTest, DryRunRelaxNmaxZero)
+{
+    inp.calculation = "relax";
+    inp.relax_nmax = 0;
+    UnitCell ucell;
+    setup_ucell(ucell);
+    optimizer.init_relax(natom, inp);
+    ModuleBase::matrix force(natom, 3);
+    force(0, 0) = 1.0; // would be above threshold, but no step should run
+    ModuleBase::matrix stress(3, 3);
+    int force_step = 1;
+    int stress_step = 1;
+    std::ofstream ofs(log_file);
+
+    // istep == relax_nmax == 0 hits the former not-converged branch.
+    const bool done = optimizer.relax_step(0, etot, ucell, force, stress, force_step, stress_step, ofs);
+    ofs.close();
+
+    EXPECT_TRUE(done);
+    const std::string log = read_log();
+    EXPECT_THAT(log, testing::Not(testing::HasSubstr("not converged")));
+    EXPECT_THAT(log, testing::Not(testing::HasSubstr("relax_nmax = 0 reached")));
+}
+
+// cell-relax + fixed_axes = abc: the lattice is fully fixed but the atoms can
+// still move. Once the forces converge there is no cell step to run, and the
+// log must still carry the unified converged summary (PR #8067 review).
+TEST_F(IonCellOptimizerTest, CellRelaxFixedLatticeConverged)
+{
+    inp.calculation = "cell-relax";
+    UnitCell ucell;
+    setup_ucell(ucell);
+    // fixed_axes = abc: no lattice vector may change.
+    ucell.lat_axis_free[0] = 0;
+    ucell.lat_axis_free[1] = 0;
+    ucell.lat_axis_free[2] = 0;
+    optimizer.init_relax(natom, inp);
+    ModuleBase::matrix force(natom, 3);
+    force(0, 0) = 1.0e-4; // below force_thr
+    ModuleBase::matrix stress(3, 3);
+    int force_step = 1;
+    int stress_step = 1;
+    std::ofstream ofs(log_file);
+
+    const bool done = optimizer.relax_step(1, etot, ucell, force, stress, force_step, stress_step, ofs);
+    ofs.close();
+
+    EXPECT_TRUE(done);
+    const std::string log = read_log();
+    EXPECT_THAT(log, testing::HasSubstr(" Largest force is "));
+    EXPECT_THAT(log, testing::HasSubstr(" Relaxation method: lbfgs"));
+    EXPECT_THAT(log, testing::HasSubstr(" Relaxation converged in 1 step(s)."));
+    EXPECT_THAT(log, testing::HasSubstr(" Largest force per step (eV/Angstrom):"));
+    EXPECT_THAT(log, testing::HasSubstr("\n Relaxation is converged!"));
+    // No cell step ran, so no stress history line and no not-converged marker.
+    EXPECT_THAT(log, testing::Not(testing::HasSubstr(" Largest stress per step (kbar):")));
+    EXPECT_THAT(log, testing::Not(testing::HasSubstr("not converged")));
+}
+
+// Same fixed-lattice setup, but the forces are above threshold: relaxation is
+// genuinely in progress, so the log must not print the converged marker.
+TEST_F(IonCellOptimizerTest, CellRelaxFixedLatticeNotConverged)
+{
+    inp.calculation = "cell-relax";
+    UnitCell ucell;
+    setup_ucell(ucell);
+    ucell.lat_axis_free[0] = 0;
+    ucell.lat_axis_free[1] = 0;
+    ucell.lat_axis_free[2] = 0;
+    optimizer.init_relax(natom, inp);
+    ModuleBase::matrix force(natom, 3);
+    force(0, 0) = 1.0; // above force_thr
+    ModuleBase::matrix stress(3, 3);
+    int force_step = 1;
+    int stress_step = 1;
+    std::ofstream ofs(log_file);
+
+    const bool done = optimizer.relax_step(1, etot, ucell, force, stress, force_step, stress_step, ofs);
+    ofs.close();
+
+    EXPECT_FALSE(done);
+    const std::string log = read_log();
+    EXPECT_THAT(log, testing::HasSubstr("\n Relaxation is not converged yet!"));
+    EXPECT_THAT(log, testing::Not(testing::HasSubstr("Relaxation is converged!")));
+}
