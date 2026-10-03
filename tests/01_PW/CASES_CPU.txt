@@ -47,9 +47,7 @@ scf_Al100_kspace3
 049_PW_PU_chgmix
 050_PW_CHG_mismatch
 051_PW_OBOD_MemSaver
-052_PW_OB
-053_PW_OD
-055_PW_OW
+scf_out_band_dos_wf
 056_PW_IW
 057_PW_SO_IW
 058_PW_RE_MB

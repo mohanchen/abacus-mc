@@ -1,22 +1,25 @@
-INPUT_PARAMETERS 
+INPUT_PARAMETERS
 #Parameters (1.General)
 suffix            autotest
-calculation       nscf
+calculation       scf
+cal_force         1
+cal_stress        1
 
 nbands            6
-symmetry          0
+nspin             1
+symmetry          1
 pseudo_dir        ../../PP_ORB
-read_file_dir     ./
-kpar              2
 
 #Parameters (2.Iteration)
 ecutwfc           20
 scf_thr           1e-8
 scf_nmax          100
 
-init_chg          file
+init_chg          atomic
 init_wfc          random
 out_band          1
+out_dos           1
+out_wfc_pw        1
 pw_diag_thr       0.00001
 
 #Parameters (3.Basis)
@@ -30,5 +33,7 @@ smearing_sigma    0.002
 mixing_type       plain
 mixing_beta       0.7
 
+dos_edelta_ev     0.01
+dos_sigma         0.05
 
 pw_seed           1
