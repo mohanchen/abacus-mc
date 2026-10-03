@@ -251,3 +251,159 @@ TEST(CGBase, ThirdOrderCubicFit)
     EXPECT_TRUE(std::isfinite(best_x));
     EXPECT_DOUBLE_EQ(best_x, expected);
 }
+
+// --- Cases merged from test_ions_move_cg.cpp / test_lattice_change_cg.cpp ---
+// These exercise the CG_Base line-search helpers directly (they were
+// previously tested redundantly through the Ions_Move_CG and
+// Lattice_Change_CG subclasses). References are pre-verified numerical
+// outputs of the algorithm.
+
+TEST(CGBase, BrentSameSignMovesToXcCase)
+{
+    // fa, fb, fc all > 0 with fa*fb > 0: pure linear extrapolation moves the
+    // bracket to xc.
+    TestableCG cg;
+    double fa = 2.0;
+    double fb = 1.0;
+    double fc = 1.0;
+    double xa = -3.0;
+    double xb = 2.0;
+    double xc = 1.0;
+    double best_x = 0.0;
+    double xpt = 0.0;
+
+    cg.Brent(fa, fb, fc, xa, xb, xc, best_x, xpt);
+
+    EXPECT_DOUBLE_EQ(fa, 2.0);
+    EXPECT_DOUBLE_EQ(xb, 1.0);
+    EXPECT_DOUBLE_EQ(xc, 4.0);
+    EXPECT_DOUBLE_EQ(best_x, 4.0);
+    EXPECT_DOUBLE_EQ(xpt, 4.0);
+}
+
+TEST(CGBase, BrentQuadraticCaseA)
+{
+    TestableCG cg;
+    double fa = -2.0;
+    double fb = 3.0;
+    double fc = -4.0;
+    double xa = 1.0;
+    double xb = 2.0;
+    double xc = 3.0;
+    double best_x = 0.0;
+    double xpt = 0.0;
+
+    cg.Brent(fa, fb, fc, xa, xb, xc, best_x, xpt);
+
+    EXPECT_DOUBLE_EQ(fa, -4.0);
+    EXPECT_DOUBLE_EQ(xa, 3.0);
+    EXPECT_DOUBLE_EQ(xb, 2.0);
+    EXPECT_NEAR(xc, 1.2046663545568725, 1e-12);
+    EXPECT_NEAR(best_x, 1.2046663545568725, 1e-12);
+    EXPECT_NEAR(xpt, 1.2046663545568725, 1e-12);
+}
+
+TEST(CGBase, BrentQuadraticCaseB)
+{
+    TestableCG cg;
+    double fa = 1.0;
+    double fb = -3.0;
+    double fc = -4.0;
+    double xa = 3.0;
+    double xb = 2.0;
+    double xc = 1.0;
+    double best_x = 0.0;
+    double xpt = 0.0;
+
+    cg.Brent(fa, fb, fc, xa, xb, xc, best_x, xpt);
+
+    EXPECT_DOUBLE_EQ(fa, 1.0);
+    EXPECT_DOUBLE_EQ(xa, 3.0);
+    EXPECT_DOUBLE_EQ(xb, 1.0);
+    EXPECT_NEAR(xc, 2.8081429669660172, 1e-12);
+    EXPECT_NEAR(best_x, 2.8081429669660172, 1e-12);
+    EXPECT_NEAR(xpt, 2.8081429669660172, 1e-12);
+}
+
+TEST(CGBase, BrentQuadraticCaseC)
+{
+    TestableCG cg;
+    double fa = 2.0;
+    double fb = -3.0;
+    double fc = 4.0;
+    double xa = 0.0;
+    double xb = 2.0;
+    double xc = 1.0;
+    double best_x = 0.0;
+    double xpt = 0.0;
+
+    cg.Brent(fa, fb, fc, xa, xb, xc, best_x, xpt);
+
+    EXPECT_DOUBLE_EQ(fa, 4.0);
+    EXPECT_DOUBLE_EQ(xa, 1.0);
+    EXPECT_DOUBLE_EQ(xb, 2.0);
+    EXPECT_DOUBLE_EQ(xc, 2.0);
+    EXPECT_DOUBLE_EQ(best_x, 2.0);
+    EXPECT_DOUBLE_EQ(xpt, 2.0);
+}
+
+TEST(CGBase, ThirdOrderLinearFallbackPositiveFa)
+{
+    // |k3/k1| small: linear estimate dmoveh = x*fb/(fa-fb) is returned.
+    TestableCG cg;
+    double best_x = -1.0;
+
+    cg.third_order(1.0, 1.0, 10.0, -9.99, 1.0, best_x);
+
+    EXPECT_DOUBLE_EQ(best_x, 1.0 * -9.99 / (10.0 - -9.99));
+}
+
+TEST(CGBase, ThirdOrderLinearFallbackNegativeFa)
+{
+    TestableCG cg;
+    double best_x = -1.0;
+
+    cg.third_order(1.0, 1.0, -10.0, 9.9, 1.0, best_x);
+
+    EXPECT_DOUBLE_EQ(best_x, 1.0 * 9.9 / (-10.0 - 9.9));
+}
+
+TEST(CGBase, ThirdOrderLinearFallbackMixedSign)
+{
+    TestableCG cg;
+    double best_x = -1.0;
+
+    cg.third_order(1.0, 1.0, 10.0, -10.1, 1.0, best_x);
+
+    EXPECT_DOUBLE_EQ(best_x, 1.0 * -10.1 / (10.0 - -10.1));
+}
+
+TEST(CGBase, FCalUniformNine)
+{
+    // g0 = g1 = all-ones in 9 dims: f_value = (9)/sqrt(9) = 3.
+    TestableCG cg;
+    const int dim = 9;
+    double g0[dim] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    double g1[dim] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    double f_value = 0.0;
+
+    cg.f_cal(dim, g0, g1, f_value);
+
+    EXPECT_DOUBLE_EQ(f_value, 3.0);
+}
+
+TEST(CGBase, SetupMoveUniformNine)
+{
+    TestableCG cg;
+    const int dim = 9;
+    double trust_radius = 1.0;
+    double cg_gradn[dim] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    double move[dim] = {0.0};
+
+    cg.setup_move(dim, move, cg_gradn, trust_radius);
+
+    for (int i = 0; i < dim; ++i)
+    {
+        EXPECT_DOUBLE_EQ(move[i], -1.0);
+    }
+}
