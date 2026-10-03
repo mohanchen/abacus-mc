@@ -40,7 +40,6 @@ scf_out_chg_tau
 038_PW_NC
 038_PW_NC_GGA_GRAD2
 scf_Al100_kspace3
-040_PW_FX_smear
 045_PW_BD_chgmix
 046_PW_KK_chgmix
 047_PW_PK_chgmix
@@ -117,7 +116,7 @@ scf_brav_sc_smear_fd
 scf_brav_fcc_smear_ga
 scf_brav_bcc_smear_m2
 scf_brav_hex_smear_mp
-805_PW_LT_trigonal
+scf_brav_trig_smear_fx
 806_PW_LT_st
 807_PW_LT_bct
 808_PW_LT_so
