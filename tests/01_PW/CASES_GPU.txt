@@ -31,7 +31,6 @@ scf_out_elf
 028_PW_PINT_UKS
 029_PW_15_CF_CS_S1_smallg
 030_PW_15_CF_CS_S2_smallg
-031_PW_15_CF_CS
 032_PW_15_CF_CS_bspline
 033_PW_CF_CS_S1_smallg
 034_PW_CF_CS_S2_smallg
