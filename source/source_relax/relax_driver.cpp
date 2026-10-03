@@ -264,29 +264,7 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
     {
         if (is_relax)
         {
-            // Unified not-converged summary for both relaxation paths so ASE and
-            // users can read the method, the actual number of steps taken, and
-            // the per-step force / stress history from the running log.
-            const std::vector<double>& force_hist = inp.uses_simultaneous_relaxation()
-                ? rl.get_max_force_history()
-                : rl_old.get_max_force_history();
-            const std::vector<double>& stress_hist = inp.uses_simultaneous_relaxation()
-                ? rl.get_max_stress_history()
-                : rl_old.get_max_stress_history();
-            const int ionic_steps = static_cast<int>(force_hist.size());
-            const std::string method = inp.relax_method.empty() ? "unknown" : inp.relax_method[0];
-            ofs_running << " Relaxation method: " << method << std::endl;
-            ofs_running << " Relaxation stopped after " << ionic_steps << " ionic step(s) (relax_nmax = "
-                        << inp.relax_nmax << " reached)." << std::endl;
-            if (!force_hist.empty())
-            {
-                ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(force_hist);
-            }
-            if (!stress_hist.empty())
-            {
-                ofs_running << " Largest stress per step (kbar):" << format_relax_history(stress_hist);
-            }
-            ofs_running << " Relaxation is not converged after reaching relax_nmax!" << std::endl;
+            print_not_converged_summary(inp, ofs_running);
 
             std::cout << "\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
             std::cout << " Geometry relaxation stops here due to reaching the maximum      " << std::endl;
@@ -306,8 +284,40 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
 
     if (is_relax && inp.relax_nmax == 0)
     {
-        std::cout << "-----------------------------------------------" << std::endl;
-        std::cout << " relax_nmax = 0, DRY RUN TEST SUCCEEDS :)" << std::endl;
-        std::cout << "-----------------------------------------------" << std::endl;
+        print_dry_run_message();
     }
+}
+
+void Relax_Driver::print_not_converged_summary(const Input_para& inp, std::ofstream& ofs_running) const
+{
+    // Unified not-converged summary for both relaxation paths so ASE and
+    // users can read the method, the actual number of steps taken, and
+    // the per-step force / stress history from the running log.
+    const std::vector<double>& force_hist = inp.uses_simultaneous_relaxation()
+        ? rl.get_max_force_history()
+        : rl_old.get_max_force_history();
+    const std::vector<double>& stress_hist = inp.uses_simultaneous_relaxation()
+        ? rl.get_max_stress_history()
+        : rl_old.get_max_stress_history();
+    const int ionic_steps = static_cast<int>(force_hist.size());
+    const std::string method = inp.relax_method.empty() ? "unknown" : inp.relax_method[0];
+    ofs_running << " Relaxation method: " << method << std::endl;
+    ofs_running << " Relaxation stopped after " << ionic_steps << " ionic step(s) (relax_nmax = "
+                << inp.relax_nmax << " reached)." << std::endl;
+    if (!force_hist.empty())
+    {
+        ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(force_hist);
+    }
+    if (!stress_hist.empty())
+    {
+        ofs_running << " Largest stress per step (kbar):" << format_relax_history(stress_hist);
+    }
+    ofs_running << " Relaxation is not converged after reaching relax_nmax!" << std::endl;
+}
+
+void Relax_Driver::print_dry_run_message() const
+{
+    std::cout << "-----------------------------------------------" << std::endl;
+    std::cout << " relax_nmax = 0, DRY RUN TEST SUCCEEDS :)" << std::endl;
+    std::cout << "-----------------------------------------------" << std::endl;
 }

@@ -126,6 +126,23 @@ class Relax_Driver
      * @param stress Stress tensor of the final step.
      */
     void final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force, std::ofstream& ofs_running);
+
+    /**
+     * @brief Print the unified not-converged summary to the running log.
+     *
+     * Reports the relaxation method, the number of ionic steps taken and the
+     * per-step largest force / stress history, so ASE and users can diagnose
+     * why the relaxation stopped at relax_nmax.
+     *
+     * @param inp Input parameters (selects the active optimizer and relax_nmax).
+     * @param ofs_running Output stream for the running log.
+     */
+    void print_not_converged_summary(const Input_para& inp, std::ofstream& ofs_running) const;
+
+    /**
+     * @brief Print the dry-run success message to screen.
+     */
+    void print_dry_run_message() const;
 };
 
 #endif
