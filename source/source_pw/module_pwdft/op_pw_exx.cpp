@@ -1049,11 +1049,10 @@ double OperatorEXXPW<T, Device>::cal_exx_energy_op(psi::Psi<T, Device> *ppsi_) c
                         {
                             continue;
                         }
-                        // pure occupations f = wg / wk; the outer ik loop already
-                        // carries the wk[ik] BZ weight, so the q-state weight is
-                        // applied once here via wk[iq] (uniform grid: wk = 1/nqs,
-                        // recovering the historical /nqs/wk[ik] form).
-                        const double exx_weight = wg_iqb_real * wg_ikb_real / kv->wk[iq];
+                        // pure occupations f = wg / wk; divide by the q-mesh
+                        // size nqs to apply the uniform q-point BZ weight, and
+                        // by wk[ik] to convert wg(ik) into the occupation.
+                        const double exx_weight = wg_iqb_real / nqs * wg_ikb_real / kv->wk[ik];
                         Eexx_ik_real += exx_cal_energy_op<T, Device>()(pair_density(n_iband),
                                                                        pot,
                                                                        exx_weight,
