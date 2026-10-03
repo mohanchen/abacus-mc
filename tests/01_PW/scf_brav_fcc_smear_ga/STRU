@@ -2,15 +2,14 @@
 #about the lattice structure.
 
 ATOMIC_SPECIES
-H 1.0008   H.pz-vbc.UPF
+Fe 55.845   Fe_ONCV_PBE-1.0.upf
 
 LATTICE_CONSTANT
-10.0  			#Lattice constant
+3.6
 
 ATOMIC_POSITIONS
-Cartesian   		#Cartesian(Unit is LATTICE_CONSTANT)
-H 			#Name of element	
-0.0			#Magnetic for this element.
-2			#Number of atoms
-0.00 0.00 -0.0661400 0 0 0	#x,y,z, move_x, move_y, move_z
-0.00 0.00  0.0661400 0 0 0	#x,y,z, move_x, move_y, move_z
+Direct
+Fe
+2.0
+1
+0.00 0.00 0.00 1 1 1

@@ -2,12 +2,13 @@ INPUT_PARAMETERS
 #Parameters	(System)
 suffix            autotest
 
-nbands            4
 stru_file         STRU
 kpoint_file       KPT
 pseudo_dir        ../../PP_ORB
 calculation       scf
 latname           fcc
+nspin             2
+nbands            12
 #Parameters (PW)
 ecutwfc           25.0 # Rydberg
 #Parameters (electronic)
