@@ -42,6 +42,19 @@ class Relax
     double setup_ion_gradient(const UnitCell& ucell, const ModuleBase::matrix& force,
                               bool& force_converged, std::ofstream& ofs_running);
 
+    // Compute the cell gradient from the stress, applying the fixed_axes
+    // constraints (shape / volume / per-axis), and update force_converged.
+    // Records the largest stress in the history and the running log. Only runs
+    // when if_cell_moves is true.
+    void setup_cell_gradient(const UnitCell& ucell, const ModuleBase::matrix& stress,
+                             bool& force_converged, std::ofstream& ofs_running);
+
+    // Print the converged / not-converged summary to the running log. On
+    // convergence, reports the method, the converged step (istep + 1, since
+    // setup_gradient runs before istep is incremented), and the per-step
+    // largest force (and stress when the cell moves).
+    void print_gradient_summary(bool force_converged, std::ofstream& ofs_running);
+
     // check whether previous line search is done
     bool check_line_search();
 

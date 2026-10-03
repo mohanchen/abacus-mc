@@ -131,25 +131,7 @@ bool Relax::setup_gradient(const UnitCell& ucell, const ModuleBase::matrix& forc
         setup_cell_gradient(ucell, stress, force_converged, ofs_running);
     }
 
-    if (force_converged)
-    {
-        // setup_gradient runs before istep is incremented at the end of
-        // relax_step, so the step that just converged is istep + 1.
-        const int converged_step = istep + 1;
-        const std::string method = inp_->relax_method.empty() ? "unknown" : inp_->relax_method[0];
-        ofs_running << " Relaxation method: " << method << std::endl;
-        ofs_running << " Relaxation converged in " << converged_step << " step(s)." << std::endl;
-        ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(max_force_history_);
-        if (if_cell_moves)
-        {
-            ofs_running << " Largest stress per step (kbar):" << format_relax_history(max_stress_history_);
-        }
-        ofs_running << "\n Relaxation is converged!" << std::endl;
-    }
-    else
-    {
-        ofs_running << "\n Relaxation is not converged yet!" << std::endl;
-    }
+    print_gradient_summary(force_converged, ofs_running);
 
     return force_converged;
 }
@@ -306,6 +288,29 @@ void Relax::setup_cell_gradient(const UnitCell& ucell, const ModuleBase::matrix&
     max_stress_history_.push_back(largest_grad);
     ofs_running << " Largest stress is " << largest_grad << " kbar while threshold is "
                 << inp_->stress_thr << " kbar" << std::endl;
+}
+
+void Relax::print_gradient_summary(bool force_converged, std::ofstream& ofs_running)
+{
+    if (force_converged)
+    {
+        // setup_gradient runs before istep is incremented at the end of
+        // relax_step, so the step that just converged is istep + 1.
+        const int converged_step = istep + 1;
+        const std::string method = inp_->relax_method.empty() ? "unknown" : inp_->relax_method[0];
+        ofs_running << " Relaxation method: " << method << std::endl;
+        ofs_running << " Relaxation converged in " << converged_step << " step(s)." << std::endl;
+        ofs_running << " Largest force per step (eV/Angstrom):" << format_relax_history(max_force_history_);
+        if (if_cell_moves)
+        {
+            ofs_running << " Largest stress per step (kbar):" << format_relax_history(max_stress_history_);
+        }
+        ofs_running << "\n Relaxation is converged!" << std::endl;
+    }
+    else
+    {
+        ofs_running << "\n Relaxation is not converged yet!" << std::endl;
+    }
 }
 
 void Relax::calculate_gamma()
