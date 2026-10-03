@@ -37,7 +37,6 @@ scf_out_elf
 034_PW_CF_CS_S2_smallg
 035_PW_15_SO
 036_PW_AF
-037_PW_FM
 #038_PW_NC
 scf_Al100_kspace3
 040_PW_FX_smear
