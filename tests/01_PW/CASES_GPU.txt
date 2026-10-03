@@ -40,7 +40,7 @@ scf_out_elf
 036_PW_AF
 037_PW_FM
 #038_PW_NC
-039_PW_FD_smear
+scf_Al100_surface
 040_PW_FX_smear
 041_PW_GA_smear
 042_PW_M2_smear
@@ -113,7 +113,7 @@ scf_pbe0_spin2
 #208_PW_CG_float
 209_PW_DFTHALF
 210_PW_kspace_shift
-801_PW_LT_sc
+scf_brav_sc_smear_fd
 802_PW_LT_fcc
 #803_PW_LT_bcc
 804_PW_LT_hex

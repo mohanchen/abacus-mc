@@ -41,7 +41,7 @@ scf_out_chg_tau
 037_PW_FM
 038_PW_NC
 038_PW_NC_GGA_GRAD2
-039_PW_FD_smear
+scf_Al100_surface
 040_PW_FX_smear
 041_PW_GA_smear
 042_PW_M2_smear
@@ -119,7 +119,7 @@ scf_pbe0_spin2
 212_PW_USPP_BPCG
 213_PW_USPP_pchg_wfc
 214_PW_SCAN_NLCC
-801_PW_LT_sc
+scf_brav_sc_smear_fd
 802_PW_LT_fcc
 803_PW_LT_bcc
 804_PW_LT_hex
