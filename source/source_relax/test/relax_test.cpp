@@ -174,15 +174,51 @@ class Test_RELAX : public testing::Test
         UnitCell ucell;
         std::ofstream ofs;
 
+        // Fixed mock SCF outputs (forces, stresses, energies) feeding
+        // relax_step, previously read from support/*.txt. Inlining them keeps
+        // the test independent of the working directory. Values are the first
+        // 3 steps of the original files, so result_ref is unchanged.
+        static constexpr int nforce = 45;  // 3 steps x 5 atoms x 3
+        static constexpr int nstress = 27; // 3 steps x 3 x 3
+        static constexpr int nenergy = 3;  // 3 steps
+        const double forces[nforce] = {
+            4.56e-08, -8.74e-08, 4.0671950e-03,
+            -5.59e-08, 1.479e-07, 1.81171376e-02,
+            2.942e-07, -5.56e-08, -1.7979905e-03,
+            -1.691e-07, 1.612e-07, -1.7977699e-03,
+            -1.149e-07, -1.660e-07, -1.85885722e-02,
+            6.73e-08, 5.90e-08, 4.8608620e-03,
+            -1.632e-07, -1.833e-07, -2.24081615e-02,
+            4.93e-08, 1.246e-07, -1.8938742e-03,
+            9.84e-08, 4.34e-08, -1.8939930e-03,
+            -5.19e-08, -4.38e-08, 2.13351667e-02,
+            8.25e-08, 2.095e-07, 4.5297162e-03,
+            -5.19e-08, 3.57e-08, -3.6659292e-03,
+            4.95e-08, -1.654e-07, -1.8863808e-03,
+            4.14e-08, 2.440e-07, -1.8870376e-03,
+            -1.215e-07, -3.239e-07, 2.9096315e-03,
+        };
+        const double stresses[nstress] = {
+            4.79987e-05, -2.0e-10, 6.0e-10,
+            -2.0e-10, 4.80038e-05, -4.0e-10,
+            6.0e-10, -4.0e-10, -2.751687e-04,
+            1.040725e-04, 2.0e-10, -1.6e-09,
+            2.0e-10, 1.040682e-04, -7.0e-10,
+            -1.6e-09, -7.0e-10, 1.982021e-04,
+            8.00586e-05, 1.0e-10, -1.0e-09,
+            1.0e-10, 8.00526e-05, 2.8e-09,
+            -1.0e-09, 2.8e-09, -6.4010e-06,
+        };
+        const double energies[nenergy] = {
+            4.79987e-05,
+            -2.0e-10,
+            6.0e-10,
+        };
+
         void SetUp()
         {
-            std::ifstream force_file("./support/force.txt");
-            std::ifstream stress_file("./support/stress.txt");
-            std::ifstream energy_file("./support/stress.txt");
-
             int nstep = 3;
             int nat = 5;
-            double energy;
             inp.calculation = "cell-relax";
             inp.force_thr = 0.001;
             inp.fixed_axes = "a";
@@ -199,22 +235,24 @@ class Test_RELAX : public testing::Test
 
             for(int istep=0;istep<nstep;istep++)
             {
+                const int fbase = istep * nat * 3;
                 for(int i=0;i<nat;i++)
                 {
                     for(int j=0;j<3;j++)
                     {
-                        force_file >> force_in(i,j);
+                        force_in(i,j) = forces[fbase + i*3 + j];
                     }
                 }
+                const int sbase = istep * 9;
                 for(int i=0;i<3;i++)
                 {
                     for(int j=0;j<3;j++)
                     {
-                        stress_file >> stress_in(i,j);
+                        stress_in(i,j) = stresses[sbase + i*3 + j];
                     }
                 }
 
-                energy_file >> energy;
+                const double energy = energies[istep];
 
                 inp.fixed_ibrav = false;
                 rl.relax_step(ucell,force_in,stress_in,energy, ofs);
@@ -450,9 +488,12 @@ TEST(RelaxSyncSummary, TwoStepConvergence)
     Relax rl;
     rl.init_relax(nat, inp);
 
-    // Step 1: large force -> not converged.
+    // Step 1: force above threshold -> not converged. The magnitude must stay
+    // small enough that the CG step keeps the atom inside the unit cell
+    // (latvec is the identity), otherwise ABACUS aborts with "Movement of
+    // atom is larger than the cell length".
     ModuleBase::matrix force_big(nat, 3);
-    force_big(0, 0) = 1.0; // ~25.7 eV/Angstrom, above threshold
+    force_big(0, 0) = 0.01; // ~0.257 eV/Angstrom, above threshold
     std::ofstream ofs("./running_relax_sync_test.log");
     const bool done1 = rl.relax_step(ucell, force_big, stress_in, 0.0, ofs);
     EXPECT_FALSE(done1);
