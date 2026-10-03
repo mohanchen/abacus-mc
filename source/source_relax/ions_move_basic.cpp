@@ -158,7 +158,7 @@ bool Ions_Move_Basic::check_converged(const UnitCell &ucell,
 
     if (Ions_Move_Basic::largest_grad == 0.0)
     {
-        ofs << " largest force is 0, no movement is possible." << std::endl;
+        ofs << "\n largest force is 0, no movement is possible." << std::endl;
         ofs << " it may converged, otherwise no movement of atom is allowed." << std::endl;
         return true;
     }
