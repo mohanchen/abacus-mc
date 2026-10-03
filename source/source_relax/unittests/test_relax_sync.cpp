@@ -580,3 +580,242 @@ TEST(RelaxSyncSummary, CellRelaxConvergedPrintsStressHistory)
 
     delete[] ucell.atoms;
 }
+
+// ---------------------------------------------------------------------------
+// Behavior tests locking move_cell_ions branches before its refactor.
+// All drive the public relax_step and assert only externally observable
+// UnitCell state (latvec / taud / omega), so the private-method split must
+// keep these numbers bit-stable.
+// ---------------------------------------------------------------------------
+
+namespace
+{
+// Build a minimal 2-type, 3-atom cell with the given per-atom move flags.
+// Atom 0 is type 0 (1 atom), atoms 1-2 are type 1 (2 atoms). taud start at 0.
+// UnitCell is non-copyable, so the caller supplies the object to fill.
+void make_two_type_cell(UnitCell& ucell, const int mbl_flat[9])
+{
+    ucell.ntype = 2;
+    ucell.nat = 3;
+    ucell.omega = 8.0;   // 2x2x2 cell
+    ucell.lat0 = 1.0;
+    ucell.atoms = new Atom[2];
+    ucell.atoms[0].na = 1;
+    ucell.atoms[1].na = 2;
+    for (int t = 0; t < 2; t++)
+    {
+        const int na = ucell.atoms[t].na;
+        ucell.atoms[t].label = "X";
+        ucell.atoms[t].mbl.resize(na);
+        ucell.atoms[t].taud.resize(na);
+        ucell.atoms[t].tau.resize(na);
+        ucell.atoms[t].dis.resize(na);
+        ucell.atoms[t].mag.resize(na);
+        ucell.atoms[t].vel.resize(na);
+    }
+    // iat: 0 -> (type0, ia0); 1 -> (type1, ia0); 2 -> (type1, ia1)
+    ucell.iat2it = new int[3];
+    ucell.iat2ia = new int[3];
+    ucell.iat2it[0] = 0; ucell.iat2it[1] = 1; ucell.iat2it[2] = 1;
+    ucell.iat2ia[0] = 0; ucell.iat2ia[1] = 0; ucell.iat2ia[2] = 1;
+
+    // mbl flags, laid out per atom
+    ucell.atoms[0].mbl[0] = {mbl_flat[0], mbl_flat[1], mbl_flat[2]};
+    ucell.atoms[1].mbl[0] = {mbl_flat[3], mbl_flat[4], mbl_flat[5]};
+    ucell.atoms[1].mbl[1] = {mbl_flat[6], mbl_flat[7], mbl_flat[8]};
+
+    ucell.atoms[0].taud[0] = {0.0, 0.0, 0.0};
+    ucell.atoms[1].taud[0] = {0.0, 0.0, 0.0};
+    ucell.atoms[1].taud[1] = {0.0, 0.0, 0.0};
+
+    ucell.latvec.Identity();
+    ucell.latvec.e11 = 2.0;
+    ucell.latvec.e22 = 2.0;
+    ucell.latvec.e33 = 2.0;
+    ucell.lat_axis_free[0] = 1;
+    ucell.lat_axis_free[1] = 1;
+    ucell.lat_axis_free[2] = 1;
+}
+
+void free_two_type_cell(UnitCell& ucell)
+{
+    delete[] ucell.atoms;
+    // iat2it / iat2ia are owned by the mock; release explicitly.
+    delete[] ucell.iat2it;
+    delete[] ucell.iat2ia;
+    ucell.iat2it = nullptr;
+    ucell.iat2ia = nullptr;
+}
+} // namespace
+
+// fixed_axes="shape": only the hydrostatic part of the stress survives, so the
+// lattice scales isotropically (off-diagonals stay zero, diagonal scales equal).
+TEST(RelaxSyncCellMove, FixedShapeIsotropicScale)
+{
+    const int mbl[9] = {1,1,1, 1,1,1, 1,1,1};
+    UnitCell ucell;
+    make_two_type_cell(ucell, mbl);
+
+    Input_para inp;
+    inp.calculation = "cell-relax";
+    inp.force_thr = 0.0;      // force never converged -> take the CG move
+    inp.force_thr_ev = 0.0;
+    inp.stress_thr = 0.0;     // stress never converged either
+    inp.fixed_axes = "shape";
+    inp.fixed_ibrav = false;
+
+    ModuleBase::matrix force_in(3, 3);
+    force_in(0, 0) = 0.01;    // nonzero -> not converged -> performs the move
+    ModuleBase::matrix stress_in(3, 3);
+    stress_in(0, 0) = 1.0; stress_in(1, 1) = 2.0; stress_in(2, 2) = 3.0;
+    stress_in(0, 1) = 0.5; // anisotropic + off-diagonal parts must be dropped
+
+    Relax rl;
+    rl.init_relax(3, inp);
+    std::ofstream ofs("./running_relax_sync_shape.log");
+    rl.relax_step(ucell, force_in, stress_in, 0.0, ofs);
+    ofs.close();
+    std::remove("./running_relax_sync_shape.log");
+
+    // Off-diagonal lattice components unchanged (remain zero).
+    EXPECT_NEAR(ucell.latvec.e12, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e13, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e21, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e23, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e31, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e32, 0.0, 1e-12);
+    // Isotropic scaling: all three diagonals shifted by the same amount.
+    EXPECT_NEAR(ucell.latvec.e11 - 2.0, ucell.latvec.e22 - 2.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e22 - 2.0, ucell.latvec.e33 - 2.0, 1e-12);
+
+    free_two_type_cell(ucell);
+}
+
+// fixed_axes="volume": the cell may change shape but its volume is re-scaled
+// back to the original omega after each move (relax_sync.cpp Step 1).
+TEST(RelaxSyncCellMove, FixedVolumePreservesOmega)
+{
+    const int mbl[9] = {1,1,1, 1,1,1, 1,1,1};
+    UnitCell ucell;
+    make_two_type_cell(ucell, mbl);
+    const double omega0 = ucell.omega;
+
+    Input_para inp;
+    inp.calculation = "cell-relax";
+    inp.force_thr = 0.0;
+    inp.force_thr_ev = 0.0;
+    inp.stress_thr = 0.0;
+    inp.fixed_axes = "volume";
+    inp.fixed_ibrav = false;
+
+    ModuleBase::matrix force_in(3, 3);
+    force_in(0, 0) = 0.01;    // nonzero -> not converged
+    ModuleBase::matrix stress_in(3, 3);
+    stress_in(0, 0) = 1.0; stress_in(1, 1) = -0.5; stress_in(0, 1) = 0.3;
+
+    Relax rl;
+    rl.init_relax(3, inp);
+    std::ofstream ofs("./running_relax_sync_vol.log");
+    rl.relax_step(ucell, force_in, stress_in, 0.0, ofs);
+    ofs.close();
+    std::remove("./running_relax_sync_vol.log");
+
+    const double omega_new = std::abs(ucell.latvec.Det()) * ucell.lat0 * ucell.lat0 * ucell.lat0;
+    EXPECT_NEAR(omega_new, omega0, 1e-8);
+
+    free_two_type_cell(ucell);
+}
+
+// lat_axis_free = {1,0,0}: only the first lattice row may move; rows 2 and 3
+// must remain exactly at their initial values (relax_sync.cpp 572-589).
+TEST(RelaxSyncCellMove, PartialAxisFreeKeepsLockedRows)
+{
+    const int mbl[9] = {1,1,1, 1,1,1, 1,1,1};
+    UnitCell ucell;
+    make_two_type_cell(ucell, mbl);
+    ucell.lat_axis_free[0] = 1;
+    ucell.lat_axis_free[1] = 0; // lock row 2
+    ucell.lat_axis_free[2] = 0; // lock row 3
+
+    Input_para inp;
+    inp.calculation = "cell-relax";
+    inp.force_thr = 0.0;
+    inp.force_thr_ev = 0.0;
+    inp.stress_thr = 0.0;
+    inp.fixed_axes = "None";
+    inp.fixed_ibrav = false;
+
+    ModuleBase::matrix force_in(3, 3);
+    force_in(0, 0) = 0.01;    // nonzero -> not converged
+    ModuleBase::matrix stress_in(3, 3);
+    stress_in(0, 0) = 1.0; stress_in(1, 1) = 1.0; stress_in(2, 2) = 1.0;
+    stress_in(0, 1) = 0.2; stress_in(1, 0) = 0.2;
+
+    Relax rl;
+    rl.init_relax(3, inp);
+    std::ofstream ofs("./running_relax_sync_axis.log");
+    rl.relax_step(ucell, force_in, stress_in, 0.0, ofs);
+    ofs.close();
+    std::remove("./running_relax_sync_axis.log");
+
+    // Locked rows unchanged.
+    EXPECT_NEAR(ucell.latvec.e21, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e22, 2.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e23, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e31, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e32, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.latvec.e33, 2.0, 1e-12);
+
+    free_two_type_cell(ucell);
+}
+
+// Mixed mbl flags across two atom types: each atom's direct-coordinate
+// displacement must be zero along the constrained (mbl==0) directions and
+// nonzero only along free ones (relax_sync.cpp Step 2&3, iat2it/iat2ia + mbl).
+TEST(RelaxSyncCellMove, MixedMblMovesOnlyFreeComponents)
+{
+    // atom0: free x only; atom1(type1,ia0): free y only; atom2(type1,ia1): free z only
+    const int mbl[9] = {1,0,0, 0,1,0, 0,0,1};
+    UnitCell ucell;
+    make_two_type_cell(ucell, mbl);
+
+    Input_para inp;
+    inp.calculation = "relax";  // ions only, keep lattice fixed for clarity
+    inp.force_thr = 0.0;
+    inp.force_thr_ev = 0.0;
+    inp.fixed_axes = "None";
+    inp.fixed_ibrav = false;
+
+    // Uniform force on every atom/component; mbl must mask the movement.
+    ModuleBase::matrix force_in(3, 3);
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            force_in(i, j) = 0.05;
+        }
+    }
+    ModuleBase::matrix stress_in(3, 3);
+
+    Relax rl;
+    rl.init_relax(3, inp);
+    std::ofstream ofs("./running_relax_sync_mbl.log");
+    rl.relax_step(ucell, force_in, stress_in, 0.0, ofs);
+    ofs.close();
+    std::remove("./running_relax_sync_mbl.log");
+
+    // atom0: only x moved
+    EXPECT_NE(ucell.atoms[0].taud[0].x, 0.0);
+    EXPECT_NEAR(ucell.atoms[0].taud[0].y, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.atoms[0].taud[0].z, 0.0, 1e-12);
+    // atom1: only y moved
+    EXPECT_NEAR(ucell.atoms[1].taud[0].x, 0.0, 1e-12);
+    EXPECT_NE(ucell.atoms[1].taud[0].y, 0.0);
+    EXPECT_NEAR(ucell.atoms[1].taud[0].z, 0.0, 1e-12);
+    // atom2: only z moved
+    EXPECT_NEAR(ucell.atoms[1].taud[1].x, 0.0, 1e-12);
+    EXPECT_NEAR(ucell.atoms[1].taud[1].y, 0.0, 1e-12);
+    EXPECT_NE(ucell.atoms[1].taud[1].z, 0.0);
+
+    free_two_type_cell(ucell);
+}
