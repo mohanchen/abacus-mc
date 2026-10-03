@@ -1,5 +1,6 @@
 #include "relax_driver.h"
 #include "relax_history.h"
+#include "relax_stru_io.h"
 #include "socket_driver.h"
 #include "source_base/formatter.h"
 #include "source_base/global_file.h"
@@ -194,32 +195,8 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
     const std::string& out_dir = PARAM.globalv.global_out_dir;
     const bool deepks_setorb = PARAM.globalv.deepks_setorb;
 
-    // Build header comment with version, timestamp, energy and stress
-    std::time_t now = std::time(nullptr);
-    char time_buf[64];
-    std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-    std::string header = FmtCore::format("# ABACUS version: %s\n# Written at %s\n# RELAX STEP %d, Energy: %.8f eV\n",
-                                          VERSION,
-                                          time_buf,
-                                          istep + 1,
-                                          etot * ModuleBase::Ry_to_eV);
-    // stress in kbar: Ry/Bohr^3 -> kbar, 3 rows
-    const double stress_transform = ModuleBase::RYDBERG_SI
-                                    / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI)
-                                    * 1.0e-8;
-    for (int i = 0; i < 3; i++)
-    {
-        header += FmtCore::format("# Stress (kbar): %.6f %.6f %.6f\n",
-                                  stress(i, 0) * stress_transform,
-                                  stress(i, 1) * stress_transform,
-                                  stress(i, 2) * stress_transform);
-    }
-
-    bool need_orb = inp.basis_type == "pw";
-    need_orb = need_orb && inp.init_wfc.substr(0, 3) == "nao";
-    need_orb = need_orb || inp.basis_type == "lcao";
-    need_orb = need_orb || inp.basis_type == "lcao_in_pw";
-
+    const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, false);
+    const bool need_orb = relax_stru_io::need_orbital(inp);
     const bool freq_ok = (inp.out_freq_ion > 0 && istep % inp.out_freq_ion == 0);
 
     // STRU_NOW: overwrite each step (for out_stru 1 and 2)
@@ -227,59 +204,18 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
     // is written in final_out() to avoid a duplicate file.
     if (is_relax)
     {
-        if (inp.out_stru == 1)
-        {
-            unitcell::print_stru_file(ucell,
-                                  ucell.atoms,
-                                  ucell.latvec,
-                                  out_dir + "STRU_NOW",
-                                  header,
-                                  inp.nspin,
-                                  true,
-                                  inp.calculation == "md",
-                                  inp.out_mul,
-                                  need_orb,
-                                  deepks_setorb,
-                                  GlobalV::MY_RANK,
-                                  force);
-        }
-        else if (inp.out_stru == 2)
-        {
-            ModuleIO::CifParser::write(out_dir + "STRU_NOW.cif",
-                                       ucell,
-                                       header,
-                                       "data_?",
-                                       GlobalV::MY_RANK);
-        }
+        const std::string now_file = out_dir + (inp.out_stru == 1 ? "STRU_NOW" : "STRU_NOW.cif");
+        relax_stru_io::write_stru(ucell, inp, now_file, header, force, need_orb,
+                                  deepks_setorb, GlobalV::MY_RANK);
     }
 
     // Numbered files per out_freq_ion: only meaningful for relaxation calculations
     if (is_relax && freq_ok)
     {
-        if (inp.out_stru == 1)
-        {
-            unitcell::print_stru_file(ucell,
-                                  ucell.atoms,
-                                  ucell.latvec,
-                                  out_dir + "STRU" + std::to_string(istep + 1),
-                                  header,
-                                  inp.nspin,
-                                  true,
-                                  inp.calculation == "md",
-                                  inp.out_mul,
-                                  need_orb,
-                                  deepks_setorb,
-                                  GlobalV::MY_RANK,
-                                  force);
-        }
-        else if (inp.out_stru == 2)
-        {
-            ModuleIO::CifParser::write(out_dir + "STRU" + std::to_string(istep + 1) + ".cif",
-                                       ucell,
-                                       header,
-                                       "data_?",
-                                       GlobalV::MY_RANK);
-        }
+        const std::string step_file = out_dir + "STRU" + std::to_string(istep + 1)
+                                      + (inp.out_stru == 1 ? "" : ".cif");
+        relax_stru_io::write_stru(ucell, inp, step_file, header, force, need_orb,
+                                  deepks_setorb, GlobalV::MY_RANK);
     }
 }
 
@@ -315,55 +251,11 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
         const std::string& out_dir = PARAM.globalv.global_out_dir;
         const bool deepks_setorb = PARAM.globalv.deepks_setorb;
 
-        // Build header comment for STRU_FINAL
-        std::time_t now = std::time(nullptr);
-        char time_buf[64];
-        std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-        std::string header = FmtCore::format("# ABACUS version: %s\n# Written at %s\n# RELAX STEP %d (FINAL), Energy: %.8f eV\n",
-                                              VERSION,
-                                              time_buf,
-                                              istep + 1,
-                                              etot * ModuleBase::Ry_to_eV);
-        const double stress_transform = ModuleBase::RYDBERG_SI
-                                        / (ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI * ModuleBase::BOHR_RADIUS_SI)
-                                        * 1.0e-8;
-        for (int i = 0; i < 3; i++)
-        {
-            header += FmtCore::format("# Stress (kbar): %.6f %.6f %.6f\n",
-                                      stress(i, 0) * stress_transform,
-                                      stress(i, 1) * stress_transform,
-                                      stress(i, 2) * stress_transform);
-        }
-
-        if (inp.out_stru == 1)
-        {
-            bool need_orb = inp.basis_type == "pw";
-            need_orb = need_orb && inp.init_wfc.substr(0, 3) == "nao";
-            need_orb = need_orb || inp.basis_type == "lcao";
-            need_orb = need_orb || inp.basis_type == "lcao_in_pw";
-
-            unitcell::print_stru_file(ucell,
-                                      ucell.atoms,
-                                      ucell.latvec,
-                                      out_dir + "STRU_FINAL",
-                                      header,
-                                      inp.nspin,
-                                      true,
-                                      inp.calculation == "md",
-                                      inp.out_mul,
-                                      need_orb,
-                                      deepks_setorb,
-                                      GlobalV::MY_RANK,
-                                      force);
-        }
-        else if (inp.out_stru == 2)
-        {
-            ModuleIO::CifParser::write(out_dir + "STRU_FINAL.cif",
-                                       ucell,
-                                       header,
-                                       "data_?",
-                                       GlobalV::MY_RANK);
-        }
+        const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, true);
+        const bool need_orb = relax_stru_io::need_orbital(inp);
+        const std::string final_file = out_dir + (inp.out_stru == 1 ? "STRU_FINAL" : "STRU_FINAL.cif");
+        relax_stru_io::write_stru(ucell, inp, final_file, header, force, need_orb,
+                                  deepks_setorb, GlobalV::MY_RANK);
     }
 
     // relax_nmax == 0 is a valid dry-run mode: no relaxation step was ever

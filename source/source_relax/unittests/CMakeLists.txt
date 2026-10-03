@@ -175,6 +175,16 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_RELAX_relax_stru_io_test
+  LIBS parameter base device
+  SOURCES test_relax_stru_io.cpp
+          ../relax_stru_io.cpp
+          ../../source_cell/print_cell.cpp
+          ../../source_cell/cif_io.cpp
+          ../../source_cell/bcast_cell.cpp
+)
+
+AddTest(
   TARGET MODULE_RELAX_ions_move_lbfgs_test
   LIBS parameter base device
   SOURCES test_ions_move_lbfgs.cpp
