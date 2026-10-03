@@ -21,4 +21,4 @@ cal_stress        1
 
 dft_functional    pbe0
 symmetry          -1
-exx_gamma_extrapolation  false
+exx_gamma_extra  false
