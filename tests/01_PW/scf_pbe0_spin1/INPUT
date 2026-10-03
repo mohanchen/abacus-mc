@@ -13,12 +13,13 @@ calculation       scf
 ecutwfc           10.0 # Rydberg
 #Parameters (electronic)
 basis_type        pw
-scf_thr           1e-3
+scf_thr           1e-7
 smearing_method   fixed
 
-cal_force         0
+cal_force         1
 cal_stress        1
 
 dft_functional    pbe0
 symmetry          -1
 exx_gamma_extra  false
+

@@ -7,7 +7,7 @@ pseudo_dir        ../../PP_ORB
 orbital_dir       ../../PP_ORB
 
 #Parameters (PW)
-ecutwfc           30
+ecutwfc           8
 basis_type        pw
 
 #Parameters (SCF)
@@ -29,3 +29,7 @@ pw_seed           1
 device            cpu
 exx_thr_type      energy
 exx_ene_thr       5e-2
+
+cal_force         1
+#cal_stress        1 # not implement yet
+out_elf           1
