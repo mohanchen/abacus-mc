@@ -9,7 +9,7 @@ pw_seed           1
 calculation       scf
 latname           bco
 #Parameters (PW)
-ecutwfc           25.0 # Rydberg
+ecutwfc           10.0 # Rydberg
 #Parameters (electronic)
 basis_type        pw
 scf_thr           1e-10
