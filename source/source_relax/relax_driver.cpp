@@ -24,6 +24,12 @@ void Relax_Driver::relax_driver(
     ModuleBase::TITLE("Relax_Driver", "relax_driver");
     ModuleBase::timer::start("Relax_Driver", "relax_driver");
 
+    // Cache global configuration once so downstream helpers do not each reach
+    // into PARAM / GlobalV.
+    out_dir_ = PARAM.globalv.global_out_dir;
+    deepks_setorb_ = PARAM.globalv.deepks_setorb;
+    my_rank_ = GlobalV::MY_RANK;
+
     if (inp.socket_driver)
     {
         Socket_Driver socket_driver;
@@ -60,7 +66,7 @@ void Relax_Driver::relax_driver(
             // Relaxation converged, exit loop immediately
             break;
         }
-        else if (ModuleIO::read_exit_file(GlobalV::MY_RANK, "EXIT", ofs_running))
+        else if (ModuleIO::read_exit_file(my_rank_, "EXIT", ofs_running))
         {
             // EXIT file detected, exit loop
             break;
@@ -113,12 +119,12 @@ void Relax_Driver::iter_info(const std::vector<int>& steps, const Input_para& in
 }
 
 void Relax_Driver::esolve(const int istep,
-		ModuleESolver::ESolver* p_esolver,
-		UnitCell& ucell,
-		const Input_para& inp,
-		ModuleBase::matrix& force,
-		ModuleBase::matrix& stress,
-		double& etot)
+        ModuleESolver::ESolver* p_esolver,
+        UnitCell& ucell,
+        const Input_para& inp,
+        ModuleBase::matrix& force,
+        ModuleBase::matrix& stress,
+        double& etot)
 {
     p_esolver->runner(ucell, istep);
 
@@ -136,13 +142,13 @@ void Relax_Driver::esolve(const int istep,
 }
 
 bool Relax_Driver::relax_step(std::vector<int>& steps,
-		ModuleESolver::ESolver* p_esolver,
-		UnitCell& ucell,
-		const Input_para& inp,
-		const ModuleBase::matrix& force,
-		const ModuleBase::matrix& stress,
-		const double etot,
-		std::ofstream& ofs_running)
+        ModuleESolver::ESolver* p_esolver,
+        UnitCell& ucell,
+        const Input_para& inp,
+        const ModuleBase::matrix& force,
+        const ModuleBase::matrix& stress,
+        const double etot,
+        std::ofstream& ofs_running)
 {
     // Guard: For non-relaxation calculations (scf, nscf, etc.), return true immediately
     // to ensure the main loop exits after one iteration. This provides robustness
@@ -157,15 +163,15 @@ bool Relax_Driver::relax_step(std::vector<int>& steps,
     if (inp.uses_simultaneous_relaxation())
     {
         converged = this->rl.relax_step(ucell, force, stress, etot, ofs_running);
-	// stress step +1
+        // stress step +1
         steps[2]++;
-	// fix force step to 1
+        // fix force step to 1
         steps[1] = 1;
     }
     else
     {
         converged = this->rl_old.relax_step(steps[0]+1, etot, ucell, force,
-			stress, steps[1], steps[2], ofs_running);
+            stress, steps[1], steps[2], ofs_running);
     }
 
     ModuleIO::output_after_relax(converged, p_esolver->conv_esolver, ofs_running);
@@ -191,10 +197,6 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
         return;
     }
 
-    // cache global parameters to reduce repeated PARAM access
-    const std::string& out_dir = PARAM.globalv.global_out_dir;
-    const bool deepks_setorb = PARAM.globalv.deepks_setorb;
-
     const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, false);
     const bool need_orb = relax_stru_io::need_orbital(inp);
     const bool freq_ok = (inp.out_freq_ion > 0 && istep % inp.out_freq_ion == 0);
@@ -204,18 +206,18 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
     // is written in final_out() to avoid a duplicate file.
     if (is_relax)
     {
-        const std::string now_file = out_dir + (inp.out_stru == 1 ? "STRU_NOW" : "STRU_NOW.cif");
+        const std::string now_file = out_dir_ + (inp.out_stru == 1 ? "STRU_NOW" : "STRU_NOW.cif");
         relax_stru_io::write_stru(ucell, inp, now_file, header, force, need_orb,
-                                  deepks_setorb, GlobalV::MY_RANK);
+                                  deepks_setorb_, my_rank_);
     }
 
     // Numbered files per out_freq_ion: only meaningful for relaxation calculations
     if (is_relax && freq_ok)
     {
-        const std::string step_file = out_dir + "STRU" + std::to_string(istep + 1)
+        const std::string step_file = out_dir_ + "STRU" + std::to_string(istep + 1)
                                       + (inp.out_stru == 1 ? "" : ".cif");
         relax_stru_io::write_stru(ucell, inp, step_file, header, force, need_orb,
-                                  deepks_setorb, GlobalV::MY_RANK);
+                                  deepks_setorb_, my_rank_);
     }
 }
 
@@ -247,15 +249,11 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
     // 1: write STRU_FINAL; 2: write STRU_FINAL.cif
     if (stru_effective && (inp.out_stru == 1 || inp.out_stru == 2))
     {
-        // cache global parameters to reduce repeated PARAM access
-        const std::string& out_dir = PARAM.globalv.global_out_dir;
-        const bool deepks_setorb = PARAM.globalv.deepks_setorb;
-
         const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, true);
         const bool need_orb = relax_stru_io::need_orbital(inp);
-        const std::string final_file = out_dir + (inp.out_stru == 1 ? "STRU_FINAL" : "STRU_FINAL.cif");
+        const std::string final_file = out_dir_ + (inp.out_stru == 1 ? "STRU_FINAL" : "STRU_FINAL.cif");
         relax_stru_io::write_stru(ucell, inp, final_file, header, force, need_orb,
-                                  deepks_setorb, GlobalV::MY_RANK);
+                                  deepks_setorb_, my_rank_);
     }
 
     // relax_nmax == 0 is a valid dry-run mode: no relaxation step was ever

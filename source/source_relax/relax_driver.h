@@ -9,6 +9,7 @@
 #include "source_base/matrix.h"
 #include <vector>
 #include <fstream>
+#include <string>
 
 /**
  * @brief Driver class for geometry relaxation calculations.
@@ -45,6 +46,13 @@ class Relax_Driver
     Relax rl;
     /// Old relaxation optimizer (IonCellOptimizer class)
     IonCellOptimizer rl_old;
+
+    /// Cached global output directory (read once from PARAM at relax_driver entry)
+    std::string out_dir_;
+    /// Cached DeePKS setorb flag (read once from PARAM at relax_driver entry)
+    bool deepks_setorb_ = false;
+    /// Cached MPI rank (read once at relax_driver entry)
+    int my_rank_ = 0;
 
     /**
      * @brief Initialize the relaxation optimizer.
