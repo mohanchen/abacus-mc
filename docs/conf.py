@@ -21,9 +21,15 @@ project = 'ABACUS'
 copyright = '%Y, ABACUS'
 author = 'ABACUS'
 
-# The full version, including alpha/beta/rc tags
-version = '3.11'
-release = '3.11.0'
+# The full version, including alpha/beta/rc tags, read from the C++ source so
+# it stays in sync with releases. The EPUB3 builder warns when it is empty,
+# which fails the Read the Docs build under fail_on_warning.
+import re
+from pathlib import Path
+
+_version_h = Path(__file__).resolve().parent.parent / 'source' / 'source_main' / 'version.h'
+release = re.search(r'#define\s+VERSION\s+"v?([^"]+)"', _version_h.read_text()).group(1)
+version = release
 
 
 # -- General configuration ---------------------------------------------------
@@ -124,7 +130,19 @@ latex_use_xindy = False
 mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js'
 # deepmodeling_current_site = 'Tutorials'
 latex_elements = {
-    'extraclassoptions':'openany,oneside'
+    'extraclassoptions':'openany,oneside',
+    # LaTeX-side shims for MathJax-dialect macros used in the markdown
+    # sources. MathJax (HTML rendering) provides these natively, which is
+    # why the gap only surfaces in the PDF build.
+    'preamble': r'''
+% Dirac notation: MathJax has \ket/\bra built in; LaTeX needs braket.
+\usepackage{braket}
+\providecommand{\bra}[1]{\langle #1\rvert}
+\providecommand{\ket}[1]{\lvert #1\rangle}
+% MathJax alias macros that plain LaTeX lacks: \lt / \gt for < / >
+\providecommand{\lt}{<}
+\providecommand{\gt}{>}
+''',
 }
 
 
