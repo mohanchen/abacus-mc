@@ -9,8 +9,9 @@
 #include <vector>
 
 // Test build_stru_header for stru_out / final_out header generation.
-// The header logic is the only part of Relax_Driver that does not depend on
-// PARAM.globalv or MPI rank, so it can be unit-tested in isolation.
+// The header logic is the only part of Relax_Driver that takes all of its
+// inputs as explicit arguments (no global state or MPI rank access), so it
+// can be unit-tested in isolation.
 //
 // The header is always exactly 7 lines:
 //   1: version
