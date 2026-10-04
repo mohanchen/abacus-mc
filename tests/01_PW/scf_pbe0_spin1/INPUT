@@ -17,7 +17,6 @@ scf_thr           1e-7
 smearing_method   fixed
 
 cal_force         1
-cal_stress        1
 
 dft_functional    pbe0
 symmetry          -1
