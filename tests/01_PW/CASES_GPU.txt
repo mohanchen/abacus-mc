@@ -78,8 +78,8 @@ scf_sol_H2O
 092_PW_CR_VDW3
 #093_PW_MSST
 #094_PW_MSST2
-#095_PW_NPT  # disabled: uses ref_cell_factor=1.05 which is currently blocked
-#096_PW_NVT
+#md_npt  # disabled: uses ref_cell_factor=1.05 which is currently blocked
+#md_nvt
 scf_pbe0_spin1
 scf_pbe0_spin2
 099_PW_15_SO_avg
@@ -95,7 +95,7 @@ scf_pbe0_spin2
 #206_PW_SCAN_S2
 #207_PW_skip
 #208_PW_CG_float
-209_PW_DFTHALF
+scf_half
 210_PW_kspace_shift
 scf_brav_sc_smear_fd
 scf_brav_fcc_smear_ga
@@ -111,7 +111,7 @@ scf_brav_bco_smear_mv
 812_PW_LT_sm
 813_PW_LT_bacm
 814_PW_LT_triclinic
-815_PW_DFTU_S2_Z
-816_PW_DFTU_S4_XY
+scf_dftu_spin2
+scf_dftu_spin4
 scf_deltaspin2
 scf_deltaspin4
