@@ -5,6 +5,7 @@ basis_type        pw
 init_wfc          random
 pw_seed           1
 cal_force         1
+#cal_stress        1 # implicit solvation stress is not implemented yet
 nbands            20
 ecutwfc           20
 scf_nmax          50

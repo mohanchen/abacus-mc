@@ -58,7 +58,7 @@ relax_cell_fix_ac
 relax_cell_move
 073_PW_SY
 074_PW_SY_LiRH
-075_PW_CHG_BINARY
+scf_in_chgdat
 076_PW_elec_add
 077_PW_elec_minus
 078_PW_S2_elec_add
@@ -66,8 +66,8 @@ relax_cell_move
 080_PW_dipole
 081_PW_efield
 082_PW_gatefield
-083_PW_sol_H2
-084_PW_sol_H2O
+scf_sol_H2
+scf_sol_H2O
 085_PW_get_pchg
 086_PW_get_wf
 087_PW_get_pchg_kpar_bndpar

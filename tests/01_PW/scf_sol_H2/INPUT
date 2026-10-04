@@ -12,6 +12,8 @@ basis_type        pw
 #Parameters (Accuracy)
 ecutwfc           20
 scf_nmax          50
+cal_force         1
+#cal_stress        1 # implicit solvation stress is not implemented yet
 
 #Parameters (Solvation Model)
 imp_sol           1
