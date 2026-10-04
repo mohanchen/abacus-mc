@@ -4,9 +4,6 @@ abacus_disable_feature_definitions(__MLALGO)
 abacus_disable_feature_definitions(__CUDA)
 abacus_disable_feature_definitions(__ROCM)
 
-install(DIRECTORY support DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-
 AddTest(
   TARGET MODULE_RELAX_socket_ipi_test
   SOURCES test_socket_ipi.cpp ../socket_ipi.cpp
