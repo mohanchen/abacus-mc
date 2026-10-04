@@ -102,7 +102,15 @@ scf_brav_fcc_smear_ga
 #scf_brav_bcc_smear_m2
 scf_brav_hex_smear_mp
 scf_brav_trig_smear_fx
+806_PW_LT_st
+807_PW_LT_bct
+808_PW_LT_so
+809_PW_LT_baco
+810_PW_LT_fco
 scf_brav_bco_smear_mv
+812_PW_LT_sm
+813_PW_LT_bacm
+814_PW_LT_triclinic
 815_PW_DFTU_S2_Z
 816_PW_DFTU_S4_XY
 scf_deltaspin2
