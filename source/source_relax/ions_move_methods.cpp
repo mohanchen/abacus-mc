@@ -5,6 +5,7 @@
 #include "ions_move_basic.h"
 #include "source_base/global_function.h"
 #include "source_base/global_variable.h"
+#include "source_io/module_parameter/parameter.h"
 
 
 Ions_Move_Methods::Ions_Move_Methods()
@@ -45,7 +46,7 @@ void Ions_Move_Methods::allocate(const int &natom, const std::string& relax_meth
     }
     else if(relax_method_0 == "lbfgs")
     {
-        this->lbfgs.allocate(natom);       
+        this->lbfgs.allocate(natom, PARAM.inp.relax_bfgs_rmax, PARAM.inp.out_level);       
     }
     else
     {

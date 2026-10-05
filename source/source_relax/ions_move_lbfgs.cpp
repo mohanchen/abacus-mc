@@ -1,14 +1,14 @@
 #include "ions_move_lbfgs.h"
 #include "matrix_methods.h"
-#include "source_io/module_parameter/parameter.h"
 #include "ions_move_basic.h"
 #include "source_cell/update_cell.h"
 #include "source_cell/print_cell.h" // mohan add 2025-06-19  
 
-void Ions_Move_LBFGS::allocate(const int _size) // initialize H0、H、pos0、force0、force
+void Ions_Move_LBFGS::allocate(const int _size, const double relax_bfgs_rmax, const std::string& out_level) // initialize H0、H、pos0、force0、force
 {
     alpha=70;//default value in ase is 70
-    maxstep=PARAM.inp.relax_bfgs_rmax;
+    maxstep=relax_bfgs_rmax;
+    this->out_level=out_level;
     size=_size;
     memory=100;
     iteration=0;
@@ -284,7 +284,7 @@ void Ions_Move_LBFGS::calculate_largest_grad(const ModuleBase::matrix& _force,Un
         }
     }
     Ions_Move_Basic::largest_grad /= ucell.lat0;
-    if (PARAM.inp.out_level == "ie")
+    if (out_level == "ie")
     {
         std::cout << " LARGEST GRAD (eV/Angstrom)  : " 
                   << Ions_Move_Basic::largest_grad * ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A

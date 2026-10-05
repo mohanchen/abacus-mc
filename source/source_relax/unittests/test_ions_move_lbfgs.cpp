@@ -5,7 +5,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "source_cell/unitcell.h"
-#include "source_io/module_parameter/parameter.h"
 #include "source_relax/ions_move_basic.h"
 #include "source_relax/ions_move_lbfgs.h"
 #include "source_relax/relax_criteria.h"
@@ -113,16 +112,7 @@ void ModuleSymmetry::Symmetry::symmetrize_vec3_nat(double* v) const
 }
 
 // Friend of Parameter; the only sanctioned way to write PARAM.input in tests.
-class TestParameters
-{
-  public:
-    static void set_relax(const std::string& out_level, const double relax_bfgs_rmax)
-    {
-        PARAM.input.out_level = out_level;
-        PARAM.input.relax_bfgs_rmax = relax_bfgs_rmax;
-    }
-};
-
+// Not needed anymore: allocate() takes relax_bfgs_rmax and out_level explicitly.
 class IonsMoveLBFGSTest : public ::testing::Test
 {
   protected:
@@ -131,8 +121,7 @@ class IonsMoveLBFGSTest : public ::testing::Test
 
     void SetUp() override
     {
-        TestParameters::set_relax("m", 0.2); // keep stdout quiet
-        lbfgs.allocate(natom);
+        lbfgs.allocate(natom, 0.2, "m"); // keep stdout quiet
     }
 };
 
