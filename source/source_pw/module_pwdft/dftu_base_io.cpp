@@ -105,7 +105,7 @@ inline std::vector<double> CalculateEigenvalues(std::vector<std::vector<double>>
 inline void extract_soc_pauli_blocks(const Plus_U_Base& dftu,
                                      const int iat,
                                      const int l,
-                                     const OccmatSocLayout layout,
+                                     const DFTU_BASE::OccmatSocLayout layout,
                                      std::vector<std::vector<double>>& blocks)
 {
     const int m = 2 * l + 1;
@@ -113,7 +113,7 @@ inline void extract_soc_pauli_blocks(const Plus_U_Base& dftu,
     blocks.assign(4, std::vector<double>(m2, 0.0));
 
     const OccupationMatrix& occmat = dftu.occmat();
-    if (layout == SOC_LAYOUT_PAULI)
+    if (layout == DFTU_BASE::SOC_LAYOUT_PAULI)
     {
         const ModuleBase::matrix& occ = occmat.mat(iat, l, 0);
         for (int is = 0; is < 4; ++is)
