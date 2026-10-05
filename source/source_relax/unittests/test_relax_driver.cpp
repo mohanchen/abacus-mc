@@ -164,3 +164,43 @@ TEST_F(RelaxDriverHeaderTest, PreviewFinalHeaders)
     EXPECT_EQ(split_lines(header_ok).size(), 7u);
     EXPECT_EQ(split_lines(header_bad).size(), 7u);
 }
+
+// Early-exit (max-step / EXIT) integration test: simulate the driver loop
+// condition and verify that the final_out path receives geometry_evaluated=false
+// and produces the N/A header. This is the acceptance criterion for #8051.
+TEST_F(RelaxDriverHeaderTest, EarlyExitGeometryNotEvaluated)
+{
+    inp.cal_force = true;
+    inp.cal_stress = true;
+
+    // Simulate: esolve() was called, then relax_step() moved the geometry,
+    // then loop exited early (max-step or EXIT). geometry_evaluated=false.
+    const bool geometry_evaluated = false;
+
+    const std::string header = relax_stru_io::build_stru_header(3, etot, stress, inp, true, geometry_evaluated);
+    const auto lines = split_lines(header);
+
+    ASSERT_EQ(lines.size(), 7u);
+    EXPECT_EQ(count_substr(header, "# Stress (kbar): N/A N/A N/A"), 3);
+    EXPECT_THAT(lines[6], testing::HasSubstr("# NOTE: geometry proposed by optimizer but not evaluated"));
+    EXPECT_THAT(lines[6], testing::HasSubstr("stress N/A"));
+    EXPECT_THAT(lines[6], testing::HasSubstr("forces omitted"));
+    EXPECT_THAT(lines[6], testing::HasSubstr("energy above belongs to the last evaluated geometry"));
+}
+
+// Converged exit: relax_step returned true (geometry untouched), so
+// geometry_evaluated=true and the header must carry real stress values.
+TEST_F(RelaxDriverHeaderTest, ConvergedExitGeometryEvaluated)
+{
+    inp.cal_force = true;
+    inp.cal_stress = true;
+
+    const bool geometry_evaluated = true;
+
+    const std::string header = relax_stru_io::build_stru_header(3, etot, stress, inp, true, geometry_evaluated);
+    const auto lines = split_lines(header);
+
+    ASSERT_EQ(lines.size(), 7u);
+    EXPECT_EQ(count_substr(header, "N/A"), 0);
+    EXPECT_THAT(lines[6], testing::HasSubstr("stress and forces computed for this geometry"));
+}

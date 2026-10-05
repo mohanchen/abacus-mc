@@ -614,6 +614,90 @@ TEST_F(ReadAtomsHelperTest, RoundTripWriterReaderForce)
     std::remove("test_input.tmp");
 }
 
+// Multi-atom round-trip: verify that consecutive parse_atom_properties calls
+// on a print_stru_file-formatted block consume every field correctly,
+// including m, mag, and f. This catches stream corruption that would only
+// appear when na > 1 (issue #8051).
+TEST_F(ReadAtomsHelperTest, RoundTripMultiAtomMixedFields)
+{
+    // Format: x y z m mx my mz [mag value] [f fx fy fz]
+    // Atom 0: m + mag + f
+    // Atom 1: m only (no mag, no f)
+    // Atom 2: m + f (no mag)
+    std::string input_str =
+        "0.000000000000 0.000000000000 0.000000000000 m 1 1 1 mag 1.5 f -0.123456 0.234567 -0.345678\n"
+        "1.000000000000 0.000000000000 0.000000000000 m 0 1 0\n"
+        "0.500000000000 0.500000000000 0.500000000000 m 1 0 1 f 0.111111 -0.222222 0.333333\n";
+
+    std::ofstream temp_file("test_input.tmp");
+    temp_file << input_str;
+    temp_file.close();
+
+    std::ifstream ifpos("test_input.tmp");
+
+    Atom atom;
+    atom.label = "Fe";
+    atom.vel.resize(1);
+    atom.mag.resize(1);
+    atom.m_loc_.resize(1);
+    atom.angle1.resize(1);
+    atom.angle2.resize(1);
+    atom.lambda.resize(1);
+    atom.constrain.resize(1);
+
+    ModuleBase::Vector3<int> mv(0, 0, 0);
+    bool input_vec_mag = false;
+    bool input_angle_mag = false;
+    bool set_element_mag_zero = false;
+
+    // Atom 0: expect mag consumed
+    {
+        double x, y, z;
+        ifpos >> x >> y >> z;
+        bool ok = unitcell::parse_atom_properties(ifpos, atom, 0, mv,
+                                                   input_vec_mag, input_angle_mag,
+                                                   set_element_mag_zero);
+        EXPECT_TRUE(ok);
+        EXPECT_EQ(mv.x, 1);
+        EXPECT_EQ(mv.y, 1);
+        EXPECT_EQ(mv.z, 1);
+        EXPECT_NEAR(atom.mag[0], 1.5, 1e-12);
+        EXPECT_FALSE(ifpos.fail());
+    }
+
+    // Atom 1: no mag, no f -- stream must stay valid for next atom
+    {
+        double x, y, z;
+        ifpos >> x >> y >> z;
+        bool ok = unitcell::parse_atom_properties(ifpos, atom, 0, mv,
+                                                   input_vec_mag, input_angle_mag,
+                                                   set_element_mag_zero);
+        EXPECT_TRUE(ok);
+        EXPECT_EQ(mv.x, 0);
+        EXPECT_EQ(mv.y, 1);
+        EXPECT_EQ(mv.z, 0);
+        EXPECT_FALSE(ifpos.fail());
+    }
+
+    // Atom 2: m + f
+    {
+        double x, y, z;
+        ifpos >> x >> y >> z;
+        bool ok = unitcell::parse_atom_properties(ifpos, atom, 0, mv,
+                                                   input_vec_mag, input_angle_mag,
+                                                   set_element_mag_zero);
+        EXPECT_TRUE(ok);
+        EXPECT_EQ(mv.x, 1);
+        EXPECT_EQ(mv.y, 0);
+        EXPECT_EQ(mv.z, 1);
+        EXPECT_FALSE(ifpos.fail());
+    }
+
+    EXPECT_TRUE(ifpos.eof());
+    ifpos.close();
+    std::remove("test_input.tmp");
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
