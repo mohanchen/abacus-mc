@@ -182,7 +182,6 @@
     - [out\_mat\_dh\_vnl](#out_mat_dh_vnl)
     - [out\_mat\_dh\_vh](#out_mat_dh_vh)
     - [out\_mat\_dh\_vxc](#out_mat_dh_vxc)
-    - [out\_mat\_dh\_exx](#out_mat_dh_exx)
     - [out\_mat\_h\_t](#out_mat_h_t)
     - [out\_mat\_h\_vnl](#out_mat_h_vnl)
     - [out\_mat\_h\_vl](#out_mat_h_vl)
@@ -343,7 +342,7 @@
     - [out\_ri\_cv](#out_ri_cv)
   - [Exact Exchange (PW)](#exact-exchange-pw)
     - [exxace](#exxace)
-    - [exx\_gamma\_extrapolation](#exx_gamma_extrapolation)
+    - [exx\_gamma\_extra](#exx_gamma_extra)
     - [ecutexx](#ecutexx)
     - [exx\_batch\_size](#exx_batch_size)
     - [exx\_thr\_type](#exx_thr_type)
@@ -2242,15 +2241,6 @@
 - **Default**: 0 8
 - **Unit**: Ry/Bohr
 
-### out_mat_dh_exx
-
-- **Type**: Integer
-- **Description**: Whether to print files containing the derivatives of the exact-exchange matrix dV^EXX/dR.
-
-  See out_mat_dh for format details.
-- **Default**: 0 8
-- **Unit**: Ry/Bohr
-
 ### out_mat_h_t
 
 - **Type**: Integer
@@ -3456,7 +3446,7 @@
   - False: Use the traditional method to calculate the Fock exchange operator.
 - **Default**: True
 
-### exx_gamma_extrapolation
+### exx_gamma_extra
 
 - **Type**: Boolean
 - **Description**: Whether to use the gamma point extrapolation method to calculate the Fock exchange operator. See https://doi.org/10.1103/PhysRevB.79.205114 for details. Should be set to true most of the time.
