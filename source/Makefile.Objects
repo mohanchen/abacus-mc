@@ -31,6 +31,7 @@ VPATH=./src_global:\
 ./source_base/module_mixing:\
 ./source_base/module_out:\
 ./source_md:\
+./source_md/module_plumed:\
 ./source_basis/module_pw:\
 ./source_base/module_fft:\
 ./source_esolver:\
@@ -477,6 +478,10 @@ OBJS_HSOLVER=diago_cg.o\
     diago_pxxxgvx.o\
     linear_bicgstab.o\
     linear_cgs.o\
+    linear_gmres.o\
+    linear_algebra.o\
+    cn_subspace.o\
+    linear_low_rank.o\
     linear_workspace.o\
     hsolver_linear.o\
     linear_op.o\
@@ -506,6 +511,7 @@ OBJS_MD=fire.o\
     md_func.o\
     msst.o\
     nhchain.o\
+    plumed_interface.o\
     run_md.o\
     verlet.o\
 
