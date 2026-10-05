@@ -79,11 +79,8 @@ scf_sol_H2O
 093_PW_MSST
 094_PW_MSST2
 #095_PW_NPT  # disabled: uses ref_cell_factor=1.05 which is currently blocked
-096_PW_NVT
-097_PW_PBE0
-097_PW_PBE0_AFM
-097_PW_PBE0_FM
 md_nvt
+097_PW_PBE0_AFM
 scf_pbe0_spin1
 scf_pbe0_spin2
 scf_pbe0_spin2_kpar
