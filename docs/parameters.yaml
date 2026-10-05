@@ -3618,16 +3618,6 @@ parameters:
     default_value: 0 8
     unit: Ry/Bohr
     availability: ""
-  - name: out_mat_dh_exx
-    category: Output information
-    type: Integer
-    description: |
-      Whether to print files containing the derivatives of the exact-exchange matrix dV^EXX/dR.
-
-      See out_mat_dh for format details.
-    default_value: 0 8
-    unit: Ry/Bohr
-    availability: ""
   - name: out_mat_h_t
     category: Output information
     type: Integer
@@ -5370,7 +5360,7 @@ parameters:
     default_value: "True"
     unit: ""
     availability: exx_separate_loop==true
-  - name: exx_gamma_extrapolation
+  - name: exx_gamma_extra
     category: Exact Exchange (PW)
     type: Boolean
     description: |
