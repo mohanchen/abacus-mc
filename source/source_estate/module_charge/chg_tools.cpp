@@ -2,10 +2,10 @@
 
 #include <algorithm>
 #include <functional>
+#include <sstream>
 
 #include "source_base/complexmatrix.h"
 #include "source_base/constants.h"
-#include "source_base/global_variable.h"
 #include "source_base/math_integral.h"
 #include "source_base/math_sphbes.h"
 #include "source_base/parallel_reduce.h"
@@ -56,12 +56,13 @@ double sum_rho(double* const* rho,
         // This helps distinguish "initial atomic rho failed" from
         // "rho collapsed after GINT / mixing at some SCF step" when
         // reproducing intermittent CI failures (e.g. issue #7794).
-        GlobalV::ofs_warning << "\n module_charge::sum_rho diagnostic:"
-                             << " nspin0 = " << nspin0
-                             << " nrxx = " << nrxx
-                             << " omega = " << omega
-                             << " nxyz = " << nxyz
-                             << " per-spin sum_rho =";
+        std::ostringstream diag;
+        diag << "\n module_charge::sum_rho diagnostic:"
+             << " nspin0 = " << nspin0
+             << " nrxx = " << nrxx
+             << " omega = " << omega
+             << " nxyz = " << nxyz
+             << " per-spin sum_rho =";
         for (int is = 0; is < nspin0; ++is)
         {
             double sum_is = 0.0;
@@ -73,10 +74,10 @@ double sum_rho(double* const* rho,
 #ifdef __MPI
             Parallel_Reduce::reduce_pool(sum_is);
 #endif
-            GlobalV::ofs_warning << " " << sum_is;
+            diag << " " << sum_is;
         }
-        GlobalV::ofs_warning << " (total = " << sum_rho << ")" << std::endl;
-        ModuleBase::WARNING_QUIT("module_charge::sum_rho", "Can't find even an electron!");
+        diag << " (total = " << sum_rho << ")";
+        ModuleBase::WARNING_QUIT("module_charge::sum_rho", diag.str());
     }
 
     return sum_rho;
