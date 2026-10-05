@@ -144,16 +144,16 @@ void write_dH_components(WriteDHParams& params, const Exx_Info& exx_info)
     }
 
 #ifdef __EXX
-    // The EXX interfaces carried by WriteDHParams are gamma-only (see write_dh.h): at multi-k
-    // dH^EXX would be the derivative with respect to every mirror atom, which this output is
-    // not meant for. Quit instead of writing a dH sum that silently omits the EXX term.
-    if (exx_info.info_global.cal_exx && !PARAM.globalv.gamma_only_local
-        && PARAM.inp.out_mat_dh[0])
+    // dV^EXX/dR cannot be computed in this branch (it requires the LibRI cal_dHs/dHs_HF
+    // APIs from the unmerged LibRI PR#10), so the dH sum would silently omit the EXX term
+    // at any k-point setting, gamma-only included. Quit whenever EXX is on and the sum is
+    // requested; the individual non-EXX terms remain available.
+    if (exx_info.info_global.cal_exx && PARAM.inp.out_mat_dh[0])
     {
         ModuleBase::WARNING_QUIT("write_dH_components",
-                                 "out_mat_dh (the dH sum) is only supported for gamma-only when EXX is on. "
-                                 "Use gamma_only, or request the individual non-EXX terms (out_mat_dh_t, "
-                                 "out_mat_dh_vnl, out_mat_dh_vl, out_mat_dh_vh, out_mat_dh_vxc).");
+                                 "out_mat_dh (the dH sum) is not supported with EXX because dV^EXX/dR is "
+                                 "unavailable; request the individual non-EXX terms (out_mat_dh_t, "
+                                 "out_mat_dh_vnl, out_mat_dh_vl, out_mat_dh_vh, out_mat_dh_vxc) instead.");
     }
 #endif
 
