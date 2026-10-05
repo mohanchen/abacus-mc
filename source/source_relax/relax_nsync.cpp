@@ -181,8 +181,11 @@ bool IonCellOptimizer::relax_step(const int& istep,
     }
     else if (is_relax)
     {
-        // Relax mode but no atoms can move - nothing to do
-        ModuleBase::WARNING("IonCellOptimizer", "No atom is allowed to move!");
+        // Relax mode but no atoms can move - nothing to do. The no-op run is
+        // still a valid converged relaxation, so emit the unified summary to
+        // give the running log an explicit success marker.
+        ModuleBase::WARNING("IonCellOptimizer", "No atoms are allowed to move!");
+        print_converged_summary(istep, false, ofs_running);
         return true;
     }
 

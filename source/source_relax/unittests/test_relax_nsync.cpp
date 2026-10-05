@@ -5,6 +5,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "source_base/global_variable.h"
 #include "source_cell/unitcell.h"
 #include "source_io/module_parameter/parameter.h"
 #include "source_relax/lattice_change_basic.h"
@@ -147,6 +148,7 @@ class IonCellOptimizerTest : public ::testing::Test
     const int natom = 1;
     const double etot = 0.0;
     const std::string log_file = "relax_nsync_test.log";
+    const std::string warning_file = "relax_nsync_test_warning.log";
 
     void SetUp() override
     {
@@ -170,6 +172,7 @@ class IonCellOptimizerTest : public ::testing::Test
     void TearDown() override
     {
         std::remove(log_file.c_str());
+        std::remove(warning_file.c_str());
     }
 
     // UnitCell is non-copyable (unique_ptr member), so fill it in place.
@@ -192,6 +195,14 @@ class IonCellOptimizerTest : public ::testing::Test
     std::string read_log()
     {
         std::ifstream ifs(log_file);
+        std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        ifs.close();
+        return content;
+    }
+
+    std::string read_warning_log()
+    {
+        std::ifstream ifs(warning_file);
         std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
         ifs.close();
         return content;
@@ -420,6 +431,43 @@ TEST_F(IonCellOptimizerTest, CellRelaxFixedLatticeConverged)
     // No cell step ran, so no stress history line and no not-converged marker.
     EXPECT_THAT(log, testing::Not(testing::HasSubstr(" Largest stress per step (kbar):")));
     EXPECT_THAT(log, testing::Not(testing::HasSubstr("not converged")));
+}
+
+// Regression test for the no-atom-can-move branch of relax_step: with every
+// atom fixed (mbl = 0), relax mode is a valid no-op relaxation. The running
+// log must still carry the unified converged summary so that downstream tools
+// (e.g. the ASE interface) find an explicit success marker.
+TEST_F(IonCellOptimizerTest, RelaxAllAtomsFixedConverged)
+{
+    inp.calculation = "relax";
+    UnitCell ucell;
+    setup_ucell(ucell);
+    // Fix the only atom in all directions: no atoms are allowed to move.
+    ucell.atoms[0].mbl[0] = {0, 0, 0};
+    optimizer.init_relax(natom, inp);
+    ModuleBase::matrix force(natom, 3);
+    ModuleBase::matrix stress(3, 3);
+    int force_step = 1;
+    int stress_step = 1;
+    std::ofstream ofs(log_file);
+
+    // Redirect warnings to a file so the no-op warning can be inspected.
+    GlobalV::ofs_warning.open(warning_file);
+    const bool done = optimizer.relax_step(1, etot, ucell, force, stress, force_step, stress_step, ofs);
+    GlobalV::ofs_warning.close();
+    ofs.close();
+
+    EXPECT_TRUE(done);
+    const std::string log = read_log();
+    EXPECT_THAT(log, testing::HasSubstr(" Relaxation method: lbfgs"));
+    EXPECT_THAT(log, testing::HasSubstr(" Relaxation converged in 1 step(s)."));
+    EXPECT_THAT(log, testing::HasSubstr("\n Relaxation is converged!"));
+    // No ionic step ran, so no force history and no not-converged marker.
+    EXPECT_THAT(log, testing::Not(testing::HasSubstr(" Largest force per step (eV/Angstrom):")));
+    EXPECT_THAT(log, testing::Not(testing::HasSubstr("not converged")));
+    // The no-op branch must warn that no atoms are allowed to move.
+    const std::string warning_log = read_warning_log();
+    EXPECT_THAT(warning_log, testing::HasSubstr("No atoms are allowed to move!"));
 }
 
 // Same fixed-lattice setup, but the forces are above threshold: relaxation is
