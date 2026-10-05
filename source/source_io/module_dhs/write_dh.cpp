@@ -165,7 +165,7 @@ void write_dH_components(WriteDHParams& params, const Exx_Info& exx_info)
 
     if (PARAM.inp.out_mat_dh[0])
     {
-        write_dH_sum(params, exx_info);
+        write_dH_sum(params);
     }
 
     if (PARAM.inp.out_mat_dh_t[0])

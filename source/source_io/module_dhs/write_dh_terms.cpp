@@ -13,10 +13,6 @@
 #include "source_base/global_variable.h"
 #include "source_base/parallel_reduce.h"
 #include "write_dh.h"
-#ifdef __EXX
-#include "source_lcao/module_operator_lcao/op_exx_lcao.h"
-#include "source_lcao/module_ri/exx_lri_interface.hpp"
-#endif
 
 #include <algorithm>
 #include <cmath>
@@ -325,7 +321,7 @@ bool write_dH_vxc_pulay(WriteDHParams& params)
 // EXX_DEV path), so it cannot be computed in the current develop branch. When EXX is active
 // and out_mat_dh is requested at gamma-only, the resulting dH sum therefore omits the EXX
 // contribution.
-bool write_dH_sum(WriteDHParams& params, const Exx_Info& exx_info)
+bool write_dH_sum(WriteDHParams& params)
 {
     ModuleBase::TITLE("ModuleIO", "write_dH_sum");
     ModuleBase::timer::start("ModuleIO", "write_dH_sum");

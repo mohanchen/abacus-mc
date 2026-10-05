@@ -20,9 +20,6 @@ std::unique_ptr<T> make_unique(Args &&... args)
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-template <typename T, typename Tdata>
-class Exx_LRI_Interface;
-
 namespace ModuleIO
 {
 
@@ -96,7 +93,7 @@ bool write_dH_vxc(WriteDHParams& params);
 
 bool write_dH_vxc_pulay(WriteDHParams& params);
 
-bool write_dH_sum(WriteDHParams& params, const Exx_Info& exx_info);
+bool write_dH_sum(WriteDHParams& params);
 
 } // namespace ModuleIO
 
