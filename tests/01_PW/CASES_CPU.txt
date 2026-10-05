@@ -78,10 +78,16 @@ scf_sol_H2O
 092_PW_CR_VDW3
 093_PW_MSST
 094_PW_MSST2
-#md_npt  # disabled: uses ref_cell_factor=1.05 which is currently blocked
+#095_PW_NPT  # disabled: uses ref_cell_factor=1.05 which is currently blocked
+096_PW_NVT
+097_PW_PBE0
+097_PW_PBE0_AFM
+097_PW_PBE0_FM
 md_nvt
 scf_pbe0_spin1
 scf_pbe0_spin2
+scf_pbe0_spin2_kpar
+scf_pbe0_afm_kpar
 099_PW_15_SO_avg
 100_PW_DJ_SO
 101_PW_W90
