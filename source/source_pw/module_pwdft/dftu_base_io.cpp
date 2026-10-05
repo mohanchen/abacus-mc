@@ -290,24 +290,61 @@ void read_occup_m(const UnitCell& ucell,
             break;
         }
 
+        // The header line of one atom block may carry an optional
+        // human-readable prefix "<Element> <index>" (e.g. "Fe 1"), written
+        // by write_occup_m() since the element-label output was added.
+        // Skip tokens until "Atom=" is found so both layouts parse.
+        while (strcmp("Atom=", word) != 0)
+        {
+            ifdftu >> word;
+            if (ifdftu.eof())
+            {
+                break;
+            }
+        }
+        if (ifdftu.eof())
+        {
+            break;
+        }
+
         if (strcmp("Atom=", word) == 0)
         {
             ifdftu >> iat;
             iat -= 1;
             ifdftu >> word;
 
-            if (strcmp("L=", word) != 0)
+            // Accept both the compact "L=2" and the legacy split "L= 2".
+            if (strncmp("L=", word, 2) != 0)
             {
                 ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
             }
-            ifdftu >> L;
+            if (strlen(word) > 2)
+            {
+                L = atoi(word + 2);
+            }
+            else
+            {
+                ifdftu >> L;
+            }
             ifdftu >> word;
 
-            if (strcmp("ORBITAL=", word) != 0)
+            // The ORBITAL= token is optional in newly written files; when
+            // absent the radial channel defaults to 0.
+            if (strncmp("ORBITAL=", word, 8) == 0)
             {
-                ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "WRONG IN READING LOCAL OCCUPATION NUMBER MATRIX FROM Plus_U FILE");
+                if (strlen(word) > 8)
+                {
+                    zeta = atoi(word + 8);
+                }
+                else
+                {
+                    ifdftu >> zeta;
+                }
             }
-            ifdftu >> zeta;
+            else
+            {
+                zeta = 0;
+            }
             ifdftu.ignore(150, '\n');
 
             if (zeta != 0)
@@ -707,16 +744,34 @@ void write_occup_m(const Plus_U_Base& dftu,
                     continue;
                 }
 
+                // Element label, 1-based index within that type and the
+                // Cartesian position (Bohr), e.g. Fe 1 x y z.
+                const std::string& elem_label = ucell.atoms[T].label;
+                const int index_in_type = I + 1;
+                const ModuleBase::Vector3<double>& tau = ucell.atoms[T].tau[I];
+
                 if (fmt == OCMAT_FMT_READABLE)
                 {
-                    ofs << "\nAtom=" << iat + 1;
-                    ofs << " L=" << l << std::endl;
+                    ofs << "\n" << elem_label << " " << index_in_type;
+                    ofs << " Atom=" << iat + 1;
+                    ofs << " L=" << l;
+                    ofs << std::setprecision(8) << std::fixed
+                        << std::setw(14) << tau.x
+                        << std::setw(14) << tau.y
+                        << std::setw(14) << tau.z << std::endl;
                 }
                 else
                 {
-                    ofs << "\n Atom= " << iat + 1;
-                    ofs << " L= " << l;
-                    ofs << " ORBITAL= " << 0 << std::endl;
+                    // Identical header layout as the readable format; the
+                    // "<Element> <index>" prefix is skipped by
+                    // read_occup_m() when scanning for "Atom=".
+                    ofs << "\n" << elem_label << " " << index_in_type;
+                    ofs << " Atom=" << iat + 1;
+                    ofs << " L=" << l;
+                    ofs << std::setprecision(8) << std::fixed
+                        << std::setw(14) << tau.x
+                        << std::setw(14) << tau.y
+                        << std::setw(14) << tau.z << std::endl;
                 }
 
                 if (nspin == 1 || nspin == 2)
