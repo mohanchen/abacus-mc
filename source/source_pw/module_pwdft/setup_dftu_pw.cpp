@@ -36,7 +36,10 @@ void iter_init_dftu_pw(const int iter,
                               dftu.has_occ_mixer() ? &dftu.occ_mixer() : nullptr,
                               dftu.get_uterm_mat(), dftu.energy_ref());
     }
-    DFTU_BASE::output(dftu, ucell, PARAM.inp.out_chg[0], PARAM.globalv.global_out_dir, PARAM.inp.nspin, PARAM.globalv.npol);
+    const OccmatOutputCfg occmat_cfg{PARAM.inp.out_freq_ion, PARAM.inp.out_freq_elec, PARAM.inp.scf_nmax};
+    DFTU_BASE::output(dftu, ucell, PARAM.inp.out_chg[0], PARAM.globalv.global_out_dir,
+                      PARAM.inp.nspin, PARAM.globalv.npol, istep, iter, occmat_cfg,
+                      DFTU_BASE::SOC_LAYOUT_PAULI);
 }
 
 }

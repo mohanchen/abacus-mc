@@ -20,6 +20,7 @@
 #include "source_hamilt/module_xc/general_exx_info.h" // for General_Exx_Info type used via general_exx_info_
 #include "source_io/module_ctrl/ctrl_output_pw.h"  // mohan add 20250927
 #include "source_pw/module_pwdft/deltaspin_pw.h"   // mohan add 20250309
+#include "source_pw/module_pwdft/dftu_base_io.h" // append_ion_step_snapshot
 #include "source_lcao/module_deltaspin/spin_constrain.h"
 #include "source_pw/module_pwdft/setup_pot.h"      // mohan add 20250929
 #include "source_pw/module_pwdft/update_cell_pw.h" // mohan add 20250309
@@ -331,6 +332,24 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
 
     // check if oscillate for delta_spin method
     pw::check_deltaspin_oscillation(iter, this->drho, this->p_chgmix, *this->inp_);
+
+    // append the current electronic-step section to dm_onsiteg{#}.txt
+    const DFTU_BASE::OccmatOutputCfg occmat_cfg{this->inp_->out_freq_ion,
+                                                this->inp_->out_freq_elec,
+                                                this->inp_->scf_nmax};
+    DFTU_BASE::append_ion_step_snapshot(*this->dftu_,
+                                        ucell,
+                                        PARAM.globalv.global_out_dir,
+                                        this->inp_->nspin,
+                                        PARAM.globalv.npol,
+                                        istep,
+                                        iter,
+                                        conv_esolver,
+                                        this->pelec->f_en.etot,
+                                        ucell.magnet.tot_mag,
+                                        ucell.magnet.tot_mag_nc,
+                                        occmat_cfg,
+                                        DFTU_BASE::SOC_LAYOUT_PAULI);
 
     // the output quantities
     ModuleIO::ctrl_iter_pw(istep, iter, conv_esolver, this->stp, this->kv, this->pw_wfc, *this->inp_);

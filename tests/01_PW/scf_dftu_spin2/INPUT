@@ -1,6 +1,7 @@
 INPUT_PARAMETERS
 suffix    autotest
-calculation    scf
+calculation    relax
+relax_nmax  5
 basis_type    pw
 ecutwfc    50
 gamma_only    0
@@ -9,8 +10,8 @@ device    cpu
 nspin    2
 nbands    28
 scf_thr    1.0e-6
-scf_nmax    100
-out_chg    0
+scf_nmax    5
+out_chg    1
 smearing_method    gaussian
 smearing_sigma    0.01
 mixing_type    broyden
@@ -27,3 +28,7 @@ onsite_radius   3.0
 pseudo_dir    ../../PP_ORB
 orbital_dir    ../../PP_ORB
 pw_seed 1
+
+out_stru 1
+out_freq_elec 2
+out_freq_ion  2

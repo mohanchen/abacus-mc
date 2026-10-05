@@ -51,7 +51,10 @@ void finish_dftu_lcao(const bool conv_esolver,
                        const std::string& global_out_dir,
                        int nspin,
                        int npol,
-                       const bool gamma_only_local)
+                       const bool gamma_only_local,
+                       int istep,
+                       int iter,
+                       const DFTU_BASE::OccmatOutputCfg& occmat_cfg)
 {
     if (!dft_plus_u)
     {
@@ -80,7 +83,8 @@ void finish_dftu_lcao(const bool conv_esolver,
             DFTU_LCAO::cal_energy_correction(*dftu_ptr, ucell, PARAM.inp.nspin);
         }
     }
-    DFTU_BASE::output(*dftu_ptr, ucell, out_chg, global_out_dir, nspin, npol);
+    DFTU_BASE::output(*dftu_ptr, ucell, out_chg, global_out_dir, nspin, npol,
+                      istep, iter, occmat_cfg, DFTU_BASE::SOC_LAYOUT_SPIN_BASIS_REAL);
     
     /// use the converged occupation matrix for next MD/Relax SCF calculation
     if (conv_esolver)
@@ -102,7 +106,10 @@ template void finish_dftu_lcao<double>(const bool conv_esolver,
                                         const std::string& global_out_dir,
                                         int nspin,
                                         int npol,
-                                        const bool gamma_only_local);
+                                        const bool gamma_only_local,
+                                        int istep,
+                                        int iter,
+                                        const DFTU_BASE::OccmatOutputCfg& occmat_cfg);
 
 template void finish_dftu_lcao<std::complex<double>>(const bool conv_esolver,
                                                       int dft_plus_u,
@@ -116,6 +123,9 @@ template void finish_dftu_lcao<std::complex<double>>(const bool conv_esolver,
                                                       const std::string& global_out_dir,
                                                       int nspin,
                                                       int npol,
-                                                      const bool gamma_only_local);
+                                                      const bool gamma_only_local,
+                                                      int istep,
+                                                      int iter,
+                                                      const DFTU_BASE::OccmatOutputCfg& occmat_cfg);
 
 } // namespace ModuleESolver

@@ -1898,6 +1898,8 @@
 - **Type**: Integer
 - **Description**: Controls the output interval in ionic steps. When set to a positive integer, information such as charge density, local potential, electrostatic potential, Hamiltonian matrix, overlap matrix, density matrix, Mulliken population analysis, and structure files (STRU{istep} or STRU{istep}.cif, when out_stru is 1 or 2) is printed every n ionic steps.
 
+  For DFT+U calculations with out_chg > 0, a separate occupation-matrix file dm_onsiteg{geom_step}.txt is created for every output ionic step. The converged (or final, if not converged) electronic step is always recorded in that file; when out_freq_elec is set smaller than scf_nmax, additional electronic steps are appended as separate sections, each labelled with the electronic step, total energy, total magnetism and convergence status.
+
   > Note: In RT-TDDFT calculations, this parameter is inactive; output frequency is instead controlled by out_freq_td.
 - **Default**: 0
 
@@ -1905,6 +1907,8 @@
 
 - **Type**: Integer
 - **Description**: Output the charge density (only binary format, controlled by out_chg), wavefunction (controlled by out_wfc_pw) per out_freq_elec electronic iterations. Note that they are always output when converged or reach the maximum iterations scf_nmax.
+
+  In DFT+U calculations with out_freq_ion > 0 and out_chg > 0, this parameter also selects the electronic iterations recorded as separate sections inside dm_onsiteg{geom_step}.txt (the converged or final electronic step is recorded regardless of this parameter).
 - **Default**: scf_nmax
 
 ### out_chg
@@ -3910,7 +3914,7 @@
   - 1: The first SCF step will use an initial density matrix read from a file named dm_onsite_ini.txt, but for later steps, the onsite density matrix will be updated.
   - 2: The same onsite density matrix from dm_onsite_ini.txt will be used throughout the entire calculation.
 
-  > Note: The easiest way to create dm_onsite_ini.txt is to run a DFT+U calculation with out_chg=1, look for a file named dm_onsite.txt in the OUT.prefix directory, copy and rename it to dm_onsite_ini.txt. The file dm_onsite_ini.txt should be placed in the directory specified by read_file_dir. The format of the file is rather straight-forward.
+  > Note: The easiest way to create dm_onsite_ini.txt is to run a DFT+U calculation with out_chg=1, look for a file named dm_onsite.txt in the OUT.prefix directory (it always holds the occupation matrix of the latest electronic step), copy and rename it to dm_onsite_ini.txt. When out_freq_ion is positive, separate dm_onsiteg{geom_step}.txt files are also written, one per output ionic step; they may contain several electronic-step sections separated by comment headers. The file dm_onsite_ini.txt should be placed in the directory specified by read_file_dir. The format of the file is rather straight-forward.
 - **Default**: 0
 
 ### onsite_radius

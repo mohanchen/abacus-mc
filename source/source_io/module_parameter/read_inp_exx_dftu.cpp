@@ -816,7 +816,7 @@ void ReadInput::item_dftu()
 * 1: The first SCF step will use an initial density matrix read from a file named dm_onsite_ini.txt, but for later steps, the onsite density matrix will be updated.
 * 2: The same onsite density matrix from dm_onsite_ini.txt will be used throughout the entire calculation.
 
-[NOTE] The easiest way to create dm_onsite_ini.txt is to run a DFT+U calculation with out_chg=1, look for a file named dm_onsite.txt in the OUT.prefix directory, copy and rename it to dm_onsite_ini.txt. The file dm_onsite_ini.txt should be placed in the directory specified by read_file_dir. The format of the file is rather straight-forward.)";
+[NOTE] The easiest way to create dm_onsite_ini.txt is to run a DFT+U calculation with out_chg=1, look for a file named dm_onsite.txt in the OUT.prefix directory (it always holds the occupation matrix of the latest electronic step), copy and rename it to dm_onsite_ini.txt. When out_freq_ion is positive, separate dm_onsiteg{geom_step}.txt files are also written, one per output ionic step; they may contain several electronic-step sections separated by comment headers. The file dm_onsite_ini.txt should be placed in the directory specified by read_file_dir. The format of the file is rather straight-forward.)";
         item.default_value = "0";
         item.unit = "";
         read_sync_int(input.occ_mat_ctrl);
