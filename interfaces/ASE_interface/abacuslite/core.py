@@ -372,24 +372,34 @@ class AbacusTemplate(CalculatorTemplate):
                         outputfile=self.outputname, 
                         errorfile=self.errorname)
         except SubprocessError:
+            # Surface only the tails of each log: abacus.out already contains
+            # the SCF iteration table, so full stdout/stderr plus 200 lines of
+            # running log would make the exception message unreadably long.
+            # The run dir is preserved separately by the test harness
+            # (ASE_ABACUS_KEEP_DIR) when post-mortem of the full logs is
+            # needed.
+            def tail(p: Path, n: int) -> str:
+                if not p.exists():
+                    return ''
+                lines = p.read_text(errors='replace').splitlines()
+                header = f'=== {p.name} (last {min(n, len(lines))} lines) ==='
+                return header + '\n' + '\n'.join(lines[-n:])
+
+            directory = Path(directory)
             message = ['ABACUS Lite calculation failed']
-            for fn in (self.outputname, self.errorname):
-                p = Path(directory) / fn
-                if p.exists():
-                    message.append(f'=== {fn} ===')
-                    message.append(p.read_text())
-            # Also surface the tail of the SCF running log: the per-step
-            # drho history there is usually the key evidence for issues
-            # like #7794 ("Can't find even an electron"), and on remote CI
-            # we cannot inspect the run dir after the fact.
-            scf_log = (Path(directory) / f'OUT.{self.suffix}'
+            for fn, n in ((self.outputname, 200),
+                          (self.errorname, 200)):
+                chunk = tail(directory / fn, n)
+                if chunk:
+                    message.append(chunk)
+            # The tail of the SCF running log holds the per-step drho
+            # history, usually the key evidence for issues like #7794
+            # ("Can't find even an electron").
+            scf_log = (directory / f'OUT.{self.suffix}'
                        / f'running_{self.calculation}.log')
-            if scf_log.exists():
-                tail = scf_log.read_text().splitlines()[-200:]
-                message.append(
-                    f'=== OUT.{self.suffix}/running_{self.calculation}.log'
-                    ' (last 200 lines) ===')
-                message.append('\n'.join(tail))
+            chunk = tail(scf_log, 100)
+            if chunk:
+                message.append(chunk)
             raise SubprocessError('\n'.join(message))
 
     def read_results(self, directory) -> Dict:

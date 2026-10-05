@@ -1,12 +1,10 @@
-import os
-import shutil
 import unittest
-import tempfile
 from pathlib import Path
 here = Path(__file__).parent
 from ase.build import bulk
 from abacuslite.io.generalio import load_pseudo, load_orbital
 from abacuslite import AbacusProfile, Abacus
+from common import preserved_tmpdir
 
 class TestSCF(unittest.TestCase):
 
@@ -21,12 +19,9 @@ class TestSCF(unittest.TestCase):
             omp_num_threads=1,
         )
 
-        # Use mkdtemp + explicit cleanup so that on failure we can preserve
-        # the whole run directory for post-mortem analysis (issue #7794 is
-        # only reproducible on remote CI; losing the run dir there makes
-        # root-causing impossible).
-        tmpdir = tempfile.mkdtemp(prefix='abacus_ase_scf_')
-        try:
+        # preserved_tmpdir keeps the run dir under ASE_ABACUS_KEEP_DIR on
+        # failure so remote-CI-only failures (issue #7794) can be root-caused.
+        with preserved_tmpdir('abacus_ase_scf_') as tmpdir:
             abacus = Abacus(
                 profile=aprof,
                 directory=tmpdir,
@@ -41,16 +36,6 @@ class TestSCF(unittest.TestCase):
 
             silicon.calc = abacus
             print('Silicon :', silicon.get_potential_energy())
-        except Exception:
-            keep_root = Path(os.environ.get(
-                'ASE_ABACUS_KEEP_DIR', '/tmp/abacus_ase_failure'))
-            keep_root.mkdir(parents=True, exist_ok=True)
-            keep = keep_root / Path(tmpdir).name
-            shutil.copytree(tmpdir, keep, dirs_exist_ok=True)
-            print(f'[ase-test] failure, run dir preserved at {keep}')
-            raise
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
 
 if __name__ == '__main__':
     unittest.main()

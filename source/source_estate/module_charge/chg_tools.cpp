@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <limits>
 #include <sstream>
 
 #include "source_base/complexmatrix.h"
@@ -31,33 +32,70 @@ double sum_rho(double* const* rho,
 {
     ModuleBase::TITLE("module_charge", "sum_rho");
 
-    double sum_rho = 0.0;
-
+    std::vector<double> sum_is(nspin0, 0.0);
     for (int is = 0; is < nspin0; is++)
     {
         for (int ir = 0; ir < nrxx; ir++)
         {
-            sum_rho += rho[is][ir];
+            sum_is[is] += rho[is][ir];
         }
     }
 
     // multiply the sum of charge density by a factor
-    sum_rho *= omega / static_cast<double>(nxyz);
+    const double factor = omega / static_cast<double>(nxyz);
+    for (int is = 0; is < nspin0; is++)
+    {
+        sum_is[is] *= factor;
+    }
 
 #ifdef __MPI
-    Parallel_Reduce::reduce_pool(sum_rho);
+    Parallel_Reduce::reduce_pool(sum_is.data(), nspin0);
 #endif
+
+    double sum_rho = 0.0;
+    for (int is = 0; is < nspin0; is++)
+    {
+        sum_rho += sum_is[is];
+    }
 
     // mohan fixed bug 2010-01-18,
     // sum_rho may be smaller than 1, like Na bcc.
-    if (sum_rho <= 0.1)
+    // A NaN sum never satisfies sum_rho <= 0.1, so check it explicitly.
+    if (std::isnan(sum_rho) || sum_rho <= 0.1)
     {
-        // Diagnostic context: print per-spin electron counts before quitting.
-        // This helps distinguish "initial atomic rho failed" from
-        // "rho collapsed after GINT / mixing at some SCF step" when
-        // reproducing intermittent CI failures (e.g. issue #7794).
+        // Diagnostic context: report per-spin electron counts plus rho
+        // extrema. min/max and the number of negative grid points help
+        // distinguish "rho driven negative by mixing" from "rho collapsed"
+        // when reproducing intermittent CI failures (e.g. issue #7794).
+        // For nspin0 == 1 the per-spin value equals the total; the extrema
+        // still carry information there.
+        double rho_min = std::numeric_limits<double>::max();
+        double rho_max = std::numeric_limits<double>::lowest();
+        // double, not long: Parallel_Reduce::reduce_pool is only explicitly
+        // instantiated for float/double/complex and int arrays.
+        double n_neg = 0.0;
+        for (int is = 0; is < nspin0; ++is)
+        {
+            for (int ir = 0; ir < nrxx; ++ir)
+            {
+                const double v = rho[is][ir];
+                rho_min = std::min(rho_min, v);
+                rho_max = std::max(rho_max, v);
+                n_neg += (v < 0.0) ? 1.0 : 0.0;
+            }
+        }
+#ifdef __MPI
+        // No pool-aware min/max wrapper exists; sum_rho() has no access to
+        // nproc_in_pool either, so use the world-communicator variants. The
+        // extrema over the union of all ranks still answer the diagnostic
+        // question (is rho going negative anywhere?).
+        Parallel_Reduce::reduce_min(rho_min);
+        Parallel_Reduce::reduce_max(rho_max);
+        Parallel_Reduce::reduce_pool(n_neg);
+#endif
         std::ostringstream diag;
-        diag << "\n module_charge::sum_rho diagnostic:"
+        diag << "\nCan't find even an electron!"
+             << "\nmodule_charge::sum_rho diagnostic:"
              << " nspin0 = " << nspin0
              << " nrxx = " << nrxx
              << " omega = " << omega
@@ -65,18 +103,12 @@ double sum_rho(double* const* rho,
              << " per-spin sum_rho =";
         for (int is = 0; is < nspin0; ++is)
         {
-            double sum_is = 0.0;
-            for (int ir = 0; ir < nrxx; ++ir)
-            {
-                sum_is += rho[is][ir];
-            }
-            sum_is *= omega / static_cast<double>(nxyz);
-#ifdef __MPI
-            Parallel_Reduce::reduce_pool(sum_is);
-#endif
-            diag << " " << sum_is;
+            diag << " " << sum_is[is];
         }
-        diag << " (total = " << sum_rho << ")";
+        diag << " (total = " << sum_rho << ")"
+             << " rho min = " << rho_min
+             << " max = " << rho_max
+             << " negative grid points = " << static_cast<long>(n_neg);
         ModuleBase::WARNING_QUIT("module_charge::sum_rho", diag.str());
     }
 
