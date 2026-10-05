@@ -9,6 +9,7 @@
 #include "source_base/matrix.h"
 #include <vector>
 #include <fstream>
+#include <string>
 
 /**
  * @brief Driver class for geometry relaxation calculations.
@@ -40,32 +41,18 @@ class Relax_Driver
             const Input_para& inp,
             std::ofstream& ofs_running);
 
-    /**
-     * @brief Build the header comment for STRU output files.
-     *
-     * @param istep Current/final iteration step (0-based; printed as istep+1).
-     * @param etot Total energy in Ry.
-     * @param stress Stress matrix in Ry/Bohr^3.
-     * @param inp Input parameters (cal_force, cal_stress).
-     * @param is_final true for "(FINAL)" suffix.
-     * @param geometry_evaluated false when the current geometry has been
-     *        proposed by the optimizer but not yet evaluated; forces and
-     *        stress are then marked N/A/omitted.
-     * @return Header string including version, timestamp, energy, stress
-     *         block and force note.
-     */
-    static std::string build_stru_header(const int istep,
-                                         const double etot,
-                                         const ModuleBase::matrix& stress,
-                                         const Input_para& inp,
-                                         const bool is_final,
-                                         const bool geometry_evaluated);
-
   private:
     /// New relaxation optimizer (Relax class)
     Relax rl;
     /// Old relaxation optimizer (IonCellOptimizer class)
     IonCellOptimizer rl_old;
+
+    /// Cached global output directory (read once from PARAM at relax_driver entry)
+    std::string out_dir_;
+    /// Cached DeePKS setorb flag (read once from PARAM at relax_driver entry)
+    bool deepks_setorb_ = false;
+    /// Cached MPI rank (read once at relax_driver entry)
+    int my_rank_ = 0;
 
     /**
      * @brief Initialize the relaxation optimizer.
@@ -156,7 +143,25 @@ class Relax_Driver
                    const double etot,
                    const ModuleBase::matrix& stress,
                    const ModuleBase::matrix& force,
-                   const bool geometry_evaluated);
+                   const bool geometry_evaluated,
+                   std::ofstream& ofs_running);
+
+    /**
+     * @brief Print the unified not-converged summary to the running log.
+     *
+     * Reports the relaxation method, the number of ionic steps taken and the
+     * per-step largest force / stress history, so ASE and users can diagnose
+     * why the relaxation stopped at relax_nmax.
+     *
+     * @param inp Input parameters (selects the active optimizer and relax_nmax).
+     * @param ofs_running Output stream for the running log.
+     */
+    void print_not_converged_summary(const Input_para& inp, std::ofstream& ofs_running) const;
+
+    /**
+     * @brief Print the dry-run success message to screen.
+     */
+    void print_dry_run_message() const;
 };
 
 #endif
