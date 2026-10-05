@@ -1604,6 +1604,8 @@
   - noncolin=0, lspinorb=1: SOC with z-axis magnetism only (for non-magnetic materials with SOC)
   - noncolin=1, lspinorb=0: Non-collinear magnetism without SOC
   - noncolin=1, lspinorb=1: Both non-collinear magnetism and SOC
+  - Note: When nspin=4 and noncolin=0, only the z component of the initial magnetization in STRU is used; x/y components are ignored and a warning is printed.
+  - Note: When nspin=4 and no initial magnetization is set in STRU, the calculation starts from zero magnetic moment; no automatic magnetization is assigned.
 - **Default**: False
 
 ### soc_lambda

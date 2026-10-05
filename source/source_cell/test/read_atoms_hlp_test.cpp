@@ -478,3 +478,207 @@ int main(int argc, char **argv)
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+// ============================================================
+// Tests for issue #5021: nspin=4 with noncolin=0 should warn
+// when x/y components are non-zero
+// ============================================================
+
+TEST_F(ReadAtomsHelperTest, ProcessMagnetizationNspin4CollinearWarnsOnXY)
+{
+    Atom atom;
+    atom.label = "Fe";
+    atom.mag.resize(1);
+    atom.m_loc_.resize(1);
+    atom.angle1.resize(1);
+    atom.angle2.resize(1);
+
+    atom.m_loc_[0].set(1.0, 0.5, 0.3);
+    atom.mag[0] = sqrt(1.0 + 0.25 + 0.09);
+
+    const int nspin = 4;
+    const bool input_vec_mag = true;
+    const bool input_angle_mag = false;
+    const bool noncolin = false;
+
+    // Capture stdout
+    testing::internal::CaptureStdout();
+    unitcell::process_magnetization(atom, 0, 0, nspin, input_vec_mag, input_angle_mag, ofs_running, noncolin);
+    std::string stdout_output = testing::internal::GetCapturedStdout();
+
+    // x/y should be zeroed
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].x, 0.0);
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].y, 0.0);
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].z, 0.3);
+
+    // Warning should appear on stdout
+    EXPECT_NE(stdout_output.find("Warning"), std::string::npos);
+    EXPECT_NE(stdout_output.find("x/y components are IGNORED"), std::string::npos);
+
+    // Warning should appear in running log
+    ofs_running.flush();
+    std::ifstream ifs("test_running.log");
+    std::stringstream buffer;
+    buffer << ifs.rdbuf();
+    std::string log_content = buffer.str();
+    ifs.close();
+    EXPECT_NE(log_content.find("Warning"), std::string::npos);
+    EXPECT_NE(log_content.find("x/y components are IGNORED"), std::string::npos);
+}
+
+TEST_F(ReadAtomsHelperTest, ProcessMagnetizationNspin4CollinearNoWarnOnZeroXY)
+{
+    Atom atom;
+    atom.label = "Fe";
+    atom.mag.resize(1);
+    atom.m_loc_.resize(1);
+    atom.angle1.resize(1);
+    atom.angle2.resize(1);
+
+    atom.m_loc_[0].set(0.0, 0.0, 0.3);
+    atom.mag[0] = 0.3;
+
+    const int nspin = 4;
+    const bool input_vec_mag = true;
+    const bool input_angle_mag = false;
+    const bool noncolin = false;
+
+    testing::internal::CaptureStdout();
+    unitcell::process_magnetization(atom, 0, 0, nspin, input_vec_mag, input_angle_mag, ofs_running, noncolin);
+    std::string stdout_output = testing::internal::GetCapturedStdout();
+
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].x, 0.0);
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].y, 0.0);
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].z, 0.3);
+
+    // No warning should appear
+    EXPECT_EQ(stdout_output.find("Warning"), std::string::npos);
+}
+
+TEST_F(ReadAtomsHelperTest, ProcessMagnetizationNspin4NoncolinNoWarn)
+{
+    Atom atom;
+    atom.label = "Fe";
+    atom.mag.resize(1);
+    atom.m_loc_.resize(1);
+    atom.angle1.resize(1);
+    atom.angle2.resize(1);
+
+    atom.m_loc_[0].set(1.0, 0.5, 0.3);
+    atom.mag[0] = sqrt(1.0 + 0.25 + 0.09);
+
+    const int nspin = 4;
+    const bool input_vec_mag = true;
+    const bool input_angle_mag = false;
+    const bool noncolin = true;
+
+    testing::internal::CaptureStdout();
+    unitcell::process_magnetization(atom, 0, 0, nspin, input_vec_mag, input_angle_mag, ofs_running, noncolin);
+    std::string stdout_output = testing::internal::GetCapturedStdout();
+
+    // All components should be preserved
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].x, 1.0);
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].y, 0.5);
+    EXPECT_DOUBLE_EQ(atom.m_loc_[0].z, 0.3);
+
+    // No warning should appear
+    EXPECT_EQ(stdout_output.find("Warning"), std::string::npos);
+}
+
+// ============================================================
+// Tests for issue #5939: nspin=4 autoset should not force (1,1,1)
+// ============================================================
+
+TEST_F(ReadAtomsHelperTest, AutosetMagnetizationNspin4NoAutoset)
+{
+    UnitCell ucell;
+    ucell.ntype = 1;
+    ucell.atoms = new Atom[1];
+    ucell.atoms[0].label = "Fe";
+    ucell.atoms[0].na = 1;
+    ucell.atoms[0].mag.resize(1, 0.0);
+    ucell.atoms[0].m_loc_.resize(1);
+    ucell.atoms[0].m_loc_[0].set(0.0, 0.0, 0.0);
+
+    const int nspin = 4;
+
+    testing::internal::CaptureStdout();
+    unitcell::autoset_magnetization(ucell, nspin, ofs_running);
+    std::string stdout_output = testing::internal::GetCapturedStdout();
+
+    // Magnetization should remain zero (NOT autoset to (1,1,1))
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].m_loc_[0].x, 0.0);
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].m_loc_[0].y, 0.0);
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].m_loc_[0].z, 0.0);
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].mag[0], 0.0);
+
+    // Warning should appear on stdout
+    EXPECT_NE(stdout_output.find("Warning"), std::string::npos);
+    EXPECT_NE(stdout_output.find("no initial magnetization is set in STRU"), std::string::npos);
+
+    // Warning should appear in running log
+    ofs_running.flush();
+    std::ifstream ifs("test_running.log");
+    std::stringstream buffer;
+    buffer << ifs.rdbuf();
+    std::string log_content = buffer.str();
+    ifs.close();
+    EXPECT_NE(log_content.find("Warning"), std::string::npos);
+    EXPECT_NE(log_content.find("no initial magnetization is set in STRU"), std::string::npos);
+
+    delete[] ucell.atoms;
+}
+
+TEST_F(ReadAtomsHelperTest, AutosetMagnetizationNspin4NoWarnWhenMagSet)
+{
+    UnitCell ucell;
+    ucell.ntype = 1;
+    ucell.atoms = new Atom[1];
+    ucell.atoms[0].label = "Fe";
+    ucell.atoms[0].na = 1;
+    ucell.atoms[0].mag.resize(1, 1.5);
+    ucell.atoms[0].m_loc_.resize(1);
+    ucell.atoms[0].m_loc_[0].set(0.0, 0.0, 1.5);
+
+    const int nspin = 4;
+
+    testing::internal::CaptureStdout();
+    unitcell::autoset_magnetization(ucell, nspin, ofs_running);
+    std::string stdout_output = testing::internal::GetCapturedStdout();
+
+    // No autoset should happen
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].mag[0], 1.5);
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].m_loc_[0].z, 1.5);
+
+    // No warning should appear
+    EXPECT_EQ(stdout_output.find("Warning"), std::string::npos);
+
+    delete[] ucell.atoms;
+}
+
+TEST_F(ReadAtomsHelperTest, AutosetMagnetizationNspin2StillAutoset)
+{
+    UnitCell ucell;
+    ucell.ntype = 1;
+    ucell.atoms = new Atom[1];
+    ucell.atoms[0].label = "Fe";
+    ucell.atoms[0].na = 1;
+    ucell.atoms[0].mag.resize(1, 0.0);
+    ucell.atoms[0].m_loc_.resize(1);
+    ucell.atoms[0].m_loc_[0].set(0.0, 0.0, 0.0);
+
+    const int nspin = 2;
+
+    testing::internal::CaptureStdout();
+    unitcell::autoset_magnetization(ucell, nspin, ofs_running);
+    std::string stdout_output = testing::internal::GetCapturedStdout();
+
+    // nspin=2 should still autoset to 1.0 (VASP-compatible behavior)
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].mag[0], 1.0);
+    EXPECT_DOUBLE_EQ(ucell.atoms[0].m_loc_[0].z, 1.0);
+
+    // No warning for nspin=2 autoset
+    EXPECT_EQ(stdout_output.find("Warning"), std::string::npos);
+
+    delete[] ucell.atoms;
+}

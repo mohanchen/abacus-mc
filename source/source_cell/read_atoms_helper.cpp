@@ -102,19 +102,14 @@ void autoset_magnetization(UnitCell& ucell, int nspin,
     {
         if(nspin==4)
         {
-            for (int it = 0; it < ntype; it++)
-            {
-                for (int ia = 0; ia < ucell.atoms[it].na; ia++)
-                {
-                    ucell.atoms[it].m_loc_[ia].x = 1.0;
-                    ucell.atoms[it].m_loc_[ia].y = 1.0;
-                    ucell.atoms[it].m_loc_[ia].z = 1.0;
-                    ucell.atoms[it].mag[ia] = sqrt(pow(ucell.atoms[it].m_loc_[ia].x,2)
-                            +pow(ucell.atoms[it].m_loc_[ia].y,2)
-                            +pow(ucell.atoms[it].m_loc_[ia].z,2));
-                    ModuleBase::GlobalFunc::OUT(ofs_running,"Autoset magnetism for this atom", 1.0, 1.0, 1.0);
-                }
-            }
+            // nspin=4 with all-zero magnetization: do NOT autoset,
+            // start from zero and let the user decide explicitly.
+            std::string msg = "nspin=4 but no initial magnetization is set in STRU.\n"
+                "  All atoms start from zero magnetic moment.\n"
+                "  If a magnetic ground state is expected, set 'mag' explicitly "
+                "in STRU for the magnetic atoms.";
+            std::cout << " Warning: " << msg << std::endl;
+            ModuleBase::GlobalFunc::OUT(ofs_running, "Warning", msg);
         }
         else if(nspin==2)
         {
@@ -307,6 +302,18 @@ void process_magnetization(Atom& atom, int it, int ia,
         if(!noncolin)
         {
             // collinear case with nspin = 4, only z component is used
+            if(std::abs(atom.m_loc_[ia].x) > 1e-5 || std::abs(atom.m_loc_[ia].y) > 1e-5)
+            {
+                std::stringstream ss;
+                ss << "Atom " << ia+1 << " of type " << atom.label
+                   << ": STRU gives non-zero x/y magnetization ("
+                   << atom.m_loc_[ia].x << ", " << atom.m_loc_[ia].y << ", "
+                   << atom.m_loc_[ia].z << "), but nspin=4 with noncolin=0 "
+                   << "is a collinear calculation; only the z component is used.\n"
+                   << "  x/y components are IGNORED. Set 'noncolin 1' to use the full vector.";
+                std::cout << " Warning: " << ss.str() << std::endl;
+                ModuleBase::GlobalFunc::OUT(ofs_running, "Warning", ss.str());
+            }
             atom.m_loc_[ia].x = 0;
             atom.m_loc_[ia].y = 0;
         }
