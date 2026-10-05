@@ -2,8 +2,13 @@
 #define SETUP_PWRHO_H
 
 #include "source_cell/unitcell.h" // use UnitCell
-#include "source_basis/module_pw/pw_basis_big.h" // use PW_Basis_Big
 #include "source_io/module_parameter/input_parameter.h" // use Input_para
+
+namespace ModulePW
+{
+class PW_Basis;
+class PW_Basis_Big;
+}
 
 namespace pw
 {

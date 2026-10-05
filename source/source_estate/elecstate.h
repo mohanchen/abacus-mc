@@ -7,7 +7,11 @@
 #include "source_io/module_parameter/parameter.h"
 #include "source_psi/psi.h"
 #include "module_pot/potential_new.h"
-#include "source_basis/module_pw/pw_basis_big.h"
+
+namespace ModulePW
+{
+class PW_Basis_Big;
+}
 
 namespace elecstate
 {

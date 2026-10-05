@@ -12,7 +12,12 @@
 #include <fstream>
 
 class Charge;
-#include "source_basis/module_pw/pw_basis_big.h"
+
+namespace ModulePW
+{
+class PW_Basis;
+class PW_Basis_Big;
+}
 
 namespace ModuleIO
 {
