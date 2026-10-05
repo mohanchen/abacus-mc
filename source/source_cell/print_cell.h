@@ -39,8 +39,11 @@ namespace unitcell
      * @param latvec lattice parameter vector [in]
      * @param fn STRU file name [in]
      * @param header comment lines written at the top of the file [in]
+     * @note Positions are always written in Cartesian_angstrom, independent of
+     *       force availability, so that all STRU outputs share one coordinate
+     *       format. has_force only controls the per-atom f fields.
+     *
      * @param nspin number of spin channels [in]
-     * @param direct true for direct coords, false for cartesian coords [in]
      * @param vel true for printing velocities [in]
      * @param magmom true for printing Mulliken population analysis produced magmom [in]
      * @param orb true for printing NUMERICAL_ORBITAL section [in]
@@ -55,7 +58,6 @@ namespace unitcell
                          const std::string& fn,
                          const std::string& header,
                          const int& nspin,
-                         const bool& direct,
                          const bool& vel,
                          const bool& magmom,
                          const bool& orb,

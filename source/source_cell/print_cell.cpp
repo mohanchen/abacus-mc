@@ -95,7 +95,6 @@ namespace unitcell
                          const std::string& fn,
                          const std::string& header,
                          const int& nspin,
-                         const bool& direct,
                          const bool& vel,
                          const bool& magmom,
                          const bool& orb,
@@ -166,17 +165,14 @@ namespace unitcell
             ModuleBase::WARNING_QUIT("print_stru_file",
                                      "has_force is true but force matrix dimensions do not match nat x 3");
         }
-        const bool use_cartesian = has_force || !direct;
-        const std::string scale = use_cartesian ? "Cartesian_angstrom" : "Direct";
-        std::string unit_note = "\n";
-        if (use_cartesian)
-        {
-            unit_note = has_force ? " # positions in Angstrom, forces in eV/Angstrom\n"
-                                  : " # positions in Angstrom\n";
-        }
-        str += scale + unit_note;
+        // Positions are always written as Cartesian_angstrom so that the
+        // coordinate format is independent of force availability; has_force
+        // only controls the per-atom f fields and the unit annotation.
+        const std::string unit_note = has_force ? " # positions in Angstrom, forces in eV/Angstrom\n"
+                                                : " # positions in Angstrom\n";
+        str += "Cartesian_angstrom" + unit_note;
         // Internal Cartesian tau is in units of lat0 (Bohr); convert to Angstrom.
-        const double pos_conv = use_cartesian ? ucell.lat0 * ModuleBase::BOHR_TO_A : 1.0;
+        const double pos_conv = ucell.lat0 * ModuleBase::BOHR_TO_A;
         const double force_conv = ModuleBase::Ry_to_eV / ModuleBase::BOHR_TO_A; // Ry/Bohr to eV/Angstrom
         for(int it = 0; it < ucell.ntype; it++)
         {
@@ -197,9 +193,9 @@ namespace unitcell
             for(int ia = 0; ia < atoms[it].na; ia++)
             {
                 // output position
-                const double& x = use_cartesian ? atoms[it].tau[ia].x : atoms[it].taud[ia].x;
-                const double& y = use_cartesian ? atoms[it].tau[ia].y : atoms[it].taud[ia].y;
-                const double& z = use_cartesian ? atoms[it].tau[ia].z : atoms[it].taud[ia].z;
+                const double& x = atoms[it].tau[ia].x;
+                const double& y = atoms[it].tau[ia].y;
+                const double& z = atoms[it].tau[ia].z;
                 str += FmtCore::format("%.10f %.10f %.10f", x*pos_conv, y*pos_conv, z*pos_conv);
                 str += FmtCore::format(" m%2d%2d%2d", atoms[it].mbl[ia].x, atoms[it].mbl[ia].y, atoms[it].mbl[ia].z);
                 if (vel) // output velocity

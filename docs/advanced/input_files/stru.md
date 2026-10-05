@@ -368,3 +368,4 @@ Rules:
   - `# NOTE: stress not computed (cal_stress=0); forces not computed (cal_force=0); per-atom f fields omitted intentionally`
   - `# NOTE: geometry proposed by optimizer but not evaluated; stress N/A; forces omitted; energy above belongs to the last evaluated geometry`
 - Per-atom `f fx fy fz` fields (forces in eV/Angstrom) are appended to the atom lines only when [`cal_force`](input-main.md#cal_force) is true **and** the geometry was evaluated. They are omitted on early relaxation exit so the geometry and the property data always come from the same configuration.
+- The coordinate format line of the ATOMIC_POSITIONS section is always `Cartesian_angstrom`, independent of force availability; `has_force` only controls the per-atom `f` fields. `Direct` and the other coordinate keywords remain fully supported as **input** formats.
