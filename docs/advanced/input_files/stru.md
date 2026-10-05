@@ -360,12 +360,13 @@ When [`out_stru`](input-main.md#out_stru) writes STRU{istep}, STRU_NOW or STRU_F
 
 Rules:
 
+- Line 3 carries the total energy in eV only when that energy was computed for the geometry written below. If the geometry was proposed by the optimizer but never evaluated (early relaxation exit), line 3 is written as `# RELAX STEP <istep>[ (FINAL)], Energy: N/A` so the energy label and the coordinates always describe the same frame.
 - Lines 4-6 always carry the stress tensor in **kbar**, one row per line. If stress was not computed ([`cal_stress`](input-main.md#cal_stress) = 0) or the geometry was proposed by the optimizer but not yet evaluated (early relaxation exit), all three rows are written as `# Stress (kbar): N/A N/A N/A` with no extra inline comment, so every stress line has the same token shape.
 - Line 7 is a single `# NOTE:` line describing the state:
   - `# NOTE: stress and forces computed for this geometry` (normal case)
   - `# NOTE: stress not computed (cal_stress=0)`
   - `# NOTE: forces not computed (cal_force=0); per-atom f fields omitted intentionally`
   - `# NOTE: stress not computed (cal_stress=0); forces not computed (cal_force=0); per-atom f fields omitted intentionally`
-  - `# NOTE: geometry proposed by optimizer but not evaluated; stress N/A; forces omitted; energy above belongs to the last evaluated geometry`
+  - `# NOTE: geometry proposed by optimizer but not evaluated; energy N/A; stress N/A; forces omitted`
 - Per-atom `f fx fy fz` fields (forces in eV/Angstrom) are appended to the atom lines only when [`cal_force`](input-main.md#cal_force) is true **and** the geometry was evaluated. They are omitted on early relaxation exit so the geometry and the property data always come from the same configuration.
 - The coordinate format line of the ATOMIC_POSITIONS section is always `Cartesian_angstrom`, independent of force availability; `has_force` only controls the per-atom `f` fields. `Direct` and the other coordinate keywords remain fully supported as **input** formats.

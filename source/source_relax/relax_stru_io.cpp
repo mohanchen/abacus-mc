@@ -22,12 +22,29 @@ std::string build_stru_header(const int istep,
     std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
 
     const char* final_tag = is_final ? " (FINAL)" : "";
-    std::string header = FmtCore::format("# ABACUS version: %s\n# Written at %s\n# RELAX STEP %d%s, Energy: %.8f eV\n",
-                                         VERSION,
-                                         time_buf,
-                                         istep + 1,
-                                         final_tag,
-                                         etot * ModuleBase::Ry_to_eV);
+    const double etot_ev = etot * ModuleBase::Ry_to_eV;
+    // Line 3 is labeled with an energy value only when that energy belongs
+    // to the geometry written below. When the optimizer proposed the final
+    // geometry but it was never evaluated, etot is stale, so print N/A to
+    // keep the energy label and the coordinates on the same frame.
+    std::string header;
+    if (geometry_evaluated)
+    {
+        header = FmtCore::format("# ABACUS version: %s\n# Written at %s\n# RELAX STEP %d%s, Energy: %.8f eV\n",
+                                 VERSION,
+                                 time_buf,
+                                 istep + 1,
+                                 final_tag,
+                                 etot_ev);
+    }
+    else
+    {
+        header = FmtCore::format("# ABACUS version: %s\n# Written at %s\n# RELAX STEP %d%s, Energy: N/A\n",
+                                 VERSION,
+                                 time_buf,
+                                 istep + 1,
+                                 final_tag);
+    }
 
     // stress in kbar: Ry/Bohr^3 -> kbar, always exactly 3 lines for
     // downstream parsers. N/A marks uncomputed stress; no inline comment is
@@ -60,7 +77,7 @@ std::string build_stru_header(const int istep,
     std::string note;
     if (!geometry_evaluated)
     {
-        note = "# NOTE: geometry proposed by optimizer but not evaluated; stress N/A; forces omitted; energy above belongs to the last evaluated geometry";
+        note = "# NOTE: geometry proposed by optimizer but not evaluated; energy N/A; stress N/A; forces omitted";
     }
     else if (!inp.cal_stress && !inp.cal_force)
     {

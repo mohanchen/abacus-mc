@@ -140,11 +140,13 @@ TEST_F(RelaxDriverHeaderTest, GeometryNotEvaluated)
     const auto lines = split_lines(header);
 
     ASSERT_EQ(lines.size(), 7u);
+    EXPECT_THAT(lines[2], testing::HasSubstr("Energy: N/A"));
     EXPECT_EQ(count_substr(header, "# Stress (kbar): N/A N/A N/A"), 3);
     EXPECT_THAT(lines[6], testing::HasSubstr("# NOTE: geometry proposed by optimizer but not evaluated"));
+    EXPECT_THAT(lines[6], testing::HasSubstr("energy N/A"));
     EXPECT_THAT(lines[6], testing::HasSubstr("stress N/A"));
     EXPECT_THAT(lines[6], testing::HasSubstr("forces omitted"));
-    EXPECT_THAT(lines[6], testing::HasSubstr("energy above belongs to the last evaluated geometry"));
+    EXPECT_THAT(lines[6], testing::Not(testing::HasSubstr("energy above belongs to the last evaluated geometry")));
 }
 
 TEST_F(RelaxDriverHeaderTest, PreviewFinalHeaders)
@@ -181,11 +183,13 @@ TEST_F(RelaxDriverHeaderTest, EarlyExitGeometryNotEvaluated)
     const auto lines = split_lines(header);
 
     ASSERT_EQ(lines.size(), 7u);
+    EXPECT_THAT(lines[2], testing::HasSubstr("Energy: N/A"));
     EXPECT_EQ(count_substr(header, "# Stress (kbar): N/A N/A N/A"), 3);
     EXPECT_THAT(lines[6], testing::HasSubstr("# NOTE: geometry proposed by optimizer but not evaluated"));
+    EXPECT_THAT(lines[6], testing::HasSubstr("energy N/A"));
     EXPECT_THAT(lines[6], testing::HasSubstr("stress N/A"));
     EXPECT_THAT(lines[6], testing::HasSubstr("forces omitted"));
-    EXPECT_THAT(lines[6], testing::HasSubstr("energy above belongs to the last evaluated geometry"));
+    EXPECT_THAT(lines[6], testing::Not(testing::HasSubstr("energy above belongs to the last evaluated geometry")));
 }
 
 // Converged exit: relax_step returned true (geometry untouched), so

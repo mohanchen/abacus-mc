@@ -30,8 +30,8 @@ namespace relax_stru_io
      * @param inp Input parameters (cal_force, cal_stress select the NOTE text).
      * @param is_final If true, the step label is marked "(FINAL)".
      * @param geometry_evaluated false when the geometry was proposed by the
-     *        optimizer but never evaluated; stress is then marked N/A and the
-     *        NOTE explains that forces are omitted.
+     *        optimizer but never evaluated; the energy and stress are then
+     *        marked N/A and the NOTE explains that forces are omitted.
      * @return The formatted header string.
      */
     std::string build_stru_header(const int istep,
