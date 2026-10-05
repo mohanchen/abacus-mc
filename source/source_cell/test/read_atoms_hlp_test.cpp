@@ -693,6 +693,9 @@ TEST_F(ReadAtomsHelperTest, RoundTripMultiAtomMixedFields)
         EXPECT_FALSE(ifpos.fail());
     }
 
+    // The parser consumes the trailing newline, so eof() is not set until a
+    // read is attempted past end-of-file. Trigger that read explicitly.
+    ifpos.get();
     EXPECT_TRUE(ifpos.eof());
     ifpos.close();
     std::remove("test_input.tmp");
