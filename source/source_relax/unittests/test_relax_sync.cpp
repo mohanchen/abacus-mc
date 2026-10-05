@@ -406,11 +406,9 @@ TEST(RelaxSyncSummary, ConvergedPrintsSummary)
     inp.force_thr = 0.001;   // force_thr_eva ~ 0.0257 eV/Angstrom
     inp.force_thr_ev = inp.force_thr * 13.6058 / 0.529177;
 
-    // iat2it/iat2ia are owned by the caller, not by UnitCell's destructor.
-    // Use vectors so cleanup is automatic.
-    std::vector<int> iat2it(nat, 0);
-    std::vector<int> iat2ia(nat, 0);
-
+    // iat2it/iat2ia are owned by UnitCell's internal Statistics member, whose
+    // destructor releases them; do not delete them again (mirror the other
+    // tests in this file).
     UnitCell ucell;
     ucell.ntype = 1;
     ucell.nat = nat;
@@ -419,8 +417,10 @@ TEST(RelaxSyncSummary, ConvergedPrintsSummary)
     ucell.atoms[0].label = "Si";
     ucell.omega = 1.0;
     ucell.lat0 = 1.0;
-    ucell.iat2it = iat2it.data();
-    ucell.iat2ia = iat2ia.data();
+    ucell.iat2it = new int[nat];
+    ucell.iat2ia = new int[nat];
+    ucell.iat2it[0] = 0;
+    ucell.iat2ia[0] = 0;
     ucell.atoms[0].mbl.resize(nat);
     ucell.atoms[0].taud.resize(nat);
     ucell.atoms[0].tau.resize(nat);
