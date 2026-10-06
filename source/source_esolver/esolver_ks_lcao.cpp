@@ -583,8 +583,26 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     // HF and kS energies are computed, meta-GGA, Jason and restart
     ESolver_KS::iter_finish(ucell, istep, iter, conv_esolver);
 
-    // append the current electronic-step section to dm_onsiteg{#}.txt;
-    // total energy and magnetism are now updated for this electronic step
+    // overwrite dm_onsite.txt with the latest occupation matrix and the
+    // actual charge-density residual; ESolver_KS::iter_finish() above has
+    // computed drho for this electronic step.
+    if (this->inp_->out_chg[0])
+    {
+        DFTU_BASE::write_latest_occmat(*this->dftu_,
+                                      ucell,
+                                      PARAM.globalv.global_out_dir,
+                                      this->inp_->nspin,
+                                      PARAM.globalv.npol,
+                                      istep,
+                                      iter,
+                                      this->scf_thr,
+                                      this->drho,
+                                      DFTU_BASE::SOC_LAYOUT_SPIN_BASIS_REAL);
+    }
+
+    // append the current electronic-step section to dm_onsiteg{#}.txt
+    // LCAO computes the occupation matrix in every electronic iteration, so
+    // the snapshot always carries a real matrix.
     DFTU_BASE::append_ion_step_snapshot(*this->dftu_,
                                         ucell,
                                         PARAM.globalv.global_out_dir,
@@ -593,9 +611,9 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
                                         istep,
                                         iter,
                                         conv_esolver,
-                                        this->pelec->f_en.etot,
-                                        ucell.magnet.tot_mag,
-                                        ucell.magnet.tot_mag_nc,
+                                        true,
+                                        this->scf_thr,
+                                        this->drho,
                                         occmat_cfg,
                                         DFTU_BASE::SOC_LAYOUT_SPIN_BASIS_REAL);
 

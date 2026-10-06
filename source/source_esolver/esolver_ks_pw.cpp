@@ -215,6 +215,9 @@ void ESolver_KS_PW<T, Device>::iter_init(UnitCell& ucell, const int istep, const
 
     // update local occupations for DFT+U
     // should before lambda loop in DeltaSpin
+    const DFTU_BASE::OccmatOutputCfg init_occmat_cfg{this->inp_->out_freq_ion,
+                                                     this->inp_->out_freq_elec,
+                                                     this->inp_->scf_nmax};
     DFTU_BASE::iter_init_dftu_pw(iter,
                           istep,
                           *this->dftu_,
@@ -222,6 +225,9 @@ void ESolver_KS_PW<T, Device>::iter_init(UnitCell& ucell, const int istep, const
                           this->pelec->wg,
                           ucell,
                           this->p_chgmix,
+                          this->inp_->out_chg[0],
+                          PARAM.globalv.global_out_dir,
+                          init_occmat_cfg,
                           this->kv.isk.data());
 
     // mohan add 2025-11: push DFT+U energy from Plus_U instance to ElecState
@@ -333,10 +339,34 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
     // check if oscillate for delta_spin method
     pw::check_deltaspin_oscillation(iter, this->drho, this->p_chgmix, *this->inp_);
 
+    // overwrite dm_onsite.txt with the latest occupation matrix and the
+    // actual charge-density residual of this electronic step. At the very
+    // first step (istep 0, iter 1) the PW occupation matrix does not exist
+    // yet (iter_init_dftu_pw returns before calculating it), so skip it and
+    // keep the previous behavior where dm_onsite.txt first appears at iter 2.
+    const bool latest_ready = (iter > 1 || istep > 0);
+    if (this->inp_->out_chg[0] && latest_ready)
+    {
+        DFTU_BASE::write_latest_occmat(*this->dftu_,
+                                      ucell,
+                                      PARAM.globalv.global_out_dir,
+                                      this->inp_->nspin,
+                                      PARAM.globalv.npol,
+                                      istep,
+                                      iter,
+                                      this->scf_thr,
+                                      this->drho,
+                                      DFTU_BASE::SOC_LAYOUT_PAULI);
+    }
+
     // append the current electronic-step section to dm_onsiteg{#}.txt
     const DFTU_BASE::OccmatOutputCfg occmat_cfg{this->inp_->out_freq_ion,
                                                 this->inp_->out_freq_elec,
                                                 this->inp_->scf_nmax};
+    // At istep 0 / iter 1 the PW occupation matrix does not exist yet,
+    // unless it was loaded from dm_onsite_ini.txt or a previous
+    // dm_onsite.txt; snapshot an "N/A" placeholder in that case.
+    const bool occmat_ready = latest_ready || this->dftu_->is_occmat_ready();
     DFTU_BASE::append_ion_step_snapshot(*this->dftu_,
                                         ucell,
                                         PARAM.globalv.global_out_dir,
@@ -345,9 +375,9 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
                                         istep,
                                         iter,
                                         conv_esolver,
-                                        this->pelec->f_en.etot,
-                                        ucell.magnet.tot_mag,
-                                        ucell.magnet.tot_mag_nc,
+                                        occmat_ready,
+                                        this->scf_thr,
+                                        this->drho,
                                         occmat_cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 

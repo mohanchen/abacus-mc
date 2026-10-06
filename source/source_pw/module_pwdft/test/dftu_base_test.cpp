@@ -9,12 +9,17 @@
  ***********************************************/
 
 #include "source_pw/module_pwdft/dftu_base.h"
+#include "source_pw/module_pwdft/dftu_base_io.h"
 
 #include "source_cell/atom_spec.h"
 #include "source_cell/unitcell.h"
 
 #include "gtest/gtest.h"
 
+#include <cstdio>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <vector>
 #include <numeric>
 
@@ -377,4 +382,71 @@ TEST_F(OccMatRoundtripTest, Nspin4_PauliBlocks)
     for (size_t i = 0; i < specs.size(); i++)
         for (int j = 0; j < sizes[i]; j++)
             EXPECT_DOUBLE_EQ(occ_mat[i].data[j], static_cast<double>(i * 1000 + j + 1));
+}
+
+/// append_ion_step_snapshot must record an "N/A" placeholder instead of a
+/// silent zero matrix when the occupation matrix does not exist yet (the PW
+/// istep 0 / iter 1 case), and the real matrix body when it does.
+TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
+{
+    Plus_U_Base dftu;
+    this->init_dftu(dftu, false);
+
+    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5};
+    const std::string out_dir = "./";
+
+    // fresh run: no occupation matrix has been computed or loaded
+    ASSERT_FALSE(dftu.is_occmat_ready());
+    DFTU_BASE::append_ion_step_snapshot(dftu,
+                                        ucell,
+                                        out_dir,
+                                        2, // nspin
+                                        1, // npol
+                                        0, // istep -> dm_onsiteg1.txt
+                                        1, // iter
+                                        false,
+                                        false, // occmat_ready
+                                        1e-6,
+                                        0.5,
+                                        cfg,
+                                        DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    std::ifstream ifs("./dm_onsiteg1.txt");
+    ASSERT_TRUE(ifs.is_open());
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+    ifs.close();
+    const std::string content = ss.str();
+    EXPECT_NE(content.find("# Electronic step 1"), std::string::npos);
+    EXPECT_NE(content.find("# scf_thr 1.00000000e-06"), std::string::npos);
+    EXPECT_NE(content.find("# drho 5.00000000e-01"), std::string::npos);
+    EXPECT_NE(content.find("\n N/A\n"), std::string::npos);
+    EXPECT_EQ(content.find("Atom"), std::string::npos);
+
+    // ready case: the matrix body is written for the atom (fresh file g2)
+    DFTU_BASE::append_ion_step_snapshot(dftu,
+                                        ucell,
+                                        out_dir,
+                                        2, // nspin
+                                        1, // npol
+                                        1, // istep -> dm_onsiteg2.txt
+                                        2, // iter
+                                        false,
+                                        true, // occmat_ready
+                                        1e-6,
+                                        0.5,
+                                        cfg,
+                                        DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    std::ifstream ifs2("./dm_onsiteg2.txt");
+    ASSERT_TRUE(ifs2.is_open());
+    std::stringstream ss2;
+    ss2 << ifs2.rdbuf();
+    ifs2.close();
+    const std::string content2 = ss2.str();
+    EXPECT_NE(content2.find("Fe Atom 1 L 2"), std::string::npos);
+    EXPECT_EQ(content2.find("N/A"), std::string::npos);
+
+    std::remove("./dm_onsiteg1.txt");
+    std::remove("./dm_onsiteg2.txt");
 }

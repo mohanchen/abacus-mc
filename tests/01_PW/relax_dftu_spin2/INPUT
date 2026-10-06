@@ -1,0 +1,41 @@
+INPUT_PARAMETERS
+
+# general
+suffix          autotest
+calculation     relax
+relax_nmax      5
+basis_type      pw
+device          cpu
+
+# plane wave
+nspin           2
+ecutwfc         10
+nbands          28
+gamma_only      0
+scf_thr         1e-06
+scf_nmax        30
+out_chg         1
+
+# smearing
+smearing_method gaussian
+smearing_sigma  0.01
+
+# charge mixing
+mixing_type     broyden
+mixing_beta     0.4
+ks_solver       dav_subspace
+symmetry        0
+
+# DFT+U parameters
+dft_plus_u      1
+orbital_corr    2
+hubbard_u       5.0
+onsite_radius   3.0
+
+pseudo_dir      ../../PP_ORB/
+orbital_dir     ../../PP_ORB/
+pw_seed         1
+
+out_stru        1
+out_freq_ion    2
+#out_freq_elec   2
