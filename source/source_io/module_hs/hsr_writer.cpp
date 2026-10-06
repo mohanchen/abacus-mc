@@ -83,7 +83,8 @@ void ModuleIO::write_hcontainer_csr(const std::string& fname,
                                      const int nspin,
                                      const std::string& label,
                                      const std::string& representation_note,
-                                     const double efermi_eV)
+                                     const double efermi_eV,
+                                     const bool has_efermi)
 {
     std::ofstream ofs;
     if (istep <= 0)
@@ -104,7 +105,7 @@ void ModuleIO::write_hcontainer_csr(const std::string& fname,
     ofs << " # print " << label << " matrix in real space " << label << "(R)" << std::endl;
     ofs << " " << nspin << " # number of spin directions" << std::endl;
     ofs << " " << ispin + 1 << " # spin index";
-    if (label == "H")
+    if (has_efermi)
     {
         ofs << ", E_Fermi = " << std::setprecision(6) << efermi_eV << " eV";
     }
@@ -328,7 +329,7 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
             {
                 const double efermi_eV = eferm.get_efval(ispin) * ModuleBase::Ry_to_eV;
                 write_hcontainer_csr(
-                    fname, ucell, precision, &hr_serial, istep, ispin, nspin, "H", representation_note, efermi_eV);
+                    fname, ucell, precision, &hr_serial, istep, ispin, nspin, "H", representation_note, efermi_eV, true);
             }
             ofs_running << " Write H(R)" << ((nspin == 2) ? (ispin == 0 ? " (spin up  )" : " (spin down)") : "")
                         << " matrix in NAO basis to file: " << fname << std::endl;
@@ -360,7 +361,7 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
             else
             {
                 write_hcontainer_csr(
-                    fname, ucell, precision, &sr_serial, istep, 0, 1, "S", representation_note, 0.0);
+                    fname, ucell, precision, &sr_serial, istep, 0, 1, "S", representation_note, 0.0, false);
             }
             ofs_running << " Write S(R) matrix in NAO basis to file: " << fname << std::endl;
         }
@@ -370,10 +371,10 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
 // Explicit instantiations
 template void ModuleIO::write_hcontainer_csr<double>(
     const std::string&, const UnitCell*, const int,
-    hamilt::HContainer<double>*, const int, const int, const int, const std::string&, const std::string&, const double);
+    hamilt::HContainer<double>*, const int, const int, const int, const std::string&, const std::string&, const double, const bool);
 template void ModuleIO::write_hcontainer_csr<std::complex<double>>(
     const std::string&, const UnitCell*, const int,
-    hamilt::HContainer<std::complex<double>>*, const int, const int, const int, const std::string&, const std::string&, const double);
+    hamilt::HContainer<std::complex<double>>*, const int, const int, const int, const std::string&, const std::string&, const double, const bool);
 
 template void ModuleIO::write_hcontainer_csr_binary<double>(
     const std::string&, hamilt::HContainer<double>*, const int, const bool);

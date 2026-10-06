@@ -99,9 +99,9 @@ static void gather_and_write(const std::string& prefix,
         // dH/dR and similar derived terms are not the Hamiltonian: no Fermi annotation
         const double no_efermi = 0.0;
 #ifdef __MPI
-        write_hcontainer_csr(fname, &ucell, 8, &hr_serial, istep, ispin, nspin, label, "", no_efermi);
+        write_hcontainer_csr(fname, &ucell, 8, &hr_serial, istep, ispin, nspin, label, "", no_efermi, false);
 #else
-        write_hcontainer_csr(fname, &ucell, 8, &hR, istep, ispin, nspin, label, "", no_efermi);
+        write_hcontainer_csr(fname, &ucell, 8, &hR, istep, ispin, nspin, label, "", no_efermi, false);
 #endif
         if (ofs_running != nullptr)
         {

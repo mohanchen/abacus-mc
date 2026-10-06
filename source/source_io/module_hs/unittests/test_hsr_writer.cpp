@@ -161,7 +161,7 @@ TEST(HsrWriterIo, HContainerCsrHeaderKeepsCurrentFormat)
 
     // label "H": header carries the Fermi energy of this spin channel
     const double efermi_eV = 5.4321;
-    ModuleIO::write_hcontainer_csr(filename, &ucell, 5, &matrix, 0, 0, 1, "H", "", efermi_eV);
+    ModuleIO::write_hcontainer_csr(filename, &ucell, 5, &matrix, 0, 0, 1, "H", "", efermi_eV, true);
 
     const std::string output = read_file(filename);
     EXPECT_THAT(output, testing::HasSubstr(" --- Ionic Step 1 ---\n"));
@@ -198,15 +198,17 @@ TEST(HsrWriterIo, GammaFoldedHeaderKeepsCsrReadable)
     double values[4] = {1.0, 0.0, 0.5, 2.0};
     fill_matrix(matrix, pv, values);
 
-    // label "H" without Fermi energy available: pass 0.0
+    // label "H" without Fermi energy available: pass has_efermi = false
     const double no_efermi = 0.0;
     ModuleIO::write_hcontainer_csr(
-        filename, &ucell, 5, &matrix, 0, 0, 1, "H", representation_note, no_efermi);
+        filename, &ucell, 5, &matrix, 0, 0, 1, "H", representation_note, no_efermi, false);
 
     const std::string output = read_file(filename);
     EXPECT_THAT(output, testing::HasSubstr("# representation: " + representation_note + "\n"));
     EXPECT_THAT(output, testing::HasSubstr(" 1 # number of Bravais lattice vector R\n"));
     EXPECT_THAT(output, testing::HasSubstr(" 0 0 0 3\n"));
+    // has_efermi = false: no Fermi annotation even though label is "H"
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("E_Fermi")));
 
     ModuleIO::csrFileReader<double> reader(filename);
     ASSERT_EQ(reader.getNumberOfR(), 1);
@@ -229,10 +231,10 @@ TEST(HsrWriterIo, HContainerCsrAppendKeepsCurrentStepSections)
     double values[4] = {1.0, 0.0, 0.0, 1.0};
     fill_matrix(matrix, pv, values);
 
-    // label "S": header carries no Fermi energy (argument is ignored)
+    // label "S": header carries no Fermi energy (has_efermi = false)
     const double ignored_efermi = 0.0;
-    ModuleIO::write_hcontainer_csr(filename, &ucell, 4, &matrix, 0, 0, 1, "S", "", ignored_efermi);
-    ModuleIO::write_hcontainer_csr(filename, &ucell, 4, &matrix, 1, 0, 1, "S", "", ignored_efermi);
+    ModuleIO::write_hcontainer_csr(filename, &ucell, 4, &matrix, 0, 0, 1, "S", "", ignored_efermi, false);
+    ModuleIO::write_hcontainer_csr(filename, &ucell, 4, &matrix, 1, 0, 1, "S", "", ignored_efermi, false);
 
     const std::string output = read_file(filename);
     EXPECT_EQ(count_substr(output, " --- Ionic Step "), 2);
@@ -262,8 +264,8 @@ TEST(HsrWriterIo, HContainerCsrHeaderCarriesPerChannelFermi)
     const std::string filename_dw = "write_hs_r_header_fermi_dw.csr";
     std::remove(filename_up.c_str());
     std::remove(filename_dw.c_str());
-    ModuleIO::write_hcontainer_csr(filename_up, &ucell, 5, &matrix, 0, 0, 2, "H", "", efermi_up_eV);
-    ModuleIO::write_hcontainer_csr(filename_dw, &ucell, 5, &matrix, 0, 1, 2, "H", "", efermi_dw_eV);
+    ModuleIO::write_hcontainer_csr(filename_up, &ucell, 5, &matrix, 0, 0, 2, "H", "", efermi_up_eV, true);
+    ModuleIO::write_hcontainer_csr(filename_dw, &ucell, 5, &matrix, 0, 1, 2, "H", "", efermi_dw_eV, true);
 
     const std::string output_up = read_file(filename_up);
     const std::string output_dw = read_file(filename_dw);

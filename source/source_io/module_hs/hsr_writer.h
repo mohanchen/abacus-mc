@@ -49,7 +49,8 @@ std::string dhr_gen_fname(const std::string& prefix,
                           const int istep);
 
 /// Write a single HContainer to CSR file with header.
-/// @param efermi_eV the Fermi energy in eV for this spin channel (only used when label == "H")
+/// @param efermi_eV the Fermi energy in eV for this spin channel
+/// @param has_efermi whether to append the Fermi energy to the spin-index line
 template <typename TR>
 void write_hcontainer_csr(const std::string& fname,
                           const UnitCell* ucell,
@@ -60,7 +61,8 @@ void write_hcontainer_csr(const std::string& fname,
                           const int nspin,
                           const std::string& label,
                           const std::string& representation_note,
-                          const double efermi_eV);
+                          const double efermi_eV,
+                          const bool has_efermi);
 
 /// Write one HContainer record in the native binary CSR format.
 template <typename TR>

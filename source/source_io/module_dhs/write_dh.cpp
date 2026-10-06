@@ -83,10 +83,10 @@ void write_dh_perI(WriteDHParams& params,
                 const double no_efermi = 0.0;
 #ifdef __MPI
                 ModuleIO::write_hcontainer_csr(
-                    fr, &ucell, 8, &hR_s, params.istep, ispin, nspin, label, "", no_efermi);
+                    fr, &ucell, 8, &hR_s, params.istep, ispin, nspin, label, "", no_efermi, false);
 #else
                 ModuleIO::write_hcontainer_csr(
-                    fr, &ucell, 8, hR, params.istep, ispin, nspin, label, "", no_efermi);
+                    fr, &ucell, 8, hR, params.istep, ispin, nspin, label, "", no_efermi, false);
 #endif
                 if (params.ofs_running != nullptr)
                 {
