@@ -37,7 +37,11 @@ test -e $GENERAL_INFO_FILE|| echo "current dir:`pwd`, plese prepare the general_
 
 test -e $GENERAL_INFO_FILE|| exit 0
 
+# EXEC may be a literal path, or contain $VAR / ${VAR} placeholders that are
+# expanded from the environment (e.g. "EXEC ${ABACUS_EXE}"), so a single
+# env var can override the executable without editing general_info.
 exec_path=`grep EXEC $GENERAL_INFO_FILE | awk '{printf $2}'`
+exec_path=$(eval echo "$exec_path")
 
 test -e $exec_path || echo "Error! ABACUS path was wrong!!"
 

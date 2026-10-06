@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# ABACUS executable path
-abacus=abacus
+# ABACUS executable path; override with the ABACUS_EXE environment variable
+# so both this script and general_info (via ${ABACUS_EXE}) share one setting.
+abacus=${ABACUS_EXE:-abacus}
 # number of MPI processes
 np=4
 nt=$OMP_NUM_THREADS # number of OpenMP threads, default is $OMP_NUM_THREADS

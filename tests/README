@@ -4,7 +4,8 @@
 1,  cover most features of ABACUS
 2,  autotest script to check if the version is correct.
     (reference result calculated by one core and saved in result.ref)
-    (user can change NUMBEROFPROCESS value in integrate/general_info to test by multi cores)
+    (user can change NUMBEROFPROCESS value in integrate/general_info to test by multi cores;
+     set the executable once via 'export ABACUS_EXE=/path/to/abacus')
 
 --------------------------------------
  Folders in this directory
@@ -31,16 +32,57 @@ performance: Examples related to performance of ABACUS, will be refactored soon.
 PP_ORB: Collection of all the used pseudopotentials and numerical atomic orbitals.
 README: This file
 
+--------------------------------------
+ CASES_CPU.txt / CASES_GPU.txt
+--------------------------------------
+Each category directory (01_PW, 02_NAO_Gamma, ...) contains its own
+CASES_CPU.txt and/or CASES_GPU.txt. These are plain lists of the sub-case
+names (the test directories) to run, one per line:
+
+- CASES_CPU.txt: cases run on CPU builds.
+- CASES_GPU.txt: cases run on GPU builds.
+
+Autotest.sh reads the list from the file given by '-f <file>' (default
+'CASES_CPU.txt' in the current working directory) and runs each named case.
+Ctest invokes Autotest.sh per category directory with the appropriate -f file,
+e.g. tests/11_PW_GPU/CMakeLists.txt uses '-f CASES_GPU.txt'.
+
+When you add/rename a test case, add/remove its directory name in the relevant
+CASES_*.txt of its category, otherwise it will not be picked up.
+
 
 --------------------------------------
  How to run tests
 --------------------------------------
 
-1. Modify the file '/integrate/general_info' and set appropriate parameters.
-2. Set the appropriate 'abacus' in the Autotst.sh.
-3. Enter each integrate test directory, try this script for autotests
+1. Set the ABACUS executable. The recommended way is a single environment
+   variable, which both Autotest.sh and general_info (via run_check.sh) read:
+
+       export ABACUS_EXE=/path/to/abacus
+
+   If ABACUS_EXE is not set, both fall back to the bare command name 'abacus',
+   which the shell resolves by searching the directories listed in $PATH (run
+   'which abacus' to see what it resolves to). This PATH fallback is what CI
+   uses after 'cmake --install'.
+
+   Ways to point at a specific executable, highest priority first:
+   a) Command-line flag (Autotest.sh only):
+          ../integrate/Autotest.sh -a /path/to/abacus -n 4
+      Overrides everything for that invocation. Single_job.sh/run_check.sh
+      do not accept -a.
+   b) Environment variable (works for Autotest.sh and run_check.sh):
+          export ABACUS_EXE=/path/to/abacus
+      Add it to ~/.bashrc to make it persistent across sessions.
+   c) Edit the files directly (hard-coded; do NOT commit a local absolute path):
+      - 'integrate/Autotest.sh': set the 'abacus' variable.
+      - 'integrate/general_info': set EXEC (supports $VAR/${VAR} placeholders,
+        expanded by integrate/tools/run_check.sh from the environment).
+
+   Effective priority: '-a' flag > ABACUS_EXE > hard-coded value in the files
+   > 'abacus' from PATH.
+2. Enter each integrate test directory, try this script for autotests
 ../integrate/Autotest.sh
-4. if you want to focus on No.xxx example, such as 101_PW_OU:
+3. if you want to focus on No.xxx example, such as 101_PW_OU:
 cd 101_PW_OU and then type
 ./../integrate/Single.sh $parameter
 # you can choose $parameter among "" (empty), debug or ref
@@ -69,83 +111,3 @@ Marking unimplemented features:
   `#cal_stress        1 # implicit solvation stress is not implemented yet`
 
   This documents the intended coverage, makes the gap visible to readers, and lets the test be enabled later by simply uncommenting once the feature lands.
-
---------------------------------------
- Some comman names appear in the tests 
---------------------------------------
-_PW    plain wave bases
-_NO    numerical atoms orbitals bases
-_NP    expand numerical atoms orbitals in plane-wave basis
-
-_OU    old upf pseudopotential file
-_15    SG15 pseudopotential file
-_VW    vwr pseudopotential file
-_DJ    DOJO pseudopotential file
-
-_FD    smearing methodL Fermi-dirac
-_FX    smearing method: Fixed occupations
-_M2    smearing method: mp2
-_MP    smearing method: Methfessel-Paxton (MP)
-_MV    smearing method: Marzari-Vanderbilt
-_SG    smearing method: Gaussian
-
-_SY    turn on symmetry
-_CG    cg diagonalization method
-_DA    david diagonalization method
-
-_S1    one spin channel
-_S2    two spin channels
-_S4    four spin channels
-
-_GE    genelpa diagonalization method
-_SC    scalapack diagonalization method
-
-_RE    relax calculation
-_CR    cell-relax calculation
-_CF    calculate and output force
-_CS    calculate and output stress
-_MD    molecular dynamics
-_TD    real-time TDDFT
-_LR    linear response TDDFT
-
-_OH    output Halmitonian matrix
-_OB    output bands file
-_OD    output DOS file
-_OW    output wave functions
-_OC    output charge density
-_OK    output kinetic energy density
-
-_GO    gamma_only method
-_KP    all K-Points method
-
-_FM    ferromagnetic nspin=2
-_AF    anti-ferromagnetic nspin=2 anti initial magnetism
-
-_PU    DFT plus U
-_BS    BSSE
-
-_PL    mixing_type plain mixing
-_KK    mixing_type kerker mixing
-_PU    mixing_type pulay mixing
-_PK    mixing_type pulay-kerker mixing
-_BD    mixing_type broyden mixing
-
-_SO    spin orbit coupling (SOC)
-
-_XX    EXX
-_VD    VDW (both d2 or d3)
-
-_MG    move ions method: cg
-_MF    move ions method: FIRE
-_MB    move ions method: bfgs
-_MT    move ions method: bfgs_traj
-
-_1O    first-order charge extrapolation
-_2O    second-order charge extrapolation
-
-Orbital free DFT properties
-
-_OF    orbital free density functional theory (OFDFT)
-_OP    optimization method used in OFDFT
-_KE    kinetic energy functional used in OFDFT
-_CO    convergence check
