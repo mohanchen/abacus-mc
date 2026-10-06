@@ -134,58 +134,79 @@ std::tuple<double, double, ModuleBase::matrix> XC_Functional::v_xc(
     else if(nspin == 4)
     {
 #ifdef _OPENMP
-#pragma omp parallel for reduction(+:etxc) reduction(+:vtxc)
-#endif
-        for(int ir = 0;ir<nrxx; ir++)
+#pragma omp parallel reduction(+:etxc) reduction(+:vtxc)
         {
-            double amag = sqrt( pow(chr->rho[1][ir],2) + pow(chr->rho[2][ir],2) + pow(chr->rho[3][ir],2) );
-            double rhox = chr->rho[0][ir] + chr->rho_core[ir];
-            double arhox = std::abs( rhox );
-
-            if ( arhox > vanishing_charge )
-            {
-                double zeta = amag / arhox;
-                double exc = 0.0;
-                double vxc[2];
-
-                if ( std::abs( zeta ) > 1.0 )
-                {
-                    zeta = (zeta > 0.0) ? 1.0 : (-1.0);
-                }
-
-                if(use_libxc)
-                {
-#ifdef __LIBXC
-                    double rhoup = arhox * (1.0+zeta) / 2.0;
-                    double rhodw = arhox * (1.0-zeta) / 2.0;
-                    XC_Functional_Libxc::xc_spin_libxc(XC_Functional::get_func_id(), rhoup, rhodw, exc, vxc[0], vxc[1], hybrid_alpha, hse_omega);
-#else
-                    ModuleBase::WARNING_QUIT("v_xc", "compile with LIBXC");
 #endif
-                }
-                else
+            // Initialize the libxc functional once per thread instead of once
+            // per grid point; the nspin==4 LDA path uses the spin-polarized
+            // wrapper.
+#ifdef __LIBXC
+            std::vector<xc_func_type> tls_funcs;
+            if (use_libxc)
+            {
+                tls_funcs = XC_Functional_Libxc::init_func(
+                    XC_Functional::get_func_id(), XC_POLARIZED, hybrid_alpha, hse_omega);
+            }
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
+            for(int ir = 0;ir<nrxx; ir++)
+            {
+                double amag = sqrt( pow(chr->rho[1][ir],2) + pow(chr->rho[2][ir],2) + pow(chr->rho[3][ir],2) );
+                double rhox = chr->rho[0][ir] + chr->rho_core[ir];
+                double arhox = std::abs( rhox );
+
+                if ( arhox > vanishing_charge )
                 {
-                    double rhoup = arhox * (1.0+zeta) / 2.0;
-                    double rhodw = arhox * (1.0-zeta) / 2.0;
-                    XC_Functional::xc_spin(arhox, zeta, exc, vxc[0], vxc[1]);
-                }
+                    double zeta = amag / arhox;
+                    double exc = 0.0;
+                    double vxc[2];
 
-                etxc += e2 * exc * rhox;
-
-                v(0, ir) = e2*( 0.5 * ( vxc[0] + vxc[1]) );
-                vtxc += v(0,ir) * chr->rho[0][ir];
-
-                double vs = 0.5 * ( vxc[0] - vxc[1] );
-                if ( amag > vanishing_charge )
-                {
-                    for(int ipol = 1;ipol< 4;ipol++)
+                    if ( std::abs( zeta ) > 1.0 )
                     {
-                        v(ipol, ir) = e2 * vs * chr->rho[ipol][ir] / amag;
-                        vtxc += v(ipol,ir) * chr->rho[ipol][ir];
+                        zeta = (zeta > 0.0) ? 1.0 : (-1.0);
+                    }
+
+                    if(use_libxc)
+                    {
+#ifdef __LIBXC
+                        double rhoup = arhox * (1.0+zeta) / 2.0;
+                        double rhodw = arhox * (1.0-zeta) / 2.0;
+                        XC_Functional_Libxc::xc_spin_libxc(tls_funcs, rhoup, rhodw, exc, vxc[0], vxc[1]);
+#else
+                        ModuleBase::WARNING_QUIT("v_xc", "compile with LIBXC");
+#endif
+                    }
+                    else
+                    {
+                        double rhoup = arhox * (1.0+zeta) / 2.0;
+                        double rhodw = arhox * (1.0-zeta) / 2.0;
+                        XC_Functional::xc_spin(arhox, zeta, exc, vxc[0], vxc[1]);
+                    }
+
+                    etxc += e2 * exc * rhox;
+
+                    v(0, ir) = e2*( 0.5 * ( vxc[0] + vxc[1]) );
+                    vtxc += v(0,ir) * chr->rho[0][ir];
+
+                    double vs = 0.5 * ( vxc[0] - vxc[1] );
+                    if ( amag > vanishing_charge )
+                    {
+                        for(int ipol = 1;ipol< 4;ipol++)
+                        {
+                            v(ipol, ir) = e2 * vs * chr->rho[ipol][ir] / amag;
+                            vtxc += v(ipol,ir) * chr->rho[ipol][ir];
+                        }
                     }
                 }
             }
+#ifdef __LIBXC
+            XC_Functional_Libxc::finish_func(tls_funcs);
+#endif
+#ifdef _OPENMP
         }
+#endif
     }
     // energy terms, local-density contributions
 

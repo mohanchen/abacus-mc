@@ -509,3 +509,87 @@ TEST_F(XCTest_PZ_SPN_LibXC, set_xc_type)
         EXPECT_NEAR(v2_lda[i],v2_lda_ref[i],1.0e-8);
     }
 }
+
+// Verify that the already-initialized funcs overload of xc_spin_libxc
+// produces the same result as the func_id overload for LDA.
+TEST(XC_Libxc_Overload, xc_spin_libxc_funcs_matches_func_id)
+{
+    XC_Functional::set_xc_type("LDA_X+LDA_C_PZ");
+    const std::vector<int>& ids = XC_Functional::get_func_id();
+    const double alpha = XC_Functional::get_hybrid_alpha();
+    const double omega = XC_Functional::get_hse_omega();
+
+    const double rhoup = 0.5;
+    const double rhodw = 0.3;
+
+    double e_old = 0.0, vup_old = 0.0, vdw_old = 0.0;
+    XC_Functional_Libxc::xc_spin_libxc(ids, rhoup, rhodw, e_old, vup_old, vdw_old, alpha, omega);
+
+    std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(ids, XC_POLARIZED, alpha, omega);
+    double e_new = 0.0, vup_new = 0.0, vdw_new = 0.0;
+    XC_Functional_Libxc::xc_spin_libxc(funcs, rhoup, rhodw, e_new, vup_new, vdw_new);
+    XC_Functional_Libxc::finish_func(funcs);
+
+    EXPECT_NEAR(e_old, e_new, 1.0e-12);
+    EXPECT_NEAR(vup_old, vup_new, 1.0e-12);
+    EXPECT_NEAR(vdw_old, vdw_new, 1.0e-12);
+}
+
+// Verify that the already-initialized funcs overload of gcxc_spin_libxc
+// produces the same result as the func_id overload for GGA.
+TEST(XC_Libxc_Overload, gcxc_spin_libxc_funcs_matches_func_id)
+{
+    XC_Functional::set_xc_type("GGA_X_PBE+GGA_C_PBE");
+    const std::vector<int>& ids = XC_Functional::get_func_id();
+    const double alpha = XC_Functional::get_hybrid_alpha();
+    const double omega = XC_Functional::get_hse_omega();
+
+    const double rhoup = 0.5;
+    const double rhodw = 0.3;
+    const ModuleBase::Vector3<double> gdr1(0.1, 0.2, 0.3);
+    const ModuleBase::Vector3<double> gdr2(0.05, 0.1, 0.15);
+
+    double s_old = 0.0, v1up_old = 0.0, v1dw_old = 0.0, v2up_old = 0.0, v2dw_old = 0.0, v2ud_old = 0.0;
+    XC_Functional_Libxc::gcxc_spin_libxc(ids, rhoup, rhodw, gdr1, gdr2,
+        s_old, v1up_old, v1dw_old, v2up_old, v2dw_old, v2ud_old, alpha, omega);
+
+    std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(ids, XC_POLARIZED, alpha, omega);
+    double s_new = 0.0, v1up_new = 0.0, v1dw_new = 0.0, v2up_new = 0.0, v2dw_new = 0.0, v2ud_new = 0.0;
+    XC_Functional_Libxc::gcxc_spin_libxc(funcs, rhoup, rhodw, gdr1, gdr2,
+        s_new, v1up_new, v1dw_new, v2up_new, v2dw_new, v2ud_new);
+    XC_Functional_Libxc::finish_func(funcs);
+
+    EXPECT_NEAR(s_old, s_new, 1.0e-12);
+    EXPECT_NEAR(v1up_old, v1up_new, 1.0e-12);
+    EXPECT_NEAR(v1dw_old, v1dw_new, 1.0e-12);
+    EXPECT_NEAR(v2up_old, v2up_new, 1.0e-12);
+    EXPECT_NEAR(v2dw_old, v2dw_new, 1.0e-12);
+    EXPECT_NEAR(v2ud_old, v2ud_new, 1.0e-12);
+}
+
+// The func_id overload must initialize the functional exactly once; the
+// funcs overload must initialize it zero times (the caller already did).
+TEST(XC_Libxc_InitCount, per_point_overloads_do_not_reinit)
+{
+    XC_Functional::set_xc_type("LDA_X+LDA_C_PZ");
+    const std::vector<int>& ids = XC_Functional::get_func_id();
+    const double alpha = 0.0;
+    const double omega = 0.0;
+
+    XC_Functional_Libxc::get_and_reset_init_count();
+
+    double e = 0.0, vup = 0.0, vdw = 0.0;
+    XC_Functional_Libxc::xc_spin_libxc(ids, 0.5, 0.3, e, vup, vdw, alpha, omega);
+    const int count_after_old = XC_Functional_Libxc::get_and_reset_init_count();
+    EXPECT_EQ(count_after_old, 1);
+
+    std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(ids, XC_POLARIZED, alpha, omega);
+    const int count_after_init = XC_Functional_Libxc::get_and_reset_init_count();
+    EXPECT_EQ(count_after_init, 1);
+
+    XC_Functional_Libxc::xc_spin_libxc(funcs, 0.5, 0.3, e, vup, vdw);
+    const int count_after_new = XC_Functional_Libxc::get_and_reset_init_count();
+    EXPECT_EQ(count_after_new, 0);
+
+    XC_Functional_Libxc::finish_func(funcs);
+}

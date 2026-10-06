@@ -9,14 +9,12 @@
 #include <array>
 
 void XC_Functional_Libxc::gcxc_libxc(
-    const std::vector<int>& func_id,
+    const std::vector<xc_func_type>& funcs,
     const double& rho,
     const double& grho,
     double& sxc,
     double& v1xc,
-    double& v2xc,
-    const double hybrid_alpha,
-    const double hse_omega)
+    double& v2xc)
 {
     sxc = 0.0;
     v1xc = 0.0;
@@ -29,22 +27,35 @@ void XC_Functional_Libxc::gcxc_libxc(
         return;
     }
 
+    for (const xc_func_type& func : funcs)
+    {
+        double s = 0.0;
+        double v1 = 0.0;
+        double v2 = 0.0;
+        xc_gga_exc_vxc(const_cast<xc_func_type*>(&func), 1, &rho, &grho, &s, &v1, &v2);
+        sxc += s * rho;
+        v1xc += v1;
+        v2xc += v2 * 2.0;
+    }
+}
+
+void XC_Functional_Libxc::gcxc_libxc(
+    const std::vector<int>& func_id,
+    const double& rho,
+    const double& grho,
+    double& sxc,
+    double& v1xc,
+    double& v2xc,
+    const double hybrid_alpha,
+    const double hse_omega)
+{
     std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(
         /* func_id = */ func_id,
         /* xc_polarized = */ XC_UNPOLARIZED,
         /* hybrid_alpha = */ hybrid_alpha,
         /* hse_omega = */ hse_omega);
 
-    for (xc_func_type& func : funcs)
-    {
-        double s = 0.0;
-        double v1 = 0.0;
-        double v2 = 0.0;
-        xc_gga_exc_vxc(&func, 1, &rho, &grho, &s, &v1, &v2);
-        sxc += s * rho;
-        v1xc += v1;
-        v2xc += v2 * 2.0;
-    }
+    gcxc_libxc(funcs, rho, grho, sxc, v1xc, v2xc);
 
     XC_Functional_Libxc::finish_func(funcs);
 } // end subroutine gcxc_libxc
@@ -52,7 +63,7 @@ void XC_Functional_Libxc::gcxc_libxc(
 
 
 void XC_Functional_Libxc::gcxc_spin_libxc(
-    const std::vector<int>& func_id,
+    const std::vector<xc_func_type>& funcs,
     const double rhoup,
     const double rhodw,
     const ModuleBase::Vector3<double> gdr1,
@@ -62,9 +73,7 @@ void XC_Functional_Libxc::gcxc_spin_libxc(
     double& v1xcdw,
     double& v2xcup,
     double& v2xcdw,
-    double& v2xcud,
-    const double hybrid_alpha,
-    const double hse_omega)
+    double& v2xcud)
 {
     sxc = 0.0;
     v1xcup = 0.0;
@@ -75,13 +84,7 @@ void XC_Functional_Libxc::gcxc_spin_libxc(
     const std::array<double, 2> rho = {rhoup, rhodw};
     const std::array<double, 3> grho = {gdr1.norm2(), gdr1 * gdr2, gdr2.norm2()};
 
-    std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(
-        /* func_id = */ func_id,
-        /* xc_polarized = */ XC_POLARIZED,
-        /* hybrid_alpha = */ hybrid_alpha,
-        /* hse_omega = */ hse_omega);
-
-    for (xc_func_type& func : funcs)
+    for (const xc_func_type& func : funcs)
     {
         if (func.info->family == XC_FAMILY_GGA || func.info->family == XC_FAMILY_HYB_GGA)
         {
@@ -104,7 +107,7 @@ void XC_Functional_Libxc::gcxc_spin_libxc(
             std::array<double, 2> v1xc = {0.0, 0.0};
             std::array<double, 3> v2xc = {0.0, 0.0, 0.0};
             // call Libxc function: xc_gga_exc_vxc
-            xc_gga_exc_vxc(&func, 1, rho.data(), grho.data(), &s, v1xc.data(), v2xc.data());
+            xc_gga_exc_vxc(const_cast<xc_func_type*>(&func), 1, rho.data(), grho.data(), &s, v1xc.data(), v2xc.data());
             sxc += s * (rho[0] * sgn[0] + rho[1] * sgn[1]);
             v1xcup += v1xc[0] * sgn[0];
             v1xcdw += v1xc[1] * sgn[1];
@@ -113,6 +116,32 @@ void XC_Functional_Libxc::gcxc_spin_libxc(
             v2xcdw += 2.0 * v2xc[2] * sgn[1];
         }
     }
+}
+
+void XC_Functional_Libxc::gcxc_spin_libxc(
+    const std::vector<int>& func_id,
+    const double rhoup,
+    const double rhodw,
+    const ModuleBase::Vector3<double> gdr1,
+    const ModuleBase::Vector3<double> gdr2,
+    double& sxc,
+    double& v1xcup,
+    double& v1xcdw,
+    double& v2xcup,
+    double& v2xcdw,
+    double& v2xcud,
+    const double hybrid_alpha,
+    const double hse_omega)
+{
+    std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(
+        /* func_id = */ func_id,
+        /* xc_polarized = */ XC_POLARIZED,
+        /* hybrid_alpha = */ hybrid_alpha,
+        /* hse_omega = */ hse_omega);
+
+    gcxc_spin_libxc(funcs, rhoup, rhodw, gdr1, gdr2,
+                    sxc, v1xcup, v1xcdw, v2xcup, v2xcdw, v2xcud);
+
     XC_Functional_Libxc::finish_func(funcs);
 }
 

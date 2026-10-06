@@ -14,6 +14,7 @@
 #include <regex>
 #include <map>
 #include <algorithm>
+#include <atomic>
 
 bool not_supported_xc_with_laplacian(const std::string& xc_func_in)
 {
@@ -282,12 +283,19 @@ const std::vector<double> external_xc_func_ext_params(const int id)
     return {};
 }
 
+// Counter for the number of times init_func is called. Used by tests to
+// verify that per-point evaluation paths do not re-initialize the libxc
+// functional on every grid point.
+static std::atomic<int> g_libxc_init_count{0};
+
 std::vector<xc_func_type> 
 XC_Functional_Libxc::init_func(const std::vector<int> &func_id, 
                                const int xc_polarized,
                                const double hybrid_alpha,
                                const double hse_omega)
 {
+    ++g_libxc_init_count;
+
     std::vector<xc_func_type> funcs;
     for (int id : func_id)
     {
@@ -331,6 +339,11 @@ void XC_Functional_Libxc::finish_func(std::vector<xc_func_type> &funcs)
     {
         xc_func_end(&func);
     }
+}
+
+int XC_Functional_Libxc::get_and_reset_init_count()
+{
+    return g_libxc_init_count.exchange(0);
 }
 
 #endif

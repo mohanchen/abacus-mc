@@ -159,3 +159,34 @@ TEST(XC_ScanL_Reference, tau_xc_wrapper_libxc)
     EXPECT_NE(v1xc, 0.0);
     EXPECT_NE(vlaplxc, 0.0);
 }
+
+// Verify that the already-initialized funcs overload of tau_xc
+// produces the same result as the func_id overload for mGGA.
+TEST(XC_Libxc_Overload, tau_xc_funcs_matches_func_id)
+{
+    XC_Functional::set_xc_type("MGGA_X_SCAN+MGGA_C_SCAN");
+    const std::vector<int>& ids = XC_Functional::get_func_id();
+    const double alpha = XC_Functional::get_hybrid_alpha();
+    const double omega = XC_Functional::get_hse_omega();
+
+    const double rho = 0.5;
+    const double grho = 0.01;
+    const double lapl = 0.0;
+    const double tau = 0.1;
+
+    double s_old = 0.0, v1_old = 0.0, v2_old = 0.0, v3_old = 0.0, vl_old = 0.0;
+    XC_Functional_Libxc::tau_xc(ids, rho, grho, lapl, tau,
+                                s_old, v1_old, v2_old, v3_old, vl_old, alpha, omega);
+
+    std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(ids, XC_UNPOLARIZED, alpha, omega);
+    double s_new = 0.0, v1_new = 0.0, v2_new = 0.0, v3_new = 0.0, vl_new = 0.0;
+    XC_Functional_Libxc::tau_xc(funcs, rho, grho, lapl, tau,
+                                s_new, v1_new, v2_new, v3_new, vl_new);
+    XC_Functional_Libxc::finish_func(funcs);
+
+    EXPECT_NEAR(s_old, s_new, 1.0e-12);
+    EXPECT_NEAR(v1_old, v1_new, 1.0e-12);
+    EXPECT_NEAR(v2_old, v2_new, 1.0e-12);
+    EXPECT_NEAR(v3_old, v3_new, 1.0e-12);
+    EXPECT_NEAR(vl_old, vl_new, 1.0e-12);
+}
