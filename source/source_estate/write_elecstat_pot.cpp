@@ -84,7 +84,8 @@ void write_elecstat_pot(
                                   rho_basis->nxyz,
                                   rho_basis->nrxx,
                                   rho_basis->nplane,
-                                  rho_basis->startz_current);
+                                  rho_basis->startz_current,
+                                  GlobalV::ofs_running);
 
     //-------------------------------------------
     //! Write down the electrostatic potential

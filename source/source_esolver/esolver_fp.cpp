@@ -161,7 +161,7 @@ void ESolver_FP::after_scf(UnitCell& ucell, const int istep, const bool conv_eso
     ModuleBase::TITLE("ESolver_FP", "after_scf");
 
     //! Output convergence information
-    ModuleIO::output_convergence_after_scf(conv_esolver, this->pelec->f_en.etot);
+    ModuleIO::output_convergence_after_scf(conv_esolver, this->pelec->f_en.etot, GlobalV::ofs_running);
 
     //! Write Fermi energy
     ModuleIO::output_efermi(conv_esolver, this->pelec->eferm, GlobalV::ofs_running);
