@@ -41,7 +41,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
                              const std::string& device,
                              const std::vector<double>& hubbard_u,
                              const double uramping,
-                             const int occ_mat_ctrl,
+                             const int init_occ_mat,
                              const int mixing_dftu)
 {
     ModuleBase::TITLE("Plus_U_Base", "init_base");
@@ -52,7 +52,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     this->l_channel = l_channel;
     this->uramping = uramping;
-    this->occ_mat_ctrl = occ_mat_ctrl;
+    this->init_occ_mat = init_occ_mat;
     this->u_target = hubbard_u;
     this->u_current = hubbard_u;
     if (uramping > 0.01)
@@ -136,11 +136,11 @@ void Plus_U_Base::init_base(UnitCell& cell,
         this->yukawa_.reset();
     }
 
-    if (occ_mat_ctrl != 0)
+    if (init_occ_mat != 0)
     {
         std::stringstream sst;
         sst << global_readin_dir << "dm_onsite_ini.txt";
-        DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->occ_mat_ctrl,
+        DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->init_occ_mat,
                                 sst.str(), init_chg, nspin, npol);
 #ifdef __MPI
         DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);
@@ -167,7 +167,7 @@ void Plus_U_Base::init_base(UnitCell& cell,
             const bool has_current = probe.is_open();
             probe.close();
             const std::string readin_fn = has_current ? occ_fn : legacy_fn;
-            DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->occ_mat_ctrl,
+            DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->init_occ_mat,
                                     readin_fn, init_chg, nspin, npol);
 #ifdef __MPI
             DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);

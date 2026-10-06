@@ -4867,16 +4867,24 @@ parameters:
     default_value: "-1.0."
     unit: eV
     availability: "dft_plus_u==1 and mixing_restart>0"
-  - name: omc
+  - name: init_occ_mat
     category: DFT+U correction
     type: Integer
     description: |
-      The parameter controls the form of occupation matrix control used.
-      * 0: No occupation matrix control is performed, and the onsite density matrix will be calculated from wavefunctions in each SCF step.
+      The parameter controls how the DFT+U occupation matrix is initialized.
+      * 0: No occupation-matrix initialization is performed, and the onsite density matrix will be calculated from wavefunctions in each SCF step.
       * 1: The first SCF step will use an initial density matrix read from a file named dm_onsite_ini.txt, but for later steps, the onsite density matrix will be updated.
       * 2: The same onsite density matrix from dm_onsite_ini.txt will be used throughout the entire calculation.
 
       [NOTE] The easiest way to create dm_onsite_ini.txt is to run a DFT+U calculation with out_occ_mat=1 (the default), look for a file named occ_mat.txt in the OUT.prefix directory (it always holds the occupation matrix of the latest electronic step), copy and rename it to dm_onsite_ini.txt. When out_freq_ion is positive, separate occ_matg{geom_step}.txt files are also written, one per output ionic step; they may contain several electronic-step sections separated by comment headers. The file dm_onsite_ini.txt should be placed in the directory specified by read_file_dir. The format of the file is rather straight-forward.
+    default_value: "0"
+    unit: ""
+    availability: ""
+  - name: omc
+    category: DFT+U correction
+    type: Integer
+    description: |
+      Legacy alias for init_occ_mat with the same meaning. If both omc and init_occ_mat are present, init_occ_mat takes precedence.
     default_value: "0"
     unit: ""
     availability: ""

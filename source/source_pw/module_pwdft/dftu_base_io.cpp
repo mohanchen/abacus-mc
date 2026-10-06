@@ -289,7 +289,7 @@ std::string gen_ion_step_occ_mat_filename(const std::string& out_dir, const int 
 void read_occup_m(const UnitCell& ucell,
                   OccupationMatrix& occ,
                   const std::vector<int>& l_channel,
-                  const int occ_mat_ctrl,
+                  const int init_occ_mat,
                   const std::string& fn,
                   const std::string& init_chg,
                   int nspin,
@@ -306,7 +306,7 @@ void read_occup_m(const UnitCell& ucell,
 
     if (!ifdftu)
     {
-        if (occ_mat_ctrl > 0)
+        if (init_occ_mat > 0)
         {
             ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "Can not find the file dm_onsite_ini.txt. Please check your dm_onsite_ini.txt");
         }

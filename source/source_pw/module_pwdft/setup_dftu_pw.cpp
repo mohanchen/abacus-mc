@@ -39,7 +39,7 @@ void iter_init_dftu_pw(const int iter,
         return;
     }
 
-    if (dftu.get_occ_mat_ctrl() != 2)
+    if (dftu.get_init_occ_mat() != 2)
     {
         DFTU_BASE::cal_occ_pw(psi, wg, ucell, p_chgmix, isk, PARAM.inp.kpar,
                               PARAM.inp.nspin, dftu.get_device(),

@@ -67,7 +67,7 @@ void finish_dftu_lcao(const bool conv_esolver,
     /// new DFT+U method calculates energy in Hamiltonian
     if (dft_plus_u == 2)
     {
-        if (dftu_ptr->get_occ_mat_ctrl() != 2)
+        if (dftu_ptr->get_init_occ_mat() != 2)
         {
             const Parallel_Orbitals* pv = hamilt_lcao_ptr->getHR()->get_paraV();
             if (pv != nullptr && hamilt_lcao_ptr != nullptr)

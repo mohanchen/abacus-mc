@@ -105,7 +105,7 @@ void LCAO_domain::set_pot(
                        inp.device,
                        PARAM.globalv.hubbard_u,
                        PARAM.globalv.uramping,
-                       inp.occ_mat_ctrl,
+                       inp.init_occ_mat,
                        inp.mixing_dftu);
     }
 

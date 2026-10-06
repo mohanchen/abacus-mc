@@ -47,7 +47,7 @@ class Plus_U_Base
                    const std::string& device,
                    const std::vector<double>& hubbard_u,
                    const double uramping,
-                   const int occ_mat_ctrl,
+                   const int init_occ_mat,
                    const int mixing_dftu);
 
     void uramping_update();
@@ -64,7 +64,7 @@ class Plus_U_Base
     const std::vector<int>& get_l_channel_vec() const { return l_channel; }
 
     double get_uramping() const { return uramping; }
-    int get_occ_mat_ctrl() const { return occ_mat_ctrl; }
+    int get_init_occ_mat() const { return init_occ_mat; }
     UForm get_form() const { return form; }
 
 
@@ -145,7 +145,7 @@ class Plus_U_Base
     std::vector<int> l_channel;
 
     double uramping = 0.0;
-    int occ_mat_ctrl = 0;
+    int init_occ_mat = 0;
 
     // --- Occupation matrices ---
     OccupationMatrix occmat_;

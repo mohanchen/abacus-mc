@@ -116,11 +116,11 @@ void append_ion_step_snapshot(const Plus_U_Base& dftu,
 ///
 /// The file format matches the output of write_occup_m(). When the file can
 /// not be opened, the run quits with an error message that depends on
-/// occ_mat_ctrl and init_chg.
+/// init_occ_mat and init_chg.
 void read_occup_m(const UnitCell& ucell,
                   OccupationMatrix& occ,
                   const std::vector<int>& l_channel,
-                  const int occ_mat_ctrl,
+                  const int init_occ_mat,
                   const std::string& fn,
                   const std::string& init_chg,
                   int nspin,

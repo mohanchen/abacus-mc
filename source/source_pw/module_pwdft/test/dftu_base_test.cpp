@@ -96,7 +96,7 @@ class DFTUBaseTest : public testing::Test
                        "cpu",                  // device
                        hubbard_u,
                        0.0,                    // uramping
-                       0,                      // occ_mat_ctrl
+                       0,                      // init_occ_mat
                        0);                     // mixing_dftu
     }
 };

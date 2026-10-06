@@ -657,7 +657,10 @@ struct Input_para
     bool yukawa_potential = false;         ///< default: false
     double yukawa_lambda = -1.0;           ///< default: -1.0, which means we calculate lambda
     double uramping_eV = -1.0;             ///< U-Ramping method (eV)
-    int occ_mat_ctrl = 0;                  ///< the mode of occupation matrix control
+    int init_occ_mat = 0;                  ///< mode of occupation-matrix initialization: 0: no;
+                                           ///< 1: read the initial matrix from file, then update it in SCF;
+                                           ///< 2: read the matrix from file and keep it fixed
+    int omc = 0;                           ///< legacy alias for init_occ_mat
     double onsite_radius = 0.0;            ///< radius of the sphere for onsite projection (Bohr)
     std::vector<double> hubbard_u_eV = {}; ///< Hubbard Coulomb interaction parameter U(ev)
     std::vector<int> l_channel = {};    ///< which correlated orbitals need corrected ; d:2 ,f:3, do not
