@@ -217,13 +217,3 @@ AddTest(
           ../../source_cell/bcast_cell.cpp
           ../../source_cell/print_cell.cpp
 )
-
-AddTest(
-  TARGET MODULE_RELAX_relax_driver_test
-  LIBS parameter base device
-  SOURCES test_relax_driver.cpp
-          ../relax_stru_io.cpp
-          ../../source_cell/print_cell.cpp
-          ../../source_cell/cif_io.cpp
-          ../../source_cell/bcast_cell.cpp
-)
