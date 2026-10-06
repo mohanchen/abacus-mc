@@ -158,10 +158,17 @@ void Plus_U_Base::init_base(UnitCell& cell,
     {
         if (init_chg == "file")
         {
-            std::stringstream sst;
-            sst << global_readin_dir << "dm_onsite.txt";
+            // occ_mat.txt is the current output name; fall back to the
+            // legacy dm_onsite.txt so that output directories written by
+            // older versions can still be used for restarts.
+            const std::string occ_fn = global_readin_dir + "occ_mat.txt";
+            const std::string legacy_fn = global_readin_dir + "dm_onsite.txt";
+            std::ifstream probe(occ_fn.c_str());
+            const bool has_current = probe.is_open();
+            probe.close();
+            const std::string readin_fn = has_current ? occ_fn : legacy_fn;
             DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->occ_mat_ctrl,
-                                    sst.str(), init_chg, nspin, npol);
+                                    readin_fn, init_chg, nspin, npol);
 #ifdef __MPI
             DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);
 #endif

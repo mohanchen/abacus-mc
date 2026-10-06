@@ -55,11 +55,11 @@ TEST(DFTUBaseIoTest, ElecGateConvergenceTrigger)
 
 TEST(DFTUBaseIoTest, IonStepFilenameStartsFromOne)
 {
-    const std::string fn0 = DFTU_BASE::gen_ion_step_dm_onsite_filename("OUT.ABACUS/", 0);
-    EXPECT_EQ(fn0, "OUT.ABACUS/dm_onsiteg1.txt");
+    const std::string fn0 = DFTU_BASE::gen_ion_step_occ_mat_filename("OUT.ABACUS/", 0);
+    EXPECT_EQ(fn0, "OUT.ABACUS/occ_matg1.txt");
 
-    const std::string fn4 = DFTU_BASE::gen_ion_step_dm_onsite_filename("OUT.ABACUS/", 4);
-    EXPECT_EQ(fn4, "OUT.ABACUS/dm_onsiteg5.txt");
+    const std::string fn4 = DFTU_BASE::gen_ion_step_occ_mat_filename("OUT.ABACUS/", 4);
+    EXPECT_EQ(fn4, "OUT.ABACUS/occ_matg5.txt");
 }
 
 int main(int argc, char** argv)

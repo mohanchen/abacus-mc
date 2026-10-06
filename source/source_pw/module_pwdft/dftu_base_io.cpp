@@ -212,7 +212,7 @@ inline std::vector<double> calculate_spinor_eigenvalues(
 namespace
 {
 
-// Write the STRU-style provenance header shared by dm_onsite.txt and the
+// Write the STRU-style provenance header shared by occ_mat.txt and the
 // per-ionic-step snapshot files: ABACUS version, local timestamp and the
 // 1-based relaxation step this file belongs to.
 void write_provenance_header(std::ostream& os, const int istep)
@@ -279,10 +279,10 @@ bool is_elec_snapshot_trigger(const int iter,
     return periodic || last_step || conv_esolver;
 }
 
-std::string gen_ion_step_dm_onsite_filename(const std::string& out_dir, const int istep)
+std::string gen_ion_step_occ_mat_filename(const std::string& out_dir, const int istep)
 {
     std::stringstream ss;
-    ss << out_dir << "dm_onsiteg" << (istep + 1) << ".txt";
+    ss << out_dir << "occ_matg" << (istep + 1) << ".txt";
     return ss.str();
 }
 
@@ -314,10 +314,13 @@ void read_occup_m(const UnitCell& ucell,
         {
             if (init_chg == "file")
             {
-                ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "Can not find the file dm_onsite.txt. Please do scf calculation first");
+                const std::string not_found_msg = "Can not find the file " + fn
+                                                  + ". Please do scf calculation first";
+                ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", not_found_msg);
             }
         }
-        ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", "Can not open dm_onsite.txt file");
+        const std::string open_failed_msg = "Can not open " + fn + " file";
+        ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", open_failed_msg);
     }
 
     ifdftu.clear();
@@ -624,7 +627,7 @@ void prepare_ion_step_file(const std::string& global_out_dir,
 
     // trunc makes a rerun start from a clean file instead of appending
     // snapshots left over from a previous calculation.
-    const std::string ion_step_fn = gen_ion_step_dm_onsite_filename(global_out_dir, istep);
+    const std::string ion_step_fn = gen_ion_step_occ_mat_filename(global_out_dir, istep);
     std::ofstream ofs_ion_step;
     ofs_ion_step.open(ion_step_fn, std::ios::out | std::ios::trunc);
     if (!ofs_ion_step)
@@ -632,7 +635,7 @@ void prepare_ion_step_file(const std::string& global_out_dir,
         ModuleBase::WARNING_QUIT("DFTU_BASE::prepare_ion_step_file",
                                  "Can't create per-ionic-step occupation-matrix file");
     }
-    // Provenance header shared with dm_onsite.txt.
+    // Provenance header shared with occ_mat.txt.
     write_provenance_header(ofs_ion_step, istep);
     ofs_ion_step.close();
     return;
@@ -705,7 +708,7 @@ void output(const Plus_U_Base& dftu,
     write_occup_m(dftu, ucell, GlobalV::ofs_running, true, nspin, npol,
                   OCMAT_FMT_LEGACY, soc_layout);
 
-    // dm_onsite.txt is not written here: its section records drho, which
+    // occ_mat.txt is not written here: its section records drho, which
     // is only available after the electronic solve. write_latest_occmat()
     // overwrites it at the iter_finish stage.
 
@@ -727,7 +730,7 @@ void output(const Plus_U_Base& dftu,
     return;
 }
 
-// Write one electronic-step section shared by dm_onsite.txt and the
+// Write one electronic-step section shared by occ_mat.txt and the
 // per-ionic-step snapshot files: the step marker, the configured
 // charge-density convergence threshold, the actual charge-density
 // residual and the full occupation matrices. When occmat_ready is false,
@@ -805,7 +808,7 @@ void append_ion_step_snapshot(const Plus_U_Base& dftu,
         return;
     }
 
-    const std::string ion_step_fn = gen_ion_step_dm_onsite_filename(global_out_dir, istep);
+    const std::string ion_step_fn = gen_ion_step_occ_mat_filename(global_out_dir, istep);
 
     // The provenance header written by prepare_ion_step_file() must not be
     // counted as a recorded section: scan the file for an existing section
@@ -868,15 +871,15 @@ void write_latest_occmat(const Plus_U_Base& dftu,
         return;
     }
 
-    const std::string latest_fn = global_out_dir + "dm_onsite.txt";
+    const std::string latest_fn = global_out_dir + "occ_mat.txt";
     std::ofstream ofdftu;
     ofdftu.open(latest_fn, std::ios::out | std::ios::trunc);
     if (!ofdftu)
     {
-        ModuleBase::WARNING_QUIT("DFTU_BASE::write_latest_occmat", "Can't create file dm_onsite.txt");
+        ModuleBase::WARNING_QUIT("DFTU_BASE::write_latest_occmat", "Can't create file occ_mat.txt");
     }
 
-    // dm_onsite.txt is a single-section snapshot file: the provenance
+    // occ_mat.txt is a single-section snapshot file: the provenance
     // header shared with the g files followed by the same section writer.
     write_provenance_header(ofdftu, istep);
     // Callers of write_latest_occmat() guarantee the matrix exists: the PW

@@ -54,14 +54,14 @@ void init_dftu_lcao(int dft_plus_u,
  * @param kv K-vectors
  * @param mixing_beta Mixing beta parameter
  * @param hamilt_lcao Hamiltonian LCAO object
- * @param global_out_dir Output directory for dm_onsite.txt and dm_onsiteg{#}.txt
+ * @param global_out_dir Output directory for occ_mat.txt and occ_matg{#}.txt
  * @param nspin Number of spin channels (1, 2, or 4)
  * @param npol Number of polarizations
  * @param gamma_only_local Whether only the Gamma point is used for LCAO
  * @param istep Ionic-step index, starting from 0
  * @param iter Electronic-iteration index, starting from 1
  * @param occmat_cfg Configuration for occupation-matrix output; its out_occ_mat
- *        member is the master switch of the dm_onsite*.txt files
+ *        member is the master switch of the occ_mat*.txt files
  */
 template <typename TK>
 void finish_dftu_lcao(const bool conv_esolver,

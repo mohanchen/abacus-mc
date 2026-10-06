@@ -402,7 +402,7 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
                                         out_dir,
                                         2, // nspin
                                         1, // npol
-                                        0, // istep -> dm_onsiteg1.txt
+                                        0, // istep -> occ_matg1.txt
                                         1, // iter
                                         false,
                                         false, // occmat_ready
@@ -411,7 +411,7 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
                                         cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs("./dm_onsiteg1.txt");
+    std::ifstream ifs("./occ_matg1.txt");
     ASSERT_TRUE(ifs.is_open());
     std::stringstream ss;
     ss << ifs.rdbuf();
@@ -429,7 +429,7 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
                                         out_dir,
                                         2, // nspin
                                         1, // npol
-                                        1, // istep -> dm_onsiteg2.txt
+                                        1, // istep -> occ_matg2.txt
                                         2, // iter
                                         false,
                                         true, // occmat_ready
@@ -438,7 +438,7 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
                                         cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs2("./dm_onsiteg2.txt");
+    std::ifstream ifs2("./occ_matg2.txt");
     ASSERT_TRUE(ifs2.is_open());
     std::stringstream ss2;
     ss2 << ifs2.rdbuf();
@@ -447,12 +447,12 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
     EXPECT_NE(content2.find("Fe Atom 1 L 2"), std::string::npos);
     EXPECT_EQ(content2.find("N/A"), std::string::npos);
 
-    std::remove("./dm_onsiteg1.txt");
-    std::remove("./dm_onsiteg2.txt");
+    std::remove("./occ_matg1.txt");
+    std::remove("./occ_matg2.txt");
 }
 
 /// out_occ_mat = false must suppress both the numbered snapshot file and the
-/// latest dm_onsite.txt, even when the frequency gates would trigger.
+/// latest occ_mat.txt, even when the frequency gates would trigger.
 TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
 {
     Plus_U_Base dftu;
@@ -475,7 +475,7 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
                                         cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs("./dm_onsiteg1.txt");
+    std::ifstream ifs("./occ_matg1.txt");
     EXPECT_FALSE(ifs.is_open());
 
     DFTU_BASE::write_latest_occmat(dftu,
@@ -490,6 +490,6 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
                                    cfg,
                                    DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs_latest("./dm_onsite.txt");
+    std::ifstream ifs_latest("./occ_mat.txt");
     EXPECT_FALSE(ifs_latest.is_open());
 }

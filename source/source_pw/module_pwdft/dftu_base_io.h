@@ -19,7 +19,7 @@ using OccMatData = std::vector<std::vector<std::vector<ModuleBase::matrix>>>;
 
 /// Frequency configuration for numbered occupation-matrix output.
 ///
-/// Each output ionic step (out_freq_ion) owns one file dm_onsiteg{#}.txt.
+/// Each output ionic step (out_freq_ion) owns one file occ_matg{#}.txt.
 /// Within that file, one section is appended at every electronic step
 /// selected by out_freq_elec, scf_nmax or convergence.
 struct OccmatOutputCfg
@@ -69,8 +69,8 @@ bool is_elec_snapshot_trigger(int iter,
 ///
 /// @param out_dir output directory (including the trailing separator)
 /// @param istep ionic-step index, starting from 0
-/// @return dm_onsiteg{istep+1}.txt
-std::string gen_ion_step_dm_onsite_filename(const std::string& out_dir, int istep);
+/// @return occ_matg{istep+1}.txt
+std::string gen_ion_step_occ_mat_filename(const std::string& out_dir, int istep);
 
 /// Append one electronic-step section to the per-ionic-step file.
 ///
@@ -135,7 +135,7 @@ void local_occup_bcast(const UnitCell& ucell,
                        int nspin,
                        int npol);
 
-/// Create (or truncate) the per-ionic-step file dm_onsiteg{istep+1}.txt and
+/// Create (or truncate) the per-ionic-step file occ_matg{istep+1}.txt and
 /// write its header (rank 0 only).
 ///
 /// Must be called once at the first electronic step (iter == 1) of an output
@@ -150,12 +150,12 @@ void prepare_ion_step_file(const std::string& global_out_dir,
 /// running log.
 ///
 /// When cfg.out_occ_mat is true, cfg.out_freq_ion is positive and istep is an
-/// output ionic step, the per-ionic-step file dm_onsiteg{istep+1}.txt is
+/// output ionic step, the per-ionic-step file occ_matg{istep+1}.txt is
 /// created: at the first electronic step (iter == 1) it is truncated and
 /// initialized with a provenance header, then append_ion_step_snapshot()
 /// appends one section per recorded electronic step.
 ///
-/// Note: dm_onsite.txt is NOT written here. It records the actual
+/// Note: occ_mat.txt is NOT written here. It records the actual
 /// charge-density residual drho, which is only known after the electronic
 /// solve, so write_latest_occmat() writes it from the iter_finish stage.
 ///
@@ -172,11 +172,11 @@ void output(const Plus_U_Base& dftu,
             const OccmatOutputCfg& cfg,
             OccmatSocLayout soc_layout);
 
-/// Overwrite dm_onsite.txt with the occupation matrix of the current
+/// Overwrite occ_mat.txt with the occupation matrix of the current
 /// electronic step (rank 0 only).
 ///
-/// dm_onsite.txt is a single-section snapshot file: the same provenance
-/// header and compact layout as dm_onsiteg{#}.txt, whose section header
+/// occ_mat.txt is a single-section snapshot file: the same provenance
+/// header and compact layout as occ_matg{#}.txt, whose section header
 /// additionally carries the configured scf_thr and the actual drho of
 /// this step. Must be called at the iter_finish stage, after drho is
 /// computed; it is the entry file of init_chg=file and NSCF restarts.
@@ -210,7 +210,7 @@ void write_latest_occmat(const Plus_U_Base& dftu,
 /// When diag is true, eigenvalues and magnetism are also printed; otherwise
 /// only raw matrix elements. fmt selects between the legacy token layout
 /// (used for running log) and the readable snapshot layout of
-/// dm_onsite.txt and dm_onsiteg{#}.txt. soc_layout tells how the nspin == 4
+/// occ_mat.txt and occ_matg{#}.txt. soc_layout tells how the nspin == 4
 /// storage is arranged (PW Pauli blocks or LCAO real spin-basis matrix).
 /// Caller is responsible for opening/closing the stream.
 void write_occup_m(const Plus_U_Base& dftu,

@@ -584,7 +584,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     // HF and kS energies are computed, meta-GGA, Jason and restart
     ESolver_KS::iter_finish(ucell, istep, iter, conv_esolver);
 
-    // overwrite dm_onsite.txt with the latest occupation matrix and the
+    // overwrite occ_mat.txt with the latest occupation matrix and the
     // actual charge-density residual; ESolver_KS::iter_finish() above has
     // computed drho for this electronic step.
     DFTU_BASE::write_latest_occmat(*this->dftu_,
@@ -599,7 +599,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
                                       occmat_cfg,
                                       DFTU_BASE::SOC_LAYOUT_SPIN_BASIS_REAL);
 
-    // append the current electronic-step section to dm_onsiteg{#}.txt
+    // append the current electronic-step section to occ_matg{#}.txt
     // LCAO computes the occupation matrix in every electronic iteration, so
     // the snapshot always carries a real matrix.
     DFTU_BASE::append_ion_step_snapshot(*this->dftu_,
