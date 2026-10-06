@@ -3,7 +3,6 @@
 
 #include "source_cell/read_stru.h"
 #include "source_cell/cell_tools.h"
-#include "source_cell/print_cell.h"
 #include "memory"
 #include "source_cell/read_stru.h"
 #include "source_base/global_variable.h"
@@ -50,13 +49,6 @@ Magnetism::~Magnetism()
  *     - check_tau(): check if any "two atoms are too close"
  *   - SelectiveDynamics
  *     - if_atoms_can_move():it is true if any coordinates of any atom can move, i.e. mbl = 1
- *   - PrintCell
- *     - print_cell(ofs): print basic cell info into ofs
- *   - PrintSTRU
- *     - print_stru_file(): print STRU file of ABACUS
- *   - PrintTauDirect
- *   - PrintTauCartesian
- *     - print_tau(): print atomic coordinates, magmom and initial velocities
  *   - ReadAtomSpecies
  *     - read_atom_species(): a successful case
  *   - ReadAtomSpeciesWarning1
@@ -374,75 +366,6 @@ TEST_F(UcellTest, SelectiveDynamics)
     EXPECT_TRUE(unitcell::if_atoms_can_move(ucell->atoms, ucell->ntype));
 }
 
-
-TEST_F(UcellTest, PrintCell)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Index"];
-    ucell = utp.SetUcellInfo();
-    std::ofstream ofs;
-    ofs.open("printcell.log");
-    unitcell::print_cell(*ucell, ofs);
-    ofs.close();
-    std::ifstream ifs;
-    ifs.open("printcell.log");
-    std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    EXPECT_THAT(str, testing::HasSubstr("latName = bcc"));
-    EXPECT_THAT(str, testing::HasSubstr("ntype = 2"));
-    EXPECT_THAT(str, testing::HasSubstr("nat = 3"));
-    EXPECT_THAT(str, testing::HasSubstr("GGT :"));
-    EXPECT_THAT(str, testing::HasSubstr("omega = 6748.33"));
-    remove("printcell.log");
-}
-
-// Comments and suggestions on the refactor of UnitCell class
-// NOTE: PrintSTRU tests have been moved to test_print_cell.cpp
-
-TEST_F(UcellTest, PrintTauDirect)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Index"];
-    ucell = utp.SetUcellInfo();
-    EXPECT_EQ(ucell->Coordinate, "Direct");
-
-    // open a file
-    std::ofstream ofs("print_tau_direct");
-    unitcell::print_tau(ucell->atoms,ucell->Coordinate,ucell->ntype,ucell->lat0,ofs);
-    ofs.close();
- 
-    // readin the data
-    std::ifstream ifs;
-    ifs.open("print_tau_direct");
-    std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    EXPECT_THAT(str, testing::HasSubstr("DIRECT COORDINATES"));
-    EXPECT_THAT(str, testing::HasSubstr("    C     0.100000000000     0.100000000000     0.100000000000  0.0000"));
-    EXPECT_THAT(str, testing::HasSubstr("    H     0.150000000000     0.150000000000     0.150000000000  0.0000")); 
-    ifs.close();
-
-    remove("print_tau_direct");
-}
-
-TEST_F(UcellTest, PrintTauCartesian)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Cartesian"];
-    ucell = utp.SetUcellInfo();
-    EXPECT_EQ(ucell->Coordinate, "Cartesian");
-
-    // open a file
-    std::ofstream ofs("print_tau_Cartesian");
-    unitcell::print_tau(ucell->atoms,ucell->Coordinate,ucell->ntype,ucell->lat0,ofs);
-    ofs.close();
-
-    // readin the data
-    std::ifstream ifs;
-    ifs.open("print_tau_Cartesian");
-    std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    EXPECT_THAT(str, testing::HasSubstr("CARTESIAN COORDINATES"));
-    EXPECT_THAT(str, testing::HasSubstr("    C     1.000000000000     1.000000000000     1.000000000000  0.0000"));
-    EXPECT_THAT(str, testing::HasSubstr("    H     1.500000000000     1.500000000000     1.500000000000  0.0000"));
-    ifs.close();
-
-    // remove the file
-    remove("print_tau_Cartesian");
-}
 
 #ifdef __LCAO
 class UcellTestReadStru : public ::testing::Test
