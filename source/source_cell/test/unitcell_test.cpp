@@ -1582,21 +1582,39 @@ TEST_F(UcellTestReadStru, ReadAtomPositionsAutosetMag)
         }
     }
     // for nspin == 4
+    // Issue #5939: nspin=4 with no mag in STRU no longer autosets (1,1,1);
+    // all moments stay zero and a warning is emitted instead.
     nspin = 4;
+    testing::internal::CaptureStdout();
     unitcell::read_atom_positions(*ucell, ifa, ofs_running, ofs_warning, nspin,
         basis_type, orbital_dir, init_wfc,
         onsite_radius, fixed_atoms, noncolin,
         calculation, esolver_type, 0);
+    const std::string stdout_output = testing::internal::GetCapturedStdout();
     for (int it = 0; it < ucell->ntype; it++)
     {
         for (int ia = 0; ia < ucell->atoms[it].na; ia++)
         {
-            EXPECT_DOUBLE_EQ(ucell->atoms[it].mag[ia], sqrt(pow(1.0, 2) + pow(1.0, 2) + pow(1.0, 2)));
-            EXPECT_DOUBLE_EQ(ucell->atoms[it].m_loc_[ia].x, 1.0);
-            EXPECT_DOUBLE_EQ(ucell->atoms[it].m_loc_[ia].y, 1.0);
-            EXPECT_DOUBLE_EQ(ucell->atoms[it].m_loc_[ia].z, 1.0);
+            EXPECT_DOUBLE_EQ(ucell->atoms[it].mag[ia], 0.0);
+            EXPECT_DOUBLE_EQ(ucell->atoms[it].m_loc_[ia].x, 0.0);
+            EXPECT_DOUBLE_EQ(ucell->atoms[it].m_loc_[ia].y, 0.0);
+            EXPECT_DOUBLE_EQ(ucell->atoms[it].m_loc_[ia].z, 0.0);
         }
     }
+    // The zero-moment warning must reach both stdout and the running log.
+    EXPECT_NE(stdout_output.find("no initial magnetization is set in STRU"),
+              std::string::npos);
+    ofs_running.flush();
+    std::ifstream ifs_log("read_atom_positions.tmp");
+    std::string log_content;
+    std::string log_line;
+    while (std::getline(ifs_log, log_line))
+    {
+        log_content += log_line;
+    }
+    ifs_log.close();
+    EXPECT_NE(log_content.find("no initial magnetization is set in STRU"),
+              std::string::npos);
     ofs_running.close();
     ofs_warning.close();
     ifa.close();
