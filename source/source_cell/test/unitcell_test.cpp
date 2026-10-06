@@ -1,7 +1,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "source_cell/read_pp_ucell.h"
 #include "source_cell/read_stru.h"
 #include "source_cell/cell_tools.h"
 #include "source_cell/print_cell.h"
@@ -65,8 +64,6 @@ Magnetism::~Magnetism()
  *   - PrintTauDirect
  *   - PrintTauCartesian
  *     - print_tau(): print atomic coordinates, magmom and initial velocities
- *   - PrintUnitcellPseudo
- *     - Actually an integrated function to call unitcell::print_cell and Atom::print_Atom
  *   - UpdateVel
  *     - update_vel(const ModuleBase::Vector3<double>* vel_in)
  *   - ReadAtomSpecies
@@ -216,27 +213,6 @@ TEST_F(UcellTest, Setup)
             EXPECT_FALSE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
     }
-}
-
-TEST_F(UcellDeathTest, CompareAatomLabel)
-{
-    std::string stru_label[]
-        = {"Ag", "Ag", "Ag", "47", "47", "47", "Silver", "Silver", "Silver", "Ag", "Ag", "Ag", "Ag_empty"};
-    std::string pseudo_label[]
-        = {"Ag", "47", "Silver", "Ag", "47", "Silver", "Ag", "47", "Silver", "Ag1", "ag", "ag_locpsp", "Ag"};
-    for (int it = 0; it < 12; it++)
-    {
-        unitcell::compare_atom_labels(stru_label[it], pseudo_label[it]);
-    }
-    stru_label[0] = "Fe";
-    pseudo_label[0] = "O";
-    std::string atom_label_in_orbtial = "atom label in orbital file ";
-    std::string mismatch_with_pseudo = " mismatch with pseudo file of ";
-    testing::internal::CaptureStdout();
-    EXPECT_EXIT(unitcell::compare_atom_labels(stru_label[0], pseudo_label[0]), ::testing::ExitedWithCode(1), "");
-    output = testing::internal::GetCapturedStdout();
-    EXPECT_THAT(output,
-                testing::HasSubstr(atom_label_in_orbtial + stru_label[0] + mismatch_with_pseudo + pseudo_label[0]));
 }
 
 TEST_F(UcellTest, RemakeCell)
@@ -737,29 +713,6 @@ TEST_F(UcellTest, PrintCell)
     EXPECT_THAT(str, testing::HasSubstr("nat = 3"));
     EXPECT_THAT(str, testing::HasSubstr("GGT :"));
     EXPECT_THAT(str, testing::HasSubstr("omega = 6748.33"));
-    remove("printcell.log");
-}
-
-TEST_F(UcellTest, PrintUnitcellPseudo)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Index"];
-    ucell = utp.SetUcellInfo();
-    std::string fn = "printcell.log";
-    unitcell::print_unitcell_pseudo(fn, *ucell);
-    std::ifstream ifs;
-    ifs.open("printcell.log");
-    std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    EXPECT_THAT(str, testing::HasSubstr("latName = bcc"));
-    EXPECT_THAT(str, testing::HasSubstr("ntype = 2"));
-    EXPECT_THAT(str, testing::HasSubstr("nat = 3"));
-    EXPECT_THAT(str, testing::HasSubstr("GGT :"));
-    EXPECT_THAT(str, testing::HasSubstr("omega = 6748.33"));
-    EXPECT_THAT(str, testing::HasSubstr("label = C"));
-    EXPECT_THAT(str, testing::HasSubstr("mass = 12"));
-    EXPECT_THAT(str, testing::HasSubstr("atom_position(cartesian) Dimension = 1"));
-    EXPECT_THAT(str, testing::HasSubstr("label = H"));
-    EXPECT_THAT(str, testing::HasSubstr("mass = 1"));
-    EXPECT_THAT(str, testing::HasSubstr("atom_position(cartesian) Dimension = 2"));
     remove("printcell.log");
 }
 
