@@ -4,6 +4,7 @@
 #include <functional>
 #include <limits>
 #include <sstream>
+#include <vector>
 
 #include "source_base/complexmatrix.h"
 #include "source_base/constants.h"
