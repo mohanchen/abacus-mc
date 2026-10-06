@@ -302,6 +302,13 @@ void process_magnetization(Atom& atom, int it, int ia,
         if(!noncolin)
         {
             // collinear case with nspin = 4, only z component is used
+            // Note: a scalar "mag <value>" in STRU is stored purely in
+            // m_loc_.z (x/y stay zero), so it passes the check below without
+            // triggering the warning and still defines a non-zero z moment.
+            // cal_ux() then turns that into the global XC quantization axis
+            // ux_ = (0,0,1) with lsign_ = true. Any positive scalar suffices;
+            // only the *direction* enters ux_, the magnitude (e.g. 1.7320508
+            // vs 1.0) is irrelevant.
             if(std::abs(atom.m_loc_[ia].x) > 1e-5 || std::abs(atom.m_loc_[ia].y) > 1e-5)
             {
                 std::stringstream ss;
