@@ -11,6 +11,7 @@
 #include "csr_test_helpers.h"
 
 #include "source_base/module_out/csr_reader.h"
+#include "source_base/constants.h"
 #include "source_estate/fp_energy.h"
 #include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 #include "source_io/module_hs/hsr_writer.h"
@@ -19,6 +20,7 @@
 #include <complex>
 #include <cstdio>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -481,6 +483,66 @@ TEST(HsrWriterIo, HContainerBinaryMpiGatherWritesCompleteFiles)
     ucell.atoms = nullptr;
     ucell.set_atom_flag = false;
 #endif
+}
+
+// ---------------------------------------------------------------------------
+// write_hsr: text CSR (out_type=1) threads per-spin Fermi energy from Efermi
+// ---------------------------------------------------------------------------
+
+TEST(HsrWriterIo, WriteHsrTextCsrCarriesPerSpinFermiFromEfermi)
+{
+    // Exercise the fix path inside write_hsr: eferm.get_efval(ispin) * Ry_to_eV
+    // for a two-Fermi (nspin=2) case. The only existing write_hsr test uses
+    // out_type=2 (binary), which skips the Fermi branch entirely.
+    const std::string hr_up_filename = "hrs1_nao.csr";
+    const std::string hr_dw_filename = "hrs2_nao.csr";
+    std::remove(hr_up_filename.c_str());
+    std::remove(hr_dw_filename.c_str());
+
+    UnitCell ucell;
+    init_unitcell(ucell);
+    Parallel_Orbitals pv;
+    init_serial_orbitals(pv);
+
+    hamilt::HContainer<double> hr_up(&pv);
+    hamilt::HContainer<double> hr_dw(&pv);
+    hamilt::HContainer<double> sr(&pv);
+    double values[4] = {1.0, 0.0, 0.5, 2.0};
+    double sr_values[4] = {1.0, 0.0, 0.0, 1.0};
+    fill_matrix(hr_up, pv, values);
+    fill_matrix(hr_dw, pv, values);
+    fill_matrix(sr, pv, sr_values);
+
+    init_sparse_output_globals();
+
+    elecstate::Efermi eferm;
+    eferm.two_efermi = true;
+    eferm.ef_up = 0.5;   // Ry
+    eferm.ef_dw = 0.3;   // Ry
+    const double ef_up_eV = eferm.ef_up * ModuleBase::Ry_to_eV;   // 6.802849
+    const double ef_dw_eV = eferm.ef_dw * ModuleBase::Ry_to_eV;   // 4.0817094
+
+    std::vector<hamilt::HContainer<double>*> hr_vec;
+    hr_vec.push_back(&hr_up);
+    hr_vec.push_back(&hr_dw);
+
+    std::ofstream ofs_running_null; // not opened; test does not inspect the running log
+    ModuleIO::write_hsr(
+        hr_vec, &sr, &ucell, 1, 8, pv, false, true, nullptr, 0, 0, "./", eferm, ofs_running_null);
+
+    const std::string output_up = read_file(hr_up_filename);
+    const std::string output_dw = read_file(hr_dw_filename);
+
+    // write_hsr multiplies each spin's Fermi by Ry_to_eV and passes has_efermi=true
+    std::ostringstream expected_up;
+    expected_up << " 1 # spin index, E_Fermi = " << std::setprecision(6) << ef_up_eV << " eV\n";
+    std::ostringstream expected_dw;
+    expected_dw << " 2 # spin index, E_Fermi = " << std::setprecision(6) << ef_dw_eV << " eV\n";
+    EXPECT_THAT(output_up, testing::HasSubstr(expected_up.str()));
+    EXPECT_THAT(output_dw, testing::HasSubstr(expected_dw.str()));
+
+    std::remove(hr_up_filename.c_str());
+    std::remove(hr_dw_filename.c_str());
 }
 
 int main(int argc, char** argv)
