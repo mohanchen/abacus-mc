@@ -1,7 +1,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "source_cell/cal_ux.h"
 #include "source_cell/read_orb.h"
 #include "source_cell/read_pp_ucell.h"
 #include "source_cell/read_stru.h"
@@ -43,8 +42,6 @@ Magnetism::~Magnetism()
  *     - remake_cell(): rebuild cell according to its latName
  *   - RemakeCellWarnings
  *     - remake_cell(): deliver warnings when find wrong latname or cos12
- *   - JudgeParallel
- *     - judge_parallel: judge if two vectors a[3] and Vector3<double> b are parallel
  *   - Index
  *     - set_iat2iait(): set index relations in two arrays of Unitcell: iat2it[nat], iat2ia[nat]
  *     - iat2iait(): depends on the above function, but can find both ia & it from iat
@@ -73,8 +70,6 @@ Magnetism::~Magnetism()
  *     - Actually an integrated function to call unitcell::print_cell and Atom::print_Atom
  *   - UpdateVel
  *     - update_vel(const ModuleBase::Vector3<double>* vel_in)
- *   - CalUx
- *     - cal_ux(UnitCell& ucell): calculate magnetic moments of cell
  *   - ReadOrbFile
  *     - read_orb_file(): read header part of orbital file
  *   - ReadOrbFileWarning
@@ -539,19 +534,6 @@ TEST_F(UcellDeathTest, RemakeCellWarnings)
     }
 }
 
-TEST_F(UcellTest, JudgeParallel)
-{
-    ModuleBase::Vector3<double> b(1.0, 1.0, 1.0);
-    double a[3] = {1.0, 1.0, 1.0};
-    EXPECT_TRUE(unitcell::judge_parallel(a, b));
-
-    // the negative case, moved here from MagnetismTest.JudgeParallel when the
-    // duplicate Magnetism::judge_parallel was deleted
-    double c[3] = {1.0, 0.0, 0.0};
-    ModuleBase::Vector3<double> d(0.0, 1.0, 0.0);
-    EXPECT_FALSE(unitcell::judge_parallel(c, d));
-}
-
 TEST_F(UcellTest, Index)
 {
     UcellTestPrepare utp = UcellTestLib["C1H2-Index"];
@@ -853,37 +835,6 @@ TEST_F(UcellTest, UpdateVel)
         EXPECT_DOUBLE_EQ(vel_in[iat].z, 0.1 * iat);
     }
     delete[] vel_in;
-}
-
-TEST_F(UcellTest, CalUx1)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Read"];
-    ucell = utp.SetUcellInfo();
-    ucell->atoms[0].m_loc_[0].set(0, -1, 0);
-    ucell->atoms[1].m_loc_[0].set(1, 1, 1);
-    ucell->atoms[1].m_loc_[1].set(0, 0, 0);
-    const int nspin = 4;
-    unitcell::cal_ux(*ucell, nspin);
-    EXPECT_FALSE(ucell->magnet.lsign_);
-    EXPECT_DOUBLE_EQ(ucell->magnet.ux_[0], 0);
-    EXPECT_DOUBLE_EQ(ucell->magnet.ux_[1], -1);
-    EXPECT_DOUBLE_EQ(ucell->magnet.ux_[2], 0);
-}
-
-TEST_F(UcellTest, CalUx2)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Read"];
-    ucell = utp.SetUcellInfo();
-    ucell->atoms[0].m_loc_[0].set(0, 0, 0);
-    ucell->atoms[1].m_loc_[0].set(1, 1, 1);
-    ucell->atoms[1].m_loc_[1].set(0, 0, 0);
-    //(0,0,0) is also parallel to (1,1,1)
-    const int nspin = 4;
-    unitcell::cal_ux(*ucell, nspin);
-    EXPECT_TRUE(ucell->magnet.lsign_);
-    EXPECT_NEAR(ucell->magnet.ux_[0], 0.57735, 1e-5);
-    EXPECT_NEAR(ucell->magnet.ux_[1], 0.57735, 1e-5);
-    EXPECT_NEAR(ucell->magnet.ux_[2], 0.57735, 1e-5);
 }
 
 #ifdef __LCAO
