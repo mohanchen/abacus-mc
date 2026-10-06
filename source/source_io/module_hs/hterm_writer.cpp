@@ -96,7 +96,8 @@ static void gather_and_write(const std::string& prefix,
         const bool md_no_append = (calculation == "md") && !out_app_flag;
         const std::string& out_dir = md_no_append ? global_matrix_dir : global_out_dir;
         const std::string fname = out_dir + hsr_gen_fname(prefix, ispin, append, istep);
-        // dH/dR and similar derived terms are not the Hamiltonian: no Fermi annotation
+        // H(R) component terms (T, V^NL, V^L, V^H, V^XC, V^EXX) are parts of
+        // the Hamiltonian, not the full H(R): they do not carry the Fermi annotation
         const double no_efermi = 0.0;
 #ifdef __MPI
         write_hcontainer_csr(fname, &ucell, 8, &hr_serial, istep, ispin, nspin, label, "", no_efermi, false);
