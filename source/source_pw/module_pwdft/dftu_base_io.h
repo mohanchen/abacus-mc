@@ -72,6 +72,13 @@ bool is_elec_snapshot_trigger(int iter,
 /// @return occ_matg{istep+1}.txt
 std::string gen_ion_step_occ_mat_filename(const std::string& out_dir, int istep);
 
+/// Return the full path of the first candidate file that exists in @p dir.
+/// Returns an empty string if none of the candidates exist.
+/// Only the calling process probes the filesystem; callers must arrange
+/// MPI broadcast of the result if other ranks need it.
+std::string find_first_existing_file(const std::string& dir,
+                                     const std::vector<std::string>& candidates);
+
 /// Append one electronic-step section to the per-ionic-step file.
 ///
 /// The section records the electronic-step index, the configured charge-

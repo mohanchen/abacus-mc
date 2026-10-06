@@ -3921,10 +3921,10 @@
 - **Type**: Integer
 - **Description**: The parameter controls how the DFT+U occupation matrix is initialized.
   - 0: No occupation-matrix initialization is performed, and the onsite density matrix will be calculated from wavefunctions in each SCF step.
-  - 1: The first SCF step will use an initial density matrix read from a file named dm_onsite_ini.txt, but for later steps, the onsite density matrix will be updated.
-  - 2: The same onsite density matrix from dm_onsite_ini.txt will be used throughout the entire calculation.
+  - 1: The first SCF step will use an initial density matrix read from a file, but for later steps, the onsite density matrix will be updated.
+  - 2: The same onsite density matrix read from the file will be used throughout the entire calculation.
 
-  > Note: The easiest way to create dm_onsite_ini.txt is to run a DFT+U calculation with out_occ_mat=1 (the default), look for a file named occ_mat.txt in the OUT.prefix directory (it always holds the occupation matrix of the latest electronic step), copy and rename it to dm_onsite_ini.txt. When out_freq_ion is positive, separate occ_matg{geom_step}.txt files are also written, one per output ionic step; they may contain several electronic-step sections separated by comment headers. The file dm_onsite_ini.txt should be placed in the directory specified by read_file_dir. The format of the file is rather straight-forward.
+  > Note: The occupation-matrix file is read from the directory specified by read_file_dir. The search order is dm_onsite_ini.txt -&gt; occ_mat.txt -&gt; dm_onsite.txt, so a previously output occ_mat.txt can be reused directly without renaming. The easiest way to obtain such a file is to run a DFT+U calculation with out_occ_mat=1 (the default); the resulting occ_mat.txt in the OUT.prefix directory (which always holds the occupation matrix of the latest electronic step) can be placed in read_file_dir as-is. When out_freq_ion is positive, separate occ_matg{geom_step}.txt files are also written, one per output ionic step; they may contain several electronic-step sections separated by comment headers. The format of the file is rather straight-forward.
 - **Default**: 0
 
 ### omc

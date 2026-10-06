@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -492,4 +493,44 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
 
     std::ifstream ifs_latest("./occ_mat.txt");
     EXPECT_FALSE(ifs_latest.is_open());
+}
+
+/// find_first_existing_file must return the first candidate that exists,
+/// in declaration order, and an empty string when none exist.
+TEST(FindFirstExistingFileTest, ReturnsFirstExistingCandidate)
+{
+    const std::string dir = "./occ_chain_test/";
+    const std::string mkdir_cmd = "mkdir -p " + dir;
+    std::system(mkdir_cmd.c_str());
+
+    // No candidates exist -> empty string.
+    {
+        const std::vector<std::string> candidates = {"dm_onsite_ini.txt",
+                                                      "occ_mat.txt",
+                                                      "dm_onsite.txt"};
+        EXPECT_TRUE(DFTU_BASE::find_first_existing_file(dir, candidates).empty());
+    }
+
+    // Only occ_mat.txt exists -> it is returned even though dm_onsite_ini.txt
+    // comes first in the candidate list.
+    {
+        std::ofstream(dir + "occ_mat.txt").close();
+        const std::vector<std::string> candidates = {"dm_onsite_ini.txt",
+                                                      "occ_mat.txt",
+                                                      "dm_onsite.txt"};
+        EXPECT_EQ(DFTU_BASE::find_first_existing_file(dir, candidates),
+                  dir + "occ_mat.txt");
+    }
+
+    // dm_onsite_ini.txt appears -> it takes precedence over occ_mat.txt.
+    {
+        std::ofstream(dir + "dm_onsite_ini.txt").close();
+        const std::vector<std::string> candidates = {"dm_onsite_ini.txt",
+                                                      "occ_mat.txt",
+                                                      "dm_onsite.txt"};
+        EXPECT_EQ(DFTU_BASE::find_first_existing_file(dir, candidates),
+                  dir + "dm_onsite_ini.txt");
+    }
+
+    std::system(("rm -rf " + dir).c_str());
 }

@@ -286,6 +286,21 @@ std::string gen_ion_step_occ_mat_filename(const std::string& out_dir, const int 
     return ss.str();
 }
 
+std::string find_first_existing_file(const std::string& dir,
+                                     const std::vector<std::string>& candidates)
+{
+    for (const std::string& name : candidates)
+    {
+        const std::string full = dir + name;
+        std::ifstream probe(full.c_str());
+        if (probe.is_open())
+        {
+            return full;
+        }
+    }
+    return std::string();
+}
+
 void read_occup_m(const UnitCell& ucell,
                   OccupationMatrix& occ,
                   const std::vector<int>& l_channel,

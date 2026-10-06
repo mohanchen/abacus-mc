@@ -138,10 +138,22 @@ void Plus_U_Base::init_base(UnitCell& cell,
 
     if (init_occ_mat != 0)
     {
-        std::stringstream sst;
-        sst << global_readin_dir << "dm_onsite_ini.txt";
+        // Try the user-prepared dm_onsite_ini.txt first, then fall back to
+        // the occupation-matrix snapshot written by a previous run
+        // (occ_mat.txt), and finally to the legacy dm_onsite.txt name.
+        const std::vector<std::string> candidates = {"dm_onsite_ini.txt",
+                                                      "occ_mat.txt",
+                                                      "dm_onsite.txt"};
+        const std::string readin_fn = DFTU_BASE::find_first_existing_file(global_readin_dir, candidates);
+        if (readin_fn.empty())
+        {
+            ModuleBase::WARNING_QUIT("Plus_U_Base::init_base",
+                                     "init_occ_mat is set but no occupation-matrix file found in "
+                                     + global_readin_dir
+                                     + ". Tried: dm_onsite_ini.txt, occ_mat.txt, dm_onsite.txt");
+        }
         DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->init_occ_mat,
-                                sst.str(), init_chg, nspin, npol);
+                                readin_fn, init_chg, nspin, npol);
 #ifdef __MPI
         DFTU_BASE::local_occup_bcast(cell, this->occmat_, this->l_channel, nspin, npol);
 #endif
@@ -161,12 +173,17 @@ void Plus_U_Base::init_base(UnitCell& cell,
             // occ_mat.txt is the current output name; fall back to the
             // legacy dm_onsite.txt so that output directories written by
             // older versions can still be used for restarts.
-            const std::string occ_fn = global_readin_dir + "occ_mat.txt";
-            const std::string legacy_fn = global_readin_dir + "dm_onsite.txt";
-            std::ifstream probe(occ_fn.c_str());
-            const bool has_current = probe.is_open();
-            probe.close();
-            const std::string readin_fn = has_current ? occ_fn : legacy_fn;
+            const std::vector<std::string> candidates = {"occ_mat.txt", "dm_onsite.txt"};
+            const std::string readin_fn = DFTU_BASE::find_first_existing_file(global_readin_dir, candidates);
+            if (readin_fn.empty())
+            {
+                ModuleBase::WARNING_QUIT("Plus_U_Base::init_base",
+                                         "init_chg is set to file but no occupation-matrix file "
+                                         "found in "
+                                         + global_readin_dir
+                                         + ". Tried: occ_mat.txt, dm_onsite.txt. Please do an scf "
+                                           "calculation first.");
+            }
             DFTU_BASE::read_occup_m(cell, this->occmat_, this->l_channel, this->init_occ_mat,
                                     readin_fn, init_chg, nspin, npol);
 #ifdef __MPI
