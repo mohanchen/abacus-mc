@@ -1,7 +1,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "source_cell/read_orb.h"
 #include "source_cell/read_pp_ucell.h"
 #include "source_cell/read_stru.h"
 #include "source_cell/cell_tools.h"
@@ -70,10 +69,6 @@ Magnetism::~Magnetism()
  *     - Actually an integrated function to call unitcell::print_cell and Atom::print_Atom
  *   - UpdateVel
  *     - update_vel(const ModuleBase::Vector3<double>* vel_in)
- *   - ReadOrbFile
- *     - read_orb_file(): read header part of orbital file
- *   - ReadOrbFileWarning
- *     - read_orb_file(): ABACUS Cannot find the ORBITAL file
  *   - ReadAtomSpecies
  *     - read_atom_species(): a successful case
  *   - ReadAtomSpeciesWarning1
@@ -838,21 +833,6 @@ TEST_F(UcellTest, UpdateVel)
 }
 
 #ifdef __LCAO
-TEST_F(UcellTest, ReadOrbFile)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Read"];
-    ucell = utp.SetUcellInfo();
-    std::string orb_file = "./support/C.orb";
-    std::ofstream ofs_running;
-    ofs_running.open("tmp_readorbfile");
-    bool result = unitcell::read_orb_file(0, orb_file, ofs_running, &(ucell->atoms[0]));
-    ofs_running << " result=" << result << std::endl;
-    EXPECT_TRUE(result);
-    ofs_running.close();
-    EXPECT_EQ(ucell->atoms[0].nw, 25);
-    remove("tmp_readorbfile");
-}
-
 class UcellTestReadStru : public ::testing::Test
 {
   protected:
@@ -1812,20 +1792,3 @@ TEST_F(UcellTestReadStru, ReadAtomPositionsWarning5)
     remove("read_atom_positions.warn");
 }
 #endif
-TEST_F(UcellTest, ReadOrbFileWarning)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-Read"];
-    ucell = utp.SetUcellInfo();
-    std::string orb_file = "./support/CC.orb";
-    std::ofstream ofs_running;
-    ofs_running.open("tmp_readorbfilewarning");
-    testing::internal::CaptureStdout();
-    bool result = unitcell::read_orb_file(0, orb_file, ofs_running, &(ucell->atoms[0]));
-    output = testing::internal::GetCapturedStdout();
-    ofs_running << output << std::endl;
-    EXPECT_FALSE(result);
-    EXPECT_THAT(output, testing::HasSubstr("Element index 1"));
-    EXPECT_THAT(output, testing::HasSubstr("orbital file: ./support/CC.orb"));
-    ofs_running.close();
-    remove("tmp_readorbfilewarning");
-}
