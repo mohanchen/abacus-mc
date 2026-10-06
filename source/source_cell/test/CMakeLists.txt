@@ -195,6 +195,12 @@ AddTest(
 )
 
 AddTest(
+  TARGET MODULE_CELL_cell_tools_test
+  LIBS base device cell_info
+  SOURCES test_cell_tools.cpp
+)
+
+AddTest(
   TARGET MODULE_CELL_print_cell_test
   LIBS base device cell_info symmetry
   SOURCES test_print_cell.cpp

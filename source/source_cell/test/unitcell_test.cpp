@@ -2,7 +2,6 @@
 #include "gtest/gtest.h"
 
 #include "source_cell/read_stru.h"
-#include "source_cell/cell_tools.h"
 #include "memory"
 #include "source_cell/read_stru.h"
 #include "source_base/global_variable.h"
@@ -33,22 +32,19 @@ Magnetism::~Magnetism()
  *     - UnitCell() and ~UnitCell()
  *   - Setup:
  *     - setup_from_input(): to set latname, ntype, lmaxmax, init_vel, and lc
- *     - if_cell_can_change(): judge if any lattice vector can change
  *   - Index
  *     - set_iat2iait(): set index relations in two arrays of Unitcell: iat2it[nat], iat2ia[nat]
  *     - iat2iait(): depends on the above function, but can find both ia & it from iat
  *     - ijat2iaitjajt(): find ia, it, ja, jt from ijat (ijat_max = nat*nat)
  *         which collapses it, ia, jt, ja loop into a single loop
  *   - GetAtomCounts
- *     - get_atomCounts(): get atomCounts, which is a map from atom type to atom number
+ *     - get_atom_Counts(): get atomCounts, which is a map from atom type to atom number
  *   - GetOrbitalCounts
  *     - get_orbitalCounts(): get orbitalCounts, which is a map from atom type to orbital number
  *   - CheckDTau
  *     - check_dtau(): move all atomic coordinates into the first unitcell, i.e. in between [0,1)
  *   - CheckTau
  *     - check_tau(): check if any "two atoms are too close"
- *   - SelectiveDynamics
- *     - if_atoms_can_move():it is true if any coordinates of any atom can move, i.e. mbl = 1
  *   - ReadAtomSpecies
  *     - read_atom_species(): a successful case
  *   - ReadAtomSpeciesWarning1
@@ -144,56 +140,48 @@ TEST_F(UcellTest, Setup)
             EXPECT_EQ(ucell->lat_axis_free[0], 1);
             EXPECT_EQ(ucell->lat_axis_free[1], 1);
             EXPECT_EQ(ucell->lat_axis_free[2], 1);
-            EXPECT_TRUE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
         else if (fixed_axes_in[i] == "a")
         {
             EXPECT_EQ(ucell->lat_axis_free[0], 0);
             EXPECT_EQ(ucell->lat_axis_free[1], 1);
             EXPECT_EQ(ucell->lat_axis_free[2], 1);
-            EXPECT_TRUE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
         else if (fixed_axes_in[i] == "b")
         {
             EXPECT_EQ(ucell->lat_axis_free[0], 1);
             EXPECT_EQ(ucell->lat_axis_free[1], 0);
             EXPECT_EQ(ucell->lat_axis_free[2], 1);
-            EXPECT_TRUE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
         else if (fixed_axes_in[i] == "c")
         {
             EXPECT_EQ(ucell->lat_axis_free[0], 1);
             EXPECT_EQ(ucell->lat_axis_free[1], 1);
             EXPECT_EQ(ucell->lat_axis_free[2], 0);
-            EXPECT_TRUE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
         else if (fixed_axes_in[i] == "ab")
         {
             EXPECT_EQ(ucell->lat_axis_free[0], 0);
             EXPECT_EQ(ucell->lat_axis_free[1], 0);
             EXPECT_EQ(ucell->lat_axis_free[2], 1);
-            EXPECT_TRUE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
         else if (fixed_axes_in[i] == "ac")
         {
             EXPECT_EQ(ucell->lat_axis_free[0], 0);
             EXPECT_EQ(ucell->lat_axis_free[1], 1);
             EXPECT_EQ(ucell->lat_axis_free[2], 0);
-            EXPECT_TRUE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
         else if (fixed_axes_in[i] == "bc")
         {
             EXPECT_EQ(ucell->lat_axis_free[0], 1);
             EXPECT_EQ(ucell->lat_axis_free[1], 0);
             EXPECT_EQ(ucell->lat_axis_free[2], 0);
-            EXPECT_TRUE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
         else if (fixed_axes_in[i] == "abc")
         {
             EXPECT_EQ(ucell->lat_axis_free[0], 0);
             EXPECT_EQ(ucell->lat_axis_free[1], 0);
             EXPECT_EQ(ucell->lat_axis_free[2], 0);
-            EXPECT_FALSE(unitcell::if_cell_can_change(ucell->lat_axis_free));
         }
     }
 }
@@ -259,10 +247,6 @@ TEST_F(UcellTest, GetAtomCounts)
     std::map<int, int> atomCounts = ucell->get_atom_Counts();
     EXPECT_EQ(atomCounts[0], 1);
     EXPECT_EQ(atomCounts[1], 2);
-    /// atomCounts as vector
-    std::vector<int> atomCounts2 = unitcell::get_atomCounts(ucell->atoms, ucell->ntype);
-    EXPECT_EQ(atomCounts2[0], 1);
-    EXPECT_EQ(atomCounts2[1], 2);
 }
 
 TEST_F(UcellTest, GetOrbitalCounts)
@@ -289,14 +273,6 @@ TEST_F(UcellTest, GetLnchiCounts)
     EXPECT_EQ(LnchiCounts[1][0], 1);
     EXPECT_EQ(LnchiCounts[1][1], 1);
     EXPECT_EQ(LnchiCounts[1][2], 1);
-    /// LnchiCounts as vector
-    std::vector<std::vector<int>> LnchiCounts2 = unitcell::get_lnchiCounts(ucell->atoms, ucell->ntype);
-    EXPECT_EQ(LnchiCounts2[0][0], 1);
-    EXPECT_EQ(LnchiCounts2[0][1], 1);
-    EXPECT_EQ(LnchiCounts2[0][2], 1);
-    EXPECT_EQ(LnchiCounts2[1][0], 1);
-    EXPECT_EQ(LnchiCounts2[1][1], 1);
-    EXPECT_EQ(LnchiCounts2[1][2], 1);
 }
 
 TEST_F(UcellTest, CheckDTau)
@@ -358,14 +334,6 @@ TEST_F(UcellTest, CheckTauTrue)
     EXPECT_EQ(unitcell::check_tau(ucell->atoms ,ucell->ntype, ucell->lat0),true);
     GlobalV::ofs_warning.close();
 }
-
-TEST_F(UcellTest, SelectiveDynamics)
-{
-    UcellTestPrepare utp = UcellTestLib["C1H2-SD"];
-    ucell = utp.SetUcellInfo();
-    EXPECT_TRUE(unitcell::if_atoms_can_move(ucell->atoms, ucell->ntype));
-}
-
 
 #ifdef __LCAO
 class UcellTestReadStru : public ::testing::Test
