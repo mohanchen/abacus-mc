@@ -178,7 +178,7 @@ TEST_F(KlistParaTest, Set)
         GlobalV::ofs_running.open("tmp_klist_5");
 }
     const int cal_symm_repr[2] = {0, 6};
-    symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, GlobalV::ofs_running, 1e-6, 1, "scf", cal_symm_repr);
+    symm.analy_sys(ucell.lat, ucell, ucell.atoms, GlobalV::ofs_running, 1e-6, 1, "scf", cal_symm_repr);
     // read KPT
     std::string k_file = "./support/KPT1";
     // note: do NOT pre-set kv->spin_mult here; set() takes the physical
@@ -302,7 +302,7 @@ TEST_F(KlistParaTest, SetAfterVC)
         GlobalV::ofs_running.open("tmp_klist_6");
 }
     const int cal_symm_repr[2] = {0, 6};
-    symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, GlobalV::ofs_running, 1e-6, 1, "scf", cal_symm_repr);
+    symm.analy_sys(ucell.lat, ucell, ucell.atoms, GlobalV::ofs_running, 1e-6, 1, "scf", cal_symm_repr);
     // read KPT
     std::string k_file = "./support/KPT1";
     // note: do NOT pre-set kv->spin_mult here; set() takes the physical

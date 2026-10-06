@@ -12,6 +12,8 @@
 #include "source_base/constants.h"
 #include "symm_basic.h"
 
+class UnitCell;
+
 namespace ModuleSymmetry
 {
 
@@ -47,7 +49,7 @@ public:
     /// @param calculation calculation type (scf, relax, cell-relax, etc.)
     /// @param cal_symm_repr control for symmetry representation output [0]=flag, [1]=precision
     /// get the symmetry information of the system, gmatries (rotation 3*3 matrixs), gtrans (transfer a collections vector3), etc.
-    void analy_sys(const Lattice& lat, const Statistics& st, Atom* atoms, std::ofstream& ofs_running,
+    void analy_sys(const Lattice& lat, const UnitCell& ucell, Atom* atoms, std::ofstream& ofs_running,
                    const double symmetry_prec, const int nspin, const std::string& calculation,
                    const int* cal_symm_repr);
 
@@ -349,7 +351,7 @@ public:
     void set_atom_map(const Atom* atoms);
     /// @brief check if all the atoms are movable
     ///  delta_pos symmetrization in relax is only meaningful when all the atoms are movable in all the directions.
-    bool is_all_movable(const Atom* atoms, const Statistics& st)const;
+    bool is_all_movable(const Atom* atoms, const UnitCell& ucell)const;
 
     // to be called in lattice_type
     void get_shortest_latvec(ModuleBase::Vector3<double> &a1, 
@@ -367,7 +369,7 @@ public:
     /// Analyze magnetic group without time-reversal symmetry 
     /// (because currently the charge density symmetrization does not support it)
     /// Method: treat atoms with different magmom as atoms of different type
-    void analyze_magnetic_group(const Atom* atoms, const Statistics& st, int& nrot_out, int& nrotk_out);
+    void analyze_magnetic_group(const Atom* atoms, const UnitCell& ucell, int& nrot_out, int& nrotk_out);
 
     /// (nspin=4 / SOC) Restrict the already-built space group to the unitary magnetic
     /// subgroup: keep operation g only if it preserves the magnetization as a pseudovector,
@@ -375,7 +377,7 @@ public:
     /// that reverse the moment (which are only symmetries when combined with time reversal)
     /// from being applied in k-reduction and density symmetrization.
     /// Non-magnetic (m_i=0) keeps all operations.
-    void analyze_magnetic_group_nspin4(const Atom* atoms, const Statistics& st, const ModuleBase::Matrix3& latvec);
+    void analyze_magnetic_group_nspin4(const Atom* atoms, const UnitCell& ucell, const ModuleBase::Matrix3& latvec);
 };
 
 /**

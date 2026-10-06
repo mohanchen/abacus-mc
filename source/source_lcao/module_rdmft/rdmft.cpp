@@ -157,7 +157,7 @@ void RDMFT<TK, TR>::init(Parallel_Orbitals& ParaV_in,
         if (exx_spacegroup_symmetry)
         {
             const std::array<int, 3>& period = RI_Util::get_Born_vonKarmen_period(*kv);
-            this->symrot_exx.find_irreducible_sector(ucell->symm, ucell->atoms, ucell->st,
+            this->symrot_exx.find_irreducible_sector(ucell->symm, ucell->atoms, *ucell,
                     RI_Util::get_Born_von_Karmen_cells(period), period, ucell->lat, PARAM.globalv.global_out_dir);
             this->symrot_exx.cal_Ms(*kv, *ucell, *ParaV, nspin);
         }

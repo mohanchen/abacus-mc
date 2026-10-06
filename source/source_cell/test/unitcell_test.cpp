@@ -145,10 +145,10 @@ TEST_F(UcellTest, Constructor)
     EXPECT_EQ(ucell->nat, 0);
     EXPECT_EQ(ucell->namax, 0);
     EXPECT_EQ(ucell->nwmax, 0);
-    EXPECT_EQ(ucell->iat2it, nullptr);
-    EXPECT_EQ(ucell->iat2ia, nullptr);
-    EXPECT_EQ(ucell->iwt2iat, nullptr);
-    EXPECT_EQ(ucell->iwt2iw, nullptr);
+    EXPECT_TRUE(ucell->iat2it.empty());
+    EXPECT_TRUE(ucell->iat2ia.empty());
+    EXPECT_TRUE(ucell->iwt2iat.empty());
+    EXPECT_TRUE(ucell->iwt2iw.empty());
     EXPECT_DOUBLE_EQ(ucell->tpiba, 0.0);
     EXPECT_DOUBLE_EQ(ucell->tpiba2, 0.0);
     EXPECT_DOUBLE_EQ(ucell->omega, 0.0);

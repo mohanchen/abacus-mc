@@ -36,7 +36,7 @@ namespace ModuleSymmetry
 
     template<typename TR>   // HContainer type
     void Symmetry_rotation::restore_HR(
-        const Symmetry& symm, const Atom* atoms, const Statistics& st, const char mode,
+        const Symmetry& symm, const Atom* atoms, const UnitCell& ucell, const char mode,
         const hamilt::HContainer<TR>& HR_irreduceble,
         hamilt::HContainer<TR>& HR_rotated)const
     {
@@ -59,7 +59,7 @@ namespace ModuleSymmetry
             const int R_hc = ap_hc.find_R(R[0], R[1], R[2]);
             if (R_hc < 0) continue;
             TR* ijR_ptr = ap_hc.get_pointer(R_hc);
-            rotate_atompair_parallel(irijR_ptr, isym, atoms, st, irap, ap, mode, *irap_hc.get_paraV(), ijR_ptr);
+            rotate_atompair_parallel(irijR_ptr, isym, atoms, ucell, irap, ap, mode, *irap_hc.get_paraV(), ijR_ptr);
         }
         ModuleBase::timer::end("Symmetry_rotation", "restore_HR");
     }
@@ -77,13 +77,13 @@ namespace ModuleSymmetry
                 obj[starti + i + (startj + j) * nr] = block(j, i);
     };
     template<typename TR>
-    void Symmetry_rotation::rotate_atompair_parallel(const TR* Alocal_in, const int isym, const Atom* atoms, const Statistics& st,
+    void Symmetry_rotation::rotate_atompair_parallel(const TR* Alocal_in, const int isym, const Atom* atoms, const UnitCell& ucell,
         const Tap& ap_in, const Tap& ap_out, const char mode, const Parallel_Orbitals& pv, TR* Alocal_out, const bool output)const
     {
         // all the matrices are row-major (col-contiguous)
         int iat1 = ap_in.first, iat2 = ap_in.second;
-        int it1 = st.iat2it[iat1], it2 = st.iat2it[iat2];
-        int ia1 = st.iat2ia[iat1], ia2 = st.iat2ia[iat2];
+        int it1 = ucell.iat2it[iat1], it2 = ucell.iat2it[iat2];
+        int ia1 = ucell.iat2ia[iat1], ia2 = ucell.iat2ia[iat2];
         // contruct T matrix
         std::vector<TR> T1, T2;
         auto set_rotation_matrix = [&](const int& it, const int& ia, std::vector<TR>& T)->int
@@ -149,8 +149,8 @@ namespace ModuleSymmetry
 
         // copy back to Alocal_out
         iat1 = ap_out.first, iat2 = ap_out.second;
-        it1 = st.iat2it[iat1], it2 = st.iat2it[iat2];
-        ia1 = st.iat2ia[iat1], ia2 = st.iat2ia[iat2];
+        it1 = ucell.iat2it[iat1], it2 = ucell.iat2it[iat2];
+        ia1 = ucell.iat2ia[iat1], ia2 = ucell.iat2ia[iat2];
         abr1 = pv.atom_begin_row[iat1], abc2 = pv.atom_begin_col[iat2];
         iw1start = atoms[it1].stapos_wf + ia1 * atoms[it1].nw;
         iw2start = atoms[it2].stapos_wf + ia2 * atoms[it2].nw;
@@ -164,7 +164,7 @@ namespace ModuleSymmetry
     }
 
     template<typename TR>
-    void Symmetry_rotation::test_HR_rotation(const Symmetry& symm, const Atom* atoms, const Statistics& st,
+    void Symmetry_rotation::test_HR_rotation(const Symmetry& symm, const Atom* atoms, const UnitCell& ucell,
         const char mode, const hamilt::HContainer<TR>& HR_full)
     {
         ModuleBase::TITLE("Symmetry_rotation", "test_HR_rotation");
@@ -210,11 +210,11 @@ namespace ModuleSymmetry
         //2. rotate
         hamilt::HContainer<TR> HR_rotated(HR_full);
         HR_rotated.set_zero();
-        this->restore_HR(symm, atoms, st, mode, HR_irreducible, HR_rotated);
+        this->restore_HR(symm, atoms, ucell, mode, HR_irreducible, HR_rotated);
         //3. compare
-        for (int iat1 = 0;iat1 < st.nat;++iat1)
+        for (int iat1 = 0;iat1 < ucell.nat;++iat1)
         {
-            for (int iat2 = 0;iat2 < st.nat;++iat2)
+            for (int iat2 = 0;iat2 < ucell.nat;++iat2)
             {
                 const hamilt::AtomPair<TR>& ap_full = HR_full.get_atom_pair(iat1, iat2);
                 const hamilt::AtomPair<TR>& ap_rotated = HR_rotated.get_atom_pair(iat1, iat2);

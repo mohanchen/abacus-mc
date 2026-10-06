@@ -1,9 +1,10 @@
 #include "symmetry.h"
+#include "source_cell/unitcell.h"
 #include "source_base/output.h"
 
 using namespace ModuleSymmetry;
 
-void Symmetry::analy_sys(const Lattice& lat, const Statistics& st, Atom* atoms, std::ofstream& ofs_running,
+void Symmetry::analy_sys(const Lattice& lat, const UnitCell& ucell, Atom* atoms, std::ofstream& ofs_running,
                          const double symmetry_prec, const int nspin, const std::string& calculation,
                          const int* cal_symm_repr)
 {
@@ -30,9 +31,9 @@ void Symmetry::analy_sys(const Lattice& lat, const Statistics& st, Atom* atoms, 
     // 1. copy data and allocate memory
     // --------------------------------
     // number of total atoms
-    this->nat = st.nat;
+    this->nat = ucell.nat;
     // number of atom species
-    this->ntype = st.ntype;
+    this->ntype = ucell.ntype;
 
     assert(ntype>0);
 
@@ -122,7 +123,7 @@ void Symmetry::analy_sys(const Lattice& lat, const Statistics& st, Atom* atoms, 
 
             if (!pricell_loop && nspin == 2)
             {
-                this->analyze_magnetic_group(atoms, st, nrot_out, nrotk_out);
+                this->analyze_magnetic_group(atoms, ucell, nrot_out, nrotk_out);
             }
             else
             {
@@ -294,13 +295,13 @@ void Symmetry::analy_sys(const Lattice& lat, const Statistics& st, Atom* atoms, 
     // the magnetization (pseudovector), so they are not applied in k-reduction / density symmetrization.
     if (nspin == 4)
     {
-        this->analyze_magnetic_group_nspin4(atoms, st, latvec1);
+        this->analyze_magnetic_group_nspin4(atoms, ucell, latvec1);
     }
 
     // Do this here for debug
     if (calculation == "relax")
     {
-        this->all_mbl = this->is_all_movable(atoms, st);
+        this->all_mbl = this->is_all_movable(atoms, ucell);
         if (!this->all_mbl)
         {
             std::cout << "WARNING: Symmetry cannot be kept when not all atoms are movable.\n ";

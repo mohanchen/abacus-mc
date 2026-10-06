@@ -119,7 +119,7 @@ void ESolver_FP::before_all_runners(BaseCell& basecell, const Input_para& inp)
     if (ModuleSymmetry::Symmetry::symm_flag == 1)
     {
         const int cal_symm_repr[2] = {this->inp_->cal_symm_repr[0], this->inp_->cal_symm_repr[1]};
-        ucell.symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, GlobalV::ofs_running,
+        ucell.symm.analy_sys(ucell.lat, ucell, ucell.atoms, GlobalV::ofs_running,
                              this->inp_->symmetry_prec, inp.nspin, this->inp_->calculation, cal_symm_repr);
         ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "SYMMETRY");
     }
@@ -212,7 +212,7 @@ void ESolver_FP::before_scf(UnitCell& ucell, const int istep)
         if (ModuleSymmetry::Symmetry::symm_flag == 1)
         {
             const int cal_symm_repr[2] = {this->inp_->cal_symm_repr[0], this->inp_->cal_symm_repr[1]};
-            ucell.symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, GlobalV::ofs_running,
+            ucell.symm.analy_sys(ucell.lat, ucell, ucell.atoms, GlobalV::ofs_running,
                                  this->inp_->symmetry_prec, this->inp_->nspin, this->inp_->calculation, cal_symm_repr);
             ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "SYMMETRY");
         }

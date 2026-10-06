@@ -115,11 +115,11 @@ rules. Read the complete governance document before making or reviewing changes:
 - Do not relax existing tests or references merely to make a failure pass.
   Update references only when the intended behavior changed and the PR explains
   why.
-- When mocking `UnitCell` in a test fixture, do not `delete[] iat2it` or
-  `iat2ia` in `TearDown`: they are owned by `UnitCell`'s internal `Statistics`
-  member, whose destructor releases them. Deleting them again causes a double
-  free. Mirror the ownership pattern of existing fixtures such as
-  `source/source_lcao/module_dftu/test/dftu_lcao_test.cpp`.
+- `UnitCell` is non-copyable (copy constructor/assignment deleted) and movable;
+  its index maps (`iat2it`, `iat2ia`, `iwt2iat`, `iwt2iw`) are
+  `std::vector<int>` members owned directly by `UnitCell`. Size them with
+  `resize()`/`assign()`; never `new[]`/`delete[]` them. Do not reintroduce a
+  nested data struct re-exported through reference members.
 
 ## Review And Exception Flow
 

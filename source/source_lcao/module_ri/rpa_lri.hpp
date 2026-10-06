@@ -167,7 +167,7 @@ void RPA_LRI<T, Tdata>::cal_postSCF_exx(const module_dm::DensityMatrix<T, Tdata>
     {
         const std::array<Tcell, Ndim> period = RI_Util::get_Born_vonKarmen_period(kv);
         const auto& Rs = RI_Util::get_Born_von_Karmen_cells(period);
-        symrot.find_irreducible_sector(ucell.symm, ucell.atoms, ucell.st, Rs, period, ucell.lat, PARAM.globalv.global_out_dir);
+        symrot.find_irreducible_sector(ucell.symm, ucell.atoms, ucell, Rs, period, ucell.lat, PARAM.globalv.global_out_dir);
         // set Lmax of the rotation matrices to max(l_ao, l_abf), to support rotation under ABF
         // NOTE: Using Exx_Abfs::Construct_Orbs::get_Lmax() to compute Lmax from the actual ABFs
         // instead of relying on exx_cut_coulomb->abfs_Lmax() (not yet initialized) or

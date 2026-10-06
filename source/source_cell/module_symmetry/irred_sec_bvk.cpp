@@ -1,4 +1,5 @@
 #include "irreducible_sector.h"
+#include "source_cell/unitcell.h"
 namespace ModuleSymmetry
 {
     ModuleBase::Matrix3 Irreducible_Sector::direct_to_cartesian(const ModuleBase::Matrix3& d, const ModuleBase::Matrix3& latvec)const
@@ -55,7 +56,7 @@ namespace ModuleSymmetry
         int c = a % b;
         return (c == 0) ? b : gcd(b, c);
     }
-    void Irreducible_Sector::gen_symmetry_BvK(const ModuleSymmetry::Symmetry& symm, const Atom* atoms, const Lattice& lat, const Statistics& st, const TC bvk_period)
+    void Irreducible_Sector::gen_symmetry_BvK(const ModuleSymmetry::Symmetry& symm, const Atom* atoms, const Lattice& lat, const UnitCell& ucell, const TC bvk_period)
     {
         ModuleBase::TITLE("Irreducible_Sector", "gen_symmetry_BvK");
         auto set_matrix3 = [](const ModuleBase::Vector3<double>& a1, const ModuleBase::Vector3<double>& a2, const ModuleBase::Vector3<double>& a3)
@@ -78,11 +79,11 @@ namespace ModuleSymmetry
         // extern lattice to minimal BvK lattice, and set direct coordinates in min BvK lattice
         int bvk_gcd = gcd(bvk_period[0], gcd(bvk_period[1], bvk_period[2]));
         const TC bvk_min_period = TC({ bvk_period[0] / bvk_gcd, bvk_period[1] / bvk_gcd, bvk_period[2] / bvk_gcd });
-        const int bvk_nat = st.nat * bvk_min_period[0] * bvk_min_period[1] * bvk_min_period[2];
-        std::vector<int> bvk_na(st.ntype);
-        std::vector<int> bvk_istart(st.ntype, 0);
+        const int bvk_nat = ucell.nat * bvk_min_period[0] * bvk_min_period[1] * bvk_min_period[2];
+        std::vector<int> bvk_na(ucell.ntype);
+        std::vector<int> bvk_istart(ucell.ntype, 0);
         int bvk_itmin_start = 0, bvk_itmin_type = 0;
-        for (int it = 0;it < st.ntype;++it)
+        for (int it = 0;it < ucell.ntype;++it)
         {
             bvk_na[it] = atoms[it].na * bvk_min_period[0] * bvk_min_period[1] * bvk_min_period[2];
             if (it > 0) { bvk_istart[it] = bvk_istart[it - 1] + bvk_na[it - 1];
@@ -103,7 +104,7 @@ namespace ModuleSymmetry
         s3 = a3 = lat.a3 * static_cast<double>(bvk_min_period[2]);
         ModuleBase::Matrix3 bvk_min_lat = set_matrix3(s1, s2, s3);
         int at = 0;
-        for (int it = 0; it < st.ntype; ++it) {
+        for (int it = 0; it < ucell.ntype; ++it) {
             for (int c1 = 0;c1 < bvk_min_period[0];++c1) {
                 for (int c2 = 0;c2 < bvk_min_period[1];++c2) {
                     for (int c3 = 0;c3 < bvk_min_period[2];++c3) {

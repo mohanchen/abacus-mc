@@ -1,4 +1,5 @@
 #include "symm_rotation_k.h"
+#include "source_cell/unitcell.h"
 #include "source_base/constants.h"
 #include <cmath>
 #include "source_base/parallel_reduce.h"
@@ -112,7 +113,7 @@ namespace ModuleSymmetry
             for (const int op : needed)
             {
                 this->Ms_[ik_ibz][op] = this->contruct_2d_rot_mat_ao(
-                    ucell.symm, ucell.atoms, ucell.st, kvec_d_ibz_global[ik_ibz], op, pv, spin_U[op]);
+                    ucell.symm, ucell.atoms, ucell, kvec_d_ibz_global[ik_ibz], op, pv, spin_U[op]);
             }
         }
 
@@ -388,7 +389,7 @@ namespace ModuleSymmetry
 
     // 2d-block parallized rotation matrix in AO-representation, denoted as M.
     // finally we will use D(k)=M(R, k)^\dagger*D(Rk)*M(R, k) to   D(k) from D(Rk) in cal_Ms.
-    std::vector<std::complex<double>> Symmetry_rotation_k::contruct_2d_rot_mat_ao(const Symmetry& symm, const Atom* atoms, const Statistics& cell_st,
+    std::vector<std::complex<double>> Symmetry_rotation_k::contruct_2d_rot_mat_ao(const Symmetry& symm, const Atom* atoms, const UnitCell& ucell,
         const TCdouble& kvec_d_ibz, int isym, const Parallel_2D& pv, const SpinRotation::Su2& spin_U) const
     {
         const bool soc = (this->nspin_ == 4);
@@ -402,12 +403,12 @@ namespace ModuleSymmetry
                 return (is < nrotk_u) ? symm.get_rotated_atom(is, iat)
                                       : symm.get_rotated_atom_anti(is - nrotk_u, iat);
             };
-        for (int iat1 = 0;iat1 < cell_st.nat;++iat1)
+        for (int iat1 = 0;iat1 < ucell.nat;++iat1)
         {
-            int it = cell_st.iat2it[iat1];  // it1=it2
-            int ia1 = cell_st.iat2ia[iat1];
+            int it = ucell.iat2it[iat1];  // it1=it2
+            int ia1 = ucell.iat2ia[iat1];
             int iat2 = rotated_atom(isym, iat1); //iat2=rot(iat1)
-            int ia2 = cell_st.iat2ia[iat2];
+            int ia2 = ucell.iat2ia[iat2];
             // cal phase factor from return lattice:     exp(-ik_ibz*O)
             double arg = -2 * ModuleBase::PI * kvec_d_ibz * this->irs_.return_lattice_[iat1][isym];
             std::complex<double>phase_factor = std::complex<double>(std::cos(arg), std::sin(arg));

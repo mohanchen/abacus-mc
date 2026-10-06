@@ -42,10 +42,8 @@ UnitCell::~UnitCell()
 
 void UnitCell::set_iat2itia() {
     assert(nat > 0);
-    delete[] iat2it;
-    delete[] iat2ia;
-    this->iat2it = new int[nat];
-    this->iat2ia = new int[nat];
+    this->iat2it.resize(nat);
+    this->iat2ia.resize(nat);
     int iat = 0;
     for (int it = 0; it < ntype; it++) {
         for (int ia = 0; ia < atoms[it].na; ia++) {

@@ -1,6 +1,7 @@
 #include <memory>
 #include <array>
 #include "symmetry.h"
+#include "source_cell/unitcell.h"
 
 namespace ModuleSymmetry
 {
@@ -365,13 +366,13 @@ void Symmetry::get_optlat(ModuleBase::Vector3<double> &v1, ModuleBase::Vector3<d
     return;
 }
 
-bool Symmetry::is_all_movable(const Atom* atoms, const Statistics& st)const
+bool Symmetry::is_all_movable(const Atom* atoms, const UnitCell& ucell)const
 {
     bool all_mbl = true;
-    for (int iat = 0;iat < st.nat;++iat)
+    for (int iat = 0;iat < ucell.nat;++iat)
     {
-        int it = st.iat2it[iat];
-        int ia = st.iat2ia[iat];
+        int it = ucell.iat2it[iat];
+        int ia = ucell.iat2ia[iat];
         if (!atoms[it].mbl[ia].x || !atoms[it].mbl[ia].y || !atoms[it].mbl[ia].z)
         {
             all_mbl = false;

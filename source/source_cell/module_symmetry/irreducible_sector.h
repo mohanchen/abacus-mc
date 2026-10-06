@@ -61,7 +61,7 @@ namespace ModuleSymmetry
         ///                    output directory setting); kept as an explicit argument rather than
         ///                    reading the global config directly so this LibRI-free class has no
         ///                    module_parameter link dependency.
-        void find_irreducible_sector(const Symmetry& symm, const Atom* atoms, const Statistics& st,
+        void find_irreducible_sector(const Symmetry& symm, const Atom* atoms, const UnitCell& ucell,
             const std::vector<TC>& Rs, const TC& period, const Lattice& lat, const std::string& output_dir = "");
         const std::map<Tap, std::set<TC>>& get_irreducible_sector()const { return this->irreducible_sector_; }
         // const std::map<int, std::set<std::pair<int, TC>>> convirt_irreducible_sector() {};
@@ -86,7 +86,7 @@ namespace ModuleSymmetry
             return this->return_lattice_[iat][isym];
         }
     protected:
-        void cal_return_lattice_all(const Symmetry& symm, const Atom* atoms, const Statistics& st);
+        void cal_return_lattice_all(const Symmetry& symm, const Atom* atoms, const UnitCell& ucell);
 
         //--------------------------------------------------------------------------------
         /// The sub functions to find irreducible sector: {abR}
@@ -96,8 +96,8 @@ namespace ModuleSymmetry
         TC rotate_R(const Symmetry& symm, const int isym, const int iat1, const int iat2, const TC& R, const char gauge = 'R')const;
         TapR rotate_apR_by_formula(const Symmetry& symm, const int isym, const TapR& iapR, const char gauge = 'R')const;
         /// gauge='L': tau_a + R - tau_b; gauge='R': tau_a - tau_b - R (direct)
-        TCdouble get_aRb_direct(const Atom* atoms, const Statistics& st, const int iat1, const int iat2, const TC& R, const char gauge = 'R')const;
-        TCdouble get_aRb_direct(const Atom* atoms, const Statistics& st, const int iat1, const int iat2, const TCdouble& R, const char gauge = 'R')const;
+        TCdouble get_aRb_direct(const Atom* atoms, const UnitCell& ucell, const int iat1, const int iat2, const TC& R, const char gauge = 'R')const;
+        TCdouble get_aRb_direct(const Atom* atoms, const UnitCell& ucell, const int iat1, const int iat2, const TCdouble& R, const char gauge = 'R')const;
 
         ModuleBase::Matrix3 direct_to_cartesian(const ModuleBase::Matrix3& d, const ModuleBase::Matrix3& latvec)const;
 
@@ -115,7 +115,7 @@ namespace ModuleSymmetry
 
         //--------------------------------------------------------------------------------
         /// The sub functions judge special symmetry
-        void gen_symmetry_BvK(const Symmetry& symm, const Atom* atoms, const Lattice& lat, const Statistics& st, const TC bvk_period);
+        void gen_symmetry_BvK(const Symmetry& symm, const Atom* atoms, const Lattice& lat, const UnitCell& ucell, const TC bvk_period);
         /// whether in 2D plain or not for each symmetry operation
         // std::vector<bool> in_plain(const ModuleSymmetry::Symmetry& symm, const ModuleBase::Matrix3& latvec)const;
         //--------------------------------------------------------------------------------

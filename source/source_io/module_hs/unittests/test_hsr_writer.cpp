@@ -379,7 +379,7 @@ TEST(HsrWriterIo, HContainerBinaryMpiGatherWritesCompleteFiles)
     ucell.set_atom_flag = true;
     ucell.atoms[0].na = 1;
     ucell.atoms[0].nw = 2;
-    ucell.iat2it = new int[1];
+    ucell.iat2it.resize(1);
     ucell.iat2it[0] = 0;
     ucell.set_iat2iwt(1);
     const int* iat2iwt = ucell.get_iat2iwt();

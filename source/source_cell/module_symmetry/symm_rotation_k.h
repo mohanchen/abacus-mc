@@ -42,10 +42,10 @@ namespace ModuleSymmetry
         const int& abfs_Lmax = this->abfs_Lmax_;
         //--------------------------------------------------------------------------------
         // setters
-        void find_irreducible_sector(const Symmetry& symm, const Atom* atoms, const Statistics& st,
+        void find_irreducible_sector(const Symmetry& symm, const Atom* atoms, const UnitCell& ucell,
             const std::vector<TC>& Rs, const TC& period, const Lattice& lat, const std::string& output_dir = "")
         {
-            this->irs_.find_irreducible_sector(symm, atoms, st, Rs, period, lat, output_dir);
+            this->irs_.find_irreducible_sector(symm, atoms, ucell, Rs, period, lat, output_dir);
         }
         void set_abfs_Lmax(const int l) { this->abfs_Lmax_ = l; }
         //--------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ namespace ModuleSymmetry
 
         /// 2d-block parallized rotation matrix in AO-representation, denoted as M.
         /// finally we will use D(k)=M(R, k)^\dagger*D(Rk)*M(R, k) to recover D(k) from D(Rk).
-        std::vector<std::complex<double>> contruct_2d_rot_mat_ao(const Symmetry& symm, const Atom* atoms, const Statistics& cell_st,
+        std::vector<std::complex<double>> contruct_2d_rot_mat_ao(const Symmetry& symm, const Atom* atoms, const UnitCell& ucell,
             const TCdouble& kvec_d_ibz, int isym, const Parallel_2D& pv,
             const SpinRotation::Su2& spin_U /*= SpinRotation::Su2{ 1.0, 0.0, 0.0, 1.0 }*/) const;
 
