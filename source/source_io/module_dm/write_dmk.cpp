@@ -249,6 +249,11 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
                     ModuleBase::WARNING("ModuleIO::write_dmk", "Can't create DENSITY MATRIX File < " + fn + " >.");
                     continue;
                 }
+                else
+                {
+                    const std::string spin_tag = (nspin == 2) ? (ispin == 0 ? " (spin up  )" : " (spin down)") : "";
+                    ofs_running << " Write DM(k)" << spin_tag << " matrix in NAO basis to file: " << fn << std::endl;
+                }
 
 
                 // information about density matrix at this k-point
@@ -313,13 +318,6 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
             } // rank0
         }     // ik
     }         // ispin
-
-    if (my_rank == 0)
-    {
-        const int nfiles = nk * nspin;
-        ofs_running << " Write DM(k) matrices in NAO basis to directory: " << dmk_dir
-                    << " (" << nfiles << " files)" << std::endl;
-    }
 
     ModuleBase::timer::end("ModuleIO", "write_dmk");
 }
