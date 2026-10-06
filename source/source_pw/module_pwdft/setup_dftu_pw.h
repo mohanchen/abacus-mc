@@ -22,7 +22,6 @@ void iter_init_dftu_pw(const int iter,
                        const ModuleBase::matrix& wg,
                        const UnitCell& ucell,
                        Charge_Mixing* p_chgmix,
-                       const bool out_chg,
                        const std::string& global_out_dir,
                        const OccmatOutputCfg& occmat_cfg,
                        const int* isk);

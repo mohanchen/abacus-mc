@@ -392,7 +392,7 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
     Plus_U_Base dftu;
     this->init_dftu(dftu, false);
 
-    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5};
+    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true};
     const std::string out_dir = "./";
 
     // fresh run: no occupation matrix has been computed or loaded
@@ -449,4 +449,47 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
 
     std::remove("./dm_onsiteg1.txt");
     std::remove("./dm_onsiteg2.txt");
+}
+
+/// out_occ_mat = false must suppress both the numbered snapshot file and the
+/// latest dm_onsite.txt, even when the frequency gates would trigger.
+TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
+{
+    Plus_U_Base dftu;
+    this->init_dftu(dftu, false);
+
+    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, false};
+    const std::string out_dir = "./";
+
+    DFTU_BASE::append_ion_step_snapshot(dftu,
+                                        ucell,
+                                        out_dir,
+                                        2, // nspin
+                                        1, // npol
+                                        0, // istep (an output ionic step)
+                                        1, // iter
+                                        false,
+                                        true, // occmat_ready
+                                        1e-6,
+                                        0.5,
+                                        cfg,
+                                        DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    std::ifstream ifs("./dm_onsiteg1.txt");
+    EXPECT_FALSE(ifs.is_open());
+
+    DFTU_BASE::write_latest_occmat(dftu,
+                                   ucell,
+                                   out_dir,
+                                   2, // nspin
+                                   1, // npol
+                                   0, // istep
+                                   2, // iter
+                                   1e-6,
+                                   0.5,
+                                   cfg,
+                                   DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    std::ifstream ifs_latest("./dm_onsite.txt");
+    EXPECT_FALSE(ifs_latest.is_open());
 }

@@ -641,7 +641,6 @@ void prepare_ion_step_file(const std::string& global_out_dir,
 
 void output(const Plus_U_Base& dftu,
             const UnitCell& ucell,
-            bool out_chg,
             const std::string& global_out_dir,
             int nspin,
             int npol,
@@ -716,7 +715,7 @@ void output(const Plus_U_Base& dftu,
     // iter_init_dftu_pw(), because it skips output() at istep 0 / iter 1.
     // Electronic-step sections are appended later by append_ion_step_snapshot().
     const bool ion_step_output = is_ion_step_output_step(istep, cfg);
-    if (out_chg && ion_step_output && iter == 1)
+    if (cfg.out_occ_mat && ion_step_output && iter == 1)
     {
         prepare_ion_step_file(global_out_dir, istep, cfg);
     }
@@ -801,7 +800,7 @@ void append_ion_step_snapshot(const Plus_U_Base& dftu,
 
     const bool ion_step_output = is_ion_step_output_step(istep, cfg);
     const bool elec_trigger = is_elec_snapshot_trigger(iter, conv_esolver, cfg);
-    if (!ion_step_output || !elec_trigger || GlobalV::MY_RANK != 0)
+    if (!cfg.out_occ_mat || !ion_step_output || !elec_trigger || GlobalV::MY_RANK != 0)
     {
         return;
     }
@@ -859,11 +858,12 @@ void write_latest_occmat(const Plus_U_Base& dftu,
                          int iter,
                          double scf_thr,
                          double drho,
+                         const OccmatOutputCfg& cfg,
                          OccmatSocLayout soc_layout)
 {
     ModuleBase::TITLE("DFTU_BASE", "write_latest_occmat");
 
-    if (GlobalV::MY_RANK != 0)
+    if (!cfg.out_occ_mat || GlobalV::MY_RANK != 0)
     {
         return;
     }

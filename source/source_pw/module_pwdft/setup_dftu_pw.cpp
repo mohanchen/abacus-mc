@@ -14,7 +14,6 @@ void iter_init_dftu_pw(const int iter,
                         const ModuleBase::matrix& wg,
                         const UnitCell& ucell,
                         Charge_Mixing* p_chgmix,
-                        const bool out_chg,
                         const std::string& global_out_dir,
                         const OccmatOutputCfg& occmat_cfg,
                         const int* isk)
@@ -28,7 +27,7 @@ void iter_init_dftu_pw(const int iter,
     // the first occupation matrix exists. output() is skipped below at
     // istep 0 / iter 1; without this call the g1 file would miss its header
     // and could inherit stale sections from a previous run.
-    if (iter == 1 && out_chg
+    if (iter == 1 && occmat_cfg.out_occ_mat
         && DFTU_BASE::is_ion_step_output_step(istep, occmat_cfg))
     {
         DFTU_BASE::prepare_ion_step_file(global_out_dir,
@@ -50,7 +49,7 @@ void iter_init_dftu_pw(const int iter,
                               dftu.has_occ_mixer() ? &dftu.occ_mixer() : nullptr,
                               dftu.get_uterm_mat(), dftu.energy_ref());
     }
-    DFTU_BASE::output(dftu, ucell, out_chg, global_out_dir,
+    DFTU_BASE::output(dftu, ucell, global_out_dir,
                       PARAM.inp.nspin, PARAM.globalv.npol, istep, iter, occmat_cfg,
                       DFTU_BASE::SOC_LAYOUT_PAULI);
 }

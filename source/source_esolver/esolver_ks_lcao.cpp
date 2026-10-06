@@ -560,8 +560,9 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     // 1) calculate the local occupation number matrix and energy correction in DFT+U
     const DFTU_BASE::OccmatOutputCfg occmat_cfg{this->inp_->out_freq_ion,
                                                 this->inp_->out_freq_elec,
-                                                this->inp_->scf_nmax};
-    finish_dftu_lcao<TK>(conv_esolver, this->inp_->dft_plus_u, this->inp_->out_chg[0], this->dftu_.get(), ucell, dm_vec, this->kv, this->p_chgmix->get_mixing_beta(), hamilt_lcao, PARAM.globalv.global_out_dir, this->inp_->nspin, PARAM.globalv.npol, PARAM.globalv.gamma_only_local, istep, iter, occmat_cfg);
+                                                this->inp_->scf_nmax,
+                                                this->inp_->out_occ_mat};
+    finish_dftu_lcao<TK>(conv_esolver, this->inp_->dft_plus_u, this->dftu_.get(), ucell, dm_vec, this->kv, this->p_chgmix->get_mixing_beta(), hamilt_lcao, PARAM.globalv.global_out_dir, this->inp_->nspin, PARAM.globalv.npol, PARAM.globalv.gamma_only_local, istep, iter, occmat_cfg);
 
     // mohan add 2025-11: push DFT+U energy from Plus_U instance to ElecState.
     // Covers both dft_plus_u==1 (new method, energy accumulated by DFTU::contributeHR
@@ -586,9 +587,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     // overwrite dm_onsite.txt with the latest occupation matrix and the
     // actual charge-density residual; ESolver_KS::iter_finish() above has
     // computed drho for this electronic step.
-    if (this->inp_->out_chg[0])
-    {
-        DFTU_BASE::write_latest_occmat(*this->dftu_,
+    DFTU_BASE::write_latest_occmat(*this->dftu_,
                                       ucell,
                                       PARAM.globalv.global_out_dir,
                                       this->inp_->nspin,
@@ -597,8 +596,8 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
                                       iter,
                                       this->scf_thr,
                                       this->drho,
+                                      occmat_cfg,
                                       DFTU_BASE::SOC_LAYOUT_SPIN_BASIS_REAL);
-    }
 
     // append the current electronic-step section to dm_onsiteg{#}.txt
     // LCAO computes the occupation matrix in every electronic iteration, so

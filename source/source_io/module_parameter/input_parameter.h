@@ -439,6 +439,8 @@ struct Input_para
                                               ///< 0: output only when ion steps are finished
     int out_freq_td = 0;                      ///< output interval in RT-TDDFT
     std::vector<int> out_chg = {0, 3};        ///< output charge density. 0: no; 1: yes
+    bool out_occ_mat = true;                  ///< output DFT+U occupation matrices;
+                                              ///< frequency controlled by out_freq_ion/out_freq_elec
     std::vector<int> out_xc_r = {-1, 3};      ///< output xc(r). -1: no; >=0: output the order of xc(r)
     std::vector<int> out_pot = {0, 8};        ///< output potential
     int out_wfc_pw = 0;                       ///< 0: no; 1: txt; 2: dat

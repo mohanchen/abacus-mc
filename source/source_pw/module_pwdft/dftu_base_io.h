@@ -27,6 +27,7 @@ struct OccmatOutputCfg
     int out_freq_ion;  ///< ionic-step interval; 0 disables numbered files
     int out_freq_elec; ///< electronic-iteration interval recorded inside a numbered file
     int scf_nmax;      ///< maximum number of electronic iterations
+    bool out_occ_mat;  ///< master switch of occupation-matrix output (out_occ_mat INPUT parameter)
 };
 
 /// Text format used by write_occup_m().
@@ -148,11 +149,11 @@ void prepare_ion_step_file(const std::string& global_out_dir,
 /// Output DFT+U information (Hubbard U/J, local occupation matrices) to the
 /// running log.
 ///
-/// When cfg.out_freq_ion is positive and istep is an output ionic step,
-/// the per-ionic-step file dm_onsiteg{istep+1}.txt is created: at the first
-/// electronic step (iter == 1) it is truncated and initialized with a
-/// provenance header, then append_ion_step_snapshot() appends one section
-/// per recorded electronic step.
+/// When cfg.out_occ_mat is true, cfg.out_freq_ion is positive and istep is an
+/// output ionic step, the per-ionic-step file dm_onsiteg{istep+1}.txt is
+/// created: at the first electronic step (iter == 1) it is truncated and
+/// initialized with a provenance header, then append_ion_step_snapshot()
+/// appends one section per recorded electronic step.
 ///
 /// Note: dm_onsite.txt is NOT written here. It records the actual
 /// charge-density residual drho, which is only known after the electronic
@@ -163,7 +164,6 @@ void prepare_ion_step_file(const std::string& global_out_dir,
 /// Plus_U_Base state via public accessors; no friend declaration needed.
 void output(const Plus_U_Base& dftu,
             const UnitCell& ucell,
-            bool out_chg,
             const std::string& global_out_dir,
             int nspin,
             int npol,
@@ -180,6 +180,19 @@ void output(const Plus_U_Base& dftu,
 /// additionally carries the configured scf_thr and the actual drho of
 /// this step. Must be called at the iter_finish stage, after drho is
 /// computed; it is the entry file of init_chg=file and NSCF restarts.
+/// No-op when cfg.out_occ_mat is false.
+///
+/// @param dftu DFT+U object holding the occupation matrices
+/// @param ucell unit cell
+/// @param global_out_dir output directory (including the trailing separator)
+/// @param nspin number of spin components (1, 2 or 4)
+/// @param npol number of polarizations
+/// @param istep ionic-step index, starting from 0
+/// @param iter electronic-iteration index, starting from 1
+/// @param scf_thr configured charge-density convergence threshold
+/// @param drho actual charge-density residual of the current electronic step
+/// @param cfg output configuration; only cfg.out_occ_mat is consulted here
+/// @param soc_layout storage layout of the nspin == 4 occupation matrix
 void write_latest_occmat(const Plus_U_Base& dftu,
                          const UnitCell& ucell,
                          const std::string& global_out_dir,
@@ -189,6 +202,7 @@ void write_latest_occmat(const Plus_U_Base& dftu,
                          int iter,
                          double scf_thr,
                          double drho,
+                         const OccmatOutputCfg& cfg,
                          OccmatSocLayout soc_layout);
 
 /// Write local occupation matrices to the given stream.

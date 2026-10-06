@@ -158,6 +158,7 @@
     - [out\_freq\_ion](#out_freq_ion)
     - [out\_freq\_elec](#out_freq_elec)
     - [out\_chg](#out_chg)
+    - [out\_occ\_mat](#out_occ_mat)
     - [out\_pot](#out_pot)
     - [out\_dmk](#out_dmk)
     - [out\_dmr](#out_dmr)
@@ -1898,7 +1899,7 @@
 - **Type**: Integer
 - **Description**: Controls the output interval in ionic steps. When set to a positive integer, information such as charge density, local potential, electrostatic potential, Hamiltonian matrix, overlap matrix, density matrix, Mulliken population analysis, and structure files (STRU{istep} or STRU{istep}.cif, when out_stru is 1 or 2) is printed every n ionic steps.
 
-  For DFT+U calculations with out_chg > 0, a separate occupation-matrix file dm_onsiteg{geom_step}.txt is created for every output ionic step. The converged (or final, if not converged) electronic step is always recorded in that file; when out_freq_elec is set smaller than scf_nmax, additional electronic steps are appended as separate sections, each labelled only with the electronic-step number.
+  For DFT+U calculations with out_occ_mat = 1, a separate occupation-matrix file dm_onsiteg{geom_step}.txt is created for every output ionic step. The converged (or final, if not converged) electronic step is always recorded in that file; when out_freq_elec is set smaller than scf_nmax, additional electronic steps are appended as separate sections, each labelled only with the electronic-step number.
 
   > Note: In RT-TDDFT calculations, this parameter is inactive; output frequency is instead controlled by out_freq_td.
 - **Default**: 0
@@ -1908,7 +1909,7 @@
 - **Type**: Integer
 - **Description**: Output the charge density (only binary format, controlled by out_chg), wavefunction (controlled by out_wfc_pw) per out_freq_elec electronic iterations. Note that they are always output when converged or reach the maximum iterations scf_nmax.
 
-  In DFT+U calculations with out_freq_ion > 0 and out_chg > 0, this parameter also selects the electronic iterations recorded as separate sections inside dm_onsiteg{geom_step}.txt (the converged or final electronic step is recorded regardless of this parameter).
+  In DFT+U calculations with out_freq_ion &gt; 0 and out_occ_mat = 1, this parameter also selects the electronic iterations recorded as separate sections inside dm_onsiteg{geom_step}.txt (the converged or final electronic step is recorded regardless of this parameter).
 - **Default**: scf_nmax
 
 ### out_chg
@@ -1943,6 +1944,14 @@
 
   > Note: In the 3.10-LTS version, the file names are SPIN1_CHG.cube and SPIN1_CHG_INI.cube, etc.
 - **Default**: 0 3
+
+### out_occ_mat
+
+- **Type**: Boolean
+- **Description**: Whether to output the DFT+U occupation matrices. When set to 1 (default), the latest occupation matrix is written to dm_onsite.txt at every electronic step, and a numbered file dm_onsiteg{geom_step}.txt is created for every output ionic step selected by out_freq_ion, in which electronic-step sections are appended according to out_freq_elec.
+
+  This parameter only takes effect for DFT+U calculations (dft_plus_u &gt; 0) and is independent of out_chg: disabling the charge density output does not disable the occupation-matrix output.
+- **Default**: True
 
 ### out_pot
 
