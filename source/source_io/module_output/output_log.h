@@ -33,7 +33,7 @@ void output_after_relax(bool conv_ion, bool conv_esolver, std::ofstream& ofs_run
 /// @param convergence if is convergence
 /// @param eferm the fermi energy structure (supports single and two fermi energies)
 /// @param ofs_running the output stream
-void output_efermi(const bool &convergence, const elecstate::Efermi& eferm, std::ofstream& ofs_running = GlobalV::ofs_running);
+void output_efermi(const bool &convergence, const elecstate::Efermi& eferm, std::ofstream& ofs_running);
 
 /// @brief calculate and output the vacuum level
 /// We first determine the vacuum direction, then get the vacuum position based on the minimum of charge density,
