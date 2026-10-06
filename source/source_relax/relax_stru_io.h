@@ -20,18 +20,26 @@ namespace relax_stru_io
      * @brief Build the header comment for a structure file.
      *
      * Contains the ABACUS version, a timestamp, the relaxation step number,
-     * the total energy in eV and the 3x3 stress tensor in kbar.
+     * the total energy in eV, the 3x3 stress tensor in kbar and a trailing
+     * NOTE line. The header is always exactly 7 lines so that downstream
+     * parsers can skip a fixed-size comment block.
      *
      * @param istep Current (zero-based) relaxation step; printed as istep + 1.
      * @param etot Total energy in Ry.
      * @param stress Stress tensor (3x3) in Ry/Bohr^3.
+     * @param inp Input parameters (cal_force, cal_stress select the NOTE text).
      * @param is_final If true, the step label is marked "(FINAL)".
+     * @param geometry_evaluated false when the geometry was proposed by the
+     *        optimizer but never evaluated; the energy and stress are then
+     *        marked N/A and the NOTE explains that forces are omitted.
      * @return The formatted header string.
      */
     std::string build_stru_header(const int istep,
                                   const double etot,
                                   const ModuleBase::matrix& stress,
-                                  const bool is_final);
+                                  const Input_para& inp,
+                                  const bool is_final,
+                                  const bool geometry_evaluated);
 
     /**
      * @brief Whether orbital output is required in the structure file.
@@ -49,10 +57,13 @@ namespace relax_stru_io
      * @param inp Input parameters (nspin, out_mul, calculation).
      * @param filename Output file path.
      * @param header Header comment built by build_stru_header.
-     * @param force Atomic forces (used for STRU output).
+     * @param force Atomic forces (used for STRU output when has_force is true).
      * @param need_orb Whether to write orbitals (from need_orbital).
      * @param deepks_setorb DeePKS setorb flag forwarded to the STRU writer.
      * @param my_rank MPI rank of the calling process.
+     * @param has_force true to emit per-atom f fields; forwarded to
+     *        print_stru_file. Callers must pass false when the forces do not
+     *        belong to the geometry being written (e.g. early relax exit).
      */
     void write_stru(UnitCell& ucell,
                     const Input_para& inp,
@@ -61,7 +72,8 @@ namespace relax_stru_io
                     const ModuleBase::matrix& force,
                     const bool need_orb,
                     const bool deepks_setorb,
-                    const int my_rank);
+                    const int my_rank,
+                    const bool has_force);
 } // namespace relax_stru_io
 
 #endif
