@@ -71,9 +71,7 @@ double sum_rho(double* const* rho,
         // still carry information there.
         double rho_min = std::numeric_limits<double>::max();
         double rho_max = std::numeric_limits<double>::lowest();
-        // double, not long: Parallel_Reduce::reduce_pool is only explicitly
-        // instantiated for float/double/complex and int arrays.
-        double n_neg = 0.0;
+        long n_neg = 0;
         for (int is = 0; is < nspin0; ++is)
         {
             for (int ir = 0; ir < nrxx; ++ir)
@@ -81,18 +79,12 @@ double sum_rho(double* const* rho,
                 const double v = rho[is][ir];
                 rho_min = std::min(rho_min, v);
                 rho_max = std::max(rho_max, v);
-                n_neg += (v < 0.0) ? 1.0 : 0.0;
+                n_neg += (v < 0.0) ? 1 : 0;
             }
         }
-#ifdef __MPI
-        // No pool-aware min/max wrapper exists; sum_rho() has no access to
-        // nproc_in_pool either, so use the world-communicator variants. The
-        // extrema over the union of all ranks still answer the diagnostic
-        // question (is rho going negative anywhere?).
-        Parallel_Reduce::reduce_min(rho_min);
-        Parallel_Reduce::reduce_max(rho_max);
-        Parallel_Reduce::reduce_pool(n_neg);
-#endif
+        // Rank-local on purpose: pool sums may differ in the last bits (or a
+        // NaN may be present in a single pool), so pools can disagree on
+        // entering this branch and any MPI collective here could hang.
         std::ostringstream diag;
         diag << "\nCan't find even an electron!"
              << "\nmodule_charge::sum_rho diagnostic:"
@@ -106,9 +98,9 @@ double sum_rho(double* const* rho,
             diag << " " << sum_is[is];
         }
         diag << " (total = " << sum_rho << ")"
-             << " rho min = " << rho_min
+             << " rank-local rho min = " << rho_min
              << " max = " << rho_max
-             << " negative grid points = " << static_cast<long>(n_neg);
+             << " negative grid points = " << n_neg;
         ModuleBase::WARNING_QUIT("module_charge::sum_rho", diag.str());
     }
 
