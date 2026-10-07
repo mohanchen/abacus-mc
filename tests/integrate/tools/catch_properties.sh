@@ -12,6 +12,8 @@ source "$PROPS_SCRIPT_DIR/props_basic.sh"
 source "$PROPS_SCRIPT_DIR/props_mat.sh"
 source "$PROPS_SCRIPT_DIR/props_cube.sh"
 source "$PROPS_SCRIPT_DIR/props_ml.sh"
+source "$PROPS_SCRIPT_DIR/props_tddft.sh"
+source "$PROPS_SCRIPT_DIR/props_deepks.sh"
 
 # Property collectors run in the same order as the original monolithic
 # script so result files stay byte-identical; props_finalize() writes the
@@ -65,10 +67,9 @@ run_basic_props_post_ml
 run_ml_rpa_props
 
 #--------------------------------------------
-# deepks
+# DeePKS collectors (props_deepks.sh)
 #--------------------------------------------
-script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-bash ${script_dir}/catch_deepks_properties.sh $1
+run_deepks_props
 
 #--------------------------------------------
 # basic collectors that run after deepks: symmetry
@@ -76,37 +77,9 @@ bash ${script_dir}/catch_deepks_properties.sh $1
 run_basic_props_post_deepks
 
 #--------------------------------------------
-# check currents in rt-TDDFT 
+# rt-TDDFT collectors (props_tddft.sh): current/efield/vecpot
 #--------------------------------------------
-if ! test -z "$out_current" && [ $out_current ]; then
-	current1ref=current_tot.txt.ref
-	current1cal=OUT.autotest/current_tot.txt
-	python3 $COMPARE_SCRIPT $current1ref $current1cal 10
-	echo "CompareCurrent_pass $?" >>$1
-fi
-
-#--------------------------------------------
-# Check electric fields in rt-TDDFT
-#--------------------------------------------
-if ! test -z "$out_efield" && [ "$out_efield" == 1 ]; then
-	efield_refs=(efield_*.txt.ref)
-	if [ ! -e "${efield_refs[0]}" ]; then
-		echo "CompareEfieldReference_pass 1" >>$1
-	else
-		for efield_ref in "${efield_refs[@]}"; do
-			efield_name=${efield_ref%.ref}
-			efield_key=$(sanitize_result_key "$efield_name")
-			record_compare_result "$1" "Compare${efield_key}_pass" "$efield_ref" "OUT.autotest/$efield_name" 8
-		done
-	fi
-fi
-
-#--------------------------------------------
-# Check vector potential in rt-TDDFT
-#--------------------------------------------
-if ! test -z "$out_vecpot" && [ "$out_vecpot" == 1 ]; then
-	record_compare_result "$1" "CompareVectorPot_pass" "vector_pot.txt.ref" "OUT.autotest/vector_pot.txt" 8
-fi
+run_tddft_props
 
 #--------------------------------------------
 # ML collectors (props_ml.sh): linear response excitations
