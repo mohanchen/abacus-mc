@@ -8,81 +8,13 @@
 PROPS_SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$PROPS_SCRIPT_DIR/props_common.sh"
 props_init "$1"
+source "$PROPS_SCRIPT_DIR/props_basic.sh"
 
-#----------------------------
-# total energy information
-#----------------------------
-if [ $calculation != "get_wf" ]\
-&& [ $calculation != "get_pchg" ] && [ $calculation != "get_s" ]\
-&& [ $is_lr == 0 ]; then
-	etot=$(grep "ETOT_" "$running_path" | tail -1 | awk '{print $2}')
-    #echo "etot = $etot"
-	etotperatom=`awk 'BEGIN {x='$etot';y='$natom';printf "%.10f\n",x/y}'`
-    #echo "etotperatom = $etotperatom"
-    # put the results in file
-	echo "etotref $etot" >>$1
-	echo "etotperatomref $etotperatom" >>$1
-fi
-
-# Opt-in collinear magnetic-state check. Comparing both moments distinguishes
-# compensated AFM from NM; the reference tolerance is 1e-3 mu_B per cell.
-if [ "$nspin" = "2" ] && [ -f magnetism.ref ]; then
-    awk '
-        /Total magnetism \(Bohr mag\/cell\)/ {total = $NF; have_total = 1}
-        /Absolute magnetism \(Bohr mag\/cell\)/ {absolute = $NF; have_absolute = 1}
-        END {
-            if (!have_total || !have_absolute) exit 1
-            print total, absolute
-        }
-    ' "$running_path" > magnetism.out
-    record_compare_result "$1" "CompareMagnetism_pass" "magnetism.ref" "magnetism.out" 3
-fi
-
-#----------------------------
-# force information
-# echo "hasforce:"$has_force
-#----------------------------
-if ! test -z "$has_force" && [ $has_force == 1 ]; then
-	nn3=`echo "$natom + 3" |bc`
-    # echo "nn3=$nn3"
-    # check the last step result
-    grep -A$nn3 "TOTAL-FORCE" $running_path |awk 'NF==4{print $2,$3,$4}' | tail -$natom > force.txt
-	total_force=`sum_file force.txt`
-    rm force.txt
-	echo "totalforceref $total_force" >>$1
-fi
-
-#-------------------------------
-# stress information
-# echo "has_stress:"$has_stress
-#-------------------------------
-if ! test -z "$has_stress" && [  $has_stress == 1 ]; then
-    grep -A6 "TOTAL-STRESS" $running_path| awk 'NF==3' | tail -3> stress.txt
-	total_stress=`sum_file stress.txt`
-	rm stress.txt
-	echo "totalstressref $total_stress" >>$1
-fi
-
-
-#-------------------------------
-# DOS information
-# echo $total_charge
-#-------------------------------
-if ! test -z "$has_dos"  && [  $has_dos == 1 ]; then
-	total_dos=`cat OUT.autotest/dos*.txt | awk 'END {print}' | awk '{print $3}'`
-	echo "totaldosref $total_dos" >> $1
-fi
-
-#-------------------------------
-# Onsager coefficiency
-#-------------------------------
-if ! test -z "$has_cond"  && [  $has_cond == 1 ]; then
-	onref=refOnsager.txt
-	oncal=OUT.autotest/Onsager.txt
-	python3 $COMPARE_SCRIPT $onref $oncal 3 -com_type 0
-    echo "CompareH_Failed $?" >>$1
-	rm -f je-je.txt Chebycoef
-fi
+# Property collectors run in the same order as the original monolithic
+# script so result files stay byte-identical; props_finalize() writes the
+# trailing totaltimeref entry. Add a new category by dropping a
+# props_<cat>.sh next to the others and calling run_<cat>_props here.
+run_basic_props
 
 #-------------------------------
 # echo $out_dm1
@@ -680,14 +612,9 @@ if [ -d "$descriptor_dir" ]; then
 fi
 
 #--------------------------------------------
-# implicit solvation model
+# basic collectors that run after ml: imp_sol
 #--------------------------------------------
-if ! test -z "$imp_sol" && [ $imp_sol == 1 ]; then
-	esol_el=`grep E_sol_el $running_path | awk '{print $3}'`
-	esol_cav=`grep E_sol_cav $running_path | awk '{print $3}'`
-	echo "esolelref $esol_el" >>$1
-	echo "esolcavref $esol_cav" >>$1
-fi
+run_basic_props_post_ml
 
 #--------------------------------------------
 # random phase approximation
@@ -722,27 +649,9 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 bash ${script_dir}/catch_deepks_properties.sh $1
 
 #--------------------------------------------
-# check symmetry 
+# basic collectors that run after deepks: symmetry
 #--------------------------------------------
-if ! test -z "$symmetry" && [ $symmetry == 1 ]; then
-	# exclude the nspin=4 MAGNETIC POINT/SPACE GROUP lines so they do not interfere
-	# with the crystallographic point-group / space-group detection below
-	pointgroup=`grep 'POINT GROUP =' $running_path | grep -v 'MAGNETIC' | grep -v 'BvK' | awk '{print $4}'`
-	spacegroup=`grep 'SPACE GROUP =' $running_path | grep -v 'MAGNETIC' | grep -v 'BvK' | awk '{print $7}'`
-	nksibz=`grep 'Number of irreducible k-points' $running_path | awk '{print $6}'`
-	echo "pointgroupref $pointgroup" >>$1
-	echo "spacegroupref $spacegroup" >>$1
-	echo "nksibzref $nksibz" >>$1
-	# (nspin=4) magnetic (Shubnikov) group analysis: capture the space-group-consistent
-	# magnetic point group. Only printed when the group is actually reduced (magnetic);
-	# non-magnetic nspin=4 does not print it, so the capture is skipped when empty.
-	if ! test -z "$nspin" && [ $nspin == 4 ]; then
-		magpointgroup=`grep 'MAGNETIC POINT GROUP IN SPACE GROUP' $running_path | awk '{print $NF}'`
-		if ! test -z "$magpointgroup"; then
-			echo "magpointgroupref $magpointgroup" >>$1
-		fi
-	fi
-fi
+run_basic_props_post_deepks
 
 #--------------------------------------------
 # check currents in rt-TDDFT 
@@ -826,49 +735,11 @@ if ! test -z "$rdmft" && [[ $rdmft == 1 ]]; then
 fi
 
 #--------------------------------------------
-# Check if out_alllog is set to 1
-# and verify running*.log filenames
+# basic collectors that run after rdmft: alllog
 #--------------------------------------------
-out_alllog=$(get_input_key_value "out_alllog" "INPUT")
-if ! test -z "$out_alllog" && [ $out_alllog -eq 1 ]; then
-    calculation=$(get_input_key_value "calculation" "INPUT")
-
-    if [ -z "$calculation" ]; then
-        echo "Error: calculation parameter not found in INPUT"
-        exit 1
-    fi
-
-    # Find all running*.log files in OUT.autotest directory
-    log_files=$(ls OUT.autotest/running*.log 2>/dev/null)
-
-    if [ -z "$log_files" ]; then
-        echo "Error: No running*.log files found in OUT.autotest/"
-        exit 1
-    fi
-
-    # Check each log file name contains the calculation parameter
-    all_valid=true
-    for log_file in $log_files; do
-        filename=$(basename "$log_file")
-        if [[ ! "$filename" =~ running_${calculation}_ ]]; then
-            echo "Error: Invalid log filename $filename - should contain 'running_${calculation}_'"
-            all_valid=false
-        fi
-    done
-
-    if $all_valid; then
-        echo "All log filenames contain 'running_${calculation}_' - validation passed"
-        echo "log_filename_validation 1" >>$1
-    else
-        echo "Error: Some log filenames do not contain 'running_${calculation}_'"
-        echo "log_filename_validation 0" >>$1
-        exit 1
-    fi
-fi
+run_basic_props_post_rdmft
 
 #--------------------------------------------
-# Check time information 
+# trailing total-time entry
 #--------------------------------------------
-#echo $total_band
-ttot=`grep $word_total_time $running_path | awk '{print $3}'`
-echo "totaltimeref $ttot" >>$1
+props_finalize "$1"
