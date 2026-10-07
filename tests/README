@@ -76,7 +76,7 @@ CASES_*.txt of its category, otherwise it will not be picked up.
    c) Edit the files directly (hard-coded; do NOT commit a local absolute path):
       - 'integrate/Autotest.sh': set the 'abacus' variable.
       - 'integrate/general_info': set EXEC (supports $VAR/${VAR} placeholders,
-        expanded by integrate/tools/run_check.sh from the environment).
+        expanded by integrate/validation_tools/run_check.sh from the environment).
 
    Effective priority: '-a' flag > ABACUS_EXE > hard-coded value in the files
    > 'abacus' from PATH.
@@ -84,9 +84,64 @@ CASES_*.txt of its category, otherwise it will not be picked up.
 ../integrate/Autotest.sh
 3. if you want to focus on No.xxx example, such as 101_PW_OU:
 cd 101_PW_OU and then type
-./../integrate/Single.sh $parameter
+../../integrate/Single_job.sh $parameter
 # you can choose $parameter among "" (empty), debug or ref
 # 'ref': generate result.ref file (the answer you need)
+
+
+--------------------------------------
+ How to validate an integrate test case
+--------------------------------------
+Each case directory contains a checked-in 'result.ref': a list of
+"key value" lines (total energy, forces, stress, matrix-compare flags, ...).
+Validation means running ABACUS in the case directory, collecting the same
+lines from the fresh run into 'result.out', and comparing the two:
+
+- The collectors live in integrate/validation_tools/. The entry point is
+  catch_properties.sh; it sources props_common.sh (shared helpers and INPUT
+  parsing) and the per-category modules props_basic.sh, props_mat.sh,
+  props_cube.sh, props_ml.sh, props_tddft.sh and props_deepks.sh. Each
+  module defines run_<category>_props() hooks; add a new kind of check by
+  extending the matching module (or dropping in a new props_<cat>.sh and
+  calling its hook from catch_properties.sh).
+- CompareFile.py compares numerical/text output files at a given digit
+  tolerance; cube_tool.py handles real-space .cube integration and
+  wave-function fingerprints.
+- 'totaltimeref' is the wall time of the run. It is recorded for
+  information only and is expected to differ between machines.
+
+Ways to validate, from a whole category down to one case:
+
+1. Whole category (what ctest/CI do), from tests/integrate:
+       bash Autotest.sh -n 4
+   Autotest.sh runs every case in CASES_CPU.txt, invokes the collectors to
+   build result.out, and compares it with result.ref using the thresholds
+   at the top of Autotest.sh (threshold / force_threshold /
+   stress_threshold / descriptor_threshold; a per-case 'threshold' file
+   can override them). Useful flags:
+       -r <regex>   run only cases whose name matches <regex>
+       -f <file>    take the case list from <file> (e.g. CASES_GPU.txt)
+       -n <N>       MPI ranks per case; -o <N> pins OpenMP threads
+       -j <N>|auto  number of cases to run concurrently
+       -g           generate result.ref instead of checking
+       -a <exe>     ABACUS executable for this invocation
+   Example:
+       bash Autotest.sh -r 035_PW_15_SO
+
+2. One case by hand, from the case directory (e.g. tests/01_PW/035_PW_15_SO):
+       bash ../../integrate/Single_job.sh
+   It reads integrate/general_info (NUMBEROFPROCESS, CHECKACCURACY, EXEC),
+   runs ABACUS, builds result.out through run_check.sh and prints every
+   line that disagrees with result.ref. With the 'ref' argument it
+   regenerates result.ref instead; 'debug' copies the scripts into the
+   case directory for local editing.
+
+3. Collector only (ABACUS output already exists in OUT.autotest/):
+       bash ../../integrate/validation_tools/catch_properties.sh result.out
+       diff result.ref result.out
+   A clean diff (apart from the totaltimeref line) means the case still
+   validates. This is the fastest check when you only changed the
+   validation scripts themselves.
 
 
 --------------------------------------

@@ -340,7 +340,7 @@ run_case()
                 test -d OUT.autotest || (echo "No 'OUT.autotest' dir presented. Some errors may happened in ABACUS." && exit 1)
                 if test -z $g
                 then
-                    bash -e ../../integrate/tools/catch_properties.sh result.out
+                    bash -e ../../integrate/validation_tools/catch_properties.sh result.out
                     if [ $? -ne 0 ]; then
                         echo -e "\e[0;31m [ERROR     ]  Fatal Error in catch_properties.sh \e[0m"
                         let fatal++
@@ -354,7 +354,7 @@ run_case()
                         check_out result.out $my_threshold $my_force_threshold $my_stress_threshold $my_fatal_threshold $my_descriptor_threshold
                     fi
                 else
-                    bash -e ../../integrate/tools/catch_properties.sh result.ref
+                    bash -e ../../integrate/validation_tools/catch_properties.sh result.ref
                 fi
             fi
 

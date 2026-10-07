@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOOLS_DIR="../../integrate/tools/"
+TOOLS_DIR="../../integrate/validation_tools/"
 
 # The note for using the script.
 # input parameter: 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CATCH_SCRIPT="../../integrate/tools/catch_properties.sh"
+CATCH_SCRIPT="../../integrate/validation_tools/catch_properties.sh"
 GENERAL_INFO_FILE="../../integrate/general_info"
 
 # check_out: checking the output information

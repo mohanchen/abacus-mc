@@ -5,7 +5,7 @@
 # This file is meant to be *sourced*, not executed. It provides:
 #   - absolute paths to the helper tools (CompareFile.py, cube_tool.py, ...),
 #     resolved from this file's own location so callers no longer depend on
-#     the hard-coded "../../integrate/tools" relative path;
+#     the hard-coded "../../integrate/validation_tools" relative path;
 #   - the shared helper functions (sum_file, get_input_key_value,
 #     sanitize_result_key, record_compare_result);
 #   - props_init(): one-time parsing of all INPUT switch keys into global
@@ -16,7 +16,8 @@
 # then defines run_<category>_props() that reads the global switch variables
 # set by props_init() and appends "key value" lines to the result file.
 
-# Absolute path of the directory containing this file (i.e. integrate/tools).
+# Absolute path of the directory containing this file
+# (i.e. integrate/validation_tools).
 PROPS_TOOLS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 COMPARE_SCRIPT="$PROPS_TOOLS_DIR/CompareFile.py"
