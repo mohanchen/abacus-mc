@@ -338,6 +338,9 @@ void read_occup_m(const UnitCell& ucell,
         ModuleBase::WARNING_QUIT("DFTU_BASE::read_occup_m", open_failed_msg);
     }
 
+    GlobalV::ofs_running << " DFT+U: read occupation matrix from " << fn << std::endl;
+    std::cout << " DFT+U: read occupation matrix from " << fn << std::endl;
+
     ifdftu.clear();
     ifdftu.seekg(0);
 
@@ -683,45 +686,11 @@ void output(const Plus_U_Base& dftu,
                                 "invalid occupation-matrix output frequency configuration");
     }
 
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    GlobalV::ofs_running << " | #DFT+U INFORMATION# |" << std::endl;
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-
-    for (int T = 0; T < ucell.ntype; T++)
-    {
-        const int NL = ucell.atoms[T].nwl + 1;
-
-        for (int L = 0; L < NL; L++)
-        {
-            const int N = ucell.atoms[T].l_nchi[L];
-
-            if (L >= dftu.get_l_channel(T) && dftu.has_l_channel(T))
-            {
-                if (L != dftu.get_l_channel(T))
-                {
-                    continue;
-                }
-
-                if (!dftu.use_yukawa())
-                {
-                    GlobalV::ofs_running << " Type=" << T+1 << " L=" << L << " ORBITAL=" << 0
-                                         << " U=" << dftu.get_u_current(T) * ModuleBase::Ry_to_eV << " eV" << std::endl;
-                }
-                else
-                {
-                    double Ueff = (dftu.yukawa().get_U(T, L) - dftu.yukawa().get_J(T, L)) * ModuleBase::Ry_to_eV;
-                    GlobalV::ofs_running << " Type=" << T+1 << " L=" << L << "  ORBITAL=" << 0
-                                         << " U=" << dftu.yukawa().get_U(T, L) * ModuleBase::Ry_to_eV << " eV"
-                                         << " J=" << dftu.yukawa().get_J(T, L) * ModuleBase::Ry_to_eV << " eV"
-                                         << std::endl;
-                }
-            }
-        }
-    }
-
-    GlobalV::ofs_running << " Local Occupation Matrices for each atom" << std::endl;
-    write_occup_m(dftu, ucell, GlobalV::ofs_running, true, nspin, npol,
-                  OCMAT_FMT_LEGACY, soc_layout);
+    // The per-type U values and the per-atom occupation matrices are not
+    // dumped into the running log here: for large cells (thousands of
+    // atoms) this floods the log at every electronic step. The dedicated
+    // occupation-matrix files (occ_mat.txt, occ_matg{#}.txt) gated by
+    // out_occ_mat carry the same information instead.
 
     // occ_mat.txt is not written here: its section records drho, which
     // is only available after the electronic solve. write_latest_occmat()
@@ -737,10 +706,6 @@ void output(const Plus_U_Base& dftu,
     {
         prepare_ion_step_file(global_out_dir, istep, cfg);
     }
-
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
-    GlobalV::ofs_running << " | # END DFT+U INFO    |" << std::endl;
-    GlobalV::ofs_running << " >>>>>>>>>>>>>>>>>>>>>>>" << std::endl << std::endl;
 
     return;
 }
