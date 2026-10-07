@@ -126,7 +126,6 @@ props_init(){
 	out_pot=$(get_input_key_value "out_pot" "INPUT")
 	out_elf=$(get_input_key_value "out_elf" "INPUT")
 	out_dm1=$(get_input_key_value "out_dm1" "INPUT")
-	get_s=$(get_input_key_value "calculation" "INPUT")
 	out_pband=$(get_input_key_value "out_proj_band" "INPUT")
 	toW90=$(get_input_key_value "towannier90" "INPUT")
 	has_mat_r=$(get_input_key_value "out_mat_r" "INPUT")

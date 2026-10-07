@@ -32,9 +32,9 @@ run_mat_props(){
 
 #-------------------------------
 # Overlap matrix
-# echo $get_s
+# calculation == get_s
 #-------------------------------
-if ! test -z "$get_s"  && [  $get_s == "get_s" ]; then
+if [ "$calculation" == "get_s" ]; then
 	sref=sr_nao.csr.ref
 	scal=OUT.autotest/sr_nao.csr
 	python3 $COMPARE_SCRIPT $sref $scal 8
@@ -336,15 +336,10 @@ run_mat_dm_props(){
 # density matrix information
 #--------------------------------------------
 if ! test -z "$out_dm"  && [ $out_dm == 1 ]; then
-      dmfile=OUT.autotest/dm_nao.txt
-	  dmref=dm_nao.txt.ref
-      if test -z "$dmfile"; then
-              echo "Can't find DM files"
-              exit 1
-      else
-			python3 $COMPARE_SCRIPT $dmref $dmfile 5
-            echo "DM_different $?" >>$props_result_file
-      fi
+	dmfile=OUT.autotest/dm_nao.txt
+	dmref=dm_nao.txt.ref
+	python3 $COMPARE_SCRIPT $dmref $dmfile 5
+	echo "DM_different $?" >>$props_result_file
 fi
 
 }
