@@ -4,16 +4,11 @@
 #include "socket_driver.h"
 #include "source_base/formatter.h"
 #include "source_base/global_file.h"
-#include "source_cell/cif_io.h"
 #include "source_io/module_json/output_info.h"
 #include "source_io/module_output/output_log.h"
 #include "source_io/module_output/print_info.h"
 #include "source_base/module_out/read_exit_file.h"
 #include "source_io/module_parameter/parameter.h"
-#include "source_cell/print_cell.h"
-#include "source_main/version.h"
-
-#include <ctime>
 
 void Relax_Driver::relax_driver(
         ModuleESolver::ESolver* p_esolver,
@@ -52,12 +47,22 @@ void Relax_Driver::relax_driver(
     ModuleBase::matrix stress(3, 3);
     ModuleBase::matrix force(ucell.nat, 3);
 
+    // Track whether the current geometry has been evaluated by esolve().
+    // After relax_step() proposes a new geometry, it is not evaluated until
+    // the next esolve() call; if we exit the loop early, force/stress are stale.
+    bool geometry_evaluated = false;
+
     while (steps[0] < inp.relax_nmax)
     {
         this->iter_info(steps, inp);
         this->esolve(steps[0], p_esolver, ucell, inp, force, stress, etot);
+        geometry_evaluated = true;
         this->stru_out(steps[0], ucell, inp, etot, stress, force);
         bool converged = this->relax_step(steps, p_esolver, ucell, inp, force, stress, etot, ofs_running);
+        if (!converged)
+        {
+            geometry_evaluated = false;
+        }
         this->json_out(p_esolver, ucell, inp, force, stress);
 
         // Check stop conditions
@@ -75,7 +80,7 @@ void Relax_Driver::relax_driver(
         ++steps[0];
     }
 
-    this->final_out(steps[0], ucell, inp, etot, stress, force, ofs_running);
+    this->final_out(steps[0], ucell, inp, etot, stress, force, geometry_evaluated, ofs_running);
 
     ModuleBase::timer::end("Relax_Driver", "relax_driver");
     return;
@@ -197,7 +202,10 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
         return;
     }
 
-    const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, false);
+    // stru_out is called right after esolve(), so the geometry has been
+    // evaluated and forces/stress are consistent with the written structure.
+    const bool geometry_evaluated = true;
+    const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, inp, false, geometry_evaluated);
     const bool need_orb = relax_stru_io::need_orbital(inp);
     const bool freq_ok = (inp.out_freq_ion > 0 && istep % inp.out_freq_ion == 0);
 
@@ -208,7 +216,7 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
     {
         const std::string now_file = out_dir_ + (inp.out_stru == 1 ? "STRU_NOW" : "STRU_NOW.cif");
         relax_stru_io::write_stru(ucell, inp, now_file, header, force, need_orb,
-                                  deepks_setorb_, my_rank_);
+                                  deepks_setorb_, my_rank_, inp.cal_force);
     }
 
     // Numbered files per out_freq_ion: only meaningful for relaxation calculations
@@ -217,7 +225,7 @@ void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& 
         const std::string step_file = out_dir_ + "STRU" + std::to_string(istep + 1)
                                       + (inp.out_stru == 1 ? "" : ".cif");
         relax_stru_io::write_stru(ucell, inp, step_file, header, force, need_orb,
-                                  deepks_setorb_, my_rank_);
+                                  deepks_setorb_, my_rank_, inp.cal_force);
     }
 }
 
@@ -238,7 +246,14 @@ void Relax_Driver::json_out(ModuleESolver::ESolver* p_esolver, UnitCell& ucell, 
 #endif
 }
 
-void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force, std::ofstream& ofs_running)
+void Relax_Driver::final_out(const int istep,
+                             UnitCell& ucell,
+                             const Input_para& inp,
+                             const double etot,
+                             const ModuleBase::matrix& stress,
+                             const ModuleBase::matrix& force,
+                             const bool geometry_evaluated,
+                             std::ofstream& ofs_running)
 {
     // Structure final output is effective for scf/nscf/relax/cell-relax;
     // relax-specific screen messages remain guarded below.
@@ -249,11 +264,14 @@ void Relax_Driver::final_out(const int istep, UnitCell& ucell, const Input_para&
     // 1: write STRU_FINAL; 2: write STRU_FINAL.cif
     if (stru_effective && (inp.out_stru == 1 || inp.out_stru == 2))
     {
-        const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, true);
+        const std::string header = relax_stru_io::build_stru_header(istep, etot, stress, inp, true, geometry_evaluated);
         const bool need_orb = relax_stru_io::need_orbital(inp);
         const std::string final_file = out_dir_ + (inp.out_stru == 1 ? "STRU_FINAL" : "STRU_FINAL.cif");
+        // Only write forces when they were actually computed and belong
+        // to the geometry being written.
+        const bool write_force = inp.cal_force && geometry_evaluated;
         relax_stru_io::write_stru(ucell, inp, final_file, header, force, need_orb,
-                                  deepks_setorb_, my_rank_);
+                                  deepks_setorb_, my_rank_, write_force);
     }
 
     // relax_nmax == 0 is a valid dry-run mode: no relaxation step was ever
