@@ -73,13 +73,18 @@ CASES_*.txt of its category, otherwise it will not be picked up.
    b) Environment variable (works for Autotest.sh and run_check.sh):
           export ABACUS_EXE=/path/to/abacus
       Add it to ~/.bashrc to make it persistent across sessions.
-   c) Edit the files directly (hard-coded; do NOT commit a local absolute path):
+   c) Local override file (Autotest.sh only; not tracked by git):
+          create 'integrate/general_info.local' containing e.g.
+              abacus=/path/to/abacus
+      Autotest.sh sources this file at startup when it exists, so the path
+      survives new shells while 'git status' stays clean.
+   d) Edit the files directly (hard-coded; do NOT commit a local absolute path):
       - 'integrate/Autotest.sh': set the 'abacus' variable.
       - 'integrate/general_info': set EXEC (supports $VAR/${VAR} placeholders,
         expanded by integrate/validation_tools/run_check.sh from the environment).
 
-   Effective priority: '-a' flag > ABACUS_EXE > hard-coded value in the files
-   > 'abacus' from PATH.
+   Effective priority: '-a' flag > ABACUS_EXE > general_info.local > hard-coded
+   value in the files > 'abacus' from PATH.
 2. Enter each integrate test directory, try this script for autotests
 ../integrate/Autotest.sh
 3. if you want to focus on No.xxx example, such as 101_PW_OU:
