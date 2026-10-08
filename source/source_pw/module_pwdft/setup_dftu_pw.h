@@ -24,7 +24,8 @@ void iter_init_dftu_pw(const int iter,
                        Charge_Mixing* p_chgmix,
                        const std::string& global_out_dir,
                        const OccmatOutputCfg& occmat_cfg,
-                       const int* isk);
+                       const int* isk,
+                       const int nspin);
 
 }
 

@@ -561,8 +561,14 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     const DFTU_BASE::OccmatOutputCfg occmat_cfg{this->inp_->out_freq_ion,
                                                 this->inp_->out_freq_elec,
                                                 this->inp_->scf_nmax,
-                                                this->inp_->out_occ_mat};
-    finish_dftu_lcao<TK>(conv_esolver, this->inp_->dft_plus_u, this->dftu_.get(), ucell, dm_vec, this->kv, this->p_chgmix->get_mixing_beta(), hamilt_lcao, PARAM.globalv.global_out_dir, this->inp_->nspin, PARAM.globalv.npol, PARAM.globalv.gamma_only_local, istep, iter, occmat_cfg);
+                                                this->inp_->out_occ_mat,
+                                                this->inp_->dft_plus_u};
+    // Read globalv values once into locals so the repeated DFT+U call sites
+    // below do not each re-enter the global dependency surface.
+    const std::string& global_out_dir = PARAM.globalv.global_out_dir;
+    const int npol = PARAM.globalv.npol;
+    const bool gamma_only_local = PARAM.globalv.gamma_only_local;
+    finish_dftu_lcao<TK>(conv_esolver, this->inp_->dft_plus_u, this->dftu_.get(), ucell, dm_vec, this->kv, this->p_chgmix->get_mixing_beta(), hamilt_lcao, global_out_dir, this->inp_->nspin, npol, gamma_only_local, istep, iter, occmat_cfg);
 
     // mohan add 2025-11: push DFT+U energy from Plus_U instance to ElecState.
     // Covers both dft_plus_u==1 (new method, energy accumulated by DFTU::contributeHR
@@ -589,9 +595,9 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     // computed drho for this electronic step.
     DFTU_BASE::write_latest_occmat(*this->dftu_,
                                       ucell,
-                                      PARAM.globalv.global_out_dir,
+                                      global_out_dir,
                                       this->inp_->nspin,
-                                      PARAM.globalv.npol,
+                                      npol,
                                       istep,
                                       iter,
                                       this->scf_thr,
@@ -604,9 +610,9 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(UnitCell& ucell, const int istep, int&
     // the snapshot always carries a real matrix.
     DFTU_BASE::append_ion_step_snapshot(*this->dftu_,
                                         ucell,
-                                        PARAM.globalv.global_out_dir,
+                                        global_out_dir,
                                         this->inp_->nspin,
-                                        PARAM.globalv.npol,
+                                        npol,
                                         istep,
                                         iter,
                                         conv_esolver,

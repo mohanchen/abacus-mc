@@ -218,7 +218,8 @@ void ESolver_KS_PW<T, Device>::iter_init(UnitCell& ucell, const int istep, const
     const DFTU_BASE::OccmatOutputCfg init_occmat_cfg{this->inp_->out_freq_ion,
                                                      this->inp_->out_freq_elec,
                                                      this->inp_->scf_nmax,
-                                                     this->inp_->out_occ_mat};
+                                                     this->inp_->out_occ_mat,
+                                                     this->inp_->dft_plus_u};
     DFTU_BASE::iter_init_dftu_pw(iter,
                           istep,
                           *this->dftu_,
@@ -228,7 +229,8 @@ void ESolver_KS_PW<T, Device>::iter_init(UnitCell& ucell, const int istep, const
                           this->p_chgmix,
                           PARAM.globalv.global_out_dir,
                           init_occmat_cfg,
-                          this->kv.isk.data());
+                          this->kv.isk.data(),
+                          this->inp_->nspin);
 
     // mohan add 2025-11: push DFT+U energy from Plus_U instance to ElecState
     if (this->inp_->dft_plus_u)
@@ -347,15 +349,20 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
     const DFTU_BASE::OccmatOutputCfg occmat_cfg{this->inp_->out_freq_ion,
                                                 this->inp_->out_freq_elec,
                                                 this->inp_->scf_nmax,
-                                                this->inp_->out_occ_mat};
+                                                this->inp_->out_occ_mat,
+                                                this->inp_->dft_plus_u};
+    // Read globalv values once into locals so the repeated DFT+U call sites
+    // below do not each re-enter the global dependency surface.
+    const std::string& global_out_dir = PARAM.globalv.global_out_dir;
+    const int npol = PARAM.globalv.npol;
     const bool latest_ready = (iter > 1 || istep > 0);
     if (latest_ready)
     {
         DFTU_BASE::write_latest_occmat(*this->dftu_,
                                       ucell,
-                                      PARAM.globalv.global_out_dir,
+                                      global_out_dir,
                                       this->inp_->nspin,
-                                      PARAM.globalv.npol,
+                                      npol,
                                       istep,
                                       iter,
                                       this->scf_thr,
@@ -371,9 +378,9 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
     const bool occmat_ready = latest_ready || this->dftu_->is_occmat_ready();
     DFTU_BASE::append_ion_step_snapshot(*this->dftu_,
                                         ucell,
-                                        PARAM.globalv.global_out_dir,
+                                        global_out_dir,
                                         this->inp_->nspin,
-                                        PARAM.globalv.npol,
+                                        npol,
                                         istep,
                                         iter,
                                         conv_esolver,
