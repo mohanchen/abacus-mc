@@ -132,8 +132,19 @@ class Relax_Driver
      * @param inp Input parameters for the calculation.
      * @param etot Total energy of the final step.
      * @param stress Stress tensor of the final step.
+     * @param force Force matrix of the final step.
+     * @param geometry_evaluated false when the final geometry was proposed by
+     *        the optimizer but never evaluated; forces and stress are then
+     *        omitted / marked N/A.
      */
-    void final_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force, std::ofstream& ofs_running);
+    void final_out(const int istep,
+                   UnitCell& ucell,
+                   const Input_para& inp,
+                   const double etot,
+                   const ModuleBase::matrix& stress,
+                   const ModuleBase::matrix& force,
+                   const bool geometry_evaluated,
+                   std::ofstream& ofs_running);
 
     /**
      * @brief Print the unified not-converged summary to the running log.
