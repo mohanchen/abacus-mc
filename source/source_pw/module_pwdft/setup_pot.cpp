@@ -131,7 +131,8 @@ void pw::setup_pot(const int istep,
                   PARAM.globalv.hubbard_u,
                   PARAM.globalv.uramping,
                   inp.init_occ_mat,
-                  inp.mixing_dftu);
+                  inp.mixing_dftu,
+                  DFTU_BASE::SOC_LAYOUT_PAULI);
     }
 
     return;

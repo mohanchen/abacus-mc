@@ -101,7 +101,8 @@ class DFTUBaseTest : public testing::Test
                        hubbard_u,
                        0.0,                    // uramping
                        0,                      // init_occ_mat
-                       0);                     // mixing_dftu
+                       0,                      // mixing_dftu
+                       DFTU_BASE::SOC_LAYOUT_PAULI);
     }
 };
 
@@ -595,7 +596,8 @@ TEST_F(DFTUBaseTest, InitBaseReadsOccMatFileOnlyOnce)
                        hubbard_u,
                        0.0,              // uramping
                        2,                // init_occ_mat
-                       0);               // mixing_dftu
+                       0,                // mixing_dftu
+                       DFTU_BASE::SOC_LAYOUT_PAULI);
     };
 
     // First ionic step: the file is read.

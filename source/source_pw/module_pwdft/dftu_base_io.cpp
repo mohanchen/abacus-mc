@@ -308,7 +308,8 @@ void read_occup_m(const UnitCell& ucell,
                   const std::string& fn,
                   const std::string& init_chg,
                   int nspin,
-                  int npol)
+                  int npol,
+                  OccmatSocLayout soc_layout)
 {
     ModuleBase::TITLE("DFTU_BASE", "read_occup_m");
 
@@ -541,6 +542,7 @@ void read_occup_m(const UnitCell& ucell,
                     // written: up/up, up/down Re, up/down Im, down/down.
                     std::vector<double> uu(nm * nm);
                     std::vector<double> re(nm * nm);
+                    std::vector<double> im(nm * nm);
                     std::vector<double> dd(nm * nm);
 
                     skip_compact_soc_label(ifdftu, word);
@@ -549,26 +551,58 @@ void read_occup_m(const UnitCell& ucell,
                     skip_compact_soc_label(ifdftu, word);
                     read_matrix_block(ifdftu, nm, re.data());
 
-                    // The imaginary block is not stored by the restart
-                    // contract; read the values and discard them.
+                    // The imaginary block is needed by the PW (Pauli)
+                    // path to reconstruct b2 = 2*Im(n_ud); the LCAO
+                    // (real spin-basis) path discards it because its
+                    // storage can not represent Im(n_ud).
                     skip_compact_soc_label(ifdftu, word);
-                    read_matrix_block(ifdftu, nm, nullptr);
+                    read_matrix_block(ifdftu, nm, im.data());
 
                     skip_compact_soc_label(ifdftu, word);
                     read_matrix_block(ifdftu, nm, dd.data());
 
-                    // Reconstruct the real 2m x 2m spin-basis matrix.
-                    // Mirror the legacy writer: the Re block fills both
-                    // (up, down) and (down, up) at the same (m0, m1).
-                    for (int m0 = 0; m0 < nm; m0++)
+                    if (soc_layout == SOC_LAYOUT_PAULI)
                     {
-                        for (int m1 = 0; m1 < nm; m1++)
+                        // Reconstruct the 4 contiguous Pauli blocks
+                        // [b0, b1, b2, b3] in the 2m x 2m flat buffer
+                        // from the file's (n_uu, Re(n_ud), Im(n_ud),
+                        // n_dd) representation. The writer prints
+                        //   n_uu     = (b0 + b3)/2
+                        //   Re(n_ud) = b1/2
+                        //   Im(n_ud) = b2/2
+                        //   n_dd     = (b0 - b3)/2
+                        // so the inverse is
+                        //   b0 = n_uu + n_dd
+                        //   b1 = 2 * Re(n_ud)
+                        //   b2 = 2 * Im(n_ud)
+                        //   b3 = n_uu - n_dd.
+                        ModuleBase::matrix& occ0 = occ.mat(iat, L, 0);
+                        const int m2 = nm * nm;
+                        for (int k = 0; k < m2; ++k)
                         {
-                            const int k = m0 * nm + m1;
-                            occ.set(iat, L, 0, m0, m1, uu[k]);
-                            occ.set(iat, L, 0, m0, nm + m1, re[k]);
-                            occ.set(iat, L, 0, nm + m0, m1, re[k]);
-                            occ.set(iat, L, 0, nm + m0, nm + m1, dd[k]);
+                            occ0.c[0 * m2 + k] = uu[k] + dd[k];
+                            occ0.c[1 * m2 + k] = 2.0 * re[k];
+                            occ0.c[2 * m2 + k] = 2.0 * im[k];
+                            occ0.c[3 * m2 + k] = uu[k] - dd[k];
+                        }
+                    }
+                    else // SOC_LAYOUT_SPIN_BASIS_REAL
+                    {
+                        // Reconstruct the real 2m x 2m spin-basis matrix.
+                        // Mirror the legacy writer: the Re block fills both
+                        // (up, down) and (down, up) at the same (m0, m1).
+                        // Im(n_ud) is dropped because the storage can not
+                        // represent it.
+                        for (int m0 = 0; m0 < nm; m0++)
+                        {
+                            for (int m1 = 0; m1 < nm; m1++)
+                            {
+                                const int k = m0 * nm + m1;
+                                occ.set(iat, L, 0, m0, m1, uu[k]);
+                                occ.set(iat, L, 0, m0, nm + m1, re[k]);
+                                occ.set(iat, L, 0, nm + m0, m1, re[k]);
+                                occ.set(iat, L, 0, nm + m0, nm + m1, dd[k]);
+                            }
                         }
                     }
                 }

@@ -2,7 +2,7 @@ INPUT_PARAMETERS
 
 # general
 suffix          autotest
-calculation     scf relax
+calculation     relax
 relax_nmax      3
 basis_type      pw
 device          cpu
@@ -14,7 +14,7 @@ nbands          28
 gamma_only      0
 scf_thr         1e-07
 scf_nmax        70
-out_chg         1
+out_chg         0
 out_occ_mat     1
 
 # smearing
@@ -33,11 +33,14 @@ orbital_corr    2
 hubbard_u       5.0
 onsite_radius   3.0
 
+init_occ_mat    2
+read_file_dir   .
+out_freq_elec   1
+out_freq_ion    2
+
 pseudo_dir      ../../PP_ORB/
 orbital_dir     ../../PP_ORB/
 pw_seed         1
 
-out_freq_ion    2
-out_freq_elec   1
-read_file_dir   .
-init_occ_mat    2
+cal_force       1
+cal_stress      1

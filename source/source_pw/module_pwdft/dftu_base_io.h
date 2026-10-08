@@ -124,6 +124,12 @@ void append_ion_step_snapshot(const Plus_U_Base& dftu,
 /// The file format matches the output of write_occup_m(). When the file can
 /// not be opened, the run quits with an error message that depends on
 /// init_occ_mat and init_chg.
+///
+/// @param soc_layout storage layout of the nspin == 4 occupation matrix;
+///        the PW path stores 4 contiguous Pauli blocks (b0, b1, b2, b3) and
+///        must reconstruct them from the (n_uu, Re(n_ud), Im(n_ud), n_dd)
+///        blocks written to the file; the LCAO path stores a real 2m x 2m
+///        spin-basis matrix and discards Im(n_ud).
 void read_occup_m(const UnitCell& ucell,
                   OccupationMatrix& occ,
                   const std::vector<int>& l_channel,
@@ -131,7 +137,8 @@ void read_occup_m(const UnitCell& ucell,
                   const std::string& fn,
                   const std::string& init_chg,
                   int nspin,
-                  int npol);
+                  int npol,
+                  OccmatSocLayout soc_layout);
 
 /// Broadcast the local occupation number matrices from rank 0 to all ranks.
 ///

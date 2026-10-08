@@ -190,7 +190,7 @@ void print_etot(const Magnetism& magnet,
     GlobalV::ofs_running << std::setprecision(6);
     GlobalV::ofs_running << std::setiosflags(std::ios::right);
 
-    GlobalV::ofs_running << " Electron density deviation " << scf_thr << std::endl;
+    ModuleBase::GlobalFunc::OUT(GlobalV::ofs_running, "Electron density deviation", scf_thr);
 
     if (inp.basis_type == "pw")
     {
