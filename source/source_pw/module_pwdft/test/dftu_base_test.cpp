@@ -16,8 +16,11 @@
 
 #include "gtest/gtest.h"
 
+#ifdef __MPI
+#include <mpi.h>
+#endif
+
 #include <cstdio>
-#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -499,38 +502,128 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
 /// in declaration order, and an empty string when none exist.
 TEST(FindFirstExistingFileTest, ReturnsFirstExistingCandidate)
 {
-    const std::string dir = "./occ_chain_test/";
-    const std::string mkdir_cmd = "mkdir -p " + dir;
-    std::system(mkdir_cmd.c_str());
+    // Use the gtest-managed temp dir for writable fixtures, and a
+    // non-existent subdir for the "no candidate" case. The test never
+    // creates or deletes directories itself (AGENTS.md rule 17).
+    const std::string td = testing::TempDir();
 
-    // No candidates exist -> empty string.
+    // No candidates exist -> empty string. All three names are unique to
+    // this test, so they should not be present in td.
     {
-        const std::vector<std::string> candidates = {"dm_onsite_ini.txt",
-                                                      "occ_mat.txt",
-                                                      "dm_onsite.txt"};
-        EXPECT_TRUE(DFTU_BASE::find_first_existing_file(dir, candidates).empty());
+        const std::vector<std::string> candidates = {"ffe_absent_1.txt",
+                                                      "ffe_absent_2.txt",
+                                                      "ffe_absent_3.txt"};
+        EXPECT_TRUE(DFTU_BASE::find_first_existing_file(td, candidates).empty());
     }
 
-    // Only occ_mat.txt exists -> it is returned even though dm_onsite_ini.txt
-    // comes first in the candidate list.
+    // Only the second candidate exists -> it is returned even though the
+    // first comes earlier in the list.
     {
-        std::ofstream(dir + "occ_mat.txt").close();
-        const std::vector<std::string> candidates = {"dm_onsite_ini.txt",
-                                                      "occ_mat.txt",
-                                                      "dm_onsite.txt"};
-        EXPECT_EQ(DFTU_BASE::find_first_existing_file(dir, candidates),
-                  dir + "occ_mat.txt");
+        const std::string fn = td + "ffe_second_only.txt";
+        std::ofstream(fn).close();
+        const std::vector<std::string> candidates = {"ffe_absent_1.txt",
+                                                      "ffe_second_only.txt",
+                                                      "ffe_absent_3.txt"};
+        EXPECT_EQ(DFTU_BASE::find_first_existing_file(td, candidates), fn);
     }
 
-    // dm_onsite_ini.txt appears -> it takes precedence over occ_mat.txt.
+    // The first candidate exists -> it takes precedence over the second.
     {
-        std::ofstream(dir + "dm_onsite_ini.txt").close();
-        const std::vector<std::string> candidates = {"dm_onsite_ini.txt",
-                                                      "occ_mat.txt",
-                                                      "dm_onsite.txt"};
-        EXPECT_EQ(DFTU_BASE::find_first_existing_file(dir, candidates),
-                  dir + "dm_onsite_ini.txt");
+        const std::string fn = td + "ffe_first_wins.txt";
+        std::ofstream(fn).close();
+        const std::vector<std::string> candidates = {"ffe_first_wins.txt",
+                                                      "ffe_second_only.txt",
+                                                      "ffe_absent_3.txt"};
+        EXPECT_EQ(DFTU_BASE::find_first_existing_file(td, candidates), fn);
+    }
+}
+
+/// For init_occ_mat=2 the occupation-matrix file is read exactly once.
+/// Later init_base() calls (one per ionic step in a relax run) must keep
+/// the in-memory matrix instead of reading the file again, so pointing
+/// the second call at a non-existent readin dir must not abort the run.
+TEST_F(DFTUBaseTest, InitBaseReadsOccMatFileOnlyOnce)
+{
+    // Use the gtest-managed temporary directory so the test never creates
+    // or deletes directories itself (see AGENTS.md rule 17).
+    const std::string dir = testing::TempDir();
+    const std::string fn = dir + "occ_mat.txt";
+
+    // One Fe atom, L=2, two spin channels of 5x5, filled with distinct
+    // constants so a re-read would be easy to distinguish from a
+    // preserved in-memory matrix.
+    {
+        std::ofstream ofs(fn);
+        ASSERT_TRUE(ofs.is_open());
+        ofs << "# compact test fixture\n";
+        ofs << " Fe Atom 1 L 2 mag 0.0\n";
+        ofs << " spin 1 nelec 0.5\n";
+        for (int m0 = 0; m0 < 5; ++m0)
+        {
+            for (int m1 = 0; m1 < 5; ++m1)
+            {
+                ofs << " 0.1";
+            }
+            ofs << "\n";
+        }
+        ofs << " spin 2 nelec 0.5\n";
+        for (int m0 = 0; m0 < 5; ++m0)
+        {
+            for (int m1 = 0; m1 < 5; ++m1)
+            {
+                ofs << " 0.2";
+            }
+            ofs << "\n";
+        }
     }
 
-    std::system(("rm -rf " + dir).c_str());
+    Plus_U_Base dftu;
+    const std::vector<int> l_channel = {2};
+    const std::vector<double> hubbard_u = {0.0};
+    auto call_init = [&](const std::string& readin_dir)
+    {
+        dftu.init_base(ucell,
+                       1,                // npol
+                       2,                // nspin
+                       l_channel,
+                       false,            // yukawa_potential
+                       0.5,              // yukawa_lambda
+                       readin_dir,       // global_readin_dir
+                       "",               // global_out_dir
+                       "none",           // init_chg
+                       "cpu",            // device
+                       hubbard_u,
+                       0.0,              // uramping
+                       2,                // init_occ_mat
+                       0);               // mixing_dftu
+    };
+
+    // First ionic step: the file is read.
+    call_init(dir);
+    ASSERT_TRUE(dftu.is_occmat_ready());
+    EXPECT_NEAR(dftu.occmat().get(0, 2, 0, 0, 0), 0.1, 1e-12);
+    EXPECT_NEAR(dftu.occmat().get(0, 2, 1, 4, 4), 0.2, 1e-12);
+
+    // Simulate a later ionic step: the in-memory matrix is preserved and
+    // the file is not consulted again, so a non-existent readin dir is fine.
+    call_init(dir + "does_not_exist/");
+    EXPECT_TRUE(dftu.is_occmat_ready());
+    EXPECT_NEAR(dftu.occmat().get(0, 2, 0, 0, 0), 0.1, 1e-12);
+    EXPECT_NEAR(dftu.occmat().get(0, 2, 1, 4, 4), 0.2, 1e-12);
+}
+
+// Reading the occupation-matrix file broadcasts on MPI_COMM_WORLD, so
+// the test binary must initialize MPI even when ctest launches it as a
+// single process.
+int main(int argc, char** argv)
+{
+#ifdef __MPI
+    MPI_Init(&argc, &argv);
+#endif
+    testing::InitGoogleTest(&argc, argv);
+    const int result = RUN_ALL_TESTS();
+#ifdef __MPI
+    MPI_Finalize();
+#endif
+    return result;
 }

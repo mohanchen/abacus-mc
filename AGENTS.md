@@ -61,6 +61,9 @@ rules. Read the complete governance document before making or reviewing changes:
   16. When reading a file, print a one-line confirmation with its full path to
       both stdout and the running log; when creating or overwriting a file,
       print the same confirmation to the running log.
+  17. Do not create or delete files or directories from inside a unit test
+      (`std::system("mkdir/rm")`, `std::remove`, `std::filesystem::remove_all`).
+      Use committed fixtures or `testing::TempDir()` instead.
 - Use LF line endings for text files. Only `.bat` and `.cmd` files may use CRLF.
 - Keep source file additions deterministic: update the relevant `CMakeLists.txt`
   or explain why the file is generated or included indirectly.
