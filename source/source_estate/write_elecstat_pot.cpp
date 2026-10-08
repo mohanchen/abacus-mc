@@ -105,7 +105,8 @@ void write_elecstat_pot(
         precision,
         out_fermi,
         PARAM.globalv.two_fermi,
-        false);
+        false,
+        GlobalV::ofs_running);
 
     ModuleBase::timer::end("ModuleIO", "write_elecstat_pot");
     return;

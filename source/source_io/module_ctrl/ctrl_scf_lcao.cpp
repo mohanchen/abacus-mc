@@ -345,7 +345,8 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                 gd,
                                 kv,
                                 p_ham_tk,
-                                &dftu);
+                                &dftu,
+                                ofs_running);
 
     //------------------------------------------------------------------
     //! 7c) Output atomic dH components (dT/dτ, dV^NL/dτ, dV^L/dτ, dV^H/dτ, dV^XC/dτ), only for nspin =1, 2 now

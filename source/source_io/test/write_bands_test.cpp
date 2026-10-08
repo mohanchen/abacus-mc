@@ -59,6 +59,9 @@ namespace
 
 using BandTopology = std::pair<int, int>;
 
+// Dummy output stream for running-log writes in tests; discards output.
+std::ofstream ofs_running;
+
 // GoogleTest evaluates this generator during InitGoogleTest, after MPI_Init.
 std::vector<BandTopology> band_topologies()
 {
@@ -301,7 +304,7 @@ class BandOutputTest : public testing::TestWithParam<BandTopology>
         {
             SCOPED_TRACE(distributed ? "distributed" : "replicated");
             prepare(nspin, 3, distributed);
-            ModuleIO::write_bands(input_, ekb_, kv_);
+            ModuleIO::write_bands(input_, ekb_, kv_, ofs_running);
             if (nspin == 2)
             {
                 expect_output("bands1.txt", 0, 3, 0.0, 8, 1);
@@ -323,7 +326,7 @@ class BandOutputTest : public testing::TestWithParam<BandTopology>
 TEST_P(BandOutputTest, DirectSingleSpin)
 {
     prepare(1, 3, false);
-    ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.0, 8, ekb_, kv_);
+    ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.0, 8, ekb_, kv_, ofs_running);
     expect_output("direct.txt", 0, 3, 0.0, 8, 1);
     if (world_->rank() == 0)
     {
@@ -336,8 +339,8 @@ TEST_P(BandOutputTest, DirectSingleSpin)
 TEST_P(BandOutputTest, DirectBothSpins)
 {
     prepare(2, 3, false);
-    ModuleIO::nscf_bands(0, directory_ + "up.txt", 3, 0.0, 8, ekb_, kv_);
-    ModuleIO::nscf_bands(1, directory_ + "down.txt", 3, 0.0, 8, ekb_, kv_);
+    ModuleIO::nscf_bands(0, directory_ + "up.txt", 3, 0.0, 8, ekb_, kv_, ofs_running);
+    ModuleIO::nscf_bands(1, directory_ + "down.txt", 3, 0.0, 8, ekb_, kv_, ofs_running);
     expect_output("up.txt", 0, 3, 0.0, 8, 1);
     expect_output("down.txt", 1, 3, 0.0, 8, 1);
 }
@@ -347,7 +350,7 @@ TEST_P(BandOutputTest, PrecisionAndFermiShift)
     prepare(1, 3, false);
     for (const int precision : {4, 8})
     {
-        ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.25, precision, ekb_, kv_);
+        ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.25, precision, ekb_, kv_, ofs_running);
         expect_output("direct.txt", 0, 3, 0.25, precision, 1);
         if (world_->rank() == 0 && precision == 4)
         {
@@ -363,11 +366,11 @@ TEST_P(BandOutputTest, OverwriteAndAppend)
     prepare(1, 3, true);
     seed_file("band.txt", "stale output\n");
     Parallel::barrier(*world_);
-    ModuleIO::write_bands(input_, ekb_, kv_);
+    ModuleIO::write_bands(input_, ekb_, kv_, ofs_running);
     expect_output("band.txt", 0, 3, 0.0, 8, 1);
     Parallel::barrier(*world_);
     parameters_->set_output(directory_, true);
-    ModuleIO::write_bands(input_, ekb_, kv_);
+    ModuleIO::write_bands(input_, ekb_, kv_, ofs_running);
     expect_output("band.txt", 0, 3, 0.0, 8, 2);
 }
 
@@ -375,11 +378,11 @@ TEST_P(BandOutputTest, OutputDisabled)
 {
     prepare(1, 3, true);
     input_.out_band[0] = 0;
-    ModuleIO::write_bands(input_, ekb_, kv_);
+    ModuleIO::write_bands(input_, ekb_, kv_, ofs_running);
     expect_missing("band.txt");
     seed_file("band.txt", "keep this content\n");
     Parallel::barrier(*world_);
-    ModuleIO::write_bands(input_, ekb_, kv_);
+    ModuleIO::write_bands(input_, ekb_, kv_, ofs_running);
     if (world_->rank() == 0)
     {
         EXPECT_EQ(read_text("band.txt"), "keep this content\n");
@@ -410,7 +413,7 @@ TEST_P(BandOutputTest, EmptyBandShard)
     {
         EXPECT_EQ(ekb_.nc, 0);
     }
-    ModuleIO::write_bands(input_, ekb_, kv_);
+    ModuleIO::write_bands(input_, ekb_, kv_, ofs_running);
     expect_output("bands1.txt", 0, 1, 0.0, 8, 1);
     expect_output("bands2.txt", 1, 1, 0.0, 8, 1);
 }

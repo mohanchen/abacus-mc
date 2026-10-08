@@ -25,7 +25,8 @@ void ModuleIO::save_dH_sparse(const int& istep,
                               const std::string& calculation,
                               const bool out_app_flag,
                               const int nspin,
-                              const int nlocal) {
+                              const int nlocal,
+                              std::ofstream& ofs_running) {
     ModuleBase::TITLE("ModuleIO", "save_dH_sparse");
     ModuleBase::timer::start("ModuleIO", "save_dH_sparse");
     SparseWriteOptions lat_r_options;
@@ -150,7 +151,7 @@ void ModuleIO::save_dH_sparse(const int& istep,
                 else if (!binary)
                 {
                     const char* matrix_name = (fileflag == "s") ? "dS/dR" : "dH/dR";
-                    GlobalV::ofs_running << " Write " << matrix_name << " (" << comp.axis << " component) matrix in NAO basis to file: "
+                    ofs_running << " Write " << matrix_name << " (" << comp.axis << " component) matrix in NAO basis to file: "
                                          << comp.fname[ispin].str() << std::endl;
                 }
                 comp.ofs[ispin].open(comp.fname[ispin].str().c_str(), mode);

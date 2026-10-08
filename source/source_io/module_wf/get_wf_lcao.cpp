@@ -75,7 +75,7 @@ void Get_wf_lcao::begin_gamma(const UnitCell& ucell,
 
                 ModuleBase::GlobalFunc::OUT(ofs_running, ss_info.str(), ss_file.str());
 
-                ModuleIO::write_vdata_palgrid(pgrid, wfc_norm.data(), is, nspin_, 0, ss_out.str(), 0.0, &ucell, precision, 0, false, false);
+                ModuleIO::write_vdata_palgrid(pgrid, wfc_norm.data(), is, nspin_, 0, ss_out.str(), 0.0, &ucell, precision, 0, false, false, ofs_running);
             }
 
             if (re_im_bands_picked[ib])
@@ -93,7 +93,8 @@ void Get_wf_lcao::begin_gamma(const UnitCell& ucell,
                                               precision,
                                               0,
                                               false,
-                                              false);
+                                              false,
+                                              ofs_running);
 
                 std::stringstream ss_imag;
                 ss_imag << global_out_dir << "wfi" << ib + 1 << "s" << is + 1 << "k1im.cube";
@@ -108,7 +109,8 @@ void Get_wf_lcao::begin_gamma(const UnitCell& ucell,
                                               precision,
                                               0,
                                               false,
-                                              false);
+                                              false,
+                                              ofs_running);
             }
         }
     }
@@ -195,7 +197,8 @@ void Get_wf_lcao::begin_k(const UnitCell& ucell,
                                               precision,
                                               0,
                                               false,
-                                              false);
+                                              false,
+                                              ofs_running);
             }
 
             if (re_im_bands_picked[ib])
@@ -225,7 +228,8 @@ void Get_wf_lcao::begin_k(const UnitCell& ucell,
                                                   precision,
                                                   0,
                                                   false,
-                                                  false);
+                                                  false,
+                                                  ofs_running);
 
                     std::stringstream ss_imag;
                     ss_imag << global_out_dir << "wfi" << ib + 1 << "s" << component_index + 1 << "k" << k_number << "im.cube";
@@ -240,7 +244,8 @@ void Get_wf_lcao::begin_k(const UnitCell& ucell,
                                                   precision,
                                                   0,
                                                   false,
-                                                  false);
+                                                  false,
+                                                  ofs_running);
                 }
             }
         }

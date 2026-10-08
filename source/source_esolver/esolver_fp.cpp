@@ -177,7 +177,7 @@ void ESolver_FP::after_scf(UnitCell& ucell, const int istep, const bool conv_eso
 
     //! print out charge density, potential, elf, etc.
 	ModuleIO::ctrl_output_fp(ucell, *this->inp_, this->pelec, this->pw_big, this->pw_rhod, 
-			this->chr, this->solvent, this->Pgrid, istep); 
+			this->chr, this->solvent, this->Pgrid, istep, GlobalV::ofs_running); 
 
 }
 
@@ -262,7 +262,7 @@ void ESolver_FP::before_scf(UnitCell& ucell, const int istep)
 
     //! output the initial charge density
     ModuleIO::write_chg_init(ucell, this->Pgrid, this->chr, this->pelec->eferm, istep,
-                             PARAM.globalv.global_out_dir, *this->inp_, PARAM.globalv.two_fermi);
+                             PARAM.globalv.global_out_dir, *this->inp_, PARAM.globalv.two_fermi, GlobalV::ofs_running);
 
     return;
 }

@@ -338,7 +338,7 @@ void ESolver_KS_LCAO<TK, TR>::after_all_runners(BaseCell& basecell)
 	    this->gd, this->psi, this->chr, hamilt_lcao,
 	    this->two_center_bundle_,
 	    this->orb_, this->pw_rho, this->pw_rhod,
-	    this->sf, this->locpp.vloc, this->exx_nao, this->exx_info_, this->solvent);
+	    this->sf, this->locpp.vloc, this->exx_nao, this->exx_info_, this->solvent, GlobalV::ofs_running);
 
     ModuleBase::timer::end("ESolver_KS_LCAO", "after_all_runners");
 }

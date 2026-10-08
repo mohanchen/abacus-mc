@@ -2,6 +2,7 @@
 #define CUBE_IO_H
 #include "source_cell/unitcell.h"
 
+#include <fstream>
 #include <string>
 class Parallel_Grid;
 
@@ -28,6 +29,7 @@ void write_vdata_palgrid(const Parallel_Grid& pgrid,
                          const int out_fermi,
                          const bool two_fermi,
                          const bool reduce_all_pool,
+                         std::ofstream& ofs_running,
                          const std::string& data_desc = "data");
 
 /// read the full data from a cube file

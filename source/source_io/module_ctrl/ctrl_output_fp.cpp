@@ -25,7 +25,8 @@ void ctrl_output_fp(UnitCell& ucell,
                     Charge& chr,
                     surchem& solvent,
                     Parallel_Grid& para_grid,
-                    const int istep)
+                    const int istep,
+                    std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("ModuleIO", "ctrl_output_fp");
     ModuleBase::timer::start("ModuleIO", "ctrl_output_fp");
@@ -91,6 +92,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                           1,
                                           PARAM.globalv.two_fermi,
                                           false,
+                                          ofs_running,
                                           "charge density");
 
             if (XC_Functional::get_ked_flag())
@@ -110,7 +112,8 @@ void ctrl_output_fp(UnitCell& ucell,
                                               11, // default precision
                                               1, // default out_fermi
                                               PARAM.globalv.two_fermi,
-                                              false);
+                                              false,
+                                              ofs_running);
             }
         }
     }
@@ -146,6 +149,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                           0, // out_fermi
                                           PARAM.globalv.two_fermi,
                                           false,
+                                          ofs_running,
                                           "potential");
         }
     }
@@ -191,7 +195,8 @@ void ctrl_output_fp(UnitCell& ucell,
             &(ucell),
             inp.out_elf[1],
             geom_block,
-            PARAM.globalv.two_fermi);
+            PARAM.globalv.two_fermi,
+            ofs_running);
     }
 
 #ifdef __LIBXC

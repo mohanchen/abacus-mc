@@ -17,7 +17,8 @@ void write_elf(
     const UnitCell* ucell_,
     const int& precision,
     const std::string& geom_block,
-    const bool two_fermi)
+    const bool two_fermi,
+    std::ofstream& ofs_running)
 {
     ModuleBase::timer::start("ModuleIO", "write_elf");
     // For nspin = 4, we only calculate the total ELF using the
@@ -173,7 +174,8 @@ void write_elf(
             precision,
             out_fermi,
             two_fermi,
-            false);
+            false,
+            ofs_running);
     }
     else if (nspin == 2)
     {
@@ -195,7 +197,8 @@ void write_elf(
                 precision,
                 out_fermi,
                 two_fermi,
-                false);
+                false,
+                ofs_running);
         }
 
         std::vector<double> elf_tot(nrxx, 0.0);
@@ -231,7 +234,8 @@ void write_elf(
             precision,
             out_fermi,
             two_fermi,
-            false);
+            false,
+            ofs_running);
     }
     ModuleBase::timer::end("ModuleIO", "write_elf");
 } // end write_elf

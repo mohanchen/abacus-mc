@@ -13,7 +13,8 @@
 #include <mpi.h>
 #endif
 
-void ModuleIO::write_bands(const Input_para& inp, const ModuleBase::matrix& ekb, const K_Vectors& kv)
+void ModuleIO::write_bands(const Input_para& inp, const ModuleBase::matrix& ekb, const K_Vectors& kv,
+                           std::ofstream& ofs_running)
 {
     // write band information to band.txt
     if (inp.out_band[0])
@@ -46,6 +47,7 @@ void ModuleIO::write_bands(const Input_para& inp, const ModuleBase::matrix& ekb,
                        inp.out_band[1], // precision
                        global_ekb,
                        kv,
+                       ofs_running,
                        nspin0);
         }
     }
@@ -58,6 +60,7 @@ void ModuleIO::nscf_bands(const int& is,
                           const int& precision,
                           const ModuleBase::matrix& ekb,
                           const K_Vectors& kv,
+                          std::ofstream& ofs_running,
                           const int& nspin0)
 {
     ModuleBase::TITLE("ModuleIO", "nscf_bands");
@@ -76,7 +79,7 @@ void ModuleIO::nscf_bands(const int& is,
     */
 
     const std::string spin_tag = (nspin0 == 2) ? (is == 0 ? " (spin up  )" : " (spin down)") : "";
-    GlobalV::ofs_running << " Write eigenvalues" << spin_tag << " to file: " << eig_file << std::endl;
+    ofs_running << " Write eigenvalues" << spin_tag << " to file: " << eig_file << std::endl;
 
     // number of k points without spin;
     // nspin = 1,2, nkstot = nkstot_np * nspin;

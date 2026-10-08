@@ -509,7 +509,8 @@ void ExcitonPlotter<T>::plot_average_density(const int istate, const std::string
                                       8,
                                       0,
                                       false, /*two_fermi*/
-                                      false);
+                                      false,
+                                      GlobalV::ofs_running);
     }
     LR_Util::_deallocate_2order_nested_ptr(rho_result, this->nspin_x);
 }

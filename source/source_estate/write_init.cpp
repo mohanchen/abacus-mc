@@ -64,7 +64,8 @@ void ModuleIO::write_chg_init(
     const int istep,
     const std::string& out_dir,
     const Input_para& inp,
-    const bool two_fermi)
+    const bool two_fermi,
+    std::ofstream& ofs_running)
 {
     const int nspin = inp.nspin;
     assert(nspin == 1 || nspin == 2 || nspin == 4);
@@ -115,7 +116,8 @@ void ModuleIO::write_chg_init(
                                               inp.out_chg[1],
                                               1,
                                               two_fermi,
-                                              false);
+                                              false,
+                                              ofs_running);
             }
         }
     }
@@ -130,7 +132,8 @@ void ModuleIO::write_pot_init(
     const int istep,
     const std::string& out_dir,
     const Input_para& inp,
-    const bool two_fermi)
+    const bool two_fermi,
+    std::ofstream& ofs_running)
 {
     const int nspin = inp.nspin;
     assert(nspin == 1 || nspin == 2 || nspin == 4);
@@ -164,7 +167,8 @@ void ModuleIO::write_pot_init(
                                               inp.out_pot[1],
                                               0,
                                               two_fermi,
-                                              false);
+                                              false,
+                                              ofs_running);
             }
         }
     }

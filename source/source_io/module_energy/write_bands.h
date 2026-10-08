@@ -5,13 +5,16 @@
 #include "source_base/matrix.h"
 #include "source_cell/klist.h"
 
+#include <fstream>
+
 namespace ModuleIO
 {
 
 
 void write_bands(const Input_para& inp,
     const ModuleBase::matrix& ekb,
-    const K_Vectors& kv);
+    const K_Vectors& kv,
+    std::ofstream& ofs_running);
 
 /**
  * @brief calculate the band structure
@@ -31,6 +34,7 @@ void nscf_bands(const int& is,
                const int& precision,
                const ModuleBase::matrix& ekb,
                const K_Vectors& kv,
+               std::ofstream& ofs_running,
                const int& nspin0 = 1);
 }
 
