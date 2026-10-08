@@ -494,15 +494,29 @@ TEST(HsrWriterIo, WriteHsrTextCsrCarriesPerSpinFermiFromEfermi)
     // Exercise the fix path inside write_hsr: eferm.get_efval(ispin) * Ry_to_eV
     // for a two-Fermi (nspin=2) case. The only existing write_hsr test uses
     // out_type=2 (binary), which skips the Fermi branch entirely.
+    // append=true suppresses the ionic-step suffix in the generated names.
     const std::string hr_up_filename = "hrs1_nao.csr";
     const std::string hr_dw_filename = "hrs2_nao.csr";
+    const std::string sr_filename = "sr_nao.csr";
     std::remove(hr_up_filename.c_str());
     std::remove(hr_dw_filename.c_str());
+    std::remove(sr_filename.c_str());
 
     UnitCell ucell;
     init_unitcell(ucell);
+    // The __MPI path in write_hsr calls set_atomic_trace and gatherParallels,
+    // which require a real atom-to-orbital map; nullptr with nat=0 throws on
+    // that path. iat2it is released by UnitCell's Statistics member.
+    ucell.iat2it = new int[1];
+    ucell.iat2it[0] = 0;
+    ucell.set_iat2iwt(1);
+    const int* iat2iwt_ptr = ucell.get_iat2iwt();
     Parallel_Orbitals pv;
     init_serial_orbitals(pv);
+    // gatherParallels reaches get_indexes_row(iat) on this source pv, which
+    // dereferences iat2iwt_; init_serial_orbitals does not set it, so the
+    // atomic trace must be installed explicitly.
+    pv.set_atomic_trace(iat2iwt_ptr, 1, 2);
 
     hamilt::HContainer<double> hr_up(&pv);
     hamilt::HContainer<double> hr_dw(&pv);
@@ -528,7 +542,8 @@ TEST(HsrWriterIo, WriteHsrTextCsrCarriesPerSpinFermiFromEfermi)
 
     std::ofstream ofs_running_null; // not opened; test does not inspect the running log
     ModuleIO::write_hsr(
-        hr_vec, &sr, &ucell, 1, 8, pv, false, true, nullptr, 0, 0, "./", eferm, ofs_running_null);
+        hr_vec, &sr, &ucell, 1, 8, pv, true, true, iat2iwt_ptr, 1, 0, "./", eferm,
+        ofs_running_null);
 
     const std::string output_up = read_file(hr_up_filename);
     const std::string output_dw = read_file(hr_dw_filename);
@@ -543,6 +558,7 @@ TEST(HsrWriterIo, WriteHsrTextCsrCarriesPerSpinFermiFromEfermi)
 
     std::remove(hr_up_filename.c_str());
     std::remove(hr_dw_filename.c_str());
+    std::remove(sr_filename.c_str());
 }
 
 int main(int argc, char** argv)
