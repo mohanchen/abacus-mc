@@ -614,6 +614,108 @@ TEST_F(DFTUBaseTest, InitBaseReadsOccMatFileOnlyOnce)
     EXPECT_NEAR(dftu.occmat().get(0, 2, 1, 4, 4), 0.2, 1e-12);
 }
 
+/// Reading an nspin=4 occupation-matrix file with SOC_LAYOUT_PAULI must
+/// reconstruct the 4 contiguous Pauli blocks [b0, b1, b2, b3] in the 2m x 2m
+/// flat buffer. The bug fixed in commit 1787365b3 was that the Im(n_ud)
+/// block ("spin 12 im") was discarded, so b2 came out zero/garbage and the
+/// subsequent SCF diverged. This test writes a fixture with a non-zero Im
+/// block and verifies all 4 blocks at the correct flat-buffer offsets.
+TEST_F(DFTUBaseTest, InitBaseReadsOccMatSocPauliRoundtrip)
+{
+    // Use the gtest-managed temporary directory (AGENTS.md rule 17).
+    const std::string dir = testing::TempDir();
+    const std::string fn = dir + "occ_mat.txt";
+
+    // One Fe atom, L=2 -> nm=5. The 2m x 2m flat buffer (100 elements)
+    // holds 4 contiguous m^2 blocks: [b0, b1, b2, b3]. The file stores
+    // (n_uu, Re(n_ud), Im(n_ud), n_dd); the reader must reconstruct
+    //   b0 = n_uu + n_dd
+    //   b1 = 2 * Re(n_ud)
+    //   b2 = 2 * Im(n_ud)   <- discarded by the buggy reader
+    //   b3 = n_uu - n_dd
+    const int nm = 5;
+    const int m2 = nm * nm;
+    std::vector<double> uu(m2), re(m2), im(m2), dd(m2);
+    for (int k = 0; k < m2; ++k)
+    {
+        uu[k] = 1.0 + 0.01 * k;
+        re[k] = 0.1 + 0.01 * k;
+        im[k] = 0.01 + 0.001 * k;  // non-zero -- the bug discarded this block
+        dd[k] = 0.5 + 0.01 * k;
+    }
+
+    {
+        std::ofstream ofs(fn);
+        ASSERT_TRUE(ofs.is_open());
+        ofs << " Fe Atom 1 L 2 mag 0.0 0.0 0.0\n";
+        ofs << " spin 1 nelec 0.5\n";
+        for (int m0 = 0; m0 < nm; ++m0)
+        {
+            for (int m1 = 0; m1 < nm; ++m1)
+                ofs << " " << uu[m0 * nm + m1];
+            ofs << "\n";
+        }
+        ofs << " spin 12 re\n";
+        for (int m0 = 0; m0 < nm; ++m0)
+        {
+            for (int m1 = 0; m1 < nm; ++m1)
+                ofs << " " << re[m0 * nm + m1];
+            ofs << "\n";
+        }
+        ofs << " spin 12 im\n";
+        for (int m0 = 0; m0 < nm; ++m0)
+        {
+            for (int m1 = 0; m1 < nm; ++m1)
+                ofs << " " << im[m0 * nm + m1];
+            ofs << "\n";
+        }
+        ofs << " spin 2 nelec 0.5\n";
+        for (int m0 = 0; m0 < nm; ++m0)
+        {
+            for (int m1 = 0; m1 < nm; ++m1)
+                ofs << " " << dd[m0 * nm + m1];
+            ofs << "\n";
+        }
+    }
+
+    Plus_U_Base dftu;
+    const std::vector<int> l_channel = {2};
+    const std::vector<double> hubbard_u = {0.0};
+    dftu.init_base(ucell,
+                   2,                // npol (nspin=4 requires npol=2)
+                   4,                // nspin
+                   l_channel,
+                   false,            // yukawa_potential
+                   0.5,              // yukawa_lambda
+                   dir,              // global_readin_dir
+                   "",               // global_out_dir
+                   "none",           // init_chg
+                   "cpu",            // device
+                   hubbard_u,
+                   0.0,              // uramping
+                   2,                // init_occ_mat
+                   0,                // mixing_dftu
+                   DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    ASSERT_TRUE(dftu.is_occmat_ready());
+
+    // The 2m x 2m flat buffer holds 4 contiguous m^2 blocks: [b0, b1, b2, b3].
+    const ModuleBase::matrix& occ0 = dftu.occmat().mat(0, 2, 0);
+    ASSERT_EQ(occ0.nr * occ0.nc, 4 * m2);
+
+    for (int k = 0; k < m2; ++k)
+    {
+        EXPECT_NEAR(occ0.c[0 * m2 + k], uu[k] + dd[k], 1e-12)    // b0
+            << "Pauli block b0 mismatch at k=" << k;
+        EXPECT_NEAR(occ0.c[1 * m2 + k], 2.0 * re[k], 1e-12)      // b1
+            << "Pauli block b1 mismatch at k=" << k;
+        EXPECT_NEAR(occ0.c[2 * m2 + k], 2.0 * im[k], 1e-12)      // b2 -- the bug
+            << "Pauli block b2 mismatch at k=" << k;
+        EXPECT_NEAR(occ0.c[3 * m2 + k], uu[k] - dd[k], 1e-12)    // b3
+            << "Pauli block b3 mismatch at k=" << k;
+    }
+}
+
 // Reading the occupation-matrix file broadcasts on MPI_COMM_WORLD, so
 // the test binary must initialize MPI even when ctest launches it as a
 // single process.
