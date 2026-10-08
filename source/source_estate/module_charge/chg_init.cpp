@@ -191,10 +191,18 @@ bool read_kin_file(Charge& chr,
         return true;
     }
 
-    // restart binary is absent; fall back to SPINX_TAU.cube files, probing on
-    // the parsing rank and broadcasting so all ranks agree to skip together.
+    // restart binary is absent; fall back to tau.cube/taus1.cube files,
+    // probing on the parsing rank and broadcasting so all ranks agree to
+    // skip together.
     std::stringstream ssc0;
-    ssc0 << readin_dir << "SPIN1_TAU.cube";
+    if (nspin == 1)
+    {
+        ssc0 << readin_dir << "tau.cube";
+    }
+    else
+    {
+        ssc0 << readin_dir << "taus1.cube";
+    }
     bool cube_exists = false;
     if (rank == 0)
     {
@@ -209,7 +217,14 @@ bool read_kin_file(Charge& chr,
     for (int is = 0; is < nspin; is++)
     {
         std::stringstream ssc;
-        ssc << readin_dir << "SPIN" << is + 1 << "_TAU.cube";
+        if (nspin == 1)
+        {
+            ssc << readin_dir << "tau.cube";
+        }
+        else
+        {
+            ssc << readin_dir << "taus" << is + 1 << ".cube";
+        }
         // mohan update 2012-02-10, sunliang update 2023-03-09
         ModuleIO::read_vdata_palgrid(pgrid,
                                      rank,
