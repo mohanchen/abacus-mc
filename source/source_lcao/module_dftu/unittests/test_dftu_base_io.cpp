@@ -13,7 +13,7 @@
 
 TEST(DFTUBaseIoTest, IonStepGateZeroFreqDisablesNumberedFiles)
 {
-    const DFTU_BASE::OccmatOutputCfg cfg{0, 10, 10, true};
+    const DFTU_BASE::OccmatOutputCfg cfg{0, 10, 10, true, 1};
     EXPECT_FALSE(DFTU_BASE::is_ion_step_output_step(0, cfg));
     EXPECT_FALSE(DFTU_BASE::is_ion_step_output_step(1, cfg));
     EXPECT_FALSE(DFTU_BASE::is_ion_step_output_step(2, cfg));
@@ -21,7 +21,7 @@ TEST(DFTUBaseIoTest, IonStepGateZeroFreqDisablesNumberedFiles)
 
 TEST(DFTUBaseIoTest, IonStepGateDivisibleIonStepsOnly)
 {
-    const DFTU_BASE::OccmatOutputCfg cfg{2, 10, 10, true};
+    const DFTU_BASE::OccmatOutputCfg cfg{2, 10, 10, true, 1};
     EXPECT_TRUE(DFTU_BASE::is_ion_step_output_step(0, cfg));
     EXPECT_FALSE(DFTU_BASE::is_ion_step_output_step(1, cfg));
     EXPECT_TRUE(DFTU_BASE::is_ion_step_output_step(2, cfg));
@@ -31,7 +31,7 @@ TEST(DFTUBaseIoTest, IonStepGateDivisibleIonStepsOnly)
 
 TEST(DFTUBaseIoTest, ElecGatePeriodicTrigger)
 {
-    const DFTU_BASE::OccmatOutputCfg cfg{1, 2, 10, true};
+    const DFTU_BASE::OccmatOutputCfg cfg{1, 2, 10, true, 1};
     EXPECT_FALSE(DFTU_BASE::is_elec_snapshot_trigger(1, false, cfg));
     EXPECT_TRUE(DFTU_BASE::is_elec_snapshot_trigger(2, false, cfg));
     EXPECT_FALSE(DFTU_BASE::is_elec_snapshot_trigger(3, false, cfg));
@@ -40,7 +40,7 @@ TEST(DFTUBaseIoTest, ElecGatePeriodicTrigger)
 
 TEST(DFTUBaseIoTest, ElecGateScfNmaxTrigger)
 {
-    const DFTU_BASE::OccmatOutputCfg cfg{1, 10, 10, true};
+    const DFTU_BASE::OccmatOutputCfg cfg{1, 10, 10, true, 1};
     EXPECT_FALSE(DFTU_BASE::is_elec_snapshot_trigger(1, false, cfg));
     EXPECT_FALSE(DFTU_BASE::is_elec_snapshot_trigger(9, false, cfg));
     EXPECT_TRUE(DFTU_BASE::is_elec_snapshot_trigger(10, false, cfg));
@@ -48,7 +48,7 @@ TEST(DFTUBaseIoTest, ElecGateScfNmaxTrigger)
 
 TEST(DFTUBaseIoTest, ElecGateConvergenceTrigger)
 {
-    const DFTU_BASE::OccmatOutputCfg cfg{1, 10, 10, true};
+    const DFTU_BASE::OccmatOutputCfg cfg{1, 10, 10, true, 1};
     EXPECT_TRUE(DFTU_BASE::is_elec_snapshot_trigger(3, true, cfg));
     EXPECT_TRUE(DFTU_BASE::is_elec_snapshot_trigger(7, true, cfg));
 }

@@ -397,7 +397,7 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
     Plus_U_Base dftu;
     this->init_dftu(dftu, false);
 
-    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true};
+    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true, 1};
     const std::string out_dir = "./";
 
     // fresh run: no occupation matrix has been computed or loaded
@@ -463,8 +463,62 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
     Plus_U_Base dftu;
     this->init_dftu(dftu, false);
 
-    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, false};
+    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, false, 1};
     const std::string out_dir = "./";
+
+    DFTU_BASE::append_ion_step_snapshot(dftu,
+                                        ucell,
+                                        out_dir,
+                                        2, // nspin
+                                        1, // npol
+                                        0, // istep (an output ionic step)
+                                        1, // iter
+                                        false,
+                                        true, // occmat_ready
+                                        1e-6,
+                                        0.5,
+                                        cfg,
+                                        DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    std::ifstream ifs("./occ_matg1.txt");
+    EXPECT_FALSE(ifs.is_open());
+
+    DFTU_BASE::write_latest_occmat(dftu,
+                                   ucell,
+                                   out_dir,
+                                   2, // nspin
+                                   1, // npol
+                                   0, // istep
+                                   2, // iter
+                                   1e-6,
+                                   0.5,
+                                   cfg,
+                                   DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    std::ifstream ifs_latest("./occ_mat.txt");
+    EXPECT_FALSE(ifs_latest.is_open());
+}
+
+/// dft_plus_u = 0 (no DFT+U) must suppress both the numbered snapshot file
+/// and the latest occ_mat.txt, even when out_occ_mat = true (the default).
+/// This is the regression test for the abacuslite segfault: a default-
+/// constructed Plus_U_Base has an empty l_channel vector, so without this
+/// guard write_occup_m() dereferences a null l_channel.data() inside
+/// has_l_channel(). The guard also honours the documented contract that
+/// out_occ_mat only takes effect for DFT+U calculations (dft_plus_u > 0).
+TEST_F(DFTUBaseTest, DftPlusUDisabledWritesNothing)
+{
+    Plus_U_Base dftu;  // default-constructed: l_channel is empty, mirroring
+                       // the LCAO/PW esolver path when dft_plus_u == 0
+    // Deliberately skip init_dftu(): the bug is that the IO functions must
+    // not even reach has_l_channel() when dft_plus_u == 0.
+
+    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true, 0};
+    const std::string out_dir = "./";
+
+    // Remove stale files so the existence check is meaningful.
+    std::remove("./occ_matg1.txt");
+    std::remove("./occ_mat.txt");
 
     DFTU_BASE::append_ion_step_snapshot(dftu,
                                         ucell,

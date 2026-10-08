@@ -815,9 +815,18 @@ void append_ion_step_snapshot(const Plus_U_Base& dftu,
                                 "invalid occupation-matrix output frequency configuration");
     }
 
+    // dft_plus_u <= 0 means the occupation matrix was never computed
+    // (Plus_U_Base::l_channel stays empty); writing here would dereference
+    // a null l_channel.data() in write_occup_m. Match the documented contract
+    // that out_occ_mat only takes effect for DFT+U calculations.
+    if (!cfg.out_occ_mat || cfg.dft_plus_u <= 0)
+    {
+        return;
+    }
+
     const bool ion_step_output = is_ion_step_output_step(istep, cfg);
     const bool elec_trigger = is_elec_snapshot_trigger(iter, conv_esolver, cfg);
-    if (!cfg.out_occ_mat || !ion_step_output || !elec_trigger || GlobalV::MY_RANK != 0)
+    if (!ion_step_output || !elec_trigger || GlobalV::MY_RANK != 0)
     {
         return;
     }
@@ -880,7 +889,7 @@ void write_latest_occmat(const Plus_U_Base& dftu,
 {
     ModuleBase::TITLE("DFTU_BASE", "write_latest_occmat");
 
-    if (!cfg.out_occ_mat || GlobalV::MY_RANK != 0)
+    if (!cfg.out_occ_mat || cfg.dft_plus_u <= 0 || GlobalV::MY_RANK != 0)
     {
         return;
     }

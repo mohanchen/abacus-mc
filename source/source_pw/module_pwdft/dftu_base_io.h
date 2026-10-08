@@ -28,6 +28,12 @@ struct OccmatOutputCfg
     int out_freq_elec; ///< electronic-iteration interval recorded inside a numbered file
     int scf_nmax;      ///< maximum number of electronic iterations
     bool out_occ_mat;  ///< master switch of occupation-matrix output (out_occ_mat INPUT parameter)
+    /// DFT+U calculation mode (INPUT parameter dft_plus_u). The occupation-
+    /// matrix IO is meaningful only when dft_plus_u > 0; otherwise the
+    /// occupation matrix is never computed and the writers must early-out
+    /// to avoid touching an empty l_channel vector. This honours the
+    /// documented contract that out_occ_mat only takes effect for DFT+U.
+    int dft_plus_u;
 };
 
 /// Text format used by write_occup_m().
