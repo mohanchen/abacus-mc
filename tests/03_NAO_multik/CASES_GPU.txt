@@ -43,9 +43,9 @@ scf_out_mul_nupdw
 scf_out_elf
 scf_out_qo
 scf_out_hsr_spin2
-scf_out_hsr_npz
-scf_out_hr_npz
-scf_out_dm_npz
+#scf_out_hsr_npz
+#scf_out_hr_npz
+#scf_out_dm_npz
 nscf_out_dos
 nscf_out_band_pband
 nscf_out_pot1
