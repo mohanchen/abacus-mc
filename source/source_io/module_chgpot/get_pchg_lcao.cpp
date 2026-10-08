@@ -80,7 +80,7 @@ void Get_pchg_lcao::begin_gamma(const UnitCell& ucell,
 
             ofs_running << " Writing cube file " << ssc.str() << std::endl;
 
-            ModuleIO::write_vdata_palgrid(pgrid, rho[is].data(), is, nspin_, 0, ssc.str(), 0.0, &ucell, precision, 0, false, false, ofs_running);
+            ModuleIO::write_vdata_palgrid(pgrid, rho[is].data(), is, nspin_, 0, ssc.str(), 0.0, &ucell, precision, 0, false, false, ofs_running, "partial charge");
         }
     }
 }
@@ -172,7 +172,7 @@ void Get_pchg_lcao::begin_k(const ModulePW::PW_Basis& rho_pw,
 
                     ofs_running << " Writing cube file " << ssc.str() << std::endl;
 
-                    ModuleIO::write_vdata_palgrid(pgrid, rho[is].data(), is, nspin_, 0, ssc.str(), 0.0, &ucell, precision, 0, false, false, ofs_running);
+                    ModuleIO::write_vdata_palgrid(pgrid, rho[is].data(), is, nspin_, 0, ssc.str(), 0.0, &ucell, precision, 0, false, false, ofs_running, "partial charge");
                 }
             }
         }
@@ -212,7 +212,7 @@ void Get_pchg_lcao::begin_k(const ModulePW::PW_Basis& rho_pw,
 
                 ofs_running << " Writing cube file " << ssc.str() << std::endl;
 
-                ModuleIO::write_vdata_palgrid(pgrid, rho[is].data(), is, nspin_, 0, ssc.str(), 0.0, &ucell, precision, 0, false, false, ofs_running);
+                ModuleIO::write_vdata_palgrid(pgrid, rho[is].data(), is, nspin_, 0, ssc.str(), 0.0, &ucell, precision, 0, false, false, ofs_running, "partial charge");
             }
         }
     }

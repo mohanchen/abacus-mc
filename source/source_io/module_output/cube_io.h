@@ -30,7 +30,7 @@ void write_vdata_palgrid(const Parallel_Grid& pgrid,
                          const bool two_fermi,
                          const bool reduce_all_pool,
                          std::ofstream& ofs_running,
-                         const std::string& data_desc = "data");
+                         const std::string& data_desc);
 
 /// read the full data from a cube file
 bool read_cube(const std::string& file,

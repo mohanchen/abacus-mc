@@ -175,7 +175,8 @@ void write_elf(
             out_fermi,
             two_fermi,
             false,
-            ofs_running);
+            ofs_running,
+            "electron localization function");
     }
     else if (nspin == 2)
     {
@@ -198,7 +199,8 @@ void write_elf(
                 out_fermi,
                 two_fermi,
                 false,
-                ofs_running);
+                ofs_running,
+                "electron localization function");
         }
 
         std::vector<double> elf_tot(nrxx, 0.0);
@@ -235,7 +237,8 @@ void write_elf(
             out_fermi,
             two_fermi,
             false,
-            ofs_running);
+            ofs_running,
+            "electron localization function");
     }
     ModuleBase::timer::end("ModuleIO", "write_elf");
 } // end write_elf

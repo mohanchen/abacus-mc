@@ -106,7 +106,8 @@ void write_elecstat_pot(
         out_fermi,
         PARAM.globalv.two_fermi,
         false,
-        GlobalV::ofs_running);
+        GlobalV::ofs_running,
+        "electrostatic potential");
 
     ModuleBase::timer::end("ModuleIO", "write_elecstat_pot");
     return;

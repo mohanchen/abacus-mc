@@ -72,7 +72,7 @@ void ESolver_DM2rho<TK, TR>::runner(BaseCell& basecell, const int istep)
 
     for (int is = 0; is < nspin0; is++)
     {
-        std::string fn = PARAM.globalv.global_out_dir + "/SPIN" + std::to_string(is + 1) + "_CHG.cube";
+        std::string fn = PARAM.globalv.global_out_dir + "chgs" + std::to_string(is + 1) + ".cube";
 
         // write electron density
         ModuleIO::write_vdata_palgrid(this->Pgrid,
@@ -87,7 +87,8 @@ void ESolver_DM2rho<TK, TR>::runner(BaseCell& basecell, const int istep)
                                       1,
                                       PARAM.globalv.two_fermi,
                                       false,
-                                      GlobalV::ofs_running);
+                                      GlobalV::ofs_running,
+                                      "charge density");
     }
 
     ModuleBase::timer::end("ESolver_DM2rho", "runner");

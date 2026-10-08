@@ -35,7 +35,7 @@ void nscf_bands(const int& is,
                const ModuleBase::matrix& ekb,
                const K_Vectors& kv,
                std::ofstream& ofs_running,
-               const int& nspin0 = 1);
+               const int& nspin0);
 }
 
 #endif

@@ -86,7 +86,7 @@ void Cal_ldos<T>::cal_ldos_lcao(
 
         // write ldos to cube file
         std::stringstream fn;
-        fn << global_out_dir << "LDOS_" << en << "eV"
+        fn << global_out_dir << "ldos_" << en << "ev"
            << ".cube";
 
         const int precision = out_ldos_precision;
@@ -102,7 +102,8 @@ void Cal_ldos<T>::cal_ldos_lcao(
                                       0,
                                       two_fermi,
                                       false,
-                                      ofs_running);
+                                      ofs_running,
+                                      "local DOS");
 
         // free memory
         delete[] ldos;
@@ -225,11 +226,11 @@ void stm_mode_pw(const elecstate::ElecStatePW<std::complex<double>>* pelec,
         }
 
         std::stringstream fn;
-        fn << global_out_dir << "LDOS_" << en << "eV"
+        fn << global_out_dir << "ldos_" << en << "ev"
            << ".cube";
 
         const int precision = out_ldos_precision;
-        ModuleIO::write_vdata_palgrid(pgrid, ldos.data(), 0, nspin, 0, fn.str(), 0, &ucell, precision, 0, two_fermi, false, ofs_running);
+        ModuleIO::write_vdata_palgrid(pgrid, ldos.data(), 0, nspin, 0, fn.str(), 0, &ucell, precision, 0, two_fermi, false, ofs_running, "local DOS");
     }
 }
 

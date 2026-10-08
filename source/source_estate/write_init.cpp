@@ -117,7 +117,8 @@ void ModuleIO::write_chg_init(
                                               1,
                                               two_fermi,
                                               false,
-                                              ofs_running);
+                                              ofs_running,
+                                              "charge density");
             }
         }
     }
@@ -168,7 +169,8 @@ void ModuleIO::write_pot_init(
                                               0,
                                               two_fermi,
                                               false,
-                                              ofs_running);
+                                              ofs_running,
+                                              "effective potential");
             }
         }
     }

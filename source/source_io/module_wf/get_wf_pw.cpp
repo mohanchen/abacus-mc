@@ -321,7 +321,21 @@ void Get_wf_pw<T, Device>::write_cube(const int band,
 {
     std::stringstream filename;
     filename << out_dir << "wfi" << band + 1 << "s" << component + 1 << "k" << k_number << part << ".cube";
-    ModuleIO::write_vdata_palgrid(pgrid, values.data(), component, nspin_, 0, filename.str(), 0.0, &ucell, 11, 0, false, true, ofs_running);
+
+    std::string data_desc;
+    if (part == "re")
+    {
+        data_desc = "wave function (real)";
+    }
+    else if (part == "im")
+    {
+        data_desc = "wave function (imag)";
+    }
+    else
+    {
+        data_desc = "wave function (norm)";
+    }
+    ModuleIO::write_vdata_palgrid(pgrid, values.data(), component, nspin_, 0, filename.str(), 0.0, &ucell, 11, 0, false, true, ofs_running, data_desc);
 }
 
 // Explicit instantiation emits both precisions for each supported device from this .cpp file.

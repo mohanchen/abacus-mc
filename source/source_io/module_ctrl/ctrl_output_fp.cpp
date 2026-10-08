@@ -113,7 +113,8 @@ void ctrl_output_fp(UnitCell& ucell,
                                               1, // default out_fermi
                                               PARAM.globalv.two_fermi,
                                               false,
-                                              ofs_running);
+                                              ofs_running,
+                                              "kinetic energy density");
             }
         }
     }
@@ -150,7 +151,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                           PARAM.globalv.two_fermi,
                                           false,
                                           ofs_running,
-                                          "potential");
+                                          "effective potential");
         }
     }
     else if (inp.out_pot[0] == 2 && should_output)
