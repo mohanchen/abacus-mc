@@ -331,18 +331,18 @@ TEST_F(PrintCellTest, PrintCell)
     UcellTestPrepare utp = UcellTestLib["C1H2-Index"];
     ucell = utp.SetUcellInfo();
     std::ofstream ofs;
-    ofs.open("printcell.log");
+    ofs.open("print_cell_test.log");
     unitcell::print_cell(*ucell, ofs);
     ofs.close();
     std::ifstream ifs;
-    ifs.open("printcell.log");
+    ifs.open("print_cell_test.log");
     std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     EXPECT_THAT(str, testing::HasSubstr("latName = bcc"));
     EXPECT_THAT(str, testing::HasSubstr("ntype = 2"));
     EXPECT_THAT(str, testing::HasSubstr("nat = 3"));
     EXPECT_THAT(str, testing::HasSubstr("GGT :"));
     EXPECT_THAT(str, testing::HasSubstr("omega = 6748.33"));
-    remove("printcell.log");
+    remove("print_cell_test.log");
 }
 TEST_F(PrintCellTest, PrintTauDirect)
 {

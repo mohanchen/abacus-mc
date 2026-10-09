@@ -164,9 +164,6 @@ void XC_Functional::noncolin_rho(
             }
         }
     }
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
     // Note: with lsign_ = true the up/down channels are defined w.r.t. the
     // global axis ux_ through sign(m . ux_), evaluated point by point above;
     // with lsign_ = false, "up" is always the local |m| (neg stays +1
@@ -177,6 +174,9 @@ void XC_Functional::noncolin_rho(
     // branches can give noticeably different v_xc even for predominantly
     // single-sign mz. (Locked by GgaGradTools.NoncolinRhoGlobalAxis in
     // module_xc/test/test_xc5.cpp.)
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(int ir = 0;ir<nrxx;ir++)
     {
         double amag = sqrt(pow(rho[1][ir],2)+pow(rho[2][ir],2)+pow(rho[3][ir],2));

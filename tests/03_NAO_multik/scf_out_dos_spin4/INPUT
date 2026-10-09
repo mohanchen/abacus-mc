@@ -1,4 +1,4 @@
-INPUT_PARAMETERS 
+INPUT_PARAMETERS
 #Parameters	(General)
 suffix            autotest
 pseudo_dir        ../../PP_ORB
@@ -24,7 +24,7 @@ cal_stress        1
 #Parameters (LCAO)
 basis_type        lcao
 ks_solver         scalapack_gvx
-pw_diag_thr       1e-5 
+pw_diag_thr       1e-5
 
 mixing_type       pulay
 mixing_beta       0.7
