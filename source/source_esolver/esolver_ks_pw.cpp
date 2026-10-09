@@ -329,7 +329,15 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
         this->ppcell.cal_effective_D(veff, this->pw_rhod, ucell);
     }
 
-    // Handle EXX-related operations after SCF iteration
+    // Handle EXX-related operations after SCF iteration.
+    // EXX may override conv_esolver (true -> false) to request an SCF rerun
+    // after updating the exact-exchange operator. Capture the SCF-converged
+    // state before the call so we can detect that case and signal
+    // ESolver_KS::runner via scf_rerun_ to restart the SCF loop at iter=1.
+    // This replaces the historical iter=0 restart-signal trick (EXX wrote 0
+    // into the iter reference), which crashed DFT+U occupation-matrix writers
+    // validating iter>=1 and broke the 1-based iteration invariant.
+    const bool scf_converged = conv_esolver;
     exx_helper->iter_finish(this->pelec,
                             &this->chr,
                             this->stp.template get_psi_t<T, Device>(),
@@ -337,6 +345,10 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
                             *this->inp_,
                             conv_esolver,
                             iter);
+    if (scf_converged && !conv_esolver)
+    {
+        this->scf_rerun_ = true;
+    }
 
     // check if oscillate for delta_spin method
     pw::check_deltaspin_oscillation(iter, this->drho, this->p_chgmix, *this->inp_);
