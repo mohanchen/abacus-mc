@@ -18,13 +18,17 @@ class UnitCell : public BaseCell {
     UnitCell();
     ~UnitCell();
 
-    /// UnitCell owns dynamically-sized state (index maps, atom arrays, MPI-broadcast
-    /// buffers). Copying is disabled to make accidental shallow-copy bugs fail at
-    /// compile time; moving is allowed.
+    /// Copy and move are both disabled. The defaulted move constructor
+    /// shallow-copies the owning pointer 'atoms' and 'set_atom_flag' without
+    /// resetting the source (double free), and the reference aliases into
+    /// 'lat' (Coordinate, a1, latvec, ...) make the defaulted move assignment
+    /// implicitly deleted (-Wdefaulted-function-deleted). Correct move
+    /// semantics require an owning container for 'atoms' and removing the
+    /// aliases; until then any accidental move must fail at compile time.
     UnitCell(const UnitCell&) = delete;
     UnitCell& operator=(const UnitCell&) = delete;
-    UnitCell(UnitCell&&) = default;
-    UnitCell& operator=(UnitCell&&) = default;
+    UnitCell(UnitCell&&) = delete;
+    UnitCell& operator=(UnitCell&&) = delete;
 
     /// @brief Initialize basic cell parameters (latname, ntype, lmaxmax, init_vel)
     ///        from INPUT and parse fixed_axes into lat_axis_free flags.
