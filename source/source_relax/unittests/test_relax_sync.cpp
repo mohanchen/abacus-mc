@@ -7,6 +7,52 @@
 #include "relax_test.h"
 #include <fstream>
 
+// Fixed mock SCF outputs (forces, stresses, energies) feeding relax_step,
+// previously read from support/*.txt. Inlining them keeps the test
+// independent of the working directory. Values are the first 3 steps of the
+// original files, so result_ref is unchanged.
+namespace {
+constexpr int kRelaxSteps = 3;
+constexpr int kRelaxNat = 5;
+constexpr int kRelaxNforce = kRelaxSteps * kRelaxNat * 3;  // 45
+constexpr int kRelaxNstress = kRelaxSteps * 3 * 3;           // 27
+
+const double kRelaxForces[kRelaxNforce] = {
+    4.56e-08, -8.74e-08, 4.0671950e-03,
+    -5.59e-08, 1.479e-07, 1.81171376e-02,
+    2.942e-07, -5.56e-08, -1.7979905e-03,
+    -1.691e-07, 1.612e-07, -1.7977699e-03,
+    -1.149e-07, -1.660e-07, -1.85885722e-02,
+    6.73e-08, 5.90e-08, 4.8608620e-03,
+    -1.632e-07, -1.833e-07, -2.24081615e-02,
+    4.93e-08, 1.246e-07, -1.8938742e-03,
+    9.84e-08, 4.34e-08, -1.8939930e-03,
+    -5.19e-08, -4.38e-08, 2.13351667e-02,
+    8.25e-08, 2.095e-07, 4.5297162e-03,
+    -5.19e-08, 3.57e-08, -3.6659292e-03,
+    4.95e-08, -1.654e-07, -1.8863808e-03,
+    4.14e-08, 2.440e-07, -1.8870376e-03,
+    -1.215e-07, -3.239e-07, 2.9096315e-03,
+};
+
+const double kRelaxStresses[kRelaxNstress] = {
+    4.79987e-05, -2.0e-10, 6.0e-10,
+    -2.0e-10, 4.80038e-05, -4.0e-10,
+    6.0e-10, -4.0e-10, -2.751687e-04,
+    1.040725e-04, 2.0e-10, -1.6e-09,
+    2.0e-10, 1.040682e-04, -7.0e-10,
+    -1.6e-09, -7.0e-10, 1.982021e-04,
+    8.00586e-05, 1.0e-10, -1.0e-09,
+    1.0e-10, 8.00526e-05, 2.8e-09,
+    -1.0e-09, 2.8e-09, -6.4010e-06,
+};
+
+const double kRelaxEnergies[kRelaxSteps] = {
+    4.79987e-05,
+    -2.0e-10,
+    6.0e-10,
+};
+} // namespace
 
 class Test_SETGRAD : public testing::Test
 {
@@ -174,47 +220,6 @@ class Test_RELAX : public testing::Test
         UnitCell ucell;
         std::ofstream ofs;
 
-        // Fixed mock SCF outputs (forces, stresses, energies) feeding
-        // relax_step, previously read from support/*.txt. Inlining them keeps
-        // the test independent of the working directory. Values are the first
-        // 3 steps of the original files, so result_ref is unchanged.
-        static constexpr int nforce = 45;  // 3 steps x 5 atoms x 3
-        static constexpr int nstress = 27; // 3 steps x 3 x 3
-        static constexpr int nenergy = 3;  // 3 steps
-        const double forces[nforce] = {
-            4.56e-08, -8.74e-08, 4.0671950e-03,
-            -5.59e-08, 1.479e-07, 1.81171376e-02,
-            2.942e-07, -5.56e-08, -1.7979905e-03,
-            -1.691e-07, 1.612e-07, -1.7977699e-03,
-            -1.149e-07, -1.660e-07, -1.85885722e-02,
-            6.73e-08, 5.90e-08, 4.8608620e-03,
-            -1.632e-07, -1.833e-07, -2.24081615e-02,
-            4.93e-08, 1.246e-07, -1.8938742e-03,
-            9.84e-08, 4.34e-08, -1.8939930e-03,
-            -5.19e-08, -4.38e-08, 2.13351667e-02,
-            8.25e-08, 2.095e-07, 4.5297162e-03,
-            -5.19e-08, 3.57e-08, -3.6659292e-03,
-            4.95e-08, -1.654e-07, -1.8863808e-03,
-            4.14e-08, 2.440e-07, -1.8870376e-03,
-            -1.215e-07, -3.239e-07, 2.9096315e-03,
-        };
-        const double stresses[nstress] = {
-            4.79987e-05, -2.0e-10, 6.0e-10,
-            -2.0e-10, 4.80038e-05, -4.0e-10,
-            6.0e-10, -4.0e-10, -2.751687e-04,
-            1.040725e-04, 2.0e-10, -1.6e-09,
-            2.0e-10, 1.040682e-04, -7.0e-10,
-            -1.6e-09, -7.0e-10, 1.982021e-04,
-            8.00586e-05, 1.0e-10, -1.0e-09,
-            1.0e-10, 8.00526e-05, 2.8e-09,
-            -1.0e-09, 2.8e-09, -6.4010e-06,
-        };
-        const double energies[nenergy] = {
-            4.79987e-05,
-            -2.0e-10,
-            6.0e-10,
-        };
-
         void SetUp()
         {
             int nstep = 3;
@@ -240,7 +245,7 @@ class Test_RELAX : public testing::Test
                 {
                     for(int j=0;j<3;j++)
                     {
-                        force_in(i,j) = forces[fbase + i*3 + j];
+                        force_in(i,j) = kRelaxForces[fbase + i*3 + j];
                     }
                 }
                 const int sbase = istep * 9;
@@ -248,11 +253,11 @@ class Test_RELAX : public testing::Test
                 {
                     for(int j=0;j<3;j++)
                     {
-                        stress_in(i,j) = stresses[sbase + i*3 + j];
+                        stress_in(i,j) = kRelaxStresses[sbase + i*3 + j];
                     }
                 }
 
-                const double energy = energies[istep];
+                const double energy = kRelaxEnergies[istep];
 
                 inp.fixed_ibrav = false;
                 rl.relax_step(ucell,force_in,stress_in,energy, ofs);
@@ -401,6 +406,9 @@ TEST(RelaxSyncSummary, ConvergedPrintsSummary)
     inp.force_thr = 0.001;   // force_thr_eva ~ 0.0257 eV/Angstrom
     inp.force_thr_ev = inp.force_thr * 13.6058 / 0.529177;
 
+    // iat2it/iat2ia are owned by UnitCell's internal Statistics member, whose
+    // destructor releases them; do not delete them again (mirror the other
+    // tests in this file).
     UnitCell ucell;
     ucell.ntype = 1;
     ucell.nat = nat;
@@ -684,6 +692,70 @@ TEST(RelaxSyncCellMove, FixedShapeIsotropicScale)
     EXPECT_NEAR(ucell.latvec.e22 - 2.0, ucell.latvec.e33 - 2.0, 1e-12);
 
     free_two_type_cell(ucell);
+}
+
+// ---------------------------------------------------------------------------
+// Max-step termination on the Relax (simultaneous) path.
+//
+// Unlike IonCellOptimizer::relax_step (which checks istep == relax_nmax and
+// returns true without moving), Relax::relax_step has no max-step guard.
+// When the driver loop hits relax_nmax, the last relax_step still calls
+// move_cell_ions, so the geometry IS updated and the force/stress in the
+// driver become stale. The driver then sets geometry_evaluated=false.
+//
+// This test locks that observable behavior: relax_step moves taud and returns
+// false (not converged).
+// ---------------------------------------------------------------------------
+TEST(RelaxSyncMaxStep, GeometryMovedAndNotConverged)
+{
+    const int nat = 1;
+    Input_para inp;
+    inp.calculation = "relax";
+    inp.relax_method = {"cg", "2"};
+    inp.force_thr = 0.0;      // never converged -> always take the move
+    inp.force_thr_ev = 0.0;
+    inp.fixed_axes = "None";
+    inp.fixed_ibrav = false;
+
+    UnitCell ucell;
+    ucell.ntype = 1;
+    ucell.nat = nat;
+    ucell.atoms = new Atom[1];
+    ucell.atoms[0].na = nat;
+    ucell.atoms[0].label = "Si";
+    ucell.omega = 1.0;
+    ucell.lat0 = 1.0;
+    ucell.iat2it = new int[nat];
+    ucell.iat2ia = new int[nat];
+    ucell.iat2it[0] = 0;
+    ucell.iat2ia[0] = 0;
+    ucell.atoms[0].mbl.resize(nat);
+    ucell.atoms[0].taud.resize(nat);
+    ucell.atoms[0].tau.resize(nat);
+    ucell.atoms[0].dis.resize(nat);
+    ucell.atoms[0].mag.resize(nat);
+    ucell.atoms[0].vel.resize(nat);
+    ucell.atoms[0].mbl[0] = {1, 1, 1};
+    ucell.atoms[0].taud[0] = {0.0, 0.0, 0.0};
+    ucell.latvec.Identity();
+
+    ModuleBase::matrix force_in(nat, 3);
+    ModuleBase::matrix stress_in(3, 3);
+    force_in(0, 0) = 0.01;   // nonzero -> not converged -> move
+
+    Relax rl;
+    rl.init_relax(nat, inp);
+    std::ofstream ofs("./running_relax_sync_maxstep.log");
+    const bool done = rl.relax_step(ucell, force_in, stress_in, 0.0, ofs);
+    ofs.close();
+    std::remove("./running_relax_sync_maxstep.log");
+
+    EXPECT_FALSE(done);
+    // The geometry was moved: taud is no longer the initial value.
+    EXPECT_NE(ucell.atoms[0].taud[0].x, 0.0);
+    EXPECT_TRUE(ucell.ionic_position_updated);
+
+    delete[] ucell.atoms;
 }
 
 // fixed_axes="volume": the cell may change shape but its volume is re-scaled

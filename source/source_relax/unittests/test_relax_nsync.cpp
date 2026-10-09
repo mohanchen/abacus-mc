@@ -268,6 +268,11 @@ TEST_F(IonCellOptimizerTest, RelaxNmaxReached)
     ofs.close();
 
     EXPECT_TRUE(done);
+    // Key invariant: when relax_nmax terminates the loop, cal_movement is
+    // skipped and the geometry is NOT touched. The force/stress captured by
+    // the driver before relax_step are still consistent with ucell, so the
+    // driver's geometry_evaluated=true is honest.
+    EXPECT_FALSE(ucell.ionic_position_updated);
     const std::string log = read_log();
     EXPECT_THAT(log, testing::HasSubstr(" Relaxation method: lbfgs"));
     EXPECT_THAT(log, testing::HasSubstr(" ionic step(s) (relax_nmax = 50 reached)."));
