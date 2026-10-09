@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ABACUS executable path
-abacus=abacus
+abacus=/home/510Group/6_abacus_mc/abacus-mc-2/build_max_para_test/abacus_max_para
 # number of MPI processes
 np=4
 nt=$OMP_NUM_THREADS # number of OpenMP threads, default is $OMP_NUM_THREADS
