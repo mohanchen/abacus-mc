@@ -1,4 +1,5 @@
 #include "./symm_rotation.h"
+#include "source_cell/unitcell.h"
 namespace ModuleSymmetry
 {
     std::string mat3_fmt(const ModuleBase::Matrix3& m)
