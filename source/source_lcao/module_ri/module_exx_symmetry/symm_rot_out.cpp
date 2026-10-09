@@ -17,7 +17,7 @@ namespace ModuleSymmetry
         ModuleBase::TITLE("ModuleSymmetry", "print_symrot_info_R");
         std::ofstream ofs(PARAM.globalv.global_out_dir + "symrot_R.txt");
         // Print the irreducible sector (to be optimized)
-        ofs << "Number of irreducible sector: " << symrot.get_irreducible_sector().size() << std::endl;
+        ofs << "Number of irreducible sector: " << symrot.get_irred_sector().size() << std::endl;
         ofs << "Lmax of AOs: " << lmax_ao << "\n";
         ofs << "Lmax of ABFs: " << symrot.abfs_Lmax << "\n";
         // print AO rotation matrix T
