@@ -472,7 +472,9 @@ The other way is only available when compiling with LIBXC, and it allows for sup
         item.description = R"(The number of spin components of wave functions.
 * 1: Spin degeneracy
 * 2: Collinear spin polarized.
-* 4: Noncollinear or spin-orbit calculations. Set nspin to 4 explicitly when noncolin or lspinorb is enabled.)";
+* 4: Noncollinear or spin-orbit calculations. Set nspin to 4 explicitly when noncolin or lspinorb is enabled.
+* Note: With nspin=2 and no initial magnetization in STRU, a moment of 1.0 is autoset for every atom, unless symmetry is 1.
+* Note: With nspin=4 no moment is ever autoset. The calculation starts from zero magnetic moment and a warning is printed; set 'mag' explicitly in STRU for the magnetic atoms if a magnetic ground state is expected.)";
         item.default_value = "1";
         item.unit = "";
         read_sync_int(input.nspin);

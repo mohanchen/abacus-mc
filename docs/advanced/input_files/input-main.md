@@ -1363,6 +1363,8 @@
   - 1: Spin degeneracy
   - 2: Collinear spin polarized.
   - 4: Noncollinear or spin-orbit calculations. Set nspin to 4 explicitly when noncolin or lspinorb is enabled.
+  - Note: With nspin=2 and no initial magnetization in STRU, a moment of 1.0 is autoset for every atom, unless symmetry is 1.
+  - Note: With nspin=4 no moment is ever autoset. The calculation starts from zero magnetic moment and a warning is printed; set 'mag' explicitly in STRU for the magnetic atoms if a magnetic ground state is expected.
 - **Default**: 1
 
 ### gga_grad
