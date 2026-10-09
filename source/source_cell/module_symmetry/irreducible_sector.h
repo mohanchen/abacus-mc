@@ -9,6 +9,8 @@
 #include "source_cell/module_symmetry/symmetry.h"
 #include "source_cell/klist.h"
 
+class UnitCell;
+
 namespace ModuleSymmetry
 {
     using Tap = std::pair<int, int>;

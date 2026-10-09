@@ -5,6 +5,8 @@
 #include "source_base/complexmatrix.h"
 #include "source_cell/module_symmetry/symm_rot_spin.h"
 
+class UnitCell;
+
 namespace ModuleSymmetry
 {
     /// @brief k-space AO-representation symmetry restoration: reconstructs D(k) at every

@@ -1,10 +1,14 @@
 #include "symmetry.h"
-#include "source_cell/unitcell.h"
 #include "source_base/output.h"
 
 using namespace ModuleSymmetry;
 
-void Symmetry::analy_sys(const Lattice& lat, const UnitCell& ucell, Atom* atoms, std::ofstream& ofs_running,
+void Symmetry::analy_sys(const Lattice& lat, Atom* atoms,
+                         const int nat, const int ntype,
+                         const std::vector<int>& iat2it,
+                         const std::vector<int>& iat2ia,
+                         const ModuleBase::IntArray& itia2iat,
+                         std::ofstream& ofs_running,
                          const double symmetry_prec, const int nspin, const std::string& calculation,
                          const int* cal_symm_repr)
 {
@@ -31,9 +35,9 @@ void Symmetry::analy_sys(const Lattice& lat, const UnitCell& ucell, Atom* atoms,
     // 1. copy data and allocate memory
     // --------------------------------
     // number of total atoms
-    this->nat = ucell.nat;
+    this->nat = nat;
     // number of atom species
-    this->ntype = ucell.ntype;
+    this->ntype = ntype;
 
     assert(ntype>0);
 
@@ -123,7 +127,7 @@ void Symmetry::analy_sys(const Lattice& lat, const UnitCell& ucell, Atom* atoms,
 
             if (!pricell_loop && nspin == 2)
             {
-                this->analyze_magnetic_group(atoms, ucell, nrot_out, nrotk_out);
+                this->analyze_magnetic_group(atoms, iat2it, iat2ia, itia2iat, nrot_out, nrotk_out);
             }
             else
             {
@@ -295,13 +299,13 @@ void Symmetry::analy_sys(const Lattice& lat, const UnitCell& ucell, Atom* atoms,
     // the magnetization (pseudovector), so they are not applied in k-reduction / density symmetrization.
     if (nspin == 4)
     {
-        this->analyze_magnetic_group_nspin4(atoms, ucell, latvec1);
+        this->analyze_magnetic_group_nspin4(atoms, iat2it, iat2ia, latvec1);
     }
 
     // Do this here for debug
     if (calculation == "relax")
     {
-        this->all_mbl = this->is_all_movable(atoms, ucell);
+        this->all_mbl = this->is_all_movable(atoms, iat2it, iat2ia);
         if (!this->all_mbl)
         {
             std::cout << "WARNING: Symmetry cannot be kept when not all atoms are movable.\n ";
