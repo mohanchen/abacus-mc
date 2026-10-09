@@ -15,6 +15,7 @@
 #include "source_cell/update_cell.h"
 #include "source_cell/read_stru.h"
 #include <streambuf>
+#include <type_traits>
 #include <valarray>
 #include <vector>
 
@@ -132,6 +133,22 @@ class UcellTest : public ::testing::Test
     std::unique_ptr<UnitCell> ucell{new UnitCell};
     std::string output;
 };
+
+/// Compile-time guard: UnitCell owns the raw pointer 'atoms' tracked by
+/// 'set_atom_flag' and exposes reference aliases into its 'lat' member, so
+/// neither copy nor move can be implemented correctly until that ownership
+/// model is refactored. Re-enabling either operation must fail this TU.
+TEST(UnitCellTypeTraits, NotCopyableOrMovable)
+{
+    static_assert(!std::is_copy_constructible<UnitCell>::value,
+                  "UnitCell must not be copy constructible");
+    static_assert(!std::is_copy_assignable<UnitCell>::value,
+                  "UnitCell must not be copy assignable");
+    static_assert(!std::is_move_constructible<UnitCell>::value,
+                  "UnitCell must not be move constructible");
+    static_assert(!std::is_move_assignable<UnitCell>::value,
+                  "UnitCell must not be move assignable");
+}
 
 using UcellDeathTest = UcellTest;
 
