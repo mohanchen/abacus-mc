@@ -795,6 +795,18 @@ void append_ion_step_snapshot(const Plus_U_Base& dftu,
 {
     ModuleBase::TITLE("DFTU_BASE", "append_ion_step_snapshot");
 
+    // dft_plus_u <= 0 means the occupation matrix was never computed
+    // (Plus_U_Base::l_channel stays empty); writing here would dereference
+    // a null l_channel.data() in write_occup_m. Match the documented contract
+    // that out_occ_mat only takes effect for DFT+U calculations. Check this
+    // before validating iter/istep/nspin: when DFT+U is off this function is
+    // a no-op, so an invalid iter (e.g. from an upstream bug) must not crash
+    // here. Mirrors the guard-first pattern in write_latest_occmat.
+    if (!cfg.out_occ_mat || cfg.dft_plus_u <= 0)
+    {
+        return;
+    }
+
     if (nspin != 1 && nspin != 2 && nspin != 4)
     {
         ModuleBase::WARNING_QUIT("DFTU_BASE::append_ion_step_snapshot", "nspin must be 1, 2 or 4");
@@ -813,15 +825,6 @@ void append_ion_step_snapshot(const Plus_U_Base& dftu,
     {
         ModuleBase::WARNING_QUIT("DFTU_BASE::append_ion_step_snapshot",
                                 "invalid occupation-matrix output frequency configuration");
-    }
-
-    // dft_plus_u <= 0 means the occupation matrix was never computed
-    // (Plus_U_Base::l_channel stays empty); writing here would dereference
-    // a null l_channel.data() in write_occup_m. Match the documented contract
-    // that out_occ_mat only takes effect for DFT+U calculations.
-    if (!cfg.out_occ_mat || cfg.dft_plus_u <= 0)
-    {
-        return;
     }
 
     const bool ion_step_output = is_ion_step_output_step(istep, cfg);
