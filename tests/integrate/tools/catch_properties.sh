@@ -459,13 +459,16 @@ fi
 #-----------------------------------
 #echo $has_hs2
 if ! test -z "$has_hs2"  && [  $has_hs2 == 1 ]; then
-    python3 $COMPARE_SCRIPT hrs1_nao.csr.ref OUT.autotest/hrs1_nao.csr 8
+    # Strip E_Fermi annotation from CSR header before comparison.
+    # E_Fermi is printed with setprecision(6) (~1e-4 eV resolution) and may
+    # not match the 1e-8 comparison tolerance across platforms.
+    python3 $COMPARE_SCRIPT <(sed 's/, E_Fermi = [0-9.eE+-]* eV//' hrs1_nao.csr.ref) <(sed 's/, E_Fermi = [0-9.eE+-]* eV//' OUT.autotest/hrs1_nao.csr) 8
     echo "CompareHR_pass $?" >>$1
     if ! test -z "$nspin" && [ "$nspin" -eq 2 ]; then
-        python3 $COMPARE_SCRIPT hrs2_nao.csr.ref OUT.autotest/hrs2_nao.csr 8
+        python3 $COMPARE_SCRIPT <(sed 's/, E_Fermi = [0-9.eE+-]* eV//' hrs2_nao.csr.ref) <(sed 's/, E_Fermi = [0-9.eE+-]* eV//' OUT.autotest/hrs2_nao.csr) 8
         echo "CompareHR2_pass $?" >>$1
     fi
-    python3 $COMPARE_SCRIPT sr_nao.csr.ref OUT.autotest/sr_nao.csr 8
+    python3 $COMPARE_SCRIPT <(sed 's/, E_Fermi = [0-9.eE+-]* eV//' sr_nao.csr.ref) <(sed 's/, E_Fermi = [0-9.eE+-]* eV//' OUT.autotest/sr_nao.csr) 8
     echo "CompareSR_pass $?" >>$1
 elif ! test -z "$has_hs2" && [ "$has_hs2" == 2 ]; then
     HSR_BINARY_COMPARE="../../integrate/tools/compare_hsr_binary.py"

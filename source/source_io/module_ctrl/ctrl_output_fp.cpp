@@ -80,6 +80,8 @@ void ctrl_output_fp(UnitCell& ucell,
 
             fn += spin_block + geom_block + ".cube";
 
+            const std::string desc_chg = ModuleIO::make_data_desc("charge density", "magnetization density m", is, nspin);
+
             ModuleIO::write_vdata_palgrid(para_grid,
                                           chr.rho_save[is],
                                           is,
@@ -93,13 +95,15 @@ void ctrl_output_fp(UnitCell& ucell,
                                           PARAM.globalv.two_fermi,
                                           false,
                                           ofs_running,
-                                          "charge density");
+                                          desc_chg);
 
             if (XC_Functional::get_ked_flag())
             {
                 fn = PARAM.globalv.global_out_dir + "tau";
 
                 fn += spin_block + geom_block + ".cube";
+
+                const std::string desc_tau = ModuleIO::make_data_desc("kinetic energy density", "kinetic energy density magnetization m", is, nspin);
 
                 ModuleIO::write_vdata_palgrid(para_grid,
                                               chr.kin_r_save[is],
@@ -114,7 +118,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                               PARAM.globalv.two_fermi,
                                               false,
                                               ofs_running,
-                                              "kinetic energy density");
+                                              desc_tau);
             }
         }
     }
@@ -138,6 +142,8 @@ void ctrl_output_fp(UnitCell& ucell,
 
             fn += spin_block + geom_block + ".cube";
 
+            const std::string desc_pot = ModuleIO::make_data_desc("effective potential", "effective magnetic field b", is, nspin);
+
             ModuleIO::write_vdata_palgrid(para_grid,
                                           pelec->pot->get_eff_v(is),
                                           is,
@@ -151,7 +157,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                           PARAM.globalv.two_fermi,
                                           false,
                                           ofs_running,
-                                          "effective potential");
+                                          desc_pot);
         }
     }
     else if (inp.out_pot[0] == 2 && should_output)

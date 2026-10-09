@@ -473,7 +473,8 @@ void Get_pchg_pw<T, Device>::write_cube(const int band,
         filename << "k" << k_number;
     }
     filename << ".cube";
-    ModuleIO::write_vdata_palgrid(pgrid, values.data(), component, nspin_, 0, filename.str(), 0.0, &ucell, 11, 0, false, separate_k, ofs_running, "partial charge");
+    const std::string desc_pchg = ModuleIO::make_data_desc("partial charge", "partial magnetization m", component, nspin_);
+    ModuleIO::write_vdata_palgrid(pgrid, values.data(), component, nspin_, 0, filename.str(), 0.0, &ucell, 11, 0, false, separate_k, ofs_running, desc_pchg);
 }
 
 // Explicit instantiation emits both precisions for each supported device from this .cpp file.

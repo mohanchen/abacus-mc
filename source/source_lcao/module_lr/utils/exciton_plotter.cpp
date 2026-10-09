@@ -793,7 +793,7 @@ void ExcitonPlotter<T>::plot_cond_slice(const int istate,
     std::cout << "Bloch-sum evaluation complete (cached " << cell_res << "x" << cell_res << " home-cell positions)."
               << std::endl;
     const std::string filename
-        = this->output_dir_ + "Exciton_cond_" + type + "_slice_state" + std::to_string(istate) + ".dat";
+        = this->output_dir_ + "exc_cond_" + type + "_slice_st" + std::to_string(istate + 1) + ".dat";
     write_slice_data(this->ucell,
                      geom,
                      density,

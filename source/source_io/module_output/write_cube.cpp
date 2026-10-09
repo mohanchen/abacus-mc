@@ -175,8 +175,7 @@ void ModuleIO::write_vdata_palgrid(const Parallel_Grid& pgrid,
                    data_xyz_full,
                    precision);
 
-        const std::string spin_tag = (nspin == 2) ? (is == 0 ? " (spin up  )" : " (spin down)") : "";
-        ofs_running << " Write " << data_desc << spin_tag << " to file: " << fn << std::endl;
+        ofs_running << " Write " << data_desc << " to file: " << fn << std::endl;
 
         end = time(nullptr);
         ModuleBase::GlobalFunc::OUT_TIME("write_vdata_palgrid", start, end);

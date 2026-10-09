@@ -185,11 +185,12 @@ void write_elf(
             std::string fn_temp = out_dir + "elf" + "s"
                 + std::to_string(is + 1) + geom_block + ".cube";
 
-            const int ispin = is + 1;
+            // nspin==4 never reaches this branch (only elftot is written), the magnetic label is a placeholder.
+            const std::string desc_elf = ModuleIO::make_data_desc("electron localization function", "electron localization function magnetization m", is, nspin);
 
             ModuleIO::write_vdata_palgrid(pgrid,
                 elf[is].data(),
-                ispin,
+                is,
                 nspin,
                 istep_in,
                 fn_temp,
@@ -200,7 +201,7 @@ void write_elf(
                 two_fermi,
                 false,
                 ofs_running,
-                "electron localization function");
+                desc_elf);
         }
 
         std::vector<double> elf_tot(nrxx, 0.0);
