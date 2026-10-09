@@ -725,8 +725,8 @@ TEST(RelaxSyncMaxStep, GeometryMovedAndNotConverged)
     ucell.atoms[0].label = "Si";
     ucell.omega = 1.0;
     ucell.lat0 = 1.0;
-    ucell.iat2it = new int[nat];
-    ucell.iat2ia = new int[nat];
+    ucell.iat2it.resize(nat);
+    ucell.iat2ia.resize(nat);
     ucell.iat2it[0] = 0;
     ucell.iat2ia[0] = 0;
     ucell.atoms[0].mbl.resize(nat);
