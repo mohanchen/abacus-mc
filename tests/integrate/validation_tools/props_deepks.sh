@@ -53,10 +53,9 @@ process_npy() {
 
         # Get step number for multi mode
         # Force/stress multi-mode files (ftot.npy, stot.npy) carry no e<step>
-        # suffix, so grep legitimately finds no match and returns 1. This
-        # collector runs in-process under `bash -e` (before the split it ran
-        # as a separate script without -e), so tolerate the empty match
-        # explicitly instead of aborting the whole collection.
+        # suffix, so grep legitimately finds no match and returns 1. Tolerate
+        # the empty match explicitly so the step extraction is also safe when
+        # this module is sourced under `bash -e`.
         local step=""
         if [ "$mode" = "multi" ]; then
             step=$(basename "$file" | grep -oP 'e\d+' || true)
@@ -137,6 +136,8 @@ process_many_npys() {
 run_deepks_props(){
 
 # Main script
+# cal_force/cal_stress are also parsed by props_init(); they are re-read here
+# because the standalone catch_deepks_properties.sh entry skips props_init().
 has_force=$(get_input_key_value "cal_force" "INPUT")
 has_stress=$(get_input_key_value "cal_stress" "INPUT")
 deepks_out_labels=$(get_input_key_value "deepks_out_labels" "INPUT")
@@ -177,8 +178,7 @@ if ! test -z "$deepks_out_labels" && [ $deepks_out_labels == 1 ]; then
 
     # For deepks_v_delta < 0
     # CompareFile.py exits 1 when the files differ; capture the status in a
-    # named variable so `bash -e` does not abort before it is recorded (the
-    # pre-split deepks collector ran without -e and recorded the raw status).
+    # named variable so it is recorded even when sourced under `bash -e`.
     if ! test -z "$deepks_v_delta" && [ $deepks_v_delta -lt 0 ]; then
         hr_pass=0
         python3 $COMPARE_SCRIPT "deepks_hrtot.csr.ref" "OUT.autotest/deepks_hrtot.csr" 8 || hr_pass=$?

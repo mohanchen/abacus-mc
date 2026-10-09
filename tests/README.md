@@ -142,13 +142,14 @@ lines from the fresh run into `result.out`, and comparing the two:
 
 Ways to validate, from a whole category down to one case:
 
-1. Whole category (what ctest/CI do), from `tests/integrate`:
+1. Whole category (what ctest/CI do), from the category directory
+   (e.g. `tests/01_PW`):
 
    ```bash
-   bash Autotest.sh -n 4
+   bash ../integrate/Autotest.sh -n 4
    ```
 
-   `Autotest.sh` runs every case in `CASES_CPU.txt`, invokes the collectors to
+   `Autotest.sh` runs every case in the category's `CASES_CPU.txt`, invokes the collectors to
    build `result.out`, and compares it with `result.ref` using the thresholds
    at the top of `Autotest.sh` (`threshold` / `force_threshold` /
    `stress_threshold` / `descriptor_threshold`; a per-case `threshold` file
@@ -164,7 +165,7 @@ Ways to validate, from a whole category down to one case:
    Example:
 
    ```bash
-   bash Autotest.sh -r 035_PW_15_SO
+   bash ../integrate/Autotest.sh -r 035_PW_15_SO
    ```
 
 2. One case by hand, from the case directory (e.g. `tests/01_PW/035_PW_15_SO`):
@@ -176,8 +177,9 @@ Ways to validate, from a whole category down to one case:
    It reads `integrate/general_info` (`NUMBEROFPROCESS`, `CHECKACCURACY`,
    `EXEC`), runs ABACUS, builds `result.out` through `run_check.sh` and prints
    every line that disagrees with `result.ref`. With the `ref` argument it
-   regenerates `result.ref` instead; `debug` copies the scripts into the case
-   directory for local editing.
+   regenerates `result.ref` instead; `debug` copies `run_check.sh` and the
+   whole `validation_tools/` directory into the case directory and collects
+   with that copy, so local edits to the collectors take effect.
 
 3. Collector only (ABACUS output already exists in `OUT.autotest/`):
 

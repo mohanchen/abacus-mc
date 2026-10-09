@@ -3,11 +3,14 @@
 # Optional local override file, not tracked by git (see .gitignore). When
 # present it is sourced first and may set the executable, e.g.:
 #     abacus=/home/me/abacus/build/abacus
-# or export ABACUS_EXE=/home/me/abacus/build/abacus
 # The -a command-line flag (applied later) always wins over this file, and an
-# ABACUS_EXE exported in the environment wins over a plain 'abacus=...' set
-# here. Effective priority:
+# ABACUS_EXE exported in the environment wins over a path set here.
+# Effective priority:
 #     -a flag > ABACUS_EXE environment > general_info.local > 'abacus' from PATH
+# ABACUS_EXE is saved before sourcing so the local file cannot override it,
+# and 'abacus' is cleared so only the local file can set it.
+abacus_exe_env=${ABACUS_EXE:-}
+abacus=
 abacus_local_info="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/general_info.local"
 if [ -f "$abacus_local_info" ]; then
     . "$abacus_local_info"
@@ -17,7 +20,7 @@ fi
 # so both this script and general_info (via ${ABACUS_EXE}) share one setting.
 # A path set by general_info.local (above) is only used when ABACUS_EXE is
 # not exported.
-abacus=${ABACUS_EXE:-${abacus:-abacus}}
+abacus=${abacus_exe_env:-${abacus:-abacus}}
 # number of MPI processes
 np=4
 nt=$OMP_NUM_THREADS # number of OpenMP threads, default is $OMP_NUM_THREADS

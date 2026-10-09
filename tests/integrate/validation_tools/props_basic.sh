@@ -136,7 +136,6 @@ run_basic_props_post_rdmft(){
 # Check if out_alllog is set to 1
 # and verify running*.log filenames
 #--------------------------------------------
-out_alllog=$(get_input_key_value "out_alllog" "INPUT")
 if ! test -z "$out_alllog" && [ $out_alllog -eq 1 ]; then
     if [ -z "$calculation" ]; then
         echo "Error: calculation parameter not found in INPUT"

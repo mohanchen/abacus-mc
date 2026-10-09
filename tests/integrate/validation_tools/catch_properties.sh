@@ -69,7 +69,11 @@ run_ml_rpa_props
 #--------------------------------------------
 # DeePKS collectors (props_deepks.sh)
 #--------------------------------------------
-run_deepks_props
+# Before the split this block ran as a separate `bash` process without -e,
+# so a failing helper (get_sum_*.py, a missing deepks_desc.dat) left an
+# empty value for the threshold check instead of aborting the collection.
+# Keep that behavior with a subshell that disables errexit.
+( set +e; run_deepks_props )
 
 #--------------------------------------------
 # basic collectors that run after deepks: symmetry

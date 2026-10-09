@@ -12,9 +12,11 @@
 #     shell variables, plus clearing of the result file;
 #   - props_finalize(): the always-emitted total-time entry.
 #
-# Extension contract: each props_<category>.sh module sources this file,
-# then defines run_<category>_props() that reads the global switch variables
-# set by props_init() and appends "key value" lines to the result file.
+# Extension contract: the entry script (catch_properties.sh) sources this
+# file and then each props_<category>.sh module. A module defines
+# run_<category>_props() that reads the global switch variables set by
+# props_init() and appends "key value" lines to the result file. Keys used
+# by a single module only (e.g. deepks_*) may be read by that module itself.
 
 # Absolute path of the directory containing this file
 # (i.e. integrate/validation_tools).
@@ -77,7 +79,7 @@ record_compare_result(){
 
 # props_init RESULT_FILE
 #
-# Reads every INPUT switch key once into global variables, locates the
+# Reads the shared INPUT switch keys once into global variables, locates the
 # running log, derives shared values (natom, is_lr, ...), and truncates the
 # result file. Must be called from the test-case directory (where INPUT and
 # OUT.autotest live) before any run_<category>_props function.
@@ -144,6 +146,7 @@ props_init(){
 	out_efield=$(get_input_key_value "out_efield" "INPUT")
 	out_vecpot=$(get_input_key_value "out_vecpot" "INPUT")
 	nspin=$(get_input_key_value "nspin" "INPUT")
+	out_alllog=$(get_input_key_value "out_alllog" "INPUT")
 	test -e $props_result_file && rm $props_result_file
 
 	# if NOT non-self-consistent calculations or linear response
