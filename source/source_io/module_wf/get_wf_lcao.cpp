@@ -3,6 +3,7 @@
 #include "source_hamilt/module_gint/gint_env_gamma.h"
 #include "source_hamilt/module_gint/gint_env_k.h"
 #include "source_io/module_output/cube_io.h"
+#include "source_io/module_output/spin_tag.h"
 
 #include <algorithm>
 #include <cassert>
@@ -46,16 +47,11 @@ void Get_wf_lcao::begin_gamma(const UnitCell& ucell,
     for (int is = 0; is < nspin_; ++is)
     {
         psi_gamma_->fix_k(is);
-        // Collinear wavefunction cubes carry a spin tag; nspin==4 has no magnetic wavefunction channels.
-        std::string desc_wfc_norm = "wave function (norm)";
-        std::string desc_wfc_real = "wave function (real)";
-        std::string desc_wfc_imag = "wave function (imag)";
-        if (nspin_ == 2)
-        {
-            desc_wfc_norm = ModuleIO::make_data_desc("wave function (norm)", "wave function magnetization m", is, nspin_);
-            desc_wfc_real = ModuleIO::make_data_desc("wave function (real)", "wave function magnetization m", is, nspin_);
-            desc_wfc_imag = ModuleIO::make_data_desc("wave function (imag)", "wave function magnetization m", is, nspin_);
-        }
+        // Collinear (nspin==2) wavefunction cubes carry a spin tag.
+        const std::string spin_tag = ModuleIO::make_spin_tag(is, nspin_);
+        const std::string desc_wfc_norm = "wave function (norm)" + spin_tag;
+        const std::string desc_wfc_real = "wave function (real)" + spin_tag;
+        const std::string desc_wfc_imag = "wave function (imag)" + spin_tag;
         ModuleGint::Gint_env_gamma gint_env(psi_gamma_->get_pointer(), &para_orb_, nbands_, nlocal, wfc_gamma.data());
         for (int ib = 0; ib < nbands_; ++ib)
         {
@@ -188,8 +184,8 @@ void Get_wf_lcao::begin_k(const UnitCell& ucell,
                 std::stringstream ss_out;
                 ss_out << global_out_dir << ss_file.str();
 
-                // spin_index is always 0 for nspin==4 (spinor modulus), so only collinear runs get a tag.
-                const std::string desc_wfc_norm = ModuleIO::make_data_desc("wave function (norm)", "wave function magnetization m", spin_index, nspin_);
+                // Only collinear (nspin==2) runs get a spin tag; nspin==4 writes the spinor modulus.
+                const std::string desc_wfc_norm = "wave function (norm)" + ModuleIO::make_spin_tag(spin_index, nspin_);
 
                 ModuleIO::write_vdata_palgrid(pgrid,
                                               wfc_norm.data(),
@@ -209,14 +205,10 @@ void Get_wf_lcao::begin_k(const UnitCell& ucell,
 
             if (re_im_bands_picked[ib])
             {
-                // Collinear channels carry a spin tag; nspin==4 spinor components have no magnetic label.
-                std::string desc_wfc_real = "wave function (real)";
-                std::string desc_wfc_imag = "wave function (imag)";
-                if (nspin_ == 2)
-                {
-                    desc_wfc_real = ModuleIO::make_data_desc("wave function (real)", "wave function magnetization m", spin_index, nspin_);
-                    desc_wfc_imag = ModuleIO::make_data_desc("wave function (imag)", "wave function magnetization m", spin_index, nspin_);
-                }
+                // Only collinear (nspin==2) channels get a spin tag; nspin==4 spinor components have none.
+                const std::string spin_tag = ModuleIO::make_spin_tag(spin_index, nspin_);
+                const std::string desc_wfc_real = "wave function (real)" + spin_tag;
+                const std::string desc_wfc_imag = "wave function (imag)" + spin_tag;
                 for (int ipol = 0; ipol < npol; ++ipol)
                 {
                     // Spinors write their two components separately; collinear states use the spin channel.

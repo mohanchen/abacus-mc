@@ -6,6 +6,7 @@
 #include "source_base/module_parallel/para_bridge.h"
 #include "source_base/tool_quit.h"
 #include "source_io/module_output/cube_io.h"
+#include "source_io/module_output/spin_tag.h"
 
 #include <algorithm>
 #include <cmath>
