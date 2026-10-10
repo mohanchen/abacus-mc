@@ -22,7 +22,8 @@ void write_elecstat_pot(
     const UnitCell* ucell,
     const double* v_eff,
     const surchem& solvent,
-    const int precision)
+    const int precision,
+    std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("ModuleIO", "write_elecstat_pot");
     ModuleBase::timer::start("ModuleIO", "write_elecstat_pot");
@@ -85,7 +86,7 @@ void write_elecstat_pot(
                                   rho_basis->nrxx,
                                   rho_basis->nplane,
                                   rho_basis->startz_current,
-                                  GlobalV::ofs_running);
+                                  ofs_running);
 
     //-------------------------------------------
     //! Write down the electrostatic potential
@@ -106,7 +107,7 @@ void write_elecstat_pot(
         out_fermi,
         PARAM.globalv.two_fermi,
         false,
-        GlobalV::ofs_running,
+        ofs_running,
         "electrostatic potential");
 
     ModuleBase::timer::end("ModuleIO", "write_elecstat_pot");
