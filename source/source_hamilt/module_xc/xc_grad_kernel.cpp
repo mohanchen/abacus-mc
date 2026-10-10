@@ -62,9 +62,11 @@ void gradcorr_xc_kernel(const GradCorrParams& params,
         // point) and reuse it for all points this thread handles. The
         // polarized flag matches the per-point wrappers used below:
         // nspin0==1 uses the unpolarized wrappers, otherwise the spin ones.
+        // The nspin0==1 non-stress branch uses XC_Functional::gcxc, not libxc.
 #ifdef __LIBXC
         std::vector<xc_func_type> tls_funcs;
-        if (use_libxc)
+        const bool need_libxc_funcs = use_libxc && (nspin0 != 1 || is_stress);
+        if (need_libxc_funcs)
         {
             const int xc_polarized = (nspin0 == 1) ? XC_UNPOLARIZED : XC_POLARIZED;
             tls_funcs = XC_Functional_Libxc::init_func(
@@ -116,7 +118,7 @@ void gradcorr_xc_kernel(const GradCorrParams& params,
                             double vlaplxc = 0.0;
                             double atau = chr->kin_r[0][ir]/2.0;
                             double lapl_val = (!buf.lapl1.empty()) ? buf.lapl1[ir] : 0.0;
-                            XC_Functional_Libxc::tau_xc( tls_funcs, arho, grho2a, lapl_val, atau, sxc, v1xc, v2xc, v3xc, vlaplxc);
+                            XC_Functional_Libxc::tau_xc( tls_funcs, arho, grho2a, lapl_val, atau, sxc, v1xc, v2xc, v3xc, vlaplxc, hybrid_alpha_in);
                             if(!buf.vlapl_arr1.empty()) buf.vlapl_arr1[ir] = vlaplxc;
                         }
                         else
@@ -189,7 +191,8 @@ void gradcorr_xc_kernel(const GradCorrParams& params,
                         XC_Functional_Libxc::tau_xc_spin(
                             tls_funcs,
                             buf.rhotmp1[ir], buf.rhotmp2[ir], buf.gdr1[ir], buf.gdr2[ir],
-                            laplup_val, lapldw_val, atau1, atau2, sxc, v1xcup, v1xcdw, v2xcup, v2xcdw, v2xcud, v3xcup, v3xcdw, vlaplxcup, vlaplxcdw);
+                            laplup_val, lapldw_val, atau1, atau2, sxc, v1xcup, v1xcdw, v2xcup, v2xcdw, v2xcud, v3xcup, v3xcdw, vlaplxcup, vlaplxcdw,
+                            hybrid_alpha_in);
                         if(!buf.vlapl_arr1.empty()) buf.vlapl_arr1[ir] = vlaplxcup;
                         if(!buf.vlapl_arr2.empty()) buf.vlapl_arr2[ir] = vlaplxcdw;
                     }

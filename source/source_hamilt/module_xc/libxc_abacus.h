@@ -73,13 +73,6 @@ namespace XC_Functional_Libxc
 
     extern void finish_func(std::vector<xc_func_type> &funcs);
 
-    // Returns the number of times init_func has been called since the last
-    // call to this function, and resets the counter to zero. Intended for
-    // unit tests that assert per-point evaluation paths do not re-initialize
-    // the libxc functional on every grid point.
-    extern int get_and_reset_init_count();
-
-
 //-------------------
 //  libxc_pot.cpp
 //-------------------
@@ -272,17 +265,6 @@ namespace XC_Functional_Libxc
         const double hybrid_alpha,
         const double hse_omega);
 
-    // Overload accepting an already-initialized functional vector. The caller
-    // is responsible for init_func/finish_func; this overload does not touch
-    // the lifetime of funcs. Useful for per-thread reuse inside OpenMP loops.
-    extern void xc_spin_libxc(
-        const std::vector<xc_func_type>& funcs,
-        const double &rhoup,
-        const double &rhodw,
-        double &exc,
-        double &vxcup,
-        double &vxcdw);
-
 
 //-------------------
 //  libxc_gga_wrap.cpp
@@ -299,7 +281,9 @@ namespace XC_Functional_Libxc
         const double hybrid_alpha,
         const double hse_omega);
 
-    // Overload accepting an already-initialized functional vector.
+    // Overload accepting an already-initialized functional vector. The caller
+    // is responsible for init_func/finish_func; this overload does not touch
+    // the lifetime of funcs. Useful for per-thread reuse inside OpenMP loops.
     extern void gcxc_libxc(
         const std::vector<xc_func_type>& funcs,
         const double &rho,
@@ -359,6 +343,7 @@ namespace XC_Functional_Libxc
         const double &hse_omega);
 
     // Overload accepting an already-initialized functional vector.
+    // hybrid_alpha scales the semilocal SCAN exchange for SCAN0.
     extern void tau_xc(
         const std::vector<xc_func_type>& funcs,
         const double &rho,
@@ -369,7 +354,8 @@ namespace XC_Functional_Libxc
         double &v1xc,
         double &v2xc,
         double &v3xc,
-        double &vlaplxc);
+        double &vlaplxc,
+        const double hybrid_alpha);
 
     extern void tau_xc_spin(
         const std::vector<int> &func_id,
@@ -395,6 +381,7 @@ namespace XC_Functional_Libxc
         const double &hse_omega);
 
     // Overload accepting an already-initialized functional vector.
+    // hybrid_alpha scales the semilocal SCAN exchange for SCAN0.
     extern void tau_xc_spin(
         const std::vector<xc_func_type>& funcs,
         double rhoup,
@@ -414,7 +401,8 @@ namespace XC_Functional_Libxc
         double &v3xcup,
         double &v3xcdw,
         double &vlaplxcup,
-        double &vlaplxcdw);
+        double &vlaplxcdw,
+        const double hybrid_alpha);
 
 } // namespace XC_Functional_Libxc
 

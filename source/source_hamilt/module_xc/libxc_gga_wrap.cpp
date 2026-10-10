@@ -8,6 +8,17 @@
 #include <xc.h>
 #include <array>
 
+namespace
+{
+// gcxc_libxc returns zero below these thresholds.
+bool gcxc_is_negligible(const double rho, const double grho)
+{
+    constexpr double small = 1.e-6;
+    constexpr double smallg = 1.e-10;
+    return rho <= small || grho < smallg;
+}
+} // namespace
+
 void XC_Functional_Libxc::gcxc_libxc(
     const std::vector<xc_func_type>& funcs,
     const double& rho,
@@ -20,9 +31,7 @@ void XC_Functional_Libxc::gcxc_libxc(
     v1xc = 0.0;
     v2xc = 0.0;
 
-    constexpr double small = 1.e-6;
-    constexpr double smallg = 1.e-10;
-    if (rho <= small || grho < smallg)
+    if (gcxc_is_negligible(rho, grho))
     {
         return;
     }
@@ -32,7 +41,7 @@ void XC_Functional_Libxc::gcxc_libxc(
         double s = 0.0;
         double v1 = 0.0;
         double v2 = 0.0;
-        xc_gga_exc_vxc(const_cast<xc_func_type*>(&func), 1, &rho, &grho, &s, &v1, &v2);
+        xc_gga_exc_vxc(&func, 1, &rho, &grho, &s, &v1, &v2);
         sxc += s * rho;
         v1xc += v1;
         v2xc += v2 * 2.0;
@@ -49,6 +58,15 @@ void XC_Functional_Libxc::gcxc_libxc(
     const double hybrid_alpha,
     const double hse_omega)
 {
+    // Skip the libxc setup entirely for points the evaluation would zero out.
+    if (gcxc_is_negligible(rho, grho))
+    {
+        sxc = 0.0;
+        v1xc = 0.0;
+        v2xc = 0.0;
+        return;
+    }
+
     std::vector<xc_func_type> funcs = XC_Functional_Libxc::init_func(
         /* func_id = */ func_id,
         /* xc_polarized = */ XC_UNPOLARIZED,
@@ -107,7 +125,7 @@ void XC_Functional_Libxc::gcxc_spin_libxc(
             std::array<double, 2> v1xc = {0.0, 0.0};
             std::array<double, 3> v2xc = {0.0, 0.0, 0.0};
             // call Libxc function: xc_gga_exc_vxc
-            xc_gga_exc_vxc(const_cast<xc_func_type*>(&func), 1, rho.data(), grho.data(), &s, v1xc.data(), v2xc.data());
+            xc_gga_exc_vxc(&func, 1, rho.data(), grho.data(), &s, v1xc.data(), v2xc.data());
             sxc += s * (rho[0] * sgn[0] + rho[1] * sgn[1]);
             v1xcup += v1xc[0] * sgn[0];
             v1xcdw += v1xc[1] * sgn[1];
