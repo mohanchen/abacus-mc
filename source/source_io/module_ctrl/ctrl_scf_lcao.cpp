@@ -95,14 +95,11 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                              const Exx_Info& exx_info,
                              const bool conv_esolver,
                              const bool scf_nmax_flag,
-                             const int istep)
+                             const int istep,
+                             std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("ModuleIO", "ctrl_scf_lcao");
     ModuleBase::timer::start("ModuleIO", "ctrl_scf_lcao");
-
-    // Bind the global running-log stream once; pass this reference onward so
-    // the rest of the function does not repeatedly touch GlobalV.
-    std::ofstream& ofs_running = GlobalV::ofs_running;
 
     //*****
     // if istep_in = -1, istep will not appear in file name
@@ -801,7 +798,8 @@ template void ModuleIO::ctrl_scf_lcao<double, double>(
     const Exx_Info& exx_info,
     const bool conv_esolver,
     const bool scf_nmax_flag,
-    const int istep);
+    const int istep,
+    std::ofstream& ofs_running);
 
 // For multiple k-points
 template void ModuleIO::ctrl_scf_lcao<std::complex<double>, double>(
@@ -830,7 +828,8 @@ template void ModuleIO::ctrl_scf_lcao<std::complex<double>, double>(
     const Exx_Info& exx_info,
     const bool conv_esolver,
     const bool scf_nmax_flag,
-    const int istep);
+    const int istep,
+    std::ofstream& ofs_running);
 
 template void ModuleIO::ctrl_scf_lcao<std::complex<double>, std::complex<double>>(
     UnitCell& ucell,
@@ -858,4 +857,5 @@ template void ModuleIO::ctrl_scf_lcao<std::complex<double>, std::complex<double>
     const Exx_Info& exx_info,
     const bool conv_esolver,
     const bool scf_nmax_flag,
-    const int istep);
+    const int istep,
+    std::ofstream& ofs_running);

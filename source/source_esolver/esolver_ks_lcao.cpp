@@ -649,7 +649,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(UnitCell& ucell, const int istep, const 
             this->orb_, this->pw_wfc, this->pw_rho, this->pw_big, this->sf,
             this->pw_rhod, this->locpp.vloc, this->solvent,
             this->rdmft_solver, this->deepks, this->exx_nao, this->exx_info_,
-            conv_esolver, this->scf_nmax_flag, istep);
+            conv_esolver, this->scf_nmax_flag, istep, GlobalV::ofs_running);
 
     //! 3) Clean up RA, which is used to serach for adjacent atoms
     if (!this->inp_->cal_force && !this->inp_->cal_stress)
