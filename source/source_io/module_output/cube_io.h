@@ -1,6 +1,7 @@
 #ifndef CUBE_IO_H
 #define CUBE_IO_H
 #include "source_cell/unitcell.h"
+#include "spin_tag.h"
 
 #include <fstream>
 #include <string>
@@ -22,19 +23,8 @@ namespace ModuleIO
 ///     effective potential).
 inline std::string make_data_desc(const std::string& base, const std::string& mag_base, const int is, const int nspin)
 {
-    std::string desc = base;
-    if (nspin == 2 && is >= 0)
-    {
-        if (is == 0)
-        {
-            desc += " (spin up  )";
-        }
-        else
-        {
-            desc += " (spin down)";
-        }
-    }
-    else if (nspin == 4 && is > 0)
+    std::string desc = base + make_spin_tag(is, nspin);
+    if (nspin == 4 && is > 0)
     {
         desc = mag_base;
         if (is == 1)

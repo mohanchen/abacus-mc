@@ -33,9 +33,7 @@ void nscf_bands(const int& is,
                const double& fermie,
                const int& precision,
                const ModuleBase::matrix& ekb,
-               const K_Vectors& kv,
-               std::ofstream& ofs_running,
-               const int& nspin0);
+               const K_Vectors& kv);
 }
 
 #endif

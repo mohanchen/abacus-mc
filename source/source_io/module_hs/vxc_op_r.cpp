@@ -1,4 +1,5 @@
 #include "vxc_op_r.h"
+#include "source_io/module_output/spin_tag.h"
 
 #include "source_io/module_hs/hs_sparse_io.h"
 #include "source_base/module_out/filename.h"
@@ -128,7 +129,7 @@ void write_Vxc_R(const int nspin,
                               all_R_coor,
                               *pv,
                               options);
-        const std::string spin_tag = (nspin == 2) ? (is == 0 ? " (spin up  )" : " (spin down)") : "";
+        const std::string spin_tag = ModuleIO::make_spin_tag(is, nspin);
         ofs_running << " Write Vxc(R)" << spin_tag << " matrix in NAO basis to file: " << options.filename << std::endl;
     }
 }

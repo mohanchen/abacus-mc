@@ -1,4 +1,5 @@
 #include "hsr_writer.h"
+#include "source_io/module_output/spin_tag.h"
 
 #include "source_base/module_out/sparse_matrix.h"
 #include "source_base/tool_quit.h"
@@ -331,8 +332,8 @@ void ModuleIO::write_hsr(const std::vector<hamilt::HContainer<TR>*>& hr_vec,
                 write_hcontainer_csr(
                     fname, ucell, precision, &hr_serial, istep, ispin, nspin, "H", representation_note, efermi_eV, true);
             }
-            ofs_running << " Write H(R)" << ((nspin == 2) ? (ispin == 0 ? " (spin up  )" : " (spin down)") : "")
-                        << " matrix in NAO basis to file: " << fname << std::endl;
+            const std::string spin_tag = ModuleIO::make_spin_tag(ispin, nspin);
+            ofs_running << " Write H(R)" << spin_tag << " matrix in NAO basis to file: " << fname << std::endl;
         }
     }
 

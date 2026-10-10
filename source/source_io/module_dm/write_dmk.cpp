@@ -1,4 +1,5 @@
 #include "source_io/module_dm/write_dmk.h"
+#include "source_io/module_output/spin_tag.h"
 
 #include "source_base/parallel_common.h"
 #include "source_base/module_external/scalapack_connector.h"
@@ -251,7 +252,7 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
                 }
                 else
                 {
-                    const std::string spin_tag = (nspin == 2) ? (ispin == 0 ? " (spin up  )" : " (spin down)") : "";
+                    const std::string spin_tag = ModuleIO::make_spin_tag(ispin, nspin);
                     ofs_running << " Write DM(k)" << spin_tag << " matrix in NAO basis to file: " << fn << std::endl;
                 }
 

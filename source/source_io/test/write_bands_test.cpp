@@ -326,7 +326,7 @@ class BandOutputTest : public testing::TestWithParam<BandTopology>
 TEST_P(BandOutputTest, DirectSingleSpin)
 {
     prepare(1, 3, false);
-    ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.0, 8, ekb_, kv_, ofs_running, 1);
+    ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.0, 8, ekb_, kv_);
     expect_output("direct.txt", 0, 3, 0.0, 8, 1);
     if (world_->rank() == 0)
     {
@@ -339,8 +339,8 @@ TEST_P(BandOutputTest, DirectSingleSpin)
 TEST_P(BandOutputTest, DirectBothSpins)
 {
     prepare(2, 3, false);
-    ModuleIO::nscf_bands(0, directory_ + "up.txt", 3, 0.0, 8, ekb_, kv_, ofs_running, 1);
-    ModuleIO::nscf_bands(1, directory_ + "down.txt", 3, 0.0, 8, ekb_, kv_, ofs_running, 1);
+    ModuleIO::nscf_bands(0, directory_ + "up.txt", 3, 0.0, 8, ekb_, kv_);
+    ModuleIO::nscf_bands(1, directory_ + "down.txt", 3, 0.0, 8, ekb_, kv_);
     expect_output("up.txt", 0, 3, 0.0, 8, 1);
     expect_output("down.txt", 1, 3, 0.0, 8, 1);
 }
@@ -350,7 +350,7 @@ TEST_P(BandOutputTest, PrecisionAndFermiShift)
     prepare(1, 3, false);
     for (const int precision : {4, 8})
     {
-        ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.25, precision, ekb_, kv_, ofs_running, 1);
+        ModuleIO::nscf_bands(0, directory_ + "direct.txt", 3, 0.25, precision, ekb_, kv_);
         expect_output("direct.txt", 0, 3, 0.25, precision, 1);
         if (world_->rank() == 0 && precision == 4)
         {
@@ -416,6 +416,27 @@ TEST_P(BandOutputTest, EmptyBandShard)
     ModuleIO::write_bands(input_, ekb_, kv_, ofs_running);
     expect_output("bands1.txt", 0, 1, 0.0, 8, 1);
     expect_output("bands2.txt", 1, 1, 0.0, 8, 1);
+}
+
+TEST_P(BandOutputTest, RunningLogNamesSpinChannels)
+{
+    prepare(2, 3, false);
+    const std::string log_name = "write_bands_running_p" + std::to_string(world_->size()) + "_r"
+                                 + std::to_string(world_->rank()) + ".log";
+    std::ofstream log(log_name);
+    EXPECT_TRUE(log.is_open());
+    ModuleIO::write_bands(input_, ekb_, kv_, log);
+    log.close();
+
+    std::ifstream in(log_name);
+    const std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    in.close();
+    std::remove(log_name.c_str());
+
+    const std::string up_line = " Write eigenvalues (spin up  ) to file: " + directory_ + "bands1.txt";
+    const std::string down_line = " Write eigenvalues (spin down) to file: " + directory_ + "bands2.txt";
+    EXPECT_NE(text.find(up_line), std::string::npos) << text;
+    EXPECT_NE(text.find(down_line), std::string::npos) << text;
 }
 
 INSTANTIATE_TEST_SUITE_P(Topology, BandOutputTest, testing::ValuesIn(band_topologies()), topology_name);
