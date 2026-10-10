@@ -72,7 +72,13 @@ void ESolver_DM2rho<TK, TR>::runner(BaseCell& basecell, const int istep)
 
     for (int is = 0; is < nspin0; is++)
     {
-        std::string fn = PARAM.globalv.global_out_dir + "chgs" + std::to_string(is + 1) + ".cube";
+        // same naming as ctrl_output_fp and the init_chg=file reader:
+        // chg.cube for nspin=1, chgs<n>.cube otherwise
+        std::string fn = PARAM.globalv.global_out_dir + "chg.cube";
+        if (this->inp_->nspin != 1)
+        {
+            fn = PARAM.globalv.global_out_dir + "chgs" + std::to_string(is + 1) + ".cube";
+        }
 
         // write electron density
         const std::string desc_chg = ModuleIO::make_data_desc("charge density", "magnetization density m", is, this->inp_->nspin);
