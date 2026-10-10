@@ -316,8 +316,8 @@ void Get_wf_pw<T, Device>::write_cube(const int band,
                                       const UnitCell& ucell,
                                       const Parallel_Grid& pgrid,
                                       const std::string& out_dir,
-                      const std::vector<double>& values,
-                      std::ofstream& ofs_running) const
+                                      const std::vector<double>& values,
+                                      std::ofstream& ofs_running) const
 {
     std::stringstream filename;
     filename << out_dir << "wfi" << band + 1 << "s" << component + 1 << "k" << k_number << part << ".cube";
@@ -335,6 +335,8 @@ void Get_wf_pw<T, Device>::write_cube(const int band,
     {
         data_desc = "wave function (norm)";
     }
+    // collinear spin channel (nspin=2); spinor components (nspin=4) are not spin channels
+    data_desc += ModuleIO::make_spin_tag(component, nspin_);
     ModuleIO::write_vdata_palgrid(pgrid, values.data(), component, nspin_, 0, filename.str(), 0.0, &ucell, 11, 0, false, true, ofs_running, data_desc);
 }
 
