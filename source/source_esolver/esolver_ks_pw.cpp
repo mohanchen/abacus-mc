@@ -403,7 +403,7 @@ void ESolver_KS_PW<T, Device>::iter_finish(UnitCell& ucell, const int istep, int
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
     // the output quantities
-    ModuleIO::ctrl_iter_pw(istep, iter, conv_esolver, this->stp, this->kv, this->pw_wfc, *this->inp_);
+    ModuleIO::ctrl_iter_pw(istep, iter, conv_esolver, this->stp, this->kv, this->pw_wfc, *this->inp_, GlobalV::ofs_running);
 }
 
 template <typename T, typename Device>
@@ -435,7 +435,8 @@ void ESolver_KS_PW<T, Device>::after_scf(UnitCell& ucell, const int istep, const
                                      this->pw_big,
                                      this->stp,
                                      this->Pgrid,
-                                     *this->inp_);
+                                     *this->inp_,
+                                     GlobalV::ofs_running);
 
     ModuleBase::timer::end("ESolver_KS_PW", "after_scf");
 }
@@ -533,7 +534,8 @@ void ESolver_KS_PW<T, Device>::after_all_runners(BaseCell& basecell)
                                         this->ppcell,
                                         this->solvent,
                                         this->Pgrid,
-                                        *this->inp_);
+                                        *this->inp_,
+                                        GlobalV::ofs_running);
 
     elecstate::teardown_estate_pw(this->pelec, this->vsep_cell);
 }
