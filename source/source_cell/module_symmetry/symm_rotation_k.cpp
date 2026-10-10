@@ -12,7 +12,7 @@ namespace ModuleSymmetry
 {
     void Symmetry_rotation_k::reset_symmetry()
     {
-        this->irs_ = Irreducible_Sector();
+        this->irs_ = Irred_Sector();
         this->Ms_.clear();
         this->little_groups_.clear();
         this->spin_U_.clear();

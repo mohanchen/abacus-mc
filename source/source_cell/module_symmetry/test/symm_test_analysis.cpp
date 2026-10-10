@@ -55,8 +55,9 @@ TEST_F(SymmetryTest, AtomMapRefreshWithUnchangedOperationCount)
     ModuleSymmetry::Symmetry symm;
     const int representation[2] = {0, 0};
     const std::string calculation = "cell-relax";
-    symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, ofs_running,
-                  1e-6, 1, calculation, representation);
+    symm.analy_sys(ucell.lat, ucell.atoms, ucell.nat, ucell.ntype,
+                   ucell.iat2it, ucell.iat2ia, ucell.itia2iat,
+                   ofs_running, 1e-6, 1, calculation, representation);
     const int original_count = symm.nrotk;
     EXPECT_EQ(original_count, 48);
 
@@ -70,8 +71,9 @@ TEST_F(SymmetryTest, AtomMapRefreshWithUnchangedOperationCount)
     {
         ucell.atoms[0].tau[atom] = ucell.atoms[0].taud[atom] * ucell.latvec;
     }
-    symm.analy_sys(ucell.lat, ucell.st, ucell.atoms, ofs_running,
-                  1e-6, 1, calculation, representation);
+    symm.analy_sys(ucell.lat, ucell.atoms, ucell.nat, ucell.ntype,
+                   ucell.iat2it, ucell.iat2ia, ucell.itia2iat,
+                   ofs_running, 1e-6, 1, calculation, representation);
     EXPECT_EQ(symm.nrotk, original_count);
     for (int operation = 0; operation < symm.nrotk; ++operation)
     {
