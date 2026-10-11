@@ -60,7 +60,6 @@ add_library(
     sph_bessel_tf.cpp
     cubic_spline.cpp
     parallel_2d.cpp
-    projgen.cpp
     module_out/binstream.cpp
     module_out/filename.cpp
     module_out/sparse_matrix.cpp

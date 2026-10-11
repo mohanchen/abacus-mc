@@ -5,6 +5,7 @@ if(ENABLE_LCAO)
 	numerical_radial.cpp
     radial_set.cpp
     atomic_radials.cpp
+    smoothgen.cpp
     beta_radials.cpp
     sphbes_radials.cpp
     hydrogen_radials.cpp
@@ -21,6 +22,7 @@ if(ENABLE_LCAO)
   endif()
 
   if(BUILD_TESTING)
+    add_subdirectory(unittests)
     if(ENABLE_MPI)
       add_subdirectory(test)
     endif()

@@ -1,5 +1,5 @@
-#ifndef MODULE_NAO_PROJGEN_H_
-#define MODULE_NAO_PROJGEN_H_
+#ifndef MODULE_PROJ_PROJGEN_H
+#define MODULE_PROJ_PROJGEN_H
 
 #include <vector>
 
@@ -25,19 +25,12 @@
  *
  */
 void projgen(
-    const int l, 
-    const int nr, 
-    const double* r, 
-    const double* chi, 
-    const double rcut, 
-    const int nbes, 
-    std::vector<double>& alpha);
-
-void smoothgen( 
-    const int nr, 
-    const double* r, 
-    const double* chi, 
-    const double rcut, 
+    const int l,
+    const int nr,
+    const double* r,
+    const double* chi,
+    const double rcut,
+    const int nbes,
     std::vector<double>& alpha);
 
 #endif

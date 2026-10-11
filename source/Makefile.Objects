@@ -557,7 +557,6 @@ OBJS_ORBITAL=orb_atomic.o\
       two_center_bundle.o\
       two_center_integrator.o\
       two_center_table.o\
-      projgen.o\
 
 OBJS_PSI=psi.o\
 
@@ -992,6 +991,7 @@ OBJS_SRCPW=h_ewald_pw.o\
     onsite_proj_tools_force.o\
     onsite_proj_tools_stress.o\
     onsite_proj_print.o\
+    smoothgen.o\
     vsep_pw.o
 
 OBJS_VDW=vdw.o\
