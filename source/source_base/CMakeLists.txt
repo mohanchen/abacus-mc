@@ -17,7 +17,6 @@ add_library(
     complexarray.cpp
     complexmatrix.cpp
     element_basis_index.cpp
-    export.cpp
     inverse_matrix.cpp
     gather_math_lib_info.cpp
     global_file.cpp
