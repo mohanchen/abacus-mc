@@ -144,7 +144,6 @@ OBJS_BASE=assoc_laguerre.o\
     complexmatrix.o\
     clebsch_gordan_coeff.o\
     element_basis_index.o\
-    export.o\
     inverse_matrix.o\
     gather_math_lib_info.o\
     global_file.o\
