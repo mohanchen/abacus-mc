@@ -189,6 +189,8 @@ void ESolver_KS::runner(BaseCell& basecell, const int istep)
     this->scf_rerun_ = false;         // clear any stale rerun request before the loop
     this->oscillate_esolver = false;  // clear any stale oscillation flag before the loop
     int iter = 1;
+    int rerun_count = 0;
+    const int max_rerun = 100;  // safety net: EXX rerun should never exceed this
     while (iter <= this->maxniter)
     {
         if(iter == this->maxniter)
@@ -226,6 +228,12 @@ void ESolver_KS::runner(BaseCell& basecell, const int istep)
         //    signal" trick that wrote 0 into the iter reference.
         if (this->scf_rerun_)
         {
+            if (++rerun_count > max_rerun)
+            {
+                std::cout << " WARNING: SCF rerun limit (" << max_rerun
+                          << ") reached, stopping." << std::endl;
+                break;
+            }
             this->scf_rerun_ = false;
             iter = 1;
             continue;
