@@ -186,7 +186,8 @@ void ESolver_KS::runner(BaseCell& basecell, const int istep)
     this->niter = this->maxniter;
     this->diag_ethr = this->inp_->pw_diag_thr;
     this->scf_nmax_flag = false; // mohan add 2025-09-21
-    this->scf_rerun_ = false;    // clear any stale rerun request before the loop
+    this->scf_rerun_ = false;         // clear any stale rerun request before the loop
+    this->oscillate_esolver = false;  // clear any stale oscillation flag before the loop
     int iter = 1;
     while (iter <= this->maxniter)
     {
