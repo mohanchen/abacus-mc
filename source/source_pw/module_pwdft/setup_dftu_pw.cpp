@@ -38,13 +38,20 @@ void iter_init_dftu_pw(const int iter,
 
     const bool first_scf_step = (iter == 1 && istep == 0);
 
-    if (dftu.get_init_occ_mat() == 2)
+    // Build the +U potential from the file-loaded occupation matrix when:
+    //   - init_occ_mat == 2: the matrix is fixed for the whole run, so
+    //     rebuild pot_onsite and E_plusU from it at every electronic step
+    //     (the matrix is never reprojected from psi or mixed);
+    //   - init_occ_mat == 1 at the first SCF step: the file matrix seeds
+    //     the Hamiltonian so the first diagonalization includes the +U
+    //     correction.  On later steps cal_occ_pw reprojects the matrix
+    //     from psi (which now carries the +U influence) and rebuilds the
+    //     potential, matching the documented "first step from file, then
+    //     update" semantics.  Without this the file matrix would never
+    //     enter the Hamiltonian (default mixing_dftu == 0).
+    if (dftu.get_init_occ_mat() == 2
+        || (first_scf_step && dftu.get_init_occ_mat() == 1))
     {
-        // The occupation matrix is fixed to the file-loaded one for the
-        // whole calculation: it must not be reprojected from psi or mixed.
-        // The +U potential and energy still have to be rebuilt from this
-        // fixed matrix at every electronic step, including the first one;
-        // otherwise pot_onsite and E_plusU remain zero for the entire run.
         pw::compute_pot_uterm_and_energy(ucell,
                                          nspin,
                                          dftu.get_u_current_vec(),

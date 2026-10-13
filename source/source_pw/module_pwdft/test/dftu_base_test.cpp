@@ -10,6 +10,7 @@
 
 #include "source_pw/module_pwdft/dftu_base.h"
 #include "source_pw/module_pwdft/dftu_base_io.h"
+#include "source_pw/module_pwdft/dftu_pw_tools.h"
 
 #include "source_cell/atom_spec.h"
 #include "source_cell/unitcell.h"
@@ -768,6 +769,117 @@ TEST_F(DFTUBaseTest, InitBaseReadsOccMatSocPauliRoundtrip)
         EXPECT_NEAR(occ0.c[3 * m2 + k], uu[k] - dd[k], 1e-12)    // b3
             << "Pauli block b3 mismatch at k=" << k;
     }
+}
+
+/// For init_occ_mat=1 the file-loaded occupation matrix must seed the
+/// Hamiltonian at the first SCF step.  Before the fix the whole
+/// iter_init_dftu_pw was skipped at the first step, so pot_onsite and
+/// E_plusU stayed zero and the file matrix was overwritten by the
+/// psi-reprojected matrix at iter=2 without ever entering the Hamiltonian.
+/// This test verifies the mechanism: after init_base reads the file,
+/// compute_pot_uterm_and_energy must produce a non-zero potential and
+/// energy from the file-loaded matrix.
+TEST_F(DFTUBaseTest, InitOccMat1BuildsPotentialFromFile)
+{
+    const std::string dir = testing::TempDir();
+    const std::string fn = dir + "occ_mat.txt";
+
+    // One Fe atom, L=2, nspin=2.  All 25 elements per spin set to a
+    // constant so expected pot_onsite and energy are easy to compute.
+    const double occ_up = 0.1;
+    const double occ_dn = 0.2;
+    {
+        std::ofstream ofs(fn);
+        ASSERT_TRUE(ofs.is_open());
+        ofs << "# compact test fixture\n";
+        ofs << " Fe Atom 1 L 2 mag 0.0\n";
+        ofs << " spin 1 nelec 0.5\n";
+        for (int m0 = 0; m0 < 5; ++m0)
+        {
+            for (int m1 = 0; m1 < 5; ++m1) { ofs << " " << occ_up; }
+            ofs << "\n";
+        }
+        ofs << " spin 2 nelec 0.5\n";
+        for (int m0 = 0; m0 < 5; ++m0)
+        {
+            for (int m1 = 0; m1 < 5; ++m1) { ofs << " " << occ_dn; }
+            ofs << "\n";
+        }
+    }
+
+    Plus_U_Base dftu;
+    const std::vector<int> l_channel = {2};
+    const std::vector<double> hubbard_u = {4.0};
+    dftu.init_base(ucell,
+                   1,                // npol
+                   2,                // nspin
+                   l_channel,
+                   false,            // yukawa_potential
+                   0.5,              // yukawa_lambda
+                   dir,              // global_readin_dir
+                   "",               // global_out_dir
+                   "none",           // init_chg
+                   "cpu",            // device
+                   hubbard_u,
+                   0.0,              // uramping
+                   1,                // init_occ_mat
+                   0,                // mixing_dftu
+                   DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    ASSERT_TRUE(dftu.is_occmat_ready());
+    EXPECT_NEAR(dftu.occmat().get(0, 2, 0, 0, 0), occ_up, 1e-12);
+    EXPECT_NEAR(dftu.occmat().get(0, 2, 1, 4, 4), occ_dn, 1e-12);
+
+    // Before building the potential, uterm_mat is all zeros.
+    const std::vector<std::complex<double>>& uterm0 = dftu.get_uterm_mat();
+    for (size_t i = 0; i < uterm0.size(); ++i)
+    {
+        EXPECT_EQ(uterm0[i].real(), 0.0);
+    }
+
+    // Build pot_onsite and E_plusU from the file-loaded matrix — this is
+    // the call the fix adds at the first SCF step for init_occ_mat=1.
+    pw::compute_pot_uterm_and_energy(ucell,
+                                    2,                  // nspin
+                                    dftu.get_u_current_vec(),
+                                    dftu.get_l_channel_vec(),
+                                    dftu.get_uterm_mat_index(),
+                                    dftu.occmat(),
+                                    dftu.get_uterm_mat(),
+                                    dftu.energy_ref());
+
+    const double u_value = 4.0;
+    const int m_size = 5;
+    const int size = m_size * m_size;          // 25
+    const std::vector<std::complex<double>>& uterm = dftu.get_uterm_mat();
+    ASSERT_EQ(uterm.size(), static_cast<size_t>(2 * size));
+
+    // spin-up block [0 .. size): diagonal = U*(0.5 - occ_up) = 1.6
+    // off-diagonal = U*(0 - occ_up) = -0.4
+    for (int m = 0; m < m_size; ++m)
+    {
+        EXPECT_NEAR(uterm[m * m_size + m].real(), u_value * (0.5 - occ_up), 1e-12)
+            << "spin-up diagonal mismatch at m=" << m;
+    }
+    EXPECT_NEAR(uterm[0 * m_size + 1].real(), -u_value * occ_up, 1e-12);
+    EXPECT_NEAR(uterm[1 * m_size + 0].real(), -u_value * occ_up, 1e-12);
+
+    // spin-down block [size .. 2*size): diagonal = U*(0.5 - occ_dn) = 1.2
+    // off-diagonal = U*(0 - occ_dn) = -0.8
+    for (int m = 0; m < m_size; ++m)
+    {
+        EXPECT_NEAR(uterm[size + m * m_size + m].real(),
+                    u_value * (0.5 - occ_dn), 1e-12)
+            << "spin-down diagonal mismatch at m=" << m;
+    }
+    EXPECT_NEAR(uterm[size + 0 * m_size + 1].real(), -u_value * occ_dn, 1e-12);
+
+    // E_U = U * 0.5 * 25 * (occ_up^2 + occ_dn^2)
+    //     = 4.0 * 0.5 * 25 * (0.01 + 0.04) = 2.5
+    const double expected_energy = u_value * 0.5 * size
+                                   * (occ_up * occ_up + occ_dn * occ_dn);
+    EXPECT_NEAR(dftu.get_energy(), expected_energy, 1e-12);
+    EXPECT_GT(dftu.get_energy(), 0.0);
 }
 
 // Reading the occupation-matrix file broadcasts on MPI_COMM_WORLD, so
