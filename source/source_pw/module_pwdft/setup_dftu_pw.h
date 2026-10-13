@@ -25,7 +25,9 @@ void iter_init_dftu_pw(const int iter,
                        const std::string& global_out_dir,
                        const OccmatOutputCfg& occmat_cfg,
                        const int* isk,
-                       const int nspin);
+                       const int nspin,
+                       const int kpar,
+                       const int npol);
 
 }
 

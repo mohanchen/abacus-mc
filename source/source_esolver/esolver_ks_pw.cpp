@@ -230,7 +230,9 @@ void ESolver_KS_PW<T, Device>::iter_init(UnitCell& ucell, const int istep, const
                           PARAM.globalv.global_out_dir,
                           init_occmat_cfg,
                           this->kv.isk.data(),
-                          this->inp_->nspin);
+                          this->inp_->nspin,
+                          this->inp_->kpar,
+                          PARAM.globalv.npol);
 
     // mohan add 2025-11: push DFT+U energy from Plus_U instance to ElecState
     if (this->inp_->dft_plus_u)

@@ -3,7 +3,6 @@
 #include "source_pw/module_pwdft/dftu_base_io.h" // mohan add 2025-11-08
 #include "source_pw/module_pwdft/dftu_pw.h"
 #include "source_pw/module_pwdft/dftu_pw_tools.h"
-#include "source_io/module_parameter/parameter.h"
 
 namespace DFTU_BASE
 {
@@ -18,9 +17,11 @@ void iter_init_dftu_pw(const int iter,
                         const std::string& global_out_dir,
                         const OccmatOutputCfg& occmat_cfg,
                         const int* isk,
-                        const int nspin)
+                        const int nspin,
+                        const int kpar,
+                        const int npol)
 {
-    if (!p_chgmix || !PARAM.inp.dft_plus_u)
+    if (!p_chgmix || occmat_cfg.dft_plus_u <= 0)
     {
         return;
     }
@@ -65,7 +66,7 @@ void iter_init_dftu_pw(const int iter,
     {
         // No occupation matrix exists before the first projection, so the
         // matrix can only be accumulated from psi on later electronic steps.
-        DFTU_BASE::cal_occ_pw(psi, wg, ucell, p_chgmix, isk, PARAM.inp.kpar,
+        DFTU_BASE::cal_occ_pw(psi, wg, ucell, p_chgmix, isk, kpar,
                               nspin, dftu.get_device(),
                               dftu.get_l_channel_vec(), dftu.get_u_current_vec(),
                               dftu.get_uterm_mat_index(),
@@ -82,7 +83,7 @@ void iter_init_dftu_pw(const int iter,
     }
 
     DFTU_BASE::output(dftu, ucell, global_out_dir,
-                      nspin, PARAM.globalv.npol, istep, iter, occmat_cfg,
+                      nspin, npol, istep, iter, occmat_cfg,
                       DFTU_BASE::SOC_LAYOUT_PAULI);
 }
 
