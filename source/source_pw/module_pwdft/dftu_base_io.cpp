@@ -218,8 +218,10 @@ namespace
 void write_provenance_header(std::ostream& os, const int istep)
 {
     std::time_t now = std::time(nullptr);
+    std::tm tm_local;
+    localtime_r(&now, &tm_local);
     char time_buf[64];
-    std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+    std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", &tm_local);
     os << "# ABACUS version: " << VERSION << "\n";
     os << "# Written at " << time_buf << "\n";
     os << "# RELAX STEP " << istep + 1 << "\n";
@@ -248,6 +250,11 @@ void read_matrix_block(std::ifstream& ifs, const int n, double* out)
     {
         double value = 0.0;
         ifs >> value;
+        if (ifs.fail())
+        {
+            ModuleBase::WARNING_QUIT("read_matrix_block",
+                                     "failed to read a matrix element from the occupation matrix file");
+        }
         if (out != nullptr)
         {
             out[i] = value;

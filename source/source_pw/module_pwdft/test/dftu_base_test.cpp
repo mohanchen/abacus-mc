@@ -399,7 +399,7 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
     this->init_dftu(dftu, false);
 
     const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true, 1};
-    const std::string out_dir = "./";
+    const std::string out_dir = testing::TempDir();
 
     // fresh run: no occupation matrix has been computed or loaded
     ASSERT_FALSE(dftu.is_occmat_ready());
@@ -417,7 +417,8 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
                                         cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs("./occ_matg1.txt");
+    const std::string fn1 = out_dir + "occ_matg1.txt";
+    std::ifstream ifs(fn1.c_str());
     ASSERT_TRUE(ifs.is_open());
     std::stringstream ss;
     ss << ifs.rdbuf();
@@ -444,7 +445,8 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
                                         cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs2("./occ_matg2.txt");
+    const std::string fn2 = out_dir + "occ_matg2.txt";
+    std::ifstream ifs2(fn2.c_str());
     ASSERT_TRUE(ifs2.is_open());
     std::stringstream ss2;
     ss2 << ifs2.rdbuf();
@@ -452,9 +454,6 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
     const std::string content2 = ss2.str();
     EXPECT_NE(content2.find("Fe Atom 1 L 2"), std::string::npos);
     EXPECT_EQ(content2.find("N/A"), std::string::npos);
-
-    std::remove("./occ_matg1.txt");
-    std::remove("./occ_matg2.txt");
 }
 
 /// out_occ_mat = false must suppress both the numbered snapshot file and the
@@ -465,7 +464,7 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
     this->init_dftu(dftu, false);
 
     const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, false, 1};
-    const std::string out_dir = "./";
+    const std::string out_dir = testing::TempDir();
 
     DFTU_BASE::append_ion_step_snapshot(dftu,
                                         ucell,
@@ -481,7 +480,8 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
                                         cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs("./occ_matg1.txt");
+    const std::string fn_g1 = out_dir + "occ_matg1.txt";
+    std::ifstream ifs(fn_g1.c_str());
     EXPECT_FALSE(ifs.is_open());
 
     DFTU_BASE::write_latest_occmat(dftu,
@@ -496,7 +496,8 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
                                    cfg,
                                    DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs_latest("./occ_mat.txt");
+    const std::string fn_latest = out_dir + "occ_mat.txt";
+    std::ifstream ifs_latest(fn_latest.c_str());
     EXPECT_FALSE(ifs_latest.is_open());
 }
 
@@ -515,11 +516,7 @@ TEST_F(DFTUBaseTest, DftPlusUDisabledWritesNothing)
     // not even reach has_l_channel() when dft_plus_u == 0.
 
     const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true, 0};
-    const std::string out_dir = "./";
-
-    // Remove stale files so the existence check is meaningful.
-    std::remove("./occ_matg1.txt");
-    std::remove("./occ_mat.txt");
+    const std::string out_dir = testing::TempDir();
 
     DFTU_BASE::append_ion_step_snapshot(dftu,
                                         ucell,
@@ -535,7 +532,8 @@ TEST_F(DFTUBaseTest, DftPlusUDisabledWritesNothing)
                                         cfg,
                                         DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs("./occ_matg1.txt");
+    const std::string fn_g1 = out_dir + "occ_matg1.txt";
+    std::ifstream ifs(fn_g1.c_str());
     EXPECT_FALSE(ifs.is_open());
 
     DFTU_BASE::write_latest_occmat(dftu,
@@ -550,7 +548,8 @@ TEST_F(DFTUBaseTest, DftPlusUDisabledWritesNothing)
                                    cfg,
                                    DFTU_BASE::SOC_LAYOUT_PAULI);
 
-    std::ifstream ifs_latest("./occ_mat.txt");
+    const std::string fn_latest = out_dir + "occ_mat.txt";
+    std::ifstream ifs_latest(fn_latest.c_str());
     EXPECT_FALSE(ifs_latest.is_open());
 }
 
