@@ -4,7 +4,7 @@
 #include "source_base/matrix.h"
 #include "source_estate/occ_matrix.h"
 #include "source_estate/occ_mixer.h"
-#include "source_pw/module_pwdft/dftu_base_io.h"
+#include "source_pw/module_pwdft/dftu_types.h"
 #include "source_pw/module_pwdft/yukawa_screening.h"
 
 #include <complex>

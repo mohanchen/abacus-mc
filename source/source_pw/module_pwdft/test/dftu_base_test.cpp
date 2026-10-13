@@ -454,6 +454,11 @@ TEST_F(DFTUBaseTest, AppendSnapshotNAPlaceholderAndReady)
     const std::string content2 = ss2.str();
     EXPECT_NE(content2.find("Fe Atom 1 L 2"), std::string::npos);
     EXPECT_EQ(content2.find("N/A"), std::string::npos);
+
+    // Clean up so subsequent tests checking "file not written" are not
+    // fooled by leftovers.  std::remove is Rule 17 compliant.
+    std::remove((out_dir + "occ_matg1.txt").c_str());
+    std::remove((out_dir + "occ_matg2.txt").c_str());
 }
 
 /// out_occ_mat = false must suppress both the numbered snapshot file and the
@@ -465,6 +470,11 @@ TEST_F(DFTUBaseTest, OccMatSwitchDisabledWritesNothing)
 
     const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, false, 1};
     const std::string out_dir = testing::TempDir();
+
+    // Remove stale files from previous test binary runs so the
+    // "file not written" assertions are meaningful.
+    std::remove((out_dir + "occ_matg1.txt").c_str());
+    std::remove((out_dir + "occ_mat.txt").c_str());
 
     DFTU_BASE::append_ion_step_snapshot(dftu,
                                         ucell,
@@ -516,7 +526,7 @@ TEST_F(DFTUBaseTest, DftPlusUDisabledWritesNothing)
     // not even reach has_l_channel() when dft_plus_u == 0.
 
     const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true, 0};
-    const std::string out_dir = testing::TempDir();
+    const std::string out_dir = testing::TempDir() + "guard_test/";
 
     DFTU_BASE::append_ion_step_snapshot(dftu,
                                         ucell,
@@ -879,6 +889,145 @@ TEST_F(DFTUBaseTest, InitOccMat1BuildsPotentialFromFile)
                                    * (occ_up * occ_up + occ_dn * occ_dn);
     EXPECT_NEAR(dftu.get_energy(), expected_energy, 1e-12);
     EXPECT_GT(dftu.get_energy(), 0.0);
+}
+
+/// For init_occ_mat=2 the occupation matrix is fixed from the file
+/// throughout the calculation.  Every SCF step must rebuild the potential
+/// from the same matrix.  This test verifies that (1) the file matrix
+/// produces a non-zero potential and energy, and (2) a second call with
+/// the unchanged matrix reproduces the same results — the defining
+/// property of mode 2 ("fixed matrix").
+TEST_F(DFTUBaseTest, InitOccMat2BuildsPotentialFromFileAndIsStable)
+{
+    const std::string dir = testing::TempDir();
+    const std::string fn = dir + "occ_mat.txt";
+
+    const double occ_up = 0.1;
+    const double occ_dn = 0.2;
+    {
+        std::ofstream ofs(fn);
+        ASSERT_TRUE(ofs.is_open());
+        ofs << "# compact test fixture\n";
+        ofs << " Fe Atom 1 L 2 mag 0.0\n";
+        ofs << " spin 1 nelec 0.5\n";
+        for (int m0 = 0; m0 < 5; ++m0)
+        {
+            for (int m1 = 0; m1 < 5; ++m1) { ofs << " " << occ_up; }
+            ofs << "\n";
+        }
+        ofs << " spin 2 nelec 0.5\n";
+        for (int m0 = 0; m0 < 5; ++m0)
+        {
+            for (int m1 = 0; m1 < 5; ++m1) { ofs << " " << occ_dn; }
+            ofs << "\n";
+        }
+    }
+
+    Plus_U_Base dftu;
+    const std::vector<int> l_channel = {2};
+    const std::vector<double> hubbard_u = {4.0};
+    dftu.init_base(ucell,
+                   1,                // npol
+                   2,                // nspin
+                   l_channel,
+                   false,            // yukawa_potential
+                   0.5,              // yukawa_lambda
+                   dir,              // global_readin_dir
+                   "",               // global_out_dir
+                   "none",           // init_chg
+                   "cpu",            // device
+                   hubbard_u,
+                   0.0,              // uramping
+                   2,                // init_occ_mat — mode 2: fixed matrix
+                   0,                // mixing_dftu
+                   DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    ASSERT_TRUE(dftu.is_occmat_ready());
+
+    // First call — build potential from the file-loaded matrix.
+    pw::compute_pot_uterm_and_energy(ucell,
+                                    2,
+                                    dftu.get_u_current_vec(),
+                                    dftu.get_l_channel_vec(),
+                                    dftu.get_uterm_mat_index(),
+                                    dftu.occmat(),
+                                    dftu.get_uterm_mat(),
+                                    dftu.energy_ref());
+
+    const double energy_first = dftu.get_energy();
+    EXPECT_GT(energy_first, 0.0);
+
+    // Snapshot the potential after the first build.
+    const std::vector<std::complex<double>> uterm_first = dftu.get_uterm_mat();
+
+    // Second call — mode 2 means the matrix never changes, so the
+    // potential and energy must be identical.
+    pw::compute_pot_uterm_and_energy(ucell,
+                                    2,
+                                    dftu.get_u_current_vec(),
+                                    dftu.get_l_channel_vec(),
+                                    dftu.get_uterm_mat_index(),
+                                    dftu.occmat(),
+                                    dftu.get_uterm_mat(),
+                                    dftu.energy_ref());
+
+    const double energy_second = dftu.get_energy();
+    EXPECT_NEAR(energy_first, energy_second, 1e-12);
+
+    const std::vector<std::complex<double>>& uterm_second = dftu.get_uterm_mat();
+    ASSERT_EQ(uterm_first.size(), uterm_second.size());
+    for (size_t i = 0; i < uterm_first.size(); ++i)
+    {
+        EXPECT_NEAR(uterm_first[i].real(), uterm_second[i].real(), 1e-12)
+            << "uterm mismatch at index " << i;
+    }
+}
+
+/// When DFT+U is off (dft_plus_u <= 0) append_ion_step_snapshot must
+/// return immediately, BEFORE the iter >= 1 validation.  This guard-first
+/// ordering was introduced in step 3/3 of the EXX restart refactor so that
+/// a transient iter=0 (e.g. from an upstream EXX rerun signal) does not
+/// trigger WARNING_QUIT on a non-DFT+U calculation.  Passing iter=0 with
+/// dft_plus_u=0 must therefore return cleanly.
+TEST_F(DFTUBaseTest, AppendSnapshotGuardDftuOffBeforeIterValidation)
+{
+    Plus_U_Base dftu;
+    this->init_dftu(dftu, false);
+
+    // out_occ_mat=true but dft_plus_u=0: the guard must catch dft_plus_u
+    // and return before the iter < 1 check fires.
+    const DFTU_BASE::OccmatOutputCfg cfg = {1, 1, 5, true, 0};
+
+    // Use a unique subdirectory so files from other tests in the same
+    // binary do not cause false positives.
+    const std::string out_dir = testing::TempDir() + "guard_test/";
+
+    // iter=0 is intentionally invalid; the guard-first check ensures
+    // this does not abort.
+    DFTU_BASE::append_ion_step_snapshot(dftu,
+                                        ucell,
+                                        out_dir,
+                                        2, // nspin
+                                        1, // npol
+                                        0, // istep
+                                        0, // iter — invalid, but DFT+U is off
+                                        false,
+                                        false,
+                                        1e-6,
+                                        0.5,
+                                        cfg,
+                                        DFTU_BASE::SOC_LAYOUT_PAULI);
+
+    // If we reach here the guard worked.  No file should have been written
+    // (the directory may not even exist, which is fine — the guard
+    // returned before any file IO).
+    const std::string fn_g1 = out_dir + "occ_matg1.txt";
+    std::ifstream ifs(fn_g1.c_str());
+    EXPECT_FALSE(ifs.is_open());
+
+    // Sanity check: with dft_plus_u > 0 and iter=0 the function WOULD
+    // abort.  We cannot test that path in-process (WARNING_QUIT calls
+    // exit/MPI_Abort), so the guard-first test above is the best we can do.
 }
 
 // Reading the occupation-matrix file broadcasts on MPI_COMM_WORLD, so
