@@ -990,6 +990,7 @@ OBJS_SRCPW=h_ewald_pw.o\
     onsite_proj_tools_force.o\
     onsite_proj_tools_stress.o\
     onsite_proj_print.o\
+    projgen.o\
     smoothgen.o\
     vsep_pw.o
 

@@ -12,7 +12,7 @@
  * which satisfies the following conditions:
  *
  * * alpha = \sum_p j_l(theta[p]*r/rcut) * c[p] where theta[p] is the p-th zero of j_l;
- * * \int_0^rcut alpha(r) r^2 dr = 1 (normalization);
+ * * \int_0^rcut alpha(r)^2 r^2 dr = 1 (normalization);
  * * \int_0^rcut alpha(r) chi(r) r^2 dr is maximized;
  *
  * @param[in]   l       angular momentum

@@ -11,6 +11,10 @@ if(ENABLE_COVERAGE)
   add_coverage(nao_smoothgen)
 endif()
 
+if(BUILD_TESTING)
+  add_subdirectory(unittests)
+endif()
+
 if(ENABLE_LCAO)
   add_library(
 	numerical_atomic_orbitals
@@ -34,7 +38,6 @@ if(ENABLE_LCAO)
   endif()
 
   if(BUILD_TESTING)
-    add_subdirectory(unittests)
     if(ENABLE_MPI)
       add_subdirectory(test)
     endif()
