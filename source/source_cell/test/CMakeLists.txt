@@ -54,6 +54,12 @@ list(APPEND cell_simple_srcs
 
 add_library(cell_info OBJECT ${cell_simple_srcs})
 
+AddTest(
+  TARGET MODULE_CELL_cell_geometry
+  LIBS base device
+  SOURCES test_cell_geometry.cpp ../cell_geometry.cpp
+)
+
 if(NOT ENABLE_MPI)
   return()
 endif()
@@ -89,7 +95,7 @@ AddTest(
 AddTest(
   TARGET MODULE_CELL_klist_test
   LIBS base device symmetry
-  SOURCES klist_test.cpp ../klist.cpp ../klist_io.cpp ../parallel_kpoints.cpp ../reciprocal_grid.cpp
+  SOURCES klist_test.cpp test_klist_io.cpp ../klist.cpp ../klist_io.cpp ../parallel_kpoints.cpp ../reciprocal_grid.cpp
 )
 
 AddTest(
