@@ -11,8 +11,9 @@ from cqs_config import (
     FUNCTION_PARAM_THRESHOLD, GLOBAL_DEPENDENCY_RE, GOTO_RE, GUARD_RE,
     HEADER_FUNC_BODY_STEP, HEADER_FUNC_BODY_THRESHOLD,
     HEADER_LENGTH_STEP, HEADER_LENGTH_THRESHOLD, HPP_INCLUDE_RE,
-    INDENTED_PREPROC_RE, LINE_LENGTH_LIMIT, NEW_EXPR_RE,
-    OWNED_NEW_RE, SKIP_DIRS, SOURCE_EXTENSIONS, UPPERCASE_CONST_RE,
+    INDENTED_PREPROC_RE, LINE_LENGTH_LIMIT, MACRO_DEFINE_RE, NEW_EXPR_RE,
+    OWNED_NEW_RE, PARAM_MEMBER_INIT_RE, SKIP_DIRS, SOURCE_EXTENSIONS,
+    UPPERCASE_CONST_RE,
     USING_NS_STD_RE, WEIGHTS,
 )
 from cqs_report import FileReport, Finding
@@ -272,6 +273,54 @@ def analyze_file(path: Path) -> FileReport:
             ),
             deduction=WEIGHTS["ifdef_in_call_args"],
         ))
+
+    # new `#define` macros in .h/.cpp (guard-style macros exempt)
+    if path.suffix in (".h", ".cpp"):
+        macro_hits = 0
+        cap_macro = CAPS.get("new_macro_definition", 0)
+        for idx, l in enumerate(lines):
+            if macro_hits >= cap_macro:
+                break
+            m = MACRO_DEFINE_RE.match(l)
+            if not m:
+                continue
+            name = m.group(1)
+            rest = l[m.end():].strip()
+            # include guard: NAME ends in _H/_HPP and carries no
+            # parameter list or replacement text
+            if (name.endswith("_H") or name.endswith("_HPP")) and not rest:
+                continue
+            macro_hits += 1
+            findings.append(Finding(
+                rule="new_macro_definition",
+                line=idx + 1,
+                reason=(
+                    f"new `#define {name}` macro requires approval "
+                    "(AGENTS.md rule 16)"
+                ),
+                deduction=WEIGHTS["new_macro_definition"],
+            ))
+
+    # member variables initialized from PARAM in .h/.hpp (rule 17)
+    if path.suffix in (".h", ".hpp"):
+        param_init_hits = 0
+        cap_param_init = CAPS.get("param_member_init", 0)
+        for idx, l in enumerate(lines):
+            if param_init_hits >= cap_param_init:
+                break
+            if not PARAM_MEMBER_INIT_RE.match(strip_comments(l)):
+                continue
+            param_init_hits += 1
+            findings.append(Finding(
+                rule="param_member_init",
+                line=idx + 1,
+                reason=(
+                    "member variable initialized from PARAM in a header "
+                    "(pass the value through the constructor instead; "
+                    "AGENTS.md rule 17)"
+                ),
+                deduction=WEIGHTS["param_member_init"],
+            ))
 
     # comment block(s) above the first include guard (headers only). One
     # contiguous comment block counts once regardless of its length.

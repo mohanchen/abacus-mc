@@ -59,6 +59,8 @@ WEIGHTS = {
     "duplicate_doc_block": 1,
     "header_too_long": 1,
     "header_function_body": 1,
+    "new_macro_definition": 3,
+    "param_member_init": 5,
 }
 
 CAPS = {
@@ -86,6 +88,8 @@ CAPS = {
     "duplicate_doc_block": 5,
     "header_too_long": 5,
     "header_function_body": 5,
+    "new_macro_definition": 10,
+    "param_member_init": 10,
 }
 
 FUNCTION_LENGTH_THRESHOLD = 50
@@ -109,6 +113,14 @@ ACCESS_RE = re.compile(r"^\s*(public|private|protected)\s*:")
 CLASS_OPEN_RE = re.compile(r"\b(class|struct)\s+(\w+)\b")
 
 GLOBAL_DEPENDENCY_RE = re.compile(r"\b(?:GlobalV::|GlobalC::|PARAM(?:\.|->|::))")
+# Member-variable declaration initialized from PARAM inside a class body
+# (`.h`/`.hpp` rule 17). Matches `Type name = PARAM...;` and
+# `Type name{PARAM...};` but not function declarations (those carry a
+# parameter list with a type before the closing `)`).
+PARAM_MEMBER_INIT_RE = re.compile(
+    r"^\s*(?:static\s+)?(?:const\s+)?[\w:<>,\s*&]+?\s+\w+\s*"
+    r"[={]\s*PARAM\s*(?:\.|->|::)"
+)
 HPP_INCLUDE_RE = re.compile(r'^\s*#\s*include\s+[<"][^>"]+\.hpp[>"]')
 FRIEND_RE = re.compile(r"\bfriend\b(?!\s+(?:class\s+|struct\s+)?std::)")
 NEW_EXPR_RE = re.compile(r"\bnew\s+\w")
@@ -153,6 +165,10 @@ INDENTED_PREPROC_RE = re.compile(
 )
 # First include guard / pragma-once line of a header.
 GUARD_RE = re.compile(r"^\s*#\s*(?:ifndef|pragma\s+once)\b")
+# New `#define NAME ...` directive; NAME is captured so guard-style
+# macros (NAME ending in _H / _HPP with no parameter list or value) can
+# be exempted by the caller.
+MACRO_DEFINE_RE = re.compile(r"^\s*#\s*define\s+([A-Za-z_]\w*)")
 # `@file name` inside a doxygen comment.
 DOC_FILE_RE = re.compile(r"@file\s+(\S+)")
 # Comment-only line (/// ... or a line inside a /* */ block is not fully

@@ -58,6 +58,10 @@ rules. Read the complete governance document before making or reviewing changes:
       followed by `f(..., isk, ...)` over inlining the ternary into the call.
   15. Do not use `#pragma once` in header files; use traditional
       `#ifndef`/`#define`/`#endif` include guards instead.
+  16. Do not introduce new `#define` macros without approval. Include
+      guards and `#ifdef`/`#ifndef` usages of existing macros are exempt.
+  17. Do not initialize member variables from `PARAM` in `.h`/`.hpp`
+      files; pass the value through the constructor or a setter instead.
 - Use LF line endings for text files. Only `.bat` and `.cmd` files may use CRLF.
 - Keep source file additions deterministic: update the relevant `CMakeLists.txt`
   or explain why the file is generated or included indirectly.
