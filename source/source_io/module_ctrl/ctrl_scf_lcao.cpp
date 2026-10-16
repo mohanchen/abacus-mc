@@ -140,6 +140,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     const bool gamma_only = PARAM.globalv.gamma_only_local;
     const int nspin = inp.nspin;
     const std::string global_out_dir = PARAM.globalv.global_out_dir;
+    const std::string global_mat_dir = PARAM.globalv.global_mat_dir;
 
     //------------------------------------------------------------------
     //! 1) print out density of states (DOS)
@@ -195,7 +196,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         }
         const int precision = inp.out_dmk[1];
 
-        ModuleIO::write_dmk(dm->get_dmk_vec(), kv, precision, efermis, &(ucell), pv, global_out_dir, istep, ofs_running);
+        ModuleIO::write_dmk(dm->get_dmk_vec(), kv, precision, efermis, &(ucell), pv, global_mat_dir, istep, ofs_running);
     }
 
     //------------------------------------------------------------------
@@ -558,7 +559,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                                           PARAM.globalv.gamma_only_local,
                                                           &ofs_running,
                                                           GlobalV::MY_RANK);
-        mylcalculator.calculate(inp.suffix, global_out_dir, ucell, inp.out_mat_l[1], GlobalV::MY_RANK, istep_in);
+        mylcalculator.calculate(inp.suffix, global_mat_dir, ucell, inp.out_mat_l[1], GlobalV::MY_RANK, istep_in);
     }
 
     //------------------------------------------------------------------

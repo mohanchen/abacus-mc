@@ -223,7 +223,7 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
         }
         else
         {
-            ssr << global_out_dir << "rr_nao.txt";
+            ssr << global_matrix_dir << "rr_nao.txt";
         }
 
         ofs_tem1.close();

@@ -184,7 +184,7 @@ void ModuleIO::output_TR(const int istep,
     }
     else
     {
-        sst << options.global_out_dir << TR_filename;
+        sst << options.global_matrix_dir << TR_filename;
     }
     ofs_running << " Write T(R) matrix in NAO basis to file: " << sst.str() << std::endl;
     sparse_format::cal_TR(ucell, pv, HS_Arrays, grid, two_center_bundle, orb, options.sparse_threshold);
