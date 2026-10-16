@@ -168,7 +168,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                  inp.dos_emin_ev,
                                  PARAM.globalv.two_fermi,
                                  inp.bndpar,
-                                 PARAM.globalv.global_out_dir,
+                                 PARAM.globalv.global_dos_dir,
                                  ofs_running);
     }
 
