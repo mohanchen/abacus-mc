@@ -65,7 +65,7 @@ void ctrl_output_fp(UnitCell& ucell,
     {
         for (int is = 0; is < nspin; ++is)
         {
-            std::string fn = PARAM.globalv.global_chg_dir + "chg";
+            std::string fn = global_chg_dir + "chg";
 
             std::string spin_block;
             if (nspin == 2 || nspin == 4)
@@ -98,7 +98,7 @@ void ctrl_output_fp(UnitCell& ucell,
 
             if (XC_Functional::get_ked_flag())
             {
-                fn = PARAM.globalv.global_chg_dir + "tau";
+                fn = global_chg_dir + "tau";
 
                 fn += spin_block + geom_block + ".cube";
 
@@ -127,7 +127,7 @@ void ctrl_output_fp(UnitCell& ucell,
     {
         for (int is = 0; is < nspin; is++)
         {
-            std::string fn = PARAM.globalv.global_pot_dir + "pot";
+            std::string fn = global_pot_dir + "pot";
 
             std::string spin_block;
             if (nspin == 2 || nspin == 4)
@@ -161,7 +161,7 @@ void ctrl_output_fp(UnitCell& ucell,
     }
     else if (inp.out_pot[0] == 2 && should_output)
     {
-        std::string fn = PARAM.globalv.global_pot_dir + "potes";
+        std::string fn = global_pot_dir + "potes";
         fn += geom_block + ".cube";
 
         const std::vector<double>* pcc_potential = pelec->pot->pcc_electron_potential();
@@ -193,7 +193,7 @@ void ctrl_output_fp(UnitCell& ucell,
             module_charge::cal_rhog_symm(is, chr, pw_rhod, ucell.symm);
         }
 
-        std::string out_dir = PARAM.globalv.global_elf_dir;
+        std::string out_dir = global_elf_dir;
         ModuleIO::write_elf(out_dir,
                             istep,
                             nspin,
