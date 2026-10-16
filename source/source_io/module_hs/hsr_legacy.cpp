@@ -107,7 +107,7 @@ void ModuleIO::output_SR(Parallel_Orbitals& pv,
                          const std::string& global_out_dir,
                          const std::string& global_matrix_dir,
                          const std::string& calculation,
-                         const bool out_app_flag,
+                         const int out_app_flag,
                          const int nspin,
                          std::ofstream& ofs_running)
 {
@@ -174,7 +174,7 @@ void ModuleIO::output_TR(const int istep,
     ModuleBase::timer::start("ModuleIO", "output_TR");
 
     std::stringstream sst;
-    const bool md_no_append = (options.calculation == "md") && !options.out_app_flag;
+    const bool md_no_append = (options.calculation == "md") && (options.out_app_flag != 1);
     if (istep >= 0)
     {
         // insert the 1-indexed ionic-step suffix right after the "tr" prefix,
@@ -220,7 +220,7 @@ template void ModuleIO::output_SR<double>(Parallel_Orbitals& pv,
                                           const std::string& global_out_dir,
                                           const std::string& global_matrix_dir,
                                           const std::string& calculation,
-                                          const bool out_app_flag,
+                                          const int out_app_flag,
                                           const int nspin,
                                           std::ofstream& ofs_running);
 template void ModuleIO::output_SR<std::complex<double>>(Parallel_Orbitals& pv,
@@ -233,6 +233,6 @@ template void ModuleIO::output_SR<std::complex<double>>(Parallel_Orbitals& pv,
                                                         const std::string& global_out_dir,
                                                         const std::string& global_matrix_dir,
                                                         const std::string& calculation,
-                                                        const bool out_app_flag,
+                                                        const int out_app_flag,
                                                         const int nspin,
                                                         std::ofstream& ofs_running);

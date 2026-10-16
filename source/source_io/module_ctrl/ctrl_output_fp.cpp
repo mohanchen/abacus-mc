@@ -32,7 +32,7 @@ void ctrl_output_fp(UnitCell& ucell,
     ModuleBase::TITLE("ModuleIO", "ctrl_output_fp");
     ModuleBase::timer::start("ModuleIO", "ctrl_output_fp");
 
-    const bool out_app_flag = inp.out_app_flag;
+    const int out_app_flag = inp.out_app_flag;
     const bool gamma_only = PARAM.globalv.gamma_only_local;
     const int nspin = inp.nspin;
     const std::string global_out_dir = PARAM.globalv.global_out_dir;

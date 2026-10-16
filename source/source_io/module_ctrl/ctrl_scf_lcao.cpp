@@ -136,7 +136,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
 
     //*****
 
-    const bool out_app_flag = inp.out_app_flag;
+    const int out_app_flag = inp.out_app_flag;
     const bool gamma_only = PARAM.globalv.gamma_only_local;
     const int nspin = inp.nspin;
     const std::string global_out_dir = PARAM.globalv.global_out_dir;
@@ -179,7 +179,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     {
         const int precision = inp.out_dmr[1];
 
-        ModuleIO::write_dmr(dm->get_dmr_vec(), &ucell, precision, pv, out_app_flag, 
+        ModuleIO::write_dmr(dm->get_dmr_vec(), &ucell, precision, pv, (out_app_flag == 1),
 			ucell.get_iat2iwt(), ucell.nat, istep, ofs_running);
     }
 
@@ -279,7 +279,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         const hamilt::HContainer<TR>* sr = p_hamilt->getSR();
 
         ModuleIO::write_hsr(hr_vec, sr, &ucell, inp.out_hsr[0], precision, pv,
-                            out_app_flag, gamma_only, ucell.get_iat2iwt(), ucell.nat, istep,
+                            (out_app_flag == 1), gamma_only, ucell.get_iat2iwt(), ucell.nat, istep,
                             PARAM.globalv.global_out_dir, pelec->eferm,
                             ofs_running);
     }
@@ -399,7 +399,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         dh_params.nspin = inp.nspin;
         dh_params.istep = istep;
         dh_params.gamma_only = gamma_only;
-        dh_params.append = out_app_flag;
+        dh_params.append = (out_app_flag == 1);
         dh_params.ofs_running = &ofs_running;
         if (PARAM.inp.nspin == 1 || PARAM.inp.nspin == 2)
         {
@@ -442,7 +442,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         h_params.nrxx = pw_rho->nrxx;
         h_params.nspin = nspin;
         h_params.istep = istep;
-        h_params.append = out_app_flag;
+        h_params.append = (out_app_flag == 1);
         h_params.iat2iwt = ucell.get_iat2iwt();
         h_params.nat = ucell.nat;
         h_params.nlocal = PARAM.globalv.nlocal;
@@ -527,7 +527,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                false, // bit
                                inp.out_mat_tk[1],
                                1, // true for upper triangle matrix
-                               inp.out_app_flag,
+                               (inp.out_app_flag == 1),
                                t_fn,
                                pv,
                                GlobalV::DRANK,
