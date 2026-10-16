@@ -1,0 +1,66 @@
+======================================================================
+Code Quality Score Report
+======================================================================
+
+Per-module rollup (sorted by average score, worst first):
+  Module                                   Files    Avg         Pass
+----------------------------------------------------------------------
+  source/source_io                             4   55.0          1/4
+
+ Score  File
+----------------------------------------------------------------------
+    36  source/source_io/module_parameter/read_input.cpp
+    54  source/source_io/test/write_wfc_nao_test.cpp
+    58  source/source_io/module_dos/unittests/test_cal_dos.cpp
+    72  source/source_io/module_dos/unittests/test_write_dos_pw.cpp
+
+----------------------------------------------------------------------
+File: source/source_io/module_parameter/read_input.cpp  (score: 36)
+----------------------------------------------------------------------
+  [file_too_long] file: file has 755 lines (exceeds 500 by 255) (-12)
+  [uppercase_constant] file: 2 occurrence(s) (-2)
+  [global_dependency] file: 3 occurrence(s) (-9)
+  [auto_keyword] file: 13 occurrence(s) (capped at 10) (-10)
+  [high_cyclomatic_complexity] line 99: function 'filter_nonascii_and_comment' has cyclomatic complexity 11 (exceeds 10 by 1) (-1)
+  [high_cyclomatic_complexity] line 270: function 'create_directory' has cyclomatic complexity 17 (exceeds 10 by 7) (-7)
+  [high_cyclomatic_complexity] line 353: function 'read_txt_input' has cyclomatic complexity 17 (exceeds 10 by 7) (-7)
+  [high_cyclomatic_complexity] line 555: function 'write_txt_input' has cyclomatic complexity 21 (exceeds 10 by 11) (-11)
+  [high_cyclomatic_complexity] line 651: function 'check_ntype' has cyclomatic complexity 15 (exceeds 10 by 5) (-5)
+
+----------------------------------------------------------------------
+File: source/source_io/test/write_wfc_nao_test.cpp  (score: 54)
+----------------------------------------------------------------------
+  [file_too_long] file: file has 586 lines (exceeds 500 by 86) (-4)
+  [tab_indentation] file: 21 occurrence(s) (capped at 5) (-5)
+  [line_too_long] file: 1 occurrence(s) (-1)
+  [uppercase_constant] file: 67 occurrence(s) (capped at 5) (-5)
+  [global_dependency] file: 13 occurrence(s) (capped at 10) (-30)
+  [member_function_too_long] line 157: member function in class WriteWfcLcaoTest spans 57 lines (exceeds 50) (-1)
+
+----------------------------------------------------------------------
+File: source/source_io/module_dos/unittests/test_cal_dos.cpp  (score: 58)
+----------------------------------------------------------------------
+  [tab_indentation] file: 112 occurrence(s) (capped at 5) (-5)
+  [line_too_long] file: 3 occurrence(s) (-3)
+  [uppercase_constant] file: 28 occurrence(s) (capped at 5) (-5)
+  [global_dependency] file: 9 occurrence(s) (-27)
+  [duplicate_doc_block] file: 2 occurrence(s) (-2)
+
+----------------------------------------------------------------------
+File: source/source_io/module_dos/unittests/test_write_dos_pw.cpp  (score: 72)
+----------------------------------------------------------------------
+  [tab_indentation] file: 114 occurrence(s) (capped at 5) (-5)
+  [line_too_long] file: 2 occurrence(s) (-2)
+  [uppercase_constant] file: 25 occurrence(s) (capped at 5) (-5)
+  [global_dependency] file: 4 occurrence(s) (-12)
+  [unpaired_new_delete] file: 1 occurrence(s) (-1)
+  [raw_new_keyword] file: 1 occurrence(s) (-1)
+  [duplicate_doc_block] file: 1 occurrence(s) (-1)
+  [member_local_name_conflict] line 35: local variable 'kv' in class DosPWTest shadows a member variable (-1)
+
+======================================================================
+Files scanned:        4
+Files shown:          4
+Average score:        55.0
+Passing (>= 60):  1/4
+======================================================================

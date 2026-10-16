@@ -277,7 +277,7 @@ void ReadInput::create_directory(const Parameter& param)
     // NAME : Run::make_dir( dir name : OUT.suffix)
     //----------------------------------------------------------
     bool out_dir = false;
-    if (!param.input.out_app_flag
+    if (param.input.out_app_flag == 0
         && ((param.input.out_hsr[0] == 1 || param.input.out_hsr[0] == 2)
             || param.input.out_mat_r[0] || param.input.out_mat_t[0]
             || param.input.out_mat_dh[0] || param.input.out_mat_ds[0]))
@@ -285,7 +285,7 @@ void ReadInput::create_directory(const Parameter& param)
         out_dir = true;
     }
     bool out_wfc_dir = false;
-    if (param.input.out_wfc_lcao && !param.input.out_app_flag)
+    if (param.input.out_wfc_lcao && param.input.out_app_flag == 0)
     {
         out_wfc_dir = true;
     }
