@@ -57,6 +57,8 @@ WEIGHTS = {
     "comment_above_guard": 1,
     "doc_file_mismatch": 1,
     "duplicate_doc_block": 1,
+    "header_too_long": 1,
+    "header_function_body": 1,
 }
 
 CAPS = {
@@ -82,12 +84,18 @@ CAPS = {
     "ifdef_in_call_args": 5,
     "comment_above_guard": 3,
     "duplicate_doc_block": 5,
+    "header_too_long": 5,
+    "header_function_body": 5,
 }
 
 FUNCTION_LENGTH_THRESHOLD = 50
 FUNCTION_LENGTH_STEP = 50
 FILE_LENGTH_THRESHOLD = 500
 FILE_LENGTH_STEP = 50
+HEADER_LENGTH_THRESHOLD = 120
+HEADER_LENGTH_STEP = 10
+HEADER_FUNC_BODY_THRESHOLD = 20
+HEADER_FUNC_BODY_STEP = 10
 FUNCTION_PARAM_THRESHOLD = 7
 CYCLO_THRESHOLD = 10
 LINE_LENGTH_LIMIT = 120

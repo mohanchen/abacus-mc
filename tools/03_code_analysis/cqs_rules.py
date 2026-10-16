@@ -15,7 +15,8 @@ from cqs_config import (
     CYCLO_KEYWORDS_RE, CYCLO_THRESHOLD, DECL_RE, DEFAULT_PARAM_RE,
     FUNC_NAME_RE, FUNCTION_LENGTH_STEP, FUNCTION_LENGTH_THRESHOLD,
     FUNCTION_PARAM_THRESHOLD,
-    GLOBAL_DEPENDENCY_RE, HPP_INCLUDE_RE, INDENTED_PREPROC_RE,
+    GLOBAL_DEPENDENCY_RE, HEADER_FUNC_BODY_THRESHOLD, HPP_INCLUDE_RE,
+    INDENTED_PREPROC_RE,
     NEW_EXPR_RE, NON_FUNCTION_KEYWORDS, POST_CPP11_PATTERNS,
     PREPROC_IF_RE, QUALIFIER_RE, STATEMENT_CONTEXT_KEYWORDS, WEIGHTS,
     _is_declaration_prefix, _LAST_IDENT_RE,
@@ -647,6 +648,68 @@ def find_function_bodies(content: str) -> List[Tuple[int, str, int, int]]:
         i = body_close + 1
 
     return bodies
+
+
+_TEMPLATE_RE = re.compile(r"^\s*template\s*<")
+_INLINE_RE = re.compile(r"\binline\b")
+
+
+def find_header_function_bodies(
+    content: str,
+) -> List[Tuple[int, str, int]]:
+    """Find non-inline, non-template function bodies in a .h header that
+    exceed HEADER_FUNC_BODY_THRESHOLD lines.
+
+    Exempts functions declared `inline` and template functions (they must
+    live in the header). Short getter/setter-style bodies at or below the
+    threshold are exempt by construction. Returns a list of
+    (signature_line_no, function_name, body_line_count).
+    """
+    stripped = strip_comments(content)
+    results: List[Tuple[int, str, int]] = []
+    for sig_line, name, body_open, body_close in find_function_bodies(
+        content
+    ):
+        body_lines = stripped[body_open:body_close].count("\n")
+        if body_lines <= HEADER_FUNC_BODY_THRESHOLD:
+            continue
+        # exempt `inline ... name(...) {`: check the declaration text
+        decl_text = _declaration_prefix_before(stripped, body_open)
+        if _INLINE_RE.search(decl_text):
+            continue
+        # exempt `template <...>` on the nearest non-blank line above
+        if _nearest_nonblank_line_is_template(stripped, sig_line):
+            continue
+        results.append((sig_line, name, body_lines))
+    return results
+
+
+def _declaration_prefix_before(stripped: str, body_open: int) -> str:
+    """Return the declaration text preceding a function body `{`, walking
+    back over the parameter list to the start of the signature line."""
+    depth = 0
+    i = body_open
+    while i > 0:
+        c = stripped[i - 1]
+        if c == ")":
+            depth += 1
+        elif c == "(":
+            depth -= 1
+            if depth == 0:
+                break
+        i -= 1
+    line_start = stripped.rfind("\n", 0, i) + 1
+    return stripped[line_start:body_open]
+
+
+def _nearest_nonblank_line_is_template(stripped: str, sig_line: int) -> bool:
+    """Return True when the nearest non-blank line above `sig_line`
+    (1-based) starts a `template <...>` header."""
+    lines = stripped.split("\n")
+    idx = sig_line - 2  # line index just above the signature
+    while idx >= 0 and not lines[idx].strip():
+        idx -= 1
+    return idx >= 0 and bool(_TEMPLATE_RE.match(lines[idx]))
 
 
 def find_high_complexity_functions(

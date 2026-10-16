@@ -66,6 +66,12 @@ by per-rule severity within each group:
       complex functions in the same file accumulate)
     - file longer than 500 lines: -2 per additional 50-line block
       (counts all physical lines including blanks and comments; no cap)
+    - .h header longer than 120 lines: -1 per additional 10-line block
+      (cap 5; in addition to the generic 500-line file rule above)
+    - non-inline, non-template function body in a .h header longer than
+      20 lines: -1 per additional 10-line block (cap 5; `inline` and
+      `template <...>` functions are exempt, short accessor bodies at or
+      below 20 lines are exempt by construction)
     - member function longer than 50 lines: -1 per additional 50-line
       block (counts physical lines after comments are blanked, blanks
       preserved)

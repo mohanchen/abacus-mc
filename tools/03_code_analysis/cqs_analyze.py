@@ -9,16 +9,18 @@ from cqs_config import (
     DEFAULT_PARAM_RE, DELETE_EXPR_RE, DOC_FILE_RE, FILE_LENGTH_STEP,
     FILE_LENGTH_THRESHOLD, FILENAME_LENGTH_LIMIT, FRIEND_RE,
     FUNCTION_PARAM_THRESHOLD, GLOBAL_DEPENDENCY_RE, GOTO_RE, GUARD_RE,
-    HPP_INCLUDE_RE, INDENTED_PREPROC_RE, LINE_LENGTH_LIMIT, NEW_EXPR_RE,
+    HEADER_FUNC_BODY_STEP, HEADER_FUNC_BODY_THRESHOLD,
+    HEADER_LENGTH_STEP, HEADER_LENGTH_THRESHOLD, HPP_INCLUDE_RE,
+    INDENTED_PREPROC_RE, LINE_LENGTH_LIMIT, NEW_EXPR_RE,
     OWNED_NEW_RE, SKIP_DIRS, SOURCE_EXTENSIONS, UPPERCASE_CONST_RE,
     USING_NS_STD_RE, WEIGHTS,
 )
 from cqs_report import FileReport, Finding
 from cqs_rules import (
     analyze_class_blocks, find_complex_call_arguments,
-    find_function_bodies, find_high_complexity_functions,
-    find_ifdef_in_call_args, find_long_function_signatures,
-    find_post_cpp11_features,
+    find_function_bodies, find_header_function_bodies,
+    find_high_complexity_functions, find_ifdef_in_call_args,
+    find_long_function_signatures, find_post_cpp11_features,
 )
 from cqs_text import extract_comment_blocks, strip_comments, strip_strings
 
@@ -103,6 +105,51 @@ def analyze_file(path: Path) -> FileReport:
             ),
             deduction=blocks * WEIGHTS["file_too_long"],
         ))
+
+    # .h header length rule (cap 5: headers should stay compact)
+    if path.suffix == ".h" and total_lines > HEADER_LENGTH_THRESHOLD:
+        header_excess = total_lines - HEADER_LENGTH_THRESHOLD
+        header_blocks = (
+            (header_excess + HEADER_LENGTH_STEP - 1) // HEADER_LENGTH_STEP
+        )
+        header_deduction = min(
+            header_blocks * WEIGHTS["header_too_long"],
+            CAPS["header_too_long"],
+        )
+        findings.append(Finding(
+            rule="header_too_long",
+            line=None,
+            reason=(
+                f".h header has {total_lines} lines "
+                f"(exceeds {HEADER_LENGTH_THRESHOLD} by {header_excess})"
+            ),
+            deduction=header_deduction,
+        ))
+
+    # non-inline, non-template function bodies in .h headers
+    if path.suffix == ".h":
+        for fn_line, fn_name, fn_lines in find_header_function_bodies(
+            content
+        ):
+            excess = fn_lines - HEADER_FUNC_BODY_THRESHOLD
+            blocks = (
+                (excess + HEADER_FUNC_BODY_STEP - 1)
+                // HEADER_FUNC_BODY_STEP
+            )
+            deduction = min(
+                blocks * WEIGHTS["header_function_body"],
+                CAPS["header_function_body"],
+            )
+            findings.append(Finding(
+                rule="header_function_body",
+                line=fn_line,
+                reason=(
+                    f"non-inline function `{fn_name}` defined in .h header "
+                    f"spans {fn_lines} lines "
+                    f"(exceeds {HEADER_FUNC_BODY_THRESHOLD}; move to .cpp)"
+                ),
+                deduction=deduction,
+            ))
 
     # line-based rules with caps
     tab_count = sum(1 for l in lines if "\t" in l)
