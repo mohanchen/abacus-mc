@@ -7,7 +7,7 @@ hood" in their owning modules.
 1. `esolver` functions only orchestrate the algorithm flow (e.g., SCF
    iteration, relaxation steps). Any computation of a concrete physical
    quantity must be implemented in the owning module (e.g.,
-   `module_elecstate`, `module_hamilt`) and called from `esolver` as a named
+   `source_estate`, `source_hamilt`) and called from `esolver` as a named
    step.
 2. Do not add ad-hoc function names to `esolver`. New steps must reuse the
    naming conventions already shared across solvers, so that all `esolver`
