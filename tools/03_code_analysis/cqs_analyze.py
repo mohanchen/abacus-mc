@@ -296,12 +296,12 @@ def analyze_file(path: Path) -> FileReport:
                 line=idx + 1,
                 reason=(
                     f"new `#define {name}` macro requires approval "
-                    "(AGENTS.md rule 16)"
+                    "(AGENTS.md rule 20)"
                 ),
                 deduction=WEIGHTS["new_macro_definition"],
             ))
 
-    # member variables initialized from PARAM in .h/.hpp (rule 17)
+    # member variables initialized from PARAM in .h/.hpp (rule 21)
     if path.suffix in (".h", ".hpp"):
         param_init_hits = 0
         cap_param_init = CAPS.get("param_member_init", 0)
@@ -317,7 +317,7 @@ def analyze_file(path: Path) -> FileReport:
                 reason=(
                     "member variable initialized from PARAM in a header "
                     "(pass the value through the constructor instead; "
-                    "AGENTS.md rule 17)"
+                    "AGENTS.md rule 21)"
                 ),
                 deduction=WEIGHTS["param_member_init"],
             ))

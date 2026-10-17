@@ -113,10 +113,10 @@ by per-rule severity within each group:
     - new `#define` macro in a .h/.cpp file: -3 per definition (cap 10).
       Include guards (macro name ending in `_H`/`_HPP` with no parameter
       list or replacement text) and `#ifdef`/`#ifndef` usages of
-      existing macros are exempt (AGENTS.md rule 16).
+      existing macros are exempt (AGENTS.md rule 20).
     - member variable initialized from `PARAM` in a .h/.hpp file: -5 per
       declaration (cap 10). Pass the value through the constructor or a
-      setter instead (AGENTS.md rule 17).
+      setter instead (AGENTS.md rule 21).
 
 Usage:
     python3 code_quality_score.py source/source_base

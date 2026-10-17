@@ -114,7 +114,7 @@ CLASS_OPEN_RE = re.compile(r"\b(class|struct)\s+(\w+)\b")
 
 GLOBAL_DEPENDENCY_RE = re.compile(r"\b(?:GlobalV::|GlobalC::|PARAM(?:\.|->|::))")
 # Member-variable declaration initialized from PARAM inside a class body
-# (`.h`/`.hpp` rule 17). Matches `Type name = PARAM...;` and
+# (`.h`/`.hpp` rule 21). Matches `Type name = PARAM...;` and
 # `Type name{PARAM...};` but not function declarations (those carry a
 # parameter list with a type before the closing `)`).
 PARAM_MEMBER_INIT_RE = re.compile(
