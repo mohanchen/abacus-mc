@@ -12,7 +12,7 @@ from cqs_config import (
     HEADER_FUNC_BODY_STEP, HEADER_FUNC_BODY_THRESHOLD,
     HEADER_LENGTH_STEP, HEADER_LENGTH_THRESHOLD, HPP_INCLUDE_RE,
     INDENTED_PREPROC_RE, LINE_LENGTH_LIMIT, MACRO_DEFINE_RE, NEW_EXPR_RE,
-    OWNED_NEW_RE, PARAM_MEMBER_INIT_RE, SKIP_DIRS, SOURCE_EXTENSIONS,
+    OWNED_NEW_RE, SKIP_DIRS, SOURCE_EXTENSIONS,
     UPPERCASE_CONST_RE,
     USING_NS_STD_RE, WEIGHTS,
 )
@@ -21,7 +21,8 @@ from cqs_rules import (
     analyze_class_blocks, find_complex_call_arguments,
     find_function_bodies, find_header_function_bodies,
     find_high_complexity_functions, find_ifdef_in_call_args,
-    find_long_function_signatures, find_post_cpp11_features,
+    find_long_function_signatures, find_param_member_inits,
+    find_post_cpp11_features,
 )
 from cqs_text import extract_comment_blocks, strip_comments, strip_strings
 
@@ -303,17 +304,14 @@ def analyze_file(path: Path) -> FileReport:
 
     # member variables initialized from PARAM in .h/.hpp (rule 21)
     if path.suffix in (".h", ".hpp"):
-        param_init_hits = 0
+        param_init_lines = find_param_member_inits(content)
         cap_param_init = CAPS.get("param_member_init", 0)
-        for idx, l in enumerate(lines):
-            if param_init_hits >= cap_param_init:
+        for hit_idx, line_no in enumerate(param_init_lines):
+            if hit_idx >= cap_param_init:
                 break
-            if not PARAM_MEMBER_INIT_RE.match(strip_comments(l)):
-                continue
-            param_init_hits += 1
             findings.append(Finding(
                 rule="param_member_init",
-                line=idx + 1,
+                line=line_no,
                 reason=(
                     "member variable initialized from PARAM in a header "
                     "(pass the value through the constructor instead; "

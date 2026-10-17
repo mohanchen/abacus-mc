@@ -114,12 +114,16 @@ CLASS_OPEN_RE = re.compile(r"\b(class|struct)\s+(\w+)\b")
 
 GLOBAL_DEPENDENCY_RE = re.compile(r"\b(?:GlobalV::|GlobalC::|PARAM(?:\.|->|::))")
 # Member-variable declaration initialized from PARAM inside a class body
-# (`.h`/`.hpp` rule 21). Matches `Type name = PARAM...;` and
-# `Type name{PARAM...};` but not function declarations (those carry a
-# parameter list with a type before the closing `)`).
+# (`.h`/`.hpp` rule 21). Matches `Type name = PARAM...;`,
+# `Type name = <expr> PARAM...;` and `Type name{PARAM...};`, also when
+# the declaration is split across lines (`\s*` spans newlines). The gap
+# between the `=`/`{` and `PARAM` excludes `;{}()` so a match can never
+# cross a statement boundary or dive into another brace/paren level;
+# class-scope filtering (member function bodies, parameter lists) is
+# done by the caller via brace/paren depth.
 PARAM_MEMBER_INIT_RE = re.compile(
-    r"^\s*(?:static\s+)?(?:const\s+)?[\w:<>,\s*&]+?\s+\w+\s*"
-    r"[={]\s*PARAM\s*(?:\.|->|::)"
+    r"(?:static\s+)?(?:const\s+)?[\w:<>,\s*&]+?\s+\w+\s*"
+    r"[={]\s*[^;={}()]*?PARAM\s*(?:\.|->|::)"
 )
 HPP_INCLUDE_RE = re.compile(r'^\s*#\s*include\s+[<"][^>"]+\.hpp[>"]')
 FRIEND_RE = re.compile(r"\bfriend\b(?!\s+(?:class\s+|struct\s+)?std::)")

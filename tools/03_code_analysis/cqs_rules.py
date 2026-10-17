@@ -17,7 +17,8 @@ from cqs_config import (
     FUNCTION_PARAM_THRESHOLD,
     GLOBAL_DEPENDENCY_RE, HEADER_FUNC_BODY_THRESHOLD, HPP_INCLUDE_RE,
     INDENTED_PREPROC_RE,
-    NEW_EXPR_RE, NON_FUNCTION_KEYWORDS, POST_CPP11_PATTERNS,
+    NEW_EXPR_RE, NON_FUNCTION_KEYWORDS, PARAM_MEMBER_INIT_RE,
+    POST_CPP11_PATTERNS,
     PREPROC_IF_RE, QUALIFIER_RE, STATEMENT_CONTEXT_KEYWORDS, WEIGHTS,
     _is_declaration_prefix, _LAST_IDENT_RE,
 )
@@ -650,8 +651,11 @@ def find_function_bodies(content: str) -> List[Tuple[int, str, int, int]]:
     return bodies
 
 
-_TEMPLATE_RE = re.compile(r"^\s*template\s*<")
+_TEMPLATE_DECL_RE = re.compile(r"\btemplate\b\s*<")
 _INLINE_RE = re.compile(r"\binline\b")
+# how many consecutive non-blank lines above a signature are examined
+# when looking for a (possibly multi-line) `template <...>` header
+_TEMPLATE_HEADER_SCAN_LINES = 16
 
 
 def find_header_function_bodies(
@@ -660,12 +664,17 @@ def find_header_function_bodies(
     """Find non-inline, non-template function bodies in a .h header that
     exceed HEADER_FUNC_BODY_THRESHOLD lines.
 
-    Exempts functions declared `inline` and template functions (they must
-    live in the header). Short getter/setter-style bodies at or below the
-    threshold are exempt by construction. Returns a list of
+    Exempts functions declared `inline` and template functions (they
+    must live in the header): the `template <...>` header is recognised
+    on the signature line itself, on the consecutive non-blank lines
+    above the signature (in any line-splitting), and for member
+    functions of a templated class. Short getter/setter-style bodies at
+    or below the threshold are exempt by construction. Returns a list of
     (signature_line_no, function_name, body_line_count).
     """
     stripped = strip_comments(content)
+    lines = stripped.split("\n")
+    class_blocks = find_class_blocks(stripped)
     results: List[Tuple[int, str, int]] = []
     for sig_line, name, body_open, body_close in find_function_bodies(
         content
@@ -677,11 +686,108 @@ def find_header_function_bodies(
         decl_text = _declaration_prefix_before(stripped, body_open)
         if _INLINE_RE.search(decl_text):
             continue
-        # exempt `template <...>` on the nearest non-blank line above
-        if _nearest_nonblank_line_is_template(stripped, sig_line):
+        if _is_template_context(lines, sig_line, decl_text, class_blocks):
             continue
         results.append((sig_line, name, body_lines))
     return results
+
+
+def _is_template_context(
+    lines: List[str],
+    sig_line: int,
+    decl_text: str,
+    class_blocks: List[Tuple[int, int, str, str]],
+) -> bool:
+    """Return True when the function whose signature starts on 1-based
+    `sig_line` is introduced by a `template <...>` header.
+
+    Recognised forms (formatting must not change the result):
+      * the `template <...>` header shares the signature line:
+        `template <class T> void f(T& v) { ... }`;
+      * it sits on the consecutive non-blank lines above the signature,
+        split across any number of lines — as long as no `;` appears
+        between the `template` keyword and the signature (a `;` would
+        close an unrelated declaration in between);
+      * the function is a member of a class introduced by a
+        `template <...>` header.
+    """
+    if _TEMPLATE_DECL_RE.search(decl_text):
+        return True
+    # consecutive non-blank lines above the signature; only the text
+    # after the last `;` belongs to this declaration's header
+    buf = ""
+    idx = sig_line - 2  # line index just above the signature
+    steps = 0
+    while (
+        idx >= 0 and lines[idx].strip()
+        and steps < _TEMPLATE_HEADER_SCAN_LINES
+    ):
+        buf = lines[idx] + "\n" + buf
+        if _TEMPLATE_DECL_RE.search(buf.rsplit(";", 1)[-1]):
+            return True
+        idx -= 1
+        steps += 1
+    # member of a templated class: check the innermost enclosing class
+    for start_line, end_line, _kind, _name in class_blocks:
+        if start_line <= sig_line <= end_line:
+            cls_decl = lines[start_line - 1]
+            jdx = start_line - 2
+            steps = 0
+            while (
+                jdx >= 0 and lines[jdx].strip()
+                and steps < _TEMPLATE_HEADER_SCAN_LINES
+            ):
+                cls_decl = lines[jdx] + "\n" + cls_decl
+                jdx -= 1
+                steps += 1
+            if _TEMPLATE_DECL_RE.search(cls_decl.rsplit(";", 1)[-1]):
+                return True
+            break
+    return False
+
+
+def find_param_member_inits(content: str) -> List[int]:
+    """Find class member variables initialized from PARAM in a header
+    (AGENTS.md rule 17 / 21).
+
+    Scans only inside top-level class/struct bodies and only at class
+    scope: a match must sit at the class body's own brace level (not
+    inside a member function body or a nested class) and outside any
+    parentheses (not a function default argument). The whole file is
+    comment- AND string-stripped first so declarations inside comment
+    blocks or string literals are never matched.
+
+    Returns a list of 1-indexed line numbers of offending declarations.
+    """
+    stripped = strip_strings(strip_comments(content))
+    line_starts = [0]
+    for line in stripped.split("\n"):
+        line_starts.append(line_starts[-1] + len(line) + 1)
+    hits: List[int] = []
+    for start_line, end_line, _kind, _name in find_class_blocks(stripped):
+        body_lo = line_starts[start_line - 1]
+        body_hi = line_starts[end_line]
+        body = stripped[body_lo:body_hi]
+        # the class body opens with the first `{` of the block (an
+        # inheritance clause carries no braces)
+        brace_pos = body.find("{")
+        if brace_pos < 0:
+            continue
+        for m in PARAM_MEMBER_INIT_RE.finditer(body):
+            seg = body[brace_pos + 1:m.start()]
+            brace_depth = 1 + seg.count("{") - seg.count("}")
+            paren_depth = seg.count("(") - seg.count(")")
+            if brace_depth != 1 or paren_depth != 0:
+                continue
+            # the type part of the pattern absorbs the whitespace and
+            # newline preceding the declaration, so skip it to report
+            # the line where the declaration text starts
+            decl_start = m.start()
+            while decl_start < len(body) and body[decl_start] in " \t\n":
+                decl_start += 1
+            line_no = stripped[:body_lo + decl_start].count("\n") + 1
+            hits.append(line_no)
+    return hits
 
 
 def _declaration_prefix_before(stripped: str, body_open: int) -> str:
@@ -700,16 +806,6 @@ def _declaration_prefix_before(stripped: str, body_open: int) -> str:
         i -= 1
     line_start = stripped.rfind("\n", 0, i) + 1
     return stripped[line_start:body_open]
-
-
-def _nearest_nonblank_line_is_template(stripped: str, sig_line: int) -> bool:
-    """Return True when the nearest non-blank line above `sig_line`
-    (1-based) starts a `template <...>` header."""
-    lines = stripped.split("\n")
-    idx = sig_line - 2  # line index just above the signature
-    while idx >= 0 and not lines[idx].strip():
-        idx -= 1
-    return idx >= 0 and bool(_TEMPLATE_RE.match(lines[idx]))
 
 
 def find_high_complexity_functions(
@@ -773,9 +869,12 @@ def find_complex_call_arguments(content: str) -> List[Tuple[int, str]]:
     and method-call chains. After matching a call's parentheses, only
     `?`, `&&`, `||` at the call's own paren depth are attributed to
     this call; operators nested inside an inner call's parentheses are
-    judged when the inner call is visited. Angle brackets `<>` of
-    template argument lists inside the argument list are also treated
-    as nesting so `Foo<a ? b : c>` is not misread (rare but legal).
+    judged when the inner call is visited (the scan resumes inside the
+    outer call's argument list so nested callees are never skipped).
+    Angle brackets `<>` of template argument lists inside the argument
+    list are treated as nesting only in their "glued" form (`Foo<int>`);
+    a spaced `<`/`>` is a comparison (`a < b ? c : d`) and does not
+    nest, so the ternary is still attributed to the call.
 
     Returns a list of (line_no, callee_name) for each offending call.
     """
@@ -809,7 +908,7 @@ def find_complex_call_arguments(content: str) -> List[Tuple[int, str]]:
             continue
         # NOTE: do NOT skip on a trailing `=` — `int b = add(...)` is a
         # call site, not a declaration; declarations are filtered later
-        # by the exact-2-segment check against _is_declaration_prefix.
+        # by the return-type-prefix check against _is_declaration_prefix.
         if "typedef" in prefix_stripped:
             i = m.end()
             continue
@@ -832,25 +931,56 @@ def find_complex_call_arguments(content: str) -> List[Tuple[int, str]]:
             continue
         args_str = stripped[paren_open + 1:j]
 
-        # skip declaration/definition contexts: prefix must be exactly
-        # `type name` (2 segments) as in `int add(int a, int b)`. A
-        # prefix like `int b =` (3 segments) is an assignment-init at
-        # call site, NOT a declaration of `add` — do not skip it.
-        tokens = prefix_stripped.split()
-        if len(tokens) == 2 and _is_declaration_prefix(prefix_stripped):
+        # skip declaration/definition contexts: the prefix (text between
+        # the line start and the callee name) must look like a return
+        # type, e.g. `void f(...)` / `int add(...)` / `unsigned long
+        # f(...)`. A prefix ending in `)` (`(cast) f(...)`, `if (x) f(...)`)
+        # or `=` (`int b = add(...)`) or a statement keyword (`return
+        # f(...)`) is a call site and is NOT skipped — _is_declaration_prefix
+        # already encodes the keyword/punctuation part of this.
+        if not prefix_stripped.endswith(")") \
+                and _is_declaration_prefix(prefix_stripped):
             i = j + 1
             continue
 
         # scan arguments for `?`, `&&`, `||` at this call's own depth:
-        # any opener ( ( [ { < ) dives one level; closers surface again
+        # parens/brackets/braces dive one level; glued template angle
+        # brackets (`Foo<int>`) dive too, while spaced comparison
+        # operators (`a < b`) do not
         arg_depth = 0
         complex_hit = False
         k = 0
         while k < len(args_str):
             c = args_str[k]
-            if c in "([{<":
+            if c == "<":
+                # template opener only when glued to the preceding word
+                # (`Foo<int>`); a spaced `<` is a comparison (`a < b`)
+                # and `<<` is a shift operator
+                if (
+                    arg_depth == 0
+                    and k > 0
+                    and (args_str[k - 1].isalnum()
+                         or args_str[k - 1] in "_<")
+                    and k + 1 < len(args_str)
+                    and args_str[k + 1] not in " \t\n<"
+                ):
+                    arg_depth += 1
+            elif c == ">":
+                # template closer only when glued to the preceding word;
+                # a spaced `>` is a comparison (`a > b`), `->` is a
+                # member access and `>=`/`>>=m` are operators
+                if (
+                    arg_depth > 0
+                    and k > 0
+                    and (args_str[k - 1].isalnum()
+                         or args_str[k - 1] in "_<>")
+                    and (k + 1 >= len(args_str)
+                         or args_str[k + 1] in "(),;&*> \t\n")
+                ):
+                    arg_depth -= 1
+            elif c in "([{":
                 arg_depth += 1
-            elif c in ")]}>":
+            elif c in ")]}":
                 arg_depth = max(0, arg_depth - 1)
             elif arg_depth == 0:
                 if c == "?":
@@ -866,7 +996,9 @@ def find_complex_call_arguments(content: str) -> List[Tuple[int, str]]:
             line_no = stripped[:paren_open].count("\n") + 1
             hits.append((line_no, name))
 
-        i = j + 1
+        # resume INSIDE the argument list so nested callees (e.g. the
+        # `g` of `f(g(a ? b : c))`) are visited as their own calls
+        i = paren_open + 1
 
     return hits
 
@@ -902,26 +1034,36 @@ def find_ifdef_in_call_args(content: str) -> List[int]:
         s = text_before.rstrip()
         if not s:
             return False
-        # method call: `obj.m(`, `ptr->m(`
-        if s.endswith(".") or s.endswith("->"):
-            return True
         m = _LAST_IDENT_RE.search(s)
         if not m:
             return False
+        # control-statement header: `if (`, `for (`, `while (`,
+        # `switch (`, `sizeof(` ... — the keyword itself is the last
+        # identifier, with no callee between it and `(`
         if m.group(1) in STATEMENT_CONTEXT_KEYWORDS:
             return False
+        # strip the callee name and inspect what precedes it
+        before = s[:m.start()].rstrip()
+        if not before:
+            # bare callee in statement position: `f(` — a call (a
+            # declaration would carry a return type before the name)
+            return True
+        # method call: `obj.m(`, `ptr->m(`
+        if before.endswith(".") or before.endswith("->"):
+            return True
         # assignment-init: `... = name(` — `name` is the CALLEE and the
         # whole expression is a call, regardless of any preceding
         # declaration-looking tokens. Without this, a cross-line tail
-        # like `int f = add` would be misread by _is_declaration_prefix
-        # as the declaration prefix `type=int f =` + `name=add`.
-        if s[:m.start()].rstrip().endswith("="):
+        # like `int f = add` would be misread as the declaration prefix
+        # `type=int f =` + `name=add`.
+        if before.endswith("="):
             return True
-        # declaration prefix (`type name(`): a declaration/definition
-        # parameter list, not a call
-        if _is_declaration_prefix(s):
-            return False
-        return True
+        mb = _LAST_IDENT_RE.search(before)
+        if mb and mb.group(1) in STATEMENT_CONTEXT_KEYWORDS:
+            # expression context: `return f(`, `else f(`, `throw f(`
+            return True
+        # `type name(` — declaration/definition parameter list
+        return False
 
     line_no = 0
     # rolling window of recent non-preprocessor code so that a callee
