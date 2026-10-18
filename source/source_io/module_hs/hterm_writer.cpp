@@ -78,9 +78,6 @@ static void gather_and_write(const std::string& prefix,
                              const bool append,
                              const int* iat2iwt,
                              const int nat,
-                             const std::string& calculation,
-                             const int out_app_flag,
-                             const std::string& global_out_dir,
                              const std::string& global_matrix_dir,
                              std::ofstream* ofs_running)
 {
@@ -94,9 +91,7 @@ static void gather_and_write(const std::string& prefix,
     if (GlobalV::MY_RANK == 0)
 #endif
     {
-        const bool md_no_append = (calculation == "md") && (out_app_flag != 1);
-        const std::string& out_dir = md_no_append ? global_matrix_dir : global_out_dir;
-        const std::string fname = out_dir + hsr_gen_fname(prefix, ispin, append, istep);
+        const std::string fname = global_matrix_dir + hsr_gen_fname(prefix, ispin, append, istep);
         // H(R) component terms (T, V^NL, V^L, V^H, V^XC, V^EXX) are parts of
         // the Hamiltonian, not the full H(R): they do not carry the Fermi annotation
         const double no_efermi = 0.0;
@@ -215,8 +210,8 @@ static void write_h_term(WriteHParams& params, const HTermSpec& spec)
         if (also_hR)
         {
             gather_and_write(spec.r_prefix, spec.r_label, spec.term_name, hR_tmp, ucell, pv, nspin, ispin,
-                             istep, append, iat2iwt, nat, params.calculation, params.out_app_flag,
-                             params.global_out_dir, params.global_matrix_dir, params.ofs_running);
+                             istep, append, iat2iwt, nat,
+                             params.global_matrix_dir, params.ofs_running);
         }
     }
 
@@ -402,7 +397,7 @@ static void write_h_exx_impl(const UnitCell& ucell,
         if (also_hR)
         {
             gather_and_write("vexx", "V^EXX", "exx", hR_tmp, ucell, pv, nspin, ispin, istep, append,
-                             iat2iwt, nat, calculation, out_app_flag, global_out_dir, global_matrix_dir,
+                             iat2iwt, nat, global_matrix_dir,
                              ofs_running);
         }
     }

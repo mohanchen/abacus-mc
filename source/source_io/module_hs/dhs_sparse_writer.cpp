@@ -21,7 +21,6 @@ void ModuleIO::save_dH_sparse(const int& istep,
                               const bool& binary,
                               const std::string& fileflag,
                               const int precision,
-                              const std::string& global_out_dir,
                               const std::string& global_matrix_dir,
                               const std::string& calculation,
                               const int out_app_flag,
@@ -112,20 +111,19 @@ void ModuleIO::save_dH_sparse(const int& istep,
         }
     }
 
-    const bool md_no_append = (calculation == "md") && (out_app_flag != 1);
     for (auto& comp: comps)
     {
         for (int ispin = 0; ispin < 2; ++ispin)
         {
             if (istep >= 0)
             {
-                comp.fname[ispin] << (md_no_append ? global_matrix_dir : global_out_dir)
+                comp.fname[ispin] << global_matrix_dir
                                   << "d" << fileflag << "r" << comp.axis
                                   << "s" << (ispin + 1) << "g" << (istep + 1) << "_nao.csr";
             }
             else
             {
-                comp.fname[ispin] << global_out_dir
+                comp.fname[ispin] << global_matrix_dir
                                   << "d" << fileflag << "r" << comp.axis
                                   << "s" << (ispin + 1) << "_nao.csr";
             }

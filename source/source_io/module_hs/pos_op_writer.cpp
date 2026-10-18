@@ -216,10 +216,9 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
     if (GlobalV::DRANK == 0)
     {
         std::stringstream ssr;
-        const bool md_no_append = (calculation == "md") && (out_app_flag != 1);
         if (step >= 0)
         {
-            ssr << (md_no_append ? global_matrix_dir : global_out_dir) << "rrg" << (step + 1) << "_nao.txt";
+            ssr << global_matrix_dir << "rrg" << (step + 1) << "_nao.txt";
         }
         else
         {
