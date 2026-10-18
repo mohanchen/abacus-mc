@@ -298,8 +298,9 @@ void md_line(MDCell& mdcell,
             }
             if (param_in.inp.out_stru > 0)
             {
+                const int stru_step = current_step + 1;
                 std::stringstream file;
-                file << PARAM.globalv.global_stru_dir << "STRU" << current_step;
+                file << PARAM.globalv.global_stru_dir << "STRU" << stru_step;
                 mdcell::print_stru_file(mdcell, mdcell.stru_meta(), file.str());
             }
             mdrun->write_restart(PARAM.globalv.global_out_dir);
