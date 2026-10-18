@@ -288,7 +288,7 @@ void md_line(MDCell& mdcell,
                 mdcell.sync_backing_unitcell();
             }
             std::stringstream file;
-            file << PARAM.globalv.global_stru_dir << "STRU_MD_" << mdrun->step_ + mdrun->step_rst_;
+            file << PARAM.globalv.global_stru_dir << "STRU" << mdrun->step_ + mdrun->step_rst_;
             mdcell::print_stru_file(mdcell, mdcell.stru_meta(), file.str());
             mdrun->write_restart(PARAM.globalv.global_out_dir);
         }

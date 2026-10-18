@@ -85,23 +85,12 @@ void ReadInput::set_global_dir(const Input_para& inp, System_para& sys)
     sys.global_out_dir = prefix + inp.suffix + "/";
     sys.global_out_dir = to_dir(sys.global_out_dir);
 
-    /// get the global output directory
-    sys.global_stru_dir = sys.global_out_dir + "STRU/";
-    sys.global_stru_dir = to_dir(sys.global_stru_dir);
-
-    /// get the global output directory
-    sys.global_matrix_dir = sys.global_out_dir + "matrix/";
-    sys.global_matrix_dir = to_dir(sys.global_matrix_dir);
-
-    /// get the global output directory
-    sys.global_wfc_dir = sys.global_out_dir + "WFC/";
-    sys.global_wfc_dir = to_dir(sys.global_wfc_dir);
-
     /// Set subdirectories based on out_app_flag
     /// out_app_flag == 2: use unified uppercase subdirectories
     /// otherwise: keep backward-compatible behavior (all point to global_out_dir)
     if (inp.out_app_flag == 2)
     {
+        sys.global_stru_dir = sys.global_out_dir + "STRU/";
         sys.global_psi_dir = sys.global_out_dir + "PSI/";
         sys.global_chg_dir = sys.global_out_dir + "CHG/";
         sys.global_pot_dir = sys.global_out_dir + "POT/";
@@ -112,6 +101,7 @@ void ReadInput::set_global_dir(const Input_para& inp, System_para& sys)
     }
     else
     {
+        sys.global_stru_dir = sys.global_out_dir;
         sys.global_psi_dir = sys.global_out_dir;
         sys.global_chg_dir = sys.global_out_dir;
         sys.global_pot_dir = sys.global_out_dir;
