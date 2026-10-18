@@ -188,6 +188,13 @@ void md_line(MDCell& mdcell,
         apply_plumed_forces(mdcell, plumed_forces);
     };
 
+    /// Effective ionic-step output frequency.
+    /// Prefer out_freq_ion; fall back to md_restartfreq for backward
+    /// compatibility when out_freq_ion is not set.
+    const int eff_output_freq = (param_in.inp.out_freq_ion > 0)
+                                    ? param_in.inp.out_freq_ion
+                                    : param_in.mdp.md_restartfreq;
+
     /// md cycle, mohan update 2026-01-04, change '<=' to '<'
     while ((mdrun->step_ + mdrun->step_rst_) < param_in.mdp.md_nstep && !mdrun->stop)
     {
@@ -280,16 +287,21 @@ void md_line(MDCell& mdcell,
                                mdrun->virial);
         }
 
-        if (param_in.mdp.md_restartfreq > 0
-            && (mdrun->step_ + mdrun->step_rst_) % param_in.mdp.md_restartfreq == 0)
+        const int current_step = mdrun->step_ + mdrun->step_rst_;
+        const bool do_output_step = eff_output_freq > 0
+            && current_step % eff_output_freq == 0;
+        if (do_output_step)
         {
             if (mdcell.has_backing_unitcell())
             {
                 mdcell.sync_backing_unitcell();
             }
-            std::stringstream file;
-            file << PARAM.globalv.global_stru_dir << "STRU" << mdrun->step_ + mdrun->step_rst_;
-            mdcell::print_stru_file(mdcell, mdcell.stru_meta(), file.str());
+            if (param_in.inp.out_stru > 0)
+            {
+                std::stringstream file;
+                file << PARAM.globalv.global_stru_dir << "STRU" << current_step;
+                mdcell::print_stru_file(mdcell, mdcell.stru_meta(), file.str());
+            }
             mdrun->write_restart(PARAM.globalv.global_out_dir);
         }
 

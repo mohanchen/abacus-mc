@@ -186,7 +186,7 @@ bool Relax_Driver::relax_step(std::vector<int>& steps,
 
 void Relax_Driver::stru_out(const int istep, UnitCell& ucell, const Input_para& inp, const double etot, const ModuleBase::matrix& stress, const ModuleBase::matrix& force)
 {
-    // out_stru is effective for scf/nscf/relax/cell-relax (md writes STRU_MD_* via md_restartfreq)
+    // out_stru is effective for scf/nscf/relax/cell-relax; md handles STRU output in run_md.cpp
     if (inp.calculation != "relax" && inp.calculation != "cell-relax"
         && inp.calculation != "scf" && inp.calculation != "nscf")
     {

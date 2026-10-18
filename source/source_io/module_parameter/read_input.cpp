@@ -311,7 +311,7 @@ void ReadInput::create_directory(const Parameter& param)
     if (param.input.out_app_flag == 2)
     {
         const std::vector<std::pair<bool, std::string>> subdir_flags = {
-            {param.input.out_stru > 0 || param.input.calculation == "md", param.globalv.global_stru_dir},
+            {param.input.out_stru > 0, param.globalv.global_stru_dir},
             {param.input.out_wfc_lcao > 0 || param.input.out_wfc_pw > 0, param.globalv.global_psi_dir},
             {param.input.out_chg[0] > 0, param.globalv.global_chg_dir},
             {param.input.out_pot[0] > 0 || param.input.out_elf[0] > 0, param.globalv.global_pot_dir},
