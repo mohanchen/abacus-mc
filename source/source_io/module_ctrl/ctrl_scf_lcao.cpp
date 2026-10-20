@@ -197,7 +197,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         }
         const int precision = inp.out_dmk[1];
 
-        ModuleIO::write_dmk(dm->get_dmk_vec(), kv, precision, efermis, &(ucell), pv, global_mat_dir, istep, out_app_flag, inp.calculation, ofs_running);
+        ModuleIO::write_dmk(dm->get_dmk_vec(), kv, precision, efermis, &(ucell), pv, global_mat_dir, istep, out_app_flag, ofs_running);
     }
 
     //------------------------------------------------------------------
@@ -562,7 +562,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                                           PARAM.globalv.gamma_only_local,
                                                           &ofs_running,
                                                           GlobalV::MY_RANK);
-        mylcalculator.calculate(inp.suffix, global_mat_dir, ucell, inp.out_mat_l[1], GlobalV::MY_RANK, istep_in);
+        mylcalculator.calculate(inp.suffix, global_mat_dir, ucell, inp.out_mat_l[1], GlobalV::MY_RANK, istep_in, out_app_flag);
     }
 
     //------------------------------------------------------------------

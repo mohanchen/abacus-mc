@@ -189,7 +189,6 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
         const std::string& dmk_dir,
         const int istep,
         const int out_app_flag,
-        const std::string& calculation,
         std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("ModuleIO", "write_dmk");
@@ -199,9 +198,10 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
     // so each ionic step overwrites the previous snapshot; the file body
     // still records the real ionic step via istep.
     const int istep_file = (out_app_flag == 1) ? -1 : istep;
-    // Each MD step appends a new record to the fixed file, mirroring the
-    // open_sparse_file convention; other calculations start fresh.
-    const bool append_on_restart = (calculation == "md") && (out_app_flag == 1) && (istep >= 0);
+    // Each multi-step run (MD or relax) appends a new record to the fixed
+    // file, mirroring the open_sparse_file convention; single-point SCF
+    // passes istep = -1 and starts a fresh file.
+    const bool append_on_restart = (out_app_flag == 1) && (istep >= 0);
 
     int my_rank = 0;
 #ifdef __MPI
@@ -364,7 +364,6 @@ template void ModuleIO::write_dmk<double>(const std::vector<std::vector<double>>
         const std::string& dmk_dir,
         const int istep,
         const int out_app_flag,
-        const std::string& calculation,
         std::ofstream& ofs_running);
 
 template void ModuleIO::write_dmk<std::complex<double>>(const std::vector<std::vector<std::complex<double>>>& dmk,
@@ -376,6 +375,5 @@ template void ModuleIO::write_dmk<std::complex<double>>(const std::vector<std::v
         const std::string& dmk_dir,
         const int istep,
         const int out_app_flag,
-        const std::string& calculation,
         std::ofstream& ofs_running);
 

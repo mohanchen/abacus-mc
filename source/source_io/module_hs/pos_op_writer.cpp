@@ -228,8 +228,11 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
         }
 
         ofs_tem1.close();
-        const bool open_in_append = (calculation == "md") && (out_app_flag == 1) && step >= 0;
-        const int header_step = std::max(step, 0);
+        // Append for any multi-step run (MD or relax) in append mode;
+        // single-point SCF passes step = -1 and starts a fresh file.
+        const bool open_in_append = (out_app_flag == 1) && step >= 0;
+        // ionic step printed one-based per governance rule 22
+        const int header_step = std::max(step, 0) + 1;
         ModuleIO::detail::assemble_csr(ssr.str(),
                                        tem1.str(),
                                        header_step,

@@ -66,8 +66,9 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
     const int total_R_num = static_cast<int>(all_R_coor_ptr.size());
     int output_R_number = 0;
-    // Use istep for filename/append decisions; clamp only the header STEP value.
-    const int header_step = std::max(istep, 0);
+    // Use istep for filename/append decisions; clamp only the header STEP
+    // value, printed one-based per governance rule 22.
+    const int header_step = std::max(istep, 0) + 1;
 
     int spin_loop = 1;
     if (nspin == 2) {
@@ -132,7 +133,9 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
     if (GlobalV::DRANK == 0)
     {
-        const bool open_in_append = (calculation == "md") && (out_app_flag == 1) && istep >= 0;
+        // Append for any multi-step run (MD or relax) in append mode;
+        // single-point SCF passes istep = -1 and starts a fresh file.
+        const bool open_in_append = (out_app_flag == 1) && istep >= 0;
         for (auto& comp: comps)
         {
             const std::string label = std::string("dH") + comp.axis;

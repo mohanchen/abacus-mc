@@ -62,7 +62,9 @@ void write_dos_lcao(
 
         ss << global_out_dir << "doss" << is + 1;
 
-        if(istep>=0)
+        // In append mode (out_app_flag == 1) the fixed name is reused and
+        // each ionic step appends a new DOS block; modes 0 and 2 keep g{N}.
+        if(istep>=0 && out_app_flag!=1)
         {
             ss << "g" << istep+1;
         }
@@ -102,6 +104,7 @@ void write_dos_lcao(
             dos_edelta_ev,
             bcoeff,
             istep,
+            out_app_flag,
             nlocal,
             nspin,
             global_out_dir);

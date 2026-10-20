@@ -93,7 +93,7 @@ TEST_F(WritePdosTextTest, BasicOutput)
     }
 
     ModuleIO::write_pdos_text(*ucell, &pdos, nspin, nlocal, npoints,
-                              emin, dos_edelta_ev, out_dir, istep);
+                              emin, dos_edelta_ev, out_dir, istep, 0);
 
     const std::string str = read_file("./pdoss1.txt");
 
@@ -127,7 +127,7 @@ TEST_F(WritePdosTextTest, IstepFileName)
     pdos.zero_out();
 
     ModuleIO::write_pdos_text(*ucell, &pdos, nspin, nlocal, npoints,
-                              emin, dos_edelta_ev, "./", 2);
+                              emin, dos_edelta_ev, "./", 2, 0);
 
     const std::string str = read_file("./pdoss1g3.txt");
     EXPECT_THAT(str, testing::HasSubstr("# istep: 3"));
@@ -163,7 +163,7 @@ TEST_F(WritePdosTextTest, SpinPolarized)
     }
 
     ModuleIO::write_pdos_text(*ucell, pdos_arr, nspin, nlocal, npoints,
-                              emin, dos_edelta_ev, "./", -1);
+                              emin, dos_edelta_ev, "./", -1, 0);
 
     const std::string s1 = read_file("./pdoss1.txt");
     const std::string s2 = read_file("./pdoss2.txt");

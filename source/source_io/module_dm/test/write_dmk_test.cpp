@@ -165,8 +165,8 @@ TEST(DMKTest,WriteDMK) {
     kv.kd_done = true;
     
     std::ofstream ofs_log;
-    ModuleIO::write_dmk(dmk, kv, 3, efs, ucell, pv, out_dir, istep, 0, "scf", ofs_log);
-    ModuleIO::write_dmk(dmk_multik, kv, 3, efs, ucell, pv, out_dir, istep, 0, "scf", ofs_log);
+    ModuleIO::write_dmk(dmk, kv, 3, efs, ucell, pv, out_dir, istep, 0, ofs_log);
+    ModuleIO::write_dmk(dmk_multik, kv, 3, efs, ucell, pv, out_dir, istep, 0, ofs_log);
     
     std::ifstream ifs;
 
