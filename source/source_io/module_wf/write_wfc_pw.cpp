@@ -65,15 +65,23 @@ void ModuleIO::write_wfc_pw(
 
             if (rank_in_pool == 0)
             {
-                if (out_wfc_pw == 1)
+                // Mirrors write_wfc_nao's append_flag: the first step of a
+                // run truncates the file, later steps append a new frame
+                // when out_app_flag == 1, so the file accumulates one frame
+                // per ionic step instead of being rewritten each step.
+                const bool append_frame = (istep > 0 && out_app_flag == 1);
+                if (!append_frame)
                 {
-                    std::ofstream ofs(fn.c_str()); // clear all wavefunc files.
-                    ofs.close();
-                }
-                else if (out_wfc_pw == 2)
-                {
-                    Binstream wfs(fn, "w");
-                    wfs.close();
+                    if (out_wfc_pw == 1)
+                    {
+                        std::ofstream ofs(fn.c_str()); // clear all wavefunc files.
+                        ofs.close();
+                    }
+                    else if (out_wfc_pw == 2)
+                    {
+                        Binstream wfs(fn, "w");
+                        wfs.close();
+                    }
                 }
             }
         }
