@@ -91,7 +91,7 @@ void ReadInput::item_output()
             - nspin = 2: `chgs1g{geom_step}_ini.cube` and `chgs2g{geom_step}_ini.cube`;
             - nspin = 4: `chgs1g{geom_step}_ini.cube`, `chgs2g{geom_step}_ini.cube`, `chgs3g{geom_step}_ini.cube`, and `chgs4g{geom_step}_ini.cube`.
             - output every out_freq_ion steps
-        Here, {geom_step} denotes the geometry step index, starting from 1 (geom_step = istep + 1).
+        Here, {geom_step} denotes the geometry step index, starting from 1 (geom_step = istep + 1). With out_app_flag = 1, the geometry-step index is omitted and each snapshot overwrites the same fixed file.
     - -1: Disable the charge density auto-back-up file `{suffix}-CHARGE-DENSITY.restart`, useful for large systems.
 
 The second integer controls the precision of the charge density output. If not given, `3` is used as default. For restarting from this file and other high-precision calculations, `10` is recommended.
@@ -152,7 +152,7 @@ In molecular dynamics simulations, the output frequency is controlled by out_fre
    * nspin = 2: `pots1g{geom_step}_ini.cube` and `pots2g{geom_step}_ini.cube`;
    * nspin = 4: `pots1g{geom_step}_ini.cube`, `pots2g{geom_step}_ini.cube`, `pots3g{geom_step}_ini.cube`, and `pots4g{geom_step}_ini.cube`.
    * output every out_freq_ion steps
- Here, {geom_step} denotes the geometry step index, starting from 1 (geom_step = istep + 1).
+ Here, {geom_step} denotes the geometry step index, starting from 1 (geom_step = istep + 1). With out_app_flag = 1, the geometry-step index is omitted and each snapshot overwrites the same fixed file.
 
 The optional second integer controls the output precision. If not provided, the default precision is 8.
 
@@ -562,8 +562,8 @@ The output is also controlled by out_freq_ion and out_app_flag. For more informa
 * Multi-k, nspin = 2: hk1s1_nao.txt and hk1s2_nao.txt for the two spin channels of the Hamiltonian matrix, and sk1_nao.txt for the overlap matrix at the first k-point. Only one overlap matrix is written because it is identical for both spin channels.
 * Multi-k, nspin = 4: hk1s4_nao.txt for the spinor Hamiltonian matrix and sk1_nao.txt for the spinor overlap matrix at the first k-point.
 For binary output, the same names use the .dat suffix. Each native binary record contains the matrix dimension as an int followed by the row-major upper triangle. Gamma-only elements are doubles; multi-k and spinor elements are pairs of doubles containing the real and imaginary parts. Native integer representation and byte order are used.
-When out_app_flag is true, the first ionic step truncates the file and later steps append complete records.
-When out_app_flag is false, g followed by the one-based ionic-step index is inserted before _nao, for example hk1s1g1_nao.txt.
+When out_app_flag is 1, the first ionic step truncates the file and later steps append complete records.
+When out_app_flag is 0 or 2, g followed by the one-based ionic-step index is inserted before _nao, for example hk1s1g1_nao.txt.
 
 [NOTE] In the 3.10-LTS version, the file names are data-0-H and data-0-S, etc.)";
         item.default_value = "0 8";
@@ -1397,7 +1397,7 @@ The circle order of the charge density on real space grids is: x is the outer lo
         item.type = "Integer";
         item.description = R"(Controls output file organization during multi-step calculations (MD, relax, RT-TDDFT). The directory routing applies to both LCAO and PW basis calculations.
 * 0: Write to OUT directory directly, no append (each step's file carries a g{step} suffix)
-* 1: Append to same file (default, backward compatible)
+* 1: Reuse fixed filenames across steps (default, backward compatible): text outputs append new records, cube snapshots are overwritten
 * 2: Write to subdirectory (PSI/, CHG/, POT/, ELF/, DOS/, DIP/, MAT/), files carry a g{step} suffix
 The legacy Boolean spellings (true/false, yes/no, on/off, t/f, y/n, and the dotted forms) are still accepted and map to modes 1/0 as before.
 For more information, refer to the documentation of out_mat_r, out_hsr, out_mat_t, out_mat_dh, out_hsk, out_wfc_lcao, out_chg, out_pot, out_elf, out_dos, out_dipole.)";
