@@ -188,10 +188,16 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
         const Parallel_2D& pv,
         const std::string& dmk_dir,
         const int istep,
+        const int out_app_flag,
         std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("ModuleIO", "write_dmk");
     ModuleBase::timer::start("ModuleIO", "write_dmk");
+
+    // In append mode (out_app_flag == 1) DM(k) reuses a fixed filename,
+    // so each ionic step overwrites the previous snapshot; the file body
+    // still records the real ionic step via istep.
+    const int istep_file = (out_app_flag == 1) ? -1 : istep;
 
     int my_rank = 0;
 #ifdef __MPI
@@ -239,7 +245,7 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
             if (my_rank == 0)
             {
                 std::string fn = dmk_dir
-                    + dmk_gen_fname(gamma_only, ispin, nspin, ik, istep);
+                    + dmk_gen_fname(gamma_only, ispin, nspin, ik, istep_file);
 
                 std::ofstream ofs(fn.c_str());
 
@@ -347,6 +353,7 @@ template void ModuleIO::write_dmk<double>(const std::vector<std::vector<double>>
         const Parallel_2D& pv,
         const std::string& dmk_dir,
         const int istep,
+        const int out_app_flag,
         std::ofstream& ofs_running);
 
 template void ModuleIO::write_dmk<std::complex<double>>(const std::vector<std::vector<std::complex<double>>>& dmk,
@@ -357,5 +364,6 @@ template void ModuleIO::write_dmk<std::complex<double>>(const std::vector<std::v
         const Parallel_2D& pv,
         const std::string& dmk_dir,
         const int istep,
+        const int out_app_flag,
         std::ofstream& ofs_running);
 
