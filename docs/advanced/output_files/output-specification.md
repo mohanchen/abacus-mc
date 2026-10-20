@@ -128,7 +128,7 @@ k-point blocks appended by a relax/md run stay distinguishable:
 ```
 # ABACUS version: v3.11.0-beta11
 # Written at 2026-10-20 15:40:45
-# IONIC STEP 1 (spin up  )
+# IONIC STEP 1 (spin up)
    1 0.00000000 -5.36802595 6.70427084 ...
 ```
 

@@ -279,7 +279,7 @@ class BandOutputTest : public testing::TestWithParam<BandTopology>
         const std::string written = "# Written at ";
         EXPECT_EQ(comments[3 * block + 1].compare(0, written.size(), written), 0)
             << comments[3 * block + 1];
-        const std::string tag = (channels == 2) ? (spin == 0 ? " (spin up  )" : " (spin down)") : "";
+        const std::string tag = (channels == 2) ? (spin == 0 ? " (spin up)" : " (spin down)") : "";
         EXPECT_EQ(comments[3 * block + 2], "# IONIC STEP " + std::to_string(block + 1) + tag);
     }
 
