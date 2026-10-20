@@ -390,3 +390,38 @@ TEST_F(PrintCellTest, PrintTauCartesian)
     // remove the file
     remove("print_tau_Cartesian");
 }
+
+// ---------------------------------------------------------------------------
+// STRU append flag: append=true accumulates successive structures in one file.
+// ---------------------------------------------------------------------------
+TEST_F(PrintCellTest, STRUAppend)
+{
+    UcellTestPrepare utp = UcellTestLib["C1H2-Index"];
+    ucell = utp.SetUcellInfo();
+    const std::string fn = "STRU_append_test";
+
+    // First call: append=false -> create/truncate.
+    unitcell::print_stru_file(*ucell, ucell->atoms, ucell->latvec,
+                              fn, "", 1, false, false, false, false, 0, ModuleBase::matrix(), false,
+                              /*append=*/false);
+    // Second call: append=true -> accumulate into same file.
+    unitcell::print_stru_file(*ucell, ucell->atoms, ucell->latvec,
+                              fn, "", 1, false, false, false, false, 0, ModuleBase::matrix(), false,
+                              /*append=*/true);
+
+    std::ifstream ifs(fn);
+    std::string str((std::istreambuf_iterator<char>(ifs)),
+                    std::istreambuf_iterator<char>());
+    ifs.close();
+    // Two STRU blocks -> two ATOMIC_SPECIES markers.
+    int occurrences = 0;
+    size_t pos = 0;
+    while ((pos = str.find("ATOMIC_SPECIES", pos)) != std::string::npos)
+    {
+        ++occurrences;
+        pos += 14;
+    }
+    EXPECT_EQ(occurrences, 2);
+
+    remove(fn.c_str());
+}

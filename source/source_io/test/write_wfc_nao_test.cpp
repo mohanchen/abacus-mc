@@ -102,6 +102,33 @@ TEST(GenWfcLcaoFnameTest, OutTypeInvalid)
     EXPECT_EQ(result, expected_output);
 }
 
+// ---------------------------------------------------------------------------
+// out_app_flag = 2 (write to subdirectory) keeps the g{N} suffix, identical
+// to mode 0 at the filename level; directory routing is handled by the caller.
+// ---------------------------------------------------------------------------
+TEST(GenWfcLcaoFnameTest, OutAppFlagMode2SameNamingAsMode0)
+{
+    const std::string directory = "";
+    const std::string property = "wf";
+    const std::string basis = "nao";
+    const int ik = 1;
+    const std::vector<int> ik2iktot = {0, 1};
+    const int nspin = 2;
+    const int nkstot = 2;
+    const int out_type = 2;
+    const int out_app_flag = 2;
+    const bool gamma_only = true;
+    const int istep = 2;
+
+    std::string result = ModuleIO::filename_output(
+        directory, property, basis, ik, ik2iktot, nspin,
+        nkstot, out_type, out_app_flag, gamma_only, istep);
+
+    // Same g-suffixed naming as mode 0.
+    std::string expected_output = "wfs2g3_nao.dat";
+    EXPECT_EQ(result, expected_output);
+}
+
 template <typename T>
 void read_bin(const std::string& name, std::vector<T>& data)
 {
