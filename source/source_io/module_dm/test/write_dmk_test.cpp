@@ -195,6 +195,8 @@ TEST(DMKTest,WriteDMK) {
                           std::istreambuf_iterator<char>());
         EXPECT_THAT(str, testing::HasSubstr("0 # Fermi energy in Ry"));
         EXPECT_THAT(str, testing::HasSubstr("20 # number of localized basis"));
+        // the matrix body must end with a newline so appended records are not glued
+        EXPECT_EQ(str.back(), '\n');
         ifs.close();
 
         fn = "dmk2s1_nao.txt";

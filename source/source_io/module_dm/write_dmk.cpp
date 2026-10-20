@@ -331,6 +331,10 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
                         }
                     }
                 }
+                // Terminate the matrix body with a newline so that the next
+                // appended record (out_app_flag == 1) starts on a fresh line
+                // instead of being glued to the last value of this step.
+                ofs << std::endl;
                 ofs.close();
             } // rank0
         }     // ik
