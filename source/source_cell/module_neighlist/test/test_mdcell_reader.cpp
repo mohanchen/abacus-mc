@@ -1,4 +1,5 @@
 #include "source_cell/domain_decomposition.h"
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "source_cell/mdcell_reader.h"

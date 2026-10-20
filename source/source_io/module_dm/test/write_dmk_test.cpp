@@ -252,13 +252,27 @@ TEST(DMKTest, Mode0PerStepFiles) {
     init_pv(nlocal, pv);
     gen_dmk(dmk, efs, nspin, nk, nlocal, pv);
 
+    K_Vectors kv;
+    kv.set_nkstot(1);
+    kv.set_nkstot_nospin(1);
+    kv.set_nks(1);
+    kv.set_spin_mult(2);
+    kv.kvec_c.resize(1);
+    kv.kvec_c[0].x = 0.0;
+    kv.kvec_c[0].y = 0.0;
+    kv.kvec_c[0].z = 0.0;
+    kv.wk.resize(1);
+    kv.wk[0] = 1.0;
+    kv.isk.resize(1);
+    kv.isk[0] = 0;
+
     const std::string out_dir = "./";
     const int out_app_flag = 0;
     std::ofstream ofs_log;
 
     // Two different isteps -> two differently-named files.
-    ModuleIO::write_dmk(dmk, 1, efs, ucell, pv, out_dir, /*istep=*/0, out_app_flag, ofs_log);
-    ModuleIO::write_dmk(dmk, 1, efs, ucell, pv, out_dir, /*istep=*/1, out_app_flag, ofs_log);
+    ModuleIO::write_dmk(dmk, kv, /*precision=*/3, efs, ucell, pv, out_dir, /*istep=*/0, out_app_flag, ofs_log);
+    ModuleIO::write_dmk(dmk, kv, /*precision=*/3, efs, ucell, pv, out_dir, /*istep=*/1, out_app_flag, ofs_log);
 
     if (GlobalV::MY_RANK == 0)
     {
@@ -296,13 +310,27 @@ TEST(DMKTest, Mode1FixedNameAppend) {
     init_pv(nlocal, pv);
     gen_dmk(dmk, efs, nspin, nk, nlocal, pv);
 
+    K_Vectors kv;
+    kv.set_nkstot(1);
+    kv.set_nkstot_nospin(1);
+    kv.set_nks(1);
+    kv.set_spin_mult(2);
+    kv.kvec_c.resize(1);
+    kv.kvec_c[0].x = 0.0;
+    kv.kvec_c[0].y = 0.0;
+    kv.kvec_c[0].z = 0.0;
+    kv.wk.resize(1);
+    kv.wk[0] = 1.0;
+    kv.isk.resize(1);
+    kv.isk[0] = 0;
+
     const std::string out_dir = "./";
     const int out_app_flag = 1;
     std::ofstream ofs_log;
 
     // Two ionic steps -> both write to dms1_nao.txt.
-    ModuleIO::write_dmk(dmk, 1, efs, ucell, pv, out_dir, /*istep=*/0, out_app_flag, ofs_log);
-    ModuleIO::write_dmk(dmk, 1, efs, ucell, pv, out_dir, /*istep=*/1, out_app_flag, ofs_log);
+    ModuleIO::write_dmk(dmk, kv, /*precision=*/3, efs, ucell, pv, out_dir, /*istep=*/0, out_app_flag, ofs_log);
+    ModuleIO::write_dmk(dmk, kv, /*precision=*/3, efs, ucell, pv, out_dir, /*istep=*/1, out_app_flag, ofs_log);
 
     if (GlobalV::MY_RANK == 0)
     {
@@ -339,11 +367,25 @@ TEST(DMKTest, Mode2SameNamingAsMode0) {
     init_pv(nlocal, pv);
     gen_dmk(dmk, efs, nspin, nk, nlocal, pv);
 
+    K_Vectors kv;
+    kv.set_nkstot(1);
+    kv.set_nkstot_nospin(1);
+    kv.set_nks(1);
+    kv.set_spin_mult(2);
+    kv.kvec_c.resize(1);
+    kv.kvec_c[0].x = 0.0;
+    kv.kvec_c[0].y = 0.0;
+    kv.kvec_c[0].z = 0.0;
+    kv.wk.resize(1);
+    kv.wk[0] = 1.0;
+    kv.isk.resize(1);
+    kv.isk[0] = 0;
+
     const std::string out_dir = "./";
     const int out_app_flag = 2;
     std::ofstream ofs_log;
 
-    ModuleIO::write_dmk(dmk, 1, efs, ucell, pv, out_dir, /*istep=*/2, out_app_flag, ofs_log);
+    ModuleIO::write_dmk(dmk, kv, /*precision=*/3, efs, ucell, pv, out_dir, /*istep=*/2, out_app_flag, ofs_log);
 
     if (GlobalV::MY_RANK == 0)
     {

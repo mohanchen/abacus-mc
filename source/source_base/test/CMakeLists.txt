@@ -283,6 +283,6 @@ endif()
 
 AddTest(
   TARGET MODULE_BASE_filename
-  LIBS parameter
+  LIBS parameter base device
   SOURCES test_filename.cpp
 )
