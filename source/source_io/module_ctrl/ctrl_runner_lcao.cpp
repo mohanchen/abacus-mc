@@ -84,7 +84,7 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
                                     gd,
                                     inp.dft_plus_u,
                                     PARAM.globalv.gamma_only_local,
-                                    PARAM.globalv.global_out_dir,
+                                    PARAM.globalv.global_mat_dir,
                                     inp.out_ndigits,
                                     inp.ks_solver,
                                     cal_exx,
@@ -119,7 +119,7 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
                                       kv,
                                       orb.cutoffs(),
                                       gd,
-                                      PARAM.globalv.global_out_dir,
+                                      PARAM.globalv.global_mat_dir,
                                       cal_exx,
                                       hybrid_alpha,
                                       real_number

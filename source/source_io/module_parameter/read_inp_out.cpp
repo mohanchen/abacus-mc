@@ -297,7 +297,7 @@ With `init_wfc file binary`, ABACUS reads only unindexed binary `wf*_pw.dat` fil
         item.annotation = "ouput LCAO wave functions, 0, no output 1: text, 2: binary";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = R"(Whether to output the electronic wavefunction coefficients into files and store them in the folder OUT.${suffix}. The files are named as wf{s}{spin index}{k(optional)}{k-point index}{g(optional)}{geometry index1}{_nao} + {".txt"/".dat"}. Here, 's' refers to spin, where s1 means spin up channel while s2 means spin down channel, and 's12' refer to spinor wave functions that contains both spin channels with spin-orbital coupling or noncollinear calculations enabled. In addition, if 'gamma_only' is set to 0, then the optinoal k-point sampling index appears with the k-point index attached to the electronic wave function file names. Finally, if out_app_flag is set to false, the file name contains the optional 'g' index for each ionic step that may have different geometries, and if out_app_flag is set to true, the wave functions accumulate during ionic steps. If the out_app_flag is set to false, a new folder named WFC will be created, and the wave function files will be saved into it.
+        item.description = R"(Whether to output the electronic wavefunction coefficients into files and store them in the folder OUT.${suffix} (or its PSI/ subdirectory when out_app_flag is 2). The files are named as wf{s}{spin index}{k(optional)}{k-point index}{g(optional)}{geometry index1}{_nao} + {".txt"/".dat"}. Here, 's' refers to spin, where s1 means spin up channel while s2 means spin down channel, and 's12' refer to spinor wave functions that contains both spin channels with spin-orbital coupling or noncollinear calculations enabled. In addition, if 'gamma_only' is set to 0, then the optinoal k-point sampling index appears with the k-point index attached to the electronic wave function file names. Finally, if out_app_flag is not 1, the file name contains the optional 'g' index for each ionic step that may have different geometries, and if out_app_flag is 1, the wave functions accumulate during ionic steps. When out_app_flag is 2, the wave function files are saved into the PSI/ subdirectory of OUT.${suffix}.
 * 0: no output
 * 1: (txt format)
  * gamma-only: wfs1_nao.txt or wfs2_nao.txt, ...;
@@ -1391,19 +1391,38 @@ The circle order of the charge density on real space grids is: x is the outer lo
     }
     {
         Input_Item item("out_app_flag");
-        item.annotation = "whether output r(R), H(R), S(R), T(R), and dH(R) "
-                          "matrices in an append manner during MD";
+        item.annotation = "output directory layout and append behavior "
+                          "during multi-step calculations (0/1/2)";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = R"(Controls output file organization during multi-step calculations (MD, relax, RT-TDDFT).
-* 0: Write to OUT directory directly, no append (files overwritten each step)
+        item.description = R"(Controls output file organization during multi-step calculations (MD, relax, RT-TDDFT). The directory routing applies to both LCAO and PW basis calculations.
+* 0: Write to OUT directory directly, no append (each step's file carries a g{step} suffix)
 * 1: Append to same file (default, backward compatible)
-* 2: Write to subdirectory (PSI/, CHG/, POT/, ELF/, DOS/, DIP/, MAT/)
+* 2: Write to subdirectory (PSI/, CHG/, POT/, ELF/, DOS/, DIP/, MAT/), files carry a g{step} suffix
+The legacy Boolean spellings (true/false, yes/no, on/off, t/f, y/n, and the dotted forms) are still accepted and map to modes 1/0 as before.
 For more information, refer to the documentation of out_mat_r, out_hsr, out_mat_t, out_mat_dh, out_hsk, out_wfc_lcao, out_chg, out_pot, out_elf, out_dos, out_dipole.)";
         item.default_value = "1";
         item.unit = "";
         item.set_availability("basis_type==lcao and gamma_only==0");
-        read_sync_int(input.out_app_flag);
+        // Keep the previously accepted Boolean spellings working: the legacy
+        // parser treated out_app_flag as a Boolean, so INPUT files containing
+        // "true"/"false"/"yes"/"no"/"on"/"off" (case-insensitive) must keep
+        // parsing instead of reaching std::stoi and throwing.
+        item.read_value = [](const Input_Item& item, Parameter& para) {
+            try
+            {
+                para.input.out_app_flag = std::stoi(item.str_values[0]);
+            }
+            catch (const std::invalid_argument&)
+            {
+                para.input.out_app_flag = assume_as_boolean(item.str_values[0]) ? 1 : 0;
+            }
+            catch (const std::out_of_range&)
+            {
+                para.input.out_app_flag = assume_as_boolean(item.str_values[0]) ? 1 : 0;
+            }
+        };
+        sync_int(input.out_app_flag);
         item.check_value = [](const Input_Item& item, const Parameter& para) {
             if (para.input.out_app_flag < 0 || para.input.out_app_flag > 2)
             {

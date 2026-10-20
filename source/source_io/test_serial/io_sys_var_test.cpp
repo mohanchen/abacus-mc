@@ -163,3 +163,31 @@ TEST_F(InputTest, SetGlobalDirMdRestart)
     input.mdp.md_restart = false;
     input.read_file_dir = "OUT.$suffix";
 }
+
+TEST_F(InputTest, SetGlobalDirMode2)
+{
+    readinput.check_ntype_flag = false;
+
+    // out_app_flag = 2 routes every output class to its unified
+    // subdirectory below OUT.<suffix>/
+    input.suffix = "modetwo";
+    input.out_app_flag = 2;
+    TestParameters::set_global_dir(readinput, input, sys);
+
+    EXPECT_EQ(sys.global_out_dir, "OUT.modetwo/");
+    EXPECT_EQ(sys.global_stru_dir, "OUT.modetwo/STRU/");
+    EXPECT_EQ(sys.global_psi_dir, "OUT.modetwo/PSI/");
+    EXPECT_EQ(sys.global_chg_dir, "OUT.modetwo/CHG/");
+    EXPECT_EQ(sys.global_pot_dir, "OUT.modetwo/POT/");
+    EXPECT_EQ(sys.global_elf_dir, "OUT.modetwo/ELF/");
+    EXPECT_EQ(sys.global_dos_dir, "OUT.modetwo/DOS/");
+    EXPECT_EQ(sys.global_dip_dir, "OUT.modetwo/DIP/");
+    EXPECT_EQ(sys.global_mat_dir, "OUT.modetwo/MAT/");
+    // legacy aliases follow the unified directories
+    EXPECT_EQ(sys.global_wfc_dir, sys.global_psi_dir);
+    EXPECT_EQ(sys.global_matrix_dir, sys.global_mat_dir);
+
+    // restore the shared input state so other tests are not affected
+    input.suffix = "test";
+    input.out_app_flag = 1;
+}

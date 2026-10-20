@@ -8,6 +8,7 @@
 #include "source_base/global_function.h" // use READ_VALUE
 
 #include <type_traits>
+#include <vector>
 
 namespace
 {
@@ -296,18 +297,78 @@ bool ModuleIO::read_wfc_nao(
     {
         if (myrank == 0)
         {
-            const int out_app_flag = 0;
             std::stringstream error_message;
-            std::string readin_dir = global_readin_dir;
-            if(istep >= 0)
-            {
-                readin_dir = readin_dir + "WFC/";
-            }
             const int read_type = binary ? 2 : 1;
-            std::string ss = ModuleIO::filename_output(readin_dir,"wf","nao",
-                    ik,ik2iktot,nspin,nkstot,read_type,out_app_flag,gamma_only,istep);
+            // Candidate file locations, in priority order:
+            // 1. readin_dir + step-suffixed name: layout written by runs with
+            //    out_app_flag 0 (files in the OUT directory root)
+            // 2. readin_dir + "PSI/" + step-suffixed name: layout written by
+            //    runs with out_app_flag 2
+            // 3. readin_dir + "WFC/" + step-suffixed name: layout written by
+            //    releases before the out_app_flag rework
+            // 4. readin_dir + name without the step suffix: written in append
+            //    mode (out_app_flag 1)
+            std::vector<std::string> candidates;
+            if (istep >= 0)
+            {
+                const int suffix_app_flag = 0;
+                candidates.push_back(ModuleIO::filename_output(global_readin_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        suffix_app_flag,
+                        gamma_only,
+                        istep));
+                const std::string psi_dir = global_readin_dir + "PSI/";
+                candidates.push_back(ModuleIO::filename_output(psi_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        suffix_app_flag,
+                        gamma_only,
+                        istep));
+                const std::string legacy_dir = global_readin_dir + "WFC/";
+                candidates.push_back(ModuleIO::filename_output(legacy_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        suffix_app_flag,
+                        gamma_only,
+                        istep));
+            }
+            const int append_app_flag = 1;
+            candidates.push_back(ModuleIO::filename_output(global_readin_dir,
+                    "wf",
+                    "nao",
+                    ik,
+                    ik2iktot,
+                    nspin,
+                    nkstot,
+                    read_type,
+                    append_app_flag,
+                    gamma_only,
+                    istep));
 
-            read_success = read_one_file(ss, error_message, ik, ctot);
+            for (size_t ic = 0; ic < candidates.size(); ++ic)
+            {
+                read_success = read_one_file(candidates[ic], error_message, ik, ctot);
+                if (read_success)
+                {
+                    break;
+                }
+            }
             errors = error_message.str();
         }   
 #ifdef __MPI

@@ -314,16 +314,18 @@ void ReadInput::create_directory(const Parameter& param)
             {param.input.out_stru > 0, param.globalv.global_stru_dir},
             {param.input.out_wfc_lcao > 0 || param.input.out_wfc_pw > 0, param.globalv.global_psi_dir},
             {param.input.out_chg[0] > 0, param.globalv.global_chg_dir},
-            {param.input.out_pot[0] > 0 || param.input.out_elf[0] > 0, param.globalv.global_pot_dir},
+            {param.input.out_pot[0] > 0, param.globalv.global_pot_dir},
             {param.input.out_elf[0] > 0, param.globalv.global_elf_dir},
-            {param.input.out_dos > 0 || !param.input.out_band.empty() && param.input.out_band[0] > 0, param.globalv.global_dos_dir},
+            {param.input.out_dos > 0
+                 || (!param.input.out_ldos.empty() && param.input.out_ldos[0] > 0),
+             param.globalv.global_dos_dir},
             {param.input.out_dipole, param.globalv.global_dip_dir},
             {param.input.out_dmk[0] > 0 || param.input.out_dmr[0] > 0 || param.input.out_hsk[0] > 0
                  || param.input.out_mat_hs2[0] > 0 || param.input.out_mat_r[0] > 0 || param.input.out_mat_t[0] > 0
                  || param.input.out_mat_tk[0] > 0 || param.input.out_mat_l[0] > 0
                  || param.input.out_mat_dh[0] > 0 || param.input.out_mat_ds[0] > 0
                  || param.input.out_mat_xc || param.input.out_mat_xc2[0] > 0 || param.input.out_hr_npz
-                 || param.input.out_dm_npz, param.globalv.global_mat_dir}
+                 || param.input.out_hsr_npz || param.input.out_dm_npz, param.globalv.global_mat_dir}
         };
         for (const auto& flag_dir : subdir_flags)
         {

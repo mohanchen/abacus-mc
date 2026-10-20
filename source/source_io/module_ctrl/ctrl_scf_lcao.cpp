@@ -207,7 +207,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     if (hsk_out_type == 1 || hsk_out_type == 2)
     {
         const int precision = inp.out_hsk[1];
-        ModuleIO::write_hsk(global_out_dir,
+        ModuleIO::write_hsk(global_mat_dir,
                             nspin,
                             kv.get_nks(),
                             kv.get_nkstot(),
@@ -282,7 +282,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
 
         ModuleIO::write_hsr(hr_vec, sr, &ucell, inp.out_hsr[0], precision, pv,
                             (out_app_flag == 1), gamma_only, ucell.get_iat2iwt(), ucell.nat, istep,
-                            PARAM.globalv.global_out_dir, pelec->eferm,
+                            global_mat_dir, pelec->eferm,
                             ofs_running);
     }
 
@@ -292,7 +292,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     const bool output_hsr_npz = inp.out_hsr[0] == 3 || inp.out_hsr_npz_compat;
     if (output_hsr_npz)
     {
-        std::string zipname = PARAM.globalv.global_out_dir + "sr_nao.npz";
+        std::string zipname = global_mat_dir + "sr_nao.npz";
         ModuleIO::output_mat_npz(ucell, zipname, *(p_hamilt->getSR()));
     }
 
@@ -302,7 +302,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         for (int ispin = 0; ispin < hr_vec.size(); ++ispin)
         {
             std::string zipname
-                = PARAM.globalv.global_out_dir + "hrs" + std::to_string(ispin + 1) + "_nao.npz";
+                = global_mat_dir + "hrs" + std::to_string(ispin + 1) + "_nao.npz";
             ModuleIO::output_mat_npz(ucell, zipname, *(hr_vec[ispin]));
         }
     }
@@ -313,7 +313,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         for (int ispin = 0; ispin < dmr_vec.size(); ++ispin)
         {
             std::string zipname
-                = PARAM.globalv.global_out_dir + "output_DM" + std::to_string(ispin) + ".npz";
+                = global_mat_dir + "output_DM" + std::to_string(ispin) + ".npz";
             ModuleIO::output_mat_npz(ucell, zipname, *(dmr_vec[ispin]));
         }
     }
@@ -455,7 +455,9 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         h_params.gga_grad = PARAM.inp.gga_grad;
         h_params.out_app_flag = out_app_flag;
         h_params.calculation = inp.calculation;
-        h_params.global_out_dir = global_out_dir;
+        // H(k) component matrices follow the selected matrix directory so
+        // they land in MAT/ together with the other matrix outputs in mode 2
+        h_params.global_out_dir = global_mat_dir;
         h_params.global_matrix_dir = PARAM.globalv.global_matrix_dir;
         h_params.ks_solver = PARAM.inp.ks_solver;
         h_params.drank = GlobalV::DRANK;
@@ -511,7 +513,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
 
             const int out_label = 1; // 1: .txt, 2: .dat
 
-            std::string t_fn = ModuleIO::filename_output(global_out_dir,
+            std::string t_fn = ModuleIO::filename_output(global_mat_dir,
                                                          "tk",
                                                          "nao",
                                                          ik,

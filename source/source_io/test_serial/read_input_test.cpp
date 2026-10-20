@@ -396,3 +396,43 @@ TEST_F(InputTest, Check)
     EXPECT_THAT(output, testing::HasSubstr("INPUT parameters have been successfully checked!"));
     EXPECT_TRUE(std::remove("./INPUT.ref") == 0);
 }
+
+TEST_F(InputTest, OutAppFlagParsing)
+{
+    // numeric modes 0/1/2 are parsed as integers
+    {
+        Parameter param;
+        read_parameters("app_flag_numeric_INPUT", "basis_type lcao\nout_app_flag 2\n", param);
+        EXPECT_EQ(param.inp.out_app_flag, 2);
+    }
+    {
+        Parameter param;
+        read_parameters("app_flag_zero_INPUT", "basis_type lcao\nout_app_flag 0\n", param);
+        EXPECT_EQ(param.inp.out_app_flag, 0);
+    }
+    // the legacy Boolean spellings remain valid: true-like maps to mode 1,
+    // false-like maps to mode 0
+    const std::vector<std::pair<std::string, int>> spellings
+        = {{"true", 1},
+           {"TRUE", 1},
+           {"Yes", 1},
+           {"ON", 1},
+           {".true.", 1},
+           {"t", 1},
+           {"false", 0},
+           {"False", 0},
+           {"NO", 0},
+           {"off", 0},
+           {".false.", 0},
+           {"F", 0}};
+    for (const auto& spelling : spellings)
+    {
+        Parameter param;
+        read_parameters("app_flag_bool_INPUT", "basis_type lcao\nout_app_flag " + spelling.first + "\n", param);
+        EXPECT_EQ(param.inp.out_app_flag, spelling.second) << "spelling: " << spelling.first;
+    }
+    // values outside 0/1/2 are rejected
+    expect_invalid_input("app_flag_oob_INPUT",
+                         "basis_type lcao\nout_app_flag 3\n",
+                         "out_app_flag should be 0, 1, or 2");
+}

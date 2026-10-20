@@ -123,13 +123,14 @@ void write_dh_perI(WriteDHParams& params,
                     fk += "_ik" + std::to_string(params.kv->ik2iktot[ik]);
                 }
                 fk += "_nao.txt";
+                const bool append_fk = (out_app_flag == 1);
                 ModuleIO::save_mat(params.istep,
                                    hk.data(),
                                    nlocal,
                                    false,
                                    8,
                                    false,
-                                   (out_app_flag == 1),
+                                   append_fk,
                                    fk,
                                    pv,
                                    GlobalV::DRANK,
