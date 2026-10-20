@@ -23,6 +23,7 @@ void ModuleIO::write_wfc_pw(
         const int rank_in_pool,
         const int nproc_in_pool,
         const int out_wfc_pw,
+        const int out_app_flag,
         const double& ecutwfc,
         const std::string& global_out_dir,
         const psi::Psi<std::complex<double>>& psi,
@@ -43,7 +44,6 @@ void ModuleIO::write_wfc_pw(
     assert(nkstot>0);
     assert(nks>0);
 
-    int out_app_flag = 0; // need to modify later, mohan 2025-05-17
     bool gamma_only = false; // need to modify later, mohan 2025-05-17
 
     std::string* wfilename = new std::string[nks];
