@@ -106,8 +106,18 @@ fi
 if ! test -z "$has_band"  && [  $has_band == 1 ]; then
 	bandref=band.txt.ref
 	bandcal=OUT.autotest/band.txt
-	python3 $COMPARE_SCRIPT $bandref $bandcal 8
-	echo "CompareBand_pass $?" >>$props_result_file
+	# Every ionic step in band.txt is preceded by a provenance comment block
+	# ("# ABACUS version: ...", "# Written at ...", "# IONIC STEP n"), so the
+	# reference and the computed file are compared after those lines are
+	# stripped. A missing file must be reported explicitly, because process
+	# substitution would hand CompareFile.py an empty stream and pass silently.
+	if ! test -f "$bandref" || ! test -f "$bandcal"; then
+		echo "Error: can not find file $bandref or $bandcal"
+		echo "CompareBand_pass 1" >>$props_result_file
+	else
+		python3 $COMPARE_SCRIPT <(sed '/^[[:space:]]*#/d' "$bandref") <(sed '/^[[:space:]]*#/d' "$bandcal") 8
+		echo "CompareBand_pass $?" >>$props_result_file
+	fi
 fi
 
 #--------------------------------
