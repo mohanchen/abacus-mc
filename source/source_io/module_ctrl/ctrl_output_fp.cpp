@@ -56,7 +56,12 @@ void ctrl_output_fp(UnitCell& ucell,
     bool should_output = (output_frequency == 0);
     if (istep_in >= 0)
     {
-        geom_block = "g" + std::to_string(istep + 1);
+        // In append mode (out_app_flag == 1) each cube output reuses a
+        // fixed filename, so every step overwrites the previous snapshot.
+        if (out_app_flag != 1)
+        {
+            geom_block = "g" + std::to_string(istep + 1);
+        }
         should_output = true;
     }
 
