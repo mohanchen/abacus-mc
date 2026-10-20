@@ -458,8 +458,8 @@ Note: values 2 and 3 are no longer supported. Setting out_dos to 2 or 3 will rai
         item.type = "Integer";
         item.description = "Controls the output of structure files per ionic step. The files are written to the OUT.{suffix}/ directory. Each file corresponds to the structure at the current ionic step, and includes a header comment with the ABACUS version, timestamp, energy, and stress tensor. When out_freq_ion is positive, the numbered files STRU{istep} (or STRU{istep}.cif) are written every out_freq_ion steps; when out_freq_ion is 0, no numbered files are output. This parameter is effective for scf/nscf/relax/cell-relax and md. For scf/nscf only STRU_FINAL (or STRU_FINAL.cif) is written. For MD, structure output follows the same out_freq_ion frequency as the restart file.\n"
                           "    - 0: No structure files are output.\n"
-                          "    - 1: ABACUS STRU format files are output. The latest structure is written to STRU_NOW (overwritten each step), the numbered file STRU{istep} (e.g., STRU1, STRU2) is written every out_freq_ion steps (when out_freq_ion is positive), and the final converged structure is written to STRU_FINAL. No CIF files are output.\n"
-                          "    - 2: CIF format files are output. The latest structure is written to STRU_NOW.cif (overwritten each step), the numbered file STRU{istep}.cif (e.g., STRU1.cif, STRU2.cif) is written every out_freq_ion steps (when out_freq_ion is positive), and the final converged structure is written to STRU_FINAL.cif. No non-CIF files are output.\n"
+                          "    - 1: ABACUS STRU format files are output. The latest structure is written to STRU_NOW (overwritten each step), the numbered file STRU{istep} (e.g., STRU1, STRU2) is written every out_freq_ion steps (when out_freq_ion is positive), and the final converged structure is written to STRU_FINAL. No CIF files are output. When out_app_flag is 1, the numbered STRU{istep} files are replaced by a single fixed-name STRU file that appends one structure block (with a one-based \"# Ionic Step N\" or \"# MD step N\" comment) per written step.\n"
+                          "    - 2: CIF format files are output. The latest structure is written to STRU_NOW.cif (overwritten each step), the numbered file STRU{istep}.cif (e.g., STRU1.cif, STRU2.cif) is written every out_freq_ion steps (when out_freq_ion is positive), and the final converged structure is written to STRU_FINAL.cif. No non-CIF files are output. When out_app_flag is 1, the numbered files are replaced by a fixed-name STRU.cif overwritten each written step.\n"
                           "[NOTE] For backward compatibility, true/false (case insensitive) are accepted and converted to 1/0.";
         item.default_value = "1";
         item.unit = "";
@@ -1400,7 +1400,7 @@ The circle order of the charge density on real space grids is: x is the outer lo
 * 1: Reuse fixed filenames across steps (default, backward compatible): text outputs append new records, cube snapshots are overwritten
 * 2: Write to subdirectory (PSI/, CHG/, POT/, ELF/, DOS/, DIP/, MAT/), files carry a g{step} suffix
 The legacy Boolean spellings (true/false, yes/no, on/off, t/f, y/n, and the dotted forms) are still accepted and map to modes 1/0 as before.
-For more information, refer to the documentation of out_mat_r, out_hsr, out_mat_t, out_mat_dh, out_hsk, out_wfc_lcao, out_chg, out_pot, out_elf, out_dos, out_dipole.)";
+For more information, refer to the documentation of out_mat_r, out_hsr, out_mat_t, out_mat_dh, out_hsk, out_wfc_lcao, out_chg, out_pot, out_elf, out_dos, out_dipole, out_stru.)";
         item.default_value = "1";
         item.unit = "";
         item.set_availability("basis_type==lcao and gamma_only==0");

@@ -299,9 +299,20 @@ void md_line(MDCell& mdcell,
             if (param_in.inp.out_stru > 0)
             {
                 const int stru_step = current_step + 1;
+                // out_app_flag == 1: single fixed-name STRU accumulates one
+                // frame per step with a one-based "# MD step N" comment;
+                // modes 0/2 keep the numbered STRU{stru_step} files.
+                const bool append_stru = (param_in.inp.out_app_flag == 1);
+                const std::string frame_comment = append_stru
+                    ? "# MD step " + std::to_string(stru_step) + "\n\n"
+                    : "";
                 std::stringstream file;
-                file << PARAM.globalv.global_stru_dir << "STRU" << stru_step;
-                mdcell::print_stru_file(mdcell, mdcell.stru_meta(), file.str());
+                file << PARAM.globalv.global_stru_dir << "STRU";
+                if (!append_stru)
+                {
+                    file << stru_step;
+                }
+                mdcell::print_stru_file(mdcell, mdcell.stru_meta(), file.str(), frame_comment, append_stru);
             }
             mdrun->write_restart(PARAM.globalv.global_out_dir);
         }
