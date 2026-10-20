@@ -174,7 +174,9 @@ void ModuleIO::output_TR(const int istep,
     ModuleBase::timer::start("ModuleIO", "output_TR");
 
     std::stringstream sst;
-    if (istep >= 0)
+    // In append mode (out_app_flag == 1) the file keeps the fixed name so
+    // the MD append logic in save_sparse can accumulate all ionic steps.
+    if (istep >= 0 && options.out_app_flag != 1)
     {
         // insert the 1-indexed ionic-step suffix right after the "tr" prefix,
         // i.e. tr_nao.csr -> trg{step+1}_nao.csr (aligned with lxg/rrg naming)

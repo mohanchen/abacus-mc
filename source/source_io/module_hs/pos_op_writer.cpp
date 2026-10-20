@@ -216,7 +216,9 @@ void PosOpWriter::out_lat_r(const UnitCell& ucell,
     if (GlobalV::DRANK == 0)
     {
         std::stringstream ssr;
-        if (step >= 0)
+        // In append mode (out_app_flag == 1) keep the fixed filename so
+        // the append branch below can accumulate all ionic steps.
+        if (step >= 0 && out_app_flag != 1)
         {
             ssr << global_matrix_dir << "rrg" << (step + 1) << "_nao.txt";
         }
