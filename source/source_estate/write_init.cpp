@@ -6,6 +6,7 @@
 //   - Frequency is out_freq_td for RT-TDDFT and out_freq_ion otherwise.
 //   - Frequency = 0: chg_ini.cube/pot_ini.cube, chgs1_ini.cube/chgs2_ini.cube
 //   - Frequency > 0: chgg{#}_ini.cube/potg{#}_ini.cube, chgs{#}g{#}_ini.cube
+//     (out_app_flag == 1 keeps the fixed names without the g{#} index)
 //   - File indices start from 1 (istep + 1); RT-TDDFT uses electronic steps.
 //
 // Usage:
@@ -82,7 +83,9 @@ void ModuleIO::write_chg_init(const UnitCell& ucell,
 
         if (should_output)
         {
-            const bool include_geom_step = (output_frequency > 0);
+            // In append mode (out_app_flag == 1) each snapshot overwrites
+            // the same fixed file, so the geometry-step index is omitted.
+            const bool include_geom_step = (output_frequency > 0) && (inp.out_app_flag != 1);
 
             for (int is = 0; is < nspin; is++)
             {
@@ -151,7 +154,9 @@ void ModuleIO::write_pot_init(const UnitCell& ucell,
 
         if (should_output)
         {
-            const bool include_geom_step = (output_frequency > 0);
+            // In append mode (out_app_flag == 1) each snapshot overwrites
+            // the same fixed file, so the geometry-step index is omitted.
+            const bool include_geom_step = (output_frequency > 0) && (inp.out_app_flag != 1);
 
             for (int is = 0; is < nspin; is++)
             {
