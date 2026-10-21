@@ -325,7 +325,12 @@ void ReadInput::create_directory(const Parameter& param)
                  || param.input.out_mat_tk[0] > 0 || param.input.out_mat_l[0] > 0
                  || param.input.out_mat_dh[0] > 0 || param.input.out_mat_ds[0] > 0
                  || param.input.out_mat_xc || param.input.out_mat_xc2[0] > 0 || param.input.out_hr_npz
-                 || param.input.out_hsr_npz || param.input.out_dm_npz, param.globalv.global_mat_dir}
+                 || param.input.out_hsr_npz || param.input.out_dm_npz
+                 || param.input.out_mat_h_t[0] > 0 || param.input.out_mat_h_vnl[0] > 0 || param.input.out_mat_h_vl[0] > 0
+                 || param.input.out_mat_h_vh[0] > 0 || param.input.out_mat_h_vxc[0] > 0 || param.input.out_mat_h_exx[0] > 0
+                 || param.input.out_mat_dh_t[0] > 0 || param.input.out_mat_dh_vl[0] > 0 || param.input.out_mat_dh_vnl[0] > 0
+                 || param.input.out_mat_dh_vh[0] > 0 || param.input.out_mat_dh_vxc[0] > 0,
+             param.globalv.global_mat_dir}
         };
         for (const auto& flag_dir : subdir_flags)
         {
