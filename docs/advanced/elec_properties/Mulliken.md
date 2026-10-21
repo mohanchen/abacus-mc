@@ -64,4 +64,4 @@ For each atom, the file gives detailed Mulliken population analysis at different
 -   atomic level: such as lines begin with 'sum lmz' for the atom total and
     'total charge on atom' for the charge assigned to the atom.
 
-More orbital information can be found in 'Orbital' file output with 'mulliken.txt' when `out_mul 1`
+More orbital information can be found in 'nao.txt' file output with 'mulliken.txt' when `out_mul 1`

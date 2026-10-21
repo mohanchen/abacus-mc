@@ -69,8 +69,8 @@ fi
 # echo $out_pband
 #-------------------------------
 if ! test -z "$out_pband"  && [  $out_pband == 1 ]; then
-	orbref=refOrbital
-	orbcal=OUT.autotest/Orbital
+	orbref=refNaoTxt
+	orbcal=OUT.autotest/nao.txt
 	python3 $COMPARE_SCRIPT $orbref $orbcal 8
 	echo "CompareOrb_pass $?" >>$props_result_file
 fi
