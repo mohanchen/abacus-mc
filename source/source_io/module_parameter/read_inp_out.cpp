@@ -1404,7 +1404,10 @@ The legacy Boolean spellings (true/false, yes/no, on/off, t/f, y/n, and the dott
 For more information, refer to the documentation of out_mat_r, out_hsr, out_mat_t, out_mat_dh, out_hsk, out_wfc_lcao, out_chg, out_pot, out_elf, out_dos, out_dipole, out_stru.)";
         item.default_value = "1";
         item.unit = "";
-        item.set_availability("basis_type==lcao and gamma_only==0");
+        // out_app_flag applies to both LCAO and PW bases, and gamma-only runs
+        // follow the same directory routing rules as multi-k runs. An empty
+        // availability expression means "always available".
+        item.set_availability("");
         // Keep the previously accepted Boolean spellings working: the legacy
         // parser treated out_app_flag as a Boolean, so INPUT files containing
         // "true"/"false"/"yes"/"no"/"on"/"off" (case-insensitive) must keep
