@@ -99,7 +99,7 @@ Set `out_hsr 2` to write the same H(R) and S(R) matrix sets with a `.dat` suffix
 
 Each ionic step is a complete record with no padding or self-describing header:
 
-1. Native `int`: zero-based ionic step, matrix dimension, number of R blocks.
+1. Native `int`: one-based ionic step, matrix dimension, number of R blocks.
 2. For every R block in lexicographic `(Rx, Ry, Rz)` order, four native `int` values: `Rx`, `Ry`, `Rz`, and `nnz`.
 3. `nnz` matrix values in CSR order. Real matrices use one native `double`; complex matrices use consecutive real and imaginary `double` values.
 4. `nnz` native `int` column indices.
