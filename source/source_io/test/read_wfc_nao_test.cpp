@@ -186,7 +186,8 @@ TEST_F(ReadWfcNaoTest, ReadBinaryGamma)
                                      ekb_source,
                                      wg_source,
                                      true,
-                                     false);
+                                     false,
+                                     "");
     }
 #ifdef __MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -205,6 +206,64 @@ TEST_F(ReadWfcNaoTest, ReadBinaryGamma)
                                        1,
                                        1,
                                        true));
+    EXPECT_DOUBLE_EQ(ekb(0, 0), ekb_source(0, 0));
+    EXPECT_DOUBLE_EQ(ekb(0, 1), ekb_source(0, 1));
+    EXPECT_DOUBLE_EQ(wg(0, 0), wg_source(0, 0));
+    EXPECT_DOUBLE_EQ(wg(0, 1), wg_source(0, 1));
+    if (my_rank == 0)
+    {
+        EXPECT_DOUBLE_EQ(psi_read(0, 0, 0), coefficients[0]);
+    }
+}
+
+TEST_F(ReadWfcNaoTest, ReadTextWithCommentHeader)
+{
+    // Text files carrying the provenance header (version/timestamp/step)
+    // must stay readable: the reader skips leading '#' comment lines.
+    const int nbands = 2;
+    const int nlocal = 3;
+    Parallel_Orbitals para;
+    initialize_parallel_orbitals(para, nlocal, nbands);
+
+    const std::vector<double> coefficients = {0.1, 0.2, 0.3, 1.1, 1.2, 1.3};
+    ModuleBase::matrix ekb_source(1, nbands);
+    ModuleBase::matrix wg_source(1, nbands);
+    ekb_source(0, 0) = -0.5;
+    ekb_source(0, 1) = 0.7;
+    wg_source(0, 0) = 2.0;
+    wg_source(0, 1) = 0.0;
+    if (my_rank == 0)
+    {
+        const std::string header = "# ABACUS version: test\n"
+                                   "# Written at 2026-01-01 00:00:00\n"
+                                   "# IONIC STEP 1 (spin up)\n";
+        ModuleIO::wfc_nao_write2file(binary_test_dir + "wf_nao.txt",
+                                     coefficients.data(),
+                                     nlocal,
+                                     0,
+                                     ekb_source,
+                                     wg_source,
+                                     false,
+                                     false,
+                                     header);
+    }
+#ifdef __MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
+    psi::Psi<double> psi_read;
+    ModuleBase::matrix ekb(1, nbands);
+    ModuleBase::matrix wg(1, nbands);
+    const std::vector<int> ik2iktot = {0};
+    EXPECT_TRUE(ModuleIO::read_wfc_nao(binary_test_dir,
+                                       para,
+                                       psi_read,
+                                       ekb,
+                                       wg,
+                                       ik2iktot,
+                                       1,
+                                       1,
+                                       false));
     EXPECT_DOUBLE_EQ(ekb(0, 0), ekb_source(0, 0));
     EXPECT_DOUBLE_EQ(ekb(0, 1), ekb_source(0, 1));
     EXPECT_DOUBLE_EQ(wg(0, 0), wg_source(0, 0));
@@ -238,7 +297,8 @@ TEST_F(ReadWfcNaoTest, ReadBinaryGammaFloat)
                                      ekb_source,
                                      wg_source,
                                      true,
-                                     false);
+                                     false,
+                                     "");
     }
 #ifdef __MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -292,7 +352,8 @@ TEST_F(ReadWfcNaoTest, ReadBinaryComplex)
                                              ekb_source,
                                              wg_source,
                                              true,
-                                             false);
+                                             false,
+                                             "");
     }
 #ifdef __MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -349,7 +410,8 @@ TEST_F(ReadWfcNaoTest, ReadBinaryPart)
                                      ekb_source,
                                      wg_source,
                                      true,
-                                     false);
+                                     false,
+                                     "");
     }
 #ifdef __MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -398,7 +460,8 @@ TEST_F(ReadWfcNaoTest, BinaryDoesNotFallBackToText)
                                      ekb_source,
                                      wg_source,
                                      false,
-                                     false);
+                                     false,
+                                     "");
     }
 #ifdef __MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -505,7 +568,8 @@ TEST_F(ReadWfcNaoTest, ReadPsiDirectoryLayout)
                                      ekb_source,
                                      wg_source,
                                      true,
-                                     false);
+                                     false,
+                                     "");
     }
 #ifdef __MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -547,7 +611,8 @@ TEST_F(ReadWfcNaoTest, ReadPsiDirectoryLayout)
                                      ekb_source,
                                      wg_source,
                                      true,
-                                     false);
+                                     false,
+                                     "");
 
         std::ifstream ifs_rewritten(snapshot.c_str(), std::ios::binary);
         ifs_rewritten.seekg(0, std::ios::end);
@@ -596,13 +661,13 @@ TEST_F(ReadWfcNaoTest, CompleteSpinPopulations)
                     if (gamma_only)
                     {
                         ModuleIO::wfc_nao_write2file(file, real_coefficients.data(), nlocal,
-                            ik, energies, occupations, binary, false);
+                            ik, energies, occupations, binary, false, "");
                     }
                     else
                     {
                         const ModuleBase::Vector3<double> kpoint(0.25, 0.0, 0.0);
                         ModuleIO::wfc_nao_write2file_complex(file, complex_coefficients.data(), nlocal,
-                            ik, kpoint, energies, occupations, binary, false);
+                            ik, kpoint, energies, occupations, binary, false, "");
                     }
                 }
             }
@@ -645,7 +710,7 @@ TEST_F(ReadWfcNaoTest, CompleteGlobalKPointPopulations)
         {
             const ModuleBase::Vector3<double> kpoint(0.25 * ik, 0.0, 0.0);
             ModuleIO::wfc_nao_write2file_complex(file, coefficients.data(), nlocal,
-                ik, kpoint, energies, occupations, false, false);
+                ik, kpoint, energies, occupations, false, false, "");
         }
     }
     std::vector<double> populations;

@@ -7,6 +7,7 @@
 #include "source_base/tool_title.h" // use title
 #include "source_base/global_function.h" // use READ_VALUE
 
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -18,6 +19,36 @@ bool read_binary_value(std::ifstream& ifs, T& value)
 {
     ifs.read(reinterpret_cast<char*>(&value), sizeof(T));
     return static_cast<bool>(ifs);
+}
+
+/**
+ * @brief skip leading comment lines starting with '#' in a text stream.
+ *
+ * Text wavefunction files may carry a provenance header (ABACUS version,
+ * timestamp, ionic step) before the data block. The stream is left positioned
+ * at the first non-comment character. Must not be used on binary streams,
+ * where '#' is legitimate record data.
+ *
+ * @param ifs text input stream positioned at the start of the file
+ */
+void skip_comment_lines(std::ifstream& ifs)
+{
+    std::string line;
+    while (ifs.peek() != std::char_traits<char>::eof())
+    {
+        const std::streampos pos = ifs.tellg();
+        ifs >> std::ws;
+        if (ifs.peek() == '#')
+        {
+            std::getline(ifs, line);
+        }
+        else
+        {
+            ifs.seekg(pos);
+            ifs.clear();
+            break;
+        }
+    }
 }
 
 template <typename T>
@@ -102,6 +133,10 @@ bool ModuleIO::read_wfc_nao_spin_populations(const std::string& readin_dir,
                 ik, ik2iktot, nspin, nkstot, read_type, false, gamma_only, -1);
             const std::ios_base::openmode mode = binary ? std::ios::in | std::ios::binary : std::ios::in;
             std::ifstream ifs(file.c_str(), mode);
+            if (!binary)
+            {
+                skip_comment_lines(ifs);
+            }
             if (!gamma_only)
             {
                 int ik_file = 0;
@@ -260,6 +295,11 @@ bool ModuleIO::read_wfc_nao(
         else
         {
             std::cout << " Read NAO wave functions from " << ss << std::endl;
+        }
+
+        if (!binary)
+        {
+            skip_comment_lines(ifs);
         }
 
         const auto incomplete_file = [&](const std::string& field) {
