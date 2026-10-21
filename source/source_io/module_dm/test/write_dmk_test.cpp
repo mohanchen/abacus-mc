@@ -261,6 +261,10 @@ TEST(DMKTest, Mode0PerStepFiles) {
     kv.kvec_c[0].x = 0.0;
     kv.kvec_c[0].y = 0.0;
     kv.kvec_c[0].z = 0.0;
+    kv.kvec_d.resize(1);
+    kv.kvec_d[0].x = 0.0;
+    kv.kvec_d[0].y = 0.0;
+    kv.kvec_d[0].z = 0.0;
     kv.wk.resize(1);
     kv.wk[0] = 1.0;
     kv.isk.resize(1);
@@ -319,6 +323,10 @@ TEST(DMKTest, Mode1FixedNameAppend) {
     kv.kvec_c[0].x = 0.0;
     kv.kvec_c[0].y = 0.0;
     kv.kvec_c[0].z = 0.0;
+    kv.kvec_d.resize(1);
+    kv.kvec_d[0].x = 0.0;
+    kv.kvec_d[0].y = 0.0;
+    kv.kvec_d[0].z = 0.0;
     kv.wk.resize(1);
     kv.wk[0] = 1.0;
     kv.isk.resize(1);
@@ -339,8 +347,8 @@ TEST(DMKTest, Mode1FixedNameAppend) {
                         std::istreambuf_iterator<char>());
         ifs.close();
         // Two "Ionic Step" headers present -> two appended records.
-        EXPECT_THAT(str, testing::HasSubstr("Ionic Step: 1"));
-        EXPECT_THAT(str, testing::HasSubstr("Ionic Step: 2"));
+        EXPECT_THAT(str, testing::HasSubstr(" --- Ionic Step 1 ---"));
+        EXPECT_THAT(str, testing::HasSubstr(" --- Ionic Step 2 ---"));
         // g-suffixed file must NOT exist.
         ifs.open("dms1g1_nao.txt");
         EXPECT_FALSE(ifs.good());
@@ -376,6 +384,10 @@ TEST(DMKTest, Mode2SameNamingAsMode0) {
     kv.kvec_c[0].x = 0.0;
     kv.kvec_c[0].y = 0.0;
     kv.kvec_c[0].z = 0.0;
+    kv.kvec_d.resize(1);
+    kv.kvec_d[0].x = 0.0;
+    kv.kvec_d[0].y = 0.0;
+    kv.kvec_d[0].z = 0.0;
     kv.wk.resize(1);
     kv.wk[0] = 1.0;
     kv.isk.resize(1);

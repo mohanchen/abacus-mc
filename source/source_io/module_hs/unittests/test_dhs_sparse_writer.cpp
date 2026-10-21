@@ -44,7 +44,8 @@ TEST(DhsSparseWriter, TextCountsOnlyValuesAboveThreshold)
 
     const std::vector<std::string> lines = read_lines("dhrxs1g6_nao.csr");
     ASSERT_GE(lines.size(), 7);
-    EXPECT_EQ(lines[0], "STEP: 5");
+    // istep = 5 is the sixth ionic step, printed one-based as 6
+    EXPECT_EQ(lines[0], "STEP: 6");
     EXPECT_EQ(lines[1], "Matrix Dimension of dHx(R): 2");
     EXPECT_EQ(lines[2], "Matrix number of dHx(R): 1");
     EXPECT_EQ(lines[3], "0 0 0 2");
@@ -95,7 +96,8 @@ TEST(DhsSparseWriter, BinaryCountsOnlyValuesAboveThreshold)
 
     std::ifstream ifs("dhrxs1g7_nao.csr", std::ios::binary);
     ASSERT_TRUE(ifs.is_open());
-    EXPECT_EQ(read_binary_value<int>(ifs), 6);
+    // istep = 6 -> one-based step 7 in the binary header
+    EXPECT_EQ(read_binary_value<int>(ifs), 7);
     EXPECT_EQ(read_binary_value<int>(ifs), 2);
     EXPECT_EQ(read_binary_value<int>(ifs), 1);
     EXPECT_EQ(read_binary_value<int>(ifs), 0);
