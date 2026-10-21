@@ -18,6 +18,7 @@ void write_elf(
     const int& precision,
     const std::string& geom_block,
     const bool two_fermi,
+    const bool append,
     std::ofstream& ofs_running)
 {
     ModuleBase::timer::start("ModuleIO", "write_elf");
@@ -186,6 +187,7 @@ void write_elf(
             out_fermi,
             two_fermi,
             false,
+            append,
             ofs_running,
             "electron localization function");
     }
@@ -211,6 +213,7 @@ void write_elf(
                 out_fermi,
                 two_fermi,
                 false,
+                append,
                 ofs_running,
                 desc_elf);
         }
@@ -249,6 +252,7 @@ void write_elf(
             out_fermi,
             two_fermi,
             false,
+            append,
             ofs_running,
             "electron localization function");
     }

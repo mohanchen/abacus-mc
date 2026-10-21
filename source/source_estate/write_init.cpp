@@ -83,9 +83,11 @@ void ModuleIO::write_chg_init(const UnitCell& ucell,
 
         if (should_output)
         {
-            // In append mode (out_app_flag == 1) each snapshot overwrites
-            // the same fixed file, so the geometry-step index is omitted.
+            // In append mode (out_app_flag == 1) each written step reuses the
+            // same fixed filename and contributes one complete cube frame, so
+            // the geometry-step index is omitted and frames accumulate.
             const bool include_geom_step = (output_frequency > 0) && (inp.out_app_flag != 1);
+            const bool append = (inp.out_app_flag == 1) && (istep > 0);
 
             for (int is = 0; is < nspin; is++)
             {
@@ -122,6 +124,7 @@ void ModuleIO::write_chg_init(const UnitCell& ucell,
                                               1,
                                               two_fermi,
                                               false,
+                                              append,
                                               ofs_running,
                                               desc_chg);
             }
@@ -154,9 +157,11 @@ void ModuleIO::write_pot_init(const UnitCell& ucell,
 
         if (should_output)
         {
-            // In append mode (out_app_flag == 1) each snapshot overwrites
-            // the same fixed file, so the geometry-step index is omitted.
+            // In append mode (out_app_flag == 1) each written step reuses the
+            // same fixed filename and contributes one complete cube frame, so
+            // the geometry-step index is omitted and frames accumulate.
             const bool include_geom_step = (output_frequency > 0) && (inp.out_app_flag != 1);
+            const bool append = (inp.out_app_flag == 1) && (istep > 0);
 
             for (int is = 0; is < nspin; is++)
             {
@@ -176,6 +181,7 @@ void ModuleIO::write_pot_init(const UnitCell& ucell,
                                               0,
                                               two_fermi,
                                               false,
+                                              append,
                                               ofs_running,
                                               desc_pot);
             }

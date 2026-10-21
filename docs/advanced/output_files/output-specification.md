@@ -55,6 +55,12 @@ All output file naming conventions can be found in the online documentation (wit
 - All index numbers start from 1 (not 0)
 - For Gamma-only algorithm in LCAO, no `k` index is included
 - Overlap matrix `s` does not distinguish spin, so only one matrix is output
+- `out_app_flag = 1` omits the `g#` suffix for cube files (chg/tau/pot/elf): the
+  first written ionic step truncates the fixed-name file and every later
+  written step appends one complete cube frame whose first comment line is
+  `Ionic_Step {#}` (one-based). `out_app_flag = 0` writes one suffixed file per
+  step, and `out_app_flag = 2` writes those suffixed files into the `CHG/`,
+  `POT/` and `ELF/` subdirectories
 - For initial charge density output (`out_chg = 2`):
   - `out_freq_ion = 0`: `chg_ini.cube` (nspin=1) or `chgs{#}_ini.cube` (nspin=2/4) - output at every step (overwrite same file)
   - `out_freq_ion > 0`: `chgg{#}_ini.cube` (nspin=1) or `chgs{#}g{#}_ini.cube` (nspin=2/4) - output every out_freq_ion steps

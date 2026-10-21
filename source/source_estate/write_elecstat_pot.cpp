@@ -24,6 +24,7 @@ void write_elecstat_pot(
     const surchem& solvent,
     const std::vector<double>* pcc_potential,
     const int precision,
+    const bool append,
     std::ofstream& ofs_running)
 {
     ModuleBase::TITLE("ModuleIO", "write_elecstat_pot");
@@ -112,6 +113,7 @@ void write_elecstat_pot(
         out_fermi,
         PARAM.globalv.two_fermi,
         false,
+        append,
         ofs_running,
         "electrostatic potential");
 

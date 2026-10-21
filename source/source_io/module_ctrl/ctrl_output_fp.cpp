@@ -56,14 +56,23 @@ void ctrl_output_fp(UnitCell& ucell,
     bool should_output = (output_frequency == 0);
     if (istep_in >= 0)
     {
-        // In append mode (out_app_flag == 1) each cube output reuses a
-        // fixed filename, so every step overwrites the previous snapshot.
+        // In append mode (out_app_flag == 1) each cube output reuses a fixed
+        // filename, so every written step appends one complete frame to that
+        // file. Modes 0 and 2 keep a per-step g{index} suffix, which makes
+        // every file hold exactly one frame.
         if (out_app_flag != 1)
         {
             geom_block = "g" + std::to_string(istep + 1);
         }
         should_output = true;
     }
+
+    // Mirror the out_wfc_lcao convention: in append mode the first ionic step
+    // (istep == 0, always written because every out_freq_ion divides it)
+    // truncates the fixed-name cube files and later steps append one complete
+    // frame each. Single-point SCF/NSCF runs stop at istep == 0, so they keep
+    // overwriting instead of stacking on a stale file from an earlier run.
+    const bool append_cube = (out_app_flag == 1) && (istep > 0);
 
     // 4) write charge density
     if (inp.out_chg[0] > 0 && should_output)
@@ -98,6 +107,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                           1,
                                           PARAM.globalv.two_fermi,
                                           false,
+                                          append_cube,
                                           ofs_running,
                                           desc_chg);
 
@@ -121,6 +131,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                               1,  // default out_fermi
                                               PARAM.globalv.two_fermi,
                                               false,
+                                              append_cube,
                                               ofs_running,
                                               desc_tau);
             }
@@ -160,6 +171,7 @@ void ctrl_output_fp(UnitCell& ucell,
                                           0,              // out_fermi
                                           PARAM.globalv.two_fermi,
                                           false,
+                                          append_cube,
                                           ofs_running,
                                           desc_pot);
         }
@@ -184,6 +196,7 @@ void ctrl_output_fp(UnitCell& ucell,
             solvent,
             pcc_potential,
             inp.out_pot[1],
+            append_cube,
             ofs_running);
     }
 
@@ -210,6 +223,7 @@ void ctrl_output_fp(UnitCell& ucell,
                             inp.out_elf[1],
                             geom_block,
                             PARAM.globalv.two_fermi,
+                            append_cube,
                             ofs_running);
     }
 

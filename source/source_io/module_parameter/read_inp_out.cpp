@@ -1398,7 +1398,7 @@ The circle order of the charge density on real space grids is: x is the outer lo
         item.type = "Integer";
         item.description = R"(Controls output file organization during multi-step calculations (MD, relax, RT-TDDFT). The directory routing applies to both LCAO and PW basis calculations.
 * 0: Write to OUT directory directly, no append (each step's file carries a g{step} suffix)
-* 1: Reuse fixed filenames across steps (default, backward compatible): text outputs append new records, cube snapshots are overwritten
+* 1: Reuse fixed filenames across steps (default, backward compatible): text outputs append new records, cube outputs accumulate one frame per written step
 * 2: Write to subdirectory (PSI/, CHG/, POT/, ELF/, DOS/, DIP/, MAT/), files carry a g{step} suffix
 The legacy Boolean spellings (true/false, yes/no, on/off, t/f, y/n, and the dotted forms) are still accepted and map to modes 1/0 as before.
 For more information, refer to the documentation of out_mat_r, out_hsr, out_mat_t, out_mat_dh, out_hsk, out_wfc_lcao, out_chg, out_pot, out_elf, out_dos, out_dipole, out_stru.)";
@@ -1664,6 +1664,8 @@ Here $\tilde{\psi}$ is the pseudo-wavefunction, $\beta_i^I$ are the atomic proje
     * elftot.cube: ELF for total charge density, ${\rm{ELF}} = \frac{1}{1+\chi^2}$, $\chi = \frac{\frac{1}{2}\sum_{i}{f_i |\nabla\psi_{i}|^2} - \frac{|\nabla\rho|^2}{8\rho}}{\frac{3}{10}(3\pi^2)^{2/3}\rho^{5/3}}$
 
 When `out_freq_ion > 0`, a geometry step suffix `g{#}` is appended to the file names (e.g., `elftotg1.cube`, `elfs1g1.cube`).
+
+With `out_app_flag=1` the geometry step suffix is omitted and the same ELF files accumulate one complete cube frame per written ionic step (`Ionic_Step {#}` as the first comment line, one-based); the first written step truncates them. With `out_app_flag=0` every step writes its own suffixed file, and with `out_app_flag=2` the frames are routed to the `ELF/` subdirectory.
 
 The second integer controls the precision of the kinetic energy density output, if not given, will use 3 as default. For purpose restarting from this file and other high-precision involved calculation, recommend to use 10.
 
