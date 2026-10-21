@@ -80,16 +80,17 @@ double all_band_energy(const int ik,
 /// @param nspin0 Number of independent spin channels (1 or 2)
 /// @param nbands Number of bands
 /// @param e_orb Orbital energies per k-point
-/// @param term Term label (e.g., "vxc", "kinetic")
-/// @param label Additional label (e.g., "local", "exx")
+/// @param out_name Output file name relative to the output directory
+///                 (e.g., "vxc.txt", "eband_vl.txt")
+/// @param header Comment block written before the numeric data; empty to omit
 /// @param global_out_dir Output directory
 /// @param app Append mode flag
 void write_orb_energy(const K_Vectors& kv,
                       const int nspin0,
                       const int nbands,
                       const std::vector<std::vector<double>>& e_orb,
-                      const std::string& term,
-                      const std::string& label,
+                      const std::string& out_name,
+                      const std::string& header,
                       const std::string& global_out_dir,
                       const bool app = false);
 

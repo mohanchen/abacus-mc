@@ -20,6 +20,7 @@ namespace ModuleIO
 template <typename TK, typename TR>
 void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
         const Input_para &inp,              // input
+        const int istep,                    // ionic step index, zero-based
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
         const module_dm::Setup_DM<TK> &dmat, // mohan add 2025-11-02
@@ -138,7 +139,11 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
     // write eband terms
     if (inp.out_eband_terms)
     {
+        const double etot = pelec->f_en.etot;
         ModuleIO::write_eband_terms<TK, TR>(inp.nspin,
+                                            istep,
+                                            etot,
+                                            GlobalV::MY_RANK,
                                             PARAM.globalv.nlocal,
                                             GlobalV::DRANK,
                                             &pv,
@@ -173,6 +178,7 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
 // TK: double  TR: double 
 template void ctrl_runner_lcao<double, double>(UnitCell& ucell,      // unitcell
         const Input_para &inp,              // input
+        const int istep,                    // ionic step index, zero-based
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
         const module_dm::Setup_DM<double> &dmat, // mohan add 2025-11-02
@@ -196,6 +202,7 @@ template void ctrl_runner_lcao<double, double>(UnitCell& ucell,      // unitcell
 // TK: complex<double>  TR: double 
 template void ctrl_runner_lcao<std::complex<double>, double>(UnitCell& ucell,      // unitcell
         const Input_para &inp,              // input
+        const int istep,                    // ionic step index, zero-based
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
         const module_dm::Setup_DM<std::complex<double>> &dmat, // mohan add 2025-11-02
@@ -219,6 +226,7 @@ template void ctrl_runner_lcao<std::complex<double>, double>(UnitCell& ucell,   
 // TK: complex<double>  TR: complex<double>
 template void ctrl_runner_lcao<std::complex<double>, std::complex<double>>(UnitCell& ucell,      // unitcell
         const Input_para &inp,              // input
+        const int istep,                    // ionic step index, zero-based
 		K_Vectors &kv,                      // k-point
 		elecstate::ElecState* pelec,// electronic info
         const module_dm::Setup_DM<std::complex<double>> &dmat, // mohan add 2025-11-02

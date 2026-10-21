@@ -137,12 +137,12 @@ void write_Vxc(const int nspin,
 
     if (GlobalV::MY_RANK == 0)
     {
-        write_orb_energy(kv, nspin0, nbands, e_orb_tot, "vxc", "", global_out_dir);
+        write_orb_energy(kv, nspin0, nbands, e_orb_tot, "vxc.txt", "", global_out_dir);
 #ifdef __EXX
         if (cal_exx)
         {
-            write_orb_energy(kv, nspin0, nbands, e_orb_locxc, "vxc", "local", global_out_dir);
-            write_orb_energy(kv, nspin0, nbands, e_orb_exx, "vxc", "exx", global_out_dir);
+            write_orb_energy(kv, nspin0, nbands, e_orb_locxc, "vxc_local.txt", "", global_out_dir);
+            write_orb_energy(kv, nspin0, nbands, e_orb_exx, "vxc_exx.txt", "", global_out_dir);
         }
 #endif
     }

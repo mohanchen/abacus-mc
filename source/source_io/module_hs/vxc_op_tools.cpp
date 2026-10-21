@@ -102,19 +102,21 @@ void write_orb_energy(const K_Vectors& kv,
                       const int nspin0,
                       const int nbands,
                       const std::vector<std::vector<double>>& e_orb,
-                      const std::string& term,
-                      const std::string& label,
+                      const std::string& out_name,
+                      const std::string& header,
                       const std::string& global_out_dir,
                       const bool app)
 {
     assert(e_orb.size() == kv.get_nks());
+    assert(!out_name.empty());
     const int nk = kv.get_nks() / nspin0;
     std::ofstream ofs;
-    const std::string out_name = term == "vxc"
-        ? (label.empty() ? "vxc.txt" : "vxc_" + label + ".txt")
-        : term + "_" + (label.empty() ? "out.dat" : label + "_out.dat");
     ofs.open(global_out_dir + out_name,
         app ? std::ios::app : std::ios::out);
+    if (!header.empty())
+    {
+        ofs << header;
+    }
     ofs << nk << "\n" << nspin0 << "\n" << nbands << "\n";
     ofs << std::scientific << std::setprecision(16);
     for (int ik = 0; ik < nk; ++ik)

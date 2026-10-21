@@ -37,6 +37,19 @@ compare_hr_csr(){
 	python3 $COMPARE_SCRIPT <(sed -n "$pick" "$ref") <(sed -n "$pick" "$cal") 3
 }
 
+# Band-energy-term files start with comment lines (version, timestamp, ionic
+# step, formula, units) that legitimately change between runs, so the header
+# is stripped and only the numeric body is compared.
+compare_eband_energy(){
+	local ref=$1
+	local cal=$2
+	if ! test -f "$ref" || ! test -f "$cal"; then
+		echo "Error: can not find file $ref or $cal"
+		return 1
+	fi
+	python3 $COMPARE_SCRIPT <(sed '/^[[:space:]]*#/d' "$ref") <(sed '/^[[:space:]]*#/d' "$cal") 4
+}
+
 run_mat_dm1_props(){
 
 #-------------------------------
@@ -246,21 +259,13 @@ fi
 # separate terms in band enegy
 #--------------------------------
 if ! test -z "$has_eband_separate"  && [  $has_eband_separate == 1 ]; then
-	ekref=kinetic_out.ref
-	ekcal=OUT.autotest/kinetic_out.dat
-	python3 $COMPARE_SCRIPT $ekref $ekcal 4
+	compare_eband_energy eband_kin.ref OUT.autotest/eband_kin.txt
 	echo "CompareOrbKinetic_pass $?" >>$props_result_file
-	vlref=vpp_local_out.ref
-	vlcal=OUT.autotest/vpp_local_out.dat
-	python3 $COMPARE_SCRIPT $vlref $vlcal 4
+	compare_eband_energy eband_vl.ref OUT.autotest/eband_vl.txt
 	echo "CompareOrbVL_pass $?" >>$props_result_file
-	vnlref=vpp_nonlocal_out.ref
-	vnlcal=OUT.autotest/vpp_nonlocal_out.dat
-	python3 $COMPARE_SCRIPT $vnlref $vnlcal 4
+	compare_eband_energy eband_vnl.ref OUT.autotest/eband_vnl.txt
 	echo "CompareOrbVNL_pass $?" >>$props_result_file
-	vhref=vhartree_out.ref
-	vhcal=OUT.autotest/vhartree_out.dat
-	python3 $COMPARE_SCRIPT $vhref $vhcal 4
+	compare_eband_energy eband_hart.ref OUT.autotest/eband_hart.txt
 	echo "CompareOrbVHartree_pass $?" >>$props_result_file
 fi
 

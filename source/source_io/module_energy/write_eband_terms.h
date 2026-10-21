@@ -42,10 +42,17 @@ namespace ModuleIO
 
 /// @brief Write the band-decomposed energy of each Hamiltonian term
 /// (kinetic, local/nonlocal pp, Hartree, XC) in KS orbital representation.
+/// @param nspin Number of spin components (1, 2 or 4)
+/// @param istep Zero-based ionic step index; written one-based in the header
+/// @param etot Total energy of the current frame in Ry
+/// @param my_rank World rank; only rank 0 writes the files
 /// @tparam TK K-point data type (double or std::complex<double>)
 /// @tparam TR Real-space data type (double or std::complex<double>)
 template <typename TK, typename TR>
 void write_eband_terms(const int nspin,
+                       const int istep,
+                       const double etot,
+                       const int my_rank,
                        const int nbasis,
                        const int drank,
                        const Parallel_Orbitals* pv,
