@@ -112,11 +112,16 @@ void ModuleIO::save_dH_sparse(const int& istep,
         }
     }
 
+    // In append mode (out_app_flag == 1) the fixed filename is reused so that
+    // every written ionic step accumulates into one file. Modes 0 and 2 embed
+    // the one-based ionic step before "_nao" and never append.
+    const bool include_step = (istep >= 0) && (out_app_flag != 1);
+
     for (auto& comp: comps)
     {
         for (int ispin = 0; ispin < 2; ++ispin)
         {
-            if (istep >= 0)
+            if (include_step)
             {
                 comp.fname[ispin] << global_matrix_dir
                                   << "d" << fileflag << "r" << comp.axis
@@ -133,9 +138,10 @@ void ModuleIO::save_dH_sparse(const int& istep,
 
     if (GlobalV::DRANK == 0)
     {
-        // Append for any multi-step run (MD or relax) in append mode;
-        // single-point SCF passes istep = -1 and starts a fresh file.
-        const bool open_in_append = (out_app_flag == 1) && istep >= 0;
+        // The first written ionic step (istep == 0) truncates the shared file;
+        // later steps append one complete record each. Single-point runs pass
+        // istep <= 0 and therefore always start a fresh file.
+        const bool open_in_append = (out_app_flag == 1) && istep > 0;
         for (auto& comp: comps)
         {
             const std::string label = std::string("dH") + comp.axis;
@@ -150,13 +156,14 @@ void ModuleIO::save_dH_sparse(const int& istep,
                 {
                     mode |= std::ios::app;
                 }
-                else if (!binary)
-                {
-                    const char* matrix_name = (fileflag == "s") ? "dS/dR" : "dH/dR";
-                    const std::string spin_tag = ModuleIO::make_spin_tag(ispin, nspin);
-                    ofs_running << " Write " << matrix_name << " (" << comp.axis << " component)" << spin_tag
-                                << " matrix in NAO basis to file: " << comp.fname[ispin].str() << std::endl;
-                }
+
+                // Announce every written file, including appended multi-step
+                // records and binary output, so the running log tracks each write.
+                const char* matrix_name = (fileflag == "s") ? "dS/dR" : "dH/dR";
+                const std::string spin_tag = ModuleIO::make_spin_tag(ispin, nspin);
+                ofs_running << " Write " << matrix_name << " (" << comp.axis << " component)" << spin_tag
+                            << " matrix in NAO basis to file: " << comp.fname[ispin].str() << std::endl;
+
                 comp.ofs[ispin].open(comp.fname[ispin].str().c_str(), mode);
                 detail::check_output_file_open(comp.ofs[ispin], comp.fname[ispin].str(), "ModuleIO::save_dH_sparse");
 
