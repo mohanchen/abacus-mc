@@ -158,6 +158,32 @@ TEST_F(InputTest, SetGlobalDirMdRestart)
     TestParameters::set_global_dir(readinput, input, sys);
     EXPECT_EQ(sys.global_in_stru, stru_new);
 
+    // Restart from a read_file_dir holding only the fixed-name cumulative
+    // "STRU" written in out_app_flag == 1 mode: the last "# MD step N" frame
+    // must be extracted to a single-frame file and picked up.
+    const std::string cumulative_dir = case_dir + "cumulative/";
+    ModuleBase::make_directory(cumulative_dir);
+    const std::string restart_txt_cum = cumulative_dir + "Restart_md.txt";
+    std::ofstream restart_file_cum(restart_txt_cum.c_str());
+    restart_file_cum << 2 << std::endl;
+    restart_file_cum << 0.03 << std::endl;
+    restart_file_cum.close();
+    const std::string stru_cumulative = cumulative_dir + "STRU";
+    std::ofstream stru_file_cum(stru_cumulative.c_str());
+    stru_file_cum << "# MD step 1\n\nATOMIC_SPECIES\nSi 28.0855\n" << std::endl;
+    stru_file_cum << "# MD step 2\n\nATOMIC_SPECIES\nSi 28.0855\n\nLATTICE_CONSTANT\n10.2\n" << std::endl;
+    stru_file_cum.close();
+
+    input.read_file_dir = cumulative_dir;
+    TestParameters::set_global_dir(readinput, input, sys);
+    // the router picks the extracted single-frame side file next to STRU; the
+    // frame contents themselves are covered by the stru_frame_io unit test
+    const std::string stru_frame = cumulative_dir + "STRU_restart_frame";
+    EXPECT_EQ(sys.global_in_stru, stru_frame);
+    std::ifstream frame_ifs(stru_frame.c_str());
+    EXPECT_TRUE(frame_ifs.good());
+    frame_ifs.close();
+
     // restore the shared input state so other tests are not affected
     input.calculation = "scf";
     input.mdp.md_restart = false;

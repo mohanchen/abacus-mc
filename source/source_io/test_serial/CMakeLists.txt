@@ -65,4 +65,5 @@ AddTest(
   TARGET MODULE_IO_system_variable_test
   LIBS parameter base device io_input_serial
   SOURCES io_sys_var_test.cpp
+          ../../source_cell/stru_frame_io.cpp
 )

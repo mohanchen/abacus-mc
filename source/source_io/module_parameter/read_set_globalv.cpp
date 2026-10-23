@@ -2,7 +2,10 @@
 #include "read_input_tool.h"
 #include "source_base/global_variable.h"
 #include "source_base/tool_quit.h"
+#include "source_cell/stru_frame_io.h"
 #include "source_io/module_parameter/parameter.h"
+
+#include <string>
 
 namespace
 {
@@ -10,10 +13,13 @@ namespace
 /// @param stru_dir directory where the previous run wrote its structure files
 /// @param istep number of completed ionic steps recorded in Restart_md.txt
 /// @return path of the first existing structure file, empty if none exists
-/// @details Two naming schemes are accepted, in order:
+/// @details Three naming schemes are accepted, in order:
 /// - "STRU{istep + 1}": written by run_md since the ionic-step numbering
 ///   was unified with relax (1-based);
-/// - "STRU_MD_{istep}": written by older ABACUS versions.
+/// - "STRU_MD_{istep}": written by older ABACUS versions;
+/// - "STRU": fixed-name cumulative file written in out_app_flag == 1 mode;
+///   the last frame is extracted to "STRU_restart_frame" and that path is
+///   returned so the restart readers see a single-frame file.
 std::string find_md_restart_stru(const std::string& stru_dir, const int istep)
 {
     const std::string stru_new = stru_dir + "STRU" + std::to_string(istep + 1);
@@ -27,6 +33,16 @@ std::string find_md_restart_stru(const std::string& stru_dir, const int istep)
     if (file_old.good())
     {
         return stru_old;
+    }
+    const std::string stru_cumulative = stru_dir + "STRU";
+    std::ifstream file_cumulative(stru_cumulative.c_str());
+    if (file_cumulative.good())
+    {
+        const std::string frame_path = stru_dir + "STRU_restart_frame";
+        if (stru_frame_io::extract_last_frame(stru_cumulative, frame_path))
+        {
+            return frame_path;
+        }
     }
     return "";
 }
@@ -191,7 +207,7 @@ void ReadInput::set_global_dir(const Input_para& inp, System_para& sys)
         if (sys.global_in_stru.empty())
         {
             const std::string message = "no STRU file found for MD restart in " + sys.global_readin_dir
-                                        + "; expected STRU_MD_{step} or STRU{step+1}";
+                                        + "; expected STRU_MD_{step}, STRU{step+1} or cumulative STRU";
             ModuleBase::WARNING_QUIT("ReadInput::set_global_dir", message);
         }
     }
