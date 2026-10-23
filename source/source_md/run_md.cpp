@@ -323,7 +323,12 @@ void md_line(MDCell& mdcell,
                 // out_app_flag == 1: single fixed-name STRU accumulates one
                 // frame per step with a one-based "# MD step N" comment;
                 // modes 0/2 keep the numbered STRU{stru_step} files.
-                const bool append_stru = append_stru_allowed && !has_legacy_stru_dir;
+                // The very first step of a fresh (non-restart) run truncates
+                // the cumulative file so it does not keep frames from a
+                // previous run; later steps and restarted runs append.
+                const bool is_first_step_of_fresh_run = (mdrun->step_ == 0) && (mdrun->step_rst_ == 0);
+                const bool append_stru = append_stru_allowed && !has_legacy_stru_dir
+                    && !is_first_step_of_fresh_run;
                 const std::string frame_comment = append_stru
                     ? "# MD step " + std::to_string(stru_step) + "\n\n"
                     : "";

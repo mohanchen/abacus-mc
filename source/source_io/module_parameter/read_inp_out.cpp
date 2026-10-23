@@ -1527,6 +1527,7 @@ The circle order of the charge density on real space grids is: x is the outer lo
         item.description = R"(Controls output file organization during multi-step calculations (MD, relax, RT-TDDFT). The directory routing applies to both LCAO and PW basis calculations.
 * 0: Write to OUT directory directly, no append (each step's file carries a g{step} suffix)
 * 1: Reuse fixed filenames across steps (default, backward compatible): text outputs append new records, cube outputs accumulate one frame per written step
+  In mode 1 the first output step of a fresh (non-restart) run truncates the fixed-name file so a rerun does not keep stale records from a previous run; later steps and restarted runs keep appending.
 * 2: Write to subdirectory (STRUC/ for structure files, PSI/, CHG/, POT/, ELF/, DOS/, DIP/, MAT/), files carry a g{step} suffix
 The legacy Boolean spellings (true/false, yes/no, on/off, t/f, y/n, and the dotted forms) are still accepted and map to modes 1/0 as before.
 For more information, refer to the documentation of out_mat_r, out_hsr, out_mat_t, out_mat_dh, out_hsk, out_wfc_lcao, out_chg, out_pot, out_elf, out_dos, out_dipole, out_stru.)";

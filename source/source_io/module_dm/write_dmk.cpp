@@ -200,8 +200,10 @@ void ModuleIO::write_dmk(const std::vector<std::vector<T>>& dmk,
     const int istep_file = (out_app_flag == 1) ? -1 : istep;
     // Each multi-step run (MD or relax) appends a new record to the fixed
     // file, mirroring the open_sparse_file convention; single-point SCF
-    // passes istep = -1 and starts a fresh file.
-    const bool append_on_restart = (out_app_flag == 1) && (istep >= 0);
+    // passes istep = -1 and starts a fresh file. The first written step
+    // (istep == 0) truncates so a fresh run drops records left by a previous
+    // run; only later steps (istep > 0) append.
+    const bool append_on_restart = (out_app_flag == 1) && (istep > 0);
 
     int my_rank = 0;
 #ifdef __MPI
