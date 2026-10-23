@@ -260,7 +260,12 @@ void write_h_vl(WriteHParams& params)
     spec.term_name = "local";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-        ModuleGint::cal_gint_vl(v_local, &hR_tmp);
+        // A grid-parallel rank may own no real-space grid points (nrxx == 0),
+        // leaving v_local null; there is no local potential to integrate there.
+        if (v_local != nullptr)
+        {
+            ModuleGint::cal_gint_vl(v_local, &hR_tmp);
+        }
     };
     write_h_term(params, spec);
 }
@@ -329,7 +334,12 @@ void write_h_vxc(WriteHParams& params)
     spec.term_name = "xc";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-        ModuleGint::cal_gint_vl(&v_xc(ispin, 0), &hR_tmp);
+        // A grid-parallel rank may own no real-space grid points (nrxx == 0),
+        // leaving v_xc an empty matrix; skip the gint evaluation there.
+        if (v_xc.c != nullptr)
+        {
+            ModuleGint::cal_gint_vl(&v_xc(ispin, 0), &hR_tmp);
+        }
     };
     write_h_term(params, spec);
 }
