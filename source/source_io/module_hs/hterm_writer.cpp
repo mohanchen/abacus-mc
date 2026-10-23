@@ -286,7 +286,13 @@ void write_h_vh(WriteHParams& params)
     spec.term_name = "hartree";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-        ModuleGint::cal_gint_vl(&v_h(ispin, 0), &hR_tmp);
+        // Under grid-parallel distribution a rank may own no real-space grid
+        // points (nrxx == 0), in which case v_h is an empty matrix and there
+        // is no local potential to integrate; skip the gint evaluation there.
+        if (v_h.c != nullptr)
+        {
+            ModuleGint::cal_gint_vl(&v_h(ispin, 0), &hR_tmp);
+        }
     };
     write_h_term(params, spec);
 }
