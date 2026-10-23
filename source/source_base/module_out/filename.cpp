@@ -86,7 +86,11 @@ std::string filename_output(
     else
     {
         // mohan add 20250921
-        if(property=="hk" || property=="sk" || property=="tk")
+        // A property whose name already ends in 'k' denotes a k-space
+        // quantity (hk, sk, tk, vhk, vlk, vnlk, vxck, vexxk, ...); the
+        // k-point index then needs no extra 'k' prefix, otherwise the
+        // filename would contain a doubled 'k' (e.g. vhkk1).
+        if (!property.empty() && property.back() == 'k')
         {
             kpoint_block = std::to_string(ik0+1);
         }
