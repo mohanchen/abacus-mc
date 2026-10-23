@@ -77,6 +77,7 @@ addtest(
   MODULE_CELL_stru_frame_io
   LIBS
   base
+  device
   SOURCES
   test_stru_frame_io.cpp
   ../stru_frame_io.cpp)
