@@ -312,8 +312,10 @@ void ReadInput::create_directory(const Parameter& param)
     {
         const std::vector<std::pair<bool, std::string>> subdir_flags = {
             {param.input.out_stru > 0, param.globalv.global_stru_dir},
-            {param.input.out_wfc_lcao > 0 || param.input.out_wfc_pw > 0, param.globalv.global_psi_dir},
-            {param.input.out_chg[0] > 0, param.globalv.global_chg_dir},
+            {param.input.out_wfc_lcao > 0 || param.input.out_wfc_pw > 0
+                 || !param.input.out_wfc_norm.empty() || !param.input.out_wfc_re_im.empty(),
+             param.globalv.global_psi_dir},
+            {param.input.out_chg[0] > 0 || !param.input.out_pchg.empty(), param.globalv.global_chg_dir},
             {param.input.out_pot[0] > 0, param.globalv.global_pot_dir},
             {param.input.out_elf[0] > 0, param.globalv.global_elf_dir},
             {param.input.out_dos > 0
@@ -329,7 +331,8 @@ void ReadInput::create_directory(const Parameter& param)
                  || param.input.out_mat_vnlk[0] > 0 || param.input.out_mat_vlk[0] > 0
                  || param.input.out_mat_vhk[0] > 0 || param.input.out_mat_vxck[0] > 0 || param.input.out_mat_exxk[0] > 0
                  || param.input.out_mat_dh_t[0] > 0 || param.input.out_mat_dh_vl[0] > 0 || param.input.out_mat_dh_vnl[0] > 0
-                 || param.input.out_mat_dh_vh[0] > 0 || param.input.out_mat_dh_vxc[0] > 0,
+                 || param.input.out_mat_dh_vh[0] > 0 || param.input.out_mat_dh_vxc[0] > 0
+                 || param.input.out_hsr[0] == 1 || param.input.out_hsr[0] == 2,
              param.globalv.global_mat_dir}
         };
         for (const auto& flag_dir : subdir_flags)
