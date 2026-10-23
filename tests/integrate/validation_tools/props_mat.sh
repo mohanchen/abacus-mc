@@ -237,11 +237,11 @@ if ! test -z "$has_xc" && [ "$has_xc" == 1 ]; then
 			xcref=vxck2_nao.txt.ref
 			xccal=OUT.autotest/vxck2_nao.txt
 	fi
-	oeref=vxc.ref
-	oecal=OUT.autotest/vxc.txt
+	oeref=eband_vxc.ref
+	oecal=OUT.autotest/eband_vxc.txt
 	python3 $COMPARE_SCRIPT $xcref $xccal 4
 	echo "CompareVXC_pass $?" >>$props_result_file
-	python3 $COMPARE_SCRIPT $oeref $oecal 5
+	compare_eband_energy $oeref $oecal
     echo "CompareOrbXC_pass $?" >>$props_result_file
 fi
 

@@ -81,7 +81,7 @@ double all_band_energy(const int ik,
 /// @param nbands Number of bands
 /// @param e_orb Orbital energies per k-point
 /// @param out_name Output file name relative to the output directory
-///                 (e.g., "vxc.txt", "eband_vl.txt")
+///                 (e.g., "eband_vxc.txt", "eband_vl.txt")
 /// @param header Comment block written before the numeric data; empty to omit
 /// @param global_out_dir Output directory
 /// @param app Append mode flag
@@ -93,6 +93,21 @@ void write_orb_energy(const K_Vectors& kv,
                       const std::string& header,
                       const std::string& global_out_dir,
                       const bool app = false);
+
+/// @brief Format the current local time for output file headers.
+/// @return Timestamp in "YYYY-MM-DD HH:MM:SS" format.
+std::string local_time_stamp();
+
+/// @brief Build the five comment lines preceding band-decomposed energy data.
+/// @param istep Zero-based ionic step index, printed one-based.
+/// @param etot_eV Total energy of the written frame in eV.
+/// @param term_symbol Operator symbol used in the expectation value expression.
+/// @param time_stamp Timestamp shared by all files of the same run.
+/// @return Comment block terminated by a newline.
+std::string build_eband_header(const int istep,
+                               const double etot_eV,
+                               const std::string& term_symbol,
+                               const std::string& time_stamp);
 
 } // namespace ModuleIO
 

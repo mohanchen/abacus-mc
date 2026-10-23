@@ -486,7 +486,7 @@ struct Input_para
     bool out_mat_xc = false;                  ///< output exchange-correlation matrix in
                                               ///< KS-orbital representation.
     std::vector<int> out_mat_xc2 = {0, 8};    ///< output Vxc(R) matrix with precision
-    bool out_eband_terms = false;             ///< output the band energy terms separately
+    bool out_eband = false;                   ///< output the band energy terms separately
     bool out_hr_npz = false;                  ///< output H(R) matrix in npz format
     bool out_hsr_npz = false;                 ///< output H(R) and S(R) matrices in npz format
     bool out_dm_npz = false;                  ///< output DM(R) matrix in npz format

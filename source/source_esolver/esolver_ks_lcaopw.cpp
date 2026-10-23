@@ -284,7 +284,12 @@ namespace ModuleESolver
             bool cal_exx = false;
             double hybrid_alpha = 0.0;
 #endif
+            // one-shot output after the whole run; the single frame is step 1
+            const int istep_xc = 0;
+            const double etot_xc = this->pelec->f_en.etot;
             ModuleIO::write_Vxc_LIP(this->inp_->nspin,
+                                istep_xc,
+                                etot_xc,
                                 PARAM.globalv.nlocal,
                                 GlobalV::DRANK,
                                 *this->stp.template get_psi_t<T, base_device::DEVICE_CPU>(),

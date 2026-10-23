@@ -1293,15 +1293,15 @@ The circle order of the charge density on real space grids is: x is the outer lo
         this->add_item(item);
     }
     {
-        Input_Item item("out_eband_terms");
+        Input_Item item("out_eband");
         item.annotation = "output the band energy terms separately";
         item.category = "Output information";
         item.type = "Boolean";
-        item.description = "Whether to print the band-decomposed energy of each Hamiltonian term in the files eband_kin.txt, eband_vl.txt, eband_vnl.txt, eband_hart.txt and vxc.txt under the output directory. Each file starts with comment lines giving the ABACUS version, the timestamp, the ionic step and total energy, the expectation-value formula, and the units. The terms include the kinetic, pseudopotential (local + nonlocal), Hartree and exchange-correlation (including exact exchange if calculated).";
+        item.description = "Whether to print the band-decomposed energy of each Hamiltonian term in the files eband_kin.txt, eband_vl.txt, eband_vnl.txt, eband_hart.txt and eband_vxc.txt under the output directory. Each file starts with comment lines giving the ABACUS version, the timestamp, the ionic step and total energy, the expectation-value formula, and the units. The terms include the kinetic, pseudopotential (local + nonlocal), Hartree and exchange-correlation (including exact exchange if calculated).";
         item.default_value = "False";
         item.unit = "";
         item.set_availability("basis_type==lcao");
-        read_sync_bool(input.out_eband_terms);
+        read_sync_bool(input.out_eband);
         this->add_item(item);
     }
     {

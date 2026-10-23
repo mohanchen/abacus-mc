@@ -59,15 +59,21 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
           PARAM.globalv.two_fermi, inp.out_ldos[1], ofs_running);
     }
 
-    // 3) print out exchange-correlation potential
-    if (inp.out_mat_xc)
+    // 3) print out exchange-correlation potential: the band-decomposed orbital
+    //    energies (eband_vxc.txt etc.) are produced for either switch, while
+    //    the full MO-basis matrices (vxc_nao.txt etc.) are only for out_mat_xc.
+    const bool out_vxc_orb = inp.out_mat_xc || inp.out_eband;
+    if (out_vxc_orb)
     {
         bool cal_exx = exx_info.info_global.cal_exx;
+        const double etot_xc = pelec->f_en.etot;
 #ifdef __EXX
         auto* hexxd_ptr = exx_nao.exd ? &exx_nao.exd->get_Hexxs() : nullptr;
         auto* hexxc_ptr = exx_nao.exc ? &exx_nao.exc->get_Hexxs() : nullptr;
 #endif
         ModuleIO::write_Vxc<TK, TR>(inp.nspin,
+                                    istep,
+                                    etot_xc,
                                     PARAM.globalv.nlocal,
                                     GlobalV::DRANK,
                                     &pv,
@@ -85,7 +91,9 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
                                     gd,
                                     inp.dft_plus_u,
                                     PARAM.globalv.gamma_only_local,
+                                    inp.out_mat_xc,
                                     PARAM.globalv.global_mat_dir,
+                                    PARAM.globalv.global_out_dir,
                                     inp.out_ndigits,
                                     inp.ks_solver,
                                     cal_exx,
@@ -137,7 +145,7 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
 
 
     // write eband terms
-    if (inp.out_eband_terms)
+    if (inp.out_eband)
     {
         const double etot = pelec->f_en.etot;
         ModuleIO::write_eband_terms<TK, TR>(inp.nspin,
@@ -145,7 +153,6 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
                                             etot,
                                             GlobalV::MY_RANK,
                                             PARAM.globalv.nlocal,
-                                            GlobalV::DRANK,
                                             &pv,
                                             *psi,
                                             ucell,
@@ -159,13 +166,7 @@ void ctrl_runner_lcao(UnitCell& ucell,      // unitcell
                                             pelec->wg,
                                             gd,
                                             orb.cutoffs(),
-                                            two_center_bundle,
-                                            exx_info
-#ifdef __EXX
-                                            ,
-                                            exx_nao.exd ? &exx_nao.exd->get_Hexxs() : nullptr,
-                                            exx_nao.exc ? &exx_nao.exc->get_Hexxs() : nullptr
-#endif
+                                            two_center_bundle
        );
     }
 
