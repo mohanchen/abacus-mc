@@ -34,6 +34,10 @@ AddTest(
   TARGET MODULE_IO_input_test_para
   LIBS parameter  base device io_input
   SOURCES read_input_ptest.cpp
+          # io_input (via read_set_globalv.cpp) references
+          # stru_frame_io::extract_last_frame, but this test does not link
+          # the cell library, so provide the translation unit directly.
+          ../../source_cell/stru_frame_io.cpp
 )
 
 add_test(NAME MODULE_IO_input_test_para_4
@@ -110,12 +114,14 @@ AddTest(
   TARGET MODULE_IO_parse_args
   LIBS parameter  base device io_input
   SOURCES parse_args_test.cpp ../parse_args.cpp ../input_help.cpp
+          ../../source_cell/stru_frame_io.cpp
 )
 
 AddTest(
   TARGET MODULE_IO_input_help_test
   LIBS parameter  base device io_input
   SOURCES input_help_test.cpp ../input_help.cpp
+          ../../source_cell/stru_frame_io.cpp
 )
 
 AddTest(

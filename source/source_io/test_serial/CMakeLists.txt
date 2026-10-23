@@ -26,6 +26,9 @@ add_library(
     ../module_parameter/read_set_globalv.cpp
     ../module_parameter/availability.cpp
     ../module_parameter/availability_validator.cpp
+    # read_set_globalv.cpp references stru_frame_io::extract_last_frame, so
+    # every target linking io_input_serial needs this translation unit.
+    ../../source_cell/stru_frame_io.cpp
 )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/support DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -65,5 +68,4 @@ AddTest(
   TARGET MODULE_IO_system_variable_test
   LIBS parameter base device io_input_serial
   SOURCES io_sys_var_test.cpp
-          ../../source_cell/stru_frame_io.cpp
 )
