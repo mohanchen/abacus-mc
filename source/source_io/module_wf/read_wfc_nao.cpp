@@ -435,7 +435,9 @@ bool ModuleIO::read_wfc_nao(
             // 3. readin_dir + "WFC/" + step-suffixed name: layout written by
             //    releases before the out_app_flag rework
             // 4. readin_dir + name without the step suffix: written in append
-            //    mode (out_app_flag 1)
+            //    mode (out_app_flag 1); only valid for istep < 0, because the
+            //    cumulative file is always read from its first frame and would
+            //    silently return step-0 data for a positive restart index
             std::vector<std::string> candidates;
             if (istep >= 0)
             {
@@ -476,18 +478,21 @@ bool ModuleIO::read_wfc_nao(
                         gamma_only,
                         istep));
             }
-            const int append_app_flag = 1;
-            candidates.push_back(ModuleIO::filename_output(global_readin_dir,
-                    "wf",
-                    "nao",
-                    ik,
-                    ik2iktot,
-                    nspin,
-                    nkstot,
-                    read_type,
-                    append_app_flag,
-                    gamma_only,
-                    istep));
+            else
+            {
+                const int append_app_flag = 1;
+                candidates.push_back(ModuleIO::filename_output(global_readin_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        append_app_flag,
+                        gamma_only,
+                        istep));
+            }
 
             for (size_t ic = 0; ic < candidates.size(); ++ic)
             {
