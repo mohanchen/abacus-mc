@@ -53,8 +53,8 @@ void setup_exx_h_params(ModuleIO::WriteHParams& h_params, Exx_NAO<TK>& exx_nao, 
     // EXX-H output is unsupported. Reject it explicitly here so the request cannot be silently
     // dropped (the WARNING_QUIT inside write_h_exx is unreachable at multi-k).
     ModuleBase::WARNING_QUIT("setup_exx_h_params",
-                             "out_mat_h_exx is only supported for gamma-only: the V^EXX(R) "
-                             "output is not available at multi-k. Use gamma_only.");
+                             "out_mat_exxk (legacy out_mat_h_exx) is only supported for gamma-only: "
+                             "the V^EXX(R) output is not available at multi-k. Use gamma_only.");
 }
 
 template <>
@@ -462,28 +462,27 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         h_params.ks_solver = PARAM.inp.ks_solver;
         h_params.drank = GlobalV::DRANK;
         h_params.ofs_running = &ofs_running;
-        if (inp.out_mat_h_t[0])
-        {
-            ModuleIO::write_h_t(h_params);
-        }
-        if (inp.out_mat_h_vnl[0])
+        // out_mat_h_t is a legacy alias for out_mat_tk (resolved at input
+        // normalization); the dedicated write_h_t path is removed because it
+        // duplicated the T(k) output of the out_mat_tk block below.
+        if (inp.out_mat_vnlk[0])
         {
             ModuleIO::write_h_vnl(h_params);
         }
-        if (inp.out_mat_h_vl[0])
+        if (inp.out_mat_vlk[0])
         {
             ModuleIO::write_h_vl(h_params);
         }
-        if (inp.out_mat_h_vh[0])
+        if (inp.out_mat_vhk[0])
         {
             ModuleIO::write_h_vh(h_params);
         }
-        if (inp.out_mat_h_vxc[0])
+        if (inp.out_mat_vxck[0])
         {
             ModuleIO::write_h_vxc(h_params);
         }
 #ifdef __EXX
-        if (inp.out_mat_h_exx[0] && exx_info.info_global.cal_exx)
+        if (inp.out_mat_exxk[0] && exx_info.info_global.cal_exx)
         {
             // V^EXX(R) output is wired for the gamma (TK==double) exx interfaces.
             setup_exx_h_params(h_params, exx_nao, exx_info);

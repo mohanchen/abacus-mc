@@ -1008,11 +1008,10 @@ For binary output, each file uses the same basename as text output with a .dat s
     }
     {
         Input_Item item("out_mat_h_t");
-        item.annotation = "output kinetic energy T(R) matrix";
+        item.annotation = "legacy alias for out_mat_tk";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = "Whether to print files containing the kinetic energy matrix T(R) in CSR format."
-                          "\n\nSee out_hsr for format details.";
+        item.description = "Legacy alias for out_mat_tk, which outputs the kinetic energy matrix T(k) for each k-point in the NAO basis. The optional second integer controls text precision. If both out_mat_tk and out_mat_h_t are present, out_mat_tk takes precedence.";
         item.default_value = "0 8";
         item.unit = "Ry";
         item.read_value = [](const Input_Item& item, Parameter& para) {
@@ -1023,21 +1022,47 @@ For binary output, each file uses the same basename as text output with a .dat s
             catch (const std::invalid_argument& e) {
                 ModuleBase::WARNING("Input", "out_mat_h_t enable flag must be 0/1, using default 0");
             }
-        };
-        item.check_value = [](const Input_Item& item, const Parameter& para) {
-            if (para.input.out_mat_h_t[0] && para.input.nspin == 4)
-                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_h_t is not available for nspin = 4");
+            if (count >= 2) try { para.input.out_mat_h_t[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
         };
         sync_intvec(input.out_mat_h_t, 2, 0);
         this->add_item(item);
     }
     {
-        Input_Item item("out_mat_h_vnl");
-        item.annotation = "output nonlocal pseudopotential Vnl(R) matrix";
+        Input_Item item("out_mat_vnlk");
+        item.annotation = "output nonlocal pseudopotential Vnl(k) matrix";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = "Whether to print files containing the nonlocal pseudopotential matrix Vnl(R) in CSR format."
-                          "\n\nSee out_hsr for format details.";
+        item.description = "Whether to print the nonlocal pseudopotential matrix Vnl(k) for each k-point in the NAO basis, into text files OUT.${suffix}/vnlk*_nao.txt."
+                          "\n\nThe optional second integer controls text precision (default 8).";
+        item.default_value = "0 8";
+        item.unit = "Ry";
+        item.read_value = [](const Input_Item& item, Parameter& para) {
+            const size_t count = item.get_size();
+            try {
+                para.input.out_mat_vnlk[0] = assume_as_boolean(item.str_values[0]);
+            }
+            catch (const std::invalid_argument& e) {
+                ModuleBase::WARNING("Input", "out_mat_vnlk enable flag must be 0/1, using default 0");
+            }
+            if (count >= 2) try { para.input.out_mat_vnlk[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
+        };
+        item.check_value = [](const Input_Item& item, const Parameter& para) {
+            if (para.input.out_mat_vnlk[0] && para.input.nspin == 4)
+                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_vnlk is not available for nspin = 4");
+        };
+        sync_intvec(input.out_mat_vnlk, 2, 0);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("out_mat_h_vnl");
+        item.annotation = "legacy alias for out_mat_vnlk";
+        item.category = "Output information";
+        item.type = "Integer";
+        item.description = "Legacy alias for out_mat_vnlk, which outputs the nonlocal pseudopotential matrix Vnl(k) for each k-point in the NAO basis. The optional second integer controls text precision. If both out_mat_vnlk and out_mat_h_vnl are present, out_mat_vnlk takes precedence.";
         item.default_value = "0 8";
         item.unit = "Ry";
         item.read_value = [](const Input_Item& item, Parameter& para) {
@@ -1048,21 +1073,47 @@ For binary output, each file uses the same basename as text output with a .dat s
             catch (const std::invalid_argument& e) {
                 ModuleBase::WARNING("Input", "out_mat_h_vnl enable flag must be 0/1, using default 0");
             }
-        };
-        item.check_value = [](const Input_Item& item, const Parameter& para) {
-            if (para.input.out_mat_h_vnl[0] && para.input.nspin == 4)
-                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_h_vnl is not available for nspin = 4");
+            if (count >= 2) try { para.input.out_mat_h_vnl[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
         };
         sync_intvec(input.out_mat_h_vnl, 2, 0);
         this->add_item(item);
     }
     {
-        Input_Item item("out_mat_h_vl");
-        item.annotation = "output local pseudopotential Vl(R) matrix";
+        Input_Item item("out_mat_vlk");
+        item.annotation = "output local pseudopotential Vl(k) matrix";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = "Whether to print files containing the local pseudopotential matrix Vl(R) in CSR format."
-                          "\n\nSee out_hsr for format details.";
+        item.description = "Whether to print the local pseudopotential matrix Vl(k) for each k-point in the NAO basis, into text files OUT.${suffix}/vlk*_nao.txt."
+                          "\n\nThe optional second integer controls text precision (default 8).";
+        item.default_value = "0 8";
+        item.unit = "Ry";
+        item.read_value = [](const Input_Item& item, Parameter& para) {
+            const size_t count = item.get_size();
+            try {
+                para.input.out_mat_vlk[0] = assume_as_boolean(item.str_values[0]);
+            }
+            catch (const std::invalid_argument& e) {
+                ModuleBase::WARNING("Input", "out_mat_vlk enable flag must be 0/1, using default 0");
+            }
+            if (count >= 2) try { para.input.out_mat_vlk[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
+        };
+        item.check_value = [](const Input_Item& item, const Parameter& para) {
+            if (para.input.out_mat_vlk[0] && para.input.nspin == 4)
+                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_vlk is not available for nspin = 4");
+        };
+        sync_intvec(input.out_mat_vlk, 2, 0);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("out_mat_h_vl");
+        item.annotation = "legacy alias for out_mat_vlk";
+        item.category = "Output information";
+        item.type = "Integer";
+        item.description = "Legacy alias for out_mat_vlk, which outputs the local pseudopotential matrix Vl(k) for each k-point in the NAO basis. The optional second integer controls text precision. If both out_mat_vlk and out_mat_h_vl are present, out_mat_vlk takes precedence.";
         item.default_value = "0 8";
         item.unit = "Ry";
         item.read_value = [](const Input_Item& item, Parameter& para) {
@@ -1073,21 +1124,47 @@ For binary output, each file uses the same basename as text output with a .dat s
             catch (const std::invalid_argument& e) {
                 ModuleBase::WARNING("Input", "out_mat_h_vl enable flag must be 0/1, using default 0");
             }
-        };
-        item.check_value = [](const Input_Item& item, const Parameter& para) {
-            if (para.input.out_mat_h_vl[0] && para.input.nspin == 4)
-                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_h_vl is not available for nspin = 4");
+            if (count >= 2) try { para.input.out_mat_h_vl[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
         };
         sync_intvec(input.out_mat_h_vl, 2, 0);
         this->add_item(item);
     }
     {
-        Input_Item item("out_mat_h_vh");
-        item.annotation = "output Hartree Vh(R) matrix";
+        Input_Item item("out_mat_vhk");
+        item.annotation = "output Hartree Vh(k) matrix";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = "Whether to print files containing the Hartree matrix Vh(R) in CSR format."
-                          "\n\nSee out_hsr for format details.";
+        item.description = "Whether to print the Hartree matrix Vh(k) for each k-point in the NAO basis, into text files OUT.${suffix}/vhk*_nao.txt."
+                          "\n\nThe optional second integer controls text precision (default 8).";
+        item.default_value = "0 8";
+        item.unit = "Ry";
+        item.read_value = [](const Input_Item& item, Parameter& para) {
+            const size_t count = item.get_size();
+            try {
+                para.input.out_mat_vhk[0] = assume_as_boolean(item.str_values[0]);
+            }
+            catch (const std::invalid_argument& e) {
+                ModuleBase::WARNING("Input", "out_mat_vhk enable flag must be 0/1, using default 0");
+            }
+            if (count >= 2) try { para.input.out_mat_vhk[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
+        };
+        item.check_value = [](const Input_Item& item, const Parameter& para) {
+            if (para.input.out_mat_vhk[0] && para.input.nspin == 4)
+                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_vhk is not available for nspin = 4");
+        };
+        sync_intvec(input.out_mat_vhk, 2, 0);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("out_mat_h_vh");
+        item.annotation = "legacy alias for out_mat_vhk";
+        item.category = "Output information";
+        item.type = "Integer";
+        item.description = "Legacy alias for out_mat_vhk, which outputs the Hartree matrix Vh(k) for each k-point in the NAO basis. The optional second integer controls text precision. If both out_mat_vhk and out_mat_h_vh are present, out_mat_vhk takes precedence.";
         item.default_value = "0 8";
         item.unit = "Ry";
         item.read_value = [](const Input_Item& item, Parameter& para) {
@@ -1098,21 +1175,47 @@ For binary output, each file uses the same basename as text output with a .dat s
             catch (const std::invalid_argument& e) {
                 ModuleBase::WARNING("Input", "out_mat_h_vh enable flag must be 0/1, using default 0");
             }
-        };
-        item.check_value = [](const Input_Item& item, const Parameter& para) {
-            if (para.input.out_mat_h_vh[0] && para.input.nspin == 4)
-                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_h_vh is not available for nspin = 4");
+            if (count >= 2) try { para.input.out_mat_h_vh[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
         };
         sync_intvec(input.out_mat_h_vh, 2, 0);
         this->add_item(item);
     }
     {
-        Input_Item item("out_mat_h_vxc");
-        item.annotation = "output exchange-correlation Vxc(R) matrix";
+        Input_Item item("out_mat_vxck");
+        item.annotation = "output exchange-correlation Vxc(k) matrix";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = "Whether to print files containing the XC matrix Vxc(R) in CSR format."
-                          "\n\nSee out_hsr for format details.";
+        item.description = "Whether to print the exchange-correlation matrix Vxc(k) for each k-point in the NAO basis, into text files OUT.${suffix}/vxck*_nao.txt."
+                          "\n\nThe optional second integer controls text precision (default 8).";
+        item.default_value = "0 8";
+        item.unit = "Ry";
+        item.read_value = [](const Input_Item& item, Parameter& para) {
+            const size_t count = item.get_size();
+            try {
+                para.input.out_mat_vxck[0] = assume_as_boolean(item.str_values[0]);
+            }
+            catch (const std::invalid_argument& e) {
+                ModuleBase::WARNING("Input", "out_mat_vxck enable flag must be 0/1, using default 0");
+            }
+            if (count >= 2) try { para.input.out_mat_vxck[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
+        };
+        item.check_value = [](const Input_Item& item, const Parameter& para) {
+            if (para.input.out_mat_vxck[0] && para.input.nspin == 4)
+                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_vxck is not available for nspin = 4");
+        };
+        sync_intvec(input.out_mat_vxck, 2, 0);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("out_mat_h_vxc");
+        item.annotation = "legacy alias for out_mat_vxck";
+        item.category = "Output information";
+        item.type = "Integer";
+        item.description = "Legacy alias for out_mat_vxck, which outputs the exchange-correlation matrix Vxc(k) for each k-point in the NAO basis. The optional second integer controls text precision. If both out_mat_vxck and out_mat_h_vxc are present, out_mat_vxck takes precedence.";
         item.default_value = "0 8";
         item.unit = "Ry";
         item.read_value = [](const Input_Item& item, Parameter& para) {
@@ -1123,21 +1226,47 @@ For binary output, each file uses the same basename as text output with a .dat s
             catch (const std::invalid_argument& e) {
                 ModuleBase::WARNING("Input", "out_mat_h_vxc enable flag must be 0/1, using default 0");
             }
-        };
-        item.check_value = [](const Input_Item& item, const Parameter& para) {
-            if (para.input.out_mat_h_vxc[0] && para.input.nspin == 4)
-                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_h_vxc is not available for nspin = 4");
+            if (count >= 2) try { para.input.out_mat_h_vxc[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
         };
         sync_intvec(input.out_mat_h_vxc, 2, 0);
         this->add_item(item);
     }
     {
-        Input_Item item("out_mat_h_exx");
-        item.annotation = "output exact-exchange Vexx(R) matrix";
+        Input_Item item("out_mat_exxk");
+        item.annotation = "output exact-exchange Vexx(k) matrix";
         item.category = "Output information";
         item.type = "Integer";
-        item.description = "Whether to print files containing the exact-exchange matrix Vexx(R) in CSR format."
-                          "\n\nSee out_hsr for format details.";
+        item.description = "Whether to print the exact-exchange matrix Vexx(k) for each k-point in the NAO basis, into text files OUT.${suffix}/vexxk*_nao.txt."
+                          "\n\nThe optional second integer controls text precision (default 8). Only available for gamma-only calculations with exact exchange enabled.";
+        item.default_value = "0 8";
+        item.unit = "Ry";
+        item.read_value = [](const Input_Item& item, Parameter& para) {
+            const size_t count = item.get_size();
+            try {
+                para.input.out_mat_exxk[0] = assume_as_boolean(item.str_values[0]);
+            }
+            catch (const std::invalid_argument& e) {
+                ModuleBase::WARNING("Input", "out_mat_exxk enable flag must be 0/1, using default 0");
+            }
+            if (count >= 2) try { para.input.out_mat_exxk[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
+        };
+        item.check_value = [](const Input_Item& item, const Parameter& para) {
+            if (para.input.out_mat_exxk[0] && para.input.nspin == 4)
+                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_exxk is not available for nspin = 4");
+        };
+        sync_intvec(input.out_mat_exxk, 2, 0);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("out_mat_h_exx");
+        item.annotation = "legacy alias for out_mat_exxk";
+        item.category = "Output information";
+        item.type = "Integer";
+        item.description = "Legacy alias for out_mat_exxk, which outputs the exact-exchange matrix Vexx(k) for each k-point in the NAO basis. The optional second integer controls text precision. If both out_mat_exxk and out_mat_h_exx are present, out_mat_exxk takes precedence.";
         item.default_value = "0 8";
         item.unit = "Ry";
         item.read_value = [](const Input_Item& item, Parameter& para) {
@@ -1148,10 +1277,9 @@ For binary output, each file uses the same basename as text output with a .dat s
             catch (const std::invalid_argument& e) {
                 ModuleBase::WARNING("Input", "out_mat_h_exx enable flag must be 0/1, using default 0");
             }
-        };
-        item.check_value = [](const Input_Item& item, const Parameter& para) {
-            if (para.input.out_mat_h_exx[0] && para.input.nspin == 4)
-                ModuleBase::WARNING_QUIT("ReadInput", "out_mat_h_exx is not available for nspin = 4");
+            if (count >= 2) try { para.input.out_mat_h_exx[1] = std::stoi(item.str_values[1]); }
+            catch (const std::invalid_argument&) { /* do nothing */ }
+            catch (const std::out_of_range&) { /* do nothing */ }
         };
         sync_intvec(input.out_mat_h_exx, 2, 0);
         this->add_item(item);
@@ -1195,7 +1323,7 @@ For binary output, each file uses the same basename as text output with a .dat s
         item.annotation = "output exchange-correlation matrix in KS-orbital representation";
         item.category = "Output information";
         item.type = "Boolean";
-        item.description = "Write exchange-correlation matrices in the Kohn-Sham orbital basis and their diagonal expectation values. The diagonal energies are saved in OUT.${suffix}/vxc.txt. When EXX is calculated, its local and EXX contributions are also saved as vxc_local.txt and vxc_exx.txt in the same directory. Each energy file begins with nk, nspin, and nbands, followed by nk*nspin*nbands rows of energies in Hartree and eV."
+        item.description = "Write exchange-correlation matrices in the Kohn-Sham orbital basis and their diagonal expectation values. The diagonal energies are saved in OUT.${suffix}/eband_vxc.txt. When EXX is calculated, its local and EXX contributions are also saved as eband_vxc_local.txt and eband_vxc_exx.txt in the same directory. Each energy file begins with nk, nspin, and nbands, followed by nk*nspin*nbands rows of energies in Hartree and eV."
                           "\n\n[NOTE] In the 3.10-LTS version, the file name is k-$k-Vxc and so on.";
         item.default_value = "False";
         item.unit = "Ry";

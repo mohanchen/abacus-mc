@@ -326,8 +326,8 @@ void ReadInput::create_directory(const Parameter& param)
                  || param.input.out_mat_dh[0] > 0 || param.input.out_mat_ds[0] > 0
                  || param.input.out_mat_xc || param.input.out_mat_xc2[0] > 0 || param.input.out_hr_npz
                  || param.input.out_hsr_npz || param.input.out_dm_npz
-                 || param.input.out_mat_h_t[0] > 0 || param.input.out_mat_h_vnl[0] > 0 || param.input.out_mat_h_vl[0] > 0
-                 || param.input.out_mat_h_vh[0] > 0 || param.input.out_mat_h_vxc[0] > 0 || param.input.out_mat_h_exx[0] > 0
+                 || param.input.out_mat_vnlk[0] > 0 || param.input.out_mat_vlk[0] > 0
+                 || param.input.out_mat_vhk[0] > 0 || param.input.out_mat_vxck[0] > 0 || param.input.out_mat_exxk[0] > 0
                  || param.input.out_mat_dh_t[0] > 0 || param.input.out_mat_dh_vl[0] > 0 || param.input.out_mat_dh_vnl[0] > 0
                  || param.input.out_mat_dh_vh[0] > 0 || param.input.out_mat_dh_vxc[0] > 0,
              param.globalv.global_mat_dir}
@@ -564,6 +564,37 @@ void ReadInput::normalize_hs_output_options(Parameter& param)
     {
         param.input.out_hsk[0] = 1;
     }
+
+    // Merge the legacy out_mat_h_* aliases into their canonical k-space names.
+    // Each alias is accepted for backward compatibility; when both names are
+    // present the canonical new name takes precedence. out_mat_h_t is an alias
+    // for out_mat_tk because both produce the T(k) NAO text matrices (the
+    // former via the redundant write_h_t path, now removed).
+    const auto merge_alias = [&](const char* new_label, const char* old_label,
+                                 std::vector<int>& new_val, const std::vector<int>& old_val) {
+        const bool new_is_read = item_is_read(new_label);
+        const bool old_is_read = item_is_read(old_label);
+        if (new_is_read)
+        {
+            if (old_is_read)
+            {
+                ModuleBase::WARNING("ReadInput",
+                                    std::string("both ") + new_label + " and " + old_label
+                                        + " are set; " + new_label + " takes precedence");
+            }
+        }
+        else if (old_is_read)
+        {
+            new_val = old_val;
+        }
+    };
+
+    merge_alias("out_mat_tk", "out_mat_h_t", param.input.out_mat_tk, param.input.out_mat_h_t);
+    merge_alias("out_mat_vnlk", "out_mat_h_vnl", param.input.out_mat_vnlk, param.input.out_mat_h_vnl);
+    merge_alias("out_mat_vlk", "out_mat_h_vl", param.input.out_mat_vlk, param.input.out_mat_h_vl);
+    merge_alias("out_mat_vhk", "out_mat_h_vh", param.input.out_mat_vhk, param.input.out_mat_h_vh);
+    merge_alias("out_mat_vxck", "out_mat_h_vxc", param.input.out_mat_vxck, param.input.out_mat_h_vxc);
+    merge_alias("out_mat_exxk", "out_mat_h_exx", param.input.out_mat_exxk, param.input.out_mat_h_exx);
 }
 
 void ReadInput::write_txt_input(const Parameter& param, const std::string& filename)

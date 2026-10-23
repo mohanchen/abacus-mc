@@ -65,11 +65,11 @@ struct WriteHParams
 #endif
 };
 
-// Individual Hamiltonian-term writers. write_h_t/vnl/vl/vh/vxc share a common
+// Individual Hamiltonian-term writers. write_h_vnl/vl/vh/vxc share a common
 // build -> write H(k) -> optionally write H(R) skeleton (see hterm_writer.cpp);
 // the term-specific part is only how hR_tmp is filled.
-void write_h_t(WriteHParams& params);
-
+// The kinetic T(k) output is handled by the out_mat_tk path in ctrl_scf_lcao,
+// so there is no write_h_t here.
 void write_h_vnl(WriteHParams& params);
 
 void write_h_vl(WriteHParams& params);

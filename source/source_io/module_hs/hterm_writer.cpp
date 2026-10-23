@@ -12,7 +12,6 @@
 #include "source_hamilt/module_gint/gint_interface.h"
 #include "source_hamilt/module_hcontainer/hcontainer_funcs.h"
 #include "source_hamilt/module_hcontainer/output_hcontainer.h"
-#include "source_lcao/module_operator_lcao/ekinetic.h"
 #include "source_lcao/module_operator_lcao/nonlocal.h"
 #include "source_lcao/module_operator_lcao/operator_fs_utils.h"
 #ifdef __EXX
@@ -218,31 +217,6 @@ static void write_h_term(WriteHParams& params, const HTermSpec& spec)
     ModuleBase::timer::end("ModuleIO", spec.timer_label);
 }
 
-void write_h_t(WriteHParams& params)
-{
-    const UnitCell& ucell = *params.ucell;
-    const Grid_Driver& gd = *params.gd;
-    const Parallel_Orbitals& pv = *params.pv;
-    const TwoCenterBundle& two_center_bundle = *params.two_center_bundle;
-    const LCAO_Orbitals& orb = *params.orb;
-    const K_Vectors& kv = *params.kv;
-    const std::vector<double>& orb_cutoff = orb.cutoffs();
-
-    HTermSpec spec;
-    spec.timer_label = "write_h_t";
-    spec.k_prefix = "tk";
-    spec.r_prefix = "t";
-    spec.r_label = "T";
-    spec.term_name = "kinetic";
-    spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
-        hamilt::EKinetic<hamilt::OperatorLCAO<double, double>>
-            tmp_ekinetic(nullptr, kv.kvec_d, &hR_tmp, &ucell, orb_cutoff, &gd,
-                         two_center_bundle.kinetic_orb.get());
-        tmp_ekinetic.contributeHR();
-    };
-    write_h_term(params, spec);
-}
-
 void write_h_vnl(WriteHParams& params)
 {
     const UnitCell& ucell = *params.ucell;
@@ -408,7 +382,7 @@ void write_h_exx(WriteHParams& params, const Exx_Info& exx_info)
     ModuleBase::TITLE("ModuleIO", "write_h_exx");
     ModuleBase::timer::start("ModuleIO", "write_h_exx");
 
-    // Multi-k out_mat_h_exx is rejected upstream at the call site (setup_exx_h_params in
+    // Multi-k out_mat_exxk is rejected upstream at the call site (setup_exx_h_params in
     // ctrl_scf_lcao.cpp); this function is only reached on the gamma-only path.
     const UnitCell& ucell = *params.ucell;
     const Parallel_Orbitals& pv = *params.pv;
