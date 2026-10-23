@@ -14,6 +14,7 @@
 void ModuleIO::write_wfc_pw(
         const int istep,
         const int iter,
+        const int append_step,
         const int kpar,
         const int my_pool,
         const int my_rank,
@@ -68,8 +69,11 @@ void ModuleIO::write_wfc_pw(
                 // Mirrors write_wfc_nao's append_flag: the first step of a
                 // run truncates the file, later steps append a new frame
                 // when out_app_flag == 1, so the file accumulates one frame
-                // per ionic step instead of being rewritten each step.
-                const bool append_frame = (istep > 0 && out_app_flag == 1);
+                // per ionic step instead of being rewritten each step. The
+                // decision uses append_step (the real output step), not istep
+                // (the filename sentinel), so an out_freq_ion == 0 run that
+                // writes a fixed-name file still appends after its first step.
+                const bool append_frame = (append_step > 0 && out_app_flag == 1);
                 if (!append_frame)
                 {
                     if (out_wfc_pw == 1)

@@ -62,8 +62,13 @@ void ModuleIO::ctrl_iter_pw(const int istep,
     if (out_wfc_flag && (inp.out_wfc_pw == 1 || inp.out_wfc_pw == 2))
     {
         stp.sync_cpu();
+        // istep_in is only the filename sentinel (-1 omits the step suffix);
+        // pass the real ionic step separately so append mode keeps
+        // accumulating frames even when the filename carries no step.
+        const int append_step = istep;
         ModuleIO::write_wfc_pw(istep_in,
                                iter_in,
+                               append_step,
                                GlobalV::KPAR,
                                GlobalV::MY_POOL,
                                GlobalV::MY_RANK,
