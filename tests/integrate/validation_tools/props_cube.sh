@@ -175,8 +175,21 @@ if ! test -z "$has_lowf" && [ "$has_lowf" == 1 ]; then
 		wfc_ref="$wfc_name"_mod.txt.ref
 	fi
 
-	python3 $COMPARE_SCRIPT $wfc_cal $wfc_ref 8 -abs 1
-	echo "Compare_wfc_lcao_pass $?" >>$props_result_file
+	# wfc text output carries a provenance header ("# ABACUS version:",
+	# "# Written at ...", "# IONIC STEP ...") since v3.11; the multi-k awk
+	# pass also forwards those comment lines into the *_mod.txt file.
+	# Strip comment lines from both sides so the (run-dependent) header and
+	# its timestamp never affect the comparison.
+	local wfc_cal_nohdr
+	local wfc_ref_nohdr
+	wfc_cal_nohdr=$(mktemp)
+	wfc_ref_nohdr=$(mktemp)
+	sed '/^[[:space:]]*#/d' "$wfc_cal" >"$wfc_cal_nohdr"
+	sed '/^[[:space:]]*#/d' "$wfc_ref" >"$wfc_ref_nohdr"
+	python3 $COMPARE_SCRIPT "$wfc_cal_nohdr" "$wfc_ref_nohdr" 8 -abs 1
+	local wfc_pass=$?
+	rm -f "$wfc_cal_nohdr" "$wfc_ref_nohdr"
+	echo "Compare_wfc_lcao_pass $wfc_pass" >>$props_result_file
 fi
 
 }
