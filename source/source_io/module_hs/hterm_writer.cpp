@@ -260,12 +260,11 @@ void write_h_vl(WriteHParams& params)
     spec.term_name = "local";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int /*ispin*/) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-        // A grid-parallel rank may own no real-space grid points (nrxx == 0),
-        // leaving v_local null; there is no local potential to integrate there.
-        if (v_local != nullptr)
-        {
-            ModuleGint::cal_gint_vl(v_local, &hR_tmp);
-        }
+        // All ranks must enter cal_gint_vl so the Alltoall inside
+        // hr_gint_to_hR stays matched. A grid-parallel rank with no local
+        // real-space grid points (nrxx == 0) holds v_local == nullptr;
+        // cal_gint_vl then has no local biggrid and never dereferences it.
+        ModuleGint::cal_gint_vl(v_local, &hR_tmp);
     };
     write_h_term(params, spec);
 }
@@ -291,13 +290,14 @@ void write_h_vh(WriteHParams& params)
     spec.term_name = "hartree";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-        // Under grid-parallel distribution a rank may own no real-space grid
-        // points (nrxx == 0), in which case v_h is an empty matrix and there
-        // is no local potential to integrate; skip the gint evaluation there.
-        if (v_h.c != nullptr)
-        {
-            ModuleGint::cal_gint_vl(&v_h(ispin, 0), &hR_tmp);
-        }
+        // All ranks must enter cal_gint_vl so the Alltoall inside
+        // hr_gint_to_hR stays matched. Under grid-parallel distribution a
+        // rank may own no real-space grid points (nrxx == 0), leaving v_h an
+        // empty matrix; pass nullptr there (cal_gint_vl then has no local
+        // biggrid and never dereferences it) instead of &v_h(ispin, 0), whose
+        // matrix::operator() would trip the ic < nc assertion.
+        const double* vh_ptr = (v_h.c != nullptr) ? &v_h(ispin, 0) : nullptr;
+        ModuleGint::cal_gint_vl(vh_ptr, &hR_tmp);
     };
     write_h_term(params, spec);
 }
@@ -334,12 +334,13 @@ void write_h_vxc(WriteHParams& params)
     spec.term_name = "xc";
     spec.build = [&](hamilt::HContainer<double>& hR_tmp, int ispin) {
         setup_veff_hcontainer(hR_tmp, ucell, gd, pv, orb_cutoff);
-        // A grid-parallel rank may own no real-space grid points (nrxx == 0),
-        // leaving v_xc an empty matrix; skip the gint evaluation there.
-        if (v_xc.c != nullptr)
-        {
-            ModuleGint::cal_gint_vl(&v_xc(ispin, 0), &hR_tmp);
-        }
+        // All ranks must enter cal_gint_vl so the Alltoall inside
+        // hr_gint_to_hR stays matched. A grid-parallel rank with no local
+        // real-space grid points (nrxx == 0) holds an empty v_xc matrix; pass
+        // nullptr there (never dereferenced) instead of &v_xc(ispin, 0),
+        // whose matrix::operator() would trip the ic < nc assertion.
+        const double* vxc_ptr = (v_xc.c != nullptr) ? &v_xc(ispin, 0) : nullptr;
+        ModuleGint::cal_gint_vl(vxc_ptr, &hR_tmp);
     };
     write_h_term(params, spec);
 }
