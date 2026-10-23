@@ -198,7 +198,8 @@ void md_line(MDCell& mdcell,
 
     /// out_app_flag == 1 writes one fixed-name "STRU" file. A previous
     /// release kept per-step STRU_MD_{step} files inside a STRU/
-    /// subdirectory of the output directory, so an MD restarted from those
+    /// subdirectory of the output directory (the mode-2 directory has
+    /// since been renamed to STRUC/), so an MD restarted from those
     /// files still sees that directory. Writing the fixed name on top of a
     /// directory aborts the run, therefore the legacy numbered layout is
     /// kept whenever such a directory is present.

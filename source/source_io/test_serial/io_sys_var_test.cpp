@@ -175,7 +175,7 @@ TEST_F(InputTest, SetGlobalDirMode2)
     TestParameters::set_global_dir(readinput, input, sys);
 
     EXPECT_EQ(sys.global_out_dir, "OUT.modetwo/");
-    EXPECT_EQ(sys.global_stru_dir, "OUT.modetwo/STRU/");
+    EXPECT_EQ(sys.global_stru_dir, "OUT.modetwo/STRUC/");
     EXPECT_EQ(sys.global_psi_dir, "OUT.modetwo/PSI/");
     EXPECT_EQ(sys.global_chg_dir, "OUT.modetwo/CHG/");
     EXPECT_EQ(sys.global_pot_dir, "OUT.modetwo/POT/");

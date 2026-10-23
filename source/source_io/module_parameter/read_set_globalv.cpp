@@ -117,9 +117,11 @@ void ReadInput::set_global_dir(const Input_para& inp, System_para& sys)
     /// Set subdirectories based on out_app_flag
     /// out_app_flag == 2: use unified uppercase subdirectories
     /// otherwise: keep backward-compatible behavior (all point to global_out_dir)
+    /// The structure subdirectory is named STRUC (not STRU) so it cannot be
+    /// confused with the STRU input file.
     if (inp.out_app_flag == 2)
     {
-        sys.global_stru_dir = sys.global_out_dir + "STRU/";
+        sys.global_stru_dir = sys.global_out_dir + "STRUC/";
         sys.global_psi_dir = sys.global_out_dir + "PSI/";
         sys.global_chg_dir = sys.global_out_dir + "CHG/";
         sys.global_pot_dir = sys.global_out_dir + "POT/";
@@ -172,7 +174,8 @@ void ReadInput::set_global_dir(const Input_para& inp, System_para& sys)
             {
                 // Releases before the out_app_flag rework always wrote
                 // STRU_MD_{istep} into a fixed STRU/ subdirectory of the
-                // output directory; keep those outputs restartable.
+                // output directory (the mode-2 directory has since been
+                // renamed to STRUC/); keep those outputs restartable.
                 const std::string legacy_dir = sys.global_out_dir + "STRU/";
                 sys.global_in_stru = find_md_restart_stru(legacy_dir, istep);
             }
