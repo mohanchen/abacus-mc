@@ -20,7 +20,11 @@ if(NOT ENABLE_MPI)
   return()
 endif()
 
-add_executable(MODULE_IO_input_error_mpi test_read_input.cpp)
+add_executable(MODULE_IO_input_error_mpi test_read_input.cpp
+    # io_input (via read_set_globalv.cpp) references
+    # stru_frame_io::extract_last_frame, but this test does not link
+    # the cell library, so provide the translation unit directly.
+    ../../source_cell/stru_frame_io.cpp)
 target_link_libraries(MODULE_IO_input_error_mpi PRIVATE parameter base device io_input abacus::linalg_libs)
 if(ENABLE_COVERAGE)
   add_coverage(MODULE_IO_input_error_mpi)
