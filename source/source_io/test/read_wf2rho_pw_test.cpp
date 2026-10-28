@@ -392,8 +392,10 @@ TEST_F(ReadWfcRhoTest, WriteWfcAppendMode)
     const int nbands = 4;
     const int my_pool = GlobalV::MY_POOL;
     const int my_rank = GlobalV::MY_RANK;
+    const int nproc_in_pool = GlobalV::NPROC_IN_POOL;
+    const int rank_in_pool = GlobalV::RANK_IN_POOL;
     const int nks = 2;
-    const int nkstot = GlobalV::KPAR * nks;
+    const int nkstot = kpar * nks;
 
     // K points and PW basis
     kv->set_nkstot(nkstot);
@@ -405,7 +407,7 @@ TEST_F(ReadWfcRhoTest, WriteWfcAppendMode)
     cal_ik2iktot(kv->ik2iktot, nks, nkstot);
 
 #ifdef __MPI
-    wfcpw->initmpi(GlobalV::NPROC_IN_POOL, GlobalV::RANK_IN_POOL, POOL_WORLD);
+    wfcpw->initmpi(nproc_in_pool, rank_in_pool, POOL_WORLD);
 #endif
     wfcpw->initgrids(5.3233, ModuleBase::Matrix3(-0.5, 0.0, 0.5, 0.0, 0.5, 0.5, -0.5, 0.5, 0.0), 80);
     wfcpw->initparameters(false, 20, nks, kv->kvec_d.data());
@@ -445,8 +447,8 @@ TEST_F(ReadWfcRhoTest, WriteWfcAppendMode)
                                nbands,
                                nspin,
                                npol,
-                               GlobalV::RANK_IN_POOL,
-                               GlobalV::NPROC_IN_POOL,
+                               rank_in_pool,
+                               nproc_in_pool,
                                TestParameters::input().out_wfc_pw,
                                out_app_flag,
                                ecutwfc,
@@ -475,7 +477,7 @@ TEST_F(ReadWfcRhoTest, WriteWfcAppendMode)
 #endif
     const long size_third = file_size_bytes("wfk1_pw.dat");
 
-    if (GlobalV::MY_RANK == 0)
+    if (my_rank == 0)
     {
         EXPECT_GT(size_first, 0);
         EXPECT_GT(size_second, size_first);
@@ -485,12 +487,12 @@ TEST_F(ReadWfcRhoTest, WriteWfcAppendMode)
     running_log.close();
     delete psi;
 
-    if (GlobalV::MY_RANK == 0)
+    if (my_rank == 0)
     {
         remove("running_log_app0.txt");
         remove("wfk1_pw.dat");
         remove("wfk2_pw.dat");
-        if (GlobalV::KPAR == 2)
+        if (kpar == 2)
         {
             remove("wfk3_pw.dat");
             remove("wfk4_pw.dat");
