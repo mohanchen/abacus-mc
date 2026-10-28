@@ -20,14 +20,32 @@ void eval_functional(const std::vector<double>& charge,
                       double tpiba,
                       FunctionalResult& result)
 {
+    PeriodicCoulombOperator coulomb(basis, tpiba);
+    eval_functional(charge, response, config, basis, tpiba, coulomb, result);
+}
+
+void eval_functional(const std::vector<double>& charge,
+                      const SccsResponse& response,
+                      const SccsConfig& config,
+                      const ModulePW::PW_Basis& basis,
+                      double tpiba,
+                      CoulombOperator& coulomb,
+                      FunctionalResult& result)
+{
     const std::size_t size = charge.size();
     const double dv = basis.omega / basis.nxyz;
-    PeriodicCoulombOperator coulomb(basis, tpiba);
     std::vector<double> vacuum;
     coulomb.apply_potential(charge, vacuum);
     FunctionalResult candidate;
     candidate.reaction_potential.resize(size);
     candidate.electron_potential.resize(size);
+    // The cavity-density derivative is needed only for the forces on the core
+    // Gaussians of the full cavity.
+    const bool core_electrons = config.core_electrons;
+    if (core_electrons)
+    {
+        candidate.cavity_potential = response.cavity_potential;
+    }
     for (std::size_t i = 0; i < size; ++i)
     {
         const double reaction = response.polarization.potential[i] - vacuum[i];
@@ -62,6 +80,10 @@ void eval_functional(const std::vector<double>& charge,
         const double nonel = (config.pressure - config.surface_tension * divergence[i])
                              * response.dsolute_drho[i];
         candidate.electron_potential[i] += nonel;
+        if (core_electrons)
+        {
+            candidate.cavity_potential[i] += nonel;
+        }
     }
     result = std::move(candidate);
 }
