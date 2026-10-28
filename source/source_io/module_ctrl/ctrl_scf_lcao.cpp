@@ -141,6 +141,10 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     const int nspin = inp.nspin;
     const std::string global_out_dir = PARAM.globalv.global_out_dir;
     const std::string global_mat_dir = PARAM.globalv.global_mat_dir;
+    const std::string global_matrix_dir = PARAM.globalv.global_matrix_dir;
+    const int npol = PARAM.globalv.npol;
+    const int nlocal = PARAM.globalv.nlocal;
+    const bool cal_force = inp.cal_force;
 
     //------------------------------------------------------------------
     //! 1) print out density of states (DOS)
@@ -345,6 +349,15 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
                                 kv,
                                 p_ham_tk,
                                 &dftu,
+                                global_out_dir,
+                                global_matrix_dir,
+                                inp.calculation,
+                                out_app_flag,
+                                nspin,
+                                gamma_only,
+                                npol,
+                                nlocal,
+                                cal_force,
                                 ofs_running);
 
     //------------------------------------------------------------------
@@ -458,7 +471,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
         // H(k) component matrices follow the selected matrix directory so
         // they land in MAT/ together with the other matrix outputs in mode 2
         h_params.global_out_dir = global_mat_dir;
-        h_params.global_matrix_dir = PARAM.globalv.global_matrix_dir;
+        h_params.global_matrix_dir = global_matrix_dir;
         h_params.ks_solver = PARAM.inp.ks_solver;
         h_params.drank = GlobalV::DRANK;
         h_params.ofs_running = &ofs_running;
