@@ -183,7 +183,7 @@ void ModuleIO::ctrl_scf_lcao(UnitCell& ucell,
     if (inp.out_dmr[0])
     {
         const int precision = inp.out_dmr[1];
-        const bool append_dmr = (out_app_flag == 1);
+        const bool append_dmr = (out_app_flag == 1) && (istep > 0);
 
         ModuleIO::write_dmr(dm->get_dmr_vec(), &ucell, precision, pv, append_dmr,
 				ucell.get_iat2iwt(), ucell.nat, global_mat_dir, istep, ofs_running);

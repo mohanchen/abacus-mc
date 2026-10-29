@@ -117,7 +117,8 @@ bool ModuleIO::cal_dos(const int& is,  // index for spin
 
     if (GlobalV::MY_RANK == 0)
     {
-        if(out_app_flag == 1)
+        const bool append_step = (out_app_flag == 1) && (istep > 0);
+        if (append_step)
         {
             ofs_dos.open(fn.c_str(), std::ios::app);
         }

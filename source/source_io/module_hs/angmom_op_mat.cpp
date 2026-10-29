@@ -397,7 +397,7 @@ void ModuleIO::Angmom_op::calculate(
     ///        name is reused and each ionic step appends; modes 0 and 2 carry
     ///        "g{istep+1}" (e.g., "g1") following the out_freq_ion convention.
     const std::string step_suffix = (istep >= 0 && out_app_flag != 1) ? "g" + std::to_string(istep + 1) : "";
-    const bool append_step = (out_app_flag == 1) && (istep >= 0);
+    const bool append_step = (out_app_flag == 1) && (istep > 0);
     const std::string title = "# it ia il iz im iRx iRy iRz jt ja jl jz jm Re[<a|L|b>] Im[<a|L|b>]\n"
                               "# it: atomtype index of the first atom\n"
                               "# ia: atomic index of the first atom within the atomtype\n"

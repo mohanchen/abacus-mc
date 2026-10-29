@@ -33,9 +33,10 @@ void open_sparse_file(std::ofstream& ofs, const ModuleIO::SparseWriteOptions& op
     {
         mode |= std::ios::binary;
     }
-    // Append for any multi-step run (MD or relax) in append mode;
-    // single-point SCF passes istep = -1 and always starts a fresh file.
-    const bool append_on_restart = (options.out_app_flag == 1) && (options.istep >= 0);
+    // Append from the second ionic step onward in append mode; the first
+    // step (istep == 0) truncates so a rerun does not retain prior frames.
+    // Single-point SCF passes istep = -1 and also starts a fresh file.
+    const bool append_on_restart = (options.out_app_flag == 1) && (options.istep > 0);
     if (append_on_restart)
     {
         mode |= std::ios::app;
