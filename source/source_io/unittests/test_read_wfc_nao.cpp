@@ -804,6 +804,87 @@ TEST_F(ReadWfcNaoTest, PositiveStepRejectsCumulativeFile)
 #endif
 }
 
+TEST_F(ReadWfcNaoTest, ZeroStepFallsBackToCumulativeFile)
+{
+    // Ordinary first-frame initialization (istep == 0, e.g. non-restart TDDFT)
+    // must fall back to the append-mode fixed-name file when no step-suffixed
+    // snapshot exists. The cumulative file holds the first frame only, which is
+    // exactly what step-zero initialization expects.
+    const int nbands = 2;
+    const int nlocal = 3;
+    Parallel_Orbitals para;
+    initialize_parallel_orbitals(para, nlocal, nbands);
+
+    const std::vector<double> coefficients = {0.1, 0.2, 0.3, 1.1, 1.2, 1.3};
+    ModuleBase::matrix ekb_source(1, nbands);
+    ModuleBase::matrix wg_source(1, nbands);
+    ekb_source(0, 0) = -0.5;
+    ekb_source(0, 1) = 0.7;
+    wg_source(0, 0) = 2.0;
+    wg_source(0, 1) = 0.0;
+
+    const std::vector<int> ik2iktot = {0};
+    const int read_type = 2;
+    const int append_app_flag = 1; // fixed name without the step suffix
+    const bool gamma_only_for_name = true;
+    const std::string cumulative = ModuleIO::filename_output(binary_test_dir,
+                                                             "wf",
+                                                             "nao",
+                                                             0,
+                                                             ik2iktot,
+                                                             1,
+                                                             1,
+                                                             read_type,
+                                                             append_app_flag,
+                                                             gamma_only_for_name,
+                                                             -1);
+    if (my_rank == 0)
+    {
+        ModuleIO::wfc_nao_write2file(cumulative,
+                                     coefficients.data(),
+                                     nlocal,
+                                     0,
+                                     ekb_source,
+                                     wg_source,
+                                     true,
+                                     false,
+                                     "");
+    }
+#ifdef __MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
+    psi::Psi<double> psi_read;
+    ModuleBase::matrix ekb(1, nbands);
+    ModuleBase::matrix wg(1, nbands);
+    const int init_istep = 0; // ordinary first-frame initialization
+    EXPECT_TRUE(ModuleIO::read_wfc_nao(binary_test_dir,
+                                       para,
+                                       psi_read,
+                                       ekb,
+                                       wg,
+                                       ik2iktot,
+                                       1,
+                                       1,
+                                       true,
+                                       0,
+                                       init_istep));
+    EXPECT_DOUBLE_EQ(ekb(0, 0), ekb_source(0, 0));
+    EXPECT_DOUBLE_EQ(ekb(0, 1), ekb_source(0, 1));
+    if (my_rank == 0)
+    {
+        EXPECT_DOUBLE_EQ(psi_read(0, 0, 0), coefficients[0]);
+    }
+
+    if (my_rank == 0)
+    {
+        std::remove(cumulative.c_str());
+    }
+#ifdef __MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
+}
+
 #ifdef __MPI
 int main(int argc, char** argv)
 {

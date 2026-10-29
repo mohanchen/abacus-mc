@@ -435,11 +435,19 @@ bool ModuleIO::read_wfc_nao(
             // 3. readin_dir + "WFC/" + step-suffixed name: layout written by
             //    releases before the out_app_flag rework
             // 4. readin_dir + name without the step suffix: written in append
-            //    mode (out_app_flag 1); only valid for istep < 0, because the
-            //    cumulative file is always read from its first frame and would
-            //    silently return step-0 data for a positive restart index
+            //    mode (out_app_flag 1)
+            //
+            // istep semantics:
+            // - istep > 0: positive indexed restart. Only step-suffixed
+            //   snapshots are accepted; the append-mode fixed-name file is
+            //   excluded because read_one_file always loads its first frame,
+            //   which would silently return step-0 data for a positive index.
+            // - istep == 0: ordinary first-frame initialization (e.g.
+            //   non-restart TDDFT). Try the step-suffixed g1 layout first,
+            //   then fall back to the append-mode fixed-name file.
+            // - istep < 0: default read. Append-mode fixed-name file only.
             std::vector<std::string> candidates;
-            if (istep >= 0)
+            if (istep > 0)
             {
                 const int suffix_app_flag = 0;
                 candidates.push_back(ModuleIO::filename_output(global_readin_dir,
@@ -475,6 +483,57 @@ bool ModuleIO::read_wfc_nao(
                         nkstot,
                         read_type,
                         suffix_app_flag,
+                        gamma_only,
+                        istep));
+            }
+            else if (istep == 0)
+            {
+                const int suffix_app_flag = 0;
+                candidates.push_back(ModuleIO::filename_output(global_readin_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        suffix_app_flag,
+                        gamma_only,
+                        istep));
+                const std::string psi_dir = global_readin_dir + "PSI/";
+                candidates.push_back(ModuleIO::filename_output(psi_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        suffix_app_flag,
+                        gamma_only,
+                        istep));
+                const std::string legacy_dir = global_readin_dir + "WFC/";
+                candidates.push_back(ModuleIO::filename_output(legacy_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        suffix_app_flag,
+                        gamma_only,
+                        istep));
+                const int append_app_flag = 1;
+                candidates.push_back(ModuleIO::filename_output(global_readin_dir,
+                        "wf",
+                        "nao",
+                        ik,
+                        ik2iktot,
+                        nspin,
+                        nkstot,
+                        read_type,
+                        append_app_flag,
                         gamma_only,
                         istep));
             }
