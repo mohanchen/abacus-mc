@@ -268,8 +268,12 @@ void md_line(MDCell& mdcell,
             mdrun->first_half(GlobalV::ofs_running);
 
             /// update force and virial due to the update of atom positions
+            /// Use the global (1 + restarted) step index so a restarted run's
+            /// first local step still appends to the accumulated output files
+            /// instead of truncating the previous run's records.
+            const int global_step = mdrun->step_ + mdrun->step_rst_;
             MD_func::force_virial(p_esolver,
-                                  mdrun->step_,
+                                  global_step,
                                   mdcell,
                                   decomp,
                                   mdrun->potential,
@@ -320,21 +324,25 @@ void md_line(MDCell& mdcell,
             if (param_in.inp.out_stru > 0)
             {
                 const int stru_step = current_step + 1;
-                // out_app_flag == 1: single fixed-name STRU accumulates one
-                // frame per step with a one-based "# MD step N" comment;
-                // modes 0/2 keep the numbered STRU{stru_step} files.
-                // The very first step of a fresh (non-restart) run truncates
-                // the cumulative file so it does not keep frames from a
-                // previous run; later steps and restarted runs append.
+                // File-name selection and append/truncate are two independent
+                // decisions. The file name is fixed to "STRU" whenever mode 1
+                // accumulation is allowed (and no legacy STRU/ directory is in
+                // the way); modes 0/2 keep the numbered STRU{stru_step} files.
+                // Whether to append depends on whether this is the very first
+                // step of a fresh (non-restart) run: a fresh first frame
+                // truncates the fixed-name file so it does not keep frames
+                // from a previous run, while later steps and restarted runs
+                // append one frame each, introduced by a one-based
+                // "# MD step N" comment line.
+                const bool use_fixed_name = append_stru_allowed && !has_legacy_stru_dir;
                 const bool is_first_step_of_fresh_run = (mdrun->step_ == 0) && (mdrun->step_rst_ == 0);
-                const bool append_stru = append_stru_allowed && !has_legacy_stru_dir
-                    && !is_first_step_of_fresh_run;
-                const std::string frame_comment = append_stru
+                const bool append_stru = use_fixed_name && !is_first_step_of_fresh_run;
+                const std::string frame_comment = use_fixed_name
                     ? "# MD step " + std::to_string(stru_step) + "\n\n"
                     : "";
                 std::stringstream file;
                 file << stru_out_dir << "STRU";
-                if (!append_stru)
+                if (!use_fixed_name)
                 {
                     file << stru_step;
                 }
