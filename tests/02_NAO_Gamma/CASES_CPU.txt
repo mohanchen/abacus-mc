@@ -29,9 +29,10 @@ scf_out_mul
 scf_out_mul_spin2
 scf_out_wf
 scf_solvation
+scf_tzdp_spin2
 scf_u_spin2
-scf_u_spin2_old
-#scf_u_yukawa
+scf_u_spin2_dftu2
+#scf_u_yukawa  # DISABLED: disabled with the DFT+U refactor (#7867), needs revalidation
 scf_upf100
 scf_pcc0d_water
 scf_pcc2d_water

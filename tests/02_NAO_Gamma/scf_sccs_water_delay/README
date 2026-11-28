@@ -1,3 +1,2 @@
-LCAO (gamma-only) neutral water with periodic SCCS (water-neutral preset) and a delayed start, same input as
-scf_sccs_water plus mixing_restart 1e-2, mixing_dmr 1 and sccs_start_drho 1e-3: the density-matrix mixing
-starts at the mixing restart; when SCCS starts later, the mixing restarts, including the density-matrix history.
+LCAO gamma-only neutral water with periodic SCCS and a delayed start: scf_sccs_water plus mixing_restart 1e-2, mixing_dmr 1 and sccs_start_drho 1e-3.
+When SCCS starts later, the density-matrix mixing restarts together with it.

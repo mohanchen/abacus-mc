@@ -23,6 +23,5 @@ smearing_sigma    0.002
 mixing_type       broyden
 mixing_beta       0.3
 gamma_only        1
-ks_solver         cusolver
-device            gpu
+ks_solver         scalapack_gvx
 nspin             2

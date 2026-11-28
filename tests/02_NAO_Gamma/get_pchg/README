@@ -1,2 +1,1 @@
-Obtain the charge density for selected states via the 'calculation get_pchg' 
-opiton in 'INPUT' file, for LCAO gamma_only algorithm
+Obtain the charge density of selected states via 'calculation get_pchg' in the INPUT file, for LCAO gamma_only
